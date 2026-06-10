@@ -1,0 +1,17 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "periodo-09"
+domain = "periodo"
+lifecycle = "draft"
+domain_refs = ["period:09"]
+created_at = 2026-06-10
+updated_at = 2026-06-10
+
+[language.es]
+short_description = "(sin curar) draft pendiente de definicion"
