@@ -38,12 +38,17 @@ without pre-conversion.
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
+from typing import overload
 
 from ..logging import get_logger
 
 _logger = get_logger(__name__)
 
 
+@overload
+def coerce_decimal(value: object, *, default: Decimal) -> Decimal: ...
+@overload
+def coerce_decimal(value: object, *, default: None = None) -> Decimal | None: ...
 def coerce_decimal(
     value: object,
     *,
