@@ -1188,20 +1188,19 @@ cli:
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots
-        capture_all_help: Capture all AEAT declaration register data and save snapshots.
         capture_all_modelo_help: Limit capture-all to this modelo.
-        capture_help: Capture AEAT declaration register data and save a snapshot
         latest_help: Show the most recent expediente snapshot
         list_help: List saved expediente snapshots
+        pull_all_help: cli.app.live.expedientes.pull_all_help
+        pull_help: cli.app.live.expedientes.pull_help
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
       filed:
-        capture_all_help: Capture all filed declaration data from AEAT. Read-only;
-          does not submit filings.
         capture_all_modelo_help: Limit capture-all to this modelo.
-        capture_help: Capture filed declaration data from AEAT
-        capture_sources_help: Capture filed observations required by a target filing
         list_help: List filed declaration rows without downloading artefacts
+        pull_all_help: cli.app.live.filed.pull_all_help
+        pull_help: cli.app.live.filed.pull_help
+        pull_sources_help: cli.app.live.filed.pull_sources_help
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
@@ -1221,31 +1220,28 @@ cli:
         app_help: AEAT IVA compensation wallet capture (read-only; allows only own-name
           representation and the guarded wallet read query).
         as_of_year_help: Year used to age IVA compensation carry-forward lots.
-        capture_history_help: Live-capture filed Modelo 303 history and persist secure
-          IVA compensation state. No AEAT filing or wallet form choices are submitted.
-        capture_remote_state_help: Live-capture filed Modelo 303 history and attempt
-          the AEAT IVA wallet/cartera read as one typed read-only acquisition.
         history_help: List secure local IVA compensation history, carry-forward lots,
           and persisted wallet authority decisions derived from Modelo 303 captures.
         pull_help: Live-fetch and persist AEAT's IVA compensation wallet. The only
           AEAT form action allowed is the guarded wallet read query; representation
           gates only continue in own-name mode.
+        pull_history_help: cli.app.live.iva_wallet.pull_history_help
+        pull_remote_state_help: cli.app.live.iva_wallet.pull_remote_state_help
         taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
       justificante:
         app_help: 'AEAT justificante captures (read-only): pull a filed receipt and
           reconcile against it.'
-        capture_help: Live-pull the AEAT justificante for a filed period and persist
-          it as official evidence.
         list_help: List persisted justificante captures in the active profile.
+        pull_help: cli.app.live.justificante.pull_help
         snapshot_id_help: Snapshot id (or unambiguous prefix).
         view_help: View one justificante capture.
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
       notifications:
         app_help: Read-only DEHú notification snapshots
-        capture_help: Capture DEHú notifications and save a snapshot
         latest_help: Show the most recent DEHU notification snapshot.
         list_help: List saved DEHú notification snapshots
+        pull_help: cli.app.live.notifications.pull_help
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show a DEHú notification snapshot
       output_root_help: Directory for captured filed-declaration observations
@@ -1519,13 +1515,18 @@ cli:
       readiness_help: Report whether the active profile is ready to file one modelo
         / year / period.
       reconcile:
-        app_help: 'Reconcile a modelo work unit against its AEAT justificante: pull fetches the receipt from AEAT and reconciles; file reconciles a local PDF; history lists past runs.'
-        file_help: 'Reconcile a work unit against a local justificante PDF. Local-only; never contacts AEAT.'
-        file_path_help: 'Path to the AEAT justificante PDF to reconcile against.'
-        history_empty: 'No reconciliations recorded yet.'
-        history_help: 'List past reconciliations recorded for the active profile.'
-        history_work_unit_id_help: 'Optional work unit id to narrow the history to one work unit.'
-        pull_help: 'Pull the justificante for a work unit from AEAT and reconcile against it. Contacts AEAT (read-only).'
+        app_help: 'Reconcile a modelo work unit against its AEAT justificante: pull
+          fetches the receipt from AEAT and reconciles; file reconciles a local PDF;
+          history lists past runs.'
+        file_help: Reconcile a work unit against a local justificante PDF. Local-only;
+          never contacts AEAT.
+        file_path_help: Path to the AEAT justificante PDF to reconcile against.
+        history_empty: No reconciliations recorded yet.
+        history_help: List past reconciliations recorded for the active profile.
+        history_work_unit_id_help: Optional work unit id to narrow the history to
+          one work unit.
+        pull_help: Pull the justificante for a work unit from AEAT and reconcile against
+          it. Contacts AEAT (read-only).
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       verification_report:
         app_help: Inspect recorded verification reports
@@ -2040,6 +2041,7 @@ cli:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field
         help: Sync AEAT 036 censo data with this profile
+        pull_help: cli.config.profile.censo.pull_help
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
@@ -2398,6 +2400,8 @@ cli:
       counterparty_eu_member_state_help: EU member state of the counterparty (ISO
         3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply,
         prohibited with export_third_country_zero_rated
+      evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
+        uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with --id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
@@ -2427,6 +2431,8 @@ cli:
       mixed_requires_business_pct: Refused. --classification MIXED needs a business
         share. Pass --business-pct with a value from 0 to 1, or classify the row as
         BUSINESS or PERSONAL instead.
+      read_evidence_help: Read the transaction's attached evidence on-host and feed
+        it to the classifier.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
       saturate_help: 'Saturate via LLM: also select the IVA category and derive the
@@ -2491,6 +2497,7 @@ cli:
       dry_run_preview: 'Dry run: no rows were saved. The counts above are a preview
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
+      file_help: cli.ledger.import.file_help
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
         already in the ledger but have a different description - a likely duplicate
@@ -2503,7 +2510,6 @@ cli:
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
       provider_help: 'Statement format provider. Recognised values: {providers}'
-      source_help: Original file used to verify imported rows
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
       year_help: Filing year for --period (e.g. 2024).
