@@ -191,7 +191,7 @@ def test_config_switch_accepts_output_language() -> None:
         ["config", "auth", "apoderado", "configure"],
         ["config", "auth", "apoderado", "clear"],
         ["config", "auth", "apoderado", "check"],
-        ["config", "bucket", "history"],
+        ["config", "profile", "history"],
         ["app", "ledger", "ratios", "list"],
         ["app", "ledger", "ratios", "set"],
         ["app", "ledger", "ratios", "unset"],
@@ -201,6 +201,6 @@ def test_config_switch_accepts_output_language() -> None:
 )
 def test_sub_noun_group_verb_accepts_output_language(argv: list[str]) -> None:
     """Every CLI sub-noun-group verb under
-    auth_diagnostics, apoderado, bucket, and ledger ratios accepts
+    auth_diagnostics, apoderado, profile history, and ledger ratios accepts
     ``--output-language`` for parity with the top-level config verbs."""
     _assert_output_language_registered(argv)
