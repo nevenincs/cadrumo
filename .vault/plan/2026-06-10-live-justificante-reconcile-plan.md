@@ -6,13 +6,8 @@ date: '2026-06-10'
 tier: L2
 related:
   - '[[2026-06-10-live-justificante-reconcile-adr]]'
+  - '[[2026-06-10-live-justificante-reconcile-research]]'
 ---
-
-
-
-
-
-
 
 
 # `live-justificante-reconcile` `live-sourced justificante reconciliation` plan
@@ -21,9 +16,7 @@ related:
 
 Typed justificante-capture snapshot model, secure-object namespace, repository and lifecycle service mirroring Borrador100, gated by a strict roundtrip and an anti-tautology proof.
 
-
-
-- [ ] `P01.S01` - Register the live justificante-capture secure-object namespace at FINANCIAL sensitivity and re-export it, verified by the namespace registry test; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `P01.S01` - Register the live justificante-capture secure-object namespace at FINANCIAL sensitivity and re-export it, verified by the namespace registry test; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
 - [ ] `P01.S02` - Author the JustificanteCaptureSnapshot payload (modelo via core Modelo enum, filing_year, period, expediente_id, csv, pdf_sha256, pdf_bytes, official source_kind, lifecycle), object-key, content-addressed id, repository and SnapshotService hooks mirroring Borrador100.; `src/aeat/application/live/_justificante.py`.
 - [ ] `P01.S03` - Prove the persistence boundary with a strict secure-storage roundtrip (every defaultable field non-default), a supersession lifecycle test, and an anti-tautology mutate-on-disk proof.; `src/aeat/application/live/tests/test_justificante_capture.py`.
 
