@@ -9,19 +9,21 @@ related:
   - '[[2026-06-10-period-revision-resolution-adr]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `calculation-engine-foundations` `Calculation-engine foundations: aggregation taxonomy + period-revision resolution` plan
 
 ## Epic intent
 
 Implement the two accepted calculation-engine foundation ADRs (aggregation-mechanism taxonomy + period-revision resolution) across most of the backend calculation domain, and make the live operator calculate path the single place every modelo's aggregation actually fires. Strategic goal: no calculation part may be silently dormant — every source resolver, cross-modelo relation, per-period carry, and filing-profile aggregation is either enrolled in the live mesh, or explicitly deferred behind a non-silent advisory, with the full inventory discovered by a sonnet+opus audit swarm and tracked here. External PM association: the 'calculation-engine-foundations' epic on the chore/eliminate-shims factory branch, backed by ADRs 2026-06-10-calculation-aggregation-taxonomy-adr + 2026-06-10-period-revision-resolution-adr and backlog tasks #14/#15 (a GitHub milestone should be opened to mirror it). Timeline: multi-wave; coordinator-orchestrated with per-step code-review gates. Blocks the modelo-130-100-continuity plan and all calculation/filing work until W01-W04 land.
-
 
 ## Wave `W01` - Period to revision resolution engine
 
@@ -33,6 +35,7 @@ Ratify select_revision as sole resolver (revision_id assertion-only); strengthen
 
 - [ ] `W01.P01.S01` - Strengthen resolve_registry_revision_for_work_target to resolver-equality (delegate to select_revision with revision_id, refuse divergent with an instructive message naming requested + law-determined revision); `application/modelo/_work_addressing.py`.
 - [ ] `W01.P01.S02` - Add the calc-time equality assertion snapshot.revision.id == work_unit.revision_id at every calc entry and refuse on divergence directing operator to re-create the unit; `application/modelo/_calculation_actions.py + _calculate_input.py`.
+- [ ] `W01.P01.S23` - Ratify select_revision (reached via ValidatedRegistryAuthority.snapshot / resolve_registry_revision_for_work_target) as THE sole law-determined period-to-revision resolver and add a regression that no production calc/verify/filing/export/projection path injects a stored/literal/operator-supplied revision_id into resolution (revision_id is assertion-only), pinning the three benign swept exemptions; `domain/calculations/registry/_temporal.py + _snapshot.py; application/calculations/tests`.
 
 ### Phase `W01.P02` - R2 carry revision stamp + gate
 
@@ -47,6 +50,7 @@ Add a mandatory orden_aplicabilidad field per revision.toml, validated against t
 
 - [ ] `W01.P03.S05` - Add the orden_aplicabilidad field to the revision schema with registry validation (resolves in legal catalogue, corpus_ref present, merged into legal_refs); `domain/calculations/registry/_schema.py + _validate_revision_rules.py`.
 - [ ] `W01.P03.S06` - Backfill orden_aplicabilidad across existing revisions (hard-cut if small else ratchet) and require open-ended revisions to cite their open-ended-applicability orden; `registry modelos/**/revisions/*/revision.toml + legal catalogue`.
+- [ ] `W01.P03.S24` - Document the Ruling-5 (R3) boundary: per-year norm values inside an open-ended *-y-siguientes revision are the parameter-bracket layer's responsibility (validate_bracket_table_temporal_coverage + per-value legal grounding), NOT a resolution defect, and add the connective gate that every open-ended revision's orden_aplicabilidad cites the orden establishing the open-ended applicability; `domain/calculations/registry/_validate_revision_rules.py + .vault/exec boundary note`.
 
 ## Wave `W02` - Dormant calculation-parts census and enrollment closure
 
@@ -57,19 +61,22 @@ Turn the sonnet+opus audit-swarm inventory into an explicit tracked list of ever
 Consolidate the sonnet+opus audit-swarm inventory into one explicit tracked list of every dormant/ignored/unconnected calculation part (resolvers, source kinds, relations, per-modelo aggregation, orphans) across renta/iva/sociedades/grupo/informativas.
 
 - [ ] `W02.P04.S07` - Consolidate the sonnet+opus audit-swarm inventory into an explicit dormant-parts table in this plan (per item kind, file:line, affected modelos, disposition enroll-or-defer); `.vault audit doc + this plan`.
+- [ ] `W02.P04.S25` - Adjudicate the orphan MultiYearResolver (zero callers, no test, PreviousFilingSourceResolver does not delegate to it) and the vestigial cross_period_dependency_inventory/_requirements top-level re-exports: wire into a live path, delete, or document as a named deferral with a follow-up (F7); `application/calculations/_multi_year.py + application/calculations/__init__.py`.
 
 ### Phase `W02.P05` - Wire the unhandled-source safety net
 
 Wire collect_unhandled_source_diagnostics into the live calculate path (post-merge) so any binding/relation whose source has no enrolled resolver surfaces a non-blocking advisory on source_diagnostics instead of a silent blank.
 
 - [ ] `W02.P05.S08` - Wire collect_unhandled_source_diagnostics into the live calculate path post-merge so any unrouted source surfaces a non-blocking advisory on source_diagnostics; `application/modelo/_calculation_actions.py + application/aggregation/_source_mesh.py`.
+- [ ] `W02.P05.S26` - Turn _BUCKET_AGGREGATION_OWNED_SOURCES from a descriptive constant into an enforced startup/registry gate so every registry binding source kind is a member of the enrolled-resolvers-union-explicitly-deferred-kinds set, failing a novel TOML source that would resolve to blank instead of compiling it silently (F4 boundary half); `application/modelo/_calculation_actions.py + domain/calculations/registry/_validate.py family`.
 
 ### Phase `W02.P06` - Enroll-or-defer each inventory item
 
 Enroll the tested dormant resolvers (LedgerRentaIncome, OssIoss, and any audit-discovered others) in the live mesh; for resolver-less source kinds, defer construction with a standing advisory (never on the manual_sources allowlist).
 
-- [ ] `W02.P06.S09` - Enroll the tested dormant resolvers (LedgerRentaIncome, OssIoss, and audit-discovered others) in the live merge_source_resolutions tuple with per-resolver real-behaviour enrollment tests; `application/modelo/_calculation_actions.py`.
-- [ ] `W02.P06.S10` - Register each resolver-less source kind as explicitly deferred behind the standing advisory (never on the manual_sources allowlist); `application/aggregation/_source_mesh.py + registry`.
+- [ ] `W02.P06.S09` - Enroll the tested dormant resolvers LedgerRentaIncomeAggregationSourceResolver (M130 income), OssIossLedgerSourceResolver (M369 OSS/IOSS), and InvoiceCatalogueSourceResolver (M349 collectible_invoice) in the live merge_source_resolutions tuple with per-resolver real-behaviour enrollment tests (F2); `application/modelo/_calculation_actions.py`.
+- [ ] `W02.P06.S10` - For each resolver-less Sheets-pull-only source kind register an explicit deferred disposition behind the standing source_diagnostics advisory and never on the manual_sources allowlist (atribucion_member M184, related_party_operation M232, foreign_asset M720, refund_operation M360 DEFER-with-advisory; `withholding M190/M193 is BUILT in S27, not deferred) (F3); `application/aggregation/_source_mesh.py + registry`.
+- [ ] `W02.P06.S27` - BUILD a ModeloSourceResolver for the withholding source kind (M190/M193 per-perceptor retencion rollup, the highest-value F3 pull-only kind) — a real .resolve() projecting the per-perceptor rows the Sheets assemble_* path produces — and enroll it in the live mesh with real-behaviour tests, replacing its DEFER-with-advisory disposition; `application/calculations/_withholding_resolver.py + application/modelo/_calculation_actions.py + tests`.
 
 ## Wave `W03` - Aggregation mechanism canonicalization
 
@@ -118,6 +125,8 @@ Drive iva (M390<-M303), sociedades (M200, M202 period-variant cumulative), and a
 
 - [ ] `W04.P12.S19` - Drive iva (M390-from-M303) and sociedades (M200, M202 period-variant cumulative) and audit-discovered domain fold-ins live + E2E; `registry iva/sociedades modelos; tests`.
 - [ ] `W04.P12.S20` - Re-baseline the affected enrollment and continuity suites against the live calculate path rather than the direct-call path; `application/calculations/tests + application/modelo/tests`.
+- [ ] `W04.P12.S28` - Prove each newly-enrolled DORMANT modelo fires aggregation live on the operator calculate path with an E2E real-adapter anti-tautology proof (M130 income via ledger_renta_income, M369 OSS/IOSS via ledger_oss, M349 invoices via collectible_invoice, M190/M193 withholding via the built resolver) and confirm the still-deferred M184/M232/M720/M360 each emit the standing source_diagnostics advisory rather than a silent blank (F6); `application/modelo/tests + entrypoints/cli/tests`.
+- [ ] `W04.P12.S29` - Close the Sheets-pull vs live-calculate drift (F5): unify the six assemble_* row-set functions, resolve_relations_from_local_store, and resolve_modelo_ledger_binding_values_from_repositories onto the one enrolled resolver set so both surfaces share one aggregation logic, and add a regression proving pull-path == calculate-path casilla values for a shared revision; `application/calculations/_row_set_assembly.py + _modelo_bindings.py + application/calculations/tests`.
 
 ## Wave `W05` - Codification and epic verification
 
@@ -127,7 +136,7 @@ Codify the ADR rule candidates and any audit-surfaced durable rules, and run an 
 
 Promote the ADR codification candidates (revision-resolution-is-law-determined; carried-observations-stamp-their-revision; calculation-source-canonical-mechanism; no-dormant-source-resolvers; relation-slot-bindings-declare-relation-source) and any audit-surfaced durable rule via the codify pipeline.
 
-- [ ] `W05.P13.S21` - Promote the ADR codification candidates and any audit-surfaced durable rule via the codify pipeline; `.vaultspec/rules/rules/project`.
+- [ ] `W05.P13.S21` - Promote the ADR and audit codification candidates via the codify pipeline: revision-resolution-is-law-determined and carried-observations-stamp-their-revision (period-revision ADR), calculation-source-canonical-mechanism and no-dormant-source-resolvers and relation-slot-bindings-declare-relation-source (aggregation ADR), and one-aggregation-path-pull-equals-calculate (census F5); `.vaultspec/rules/rules/project`.
 
 ### Phase `W05.P14` - Epic-close honesty review + verify
 
