@@ -152,32 +152,49 @@ is absent when all IVA is consumed; RED-before was confirmed by neutralising
 `source_diagnostics` and observing the advisory test fail. The operator now sees the
 unrouted-IVA advisory at calculate time.
 
-### Deferred to a successor campaign (re-affirmed)
+### Successor campaign (`modelo-iva-routing-carry`): both deferrals RESOLVED
 
-- **M303 special-IVA routing nuance.** The `modelo-303-iva-autorepercutido-intracomunitaria-cuota`
-  binding requires `flow_direction = inversion_sujeto_pasivo`, but the ledger's
-  `_flow_direction_for` only ever emits `REPERCUTIDO` / `SOPORTADO`, so the
-  intra-community-acquisition reverse-charge cuota is structurally unreachable from ledger
-  data; and 11 declarable categories remain unrouted in M303. These are now non-silent (the H1
-  advisory surfaces them) but still undeclared. They need LIVA art. 84 grounding for the
-  correct target casillas plus a flow-direction model fix. The "Item 2" closure above verified
-  base-casilla routing (59 vs 60) and category presence in the selector; it did not assert the
-  reverse-charge cuota value, which is the gap recorded here.
+The two items below were carried to the `modelo-iva-routing-carry` successor campaign (its
+research + ADR record the grounding and rulings) and are now closed, each landed under a
+code-review gate and verified together at HEAD (67 tests green across the combined surface).
 
-- **Local cross-period previous_filing carry.** The "Item 3" closure verified the manual
-  `--casilla` override path. Automatic local carry is not wired:
-  `PreviousFilingSourceResolver` is enrolled in no production source mesh, and the local `file`
-  verb does not persist observations to `CalculationObservationRepository` (automatic carry
-  works only via AEAT-remote capture). Wiring automatic local carry needs a design decision and
-  is carried to the successor campaign.
+- **M303 special-IVA routing — RESOLVED.** The root cause was the ledger classifier
+  `_flow_direction_for` never emitting `INVERSION_SUJETO_PASIVO`. Fixed: the classifier now
+  routes reverse-charge categories through `derive_flow_for_classification`, and net-zero
+  devengado/deducible bindings were added — interior reverse-charge boxes 13/37 (commit
+  `a9aca68fc`, LIVA art. 84) and intra-community-acquisition official-box parity boxes
+  10/11/36/37 (commit `f3b0cc777`, art. 13/15/84), the latter exposure-only so the resultado
+  is unchanged (no double-count). Import third-country deducible now routes to box 32/33 as a
+  real deduction (art. 17/92); box-59/60 were upgraded from generic art. 88/92 to the
+  substantive art. 25 / art. 21+22. The eight missing LIVA articles (7/13/15/17/20/22/25/26)
+  were grounded with verbatim BOE consolidated text (commit `df38a66e4`). The `#64` advisory
+  was refined to fire only on cuota-bearing unrouted categories (commit `068045d2b`); its
+  residual flagged set is now **empty** for every declarable category (each is routed or
+  grounded-as-cuota-less).
+
+- **Local cross-period `previous_filing` carry — RESOLVED.** Automatic local carry is now
+  wired (commit `10167440f`): local `file` persists the filed revision's observations as a
+  `RegistryModeloObservation` stamped `source_kind = "app_filing"` (deliberately NON-official —
+  it feeds calculate/draft but cannot satisfy the cross-period clean-state gate, so filing a
+  dependent period still requires real external evidence), and `PreviousFilingSourceResolver`
+  is enrolled in the calculate source mesh. Caller `--binding` overrides the carried value; the
+  resolver excludes the M303 IVA-compensation binding (owned by the iva-wallet decision).
+
+- **Process lesson (gate thoroughness).** The reverse-charge commit `a9aca68fc` passed its
+  code-review gate, but that gate ran a targeted test subset and did not catch that the new
+  interior bindings were missing from the binding-completeness lists, leaving three sibling
+  test files red. The next wave (`f3b0cc777`) caught and fixed them. A gate that adds or
+  relocates a registry binding should run the completeness/registry suite, not only the lane's
+  own new tests — recorded as a codification candidate.
 
 ### Provenance note
 
 This addendum was authored from a fresh context after a process crash. The crash orphaned a set
 of duplicate campaign commits; a commit-by-commit reconciliation confirmed every orphaned commit
 has a functional equivalent already on the branch, so no work was lost. The campaign is
-structurally complete (13/13) with H1 closed; the two deferrals above are formally carried to
-the successor campaign.
+structurally complete (13/13) with H1 closed; the two deferrals above were subsequently
+resolved by the `modelo-iva-routing-carry` successor campaign (see the resolution section
+above) — nothing was left behind.
 
 ---
 
