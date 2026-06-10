@@ -30,15 +30,24 @@ Chains:
   count. PROVEN LIVE.
 
 * M369 OSS/IOSS (``ledger_oss_aggregation``, :class:`OssIossLedgerSourceResolver`):
-  CARVED OUT. The resolver folds real ``OssIossLedgerCandidate`` substrate
-  correctly (proven here at the resolver-mesh boundary), but the live calculate
-  path hard-wires ``OssIossLedgerSourceResolver(candidates=())`` — there is NO
+  STOPGAP. The resolver folds real ``OssIossLedgerCandidate`` substrate correctly
+  (proven here at the resolver-mesh boundary), but the live calculate path
+  hard-wires ``OssIossLedgerSourceResolver(candidates=())`` — there is NO
   ledger/transaction -> OSS-candidate projection anywhere in the codebase
-  (``OssIossLedgerCandidate`` is only constructed in tests). So real seeded OSS
-  ledger data CANNOT fold through the live operator path today: every OSS casilla
-  resolves to a (claimed, non-advisory) zero. This is the same wiring-gap shape
-  found for M200<-M202. The gap and the proven resolver fold are both pinned
-  below.
+  (``OssIossLedgerCandidate`` is only constructed in tests and the Sheets
+  calc-sync caller). The projection is INFEASIBLE from any current live source:
+  neither the :class:`~aeat.domain.invoices.Invoice` / ``InvoiceLine`` model nor
+  the :class:`~aeat.domain.transactions.Transaction` model carries the OSS
+  ``regime`` axis (union / import / exterior) or the goods-vs-services
+  ``transaction_kind`` axis (``oss_union_services`` vs
+  ``oss_union_goods_distance_sale`` / ``oss_union_goods_interface_facilitated``)
+  the binding selectors require, and ``IvaCategory`` has no OSS member at all (its
+  ``INTRA_COMMUNITY_SUPPLY`` is the B2B clave-E M349 path, a different regime).
+  Rather than let every OSS cuota resolve to a SILENT claimed-zero, the resolver
+  now surfaces a non-blocking ``oss_no_live_source`` advisory per declared OSS
+  binding (W04.P12.S33) so an operator with OSS sales is told the cuotas are not
+  auto-computed and must be supplied manually. The advisory proof and the proven
+  resolver fold are both pinned below.
 
 Anti-tautological + real-adapter (no-tautological-calculation-tests,
 aeat-quality-gates): every seed set uses DISTINCT non-equal known values; each
@@ -443,7 +452,7 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
 
 
 # ---------------------------------------------------------------------------
-# Chain 2 — M369 OSS/IOSS (ledger_oss_aggregation): CARVED OUT (wiring gap)
+# Chain 2 — M369 OSS/IOSS (ledger_oss_aggregation): STOPGAP advisory (no live source)
 # ---------------------------------------------------------------------------
 
 _M369_BUCKET = "bucket-m369-oss-fold"
@@ -534,24 +543,25 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
     assert "ledger_oss_aggregation" in resolution.owned_sources
 
 
-def test_m369_live_path_cannot_fold_seeded_oss_data_documents_wiring_gap(
+def test_m369_live_path_surfaces_oss_no_live_source_advisory_not_silent_zero(
     m369_objects: SecureObjectRepository,
 ) -> None:
-    """CARVE-OUT: the live operator path supplies the OSS resolver EMPTY candidates.
+    """STOPGAP: a live M369 calculate surfaces the OSS no-live-source advisory.
 
     ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` hard-wires
-    ``OssIossLedgerSourceResolver(candidates=())``: there is no
-    ledger/transaction -> ``OssIossLedgerCandidate`` projection anywhere in the
-    codebase (``OssIossLedgerCandidate`` is constructed only in tests and the
-    Sheets calc-sync caller). So a live M369 calculate folds NOTHING from the
-    bucket — every OSS cuota resolves to a CLAIMED zero (the source is owned, so
-    no ``unhandled_binding_source`` advisory fires; it is simply empty).
+    ``OssIossLedgerSourceResolver(candidates=())`` because no bucket substrate can
+    be projected into an ``OssIossLedgerCandidate`` (neither the invoice nor the
+    transaction model carries the OSS ``regime`` or goods/services
+    ``transaction_kind`` axis the selectors require; ``IvaCategory`` has no OSS
+    member). The OSS cuotas therefore still resolve to zero on the live path — but
+    the resolver now surfaces a non-blocking ``oss_no_live_source`` advisory per
+    declared OSS binding so the zero is NOT silent: an operator with OSS sales is
+    told the cuotas are not auto-computed and must be supplied manually
+    (no-silent-under-declaration; parity with the deferred-detalle-kinds advisory).
 
-    This test pins the OBSERVED current behaviour and fails loudly if it drifts.
-    The fix — a substrate classifier that projects bucket ledger lines into
-    ``OssIossLedgerCandidate`` records and feeds them to the live resolver — is a
-    a separate wiring-gap finding (the same shape found for M200<-M202), not a
-    change made here. The resolver fold itself is sound (companion test above).
+    This is the stopgap pending an invoice/transaction-model OSS axis that would
+    make the substrate projection feasible. The resolver fold itself is already
+    sound (companion test above) — only the live-path candidate source is absent.
     """
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=m369_objects)
@@ -577,12 +587,28 @@ def test_m369_live_path_cannot_fold_seeded_oss_data_documents_wiring_gap(
     )
 
     assert isinstance(result, BucketAggregationCalculationResult)
-    # Every OSS cuota is a claimed zero on the live path — nothing folds because
-    # candidates come in empty. This is the documented wiring gap.
+    # The OSS cuotas are still zero on the live path — nothing folds because no
+    # candidate projection exists. The STOPGAP makes that zero non-silent.
     assert Decimal(result.revision.casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]) == Decimal("0")
     assert Decimal(result.revision.casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == Decimal("0")
-    # The source IS claimed (resolver enrolled) — no unhandled advisory, but no
-    # value either. The gap is the missing candidate projection, not a blank-source.
+
+    # The stopgap advisory fires: one oss_no_live_source diagnostic per declared
+    # OSS binding (the three esquema-union bindings), each naming its binding id.
+    oss_advisories = [
+        diag
+        for diag in result.source_diagnostics
+        if diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
+    ]
+    advised_bindings = {diag.binding_id for diag in oss_advisories}
+    assert advised_bindings == {
+        _M369_DE_SERVICES_BINDING,
+        _M369_FR_SERVICES_BINDING,
+        _M369_DE_GOODS_BINDING,
+    }, f"expected an oss_no_live_source advisory per OSS binding; got {advised_bindings}"
+    assert all(diag.message for diag in oss_advisories)
+    # The source is OWNED (resolver enrolled) — the silent-zero failure mode would
+    # be the unhandled_binding_source advisory NOT firing AND no oss_no_live_source
+    # advisory either; assert the boundary advisory is not the one that fired.
     assert not any(
         diag.source_kind == "ledger_oss_aggregation" and diag.reason == "unhandled_binding_source"
         for diag in result.source_diagnostics
