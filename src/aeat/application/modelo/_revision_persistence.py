@@ -35,6 +35,8 @@ from ...domain.modelos._protocols import (
 from ...domain.modelos._repository import upsert_work_unit
 from ...domain.modelos._row_models import ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue
+from ..calculations import CalculationObservationRepository
+from ._filed_revision_observation import persist_filed_revision_observation
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by modelo actions."""
@@ -201,10 +203,21 @@ def persist_filed_revision(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    calculation_observation_repository: CalculationObservationRepository | None = None,
 ) -> ModeloRecord:
     """Persist the filing transition for a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
     Uses :class:`CalculationRevision` for the source revision.
+
+    When ``calculation_observation_repository`` is supplied the filed revision's
+    casilla observations are additionally persisted into the cross-period
+    observation store (via :func:`persist_filed_revision_observation`,
+    co-emitted with the ``MODELO_FILED`` event) so a later period's
+    ``calculate`` can carry the filed values forward automatically through the
+    ``previous_filing`` resolver. The record is stamped with the NON-official
+    ``app_filing`` source_kind and therefore never satisfies the cross-period
+    clean-state filing gate. This is a second projection of the single-writer
+    filing transition, not a parallel write path.
     """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
@@ -321,6 +334,20 @@ def persist_filed_revision(
             "supersedes_filing_record_id": prior_current.filing_record_id if prior_current is not None else "",
         },
     )
+
+    # Cross-period carry projection (co-emitted with MODELO_FILED above): record
+    # the filed casilla observations under the NON-official app_filing source so
+    # a later period's calculate carries them forward through the previous_filing
+    # resolver. Runs after the catalogue saves succeed so a failed filing never
+    # leaves a carry row behind.
+    if calculation_observation_repository is not None:
+        persist_filed_revision_observation(
+            revision=filed_target,
+            work_unit=work_unit,
+            repository=calculation_observation_repository,
+            captured_at=now,
+        )
+
     return new_filing
 
 
