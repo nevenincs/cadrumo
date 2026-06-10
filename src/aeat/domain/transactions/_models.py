@@ -47,6 +47,19 @@ from ._raw_transaction import RawTransaction
 def derive_transaction_id(raw: RawTransaction) -> str:
     """Return the stable transaction hash for one raw transaction.
 
+    This content hash is the single authority for storage, audit, and
+    machine consumers, and it intentionally **changes when an
+    id-affecting fact is edited** (an ``update`` re-derives it and records
+    the superseded id as a ``previous_transaction_id`` on the heir's
+    :class:`TransactionEditLineageEntry` chain). The operator-facing
+    *lineage* convenience that lets an old, written-down handle still
+    resolve to the current row through ``ledger history`` / ``view`` /
+    ``track`` (see
+    :func:`aeat.application.ledger.resolve_lineage_transaction_id`) is a
+    **read-side lookup layer over this authoritative id**; it never
+    freezes or re-mints the id, so the content-addressing invariant import
+    dedup relies on is untouched.
+
     Args:
         raw: The upstream immutable raw transaction emitted by a provider.
 

@@ -33,7 +33,7 @@ separate, legally-grounded ADR.
 from __future__ import annotations
 
 import shutil
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
@@ -50,6 +50,7 @@ from ...domain.buckets import (
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.categories import SpendingCategory
+from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassifier,
@@ -57,6 +58,7 @@ from ...domain.transactions import (
     TransactionNotFoundError,
     TransactionValidationError,
     prompt_spec_with_every_spending_category,
+    prompt_spec_with_saturation_fields,
     resolve_classifier,
     set_classification,
 )
@@ -67,7 +69,8 @@ from ._actions_common import (
     _save_transaction_catalogue_and_events,
     _transaction_repository,
 )
-from ._models import ManualLedgerTransactionResult
+from ._actions_manual import update_manual_transaction_fields
+from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
 
 _logger = get_logger(__name__)
 
@@ -347,12 +350,267 @@ def apply_llm_classification(
     return _result(bucket_id, updated_transaction, (event.event_id,))
 
 
+# ── stage-2 saturation: grounded rich tax metadata ────────────────
+
+
+class LLMSaturatedSuggestion(BaseModel):
+    """A saturated LLM suggestion: business decision + grounded tax substrate.
+
+    Extends the stage-1 decision (classification, expense category) with the
+    IVA situation the model SELECTED and the regulated euro figures the system
+    DERIVED from the registry rate — never numbers the model emitted. Each
+    field carries its origin so the operator reviewing the preview can see
+    which values are model selections (``llm:``) and which are system
+    derivations (``derived:``).
+
+    When the selected :attr:`iva_category` has no simple derivable Spanish
+    domestic rate (intra-community, reverse-charge, export, import, recargo,
+    régimen simplificado, not-subject) the numbers are left unset and
+    :attr:`derivation_note` states why the operator must complete them — the
+    system never guesses.
+
+    Produced by :func:`saturate_llm_classification`; consumed for review and,
+    on accept, by :func:`apply_saturated_llm_classification`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1)
+    provider: LLMProvider
+    provenance: str = Field(min_length=1)
+    classification: BusinessClassification
+    category: SpendingCategory | None = None
+    confidence: Decimal
+    reason: str = Field(min_length=1)
+    iva_category: IvaCategory | None = None
+    business_pct: Decimal | None = None
+    iva_rate: Decimal | None = None
+    taxable_base: Decimal | None = None
+    iva_amount: Decimal | None = None
+    rate_derivable: bool = False
+    derivation_note: str = ""
+
+
+def _resolve_saturation_classifier(provider: LLMProvider) -> LLMClassifier:
+    """Resolve the production classifier for ``provider`` with the saturation prompt.
+
+    Builds the classifier with
+    :func:`aeat.domain.transactions.prompt_spec_with_saturation_fields` so the
+    model also selects an expense :class:`SpendingCategory` and an
+    :class:`aeat.domain.iva.IvaCategory` from the registry-grounded allow-list,
+    keeping the allow-list-guarded ``parse_response`` path intact.
+    """
+    return resolve_classifier(provider.value, spec=prompt_spec_with_saturation_fields())
+
+
+def _derive_iva_substrate(
+    iva_category: IvaCategory,
+    *,
+    gross: Decimal,
+    on_date: date,
+) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
+    """Derive ``(iva_rate, taxable_base, iva_amount, derivable, note)`` for a category.
+
+    Resolves the registry rate for ``iva_category`` via
+    :func:`aeat.domain.iva.resolve_category_rate` and, when derivable, splits
+    the absolute ``gross`` at that rate with
+    :func:`aeat.domain.iva.split_gross_at_rate`. The model never supplies these
+    numbers; they trace to the registry rate and a deterministic inverse split.
+
+    Returns the derived rate/base/amount (or ``None`` for each when the
+    category has no simple derivable Spanish domestic rate), the
+    ``derivable`` flag, and an operator-facing ``note`` explaining a
+    non-derivable category.
+    """
+    resolution = resolve_category_rate(iva_category, on_date=on_date)
+    if not resolution.derivable or resolution.rate is None:
+        return None, None, None, False, resolution.reason
+    taxable_base, iva_amount = split_gross_at_rate(abs(gross), resolution.rate)
+    return resolution.rate, taxable_base, iva_amount, True, ""
+
+
+def saturate_llm_classification(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    provider: LLMProvider,
+    classifier: LLMClassifier | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    on_date: date | None = None,
+) -> LLMSaturatedSuggestion:
+    """Run the saturating LLM classifier for one transaction and return a suggestion.
+
+    Loads the transaction, runs the injected classifier (default-resolved from
+    ``provider`` with the saturation prompt spec), then DERIVES the regulated
+    tax substrate from the model's selected :class:`aeat.domain.iva.IvaCategory`
+    using the registry rate and a deterministic inverse split. **Persists
+    nothing** — this is the suggest step; rejecting a suggestion is simply not
+    applying it.
+
+    Args:
+        bucket_id: Active profile bucket id.
+        transaction_id: Stable id of the transaction to classify.
+        provider: Subprocess provider to resolve when ``classifier`` is None.
+        classifier: Injected classifier (dependency injection for tests). When
+            None, resolved via :func:`resolve_classifier` for ``provider`` with
+            the saturation prompt spec.
+        transaction_repository: Injected catalogue repository.
+        on_date: Effective date used to resolve the registry rate; defaults to
+            the transaction's value date (or booked date).
+
+    Returns:
+        A :class:`LLMSaturatedSuggestion` carrying the model's selections and
+        the system-derived euro substrate.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        LLMClassifierError: When the classifier fails (provider CLI
+            unavailable, hallucinated out-of-allow-list value).
+    """
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    transaction = repository.load().get(transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+    resolved_classifier = classifier if classifier is not None else _resolve_saturation_classifier(provider)
+    response = resolved_classifier.classify(transaction)
+    effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
+
+    iva_rate: Decimal | None = None
+    taxable_base: Decimal | None = None
+    iva_amount: Decimal | None = None
+    rate_derivable = False
+    derivation_note = ""
+    if response.iva_category is not None:
+        iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _derive_iva_substrate(
+            response.iva_category,
+            gross=transaction.raw.amount,
+            on_date=effective_date,
+        )
+    _logger.info(
+        "llm saturate: transaction=%s provider=%s classification=%s iva_category=%s derivable=%s",
+        transaction_id,
+        provider.value,
+        response.classification.value,
+        response.iva_category.value if response.iva_category is not None else "",
+        rate_derivable,
+    )
+    return LLMSaturatedSuggestion(
+        transaction_id=transaction_id,
+        provider=provider,
+        provenance=resolved_classifier.decided_by,
+        classification=response.classification,
+        category=response.category,
+        confidence=response.confidence,
+        reason=response.reason,
+        iva_category=response.iva_category,
+        business_pct=response.business_pct,
+        iva_rate=iva_rate,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
+        rate_derivable=rate_derivable,
+        derivation_note=derivation_note,
+    )
+
+
+def apply_saturated_llm_classification(
+    suggestion: LLMSaturatedSuggestion,
+    *,
+    bucket_id: str,
+    business_pct: Decimal | None = None,
+    actor: str = "operator",
+    source_command: str = "aeat app ledger classify --llm --saturate --apply",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Persist an accepted saturated suggestion through the manual write path.
+
+    Composes the established single-writer manual-command write
+    (:func:`update_manual_transaction_fields`) rather than re-implementing it,
+    so the regulated fields land with their existing validators plus the
+    ``gross == taxable_base + iva_amount`` invariant, and stamps
+    ``classified_by`` with the suggestion's ``llm:<model>`` provenance via
+    ``classified_by_override``.
+
+    The non-regulated business decision (classification, expense category) and
+    the model-selected ``iva_category`` are persisted; the regulated euro
+    figures are persisted only when the category was derivable (a
+    non-derivable category leaves the operator to complete the numbers). A
+    ``MIXED`` suggestion requires a business percentage — the model's proposed
+    ``business_pct`` is used unless the caller overrides it; apply refuses
+    instructively when neither is present.
+
+    Args:
+        suggestion: The accepted :class:`LLMSaturatedSuggestion`.
+        bucket_id: Active profile bucket id.
+        business_pct: Operator override for the MIXED business percentage;
+            falls back to the model's proposed ``business_pct``.
+        actor: Operator identity for the audit event.
+        source_command: Source-command label recording the operator's verb.
+        transaction_repository: Injected catalogue repository.
+        bucket_event_repository: Injected audit-event repository.
+        occurred_at: Override clock for deterministic tests.
+
+    Returns:
+        A :class:`ManualLedgerTransactionResult` reflecting the persisted state.
+
+    Raises:
+        TransactionValidationError: When a ``MIXED`` suggestion is applied with
+            no business percentage available.
+    """
+    classification = suggestion.classification
+    effective_business_pct = business_pct if business_pct is not None else suggestion.business_pct
+    if classification is BusinessClassification.MIXED and effective_business_pct is None:
+        raise TransactionValidationError(
+            "applying a MIXED saturated suggestion requires a business percentage; "
+            "pass --business-pct (the model proposes the split direction but the percentage is operator-owned)",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+
+    patch_fields: dict[str, object] = {"business_classification": classification}
+    if classification is BusinessClassification.MIXED:
+        patch_fields["business_pct"] = effective_business_pct
+    category_carrying = classification in {BusinessClassification.BUSINESS, BusinessClassification.MIXED}
+    if category_carrying and suggestion.category is not None:
+        patch_fields["category_id"] = suggestion.category.value
+    if suggestion.iva_category is not None:
+        patch_fields["iva_category"] = suggestion.iva_category
+    if suggestion.rate_derivable:
+        patch_fields["taxable_base"] = suggestion.taxable_base
+        patch_fields["iva_rate"] = suggestion.iva_rate
+        patch_fields["iva_amount"] = suggestion.iva_amount
+    patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
+
+    result = update_manual_transaction_fields(
+        bucket_id=bucket_id,
+        transaction_id=suggestion.transaction_id,
+        patch=patch,
+        actor=actor,
+        source_command=source_command,
+        classified_by_override=suggestion.provenance,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=bucket_event_repository,
+        occurred_at=occurred_at,
+    )
+    _logger.info(
+        "llm saturate apply: transaction=%s classified_by=%s iva_category=%s derived=%s",
+        suggestion.transaction_id,
+        suggestion.provenance,
+        suggestion.iva_category.value if suggestion.iva_category is not None else "",
+        suggestion.rate_derivable,
+    )
+    return result
+
+
 __all__ = [
     "LLMClassificationSuggestion",
     "LLMProvider",
     "LLMProviderAvailability",
+    "LLMSaturatedSuggestion",
     "apply_llm_classification",
+    "apply_saturated_llm_classification",
     "available_llm_providers",
     "is_llm_provider_available",
+    "saturate_llm_classification",
     "suggest_llm_classification",
 ]

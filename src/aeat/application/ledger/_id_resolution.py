@@ -1,7 +1,8 @@
 """Transaction-id prefix resolution and display-id width computation.
 
-Provides the two cross-cutting helpers required by the ledger CLI surface
-to deliver the dual `full_id` / `display_id` identity contract:
+Provides the cross-cutting helpers required by the ledger CLI surface to
+deliver the dual `full_id` / `display_id` identity contract and the stable
+operator lineage handle across edits:
 
 - :func:`compute_display_id_width` returns the minimum prefix width that
   keeps every transaction id in the supplied set uniquely addressable,
@@ -11,17 +12,31 @@ to deliver the dual `full_id` / `display_id` identity contract:
   returns the matching canonical 64-character hash, raising
   :exc:`aeat.domain.transactions.TransactionIdPrefixError` on
   zero-match or ambiguous-prefix conditions.
+- :func:`resolve_lineage_transaction_id` extends that resolver with a
+  read-side lineage lookup: when a prefix names no *live* row but it
+  (or an unambiguous prefix of it) names a superseded id in some live
+  row's edit-lineage chain, the resolver returns that current row's id,
+  so an old handle written down before an edit keeps answering.
 
 The matching rule: a prefix matches a full id when the full id starts
 with the prefix (lowercase, hex). A prefix that equals a full id resolves
 trivially. Empty input and non-hex characters are refused.
+
+Lineage resolution is a *read-side lookup convenience over the
+authoritative content-addressed id*, not a change to how ids are minted.
+The content hash (see
+:func:`aeat.domain.transactions.derive_transaction_id`) remains the single
+authority for storage, audit, and machine consumers; this module never
+freezes an id across an edit. It only lets a historical handle resolve to
+the row that now carries the edited content.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ...domain.transactions import TransactionIdPrefixError
+from ...domain.transactions import Transaction, TransactionCatalogue, TransactionIdPrefixError
+from ._actions_common import _transaction_modelo_source_ids
 
 MINIMUM_DISPLAY_ID_WIDTH = 8
 _FULL_ID_LENGTH = 64
@@ -86,8 +101,92 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
     return matches[0]
 
 
+def _lineage_handles(transaction: Transaction) -> tuple[str, ...]:
+    """Return every id that addresses ``transaction`` across its edit lineage.
+
+    Reuses the finalized-modelo guard's lineage walker
+    (:func:`aeat.application.ledger._actions_common._transaction_modelo_source_ids`)
+    so the read-side handle set and the write-side guard set are computed
+    by one authority: the transaction's own current id plus every
+    ``previous_transaction_id`` recorded in its
+    :class:`aeat.domain.transactions.TransactionEditLineageEntry` chain.
+    """
+    return _transaction_modelo_source_ids(transaction)
+
+
+def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue) -> str:
+    """Resolve ``prefix`` to a live row, following edit lineage when needed.
+
+    The resolution order is:
+
+    1. Try :func:`resolve_transaction_id` against the live catalogue ids.
+       A current id, a split parent left in the catalogue, an archived
+       merged child, or an unambiguous prefix of any of them resolves
+       here unchanged. This preserves the existing resolver's behaviour
+       exactly for every handle that names a row still in the catalogue.
+    2. When step 1 finds no live row, treat ``prefix`` as a *historical*
+       handle and walk every live row's edit-lineage chain. An
+       ``update`` that edits an id-affecting fact re-derives the
+       content-addressed id and removes the old id from the catalogue,
+       recording it as a ``previous_transaction_id`` on the heir's
+       :class:`aeat.domain.transactions.TransactionEditLineageEntry`
+       chain. If ``prefix`` (or an unambiguous prefix of it) names a
+       superseded id in exactly one live row's lineage, that row's
+       *current* id is returned.
+
+    This is a read-side lookup convenience over the authoritative
+    content-addressed id: the id is never frozen across an edit, and the
+    content hash stays the single storage/audit authority. The lineage
+    chain is the same substrate the finalized-modelo guard already walks,
+    so no new storage is introduced.
+
+    Args:
+        prefix: A user-supplied prefix or full id. Lowercase hex.
+        catalogue: The active bucket's loaded
+            :class:`aeat.domain.transactions.TransactionCatalogue`.
+
+    Returns:
+        The unique full transaction id of the live row that ``prefix``
+        addresses — directly, or through its edit lineage.
+
+    Raises:
+        TransactionIdPrefixError: When ``prefix`` is empty, non-hex, too
+            long, names no live row and no lineage handle, or matches
+            more than one live row or lineage row ambiguously.
+    """
+    live_ids = tuple(transaction.transaction_id for transaction in catalogue.values())
+    try:
+        return resolve_transaction_id(prefix, live_ids)
+    except TransactionIdPrefixError as live_error:
+        if "no transaction matches" not in str(live_error):
+            # Empty / non-hex / too-long / ambiguous-live: the prefix is
+            # malformed or already ambiguous over live rows. Lineage
+            # resolution cannot make it less ambiguous, so surface the
+            # original refusal unchanged.
+            raise
+        normalized = prefix.strip().lower()
+        heirs: dict[str, str] = {}
+        for transaction in catalogue.values():
+            for handle in _lineage_handles(transaction):
+                if handle == transaction.transaction_id:
+                    continue
+                if handle.startswith(normalized):
+                    heirs[handle] = transaction.transaction_id
+        current_ids = {transaction.transaction_id for transaction in catalogue.values()}
+        resolved = {current for current in heirs.values() if current in current_ids}
+        if not resolved:
+            raise
+        if len(resolved) > 1:
+            joined = ", ".join(sorted(resolved))
+            raise TransactionIdPrefixError(
+                f"transaction id prefix {prefix!r} matches {len(resolved)} transactions: {joined}"
+            ) from live_error
+        return next(iter(resolved))
+
+
 __all__ = [
     "MINIMUM_DISPLAY_ID_WIDTH",
     "compute_display_id_width",
+    "resolve_lineage_transaction_id",
     "resolve_transaction_id",
 ]

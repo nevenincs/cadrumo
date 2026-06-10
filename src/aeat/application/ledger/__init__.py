@@ -15,7 +15,9 @@ Major declarations:
 * :func:`preflight_ledger_tax_readiness` with :class:`LedgerPreflightReport`
   and :class:`LedgerPreflightIssue` — the readiness gate that reports rows
   missing a category, base, IVA rate, currency, or prorrata reference.
-* :func:`resolve_transaction_id` — the unambiguous-prefix id resolver.
+* :func:`resolve_transaction_id` — the unambiguous-prefix id resolver, and
+  :func:`resolve_lineage_transaction_id` — its read-side lineage-aware
+  variant that resolves a superseded (pre-edit) handle to the live row.
 * The typed command and result records (:class:`LedgerSourceImportCommand`,
   :class:`LedgerImportOperationResult`, :class:`LedgerReviewQueryResult`,
   :class:`LedgerStatusReport`, and siblings) that carry each operation
@@ -78,15 +80,19 @@ from ._evidence import (
 from ._id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,
+    resolve_lineage_transaction_id,
     resolve_transaction_id,
 )
 from ._llm_classification import (
     LLMClassificationSuggestion,
     LLMProvider,
     LLMProviderAvailability,
+    LLMSaturatedSuggestion,
     apply_llm_classification,
+    apply_saturated_llm_classification,
     available_llm_providers,
     is_llm_provider_available,
+    saturate_llm_classification,
     suggest_llm_classification,
 )
 from ._models import (
@@ -169,6 +175,7 @@ __all__ = [
     "LLMClassificationSuggestion",
     "LLMProvider",
     "LLMProviderAvailability",
+    "LLMSaturatedSuggestion",
     "LedgerCatalogueResetReport",
     "LedgerClassificationRuleRepository",
     "LedgerExportCommand",
@@ -212,6 +219,7 @@ __all__ = [
     "add_classification_rule",
     "apply_classification_rules",
     "apply_llm_classification",
+    "apply_saturated_llm_classification",
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
     "available_llm_providers",
@@ -239,8 +247,10 @@ __all__ = [
     "query_ledger_review_rows",
     "remove_manual_transaction",
     "reset_ledger_catalogue",
+    "resolve_lineage_transaction_id",
     "resolve_transaction_id",
     "restore_manual_transaction",
+    "saturate_llm_classification",
     "set_usage_ratio",
     "split_transaction",
     "stash_manual_transaction",
