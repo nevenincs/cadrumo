@@ -707,3 +707,21 @@ ignore_imports =
     aeat.application.modelo.tests.test_selectors -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_work_addressing -> aeat.tests.secure_sql
     aeat.application.workflow.tests.test_active_profile_resolution -> aeat.tests.secure_sql
+    aeat.application.aggregation.tests.test_period_boundary_authority -> aeat.entrypoints.cli._common
+    aeat.application.ledger.tests.test_evidence_input -> aeat.adapters.persistence.storage.attachment
+    aeat.application.ledger.tests.test_evidence_input -> aeat.adapters.persistence.storage.sql
+    aeat.application.ledger.tests.test_evidence_input -> aeat.tests.secure_sql
+    aeat.application.ledger.tests.test_llm_evidence_wiring -> aeat.tests.secure_sql
+    aeat.application.live.tests.test_justificante_reconcile_from_persisted -> aeat.adapters.outbound.aeat.auth
+    aeat.application.live.tests.test_justificante_reconcile_from_persisted -> aeat.adapters.outbound.aeat.sede
+    aeat.application.live.tests.test_justificante_reconcile_from_persisted -> aeat.tests
+    aeat.application.live.tests.test_justificante_reconcile_from_persisted -> aeat.tests.secure_sql
+    aeat.domain.modelos.tests.test_ledger_filing_evidence_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.modelos.tests.test_ledger_filing_evidence_roundtrip -> aeat.adapters.persistence.storage.sql
+    aeat.domain.modelos.tests.test_ledger_filing_evidence_roundtrip -> aeat.tests.secure_sql
+    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.adapters.persistence.storage.sql
+    aeat.application.calculations.tests.test_pull_path_calculate_path_casilla_parity -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.adapters.persistence.storage.sql
+    aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.adapters.persistence.storage.sql
+    aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.tests.secure_sql
