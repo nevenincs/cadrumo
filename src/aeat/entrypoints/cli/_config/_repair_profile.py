@@ -1,4 +1,8 @@
-"""Profile repair command registration for ``aeat config repair``."""
+"""Profile repair command registration for ``aeat config repair``.
+
+Reads the active :class:`UserProfileRecord` through the injected record reader
+to diagnose and repair the bucket-backed profile state.
+"""
 
 from __future__ import annotations
 

@@ -1,6 +1,8 @@
 """Typed input bundle for modelo work calculation.
 
-Use of :class:`CalculationRevision` for compliance.
+Use of :class:`CalculationRevision` for compliance. Resolves the work unit's
+:class:`ModeloRevision` to guard each casilla key and data type against the
+revision's registry-declared casilla set.
 """
 
 from __future__ import annotations

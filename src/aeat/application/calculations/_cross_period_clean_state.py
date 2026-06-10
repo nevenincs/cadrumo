@@ -4,7 +4,8 @@ Used by: :mod:`~aeat.application.calculations._calculate` to verify cross-period
 
 Use of :class:`~aeat.domain.calculations.registry.RegistrySnapshot` and
 :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` for
-compliance.
+compliance. Reads filed :class:`ModeloRecord` rows from the record catalogue
+to prove a dependent period's upstream filings carry official evidence.
 """
 
 from __future__ import annotations
