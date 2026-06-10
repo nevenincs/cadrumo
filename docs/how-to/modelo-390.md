@@ -9,11 +9,25 @@ self-assessments.
 Tributaria (AEAT). Export creates a local fichero-BOE file that you upload
 through the official AEAT channel yourself.
 
-For the lifecycle model behind work units, calculation revisions, verification,
-local filing records, and exact IDs, see
-[How filings, work units, and calculation revisions fit together](filing-spine.md).
+## The filing task
 
-## Before you create the annual draft
+Modelo 390 is the annual summary of your quarterly IVA filings. To prepare it:
+
+1. Prepare and review the four quarterly Modelo 303 periods first.
+2. Create a Modelo 390 draft for the annual period (`--period 0A`).
+3. Calculate the annual summary from your year's ledger and the 303 values.
+4. Review the calculated totals against your quarterly records.
+5. Verify the draft is complete.
+6. Export the annual file.
+7. Upload the file at the AEAT portal yourself and keep the justificante.
+
+The rest of this guide walks through these steps with the checks each one
+needs. To understand how the tool organises the filing work behind the
+commands, read
+[How filings, work units, and calculation revisions fit together](filing-spine.md)
+after this guide.
+
+## Setup steps before you start
 
 Start with the local filing context:
 
@@ -242,8 +256,9 @@ Export the verified or locally filed revision:
 aeat app modelo export --modelo 390 --year 2025 --period 0A --output ./modelo-390-2025.boe
 ```
 
-Upload the exported file through AEAT's official channel. After filing, keep the
-justificante and reconcile it locally:
+Upload the exported file through AEAT's official channel - the full checklist
+is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md). After
+filing, keep the justificante and reconcile it locally:
 
 ```bash
 aeat app modelo work file --modelo 390 --year 2025 --period 0A

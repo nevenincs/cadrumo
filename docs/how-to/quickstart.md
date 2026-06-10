@@ -150,6 +150,9 @@ The final filing step is outside `aeat`:
 3. Upload the exported `.boe` file.
 4. Review, sign, and keep the justificante AEAT issues after filing.
 
+The full handoff checklist, including what to do when the upload goes wrong,
+is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md).
+
 After a real filing, you can record the local filing marker:
 
 ```bash
