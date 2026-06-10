@@ -7,9 +7,24 @@ from typer.testing import CliRunner
 
 from ..locales._ast_scanner import scan_namespace_markers, scan_source_tree
 from ..locales.cli import app
-from ..locales.manager import LocaleError, LocaleManager
+from ..locales.manager import LocaleError, LocaleManager, LocaleNode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _leaf(data: dict[str, LocaleNode], *keys: str) -> str:
+    """Walk a nested locale tree to a string leaf, asserting each level is a dict.
+
+    ``LocaleNode`` is the recursive ``str | dict`` union, so chained
+    ``data[a][b]`` subscripting is not type-safe; this helper narrows each
+    intermediate node to a dict and the final node to a str.
+    """
+    node: LocaleNode = data
+    for key in keys:
+        assert isinstance(node, dict), f"expected dict at {key!r}, got {type(node).__name__}"
+        node = node[key]
+    assert isinstance(node, str), f"expected str leaf, got {type(node).__name__}"
+    return node
 
 
 @pytest.fixture(scope="module")
@@ -74,9 +89,10 @@ def test_set_locale_value_updates_one_leaf(tmp_path: Path):
 
     assert written_path == locale_path
     data = temp_manager.load_locale(locale_path)
-    aggregate = data["cli"]["app"]["modelo"]["aggregate"]
-    assert aggregate["json_validation_error"] == "%{flag} no es válido: %{details}."
-    assert aggregate["json_parse_error"] == "{flag} debe ser un objeto JSON."
+    assert _leaf(data, "cli", "app", "modelo", "aggregate", "json_validation_error") == (
+        "%{flag} no es válido: %{details}."
+    )
+    assert _leaf(data, "cli", "app", "modelo", "aggregate", "json_parse_error") == "{flag} debe ser un objeto JSON."
 
 
 def test_set_locale_value_preserves_multiline_value_roundtrip(tmp_path: Path):
@@ -110,8 +126,8 @@ def test_set_locale_value_preserves_multiline_value_roundtrip(tmp_path: Path):
     temp_manager.set_locale_value("es", "wizard.errors.unsupported_console", value)
 
     data = temp_manager.load_locale(locale_path)
-    assert data["wizard"]["errors"]["unsupported_console"] == value
-    assert data["wizard"]["errors"]["other"] == "intacto"
+    assert _leaf(data, "wizard", "errors", "unsupported_console") == value
+    assert _leaf(data, "wizard", "errors", "other") == "intacto"
 
 
 def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: Path):
@@ -131,7 +147,7 @@ def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: P
 
     assert "    set_locale_help: 'Código de locale.'\n" in locale_path.read_text(encoding="utf-8")
     data = temp_manager.load_locale(locale_path)
-    assert data["cli"]["locales"]["set_locale_help"] == "Código de locale."
+    assert _leaf(data, "cli", "locales", "set_locale_help") == "Código de locale."
 
 
 def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):
