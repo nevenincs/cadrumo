@@ -14,6 +14,7 @@ from contextlib import redirect_stdout
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
+from typing import cast
 
 import click
 import pytest
@@ -136,9 +137,14 @@ def _ledger_help_by_command() -> dict[str, str]:
     )
     assert isinstance(group, vendored_command)
     assert hasattr(group, "commands")
-    parent = group.make_context("ledger", [], resilient_parsing=True)
-    help_by_command = {"ledger": _render_click_help(group, parent)}
-    for name, command in group.commands.items():
+    # The runtime asserts above prove ``group`` is the vendored TyperGroup
+    # (command-group shaped). It is structurally identical to upstream
+    # click.Group; the casts bridge the static vendored/upstream duality so the
+    # help-rendering helpers and ``.commands`` map type-check against click.
+    click_group = cast(click.Group, group)
+    parent = click_group.make_context("ledger", [], resilient_parsing=True)
+    help_by_command = {"ledger": _render_click_help(click_group, parent)}
+    for name, command in click_group.commands.items():
         ctx = command.make_context(name, ["--help"], parent=parent, resilient_parsing=True)
         help_by_command[name] = _render_click_help(command, ctx)
     return help_by_command
