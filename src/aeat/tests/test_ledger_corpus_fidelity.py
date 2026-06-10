@@ -20,6 +20,7 @@ import json
 from datetime import UTC, date, datetime
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -56,11 +57,11 @@ class _FixedRateProvider:
         return self._rates.get(currency.upper())
 
 
-def _load_manifest() -> dict:
+def _load_manifest() -> dict[str, Any]:
     return json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
 
 
-def _match_rule(description: str, rules: list[dict]) -> dict | None:
+def _match_rule(description: str, rules: list[dict[str, Any]]) -> dict[str, Any] | None:
     for rule in rules:
         if rule["match"] in description:
             return rule
@@ -71,7 +72,9 @@ def _q(value: Decimal) -> Decimal:
     return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
-def _derive_base_iva(rule: dict, native_amount_abs: Decimal) -> tuple[Decimal | None, Decimal | None, Decimal | None]:
+def _derive_base_iva(
+    rule: dict[str, Any], native_amount_abs: Decimal
+) -> tuple[Decimal | None, Decimal | None, Decimal | None]:
     """Return (taxable_base, iva_rate, iva_amount) per the oracle base_mode."""
     mode = rule["base_mode"]
     rate = Decimal(rule["iva_rate"]) if rule.get("iva_rate") else None
@@ -90,7 +93,7 @@ def _derive_base_iva(rule: dict, native_amount_abs: Decimal) -> tuple[Decimal | 
     raise AssertionError(f"unknown base_mode {mode!r}")
 
 
-def _build_transactions() -> list[tuple[Transaction, dict, str]]:
+def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
     """Import every corpus row and classify it per the oracle.
 
     Returns a list of (transaction, rule, currency) triples.
@@ -101,7 +104,7 @@ def _build_transactions() -> list[tuple[Transaction, dict, str]]:
     fx = CurrencyNormalizationService(rate_provider=_FixedRateProvider(fx_rates))
     provider = CsvProvider()
 
-    built: list[tuple[Transaction, dict, str]] = []
+    built: list[tuple[Transaction, dict[str, Any], str]] = []
     for account in manifest["accounts"]:
         for raw in provider.ingest(_CORPUS / account["file"]):
             rule = _match_rule(raw.description, rules)
@@ -122,7 +125,7 @@ def _build_transactions() -> list[tuple[Transaction, dict, str]]:
 
             taxable_base, iva_rate, iva_amount = _derive_base_iva(rule, abs(raw.amount))
 
-            payload: dict = {
+            payload: dict[str, Any] = {
                 "raw": raw,
                 "direction": rule["direction"],
                 "business_classification": rule["classification"],
