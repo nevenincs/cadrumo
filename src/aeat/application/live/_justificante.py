@@ -28,7 +28,7 @@ import binascii
 import contextlib
 import os
 import tempfile
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
@@ -500,7 +500,7 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
 
 
 @contextlib.contextmanager
-def _materialized_capture_pdf(snapshot: JustificanteCaptureSnapshot) -> Iterator[Path]:
+def _materialized_capture_pdf(snapshot: JustificanteCaptureSnapshot) -> Generator[Path]:
     """Yield a transient on-disk path to the captured PDF, deleted on exit.
 
     The justificante parser and the local reconciler are path-only, so the
@@ -563,6 +563,67 @@ def reconcile_capture(
         )
 
 
+def register_capture_as_filing_evidence(
+    *,
+    snapshot: JustificanteCaptureSnapshot,
+) -> object:
+    """Stamp a persisted live capture as official evidence on its filing record.
+
+    Registers the captured receipt as a domain ``Justificante`` (keyed by the
+    capture's CSV, which is the gate's evidence reference) and updates the work
+    unit's current filing record to carry ``AEAT_LIVE_CAPTURE`` external
+    evidence referencing it. After this, the cross-period clean-state gate's
+    ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker clears for the period, because
+    ``aeat_live_capture`` is a justificante-verified evidence kind and the
+    referenced justificante record loads.
+
+    Returns the stamped :class:`~aeat.domain.modelos.ModeloRecord`.
+
+    Raises:
+        LiveApplicationInputError: when no current filing record exists for the
+            captured ``(modelo, filing_year, period)`` — the operator must file
+            the period before attaching live-capture evidence to it.
+    """
+    from ...core.time import now
+    from ...domain.justificante import JustificanteRepository
+    from ...domain.modelos import (
+        ExternalEvidence,
+        ExternalEvidenceKind,
+        ModeloRecordCatalogueRepository,
+        upsert_filing_record,
+    )
+
+    justificante = parse_capture_to_justificante(snapshot).model_copy(update={"csv": snapshot.csv})
+    JustificanteRepository().save(justificante)
+
+    filing_repository = ModeloRecordCatalogueRepository()
+    catalogue = filing_repository.load()
+    current = catalogue.current_for(
+        bucket_id=snapshot.bucket_id,
+        modelo=snapshot.modelo,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+    if current is None:
+        raise LiveApplicationInputError(
+            f"no current filing record for modelo={snapshot.modelo!r} "
+            f"year={snapshot.filing_year} period={snapshot.period!r}; "
+            "file the period before stamping live-capture evidence",
+        )
+    stamped = current.model_copy(
+        update={
+            "external_evidence": ExternalEvidence(
+                kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+                reference_id=snapshot.csv,
+                imported_at=now(),
+            ),
+            "aeat_accepted": True,
+        },
+    )
+    filing_repository.save(upsert_filing_record(catalogue, stamped))
+    return stamped
+
+
 __all__ = [
     "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
@@ -574,5 +635,6 @@ __all__ = [
     "justificante_capture_snapshot_object_key",
     "parse_capture_to_justificante",
     "reconcile_capture",
+    "register_capture_as_filing_evidence",
     "resolve_period_expediente",
 ]
