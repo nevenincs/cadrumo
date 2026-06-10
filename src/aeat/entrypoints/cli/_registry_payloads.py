@@ -75,7 +75,7 @@ class RegistryAuditOraclesResult(OutputSchema):
     registered_oracle_ids: list[str] = []
     failure_count: int
     failures: list[str] = []
-    applicability_declarations: list[dict] = []
+    applicability_declarations: list[dict[str, object]] = []
     orphan_oracle_ids: list[str] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
@@ -92,7 +92,7 @@ class RegistryVerifyFiledStateResult(OutputSchema):
 
     observation_path: str
     source_observation_paths: list[str] = []
-    comparison: dict
+    comparison: dict[str, object]
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.
@@ -112,9 +112,9 @@ class RegistryWorkbooksVerifyResult(OutputSchema):
     formula_workbook_count: int
     unsupported_xls_count: int
     failed_count: int
-    runner: dict
-    reports: list[dict] = []
-    modelo_coverage: list[dict] = []
+    runner: dict[str, object]
+    reports: list[dict[str, object]] = []
+    modelo_coverage: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.
@@ -130,10 +130,10 @@ class RegistryParityRunResult(OutputSchema):
 
     created_at: str
     scenario_path: str | None = None
-    scenario: dict
-    workbook: dict
-    runner: dict
-    report: dict
+    scenario: dict[str, object]
+    workbook: dict[str, object]
+    runner: dict[str, object]
+    report: dict[str, object]
     path: str | None = None
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
@@ -152,8 +152,8 @@ class RegistryParityReplayResult(OutputSchema):
     scenario_id: str
     status: str
     differences: list[str] = []
-    stored: dict
-    current: dict
+    stored: dict[str, object]
+    current: dict[str, object]
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.

@@ -295,7 +295,7 @@ class LedgerListResult(OutputSchema):
     """
 
     bucket_id: str
-    rows: list[dict]
+    rows: list[dict[str, object]]
     total: int = 0
     shown: int = 0
     offset: int = 0
@@ -348,7 +348,7 @@ class LedgerHistoryResult(OutputSchema):
     bucket_id: str
     transaction_id: str
     event_count: int
-    events: list[dict]
+    events: list[dict[str, object]]
 
 
 @register_schema("ledger.categories")
@@ -385,7 +385,7 @@ class LedgerExportPayload(OutputSchema):
     byte_size: int
     sha256: str
     fieldnames: list[str]
-    rows: list[dict]
+    rows: list[dict[str, object]]
     bucket_event_ids: list[str] = []
     output_path: str
 
@@ -425,9 +425,9 @@ class LedgerImportPayload(OutputSchema):
     bucket_id: str | None = None
     import_batch_id: str | None = None
     bucket_event_ids: list[str] = []
-    imported_transaction_refs: list[dict] = []
-    skipped_transaction_refs: list[dict] = []
-    likely_duplicate_transaction_refs: list[dict] = []
+    imported_transaction_refs: list[dict[str, object]] = []
+    skipped_transaction_refs: list[dict[str, object]] = []
+    likely_duplicate_transaction_refs: list[dict[str, object]] = []
     validation: LedgerImportValidationPayload
     source: LedgerImportSourcePayload
     diagnostics: list[LedgerImportDiagnosticPayload] = []
@@ -469,7 +469,7 @@ class LedgerTrackResult(OutputSchema):
 
     bucket_id: str
     transaction: TransactionPayload
-    tracking: dict
+    tracking: dict[str, object]
 
 
 @register_schema("ledger.review")
@@ -531,9 +531,9 @@ class LedgerPreflightResult(OutputSchema):
     """
 
     bucket_id: str
-    period: dict
+    period: dict[str, object]
     checked_transaction_count: int
-    issues: list[dict]
+    issues: list[dict[str, object]]
     ready: bool
 
 
@@ -547,7 +547,7 @@ class LedgerLinkResult(OutputSchema):
     invoice_id: str | None = None
     evidence_id: str | None = None
     actor: str
-    evidence_update: dict | None = None
+    evidence_update: dict[str, object] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -595,7 +595,7 @@ class RatiosEligibleResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios eligible``."""
 
     bucket_id: str
-    rows: list[dict]
+    rows: list[dict[str, object]]
     count: int
 
 
@@ -612,7 +612,7 @@ class RatiosValidateResult(OutputSchema):
     eligible_count: int
     overrides_count: int
     missing_overrides: list[str] = []
-    findings: list[dict] = []
+    findings: list[dict[str, object]] = []
 
 
 # ---------------------------------------------------------------------------
@@ -654,7 +654,7 @@ class BusinessInvoiceListResult(OutputSchema):
     """Shared list result for payable / collectible invoice list verbs."""
 
     bucket_id: str
-    rows: list[dict]
+    rows: list[dict[str, object]]
     count: int
 
 
@@ -725,9 +725,9 @@ class InventoryLedgerPayload(OutputSchema):
     year: int
     valuation_method: str
     opening_stock: str
-    opening_layers: list[dict] = []
+    opening_layers: list[dict[str, object]] = []
     closing_stock: str | None = None
-    period_movements: list[dict] = []
+    period_movements: list[dict[str, object]] = []
     schema_version: str
     bucket_event_ids: list[str] = []
 
@@ -737,7 +737,7 @@ class InventoryListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory list``."""
 
     bucket_id: str
-    rows: list[dict]
+    rows: list[dict[str, object]]
     count: int
 
 
@@ -837,7 +837,7 @@ class EvidenceListResult(OutputSchema):
 
     bucket_id: str
     count: int
-    rows: list[dict]
+    rows: list[dict[str, object]]
 
 
 # ---------------------------------------------------------------------------
@@ -899,7 +899,7 @@ class RuleApplyResult(OutputSchema):
     matched: int | None = None
     skipped_already_classified: int | None = None
     no_match: int | None = None
-    applied: list[dict] | None = None
+    applied: list[dict[str, object]] | None = None
 
 
 class LLMProviderAvailabilityPayload(OutputSchema):

@@ -79,7 +79,7 @@ class CitationListResult(OutputSchema):
     reference_count: int
     tag_filter: str | None = None
     topic_count: int
-    references: list[dict] = []
+    references: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
@@ -91,9 +91,9 @@ class CitationShowResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations view``."""
 
     operation: str = "registry.citations.show"
-    reference: dict = {}
-    articulo: dict | None = None
-    related_topics: list[dict] = []
+    reference: dict[str, object] = {}
+    articulo: dict[str, object] | None = None
+    related_topics: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
@@ -109,7 +109,7 @@ class CitationVerifyResult(OutputSchema):
     issue_count: int
     passed: bool
     topic_count: int
-    issues: list[dict] = []
+    issues: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
@@ -125,7 +125,7 @@ class ManualListResult(OutputSchema):
     year_filter: int | None = None
     part_count: int
     topic_count: int
-    parts: list[dict] = []
+    parts: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
@@ -146,7 +146,7 @@ class ManualShowResult(OutputSchema):
     section_count: int
     structure_available: bool
     topic_count: int
-    section: dict | None = None
+    section: dict[str, object] | None = None
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
@@ -165,7 +165,7 @@ class ManualRulesListResult(OutputSchema):
     structure_available: bool
     rule_count: int
     topic_count: int
-    rules: list[dict] = []
+    rules: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
@@ -185,7 +185,7 @@ class ManualVerifyResult(OutputSchema):
     warning_count: int
     passed: bool
     topic_count: int
-    issues: list[dict] = []
+    issues: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
