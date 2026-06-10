@@ -23,7 +23,9 @@ def test_unknown_review_kind_error_omits_raw_operator_value() -> None:
     assert sensitive_kind not in str(exc_info.value)
     assert sensitive_kind not in repr(exc_info.value.context)
     assert exc_info.value.context is not None
-    assert "ledger_transaction" in exc_info.value.context["accepted_kinds"]
+    accepted_kinds = exc_info.value.context["accepted_kinds"]
+    assert isinstance(accepted_kinds, (list, tuple, set, frozenset))
+    assert "ledger_transaction" in accepted_kinds
 
 
 def test_project_review_item_not_found_error_omits_raw_item_id() -> None:

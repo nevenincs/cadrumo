@@ -416,10 +416,10 @@ def test_counterpart_binding_fact_op_mismatch_caught_at_snapshot_build() -> None
     would pass it and the resolver would only raise at handler-call
     time. Audit selector-drift F3.
     """
-
+    # NEGATIVE TEST: source="collectible_invoice" is valid but the fact/op pair is invalid (ty: invalid-argument-type)
     binding = DataBindingDefinition(
         id="bad-counterpart-fact-op",
-        source="collectible_invoice",
+        source="collectible_invoice",  # type: ignore
         selector={
             "fact": "operator_count",
             "claves": ("E", "M"),
