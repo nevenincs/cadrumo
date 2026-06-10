@@ -432,6 +432,21 @@ pygments_dark_style = "github-dark"
 # ```mermaid fences render as client-side mermaid.js diagrams. The extension
 # observes the Furo light/dark state and re-renders on toggle; the grayscale
 # "neutral" theme matches the documentation's neutral palette in light mode.
+# The renderer is vendored locally so the site is offline-first and pins one
+# auditable version. ``mermaid.min.mjs`` is the self-contained 11.12.1 UMD
+# build (every diagram type inlined, no lazy chunk imports) with its trailing
+# classic-script global assignment swapped for an ESM ``export default`` so the
+# extension's ``import mermaid from`` resolves it. The file keeps a ``.js``
+# extension (not ``.mjs``) so every static host — and the local dev server —
+# serves it with a JavaScript MIME type; browsers enforce strict MIME on module
+# scripts and reject the ``text/plain`` that ``.mjs`` gets by default. The
+# extension also emits a d3 dependency in raw mode (only exercised by
+# zoom/fullscreen, both off here); it is vendored too so no page reaches the
+# CDN. Sphinx resolves the bare filenames per-page relative to ``_static``.
+mermaid_version = "11.12.1"
+mermaid_use_local = "mermaid.min.js"
+d3_version = "7.9.0"
+d3_use_local = "d3.min.js"
 mermaid_light_theme = "neutral"
 mermaid_dark_theme = "dark"
 # The extension serialises this dict into a JS template literal via
