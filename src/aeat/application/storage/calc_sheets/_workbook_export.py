@@ -158,9 +158,7 @@ def _apply_base_font(workbook: Workbook, family: str) -> None:
                     cell.font = base_font
 
 
-def _apply_styled_ranges(
-    workbook: Workbook, family: str, styled_ranges: Sequence[SheetStyledRange]
-) -> None:
+def _apply_styled_ranges(workbook: Workbook, family: str, styled_ranges: Sequence[SheetStyledRange]) -> None:
     """Tint each styled range by its role, in declaration order so later ranges win."""
     for styled in styled_ranges:
         style = ROLE_STYLES[styled.role]

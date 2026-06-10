@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from functools import cache
-from typing import NotRequired, Unpack
+from typing import NotRequired, Unpack, cast
 
 import click
 from click.testing import CliRunner, Result
@@ -34,7 +34,11 @@ class ClickInvokeKwargs(TypedDict, total=False):
 def aeat_click_command() -> click.Command:
     """Materialize the Typer app once for default-locale CLI tests."""
 
-    return get_command(app)
+    # Typer vendors its own Click fork, so typer.main.get_command is typed to
+    # return typer._click.core.Command; it is the same object family at runtime
+    # as the upstream click.Command the CliRunner consumes. The cast bridges the
+    # static vendored/upstream duality only.
+    return cast(click.Command, get_command(app))
 
 
 def invoke_cached_cli(args: Sequence[str], **kwargs: Unpack[ClickInvokeKwargs]) -> Result:

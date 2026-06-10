@@ -528,9 +528,7 @@ def test_numeric_iva_rate_percentages_value() -> None:
     This literal set is the external anchor — ``{0, 4, 10, 21}`` as
     ``Decimal`` — grounded in the LIVA art. 90/91 slot taxonomy.
     """
-    assert numeric_iva_rate_percentages() == frozenset(
-        {Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")}
-    )
+    assert numeric_iva_rate_percentages() == frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})
 
 
 def test_numeric_iva_rate_percentages_cardinality_tracks_rate_members() -> None:

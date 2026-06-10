@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import click
 import pytest
+import typer
+import typer.main
 
 from ....core.json_contract import OutputSchema
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
@@ -17,7 +18,10 @@ class _EnvelopePayload(OutputSchema):
 
 
 def test_emit_envelope_text_path_redacts_lines_through_common_renderer(capsys: pytest.CaptureFixture[str]) -> None:
-    ctx = click.Context(click.Command("root"), obj={"format": "text"})
+    # Create a typer app and get its click command to create a proper typer.Context
+    app = typer.Typer()
+    click_cmd = typer.main.get_command(app)
+    ctx = typer.Context(click_cmd, obj={"format": "text"})
 
     _emit_envelope(
         ctx,

@@ -28,6 +28,8 @@ from .. import (
     discard_work_unit,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _Repos = tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
@@ -35,8 +37,6 @@ _Repos = tuple[
     VerificationReportCatalogueRepository,
     BucketEventHistoryRepository,
 ]
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture

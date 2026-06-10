@@ -295,8 +295,9 @@ def test_sede_parser_route_shapes_are_centralized() -> None:
 
     paths = load_external_constants().aeat.sede_paths
 
-    registry_paths = _aeat_section(_registry_toml_payload())["sede_paths"]
-    assert isinstance(registry_paths, dict)
+    raw_paths = _aeat_section(_registry_toml_payload())["sede_paths"]
+    assert isinstance(raw_paths, dict)
+    registry_paths = {str(key): value for key, value in raw_paths.items()}
     assert paths.irpf_expediente_detail_year_prefix == registry_paths["irpf_expediente_detail_year_prefix"]
     assert paths.irpf_expediente_detail_year_suffix.endswith("Vlt")
     assert paths.cotejo_query == registry_paths["cotejo_query"]

@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.invoices import numeric_iva_rate_percentages
-from .._edit import InvoiceEditSpec, _INVOICE_IVA_RATE_ALLOWED
+from .._edit import _INVOICE_IVA_RATE_ALLOWED, InvoiceEditSpec
 from .._errors import EditParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -83,7 +83,7 @@ def test_invoice_iva_rate_allowed_equals_helper() -> None:
     :func:`numeric_iva_rate_percentages`, not a local literal.  If the two
     diverge the closed-taxonomy duplicate defect has been reintroduced.
     """
-    assert _INVOICE_IVA_RATE_ALLOWED == numeric_iva_rate_percentages()
+    assert numeric_iva_rate_percentages() == _INVOICE_IVA_RATE_ALLOWED
 
 
 def test_no_bare_iva_rate_frozenset_literal_in_edit_module() -> None:

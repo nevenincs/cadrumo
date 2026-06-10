@@ -56,7 +56,7 @@ class TestNewErrorClassesRegistered:
             (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),
         ],
     )
-    def test_error_code_registered(self, error_cls: type, expected_code: str) -> None:
+    def test_error_code_registered(self, error_cls: type[BaseException], expected_code: str) -> None:
         code = get_registered_error_code(error_cls)
         assert code.code == expected_code
 
@@ -136,6 +136,7 @@ class TestResultSummaryNarrowing:
             {
                 "work_unit_id": uuid.UUID("00000000-0000-0000-0000-000000000001"),
                 "revision_id": uuid.UUID("00000000-0000-0000-0000-000000000002"),
+                "calculation_revision_id": uuid.UUID("00000000-0000-0000-0000-000000000003"),
                 "casilla_values": {},
             },
         )()

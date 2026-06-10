@@ -1,6 +1,8 @@
 """Calendar aggregation and evidence merge for the overview application facade.
 
-Use of :class:`Schedule`, :class:`TaxpayerProfile` for compliance.
+Use of :class:`Schedule`, :class:`TaxpayerProfile` for compliance. Derives
+per-deadline filing evidence from filed :class:`ModeloRecord` rows so the
+calendar reflects which obligations already carry a justificante.
 """
 
 from __future__ import annotations
@@ -600,7 +602,9 @@ def calendar_filing_evidence_from_sources(
     records. CLI/storage code owns I/O; this projection only reconciles
     the existing local Modelo filing catalogue, calendar-visible AEAT
     register events, and persisted calculation observations from
-    justificante capture.
+    justificante capture. The ``filing_records`` are filed
+    :class:`ModeloRecord` rows whose justificante evidence is projected
+    onto the calendar.
     """
     by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}
     event_specific: list[OverviewCalendarFilingEvidence] = []

@@ -21,6 +21,7 @@ from .._bindings import (
 )
 from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
+from .._relations import relation_source_requirements, resolve_relation_values_from_observations
 from .._schema import DataBindingDefinition, RegistrySnapshot
 from .._snapshot import build_snapshot
 
@@ -243,41 +244,46 @@ def test_previous_filing_requirements_are_declared_from_registry_binding_selecto
     assert requirement.source_casillas == tuple(sorted(source_casillas))
 
 
-def test_previous_filing_requirements_cover_all_source_periods_for_annual_summary(
+def test_relation_requirements_cover_all_source_periods_for_annual_summary(
     committed_modelo_180_snapshot: RegistrySnapshot,
 ) -> None:
-    requirements = previous_filing_observation_requirements(
+    # M180 ← M115 is canonically a RELATION fold-in (aggregation-taxonomy ADR
+    # ruling 2): the slot bindings declare source = "relation_prefill" and the
+    # requirement set is produced by the relation requirement resolver, not the
+    # previous-filing one (which now skips relation_prefill slots by design).
+    requirements = relation_source_requirements(
         committed_modelo_180_snapshot.revision,
         filing_year=2026,
         period="0A",
     )
 
-    assert [requirement.period for requirement in requirements] == ["1T", "2T", "3T", "4T"]
-    assert {requirement.modelo for requirement in requirements} == {"115"}
+    # The three 180 annual_summary relations share one source quadruple
+    # (115/2026/[1T-4T]) grouped per source_output; assert the periods cover all
+    # four quarters and the relation source modelo/year are correct.
+    assert {requirement.source_modelo for requirement in requirements} == {"115"}
     assert {requirement.filing_year for requirement in requirements} == {2026}
-    assert {requirement.binding_ids for requirement in requirements} == {
-        (
-            "modelo-180-115-base-anual",
-            "modelo-180-115-perceptores-anual",
-            "modelo-180-115-retenciones-anual",
-        )
+    assert all(tuple(requirement.periods) == ("1T", "2T", "3T", "4T") for requirement in requirements)
+    target_bindings = {tb for requirement in requirements for tb in requirement.target_bindings}
+    assert target_bindings == {
+        "modelo-180-115-base-anual",
+        "modelo-180-115-perceptores-anual",
+        "modelo-180-115-retenciones-anual",
     }
-    assert {requirement.source_casillas for requirement in requirements} == {("01", "02", "03")}
+    assert {requirement.source_output for requirement in requirements} == {"01", "02", "03"}
 
 
-def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods(
+def test_relation_resolves_annual_summary_from_all_source_periods(
     committed_modelo_180_snapshot: RegistrySnapshot,
 ) -> None:
-    # Per .claude/rules/no-tautological-calculation-tests.md, we no longer
-    # assert that base-anual / retenciones-anual equal the test author's
-    # hand-summation of the synthetic inputs (550 = 100+200+300-50,
-    # 114 = 19+38+57+0). The runtime's `op = "sum"` aggregator and the
-    # author would share the same arithmetic — agreement would prove nothing
-    # about correctness against AEAT. Instead, this test asserts:
-    #   1. graph-wiring: the three expected binding ids appear in result;
+    # Per .claude/rules/no-tautological-calculation-tests.md, we do not assert
+    # base-anual / retenciones-anual equal the author's hand-summation of the
+    # synthetic inputs; the runtime's `op = "sum"` aggregator and the author
+    # would share the same arithmetic. Instead this test asserts the canonical
+    # RELATION resolver (now live) produces:
+    #   1. graph-wiring: the three expected relation ids appear in result;
     #   2. structural: perceptores = number of observations (count, not
     #      arithmetic on input values);
-    #   3. type: the summed bindings are Decimal-valued, sign-preserving.
+    #   3. type: the summed relations are Decimal-valued, sign-preserving.
     observations = tuple(
         RegistryModeloObservation(
             modelo="115",
@@ -297,7 +303,7 @@ def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods
         )
     )
 
-    result = resolve_previous_filing_binding_values(
+    result = resolve_relation_values_from_observations(
         committed_modelo_180_snapshot.revision,
         observations,
         filing_year=2026,
@@ -305,13 +311,13 @@ def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods
     )
 
     assert set(result.keys()) == {
-        "modelo-180-115-perceptores-anual",
-        "modelo-180-115-base-anual",
-        "modelo-180-115-retenciones-anual",
+        "modelo-180-rel-115-perceptores-anual",
+        "modelo-180-rel-115-base-anual",
+        "modelo-180-rel-115-retenciones-anual",
     }
-    assert result["modelo-180-115-perceptores-anual"] == Decimal(len(observations))
-    assert isinstance(result["modelo-180-115-base-anual"], Decimal)
-    assert isinstance(result["modelo-180-115-retenciones-anual"], Decimal)
+    assert result["modelo-180-rel-115-perceptores-anual"] == Decimal(len(observations))
+    assert isinstance(result["modelo-180-rel-115-base-anual"], Decimal)
+    assert isinstance(result["modelo-180-rel-115-retenciones-anual"], Decimal)
 
 
 def test_previous_filing_binding_requires_complete_observed_casillas(

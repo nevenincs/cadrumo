@@ -13,6 +13,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar, override
 
+from pydantic import BaseModel
+
 from ...adapters.outbound.aeat.auth import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
 from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
@@ -89,7 +91,7 @@ class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemo
     namespace: ClassVar[str] = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.namespace
     sensitivity: ClassVar = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.schema_version
-    payload_type: ClassVar[type[IvaRemoteStateAcquisitionManifest]] = IvaRemoteStateAcquisitionManifest
+    payload_type: ClassVar[type[BaseModel]] = IvaRemoteStateAcquisitionManifest
 
     def __init__(self, *, objects: _SecureObjectRepository | None = None) -> None:
         """Initialise the repository, resolving the active bucket's secure-object store when no override is given."""

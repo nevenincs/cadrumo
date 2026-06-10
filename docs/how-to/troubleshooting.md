@@ -16,11 +16,11 @@ If a profile exists but the active setting won't load, repair it:
 aeat config repair profile
 ```
 
-If the active setting points at unreadable profile state, clear it and unlock a good profile:
+If the active setting points at unreadable profile state, clear it and switch to a good profile:
 
 ```bash
 aeat config repair profile --clear-active --yes
-aeat config unlock <profile-name>
+aeat config switch <profile-name>
 ```
 
 If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md).
@@ -35,20 +35,20 @@ The wrong profile is active. Each profile keeps its own ledger, calculations, an
 aeat config profile status
 ```
 
-Switch by unlocking the right profile with `aeat config unlock <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating and switching profiles.
+Switch to the right profile with `aeat config switch <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating and switching profiles.
 
 ## A calculation refuses because the ledger is not ready
 
 The refusal looks like this:
 
 ```text
-ledger preflight blocks modelo calculation: ... Run `aeat app ledger preflight --period <PERIOD>` before calculating
+ledger preflight blocks modelo calculation: ... Run `aeat app ledger preflight --year <YEAR> --period <TOKEN>` before calculating
 ```
 
-The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - the ledger preflight takes a calendar period such as `2026Q1`, `2026-03`, or `2026`:
+The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - the ledger preflight takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) with `--year`:
 
 ```bash
-aeat app ledger preflight --period 2026Q1
+aeat app ledger preflight --year 2026 --period 1T
 aeat app ledger status
 ```
 
@@ -73,13 +73,30 @@ Replace the modelo, year, and period with your own. The full workflow for supply
 
 ## The period token is rejected
 
-The refusal looks like this:
+Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. Every command takes the year separately with `--year`. [Filing periods](filing-periods.md) explains which form uses which period.
+
+Modelo and ledger commands share the same shape - the AEAT token with `--year`:
+
+```bash
+aeat app ledger preflight --year 2026 --period 1T
+aeat app ledger status --year 2026 --period 0A
+aeat app ledger preflight --year 2026 --period 03
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+```
+
+The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and `overview status`. A bare token with no `--year` is refused with the year fix:
+
+```text
+Period token '1T' needs a year on this command. Add --year (e.g. --period 1T --year 2024).
+```
+
+A modelo token that is not valid for the form lists the accepted tokens:
 
 ```text
 --period '<token>' is not a valid period token for modelo <modelo>. ... Valid tokens: ...
 ```
 
-The error itself lists the valid tokens for your modelo. As a general guide: `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. [Filing periods](filing-periods.md) explains which form uses which period.
+Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; use the AEAT token with `--year`.
 
 ## An export refuses because no verified calculation exists
 
@@ -91,7 +108,13 @@ This refusal applies to `aeat app modelo work file` only - exporting works at an
 
 ## Output appears in the wrong language
 
-Set the environment variable `AEAT_OUTPUT_LANGUAGE` before running the command. Accepted values are `en`, `es`, `ca`, and `hu`.
+Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output and help text:
+
+```bash
+aeat --language en config profile create --help
+```
+
+To set the language for a whole shell session, set the environment variable `AEAT_OUTPUT_LANGUAGE` before running commands.
 
 In PowerShell:
 
@@ -105,7 +128,7 @@ In bash:
 export AEAT_OUTPUT_LANGUAGE=en
 ```
 
-Known limitation: the `--language` flag does not change help text for every command; the environment variable does. A profile also carries a default output language - set it with `--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md).
+The `--language` flag wins over the environment variable for that command. A profile also carries a default output language - set it with `--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md).
 
 ## A live read from AEAT refuses
 

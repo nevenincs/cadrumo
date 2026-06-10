@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-dinerario-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["01"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -12,7 +12,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-especie-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["04"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -24,7 +24,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-dinerario-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["07"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -36,7 +36,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-especie-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["10"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -48,7 +48,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-premios-dinerario-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["13"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -60,7 +60,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-premios-especie-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["16"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -72,7 +72,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-dinerario-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["19"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -84,7 +84,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-especie-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["22"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -96,7 +96,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-derechos-imagen-percepciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["25"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -108,7 +108,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-dinerario-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["02"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -120,7 +120,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-especie-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["05"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -132,7 +132,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "109-121 VALORACIÓN"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-dinerario-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["08"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -144,7 +144,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-especie-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["11"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -156,7 +156,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "109-121 VALORACIÓN"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-premios-dinerario-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["14"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -168,7 +168,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-premios-especie-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["17"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -180,7 +180,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "109-121 VALORACIÓN"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-dinerario-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["20"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -192,7 +192,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-especie-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["23"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -204,7 +204,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "109-121 VALORACIÓN"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-derechos-imagen-importe-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["26"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -216,7 +216,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-retenciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["28"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]

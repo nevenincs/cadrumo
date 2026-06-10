@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -42,7 +43,7 @@ _RUNNER = CliRunner()
 _NIF = "12345678Z"
 
 
-def _unwrap_envelope(payload: object) -> dict:
+def _unwrap_envelope(payload: object) -> dict[str, object]:
     """Return the inner ``result`` payload from a CLI emit envelope.
 
     Every CLI verb now emits ``{schema_version, command, result, warnings}``
@@ -52,10 +53,14 @@ def _unwrap_envelope(payload: object) -> dict:
     unconditionally.
     """
     if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
-        return payload["result"]
+        payload_dict = cast(dict[str, object], payload)
+        result_obj = payload_dict["result"]
+        if isinstance(result_obj, dict):
+            return cast(dict[str, object], result_obj)
+        raise AssertionError(f"result field is not a dict: {type(result_obj).__name__}")
     if not isinstance(payload, dict):
         raise AssertionError(f"unexpected JSON shape: {type(payload).__name__}")
-    return payload
+    return cast(dict[str, object], payload)
 
 
 def _state(
@@ -665,3 +670,102 @@ def test_cli_seed_help_text_contains_liva_art_99_legal_grounding(tmp_path: Path)
     assert "Ley 37/1992" in help_text or "LIVA" in help_text, (
         "seed --help must reference the legal source (Ley 37/1992 or LIVA)"
     )
+
+
+# ---------------------------------------------------------------------------
+# contract: iva-wallet correct verb (guarded correction path, W04.P10 / D7)
+# ---------------------------------------------------------------------------
+
+
+def test_cli_correct_verb_requires_confirm(tmp_path: Path) -> None:
+    """Correct verb requires --confirm; without it, exit code is non-zero."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+        _store_profile_with_nif(_NIF)
+        seed_iva_compensation_period(taxpayer_nif=_NIF, filing_year=2024, period="4T", amount=Decimal("500.00"))
+        result = _RUNNER.invoke(
+            app,
+            [
+                "app",
+                "modelo",
+                "iva-wallet",
+                "correct",
+                "--filing-year",
+                "2024",
+                "--period",
+                "4T",
+                "--amount",
+                "1200.00",
+                "--reason",
+                "fix",
+            ],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+    assert result.exit_code != 0, result.output
+
+
+def test_cli_correct_verb_happy_path_overwrites_seed(tmp_path: Path) -> None:
+    """Correct verb with --confirm overwrites the seeded amount and reports it."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+        _store_profile_with_nif(_NIF)
+        seed_iva_compensation_period(taxpayer_nif=_NIF, filing_year=2024, period="4T", amount=Decimal("500.00"))
+        result = _RUNNER.invoke(
+            app,
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "iva-wallet",
+                "correct",
+                "--filing-year",
+                "2024",
+                "--period",
+                "4T",
+                "--amount",
+                "1200.50",
+                "--reason",
+                "typo in opening balance",
+                "--confirm",
+            ],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+        stored = IvaCompensationHistoryRepository().load_period(2024, "4T")
+
+    assert result.exit_code == 0, result.output
+    payload = _unwrap_envelope(json.loads(result.output))
+    assert payload["operation"] == "modelo.iva_wallet.correct"
+    assert payload["amount"] == "1200.50"
+    assert payload["previous_amount"] == "500.00"
+    assert payload["reason"] == "typo in opening balance"
+    assert stored is not None
+    assert stored.available_end_amount == Decimal("1200.50")
+
+
+def test_cli_correct_verb_refuses_when_no_record(tmp_path: Path) -> None:
+    """Correct verb refuses a period that has no seeded record (seed first)."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+        _store_profile_with_nif(_NIF)
+        result = _RUNNER.invoke(
+            app,
+            [
+                "app",
+                "modelo",
+                "iva-wallet",
+                "correct",
+                "--filing-year",
+                "2024",
+                "--period",
+                "4T",
+                "--amount",
+                "1200.50",
+                "--reason",
+                "no record",
+                "--confirm",
+            ],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+    assert result.exit_code != 0, result.output
+    assert "seed" in result.output.lower()

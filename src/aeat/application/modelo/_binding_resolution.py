@@ -16,7 +16,6 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     enum_consumed_binding_ids,
     expression_binding_refs,
-    materialize_relation_binding_values,
 )
 from ...domain.modelos._errors import ModeloError
 from ..live import Borrador100SnapshotRepository
@@ -104,12 +103,13 @@ def resolve_calculation_binding_inputs(
     _reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
 
     resolved_relations = dict(relation_values or {})
-    relation_binding_values = materialize_relation_binding_values(
-        snapshot.revision,
-        resolved_relations,
-        period=period,
-    )
-    resolved_bindings = dict(sorted({**relation_binding_values, **resolved_bindings}.items()))
+    # Relation target_binding materialisation NO LONGER happens here. It moved
+    # INTO RelationPrefillSourceResolver (aggregation-taxonomy ADR ruling 4), so
+    # the materialised slot values arrive through the source mesh's
+    # backend_binding_values channel and are adjudicated by the mesh
+    # _claim_binding exclusive-ownership guard. The previous silent post-mesh
+    # merge ({**relation_binding_values, **resolved_bindings}) — which let every
+    # other source quietly override a relation-materialised value — is retired.
     resolved_bindings = dict(
         sorted(
             _lift_previous_filing_casilla_overrides_to_bindings(

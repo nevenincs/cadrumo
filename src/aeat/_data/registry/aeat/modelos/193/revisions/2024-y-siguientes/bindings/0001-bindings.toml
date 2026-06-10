@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-193-123-perceptores-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["03"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
@@ -12,7 +12,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPTORES", "Se consignará el número tota
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-193-123-base-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["06"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
@@ -24,7 +24,7 @@ required_text = ["BASE RETENCIONES E INGRESOS A CUENTA", "suma total de las cant
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-193-123-retenciones-anual"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["09"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]

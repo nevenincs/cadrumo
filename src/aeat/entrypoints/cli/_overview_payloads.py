@@ -42,7 +42,7 @@ class OverviewCalendarEntryPayload(OutputSchema):
     payment_cutoff_on: str | None = None
     status: str
     user_state: str
-    recovery: dict | None = None
+    recovery: dict[str, object] | None = None
     filing_year: int | None = None
     filing_evidence: OverviewCalendarFilingEvidencePayload
 

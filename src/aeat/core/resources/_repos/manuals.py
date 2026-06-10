@@ -12,8 +12,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from pydantic import ConfigDict
-
 from .._keys import TypedResourceKey
 from .._repository import ResourceCacheRepository
 
@@ -31,17 +29,17 @@ if TYPE_CHECKING:
         Section,
     )
 
-_FROZEN_STRICT = ConfigDict(strict=True, frozen=True, extra="forbid")
-
 
 class ManualKey(TypedResourceKey):
     """Composite key (manual_id, year, part) for a Manual record."""
 
-    model_config = _FROZEN_STRICT
-
     manual_id: str
     year: int
     part: str = "single"
+
+    @override
+    def __hash__(self) -> int:
+        return hash((self.manual_id, self.year, self.part))
 
 
 class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):

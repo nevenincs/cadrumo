@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -54,12 +55,12 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _oracle_rules() -> list[dict]:
+def _oracle_rules() -> list[dict[str, Any]]:
     manifest = json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
     return manifest["rules"]
 
 
-def _match(description: str, rules: list[dict]) -> dict | None:
+def _match(description: str, rules: list[dict[str, Any]]) -> dict[str, Any] | None:
     for rule in rules:
         if rule["match"] in description:
             return rule
@@ -83,14 +84,14 @@ def _import_bbva() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _list_rows() -> list[dict]:
+def _list_rows() -> list[dict[str, Any]]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
 
 
-def _find(rows: list[dict], needle: str) -> dict:
+def _find(rows: list[dict[str, Any]], needle: str) -> dict[str, Any]:
     return next(r for r in rows if needle in r["description"])
 
 
@@ -525,7 +526,7 @@ def test_preflight_and_check_surface_missing_facts() -> None:
 
 
 # --- Operating-scale rendering: honest paging/truncation ---------------------------
-def _list_payload(*args: str) -> dict:
+def _list_payload(*args: str) -> dict[str, Any]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list", *args])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
@@ -556,7 +557,7 @@ def test_list_paging_is_honest_and_never_silently_caps() -> None:
     assert nxt["truncated"] is True
 
     # Paging through every window reconstructs the full ledger exactly once.
-    seen: list[dict] = []
+    seen: list[dict[str, Any]] = []
     off = 0
     while off < total:
         win = _list_payload("--limit", "25", "--offset", str(off))

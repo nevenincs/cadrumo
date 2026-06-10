@@ -130,6 +130,78 @@ def stash_manual_transaction(
     )
 
 
+def restore_manual_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    actor: str,
+    reason: str = "",
+    source_command: str = "aeat app ledger restore",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Restore one stashed or archived ledger transaction to active.
+
+    The clean inverse of :func:`archive_manual_transaction` and
+    :func:`stash_manual_transaction`. Moves ``STASHED -> ACTIVE`` and
+    ``ARCHIVED -> ACTIVE`` through the single-writer
+    :func:`_transition_manual_transaction_lifecycle` primitive, so it
+    inherits that primitive's atomic catalogue-plus-event persistence, its
+    lifecycle-lineage append, and the finalized-modelo guard: a row cited by a
+    sealed (``VERIFICADO_COMPLETO`` / ``PRESENTADO`` /
+    ``PRESENTADO_SUPERSEDIDO``) calculation revision is refused so a restore
+    cannot silently change the input basis of an already-filed period. Split
+    and merged lineage stays out of scope — only
+    :func:`split_transaction` / :func:`merge_transactions` move those rows.
+
+    Returns a :class:`ManualLedgerTransactionResult` reflecting the
+    restored, now-active transaction state.
+
+    Raises:
+        TransactionValidationError: when the row is already active (with an
+            instructive message), when the row is part of split lineage, or
+            when a finalized-modelo reference blocks the restore.
+        TransactionNotFoundError: when no transaction matches ``transaction_id``.
+    """
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    current = _require_transaction(repository.load(), transaction_id)
+    if current.lifecycle_state is TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "ledger transaction is already active; restore applies only to a stashed or archived row",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "state": current.lifecycle_state.value,
+            },
+        )
+    if current.lifecycle_state is TransactionLifecycleState.SPLIT:
+        raise TransactionValidationError(
+            "split-parent ledger transactions cannot be restored; re-merge the split children instead",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "state": current.lifecycle_state.value,
+            },
+        )
+    return _transition_manual_transaction_lifecycle(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        state=TransactionLifecycleState.ACTIVE,
+        event_type=BucketEventType.LEDGER_TRANSACTION_RESTORED,
+        actor=actor,
+        reason=reason,
+        source_command=source_command,
+        transaction_repository=repository,
+        bucket_event_repository=bucket_event_repository,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        occurred_at=occurred_at,
+    )
+
+
 def remove_manual_transaction(
     *,
     bucket_id: str,

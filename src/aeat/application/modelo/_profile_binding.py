@@ -30,6 +30,8 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import date
 from decimal import Decimal
 
@@ -39,7 +41,6 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...core.parsing._dates import _parse_iso8601_date
-from ...core.parsing._utils import _parse_bool
 from ...domain.calculations.registry import (
     DataBindingDefinition,
     RegistrySnapshot,
@@ -56,7 +57,6 @@ from ...domain.user_profile import (
     load_user_profile_schema,
     profile_binding_selectors,
 )
-from ._decimal_binding_value import decimal_from_string
 
 
 class ProfileBindingResolutionError(ModeloError):
@@ -265,25 +265,6 @@ def _decimal_value(binding_id: str, value: object) -> Decimal:
         return value
     if isinstance(value, int):
         return Decimal(value)
-    if isinstance(value, str):
-        # Legacy path: tolerate string-encoded booleans and numeric strings
-        # that may arrive from older serialised records or direct callers.
-        stripped = value.strip()
-        _bool_candidate = _parse_bool(stripped)
-        if isinstance(_bool_candidate, bool):
-            return Decimal("1") if _bool_candidate else Decimal("0")
-        return decimal_from_string(
-            binding_id,
-            stripped,
-            error_factory=lambda _message: ProfileBindingResolutionError(
-                f"profile fact for numeric binding {binding_id!r} must be decimal-compatible. "
-                "The registry consumes this binding as a numeric operand, not an enum "
-                "dispatch key; the profile fact must carry a numeric value",
-                translated_message="application.modelo.profile_binding.errors.decimal_value_invalid",
-                context={"binding_id": binding_id, "value_type": "str"},
-            ),
-            pipeline_label="profile fact",
-        )
     raise ProfileBindingResolutionError(
         f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "
         f"got value type {type(value).__name__!r}. The registry consumes this binding as a "
@@ -291,6 +272,71 @@ def _decimal_value(binding_id: str, value: object) -> Decimal:
         translated_message="application.modelo.profile_binding.errors.decimal_value_type_invalid",
         context={"binding_id": binding_id, "value_type": type(value).__name__},
     )
+
+
+@dataclass(slots=True)
+class _ResolvedBindingChannels:
+    """Mutable accumulator for the three engine channels a profile binding routes into.
+
+    The Decimal channel carries numeric operands, the enum channel carries
+    string dispatch keys, and the date channel carries date-typed facts. Object
+    identity of the three dicts is preserved across the resolution loop so
+    :func:`_route_resolved_binding` mutates the same accumulator in place.
+    """
+
+    decimal_values: dict[str, Decimal] = dataclass_field(default_factory=dict)
+    enum_values: dict[str, str] = dataclass_field(default_factory=dict)
+    date_values: dict[str, date] = dataclass_field(default_factory=dict)
+
+
+def _route_resolved_binding(
+    binding_id: str,
+    value: UserProfileFactValue,
+    *,
+    is_date_channel: bool,
+    is_enum_channel: bool,
+    channels: _ResolvedBindingChannels,
+) -> None:
+    """Route one resolved profile fact into its engine channel on ``channels``.
+
+    The caller has already skipped ``None`` (absent) facts. Date-channel facts
+    must be ``date``; enum-channel facts must not be ``bool``; otherwise the fact
+    is projected through the Decimal channel via :func:`_decimal_value`.
+    """
+    if is_date_channel:
+        # Date-channel bindings carry date-typed facts (e.g. birth_date)
+        # consumed by the age_at_year_end op.  They must not be projected
+        # through the Decimal or enum channels.
+        if not isinstance(value, date):
+            raise ProfileBindingResolutionError(
+                f"profile fact for date-channel binding {binding_id!r} must be a date, got {type(value).__name__!r}",
+                translated_message="application.modelo.profile_binding.errors.date_value_type_invalid",
+                context={"binding_id": binding_id, "value_type": type(value).__name__},
+            )
+        channels.date_values[binding_id] = value
+    elif is_enum_channel:
+        # Boolean-typed facts must never reach the enum dispatch channel —
+        # enum dispatch keys are string category codes, not yes/no flags.
+        # A bool here signals a mis-wired registry binding; refuse early
+        # rather than letting the engine silently mismatch the dispatch table.
+        if isinstance(value, bool):
+            raise ProfileBindingResolutionError(
+                f"profile fact for enum-channel binding {binding_id!r} resolved to a boolean "
+                f"({value!r}); boolean facts are not valid enum dispatch keys",
+                translated_message="application.modelo.profile_binding.errors.enum_boolean_invalid",
+                context={"binding_id": binding_id, "value_type": "bool"},
+            )
+        channels.enum_values[binding_id] = str(value)
+    else:
+        # The resolver projects profile facts into engine channels; it does not
+        # invent values the operator never supplied. Per-verb baselines own the
+        # "operator declared nothing" semantics for each call site, because the
+        # right default differs per verb (single-filer for projection vs.
+        # explicit operator entry for work_calculate). The classifier discovered
+        # 9 of 12 M100 profile bindings are core inputs whose zero-default
+        # corrupts the calculation, not optional levers — a blanket
+        # resolver-side zero is structurally wrong.
+        channels.decimal_values[binding_id] = _decimal_value(binding_id, value)
 
 
 def resolve_profile_sourced_bindings(
@@ -362,66 +408,25 @@ def resolve_profile_sourced_bindings(
     _inject_derived_state_attribution_facts(fact_index)
     enum_bindings = enum_consumed_binding_ids(snapshot.revision)
 
-    decimal_values: dict[str, Decimal] = {}
-    enum_values: dict[str, str] = {}
-    date_values: dict[str, date] = {}
+    channels = _ResolvedBindingChannels()
     for binding in profile_bindings:
         binding_id = str(binding.id)
         if binding_id in caller_binding_ids:
             continue
         value = _resolve_one(binding, fact_index)
-        if binding_id in formula_date_consumed:
-            # Date-channel bindings carry date-typed facts (e.g. birth_date)
-            # consumed by the age_at_year_end op.  They must not be projected
-            # through the Decimal or enum channels.  A missing date fact is
-            # an unrecoverable input — no defensible zero-default for a
-            # date — so the engine surfaces it as a missing-binding refusal.
-            if value is None:
-                continue
-            if not isinstance(value, date):
-                raise ProfileBindingResolutionError(
-                    f"profile fact for date-channel binding {binding_id!r} must be a date, "
-                    f"got {type(value).__name__!r}",
-                    translated_message="application.modelo.profile_binding.errors.date_value_type_invalid",
-                    context={"binding_id": binding_id, "value_type": type(value).__name__},
-                )
-            date_values[binding_id] = value
-        elif binding_id in enum_bindings:
-            # Boolean-typed facts must never reach the enum dispatch channel —
-            # enum dispatch keys are string category codes, not yes/no flags.
-            # A bool here signals a mis-wired registry binding; refuse early
-            # rather than letting the engine silently mismatch the dispatch table.
-            # A missing enum fact is unrecoverable — categorical dispatch has
-            # no defensible default — so the engine raises a missing-binding
-            # refusal downstream.
-            if value is None:
-                continue
-            if isinstance(value, bool):
-                raise ProfileBindingResolutionError(
-                    f"profile fact for enum-channel binding {binding_id!r} resolved to a boolean "
-                    f"({value!r}); boolean facts are not valid enum dispatch keys",
-                    translated_message="application.modelo.profile_binding.errors.enum_boolean_invalid",
-                    context={"binding_id": binding_id, "value_type": "bool"},
-                )
-            enum_values[binding_id] = str(value)
-        else:
-            # The resolver projects profile facts into engine channels;
-            # it does not invent values the operator never supplied. A
-            # missing Decimal-channel fact is skipped so the engine
-            # surfaces the missing-binding refusal — unless the caller
-            # supplies an explicit baseline. Per-verb baselines (e.g.
-            # ``verb_baseline_bindings`` in ``modelo project``,
-            # work_calculate's analogous setup) own the "operator declared
-            # nothing" semantics for each call site, because the right
-            # default differs per verb (single-filer for projection vs.
-            # explicit operator entry for work_calculate). The classifier
-            # discovered 9 of 12 M100 profile bindings are core inputs
-            # whose zero-default corrupts the calculation, not optional
-            # levers — a blanket resolver-side zero is structurally wrong.
-            if value is None:
-                continue
-            decimal_values[binding_id] = _decimal_value(binding_id, value)
+        if value is None:
+            continue
+        _route_resolved_binding(
+            binding_id,
+            value,
+            is_date_channel=binding_id in formula_date_consumed,
+            is_enum_channel=binding_id in enum_bindings,
+            channels=channels,
+        )
 
+    decimal_values = channels.decimal_values
+    enum_values = channels.enum_values
+    date_values = channels.date_values
     sourced = tuple(sorted(set(decimal_values) | set(enum_values) | set(date_values)))
     return ProfileSourcedBindingResult(
         binding_values=decimal_values,

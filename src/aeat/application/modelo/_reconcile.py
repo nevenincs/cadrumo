@@ -47,6 +47,31 @@ class ModeloReconciliationVerdict(StrEnum):
     EVIDENCE_INVALID = "evidence_invalid"
 
 
+class ModeloReconciliationHistoryEntry(BaseModel):
+    """One past reconciliation read back from the bucket event history.
+
+    ``modelo_reconcile`` persists no stored record: a reconciliation is
+    repeatable on demand from the justificante, so the durable trace is the
+    append-only ``MODELO_RECONCILED`` :class:`~aeat.domain.buckets.BucketEvent`
+    it emits. This typed entry projects one such event so the operator can
+    enumerate past reconciliation verdicts without re-parsing any evidence.
+    The read path is the same bucket-event catalogue the write path appends
+    into — there is no parallel reconciliation store.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    event_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    source_kind: ModeloReconciliationSourceKind
+    source_path: str
+    verdict: ModeloReconciliationVerdict
+    diff_count: int = Field(ge=0)
+    actor: str = Field(min_length=1, max_length=64)
+    reconciled_at: datetime
+
+
 class ModeloReconciliationDiff(BaseModel):
     """One per-casilla disagreement between work unit and evidence."""
 
@@ -261,9 +286,58 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     return report
 
 
+def list_modelo_reconciliations(
+    *,
+    bucket_id: BucketId,
+    work_unit_id: WorkUnitId | None = None,
+) -> tuple[ModeloReconciliationHistoryEntry, ...]:
+    """Return every recorded reconciliation in ``bucket_id`` as typed entries.
+
+    ``modelo_reconcile`` stores no record; its durable trace is the
+    ``MODELO_RECONCILED`` :class:`~aeat.domain.buckets.BucketEvent` it appends.
+    This read-back enumerates those events from the same
+    :class:`~aeat.domain.buckets.BucketEventHistoryRepository` catalogue the
+    write path appends into (no parallel read path), filtered to the active
+    ``bucket_id`` and ordered oldest-first by ``occurred_at``. Each event is
+    projected onto a typed :class:`ModeloReconciliationHistoryEntry` — the
+    verdict, source kind, diff count, actor, and reconciliation instant are
+    preserved, never collapsed to a flat ``dict[str, Any]``.
+
+    An optional ``work_unit_id`` narrows the result to one work unit's
+    reconciliation history. An empty result (no reconciliations recorded, or
+    none for the requested work unit) returns an empty tuple — the clean "no
+    reconciliations recorded yet" signal, not an error.
+    """
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    catalogue = BucketEventHistoryRepository().load()
+    events = catalogue.for_bucket(bucket_id, event_types=(BucketEventType.MODELO_RECONCILED,))
+    entries: list[ModeloReconciliationHistoryEntry] = []
+    for event in events:
+        payload = dict(event.payload)
+        event_work_unit_id = payload.get("work_unit_id", event.object_id)
+        if work_unit_id is not None and event_work_unit_id != work_unit_id:
+            continue
+        entries.append(
+            ModeloReconciliationHistoryEntry(
+                event_id=event.event_id,
+                bucket_id=event.bucket_id,
+                work_unit_id=event_work_unit_id,
+                source_kind=ModeloReconciliationSourceKind(payload["source_kind"]),
+                source_path=payload.get("source_path", ""),
+                verdict=ModeloReconciliationVerdict(payload["verdict"]),
+                diff_count=int(payload.get("diffs", "0")),
+                actor=event.actor,
+                reconciled_at=event.occurred_at,
+            ),
+        )
+    return tuple(entries)
+
+
 __all__ = [
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
+    "ModeloReconciliationHistoryEntry",
     "ModeloReconciliationReport",
     "ModeloReconciliationSourceKind",
     "ModeloReconciliationVerdict",
@@ -271,5 +345,6 @@ __all__ = [
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
     "WorkUnitNotFoundError",
+    "list_modelo_reconciliations",
     "modelo_reconcile",
 ]

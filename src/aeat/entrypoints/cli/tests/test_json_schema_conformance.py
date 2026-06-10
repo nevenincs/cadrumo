@@ -15,6 +15,8 @@ must be fixed before the suite goes green.
 
 from __future__ import annotations
 
+from typing import TypeGuard, cast
+
 import click
 import pytest
 import typer
@@ -114,7 +116,7 @@ def _force_load_lazy_subcommands(app: typer.Typer) -> None:
                 pending.append(group.typer_instance)
 
 
-def _is_command_group(command: object) -> bool:
+def _is_command_group(command: click.Command) -> TypeGuard[click.Group]:
     """Return True when ``command`` is a Click group / multi-command.
 
     Typer vendors its own Click (``typer._click``), so commands returned by
@@ -122,7 +124,9 @@ def _is_command_group(command: object) -> bool:
     this module imports — an ``isinstance(command, click.Group)`` check silently
     fails for every group and collapses the walk to the root leaf. Duck-typing on
     the group interface (``list_commands`` + ``get_command``) is version- and
-    vendor-robust.
+    vendor-robust. The ``TypeGuard`` narrows the structurally-identical vendored
+    group to ``click.Group`` so the group-only ``list_commands`` / ``get_command``
+    accesses below type-check.
     """
     return callable(getattr(command, "list_commands", None)) and callable(getattr(command, "get_command", None))
 
@@ -186,7 +190,11 @@ def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
     _force_load_lazy_subcommands(app)
     root = _typer_get_command(app)
     root.name = app.info.name or "aeat"
-    leaf_paths = _click_leaf_paths(root, prefix=())
+    # typer.main.get_command is typed to return typer's vendored
+    # ``typer._click.core.Command``; it is the same click runtime object the
+    # walk consumes as a top-level ``click.Command``. Bridge the vendored→real
+    # nominal gap once at the boundary.
+    leaf_paths = _click_leaf_paths(cast(click.Command, root), prefix=())
     keys = {_normalise_command_path(path) for path in leaf_paths}
     keys.update(_GROUP_CALLBACK_EMIT_KEYS)
     return keys
@@ -249,7 +257,10 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
     type at construction time.
     """
     schema = SCHEMA_REGISTRY[command_path]
-    envelope_cls = SchemaEnvelope[schema]  # type: ignore[valid-type]
+    # Subscripting the generic with a runtime variable is exactly what this gate
+    # exercises (the registry maps each command to its schema at runtime); both
+    # checkers reject a runtime value in a type-subscript position.
+    envelope_cls = SchemaEnvelope[schema]  # type: ignore[valid-type]  # ty: ignore[invalid-type-form]
     assert envelope_cls.__pydantic_generic_metadata__["args"] == (schema,)
 
 

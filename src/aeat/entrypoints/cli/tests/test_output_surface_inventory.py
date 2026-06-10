@@ -77,7 +77,7 @@ def _call_kind(node: ast.Call) -> str | None:
     return None
 
 
-def _line_for(path: Path, node: ast.AST) -> str:
+def _line_for(path: Path, node: ast.expr | ast.stmt) -> str:
     return path.read_text(encoding="utf-8").splitlines()[node.lineno - 1]
 
 

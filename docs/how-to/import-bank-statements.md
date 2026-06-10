@@ -131,7 +131,7 @@ aeat app ledger track <transaction-id>
 For a broader review queue, use:
 
 ```bash
-aeat app ledger review --filter period=2026Q1
+aeat app ledger review --filter period=2026-1T
 aeat app ledger check
 ```
 
@@ -143,15 +143,16 @@ anomalies across periods and is local-only.
 Export the active ledger to a file:
 
 ```bash
-aeat app ledger export --output ./ledger-2026-q1.csv --period 2026Q1
+aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
 ```
 
-The `--period` filter keeps the export aligned with the tutorial transaction
-dates. A transaction dated `2026-03-15` belongs in `2026Q1`, so it appears in
-the command above. Use a whole year when that is the review scope:
+The `--year` and `--period` filter keeps the export aligned with the tutorial
+transaction dates. A transaction dated `2026-03-15` belongs in `--year 2026
+--period 1T`, so it appears in the command above. Use the annual token `0A`
+when a whole year is the review scope:
 
 ```bash
-aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --period 2026
+aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
 ```
 
 Exports are review snapshots. They are not a general edit-and-reimport
@@ -239,8 +240,9 @@ Use the least destructive action that matches the problem:
   work. Use this when a movement was imported by mistake but you want to keep a
   record of it.
 - `stash` — set aside a transaction you are not sure about. A stashed
-  transaction leaves the everyday lists. Note that neither stashed nor
-  archived transactions can be returned to active from the command line.
+  transaction leaves the everyday lists. Both stash and archive are
+  reversible: `restore` returns the transaction to active.
+- `restore` — return a stashed or archived transaction to active.
 - `remove` — delete the transaction from your active records.
 - `reset` — clear the entire transaction list for the active profile and start
   over. **Use with care — this removes all imported data.**
@@ -250,6 +252,7 @@ Examples:
 ```bash
 aeat app ledger archive --id <transaction-id> --reason "duplicate imported row" --yes
 aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
+aeat app ledger restore --id <transaction-id> --reason "stashed by mistake" --yes
 aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --yes
 aeat app ledger reset --reason "re-importing all statements" --yes
 ```
@@ -297,8 +300,8 @@ classification update. The implemented batch path is `ledger classify
 1. Filter and export the rows you want to review:
 
    ```bash
-   aeat app ledger list --filter period=2026Q1 --filter classification=NOT_YET_PROCESSED
-   aeat app ledger export --output ./ledger-2026-q1-review.csv --period 2026Q1
+   aeat app ledger list --filter period=2026-1T --filter classification=NOT_YET_PROCESSED
+   aeat app ledger export --output ./ledger-2026-q1-review.csv --year 2026 --period 1T
    ```
 
 2. Build a small classification CSV from the reviewed transaction ids:
@@ -318,8 +321,8 @@ classification update. The implemented batch path is `ledger classify
 4. Review afterwards:
 
    ```bash
-   aeat app ledger list --filter period=2026Q1
-   aeat app ledger preflight --period 2026Q1
+   aeat app ledger list --filter period=2026-1T
+   aeat app ledger preflight --year 2026 --period 1T
    ```
 
 This batch path does not bulk edit descriptions, amounts, IVA fields, notes, or
@@ -331,7 +334,7 @@ or `ledger doclink`.
 Run preflight before calculating a modelo:
 
 ```bash
-aeat app ledger preflight --period 2026Q1
+aeat app ledger preflight --year 2026 --period 1T
 ```
 
 Preflight reports missing facts such as category, taxable base, IVA amount, IVA
@@ -341,7 +344,7 @@ preflight again.
 Check the overall ledger state:
 
 ```bash
-aeat app ledger status --period 2026Q1
+aeat app ledger status --year 2026 --period 1T
 ```
 
 Continue to calculation only when the active profile and target period are
@@ -362,7 +365,7 @@ ledger is not ready, use
 
 - [Classify transactions](classify-transactions.md)
 - [Classify transactions with an LLM](classify-with-llm.md)
-- [How calculations work](../explanation/ledger-to-calculation.md)
+- [How your records become tax figures](../explanation/from-records-to-figures.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [Quickstart: produce a modelo file](quickstart.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

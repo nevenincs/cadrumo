@@ -1002,9 +1002,11 @@ def test_verify_reports_casilla_drift_for_modelo_130_layout(tmp_path: Path) -> N
     verdict = verify_export(draft, file_path=exported, schema_provider=provider)
 
     assert verdict.verdict is DeclaracionVerifyVerdict.DRIFT
-    assert verdict.mismatched_casillas == (field.casilla,)
+    field_casilla = field.casilla
+    assert field_casilla is not None
+    assert verdict.mismatched_casillas == (field_casilla,)
     draft_provenance = {entry.casilla_id: entry for entry in draft.casilla_provenance}
-    assert verdict.mismatched_casilla_provenance == (draft_provenance[field.casilla],)
+    assert verdict.mismatched_casilla_provenance == (draft_provenance[field_casilla],)
     assert verdict.mismatched_casilla_provenance[0].legal_refs
     assert verdict.mismatched_casilla_provenance[0].source_refs
 

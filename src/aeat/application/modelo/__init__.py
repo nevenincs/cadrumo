@@ -81,6 +81,7 @@ from ._action_errors import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    WorkUnitRevisionDivergenceError,
 )
 from ._amendment_actions import amend_modelo_revision
 from ._binding_readiness import profile_resolvable_binding_ids
@@ -103,8 +104,11 @@ from ._calculate_input import (
     modelo_202_modality_for_work_unit,
 )
 from ._calculation_actions import (
+    BucketAggregationCalculationResult,
+    assert_no_novel_source_kinds,
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     get_calculation_revision,
     list_calculation_revisions,
     mark_revision_verificado_completo,
@@ -138,14 +142,19 @@ from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlockedError,
 )
 from ._iva_wallet_seed import (
+    ModeloIvaWalletCorrectionNoRecordError,
+    ModeloIvaWalletCorrectionSealedError,
     ModeloIvaWalletSeedError,
     ModeloIvaWalletSeedNegativeAmountError,
     ModeloIvaWalletSeedNoTaxpayerError,
+    correct_iva_compensation_period_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
 from ._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
+    list_m036_declarations,
+    read_m036_declaration,
     record_m036_declaration,
 )
 from ._maritime_preview import (
@@ -180,12 +189,14 @@ from ._projection import (
 from ._reconcile import (
     ModeloReconciliationCommand,
     ModeloReconciliationDiff,
+    ModeloReconciliationHistoryEntry,
     ModeloReconciliationReport,
     ModeloReconciliationSourceKind,
     ModeloReconciliationVerdict,
     ReconciliationCrossBucketRefusedError,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
+    list_modelo_reconciliations,
     modelo_reconcile,
 )
 from ._registry_discovery import (
@@ -306,6 +317,7 @@ __all__ = [
     "AmendmentOverrideCasillaError",
     "AmendmentTargetStateError",
     "AmendmentVerificationRefusedError",
+    "BucketAggregationCalculationResult",
     "CalculationRegistryUnavailableError",
     "CalculationResultSummary",
     "CalculationRevision",
@@ -350,6 +362,8 @@ __all__ = [
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportNoActiveBucketError",
     "ModeloExportResult",
+    "ModeloIvaWalletCorrectionNoRecordError",
+    "ModeloIvaWalletCorrectionSealedError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
     "ModeloIvaWalletSeedError",
@@ -366,6 +380,7 @@ __all__ = [
     "ModeloProjectionError",
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
+    "ModeloReconciliationHistoryEntry",
     "ModeloReconciliationReport",
     "ModeloReconciliationSourceKind",
     "ModeloReconciliationVerdict",
@@ -414,19 +429,23 @@ __all__ = [
     "WorkUnitHistoryEvent",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
+    "WorkUnitRevisionDivergenceError",
     "amend_modelo_revision",
     "apply_calculation_shortcut_inputs",
     "assemble_work_unit_history",
+    "assert_no_novel_source_kinds",
     "authorization_advisory_for_modelo",
     "build_work_calculate_input_bundle",
     "calculate_modelo_revision",
     "calculate_modelo_revision_from_bucket_aggregation",
+    "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     "calculate_modelo_work_revision",
     "calculation_result_summary",
     "compare_modelo_years",
     "compare_taxation_for_work_address",
     "compare_taxation_for_work_unit",
     "compare_taxation_modes",
+    "correct_iva_compensation_period_for_bucket",
     "create_work_unit",
     "declared_modelo_period_tokens",
     "discard_work_unit",
@@ -441,6 +460,8 @@ __all__ = [
     "import_external_filing_evidence",
     "list_calculation_revisions",
     "list_filing_records",
+    "list_m036_declarations",
+    "list_modelo_reconciliations",
     "list_verification_reports",
     "list_work_units",
     "maritime_facts_from_active_profile",
@@ -458,6 +479,7 @@ __all__ = [
     "project_modelo_100_from_m130",
     "project_modelo_work_target",
     "project_modelo_work_unit",
+    "read_m036_declaration",
     "record_m036_declaration",
     "registry_bindings",
     "registry_bindings_for_scope",

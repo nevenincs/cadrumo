@@ -130,7 +130,7 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     assert logged_out.returncode == 0, _combined_output(logged_out)
     assert "logged_out_profile" in logged_out.stdout
 
-    switched = _run_aeat(tmp_path, ("config", "unlock", "custody"))
+    switched = _run_aeat(tmp_path, ("config", "switch", "custody"))
     assert switched.returncode == 0, _combined_output(switched)
     assert "active_profile\tcustody" in switched.stdout
 
@@ -144,8 +144,8 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     assert "config.init" not in _combined_output(retired)
 
 
-def test_config_lock_unlock_aliases_drive_profile_lifecycle(tmp_path: Path) -> None:
-    """Root custody aliases use the profile lifecycle session path."""
+def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
+    """Root custody verbs use the profile lifecycle session path."""
 
     created = _run_aeat(
         tmp_path,
@@ -171,19 +171,19 @@ def test_config_lock_unlock_aliases_drive_profile_lifecycle(tmp_path: Path) -> N
     assert locked.returncode == 0, _combined_output(locked)
     assert "locked_profile\t" in locked.stdout
 
-    missing_default = _run_aeat(tmp_path, ("config", "unlock"))
+    missing_default = _run_aeat(tmp_path, ("config", "switch"))
     assert missing_default.returncode != 0
     assert "No active profile" in _combined_output(missing_default) or "active profile" in _combined_output(
         missing_default
     )
 
-    unlocked_by_name = _run_aeat(tmp_path, ("config", "unlock", "custody"))
-    assert unlocked_by_name.returncode == 0, _combined_output(unlocked_by_name)
-    assert "active_profile\tcustody" in unlocked_by_name.stdout
+    switched_by_name = _run_aeat(tmp_path, ("config", "switch", "custody"))
+    assert switched_by_name.returncode == 0, _combined_output(switched_by_name)
+    assert "active_profile\tcustody" in switched_by_name.stdout
 
-    unlocked_default = _run_aeat(tmp_path, ("config", "unlock"))
-    assert unlocked_default.returncode == 0, _combined_output(unlocked_default)
-    assert "active_profile\tcustody" in unlocked_default.stdout
+    switched_default = _run_aeat(tmp_path, ("config", "switch"))
+    assert switched_default.returncode == 0, _combined_output(switched_default)
+    assert "active_profile\tcustody" in switched_default.stdout
 
 
 def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path) -> None:
@@ -290,7 +290,7 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
 def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     """The accepted custody verbs are mounted under the config root."""
 
-    for verb in ("lock", "unlock", "rekey", "recover", "show-recovery", "verify-recovery"):
+    for verb in ("lock", "switch", "rekey", "recover", "show-recovery", "verify-recovery"):
         help_result = _run_aeat(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)
         assert verb in _combined_output(help_result)

@@ -26,6 +26,9 @@ from ._modelo_rendering import (
 )
 
 
+# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_work_unit_for_cli and
+# resolve_revision_for_cli are injected resolver callables whose concrete return
+# type varies by call site; Callable[..., Any] is the DI composition seam.
 def register_work_revision_commands(
     work_app: typer.Typer,
     *,

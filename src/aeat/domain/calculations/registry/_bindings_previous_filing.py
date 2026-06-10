@@ -12,6 +12,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._errors import RegistryValidationError
+from ._period_offset_math import apply_period_offset
 from ._schema import DataBindingDefinition, ModeloRevision
 
 
@@ -224,8 +225,9 @@ class _PreviousModeloSelector(BaseModel):
         if self.source_period_offset_from_target is None:
             anchors: tuple[tuple[int, str], ...] = tuple((0, period) for period in self.required_periods)
         else:
-            derived = _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period)
-            anchors = () if derived is None else (derived,)
+            anchors = (
+                _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period),
+            )
         if self.max_year_delta is None:
             return anchors
         return tuple(anchor for anchor in anchors if abs(anchor[0]) <= self.max_year_delta)
@@ -300,32 +302,13 @@ def _previous_filing_source_ids(selector: _PreviousModeloSelector) -> tuple[str,
     return ()
 
 
-_QUARTERLY_PERIOD_ORDINAL: dict[str, int] = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}
-_ORDINAL_TO_QUARTERLY: dict[int, str] = {ordinal: code for code, ordinal in _QUARTERLY_PERIOD_ORDINAL.items()}
-_PAGO_FRACCIONADO_PERIOD_ORDINAL: dict[str, int] = {"1P": 1, "2P": 2, "3P": 3}
-_ORDINAL_TO_PAGO_FRACCIONADO: dict[int, str] = {
-    ordinal: code for code, ordinal in _PAGO_FRACCIONADO_PERIOD_ORDINAL.items()
-}
-
-
-def _derive_offset_source_period(offset: int, *, target_period: str) -> str | None:
-    anchor = _derive_offset_source_anchor(offset, target_period=target_period)
-    return None if anchor is None else anchor[1]
-
-
-def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[int, str] | None:
-    if target_period in _QUARTERLY_PERIOD_ORDINAL:
-        year_delta, zero_based = divmod(_QUARTERLY_PERIOD_ORDINAL[target_period] - 1 + offset, 4)
-        return year_delta, _ORDINAL_TO_QUARTERLY[zero_based + 1]
-    if target_period in _PAGO_FRACCIONADO_PERIOD_ORDINAL:
-        year_delta, zero_based = divmod(_PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] - 1 + offset, 3)
-        return year_delta, _ORDINAL_TO_PAGO_FRACCIONADO[zero_based + 1]
-    if len(target_period) == 2 and target_period.isdigit():
-        year_delta, zero_based = divmod(int(target_period) - 1 + offset, 12)
-        return year_delta, f"{zero_based + 1:02d}"
-    raise RegistryValidationError(
-        f"previous-filing source_period_offset_from_target cannot interpret target period {target_period!r}"
-    )
+def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[int, str]:
+    try:
+        return apply_period_offset(offset, target_period=target_period)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(
+            f"previous-filing source_period_offset_from_target cannot interpret target period {target_period!r}"
+        ) from exc
 
 
 def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:

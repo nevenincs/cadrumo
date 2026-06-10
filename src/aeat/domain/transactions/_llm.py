@@ -2,7 +2,7 @@
 
 Defines the :class:`LLMClassifier` protocol plus subprocess-based
 reference implementations for the three local LLM CLIs
-(:func:`build_claude_classifier`, :func:`build_gemini_classifier`,
+(:func:`build_claude_classifier`, :func:`build_antigravity_classifier`,
 :func:`build_codex_classifier`). The prompt is built
 PROGRAMMATICALLY from the available enum values so the LLM prompt
 stays in sync with :class:`aeat.domain.transactions.BusinessClassification`:
@@ -44,6 +44,7 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ..categories import SpendingCategory, resolve_category_profiles
+from ..iva import IvaCategory
 from ._enums import BusinessClassification
 from ._errors import LLMClassifierError, TransactionValidationError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
@@ -68,6 +69,8 @@ class LLMClassificationResponse(BaseModel):
     confidence: Decimal
     reason: str = Field(min_length=1, max_length=_REASON_MAX_LENGTH)
     category: SpendingCategory | None = None
+    iva_category: IvaCategory | None = None
+    business_pct: Decimal | None = None
 
     @field_validator("confidence")
     @classmethod
@@ -75,6 +78,19 @@ class LLMClassificationResponse(BaseModel):
         """Restrict confidence to the inclusive 0..1 range."""
         if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
             raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
+        return value
+
+    @field_validator("business_pct")
+    @classmethod
+    def _check_business_pct_range(cls, value: Decimal | None) -> Decimal | None:
+        """Restrict the proposed MIXED business percentage to the inclusive 0..1 range.
+
+        The model only *proposes* the split direction; the percentage is a
+        non-regulated hint the operator confirms. ``None`` is the common case
+        (BUSINESS / PERSONAL suggestions carry no percentage).
+        """
+        if value is not None and not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
+            raise TransactionValidationError("business_pct must be within the inclusive 0..1 range")
         return value
 
     @field_validator("reason")
@@ -126,6 +142,14 @@ class CategoryChoice:
     hint: str
 
 
+@dataclass(frozen=True)
+class IvaCategoryChoice:
+    """One allowed :class:`aeat.domain.iva.IvaCategory` paired with an LLM-facing hint."""
+
+    value: IvaCategory
+    hint: str
+
+
 # Descriptive hints for the four LLM-addressable classification states. Kept
 # as module constants so the descriptions live next to their values and can
 # be overridden by callers that build a custom PromptSpec.
@@ -170,6 +194,7 @@ class PromptSpec:
         default_factory=default_classification_choices,
     )
     categories: tuple[CategoryChoice, ...] = ()
+    iva_categories: tuple[IvaCategoryChoice, ...] = ()
     header: str = "You are classifying a Spanish autónomo's bank transaction for tax purposes."
 
     def allowed_classifications(self) -> frozenset[BusinessClassification]:
@@ -183,6 +208,15 @@ class PromptSpec:
             Frozenset of :class:`SpendingCategory` values the LLM may emit.
         """
         return frozenset(choice.value for choice in self.categories)
+
+    def allowed_iva_categories(self) -> frozenset[IvaCategory]:
+        """Return the set of :class:`aeat.domain.iva.IvaCategory` values the LLM may emit (empty = none).
+
+        Returns:
+            Frozenset of :class:`aeat.domain.iva.IvaCategory` values the LLM may
+            select from; empty when the spec does not ask for an IVA category.
+        """
+        return frozenset(choice.value for choice in self.iva_categories)
 
     def render(self, transaction: Transaction) -> str:
         """Render the prompt for ``transaction`` against this spec."""
@@ -221,6 +255,83 @@ def prompt_spec_with_every_spending_category(
     return PromptSpec(
         classifications=classifications or default_classification_choices(),
         categories=category_choices,
+    )
+
+
+# Concise operator-/LLM-facing descriptions for each closed Spanish IVA
+# situation. These hint the model's SELECTION; they do not ground a number —
+# the rate is looked up from the registry and the base/amount derived
+# downstream. The IVA catalogue's own ``label`` fields are i18n keys that are
+# not carried in the locale catalogues, so they cannot serve as hints; these
+# curated one-liners are the authoritative prompt descriptions instead.
+_IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
+    IvaCategory.DOMESTIC_GENERAL_21: "domestic supply at the general 21% rate",
+    IvaCategory.DOMESTIC_REDUCED_10: "reduced 10% rate (hospitality, transport, some foods)",
+    IvaCategory.DOMESTIC_SUPER_REDUCED_4: "super-reduced 4% rate (basic foods, books, medicines)",
+    IvaCategory.DOMESTIC_ZERO: "domestic supply at a 0% rate",
+    IvaCategory.DOMESTIC_EXEMPT: "domestic supply exempt from IVA (education, health, finance — Art. 20)",
+    IvaCategory.DOMESTIC_NOT_SUBJECT: "operation not subject to Spanish IVA",
+    IvaCategory.DOMESTIC_REVERSE_CHARGE: "domestic reverse charge — the recipient self-assesses IVA (Art. 84)",
+    IvaCategory.INTRA_COMMUNITY_SUPPLY: "exempt intra-community supply of goods to an EU business (Art. 25)",
+    IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: "reverse-charge EU goods acquisition",
+    IvaCategory.INTRA_COMMUNITY_TRIANGULATION: "intra-community triangular operation",
+    IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: "export of goods outside the EU, zero-rated (Art. 21)",
+    IvaCategory.IMPORT_THIRD_COUNTRY: "import of goods from outside the EU",
+    IvaCategory.RECARGO_EQUIVALENCIA: "purchase subject to the recargo de equivalencia surcharge",
+    IvaCategory.REGIMEN_SIMPLIFICADO: "régimen simplificado (modules), not a general-regime invoice",
+    IvaCategory.OPERACION_NO_SUJETA: "operation outside the scope of Spanish IVA",
+    IvaCategory.ERRONEOUS_INVOICE: "erroneous invoice flagged for correction",
+    IvaCategory.UNKNOWN: "IVA situation not yet determined",
+}
+
+
+def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
+    """Return the grounded IVA-category choices for the saturation prompt.
+
+    The allow-list is the closed :class:`aeat.domain.iva.IvaCategory` enum (the
+    registry :class:`aeat.domain.iva.IvaCatalogue` is validated to carry a
+    regulation for every member, so the enum and the catalogue set are
+    identical). Each choice is hinted with a concise description from
+    :data:`_IVA_CATEGORY_HINTS`. The model SELECTS a category only; every
+    regulated euro figure is derived downstream from the registry rate, never
+    emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
+
+    Returns:
+        One :class:`IvaCategoryChoice` per :class:`aeat.domain.iva.IvaCategory`,
+        ordered by enum declaration.
+    """
+    return tuple(
+        IvaCategoryChoice(value=category, hint=_IVA_CATEGORY_HINTS.get(category, category.value.replace("_", " ")))
+        for category in IvaCategory
+    )
+
+
+def prompt_spec_with_saturation_fields(
+    *,
+    classifications: tuple[ClassificationChoice, ...] | None = None,
+) -> PromptSpec:
+    """Return a prompt spec for full saturation: spending + IVA category selection.
+
+    Extends :func:`prompt_spec_with_every_spending_category` with the
+    registry-grounded IVA-category allow-list (and invites a proposed MIXED
+    ``business_pct``) so one reviewed suggestion can carry the rich tax
+    metadata. The model selects categories only; the regulated rate, taxable
+    base, and IVA amount are derived downstream from the registry, never
+    emitted by the model (``2026-06-04-llm-ledger-classification-adr``).
+
+    Args:
+        classifications: Optional override for the classification choices;
+            defaults to :func:`default_classification_choices`.
+
+    Returns:
+        A :class:`PromptSpec` carrying both the spending-category and the
+        IVA-category allow-lists.
+    """
+    category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
+    return PromptSpec(
+        classifications=classifications or default_classification_choices(),
+        categories=category_choices,
+        iva_categories=default_iva_category_choices(),
     )
 
 
@@ -293,12 +404,26 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
             ]
         )
         schema_fields.append('"category": "<one SpendingCategory or null>"')
+    if spec.iva_categories:
+        iva_block = _render_choices((choice.value.value, choice.hint) for choice in spec.iva_categories)
+        sections.extend(
+            [
+                "",
+                "Also pick exactly one iva_category — the IVA situation that fits this transaction. "
+                "Pick the category only; do NOT compute or output any rate, base, or IVA amount.",
+                iva_block,
+            ]
+        )
+        schema_fields.append('"iva_category": "<one IvaCategory or null>"')
+        schema_fields.append('"business_pct": <0.0-1.0 when MIXED, else null>')
     schema_line = "{" + ", ".join(schema_fields) + "}"
     example_confidence = "0.85"
     example_reason = "restaurante meal with a named client strongly suggests business meal"
     example = f'{{"classification": "BUSINESS", "confidence": {example_confidence}, "reason": "{example_reason}"'
     if spec.categories:
         example += ', "category": "manutencion_dietas_nacional"'
+    if spec.iva_categories:
+        example += ', "iva_category": "domestic_general_21", "business_pct": null'
     example += "}"
     sections.extend(
         [
@@ -345,6 +470,7 @@ def parse_response(
     resolved_spec = spec or default_prompt_spec()
     allowed_classifications = resolved_spec.allowed_classifications()
     allowed_categories = resolved_spec.allowed_categories()
+    allowed_iva_categories = resolved_spec.allowed_iva_categories()
     failures: list[str] = []
     any_candidate_seen = False
 
@@ -365,6 +491,13 @@ def parse_response(
                 continue
             if response.category not in allowed_categories:
                 failures.append(f"disallowed category {response.category.value!r} (payload {payload[:100]!r})")
+                continue
+        if response.iva_category is not None:
+            if not allowed_iva_categories:
+                failures.append(f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:100]!r})")
+                continue
+            if response.iva_category not in allowed_iva_categories:
+                failures.append(f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:100]!r})")
                 continue
         return response
 
@@ -519,36 +652,44 @@ def build_claude_classifier(
     )
 
 
-def build_gemini_classifier(
+def build_antigravity_classifier(
     *,
     alias: str | None = None,
     model: str | None = None,
     spec: PromptSpec | None = None,
     minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
 ) -> SubprocessLLMClassifier:
-    """Build a classifier that shells out to ``gemini -p <prompt>``.
+    """Build a classifier that shells out to ``agy --prompt <prompt>``.
 
-    Gemini expects the prompt as the positional argument to ``-p``
-    (its ``--prompt`` flag); stdin piping alongside ``-p`` without a
-    value raises "Not enough arguments following: p". Gemini's stdout
-    is often polluted with MCP tool-registration warnings; the JSON
-    iterator in :func:`parse_response` tolerates the noise.
+    Antigravity (Google's agentic CLI ``agy``) is the supported successor to
+    the retired standalone ``gemini`` CLI. Its ``--print`` / ``-p`` /
+    ``--prompt`` mode runs a single prompt non-interactively; the prompt is the
+    VALUE of that flag, so it is passed as the final positional argument
+    (``prompt_via_argument=True``). Unlike the old ``gemini`` CLI (a Node
+    wrapper whose command line overflowed a ~8 KB limit on the larger
+    saturation prompt), ``agy`` is a native binary invoked through the
+    subprocess argument list, so it carries the full platform command-line
+    budget. ``--model`` selects a model when one is pinned; otherwise ``agy``
+    uses its own current default. Its stdout may carry start-up noise; the JSON
+    iterator in :func:`parse_response` tolerates it.
 
     Args:
-        alias: Capability-tier alias (``gemini-flash`` / ``gemini-pro``).
-            Enforces ``minimum_tier``.
+        alias: Capability-tier alias (``antigravity-default``). Enforces
+            ``minimum_tier``.
         model: Explicit provider-specific model override.
         spec: Prompt spec override.
         minimum_tier: Refuses aliases below this tier.
 
     Returns:
-        A :class:`SubprocessLLMClassifier` configured for the
-        ``gemini`` CLI with ``prompt_via_argument=True``.
+        A :class:`SubprocessLLMClassifier` configured for the ``agy`` CLI with
+        ``prompt_via_argument=True``.
     """
-    resolved_model = _resolve_model_id(provider="gemini", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
-    command = ("gemini", "-p") if not resolved_model else ("gemini", "-m", resolved_model, "-p")
+    resolved_model = _resolve_model_id(
+        provider="antigravity", alias=alias, explicit_model=model, minimum_tier=minimum_tier
+    )
+    command = ("agy", "--prompt") if not resolved_model else ("agy", "--model", resolved_model, "--prompt")
     return SubprocessLLMClassifier(
-        name="gemini",
+        name="antigravity",
         command=command,
         model=resolved_model or None,
         spec=spec or default_prompt_spec(),
@@ -618,7 +759,7 @@ def _resolve_model_id(
 
 _BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
     "claude": build_claude_classifier,
-    "gemini": build_gemini_classifier,
+    "antigravity": build_antigravity_classifier,
     "codex": build_codex_classifier,
 }
 
@@ -634,7 +775,7 @@ def resolve_classifier(
     """Return a classifier for the given provider name.
 
     Args:
-        provider: One of ``"claude"``, ``"gemini"``, ``"codex"``, or a
+        provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``, or a
             name registered via :func:`register_classifier`.
         alias: Optional capability-tier alias (see
             :class:`aeat.domain.transactions._model_tier.ModelProfile`).
@@ -694,6 +835,7 @@ __all__ = [
     "PIPELINE_ONLY_CLASSIFICATIONS",
     "CategoryChoice",
     "ClassificationChoice",
+    "IvaCategoryChoice",
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
@@ -701,13 +843,15 @@ __all__ = [
     "ModelTier",
     "PromptSpec",
     "SubprocessLLMClassifier",
+    "build_antigravity_classifier",
     "build_claude_classifier",
     "build_codex_classifier",
-    "build_gemini_classifier",
     "default_classification_choices",
+    "default_iva_category_choices",
     "default_prompt_spec",
     "parse_response",
     "prompt_spec_with_every_spending_category",
+    "prompt_spec_with_saturation_fields",
     "register_classifier",
     "resolve_classifier",
     "unregister_classifier",

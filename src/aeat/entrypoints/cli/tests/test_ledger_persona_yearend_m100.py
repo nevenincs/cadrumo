@@ -74,14 +74,15 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _oracle_rules() -> list[dict]:
+def _oracle_rules() -> list[dict[str, object]]:
     manifest = json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
     return manifest["rules"]
 
 
-def _match(description: str, rules: list[dict]) -> dict | None:
+def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:
     for rule in rules:
-        if rule["match"] in description:
+        match_val = rule.get("match")
+        if isinstance(match_val, str) and match_val in description:
             return rule
     return None
 
@@ -92,15 +93,17 @@ def _import_corpus() -> None:
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
-def _list_rows() -> list[dict]:
+def _list_rows() -> list[dict[str, object]]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
 
 
-def _year_of(row: dict) -> int:
-    return int(row["date"][:4])
+def _year_of(row: dict[str, object]) -> int:
+    date_str = row.get("date")
+    assert isinstance(date_str, str)
+    return int(date_str[:4])
 
 
 # --- Annual reach: the operator wants the whole year, not one quarter --------
@@ -169,12 +172,18 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand() -> None:
     lines = ["transaction_id,classification,category_id"]
     classified_ids: set[str] = set()
     for row in rows:
-        rule = _match(row["description"], rules)
-        if rule is None or rule["classification"] == "MIXED":
+        desc = row.get("description")
+        tx_id = row.get("transaction_id")
+        assert isinstance(desc, str)
+        assert isinstance(tx_id, str)
+        rule = _match(desc, rules)
+        if rule is None or rule.get("classification") == "MIXED":
             continue
         cat = rule.get("category_id") or ""
-        lines.append(f"{row['transaction_id']},{rule['classification']},{cat}")
-        classified_ids.add(row["transaction_id"])
+        classification_val = rule.get("classification")
+        assert isinstance(classification_val, str)
+        lines.append(f"{tx_id},{classification_val},{cat}")
+        classified_ids.add(tx_id)
     assert classified_ids, "oracle must classify a non-trivial slice of the corpus"
 
     import tempfile
@@ -192,8 +201,10 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand() -> None:
     rows = _list_rows()
     rows_2025 = [r for r in rows if _year_of(r) == 2025]
     business_2025 = [r for r in rows_2025 if r.get("business_classification") == "BUSINESS"]
-    income = sum(Decimal(str(r["amount"])) for r in business_2025 if r.get("direction") == "INCOMING")
-    expense = sum(-Decimal(str(r["amount"])) for r in business_2025 if r.get("direction") == "OUTGOING")
+    income_rows = [r for r in business_2025 if r.get("direction") == "INCOMING"]
+    income = sum(Decimal(str(r.get("amount", "0"))) for r in income_rows)
+    expense_rows = [r for r in business_2025 if r.get("direction") == "OUTGOING"]
+    expense = sum(-Decimal(str(r.get("amount", "0"))) for r in expense_rows)
     # Internal-consistency checks only (anti-tautology): a real autónoma year
     # has positive business income and positive deductible expense.
     assert income > 0, f"expected positive 2025 business income, got {income}"
@@ -215,11 +226,13 @@ def test_full_year_total_equals_sum_of_its_quarters() -> None:
     def _quarter(month: int) -> int:
         return (month - 1) // 3 + 1
 
-    annual_total = sum(Decimal(str(r["amount"])) for r in rows_2025)
+    annual_total = sum(Decimal(str(r.get("amount", "0"))) for r in rows_2025)
     quarter_totals = {1: Decimal(0), 2: Decimal(0), 3: Decimal(0), 4: Decimal(0)}
     for r in rows_2025:
-        month = int(r["date"][5:7])
-        quarter_totals[_quarter(month)] += Decimal(str(r["amount"]))
+        date_str = r.get("date")
+        assert isinstance(date_str, str)
+        month = int(date_str[5:7])
+        quarter_totals[_quarter(month)] += Decimal(str(r.get("amount", "0")))
     assert sum(quarter_totals.values()) == annual_total, (quarter_totals, annual_total)
     # All four quarters carry activity (full-year corpus, not a single quarter).
     assert all(total != 0 for total in quarter_totals.values()), quarter_totals
@@ -236,15 +249,20 @@ def test_cross_year_invoice_is_settled_in_2026_under_a_2025_reference() -> None:
     """
     _import_corpus()
     rows = _list_rows()
-    cross_year = [r for r in rows if _CROSS_YEAR_NEEDLE in r["description"]]
+    cross_year = []
+    for r in rows:
+        desc_val = r.get("description")
+        if isinstance(desc_val, str) and _CROSS_YEAR_NEEDLE in desc_val:
+            cross_year.append(r)
     assert cross_year, f"corpus must contain the cross-year invoice {_CROSS_YEAR_NEEDLE}"
     row = cross_year[0]
     # Settled (booked) in 2026 ...
-    assert _year_of(row) == 2026, row["date"]
+    assert _year_of(row) == 2026, row.get("date")
     # ... but the invoice reference names the prior fiscal year. The operator,
     # not the CLI, must decide which year's Renta the income belongs to.
-    assert "2025" in row["description"], row["description"]
-    assert row["direction"] == "INCOMING", row
+    desc_val = row.get("description")
+    assert isinstance(desc_val, str) and "2025" in desc_val, desc_val
+    assert row.get("direction") == "INCOMING", row
 
 
 def test_cross_year_invoice_falls_outside_a_2025_period_filter() -> None:

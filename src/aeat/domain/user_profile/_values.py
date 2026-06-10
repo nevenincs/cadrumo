@@ -80,7 +80,7 @@ def _coerce_profile_fact_value(value: object) -> object:
     # Only promote the two JSON-serialized boolean tokens produced by
     # model_dump(mode="json"). Broader token sets (e.g. "0"/"1") must
     # not be promoted to bool here because "0" is also a valid Decimal fact.
-    if value in ("true", "false"):
+    if isinstance(value, str) and value in ("true", "false"):
         _bool_candidate = _parse_bool(value)
         if isinstance(_bool_candidate, bool):
             return _bool_candidate

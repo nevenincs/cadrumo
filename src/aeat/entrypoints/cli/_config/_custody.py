@@ -29,19 +29,19 @@ def select_profile_pointer(pointer: Any) -> None:
         ) from exc
 
 
-def _register_unlock_command(
+def _register_switch_command(
     app: typer.Typer,
     *,
     resolve_active_profile_pointer: Callable[[], Any],
     resolve_profile_by_label: Callable[[str], Any],
     assert_profile_record_present: Callable[..., None],
 ) -> None:
-    """Register the profile unlock transport command."""
+    """Register the operator profile-switch transport command."""
 
-    @app.command("unlock", help=tr("cli.config.unlock.help"))
-    def config_unlock(
+    @app.command("switch", help=tr("cli.config.switch.help"))
+    def config_switch(
         ctx: typer.Context,
-        name: str | None = typer.Argument(None, help=tr("cli.config.unlock.name_help")),
+        name: str | None = typer.Argument(None, help=tr("cli.config.switch.name_help")),
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -49,7 +49,7 @@ def _register_unlock_command(
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Select and unlock a profile through the canonical lifecycle span."""
+        """Switch the active profile through the canonical lifecycle span."""
         _activate_subcommand_output_language(ctx, output_language)
         if name is None:
             pointer = resolve_active_profile_pointer()
@@ -66,12 +66,12 @@ def _register_unlock_command(
             label=pointer.label,
         )
         select_profile_pointer(pointer)
-        from .._config_payloads import ConfigUnlockResult
+        from .._config_payloads import ConfigSwitchResult
 
-        result = ConfigUnlockResult(active_profile=pointer.label)
+        result = ConfigSwitchResult(active_profile=pointer.label)
         _emit_envelope(
             ctx,
-            command="config.unlock",
+            command="config.switch",
             result=result,
             lines=(f"active_profile\t{pointer.label}",),
         )
@@ -85,7 +85,7 @@ def register_custody_commands(
     assert_profile_record_present: Callable[..., None],
 ) -> None:
     """Register root-level profile custody commands."""
-    _register_unlock_command(
+    _register_switch_command(
         app,
         resolve_active_profile_pointer=resolve_active_profile_pointer,
         resolve_profile_by_label=resolve_profile_by_label,

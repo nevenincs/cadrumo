@@ -223,9 +223,7 @@ def test_profile_flag_ambiguous_label_refuses_with_dedicated_key() -> None:
     _create_profile_and_resolve_uuid()  # bucket 1: label "operator"
     _write_second_live_bucket_sharing_label(_LABEL)  # bucket 2: same label
 
-    listed = _RUNNER.invoke(
-        app, ["--language", "en", "--profile", _LABEL, "app", "ledger", "list"]
-    )
+    listed = _RUNNER.invoke(app, ["--language", "en", "--profile", _LABEL, "app", "ledger", "list"])
 
     assert listed.exit_code != 0, listed.output
     combined = _combined_output(listed)

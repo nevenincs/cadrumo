@@ -25,7 +25,7 @@ class CensoRefreshResult(OutputSchema):
     snapshot_id: str
     profile_id: str
     captured_at: str
-    facts: dict = {}
+    facts: dict[str, object] = {}
 
 
 @register_schema("config.profile.censo.show")
@@ -37,7 +37,7 @@ class CensoShowResult(OutputSchema):
     captured_at: str
     source_url: str
     state: str
-    facts: dict = {}
+    facts: dict[str, object] = {}
 
 
 @register_schema("config.profile.censo.compare")
@@ -45,10 +45,10 @@ class CensoCompareResult(OutputSchema):
     """JSON envelope for ``aeat config profile censo compare``."""
 
     snapshot_id: str | None = None
-    diverging: list[dict] = []
-    censo_only: list[dict] = []
-    profile_only: list[dict] = []
-    rows: list[dict] = []
+    diverging: list[dict[str, object]] = []
+    censo_only: list[dict[str, object]] = []
+    profile_only: list[dict[str, object]] = []
+    rows: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor; mypy
     # assignment check is incorrect.

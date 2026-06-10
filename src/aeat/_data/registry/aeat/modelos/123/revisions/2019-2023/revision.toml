@@ -3,6 +3,7 @@ label = "Orden EHA/3435/2007, ejercicios 2019 a 2023"
 valid_from = 2019-01-01
 valid_to = 2023-12-31
 period_selector = { year_from = 2019, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-eha-3435-2007:anexo-ii"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = [
     "aeat-dr-123-2019-2023-v13",

@@ -612,7 +612,7 @@ class AeatAuthenticator:
         # directly. The authenticator passes the settings-resolved
         # secret straight through; the OpenSSL-binding env channel is
         # gone, so the secret never enters os.environ.
-        unexpected_health_failure = False
+        _deferred_error: AuthValidationError | None = None
         try:
             backend = self._settings.aeat_certificate_backend
             health = self._certificate_health_check(
@@ -665,16 +665,18 @@ class AeatAuthenticator:
                 health_summary=tr("application.auth.certificate.health.unavailable"),
             )
         except Exception as exc:
-            unexpected_health_failure = True
             log.debug(
                 "AeatAuthenticator.describe: unexpected error surfacing unavailable status failure=%s",
                 type(exc).__name__,
             )
-        if unexpected_health_failure:
-            raise AuthValidationError(
+            _deferred_error = AuthValidationError(
                 "certificate health is unavailable",
                 translated_message="application.auth.certificate.health.unavailable",
             )
+        # Raise outside the except block so __context__ stays None —
+        # the sensitive original exception must not leak through the chain.
+        if _deferred_error is not None:
+            raise _deferred_error
 
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.
@@ -812,29 +814,14 @@ class AeatAuthenticator:
         storage_state_path = path
         cert = self.load_certificate()
         persisted = self._load_persisted_browser_session(storage_state_path)
-        storage_state_sha256 = persisted.storage_state_sha256
         metadata = self._read_persisted_metadata(storage_state_path)
 
-        if metadata.storage_state_sha256 != storage_state_sha256:
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                "persisted storage_state hash does not match metadata",
-            )
-        if metadata.idle_deadline <= now():
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                "persisted AEAT session is past its idle deadline",
-            )
-        if metadata.certificate_thumbprint != cert.sha256_thumbprint:
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                "persisted AEAT session was captured with a different certificate thumbprint",
-            )
-        if metadata.certificate_subject != cert.subject:
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                "persisted AEAT session was captured with a different certificate subject",
-            )
+        self._validate_persisted_session_metadata(
+            metadata,
+            cert=cert,
+            storage_state_sha256=persisted.storage_state_sha256,
+            storage_state_path=storage_state_path,
+        )
 
         session_like = browser_session or await self._resolve_browser_session()
         owns_session = browser_session is None
@@ -875,17 +862,12 @@ class AeatAuthenticator:
                 }
             )
         except _PersistedSessionInvalidError:
-            if context is not None:
-                try:
-                    await context.close()
-                except Exception as _exc:
-                    log.debug(
-                        "AeatAuthenticator: context.close after invalid persisted session suppressed: %s",
-                        _exc,
-                        exc_info=True,
-                    )
-            if owns_session:
-                await self._close_browser_session(session_like)
+            await self._teardown_resume_attempt(
+                context,
+                session_like,
+                owns_session=owns_session,
+                context_close_log="AeatAuthenticator: context.close after invalid persisted session suppressed: %s",
+            )
             self._invalidate_persisted_state(
                 storage_state_path,
                 "persisted AEAT browser session failed live verification",
@@ -898,17 +880,12 @@ class AeatAuthenticator:
                 _PERSISTED_SESSION_LABEL,
                 type(exc).__name__,
             )
-            if context is not None:
-                try:
-                    await context.close()
-                except Exception as _exc:
-                    log.debug(
-                        "AeatAuthenticator: context.close after resume error suppressed: %s",
-                        _exc,
-                        exc_info=True,
-                    )
-            if owns_session:
-                await self._close_browser_session(session_like)
+            await self._teardown_resume_attempt(
+                context,
+                session_like,
+                owns_session=owns_session,
+                context_close_log="AeatAuthenticator: context.close after resume error suppressed: %s",
+            )
         if resume_failed:
             self._raise_invalid_persisted_state(
                 storage_state_path,
@@ -937,6 +914,66 @@ class AeatAuthenticator:
             session.certificate_thumbprint,
         )
         return session
+
+    def _validate_persisted_session_metadata(
+        self,
+        metadata: PersistedSessionMetadata,
+        *,
+        cert: LoadedCertificate,
+        storage_state_sha256: str,
+        storage_state_path: Path,
+    ) -> None:
+        """Run the four ordered persisted-session validation gates.
+
+        The checks fire in a fixed order — storage_state hash, idle
+        deadline, certificate thumbprint, certificate subject — and each
+        delegates to :meth:`_raise_invalid_persisted_state` (``NoReturn``)
+        with its specific reason so the redacted reason code is preserved.
+        Returns ``None`` only when every gate passes.
+        """
+        if metadata.storage_state_sha256 != storage_state_sha256:
+            self._raise_invalid_persisted_state(
+                storage_state_path,
+                "persisted storage_state hash does not match metadata",
+            )
+        if metadata.idle_deadline <= now():
+            self._raise_invalid_persisted_state(
+                storage_state_path,
+                "persisted AEAT session is past its idle deadline",
+            )
+        if metadata.certificate_thumbprint != cert.sha256_thumbprint:
+            self._raise_invalid_persisted_state(
+                storage_state_path,
+                "persisted AEAT session was captured with a different certificate thumbprint",
+            )
+        if metadata.certificate_subject != cert.subject:
+            self._raise_invalid_persisted_state(
+                storage_state_path,
+                "persisted AEAT session was captured with a different certificate subject",
+            )
+
+    async def _teardown_resume_attempt(
+        self,
+        context: BrowserContextLike | None,
+        session_like: BrowserSessionLike,
+        *,
+        owns_session: bool,
+        context_close_log: str,
+    ) -> None:
+        """Close a failed resume attempt's context and owned browser session.
+
+        Mirrors the suppress-and-log teardown shared by both failure
+        branches: any ``context.close()`` error is swallowed and logged at
+        DEBUG with ``context_close_log``, and the browser session is closed
+        only when this authenticator owns it (``owns_session``).
+        """
+        if context is not None:
+            try:
+                await context.close()
+            except Exception as _exc:
+                log.debug(context_close_log, _exc, exc_info=True)
+        if owns_session:
+            await self._close_browser_session(session_like)
 
     def _assert_context_marker(
         self,

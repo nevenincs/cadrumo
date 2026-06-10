@@ -93,6 +93,7 @@ def persist_filed_revision_observation(
         observation,
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=captured_at,
+        stamped_revision_id=work_unit.revision_id,
     )
     return observation_key(work_unit.modelo, work_unit.filing_year, work_unit.period)
 

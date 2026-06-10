@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistryValidationError, parse_modelo_period
+from ...domain.calculations.registry._errors import RegistrySnapshotError
 from ...domain.calculations.registry._temporal import select_revision
 from ...domain.contribuyente import CCAA
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
@@ -207,7 +208,7 @@ class ModeloWorkAddressNotFoundError(ModeloError, LookupError):
 
 
 class ModeloWorkRegistryYearMismatchError(ModeloError, ValueError):
-    """Raised when a registry revision does not cover the filing year."""
+    """Raised when an explicit revision diverges from the law-determined one."""
 
 
 class ModeloWorkPeriodTokenError(ModeloError, ValueError):
@@ -431,19 +432,6 @@ def project_modelo_work_target(target: ModeloWorkTarget) -> ModeloResolvedWorkPr
     return project_modelo_work_unit(resolution.work_unit)
 
 
-def _revision_covers_year(*, modelo: str, revision_id: str, filing_year: int) -> bool:
-    definition = resources().modelos.authority.modelo(modelo.strip())
-    revision = definition.revisions[revision_id]
-    selector = revision.period_selector
-    if selector.years:
-        return filing_year in selector.years
-    if selector.year_from is None:
-        return True
-    if selector.year_to is None:
-        return filing_year >= selector.year_from
-    return selector.year_from <= filing_year <= selector.year_to
-
-
 def resolve_registry_revision_for_work_target(
     *,
     modelo: str,
@@ -451,20 +439,51 @@ def resolve_registry_revision_for_work_target(
     period: str,
     registry_revision_id: str | None,
 ) -> str:
-    """Resolve and validate the registry revision for a visible filing target."""
+    """Resolve and validate the registry revision for a visible filing target.
+
+    When ``registry_revision_id`` is ``None`` the law-determined revision for
+    ``(modelo, filing_year, period)`` is returned unconditionally.
+
+    When ``registry_revision_id`` is supplied it is treated as an
+    *assertion parameter* (per :class:`select_revision`'s structural property):
+    an explicit ``--revision`` is accepted only when it names exactly the revision
+    that ``select_revision`` would pick from ``(filing_year, period)`` alone.  If
+    the supplied id diverges from the law-determined revision the call refuses with
+    an instructive error naming both the requested and the law-determined revision
+    and stating that the binding is fixed by law (per the CLI-boundary
+    instructive-refusal mandate in ``aeat-architecture-boundaries``).
+
+    ``--revision`` is thereby demoted from a free override to an
+    idempotence/assertion handle, mirroring the operator-surface ADR's D8
+    shape for ``preflight --revision-id``.
+    """
+    definition = resources().modelos.authority.modelo(modelo.strip())
     if registry_revision_id is None:
-        definition = resources().modelos.authority.modelo(modelo.strip())
         return select_revision(definition, filing_year=filing_year, period=period).id
     revision_id = registry_revision_id.strip()
-    definition = resources().modelos.authority.modelo(modelo.strip())
-    if revision_id not in definition.revisions:
+    try:
+        # Delegate the assertion to select_revision itself.  Within a valid
+        # registry the non-overlap gate guarantees uniqueness, so narrowing by
+        # an id that genuinely covers (filing_year, period) returns the same
+        # revision the unconstrained call would; narrowing by any other id raises
+        # RegistrySnapshotError.  This makes the structural property do the work
+        # instead of re-implementing a weaker year-only coverage check.
+        select_revision(definition, filing_year=filing_year, period=period, revision_id=revision_id)
+    except RegistrySnapshotError:
+        # Determine the law-determined revision for a clear instructive message.
+        try:
+            law_revision = select_revision(definition, filing_year=filing_year, period=period)
+            law_id = law_revision.id
+        except RegistrySnapshotError:
+            law_id = "<no revision found for this period>"
         raise ModeloWorkRegistryYearMismatchError(
-            f"registry revision {revision_id!r} is not registered for modelo {modelo.strip()!r}"
-        )
-    if not _revision_covers_year(modelo=modelo, revision_id=revision_id, filing_year=filing_year):
-        raise ModeloWorkRegistryYearMismatchError(
-            f"registry revision {revision_id!r} does not cover filing year {filing_year}"
-        )
+            f"registry revision {revision_id!r} is not the law-determined revision for "
+            f"modelo {modelo.strip()!r} {filing_year} {period!r}. "
+            f"The law-determined revision is {law_id!r}. "
+            f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
+            f"you cannot override it. Re-create the work unit without --revision to use "
+            f"the correct revision, or omit --revision to accept the law-determined default."
+        ) from None
     return revision_id
 
 

@@ -136,7 +136,7 @@ def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
 def test_aeat_login_assertion_is_valid_composite() -> None:
     assertion = _certificate_assertion()
     assert assertion.is_valid is True
-    assert assertion.model_config["frozen"] is True
+    assert assertion.model_config.get("frozen") is True
 
 
 def test_invalid_persisted_session_redacts_path_and_reason(

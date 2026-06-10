@@ -11,6 +11,8 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
+    DataBindingDefinition,
+    ExportRecordDefinition,
     InputKind,
     ModeloRevision,
     RegistryValidator,
@@ -336,12 +338,12 @@ def test_committed_modelo_232_envelope_footer_emits_single_closing_tag_field() -
         assert close_field.length == 18, revision.id
 
 
-def _envelope_header(revision):  # type: ignore[no-untyped-def]
+def _envelope_header(revision: ModeloRevision) -> ExportRecordDefinition:
     """Return the ``envelope_header`` record from ``revision``'s first export layout."""
     return next(record for record in revision.export_layouts[0].records if record.record_type == "envelope_header")
 
 
-def _envelope_footer(revision):  # type: ignore[no-untyped-def]
+def _envelope_footer(revision: ModeloRevision) -> ExportRecordDefinition:
     """Return the ``envelope_footer`` record from ``revision``'s first export layout."""
     return next(record for record in revision.export_layouts[0].records if record.record_type == "envelope_footer")
 
@@ -396,7 +398,7 @@ _SECTION_3_4_RANGE = (144, 1171)
 _SECTION_5_6_RANGE = (13, 3072)
 
 
-def _layout_bindings_for(revision: ModeloRevision, record_name: str) -> tuple:
+def _layout_bindings_for(revision: ModeloRevision, record_name: str) -> tuple[DataBindingDefinition, ...]:
     return tuple(
         binding
         for binding in revision.bindings
@@ -404,12 +406,19 @@ def _layout_bindings_for(revision: ModeloRevision, record_name: str) -> tuple:
     )
 
 
+def _selector_int(binding: DataBindingDefinition, key: str) -> int:
+    """Extract an integer selector value from a binding; asserts the value is numeric."""
+    value = binding.selector[key]
+    assert isinstance(value, (int, str))
+    return int(value)
+
+
 def test_committed_modelo_232_section_3_4_bindings_cover_page_01_slots() -> None:
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
         bindings = _layout_bindings_for(revision, "page_01")
         assert bindings, revision.id
-        ranges = sorted((int(b.selector["offset"]), int(b.selector["length"])) for b in bindings)
+        ranges = sorted((_selector_int(b, "offset"), _selector_int(b, "length")) for b in bindings)
         first_offset = ranges[0][0]
         last_offset, last_length = ranges[-1]
         assert first_offset == _SECTION_3_4_RANGE[0], (revision.id, first_offset)
@@ -426,7 +435,7 @@ def test_committed_modelo_232_section_5_6_bindings_cover_page_02_slots() -> None
     for revision in modelo.revisions.values():
         bindings = _layout_bindings_for(revision, "page_02")
         assert bindings, revision.id
-        ranges = sorted((int(b.selector["offset"]), int(b.selector["length"])) for b in bindings)
+        ranges = sorted((_selector_int(b, "offset"), _selector_int(b, "length")) for b in bindings)
         first_offset = ranges[0][0]
         last_offset, last_length = ranges[-1]
         assert first_offset == _SECTION_5_6_RANGE[0], (revision.id, first_offset)

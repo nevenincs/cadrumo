@@ -131,7 +131,7 @@ class TestBuildIntegrityReport:
 
     def test_namespace_enumeration_failure_is_not_reported_as_clean_integrity(self) -> None:
         with pytest.raises(AttributeError, match="list_namespaces"):
-            build_repair_integrity_report(repository=object())  # type: ignore[arg-type]
+            build_repair_integrity_report(repository=object())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test: bare object lacks list_namespaces
 
 
 class TestBuildListReport:

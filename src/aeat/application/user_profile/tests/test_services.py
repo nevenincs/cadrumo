@@ -7,6 +7,7 @@ import pytest
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
 from ....domain.user_profile import (
+    ProfileSchemaDefinition,
     UserProfileFact,
     UserProfileRecord,
 )
@@ -19,18 +20,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture(scope="module")
-def schema():
+def schema() -> ProfileSchemaDefinition:
     return resources().user_profile_schema.singleton
 
 
-def test_validation_rejects_unknown_field_path(schema) -> None:
+def test_validation_rejects_unknown_field_path(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
     report = svc.validate_facts("operator", [UserProfileFact(path="identity.does_not_exist", value="x")])
     codes = {issue.code for issue in report.issues}
     assert "unknown_field" in codes
 
 
-def test_validation_reports_missing_required_fields(schema) -> None:
+def test_validation_reports_missing_required_fields(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
     report = svc.validate_facts("operator", [])
     required_misses = [
@@ -41,7 +42,7 @@ def test_validation_reports_missing_required_fields(schema) -> None:
     assert len(required_misses) >= 1
 
 
-def test_validation_accepts_known_field(schema) -> None:
+def test_validation_accepts_known_field(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
     report = svc.validate_facts("operator", [UserProfileFact(path="identity.tax_id", value="12345678Z")])
     assert not any(issue.code == "unknown_field" for issue in report.issues)
@@ -58,7 +59,7 @@ def test_validation_accepts_known_field(schema) -> None:
         "19780315",  # ISO-ish but missing separators
     ],
 )
-def test_validation_rejects_non_iso_date_value(schema, garbage: str) -> None:
+def test_validation_rejects_non_iso_date_value(schema: ProfileSchemaDefinition, garbage: str) -> None:
     svc = ProfileValidationService(schema=schema)
     report = svc.validate_facts(
         "operator",
@@ -72,7 +73,7 @@ def test_validation_rejects_non_iso_date_value(schema, garbage: str) -> None:
     assert date_errors[0].path == "renta_taxpayer.birth_date"
 
 
-def test_validation_accepts_valid_iso_date_value(schema) -> None:
+def test_validation_accepts_valid_iso_date_value(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)
     report = svc.validate_facts(
         "operator",
@@ -81,7 +82,7 @@ def test_validation_accepts_valid_iso_date_value(schema) -> None:
     assert not any(issue.code == "invalid_date_value" for issue in report.issues)
 
 
-def test_validation_covers_every_date_typed_field(schema) -> None:
+def test_validation_covers_every_date_typed_field(schema: ProfileSchemaDefinition) -> None:
     """A garbage value is refused on every field the schema types as a date."""
 
     date_paths = [
@@ -99,7 +100,7 @@ def test_validation_covers_every_date_typed_field(schema) -> None:
         )
 
 
-def test_preflight_returns_ready_when_no_modelo_selectors_match(schema) -> None:
+def test_preflight_returns_ready_when_no_modelo_selectors_match(schema: ProfileSchemaDefinition) -> None:
     svc = ProfilePreflightService(schema=schema)
     record = UserProfileRecord(
         profile_id="operator",
@@ -117,7 +118,7 @@ def test_preflight_returns_ready_when_no_modelo_selectors_match(schema) -> None:
     assert report.missing == ()
 
 
-def test_preflight_carries_request_fields_through(schema) -> None:
+def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)  # warm domain
     pre = ProfilePreflightService(schema=schema)
     record = UserProfileRecord(profile_id="operator", display_name="Operator", facts=())

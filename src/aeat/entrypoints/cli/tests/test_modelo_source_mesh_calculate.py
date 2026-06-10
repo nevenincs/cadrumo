@@ -327,8 +327,7 @@ def test_work_calculate_surfaces_unconsumed_declarable_iva_advisory() -> None:
     matching = [
         advisory
         for advisory in advisories
-        if advisory["source_kind"] == "ledger_iva_aggregation"
-        and unrouted_supply.transaction_id in advisory["message"]
+        if advisory["source_kind"] == "ledger_iva_aggregation" and unrouted_supply.transaction_id in advisory["message"]
     ]
     assert len(matching) == 1, advisories
     advisory = matching[0]

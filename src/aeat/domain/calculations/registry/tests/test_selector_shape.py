@@ -57,6 +57,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
 
     expected = {
         "previous_filing",
+        "relation_prefill",
         "invoice",
         # counterpart-aggregation family shares _InvoiceSelector
         "ledger_transaction",

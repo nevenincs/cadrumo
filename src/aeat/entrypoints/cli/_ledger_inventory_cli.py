@@ -8,8 +8,8 @@ import typer
 
 from ...application.inventory import InventoryMovementCommand, InventoryService
 from ...core import require_active_bucket_id
-from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.errors import NoActiveProfileError
+from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.i18n import tr
 from ...domain.contribuyente.inventory import MovementKind
 from ._common import _bad, _emit_envelope, _no_active_profile_refusal, _parse_iso_date

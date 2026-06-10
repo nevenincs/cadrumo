@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
@@ -44,7 +47,7 @@ _R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simul
 
 
 @pytest.fixture
-def snapshot_repository(tmp_path):
+def snapshot_repository(tmp_path: Path) -> Generator[Borrador100SnapshotRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield Borrador100SnapshotRepository(
             bucket_id=_BUCKET_ID,
@@ -52,8 +55,17 @@ def snapshot_repository(tmp_path):
         )
 
 
+_ServiceRepositories = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+    Borrador100SnapshotRepository,
+    SecureObjectRepository,
+]
+
+
 @pytest.fixture
-def service_repositories(tmp_path):
+def service_repositories(tmp_path: Path) -> Generator[_ServiceRepositories]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         yield (
@@ -138,7 +150,7 @@ def _zero_relation_values() -> dict[str, Decimal]:
     return {str(relation.id): Decimal("0") for relation in _modelo_100_registry_snapshot().revision.relations}
 
 
-def _seed_profile_with_birth_date(objects) -> None:
+def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
     """Persist a minimal UserProfileRecord so the M100 2025 profile-sourced
     bindings (age_at_year_end birth-date plus declaration-type) resolve from
     the bucket profile during calculate."""
@@ -195,7 +207,9 @@ def test_borrador_binding_result_requires_trace_to_match_values() -> None:
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.source_trace_mismatch"
 
 
-def test_borrador_resolution_is_inert_without_named_snapshot(snapshot_repository) -> None:
+def test_borrador_resolution_is_inert_without_named_snapshot(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     result = resolve_modelo_100_borrador_bindings(
         _command(borrador_snapshot_id=None),
         registry_snapshot=_modelo_100_registry_snapshot(),
@@ -215,7 +229,9 @@ def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() ->
     assert bindings[_ENUM_BINDING].aeat_prefilled is True
 
 
-def test_borrador_resolution_rejects_registry_without_borrador_capability(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_registry_without_borrador_capability(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
@@ -234,7 +250,9 @@ def test_borrador_resolution_rejects_registry_without_borrador_capability(snapsh
     assert exc_info.value.context == {"modelo": "303"}
 
 
-def test_borrador_resolution_consumes_only_registry_prefilled_bindings(snapshot_repository) -> None:
+def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
         {
@@ -255,7 +273,9 @@ def test_borrador_resolution_consumes_only_registry_prefilled_bindings(snapshot_
     assert result.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
 
 
-def test_borrador_source_resolver_matches_application_binding_resolution(snapshot_repository) -> None:
+def test_borrador_source_resolver_matches_application_binding_resolution(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
         {
@@ -299,7 +319,7 @@ def test_borrador_source_resolver_matches_application_binding_resolution(snapsho
 
 
 def test_calculate_modelo_revision_consumes_borrador_snapshot_through_application_service(
-    service_repositories,
+    service_repositories: _ServiceRepositories,
 ) -> None:
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
@@ -374,7 +394,7 @@ def test_borrador_binding_error_has_stable_service_error_code() -> None:
 
 
 def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_backend(
-    service_repositories,
+    service_repositories: _ServiceRepositories,
 ) -> None:
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
@@ -437,7 +457,9 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
     assert first != second
 
 
-def test_borrador_resolution_leaves_explicit_caller_binding_in_control(snapshot_repository) -> None:
+def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
         {
@@ -461,7 +483,9 @@ def test_borrador_resolution_leaves_explicit_caller_binding_in_control(snapshot_
     assert result.bindings_sourced_from_borrador == ()
 
 
-def test_borrador_resolution_rejects_registry_unmarked_binding_values(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_registry_unmarked_binding_values(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_UNMARKED_BINDING: Decimal("1")})
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
@@ -475,7 +499,9 @@ def test_borrador_resolution_rejects_registry_unmarked_binding_values(snapshot_r
     assert exc_info.value.context == {"bindings": [_UNMARKED_BINDING]}
 
 
-def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_DECIMAL_BINDING: "not-a-decimal"})
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
@@ -489,7 +515,9 @@ def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(snaps
     assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}
 
 
-def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="missing-snapshot"),
@@ -502,7 +530,9 @@ def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(sna
     assert exc_info.value.suggestion == "aeat app live borrador 100 list"
 
 
-def test_borrador_resolution_rejects_non_modelo_100_consumers(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_non_modelo_100_consumers(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="snapshot-does-not-need-loading", modelo="303"),
@@ -517,7 +547,9 @@ def test_borrador_resolution_rejects_non_modelo_100_consumers(snapshot_repositor
     assert exc_info.value.context == {"snapshot_modelo": "100", "command_modelo": "303"}
 
 
-def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="snapshot-does-not-need-loading", filing_year=2024),
@@ -537,7 +569,9 @@ def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(snapshot_re
     }
 
 
-def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
         {_DECIMAL_BINDING: Decimal("1")},
@@ -555,7 +589,9 @@ def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(snaps
     assert exc_info.value.suggestion == "aeat app live borrador 100 list"
 
 
-def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
         {_DECIMAL_BINDING: Decimal("1")},
@@ -573,7 +609,9 @@ def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(snapsh
     assert exc_info.value.suggestion == "aeat app live borrador 100 list"
 
 
-def test_borrador_resolution_rejects_bucket_or_axis_mismatch(snapshot_repository) -> None:
+def test_borrador_resolution_rejects_bucket_or_axis_mismatch(
+    snapshot_repository: Borrador100SnapshotRepository,
+) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_DECIMAL_BINDING: Decimal("1")})
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:

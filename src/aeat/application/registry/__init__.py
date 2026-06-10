@@ -38,6 +38,7 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import (
     LiveParityCatalogue as _LiveParityCatalogue,
 )
+from ...domain.calculations.registry import ModeloDefinition as _ModeloDefinition
 from ...domain.calculations.registry import (
     OracleEnvironment as _OracleEnvironment,
 )
@@ -504,7 +505,7 @@ def replay_registry_parity(
     )
 
 
-def _revision_inventory(modelos) -> RegistryRevisionInventory:
+def _revision_inventory(modelos: tuple[_ModeloDefinition, ...]) -> RegistryRevisionInventory:
     revisions = tuple(revision for modelo in modelos for revision in modelo.revisions.values())
     application_surfaces = {link.surface for revision in revisions for link in revision.application_links}
     relation_roles = {relation.dependency_role for revision in revisions for relation in revision.relations}
@@ -523,7 +524,7 @@ def _revision_inventory(modelos) -> RegistryRevisionInventory:
     )
 
 
-def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
+def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryRevisionDetailReport, ...]:
     reports: list[RegistryRevisionDetailReport] = []
     for modelo in sorted(modelos, key=lambda item: item.id):
         for revision_id, revision in sorted(modelo.revisions.items()):

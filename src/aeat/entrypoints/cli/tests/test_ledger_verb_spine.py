@@ -41,6 +41,7 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "providers",
         "remove",
         "reset",
+        "restore",
         "review",
         "split",
         "stash",
@@ -91,8 +92,8 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
 # expected set update.
 _CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
 _RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
-_RATIFIED_WORKFLOW_AXIS_COUNT: int = 15  # allocate attach categories classify
-# doclink export history import merge providers review split stash status track
+_RATIFIED_WORKFLOW_AXIS_COUNT: int = 16  # allocate attach categories classify
+# doclink export history import merge providers restore review split stash status track
 _EXPECTED_LEDGER_VERB_COUNT: int = _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
 
 
@@ -165,10 +166,10 @@ def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> 
 # Canonical modelo top-level verb roster. The verbs are the registry/work
 # surface (list, describe, casillas, formulas, readiness, aggregate),
 # the work-unit lifecycle continuum (history, reconcile,
-# reconcile-from-justificante, export), and the cross-modelo analytics
-# (project, compare). Subgroups (`bindings`, `work`, `filing-record`,
-# `verification-report`, `audit`, `iva-wallet`) carry the operational
-# surfaces and are intentionally excluded from this top-level roster.
+# reconcile-from-justificante, reconciliation-history, export), and the
+# cross-modelo analytics (project, compare). Subgroups (`bindings`, `work`,
+# `filing-record`, `verification-report`, `audit`, `iva-wallet`) carry the
+# operational surfaces and are intentionally excluded from this top-level roster.
 EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
     {
         "aggregate",
@@ -183,6 +184,7 @@ EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
         "readiness",
         "reconcile",
         "reconcile-from-justificante",
+        "reconciliation-history",
     },
 )
 

@@ -16,7 +16,6 @@ Submodules
    aeat.adapters.persistence.storage.sql._orm
    aeat.adapters.persistence.storage.sql._secure_object_crypto
    aeat.adapters.persistence.storage.sql._secure_object_integrity
-   aeat.adapters.persistence.storage.sql._secure_object_migration
    aeat.adapters.persistence.storage.sql._secure_object_records
    aeat.adapters.persistence.storage.sql._secure_object_schema
    aeat.adapters.persistence.storage.sql.engine

@@ -233,7 +233,7 @@ def _config_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.config.section_profile_lifecycle"),
                 entries=(
                     HelpEntry(
-                        command="aeat config unlock NAME",
+                        command="aeat config switch NAME",
                         description=tr("cli.operator_surface.help.config.profile_switch"),
                     ),
                     HelpEntry(

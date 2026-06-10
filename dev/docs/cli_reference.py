@@ -5,8 +5,8 @@ walks every group and leaf command (forcing lazy-module imports), and renders
 per-family RST pages under ``docs/cli/``.  An ``index.rst`` page carries
 navigation (the family grid, a where-to-go-next block) plus root-level
 behaviour (global flags); companion pages carry the automation contract
-(``automation.rst``: exit codes, TTY/JSON output), the output-schema registry
-(``schemas.rst``), and the retired-surface redirect table (``retired.rst``).
+(``automation.rst``: exit codes, TTY/JSON output) and the output-schema
+registry (``schemas.rst``).
 
 The generator is documentation tooling.  It lives under ``dev/docs`` and
 introspects the production package from outside rather than being part of the
@@ -34,10 +34,8 @@ Accepted-surface contract
 -------------------------
 Only surfaces declared in
 :data:`~aeat.application.operator_surface.ACCEPTED_ROOTS` are documented as
-live commands.  Surfaces declared in
-:data:`~aeat.application.operator_surface.RETIRED_OPERATOR_SURFACES` appear on
-the ``retired.rst`` page as redirect notes — with their replacement suggestion
-where one exists, or as permanently removed where none exists.
+live commands.  A command name that is not mounted under an accepted root
+simply does not exist; typing it yields Click's standard "No such command".
 """
 
 from __future__ import annotations
@@ -399,36 +397,6 @@ def _render_family_page(
     return "".join(parts)
 
 
-def _render_retired_table(retired_surfaces: list[object]) -> str:
-    """Render an RST table of retired operator surfaces.
-
-    Args:
-        retired_surfaces: The
-            :data:`~aeat.application.operator_surface.RETIRED_OPERATOR_SURFACES`
-            sequence.
-
-    Returns:
-        RST content describing each retired surface with redirect suggestions.
-    """
-    parts: list[str] = []
-    for surface in retired_surfaces:
-        name = getattr(surface, "name", "?")
-        suggestion = getattr(surface, "suggestion", None)
-        replacement = getattr(surface, "replacement", None)
-        reason = getattr(surface, "reason", "Retired.")
-
-        parts.append(_rst_heading(f"``aeat {name}`` (retired)", "~"))
-        parts.append(f"{reason}\n\n")
-        if suggestion is not None:
-            parts.append(f"**Use instead:** ``{suggestion}``\n\n")
-        elif replacement is not None:
-            parts.append(f"**See:** ``aeat {replacement}``\n\n")
-        else:
-            parts.append("**Status:** Permanently removed. No replacement is available.\n\n")
-
-    return "".join(parts)
-
-
 def _render_index_page(
     family_names: list[str],
     total_leaf_count: int,
@@ -437,8 +405,8 @@ def _render_index_page(
 
     The index carries navigation (the family grid, a where-to-go-next block)
     and root-level behaviour (global flags).  Exit codes, the TTY/JSON output
-    contract, the output-schema registry, and the retired-surface catalogue
-    live on the companion ``automation``, ``schemas``, and ``retired`` pages.
+    contract, and the output-schema registry live on the companion
+    ``automation`` and ``schemas`` pages.
 
     Args:
         family_names: Ordered list of top-level family names (e.g. ``["config", "app"]``).
@@ -516,7 +484,6 @@ def _render_index_page(
     parts.append("* Open :doc:`config` for the local setup and maintenance commands.\n")
     parts.append("* Open :doc:`automation` for exit codes and the TTY/JSON output contract.\n")
     parts.append("* Open :doc:`schemas` for the JSON output-schema registry.\n")
-    parts.append("* Open :doc:`retired` for redirect guidance on retired command names.\n")
     parts.append("* Open :doc:`/how-to/index` for task-focused guides.\n")
     parts.append("* Open :doc:`/tutorials/index` for step-by-step walkthroughs.\n\n")
 
@@ -528,7 +495,6 @@ def _render_index_page(
         parts.append(f"   {name}\n")
     parts.append("   automation\n")
     parts.append("   schemas\n")
-    parts.append("   retired\n")
     parts.append("\n")
 
     return "".join(parts)
@@ -637,32 +603,6 @@ def _render_schemas_page(schema_registry: Mapping[str, object]) -> str:
     return "".join(parts)
 
 
-def _render_retired_page(retired_surfaces: list[object]) -> str:
-    """Render the ``docs/cli/retired.rst`` page.
-
-    Carries the retired-surface redirect subsections under the
-    ``cli-reference-retired-surfaces`` anchor so existing cross-references
-    keep resolving.
-
-    Args:
-        retired_surfaces: The retired-surface sequence.
-
-    Returns:
-        The complete RST page content.
-    """
-    parts: list[str] = []
-    parts.append(".. _cli-reference-retired-surfaces:\n\n")
-    parts.append(_rst_heading("Retired surfaces", "="))
-    parts.append("\n")
-    parts.append(
-        "The following command roots or families have been retired. They are listed"
-        " here with redirect guidance so operators can update their tooling.\n\n"
-    )
-    parts.append(_render_retired_table(retired_surfaces))
-
-    return "".join(parts)
-
-
 def _write_text_if_changed(path: Path, content: str) -> None:
     """Write ``content`` only when it differs from the file already on disk.
 
@@ -686,7 +626,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     Imports :mod:`aeat.entrypoints.cli` in the calling process, forces every
     lazy subcommand to load, asserts no fallback surface is present, then
     renders one RST page per top-level family plus an ``index.rst`` and the
-    companion ``automation.rst``, ``schemas.rst``, and ``retired.rst`` pages.
+    companion ``automation.rst`` and ``schemas.rst`` pages.
 
     This function pins the output-language setting to English before importing the
     CLI tree so that ``tr()`` keys resolve to English strings for deterministic
@@ -713,10 +653,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     import click
     from typer.main import get_command as _typer_get_command
 
-    from aeat.application.operator_surface import (
-        ACCEPTED_ROOTS,
-        RETIRED_OPERATOR_SURFACES,
-    )
+    from aeat.application.operator_surface import ACCEPTED_ROOTS
     from aeat.core.i18n._render import clear_output_language_cache
     from aeat.core.json_contract import SCHEMA_REGISTRY
 
@@ -819,10 +756,6 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     schemas_content = _render_schemas_page(SCHEMA_REGISTRY)
     rendered["cli/schemas.rst"] = schemas_content
     _write_text_if_changed(output_dir / "schemas.rst", schemas_content)
-
-    retired_content = _render_retired_page(list(RETIRED_OPERATOR_SURFACES))
-    rendered["cli/retired.rst"] = retired_content
-    _write_text_if_changed(output_dir / "retired.rst", retired_content)
 
     return rendered
 

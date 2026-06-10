@@ -11,13 +11,10 @@ from typing import Final
 from pydantic import ValidationError
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE
 from ..errors import DecryptionError, MasterKeyMaterialMissingError, MasterKeyUnavailableError
 from ._master_key_io import _b64decode, _b64encode, atomic_write_secure_bytes
 from ._master_key_records import _WrappedBucketDekDocument
-
-_log = get_logger(__name__)
 
 _MASTER_KEY_UNAVAILABLE_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_unavailable"
 
@@ -47,20 +44,6 @@ def bucket_key_schedule(*, storage_root: Path, bucket_id: str):
     except StorageValidationError as exc:
         if str(exc) == MISSING_BUCKET_MANIFEST_MESSAGE:
             return None
-        if "missing required lifecycle status" in str(exc):
-            # Legacy manifest without status; parse key_schedule directly so
-            # the session can open and the repair command can backfill status.
-            import tomllib
-
-            from ..bucket._layout import bucket_paths as _bp
-            from ..bucket._manifest import BucketKeySchedule
-            from ..bucket._manifest_io import manifest_path
-
-            paths = _bp(storage_root, bucket_id)
-            payload: dict[str, object] = dict(tomllib.loads(manifest_path(paths).read_text(encoding=_UTF_8_ENCODING)))
-            raw = payload.get("key_schedule")
-            if raw is not None:
-                return BucketKeySchedule(str(raw))
         raise
 
 
@@ -112,13 +95,6 @@ def load_or_mint_bucket_dek(
             f"bucket {bucket_id!r} has no manifest; run `aeat config profile create NAME` "
             "to create a profile before invoking commands that decrypt or persist stored records.",
         )
-
-    if key_schedule is BucketKeySchedule.LEGACY_MASTER_KEY:
-        _log.warning(
-            "bucket %s has no separated DEK document; using legacy master-key data path",
-            bucket_id,
-        )
-        return kek
 
     if key_schedule is BucketKeySchedule.BUCKET_DEK_V1:
         if not path.is_file():

@@ -49,6 +49,7 @@ from ....application.filing import (
     build_runtime_schema_provider,
     export_draft,
 )
+from ....domain.filing import ModeloInputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -71,7 +72,7 @@ _NOMBRE = "TEST DECLARANTE"
 _EJERCICIO = "2024"
 
 # The binding IDs match the registry exactly (from 0001-bindings.toml offset selectors).
-_INPUTS: dict[str, object] = {
+_INPUTS: ModeloInputs = {
     # --- type_1 bindings (declarante summary record) ---
     "modelo-720-2013.type_1.1-1.tipo-de-registro": Decimal("1"),
     "modelo-720-2013.type_1.2-4.modelo-declaracion": Decimal("720"),

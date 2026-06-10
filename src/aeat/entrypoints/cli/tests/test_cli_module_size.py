@@ -50,6 +50,7 @@ def test_cli_command_functions_do_not_grow_past_complexity_budget() -> None:
             is_registrar = node.name.startswith("register_") and relative.startswith("_modelo")
             if not (is_command_body or is_registrar):
                 continue
+            assert node.end_lineno is not None
             length = node.end_lineno - node.lineno + 1
             if length > _DEFAULT_COMMAND_LINE_LIMIT:
                 offenders.append(f"{relative}:{node.name}: {length} lines > budget {_DEFAULT_COMMAND_LINE_LIMIT}")

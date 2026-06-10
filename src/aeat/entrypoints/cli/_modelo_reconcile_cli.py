@@ -10,10 +10,12 @@ import typer
 
 from ...application.modelo import ModeloReconciliationReport, WorkUnit
 from ...core.i18n import tr
+from ._common import _emit_envelope
 
 _require_active_profile: Callable[[], None] | None = None
 _resolve_work_unit_for_cli: Callable[..., WorkUnit] | None = None
 _resolve_default_actor: Callable[[], str] | None = None
+_active_bucket_id: Callable[[], str] | None = None
 
 
 def register_reconcile_commands(
@@ -22,12 +24,25 @@ def register_reconcile_commands(
     require_active_profile: Callable[[], None],
     resolve_work_unit_for_cli: Callable[..., WorkUnit],
     resolve_default_actor: Callable[[], str],
+    active_bucket_id: Callable[[], str],
 ) -> None:
     """Register local-only modelo reconciliation commands."""
-    global _require_active_profile, _resolve_work_unit_for_cli, _resolve_default_actor
+    global _require_active_profile, _resolve_work_unit_for_cli, _resolve_default_actor, _active_bucket_id
     _require_active_profile = require_active_profile
     _resolve_work_unit_for_cli = resolve_work_unit_for_cli
     _resolve_default_actor = resolve_default_actor
+    _active_bucket_id = active_bucket_id
+    app.command(
+        "reconciliation-history",
+        help=tr(
+            "cli.app.modelo.reconciliation_history.help",
+            default=(
+                "List past reconciliations recorded for the active profile. Reads the "
+                "append-only MODELO_RECONCILED bucket-event history; reconciliations are "
+                "repeatable on demand, so this is a convenience read-back, not a stored record."
+            ),
+        ),
+    )(modelo_reconciliation_history_verb)
     app.command(
         "reconcile",
         help=tr(
@@ -153,6 +168,85 @@ def _source_from_options(*, from_justificante: Path | None, from_declaration: Pa
         return ModeloReconciliationSourceKind.JUSTIFICANTE, from_justificante
     assert from_declaration is not None
     return ModeloReconciliationSourceKind.DECLARATION, from_declaration
+
+
+def _active_bucket() -> str:
+    if _active_bucket_id is None:
+        raise RuntimeError("modelo reconcile commands were not registered")
+    return _active_bucket_id()
+
+
+def modelo_reconciliation_history_verb(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str | None,
+        typer.Option(
+            "--work-unit-id",
+            help=tr(
+                "cli.app.modelo.reconciliation_history.work_unit_id_help",
+                default="Optional work unit id to narrow the history to one work unit.",
+            ),
+        ),
+    ] = None,
+) -> None:
+    """List past reconciliations recorded in the active profile."""
+    from ...application.modelo import list_modelo_reconciliations
+    from ._modelo_payloads import (
+        ModeloReconciliationHistoryResult,
+        ModeloReconciliationHistoryRowPayload,
+    )
+
+    _require_profile()
+    bucket_id = _active_bucket()
+    work_unit_token = work_unit_id.strip() if work_unit_id else None
+    entries = list_modelo_reconciliations(bucket_id=bucket_id, work_unit_id=work_unit_token)
+    result = ModeloReconciliationHistoryResult(
+        bucket_id=bucket_id,
+        work_unit_id=work_unit_token,
+        reconciliation_count=len(entries),
+        reconciliations=[
+            ModeloReconciliationHistoryRowPayload(
+                event_id=entry.event_id,
+                bucket_id=entry.bucket_id,
+                work_unit_id=entry.work_unit_id,
+                source_kind=entry.source_kind.value,
+                source_path=entry.source_path,
+                verdict=entry.verdict.value,
+                diff_count=entry.diff_count,
+                actor=entry.actor,
+                reconciled_at=entry.reconciled_at.isoformat(),
+            )
+            for entry in entries
+        ],
+    )
+    lines = [
+        "operation\tmodelo.reconciliation-history",
+        f"bucket_id\t{bucket_id}",
+        f"reconciliation_count\t{len(entries)}",
+    ]
+    if entries:
+        lines.append("reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tactor")
+        lines.extend(
+            "\t".join(
+                (
+                    entry.reconciled_at.isoformat(),
+                    entry.work_unit_id,
+                    entry.source_kind.value,
+                    entry.verdict.value,
+                    str(entry.diff_count),
+                    entry.actor,
+                )
+            )
+            for entry in entries
+        )
+    else:
+        lines.append(
+            tr(
+                "cli.app.modelo.reconciliation_history.empty",
+                default="No reconciliations recorded yet.",
+            )
+        )
+    _emit_envelope(ctx, command="modelo.reconciliation_history", result=result, lines=lines)
 
 
 def modelo_reconcile_verb(

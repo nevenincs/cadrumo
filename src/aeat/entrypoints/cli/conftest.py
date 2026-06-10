@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Any, override
+from typing import Any, cast, override
 
 import pytest
 import typer
 import typer.main
+from click.core import Command
 from click.testing import CliRunner, Result
 
 from ...core.i18n import OUTPUT_LANGUAGE_ENV_VAR
@@ -27,7 +28,11 @@ class _TyperAwareCliRunner(CliRunner):
     def invoke(self, cli: Any, *args: Any, **kwargs: Any) -> Result:  # type: ignore[override]  # TYPE-IGNORE-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE
         if isinstance(cli, typer.Typer):
             cli = typer.main.get_command(cli)
-        return super().invoke(cli, *args, **kwargs)
+        # After isinstance narrowing, cli is either a Command or Any.
+        # CAST-RATIONALE-CLIRUNNER-TYPER-UNWRAP: click's invoke() needs a Command;
+        # the isinstance check narrows Typer → Command but the union still includes Any
+        # from the broader input accept-all signature. Cast explicitly post-narrowing.
+        return super().invoke(cast(Command, cli), *args, **kwargs)
 
 
 @pytest.fixture(autouse=True)

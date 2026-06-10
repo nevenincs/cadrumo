@@ -14,7 +14,6 @@ from ._secure_objects_support import (
     SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectRevisionConflictError,
-    SecureObjectRow,
     SecureObjectUnreadable,
     SecureObjectWrite,
     SensitivityClass,
@@ -489,63 +488,6 @@ def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path
             assert row[2] == first_payload_hash
             assert row[3] == hashlib.sha256(b"second-revision-payload").hexdigest()
             assert row[4] == "test:second-write"
-        finally:
-            engine.dispose()
-
-
-def test_secure_object_overwrite_of_legacy_row_derives_previous_payload_hash(tmp_path: Path) -> None:
-    """A first overwrite after schema bootstrap links to the legacy plaintext hash."""
-
-    with EphemeralMasterKeyProvider():
-        db_path = tmp_path / "revision-legacy-overwrite.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        legacy_payload = b"legacy-before-revision-metadata"
-        namespace = "aeat.revision.legacy"
-        try:
-            with engine.begin() as connection:
-                connection.exec_driver_sql(
-                    "CREATE TABLE secure_objects ("
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                    "namespace VARCHAR(128) NOT NULL, "
-                    "object_key BLOB NOT NULL, "
-                    "classification VARCHAR(32) NOT NULL, "
-                    "schema_version INTEGER NOT NULL, "
-                    "written_at DATETIME NOT NULL, "
-                    "payload BLOB NOT NULL, "
-                    "CONSTRAINT uq_secure_objects_identity UNIQUE (namespace, object_key)"
-                    ")"
-                )
-                from typing import Any, cast
-
-                connection.execute(
-                    cast(Any, SecureObjectRow.__table__)
-                    .insert()
-                    .values(
-                        namespace=namespace,
-                        object_key="legacy-overwrite-key",
-                        classification=SensitivityClass.FINANCIAL.value,
-                        schema_version=1,
-                        written_at=datetime(2026, 5, 22, 15, 0, 0, tzinfo=UTC),
-                        payload=legacy_payload,
-                    )
-                )
-
-            SecureObjectRepository(engine=engine).save(
-                namespace=namespace,
-                object_key="legacy-overwrite-key",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime(2026, 5, 22, 15, 10, 0, tzinfo=UTC),
-                payload=b"post-bootstrap-overwrite",
-            )
-
-            with sqlite3.connect(db_path) as con:
-                previous_revision_id, previous_payload_hash = con.execute(
-                    "SELECT previous_revision_id, previous_payload_hash FROM secure_objects WHERE namespace = ?",
-                    (namespace,),
-                ).fetchone()
-            assert previous_revision_id is None
-            assert previous_payload_hash == hashlib.sha256(legacy_payload).hexdigest()
         finally:
             engine.dispose()
 

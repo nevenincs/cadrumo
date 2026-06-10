@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -50,21 +51,21 @@ _ACCURACY_FLOOR = Decimal("0.5")
 _LOW_CONFIDENCE = Decimal("0.5")
 
 
-def _oracle_rules() -> list[dict]:
+def _oracle_rules() -> list[dict[str, Any]]:
     return json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))["rules"]
 
 
-def _match(description: str, rules: list[dict]) -> dict | None:
+def _match(description: str, rules: list[dict[str, Any]]) -> dict[str, Any] | None:
     for rule in rules:
         if rule["match"] in description:
             return rule
     return None
 
 
-def _sample_transactions() -> list[tuple[Transaction, dict]]:
+def _sample_transactions() -> list[tuple[Transaction, dict[str, Any]]]:
     rules = _oracle_rules()
     seen: set[str] = set()
-    out: list[tuple[Transaction, dict]] = []
+    out: list[tuple[Transaction, dict[str, Any]]] = []
     for account in _ACCOUNTS:
         for raw in CsvProvider().ingest(_CORPUS / account):
             for needle in _SAMPLE_NEEDLES:

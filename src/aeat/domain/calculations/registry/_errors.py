@@ -263,6 +263,13 @@ class RegistrySnapshotError(RegistryError):
     The single canonical raise scenario is `for_modelo_not_registered`
     at the `_authority.modelo` boundary; the bare constructor stays
     valid for one-off scenarios not yet promoted to a factory.
+
+    Two temporal-selection scenarios carry structured context as
+    dedicated subclasses (:class:`NoRevisionForPeriodError`,
+    :class:`AmbiguousRevisionSelectionError`) so a consumer dispatches
+    by ``except`` type rather than parsing the human-readable message.
+    Both subclass this type, so every existing ``except
+    RegistrySnapshotError`` site catches them unchanged.
     """
 
     @classmethod
@@ -272,6 +279,82 @@ class RegistrySnapshotError(RegistryError):
             f"modelo {modelo_id!r} is not present in the calculation registry",
             translated_message="errors.snapshot.modelo_not_registered",
             context={"modelo_id": modelo_id},
+        )
+
+
+class NoRevisionForPeriodError(RegistrySnapshotError):
+    """No registry revision matches the requested temporal natural key.
+
+    Raised by :func:`select_revision` when the (modelo, filing year,
+    period, optional date window, optional revision id) constraints
+    select zero candidate revisions. Carries the natural-key components
+    as structured context so a consumer (e.g. the ``config profile
+    preflight`` resolver) can build an instructive refusal without
+    parsing the message. Catchable as :class:`RegistrySnapshotError`.
+
+    Structured attributes: :attr:`modelo_id`, :attr:`filing_year`,
+    :attr:`period`, :attr:`revision_id`.
+    """
+
+    def __init__(
+        self,
+        *,
+        modelo_id: str,
+        filing_year: int,
+        period: str,
+        revision_id: str | None,
+    ) -> None:
+        """Construct the no-revision-for-period error.
+
+        Args:
+            modelo_id: The modelo whose revisions were searched.
+            filing_year: The AEAT filing year used to narrow revisions.
+            period: The period token that found no covering revision.
+            revision_id: The optional explicit revision-id filter, if any.
+        """
+        self.modelo_id: str = modelo_id
+        self.filing_year: int = filing_year
+        self.period: str = period
+        self.revision_id: str | None = revision_id
+        super().__init__(
+            f"modelo {modelo_id}: no revision for year={filing_year!r} period={period!r} revision={revision_id!r}",
+            translated_message="errors.snapshot.no_revision_for_period",
+            context={
+                "modelo_id": modelo_id,
+                "filing_year": filing_year,
+                "period": period,
+                "revision_id": revision_id if revision_id is not None else "",
+            },
+        )
+
+
+class AmbiguousRevisionSelectionError(RegistrySnapshotError):
+    """More than one registry revision matches the temporal natural key.
+
+    Raised by :func:`select_revision` when the constraints select two or
+    more candidate revisions. Carries the candidate revision ids as a
+    structured, already-sorted tuple so a consumer can list them in an
+    operator refusal without re-parsing the message. Catchable as
+    :class:`RegistrySnapshotError`.
+
+    Structured attributes: :attr:`modelo_id`, :attr:`candidate_ids`.
+    """
+
+    def __init__(self, *, modelo_id: str, candidate_ids: Iterable[str]) -> None:
+        """Construct the ambiguous-revision-selection error.
+
+        Args:
+            modelo_id: The modelo whose revisions were searched.
+            candidate_ids: The matching revision ids; stored sorted as a
+                tuple on :attr:`candidate_ids`.
+        """
+        ids = tuple(sorted(candidate_ids))
+        self.modelo_id: str = modelo_id
+        self.candidate_ids: tuple[str, ...] = ids
+        super().__init__(
+            f"modelo {modelo_id}: ambiguous revision selection: {', '.join(ids)}",
+            translated_message="errors.snapshot.ambiguous_revision_selection",
+            context={"modelo_id": modelo_id, "candidate_ids": _csv(ids)},
         )
 
 

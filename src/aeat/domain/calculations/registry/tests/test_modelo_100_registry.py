@@ -241,8 +241,16 @@ def test_modelo_100_personal_family_construct_casillas_match_expected_set() -> N
 def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_binding() -> None:
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
+    # The dependent-modelos construct covers every observation-backed slot: the
+    # direct same-modelo previous_filing carries (BIN N-1) AND the cross-modelo
+    # relation_prefill fold-in slots (130/131/111/115/123/180/184/190/193). The
+    # latter were re-stamped from previous_filing to relation_prefill when the
+    # relation became canonical for cross-modelo fold-ins (aggregation-taxonomy
+    # ADR ruling 3).
     filed_dependency_bindings = {
-        binding.id for binding in snapshot.revision.bindings if binding.source == "previous_filing"
+        binding.id
+        for binding in snapshot.revision.bindings
+        if binding.source in {"previous_filing", "relation_prefill"}
     }
     assert set(dependencies.bindings) == filed_dependency_bindings
 
@@ -270,7 +278,8 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_bind
     expected = {
         binding.id
         for binding in snapshot.revision.bindings
-        if binding.source == "previous_filing" and binding.selector.get("source_modelo") in payment_source_modelos
+        if binding.source in {"previous_filing", "relation_prefill"}
+        and binding.selector.get("source_modelo") in payment_source_modelos
     }
 
     assert set(payments_retentions.bindings) == expected
@@ -546,7 +555,9 @@ def test_modelo_100_construct_reader_resolves_revision_member_objects() -> None:
     constructs = {construct.id: construct for construct in resolve_revision_constructs(revision)}
     dependencies = constructs["renta-dependent-modelos"]
     economic_activities = constructs["renta-economic-activities"]
-    filed_dependency_binding_ids = {binding.id for binding in revision.bindings if binding.source == "previous_filing"}
+    filed_dependency_binding_ids = {
+        binding.id for binding in revision.bindings if binding.source in {"previous_filing", "relation_prefill"}
+    }
 
     assert {member.id for member in dependencies.members_of_kind("binding")} == filed_dependency_binding_ids
     assert {member.id for member in dependencies.members_of_kind("relation")} == {

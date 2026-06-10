@@ -82,7 +82,7 @@ class BucketLockedError(BucketError):
     """Raised when an operation requires an unlocked :class:`BucketSession`.
 
     Carries the locked bucket id so the diagnostic can point the
-    operator at ``aeat config unlock NAME``.
+    operator at ``aeat config switch NAME``.
     """
 
     def __init__(self, *, bucket_id: str) -> None:

@@ -17,6 +17,7 @@ import typer
 
 from ...application.overview import (
     OverviewCalendar,
+    OverviewCalendarEvent,
     OverviewCalendarRange,
     build_overview_calendar,
     build_overview_calendar_events,
@@ -27,10 +28,10 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._common import (
     _bad,
-    _canonical_period,
     _emit_envelope,
     _load_drafts,
     _no_active_profile_refusal,
+    _optional_canonical_period,
     _parse_iso_date,
     _profile_to_taxpayer,
     _state,
@@ -74,7 +75,7 @@ def _local_live_calendar_events(bucket_id: str, rng: OverviewCalendarRange):
     )
 
 
-def _local_calendar_filing_evidence(bucket_id: str, events: tuple):
+def _local_calendar_filing_evidence(bucket_id: str, events: tuple[OverviewCalendarEvent, ...]):
     """Return local/AEAT filing evidence rows from persisted local stores."""
     try:
         from ...adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
@@ -137,6 +138,11 @@ def _stored_filed_artefact_matches(store, artefact) -> bool:
 def overview_status(
     ctx: typer.Context,
     period: str | None = typer.Option(None, "--period", help=tr("cli.overview.period_help")),
+    year: int | None = typer.Option(
+        None,
+        "--year",
+        help=tr("cli.overview.year_help", default="Filing year for --period (e.g. 2024)."),
+    ),
     verbose: bool = typer.Option(False, "--verbose", help=tr("cli.overview.verbose_help")),
 ) -> None:
     """Render workspace readiness or per-period detail.
@@ -154,7 +160,7 @@ def overview_status(
         if current is None:
             raise _no_active_profile_refusal()
         drafts = _load_drafts()
-        canonical = _canonical_period(period)
+        canonical = _optional_canonical_period(period, year=year)
         per_modelo_drafts = [d for d in drafts if d.period == canonical]
         from ._overview_payloads import OverviewDraftPayload
 

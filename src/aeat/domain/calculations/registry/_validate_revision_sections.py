@@ -10,12 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from ._schema import (
-    LegalReference,
-    ModeloDefinition,
-    ModeloRevision,
-    SourceReference,
-)
+from ._schema import LegalReference, ModeloDefinition, ModeloRevision, SourceReference
 from ._validate_algorithms import validate_algorithm_binding_section, validate_algorithm_provider_section
 from ._validate_application_links import validate_application_link_closure
 from ._validate_completeness import _emit_completeness_gate_failures
@@ -29,6 +24,7 @@ from ._validate_evidence import EvidenceValidator
 from ._validate_exports import validate_export_layout_section
 from ._validate_formulas import validate_formula_dag
 from ._validate_helpers import _missing_refs
+from ._validate_orden_aplicabilidad import orden_aplicabilidad_hard_failures
 from ._validate_record_sections import (
     validate_binding_section,
     validate_casilla_section,
@@ -241,6 +237,8 @@ def _validate_revision_closure_sections(
     failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo_id))
     failures.extend(validate_reconciliation_total_closure(prefix, revision))
     failures.extend(validate_bracket_table_temporal_coverage(prefix, revision))
+    # D3 / S05: orden_aplicabilidad ratchet gate (hard, load-blocking failures only).
+    failures.extend(orden_aplicabilidad_hard_failures(prefix, modelo_id, revision, legal_refs))
     failures.extend(
         validate_construct_closure(
             prefix,

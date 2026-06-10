@@ -2,6 +2,7 @@
 label = "Modelo 369 - Esquema Importacion (IOSS) - regimen especial ventas a distancia de bienes importados (LIVA art 163 quinvicies a octovicies). Mensual por HAC/610/2021 art 2(c)/(d)."
 valid_from = 2021-07-01
 period_selector = { year_from = 2021, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+orden_aplicabilidad = ["orden-hac-610-2021:art-1"]
 legal_refs = [
     "orden-hac-610-2021:art-1",
     "orden-hac-610-2021:art-2",

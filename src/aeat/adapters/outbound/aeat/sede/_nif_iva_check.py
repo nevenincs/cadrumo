@@ -23,8 +23,8 @@ sede entry subdomain and the www1 form-servlet subdomain.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
-from typing import TYPE_CHECKING, Any, Literal, Protocol
+from collections.abc import Awaitable, Callable, Mapping
+from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
@@ -45,6 +45,7 @@ from .....domain.calculations.registry import (
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, BrowserSession, default_browser_session_factory
 from ._adapter_utils import (
+    _LocateHelper,
     _SedeCheckerModel,
     assert_query_browser_action_for,
     make_locate_helper,
@@ -59,26 +60,6 @@ from ._browser_constants import (
 )
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
-
-
-class _LocateHelper(Protocol):
-    """Callable protocol for the ``_locate`` helper produced by :func:`make_locate_helper`.
-
-    Parameters are positional-only to match the
-    ``Callable[[Page, tuple[str, ...], str, str, int], Coroutine[Any, Any, Locator]]``
-    return annotation on :func:`make_locate_helper`.
-    """
-
-    def __call__(
-        self,
-        page: Page,
-        selectors: tuple[str, ...],
-        stage: str,
-        description: str,
-        timeout_ms: int,
-        /,
-    ) -> Coroutine[Any, Any, Locator]: ...
-
 
 logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()

@@ -24,10 +24,10 @@ aeat config profile list
 aeat config profile status
 ```
 
-Switch before working on another taxpayer by unlocking that profile:
+Switch to another taxpayer profile before working on it:
 
 ```bash
-aeat config unlock my-other-profile
+aeat config switch my-other-profile
 ```
 
 Switching changes which local ledger, modelo drafts, and filing markers `aeat

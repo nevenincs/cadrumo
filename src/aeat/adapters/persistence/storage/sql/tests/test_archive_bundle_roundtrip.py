@@ -123,7 +123,7 @@ def _save_archive_bundle_rows(
 
 
 def _assert_raw_bundle_is_ciphertext(
-    bundle: tuple,  # type: ignore[type-arg]
+    bundle: tuple[SecureObjectRawRow, ...],
     *,
     rows: tuple[tuple[str, str, SensitivityClass, int, bytes], ...],
 ) -> None:

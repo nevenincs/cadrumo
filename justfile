@@ -302,6 +302,10 @@ docs:
 docs-page PAGE:
     uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
 
+# Serve documentation on localhost with live reload on docs/ and src/aeat/ edits.
+docs-serve PORT="8000":
+    uv run --no-sync python -m dev.docs.serve --port {{PORT}} --open-browser
+
 # Build documentation changed since a base commit.
 docs-changed BASE="HEAD":
     uv run --no-sync python -m dev.docs.build --base {{BASE}}

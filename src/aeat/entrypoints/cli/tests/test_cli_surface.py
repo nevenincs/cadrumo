@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -35,7 +35,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _json(result) -> dict:
+def _json(result) -> dict[str, Any]:
     """Parse a CLI JSON result, unwrapping the emit-envelope when present.
 
     ``_emit_envelope`` (the schema-envelope and ledger.import migrations)
@@ -188,14 +188,14 @@ def test_app_ledger_import_dry_run_does_not_persist(
     assert _json(after)["transactions"] == 0
 
 
-def _run_ledger_cli_json(args: list[str]) -> dict[str, object]:
+def _run_ledger_cli_json(args: list[str]) -> dict[str, Any]:
     """Invoke the CLI with ``--format json`` prefixed, assert exit-0, return parsed JSON."""
     result = _invoke(["--format", "json", *args])
     assert result.exit_code == 0, result.output
-    return cast(dict[str, object], _json(result))
+    return _json(result)
 
 
-def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
+def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, Any]:
     """Create the seed manual transaction the rest of the workflow operates on."""
     payload = _run_ledger_cli_json(
         [

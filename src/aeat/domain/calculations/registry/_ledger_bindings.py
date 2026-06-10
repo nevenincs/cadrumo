@@ -7,10 +7,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from ....core import Modelo
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ....core import Modelo
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,

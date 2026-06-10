@@ -45,6 +45,7 @@ Submodules
    aeat.domain.calculations.registry._loader
    aeat.domain.calculations.registry._m232_row_bindings
    aeat.domain.calculations.registry._parity_tapes
+   aeat.domain.calculations.registry._period_offset_math
    aeat.domain.calculations.registry._queries
    aeat.domain.calculations.registry._record_design
    aeat.domain.calculations.registry._record_design_coverage
@@ -83,6 +84,7 @@ Submodules
    aeat.domain.calculations.registry._validate_formulas
    aeat.domain.calculations.registry._validate_helpers
    aeat.domain.calculations.registry._validate_label_artifacts
+   aeat.domain.calculations.registry._validate_orden_aplicabilidad
    aeat.domain.calculations.registry._validate_previous_filing_sources
    aeat.domain.calculations.registry._validate_record_sections
    aeat.domain.calculations.registry._validate_reference_checker
@@ -96,6 +98,7 @@ Submodules
    aeat.domain.calculations.registry._validate_revision_rules
    aeat.domain.calculations.registry._validate_revision_sections
    aeat.domain.calculations.registry._validate_semantic_role_axes
+   aeat.domain.calculations.registry._validate_semantic_role_required
    aeat.domain.calculations.registry._validate_semantic_role_typos
    aeat.domain.calculations.registry._validate_semantic_roles
    aeat.domain.calculations.registry._validate_source_outputs

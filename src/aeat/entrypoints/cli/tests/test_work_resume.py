@@ -90,8 +90,10 @@ def _done_run(run_id: str) -> WorkflowResult:
 
 
 def _seed_work_unit():
+    bucket_id = resolve_active_bucket_id()
+    assert isinstance(bucket_id, str)
     return create_work_unit(
-        bucket_id=resolve_active_bucket_id(),
+        bucket_id=bucket_id,
         modelo="130",
         filing_year=2026,
         period="1T",

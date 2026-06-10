@@ -122,7 +122,8 @@ adapters:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
       suggestions:
-        create_profile: 'Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` and then retry the Google command.'
+        create_profile: Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
+          and then retry the Google command.
   inbound:
     declaracion:
       errors:
@@ -414,7 +415,7 @@ application:
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
         dangling_active_profile: Active profile pointer '%{active_profile}' does not
           resolve to a registered profile bucket. Run aeat config profile list to
-          inspect registered profiles, then aeat config unlock NAME or aeat config
+          inspect registered profiles, then aeat config switch NAME or aeat config
           profile create NAME.
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
@@ -496,6 +497,7 @@ application:
   calculations:
     iva_compensation:
       errors:
+        correction_missing: 'No seeded compensation record exists for %{filing_year}/%{period}; correction overwrites an existing seed, it does not create one.'
         modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
         modelo_390_only: IVA compensation annual summary only accepts Modelo 390 observations.
         seed_conflict: An IVA compensation state already exists for this period; seeding
@@ -708,6 +710,10 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
+        on revision %{revision_id}: the registry declares a binding source no enrolled
+        calculation resolver handles. Enroll a resolver or register it as deferred
+        before calculating.'
       reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
         implemented; use --from-justificante PATH until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
@@ -727,6 +733,10 @@ application:
       work_unit_mutation_refused: The work unit is discarded; create a fresh work
         unit to continue.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
+      work_unit_revision_divergence: Work unit %{work_unit_id} was created against
+        registry revision %{work_unit_revision}, but the law-determined revision for
+        modelo %{modelo} %{filing_year} %{period} is now %{law_revision}. Re-create
+        the work unit to bind it to the current revision.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
     findings:
@@ -763,18 +773,34 @@ application:
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
         filing M130 this quarter because accumulated withholdings and payments on
         account for the year represent 70% or more of gross income.'
+      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Net
+        income from datos-base activities (C01) is positive but the fractional payment
+        for datos-base (C02) is zero; check casilla 02 using the applicable Orden
+        de módulos rate (minimum 2 per cent).
+      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: Net
+        income from datos-base activities (C01) is positive but the fractional payment
+        for datos-base (C02) is zero; check casilla 02 using the applicable Orden
+        de módulos rate (minimum 2 per cent).
+      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: Net
+        income from datos-base activities (C01) is positive but the fractional payment
+        for datos-base (C02) is zero; check casilla 02 using the applicable Orden
+        de módulos rate (minimum 2 per cent).
+      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: Net
+        income from datos-base activities (C01) is positive but the fractional payment
+        for datos-base (C02) is zero; check casilla 02 using the applicable Orden
+        de módulos rate (minimum 2 per cent).
+      modelo_200_base_imponible_determinada_cuando_resultado_positivo: The accounting
+        result is positive but the taxable base (C552) is zero; review the taxable
+        base determination.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
-      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Net income from datos-base activities (C01) is positive but the fractional payment for datos-base (C02) is zero; check casilla 02 using the applicable Orden de módulos rate (minimum 2 per cent).'
-      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Net income from datos-base activities (C01) is positive but the fractional payment for datos-base (C02) is zero; check casilla 02 using the applicable Orden de módulos rate (minimum 2 per cent).'
-      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Net income from datos-base activities (C01) is positive but the fractional payment for datos-base (C02) is zero; check casilla 02 using the applicable Orden de módulos rate (minimum 2 per cent).'
-      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Net income from datos-base activities (C01) is positive but the fractional payment for datos-base (C02) is zero; check casilla 02 using the applicable Orden de módulos rate (minimum 2 per cent).'
-      modelo_200_base_imponible_determinada_cuando_resultado_positivo: 'The accounting result is positive but the taxable base (C552) is zero; review the taxable base determination.'
     iva_wallet:
+      correct_no_record: 'No seeded compensation record exists for %{filing_year}/%{period}. Run ''aeat app modelo iva-wallet seed'' first; correction overwrites an existing seed.'
+      correct_sealed_blocked: 'Correction refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period}) has consumed this seeded compensation basis. Changing it would alter a filed return.'
       seed_negative_amount: The seed amount cannot be negative.
       seed_no_nif: No NIF defined for the seed operation; associate one with the active
         profile before seeding.
@@ -782,8 +808,6 @@ application:
       errors:
         date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
           must be a date; got %{value_type}.
-        decimal_value_invalid: Profile fact for numeric binding %{binding_id} must
-          be decimal-compatible.
         decimal_value_type_invalid: Profile fact for Decimal-channel binding %{binding_id}
           has unsupported value type %{value_type}.
         enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
@@ -912,7 +936,7 @@ application:
         schema.
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
-        unlock NAME to activate it or aeat config profile delete NAME first.
+        switch NAME to activate it or aeat config profile delete NAME first.
       profile_bucket_directory_removal_failed: Profile bucket directory could not
         be removed.
       profile_create_route_mismatch: Profile create route '%{route}' does not match
@@ -1060,7 +1084,7 @@ cli:
         yes_required: Pass --yes to delete a collectible invoice
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
-        evidence_id_help: 'Evidence id (exact match)'
+        evidence_id_help: Evidence id (exact match)
         group_help: Purchase invoice evidence in PDF or image form
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_number_help: Supplier invoice number
@@ -1297,12 +1321,14 @@ cli:
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
-        explain_help: 'Include localized help text in the text output.'
+        explain_help: Include localized help text in the text output.
         form_number_help: Filter casillas by BOE-printed form number (e.g. 46)
         help: List all casillas (fields/boxes) defined for a specific modelo revision.
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: 'Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.'
+        period_help: 'Period token used to resolve the modelo revision: 0A annual,
+          1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
+          or baja.'
         required_help: Show only casillas the modelo marks as required
       compare:
         modelo_help: Modelo number to compare (e.g. 100, 130).
@@ -1374,16 +1400,28 @@ cli:
         help: List all computed casillas and their formulas for a specific modelo
           revision.
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: 'Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.'
+        period_help: 'Period token used to resolve the modelo revision: 0A annual,
+          1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
+          or baja.'
       history:
         modelo_help: Modelo code (e.g. 100, 303)
-        period_help: 'Optional period filter using the modelo revision token: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.'
+        period_help: 'Optional period filter using the modelo revision token: 0A annual,
+          1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
+          or baja.'
         year_help: Optional filing year filter
       history_help: Show the chronological lifecycle audit for one modelo
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
           from local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
+        correct_amount_help: 'Corrected carry-forward balance amount in EUR (decimal, e.g. 1200.50).'
+        correct_confirm_help: 'Required confirmation flag. Acknowledge that this overwrites a previously seeded carry-forward balance and filing accuracy depends on the new value.'
+        correct_confirm_required: 'Pass --confirm to acknowledge: this overwrites the previously seeded M303 carry-forward balance for the specified period.'
+        correct_filing_year_help: 'Filing year of the seeded Modelo 303 period to correct.'
+        correct_help: 'Correct a wrong opening Modelo 303 carry-forward balance previously seeded for a pre-history period. Overwrites the existing seeded amount; refuses when no record exists for the period (seed first) and when an already-filed Modelo 303 has consumed the seeded basis (correcting it would change a filed return). Records --reason into an audit event. Requires --confirm.'
+        correct_period_help: 'Period of the seeded Modelo 303 record to correct (e.g. 4T, 3T).'
+        correct_reason_help: 'Reason for the correction, recorded into the audit event.'
+        correct_reason_required: 'Provide --reason: record why the opening balance is being corrected; it must not be blank.'
         group_help: Local IVA compensation wallet balance commands.
         seed_amount_help: Carry-forward balance amount in EUR (decimal, e.g. 1200.50).
           This is the compensación pendiente de periodos anteriores for the NEXT period
@@ -1415,16 +1453,23 @@ cli:
           at sede.
         baja_help: Record an M036 baja declaration (census deregistration) filed at
           sede.
+        declaration_id_help: The declaration id (or an unambiguous prefix of it) to
+          view.
         declared_on_help: ISO date (YYYY-MM-DD) the operator filed the M036 at sede.
         errors:
           bad_declared_on: --declared-on must be an ISO date (YYYY-MM-DD); got {value}.
+          declaration_not_found: No M036 declaration matches {value!r}. Run 'aeat
+            app modelo m036 list' to see recorded declarations.
         group_help: Record an M036 declaration filed at sede (alta / modificacion
           / baja). The local app never files; AEAT is the authority.
         justificante_help: Optional AEAT acuse de recibo identifier emitted by sede
           for the filing.
+        list_empty: No M036 declarations recorded yet.
+        list_help: List the M036 declarations recorded in the active profile.
         modificacion_help: Record an M036 modificacion declaration (census update)
           filed at sede.
         note_help: Optional operator note (up to 512 chars).
+        view_help: View one recorded M036 declaration by id (or unambiguous prefix).
       project:
         binding_help: Additional M100 binding override as KEY=VALUE. Repeat for multiple.
           Retenciones bindings default to zero when not supplied.
@@ -1443,7 +1488,9 @@ cli:
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
         modelo_help: Modelo code (e.g. 303).
-        period_help: 'Period token used to resolve the modelo revision: 0A annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion, or baja.'
+        period_help: 'Period token used to resolve the modelo revision: 0A annual,
+          1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
+          or baja.'
         revision_help: Registry revision id.
         year_help: Filing year.
       readiness_help: Report whether the active profile is ready to file one modelo
@@ -1466,6 +1513,10 @@ cli:
           with the flag-based form. Local-only; never contacts AEAT.
         justificante_path_help: Path to the AEAT justificante PDF to reconcile against.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
+      reconciliation_history:
+        empty: 'No reconciliations recorded yet.'
+        help: 'List past reconciliations recorded for the active profile. Reads the append-only MODELO_RECONCILED bucket-event history; reconciliations are repeatable on demand, so this is a convenience read-back, not a stored record.'
+        work_unit_id_help: 'Optional work unit id to narrow the history to one work unit.'
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
@@ -1501,6 +1552,9 @@ cli:
           %{state}). It is persisted and can be resumed later; list revisions with
           `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
           %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
+        calculate_source_advisory: 'ADVISORY: %{message} The calculation completed,
+          but this declarable amount is not routed to any casilla and is not declared
+          on this filing; review it before filing.'
         calculate_unauthorized_advisory: 'ADVISORY: modelo %{modelo} calculation backend
           is UNAUTHORIZED — it has not yet been proven by an end-to-end test across
           at least two renta years (multi-year-renta authorization gate). The result
@@ -1743,19 +1797,25 @@ cli:
         status_help: Show the metadata of one work unit
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
+        verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        calculate_source_advisory: 'ADVISORY: %{message} The calculation completed, but this declarable amount is not routed to any casilla and is not declared on this filing; review it before filing.'
-        verify_selector_help: 'Draft revision selector (current, latest-draft, or explicit).'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
       no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
-      period_unrecognised: Unrecognized period
+      period_filter_unrecognised: 'Unrecognized filter period ''{raw}''. Use a year-qualified
+        AEAT token in the filter clause: period=2024-1T (quarters), period=2024-0A
+        (annual), period=2024-03 (months).'
+      period_missing_year: Period token '{token}' needs a year on this command. Add
+        --year (e.g. --period {token} --year 2024).
+      period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token: 1T-4T
+        (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g.
+        --period 1T --year 2024).'
     next:
       create_profile_command: aeat config profile create NAME
   config:
@@ -1850,7 +1910,8 @@ cli:
       new_passphrase_prompt: 'New AEAT secret-store passphrase: '
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
-      no_active_profile: 'No active profile. Run ''aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>'' first.'
+      no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
+        <NIF/CIF/DNI/NIE>' first.
       unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile
         list'' to see the available keys.'
     get:
@@ -1884,7 +1945,7 @@ cli:
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
         network: 'Could not reach Google: {detail}'
-        profile_unbound: No active profile. Run aeat config unlock NAME or pass --profile.
+        profile_unbound: No active profile. Run aeat config switch NAME or pass --profile.
         scope_insufficient: The access granted for Google is missing required permissions.
           Run `aeat config google login` and accept every permission.
         storage: 'Could not reach Google Drive storage: {detail}'
@@ -1974,7 +2035,7 @@ cli:
       submissions_dir_help: Directory to store submitted filing receipts
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: 'Spanish tax identifier (NIF/CIF/DNI/NIE)'
+      tax_id_help: Spanish tax identifier (NIF/CIF/DNI/NIE)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
@@ -1993,7 +2054,7 @@ cli:
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile and config bucket.
       delete_active_cleared: The deleted profile was the active one; the active-profile
-        pointer has been cleared. Run aeat config unlock NAME or aeat config profile
+        pointer has been cleared. Run aeat config switch NAME or aeat config profile
         create NAME to resume work.
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
@@ -2026,15 +2087,27 @@ cli:
       logout_help: Sign out of the active profile by clearing the local pointer
       logout_session_warning: Logout cleared the active-profile pointer. Subsequent
         verbs in this terminal will refuse with NoActiveBucketSessionError until you
-        run aeat config unlock NAME or open a new terminal and re-select.
-      no_active_profile: 'No active profile. Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` first.'
+        run aeat config switch NAME or open a new terminal and re-select.
+      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
+        <NIF/CIF/DNI/NIE>` first.
       preflight_filing_year_help: Four-digit filing year.
       preflight_help: Report which profile fields are missing for a given (modelo,
         revision, filing-year, period) filing context.
       preflight_modelo_help: Numeric modelo identifier (e.g. 303).
       preflight_period_help: Period code (e.g. 1T, 1P, 0A, 01).
+      preflight_revision_ambiguous: 'More than one registry revision matches modelo
+        %{modelo} period %{period}: %{candidates}. Re-run with --revision-id naming
+        one of them.'
       preflight_revision_help: Registry revision id.
-      preflight_revision_id_help: 'Optional registry revision id override for exact replay (e.g. 2024-0A); defaults to the active revision for the modelo, filing year, and period.'
+      preflight_revision_id_help: Optional registry revision id override for exact
+        replay (e.g. 2024-0A); defaults to the active revision for the modelo, filing
+        year, and period.
+      preflight_revision_override_invalid: 'Registry revision override is not valid
+        for modelo %{modelo} filing year %{filing_year}: %{detail}. Run `aeat app
+        modelo describe %{modelo}` to list the registered revisions.'
+      preflight_revision_unresolved: No registry revision covers modelo %{modelo}
+        filing year %{filing_year} period %{period}. Run `aeat app modelo describe
+        %{modelo}` to see the valid periods and revisions.
       preflight_year_help: Filing year.
       remove_help: Tombstone a profile (immutable filing snapshots are retained)
       remove_name_help: Profile id to tombstone
@@ -2057,9 +2130,6 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
-      preflight_revision_ambiguous: 'More than one registry revision matches modelo %{modelo} period %{period}: %{candidates}. Re-run with --revision-id naming one of them.'
-      preflight_revision_unresolved: 'No registry revision covers modelo %{modelo} filing year %{filing_year} period %{period}. Run `aeat app modelo describe %{modelo}` to see the valid periods and revisions.'
-      preflight_revision_override_invalid: 'Registry revision override is not valid for modelo %{modelo} filing year %{filing_year}: %{detail}. Run `aeat app modelo describe %{modelo}` to list the registered revisions.'
     recover:
       help: Recover the file secret store with a recovery key and bind it to a new
         passphrase.
@@ -2074,7 +2144,7 @@ cli:
       integrity:
         objects_help: Check secure-object integrity.
         objects_namespace_help: Restrict secure-object integrity checks to one namespace.
-        registry_help: 'Check calculation registry integrity.'
+        registry_help: Check calculation registry integrity.
       integrity_attribution_details_help: Include per-row safe metadata details
       integrity_attribution_help: Group undecryptable secure-object rows by safe metadata.
       integrity_help: Probe secure-object and registry integrity.
@@ -2153,9 +2223,10 @@ cli:
         to get started.
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
-    unlock:
-      help: Unlock a profile by selecting it and opening its storage session.
-      name_help: Profile name to unlock. Defaults to the active profile pointer.
+    switch:
+      help: Switch the active profile by selecting it and opening its storage session.
+      name_help: Profile name to switch to. Defaults to the active profile pointer.
+    unlock: null
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -2320,7 +2391,8 @@ cli:
         3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply,
         prohibited with export_third_country_zero_rated
       from_csv_exclusive: --from-csv cannot be combined with --id or --classification.
-      from_csv_help: 'Path to a CSV file with columns transaction_id, classification[, category_id, business_pct, taxable_base, iva_rate, iva_amount].'
+      from_csv_help: Path to a CSV file with columns transaction_id, classification[,
+        category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to classify
@@ -2335,8 +2407,8 @@ cli:
       llm_exclusive: --llm cannot be combined with --classification or --from-csv;
         the manual path is the explicit operator override.
       llm_failed: 'LLM classification failed: {reason}'
-      llm_help: Ask a local LLM provider (claude/gemini/codex) to classify the transaction;
-        preview by default, persist with --apply.
+      llm_help: Ask a local LLM provider (claude/antigravity/codex) to classify the
+        transaction; preview by default, persist with --apply.
       llm_provider_unavailable: 'LLM provider ''{provider}'' is unavailable: its CLI
         is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH, or
         run ''aeat app ledger providers'' to list usable providers.'
@@ -2349,6 +2421,11 @@ cli:
         BUSINESS or PERSONAL instead.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
+      saturate_help: 'Saturate via LLM: also select the IVA category and derive the
+        rate, base, and IVA amount.'
+      saturate_non_derivable: Rate not derivable
+      saturate_requires_llm: The --saturate option applies only with --llm; supply
+        --llm with a provider.
       taxable_base_help: Taxable base amount
     doclink:
       actor_help: Operator label.
@@ -2358,6 +2435,8 @@ cli:
       reference_help: The document link reference.
       source_help: 'Link source: gmail, google_drive, or url.'
     errors:
+      business_pct_out_of_range: Business-use share %{value} (= %{percent}) is out
+        of range. Enter a share between 0 and 1, e.g. 0.5 for 50 percent.
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation, or
@@ -2380,14 +2459,15 @@ cli:
         app ledger categories` to list every recognised id.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
-      business_pct_out_of_range: 'Business-use share %{value} (= %{percent}) is out of range. Enter a share between 0 and 1, e.g. 0.5 for 50 percent.'
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
       help: Export canonical ledger rows from the active profile bucket
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
-      period_help: Restrict the export to one filing period (e.g. 2025Q1, 2025).
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year for --period (e.g. 2024).
     history:
       help: Emit the chronological bucket-event chain for one ledger transaction id
       id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
@@ -2409,11 +2489,13 @@ cli:
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
       path_help: Path to the bank statement file or directory
-      period_help: Fiscal period for the import
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
       provider_help: 'Statement format provider. Recognised values: {providers}'
       source_help: Original file used to verify imported rows
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
+      year_help: Filing year for --period (e.g. 2024).
     labels:
       active: Active
       amount: Amount
@@ -2439,6 +2521,7 @@ cli:
       imported: Entries imported
       irpf_category: IRPF category
       iva_amount: IVA amount
+      iva_category: IVA category
       iva_rate: IVA rate
       lifecycle_state: Lifecycle state
       merged_id: Merged transaction id
@@ -2482,9 +2565,10 @@ cli:
       invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
-      filter_help: Filter rows by status, period (incl. bare YYYY for a year), classification,
-        issue, import, direction (ingreso/gasto), or text. To filter by organisational
-        group label use the separate --group option.
+      filter_help: Filter rows by status, period (a year-qualified AEAT token, e.g.
+        period=2024-1T), classification, issue, import, direction (ingreso/gasto),
+        or text. To filter by organisational group label use the separate --group
+        option.
       footer_truncated: Showing rows {start}-{end} of {total} (offset {offset}). Use
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.
@@ -2507,7 +2591,9 @@ cli:
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active bucket's transactions
         in a given period. Local-only; never contacts AEAT.
-      period_help: Canonical period (e.g. 2026Q1, 2026-03, 2026).
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year (e.g. 2024).
     providers:
       help: List which subprocess LLM providers have a usable CLI on PATH.
     remove:
@@ -2523,8 +2609,15 @@ cli:
       help: Reset the active profile bucket ledger catalogue
       reason_help: Reason recorded in reset history
       yes_help: Confirm clearing the active ledger catalogue
+    restore:
+      actor_help: Operator name recorded on the bucket event
+      help: Restore one stashed or archived ledger transaction to active
+      id_help: Ledger transaction id to restore to active
+      reason_help: Reason recorded in lifecycle history
+      yes_help: Confirm restoring the ledger transaction to active
     review:
-      filter_help: 'Filter rows by status, period, issue, import, classification, text, or direction'
+      filter_help: Filter rows by status, period, issue, import, classification, text,
+        or direction
       header: ACCOUNTING LEDGER REVIEW SESSION
       help: Interactive review and validation of ledger entries
       id_help: Identifier of the specific entry to review
@@ -2556,7 +2649,9 @@ cli:
     status:
       help: Summarize ledger state and calculation readiness for the active profile
         bucket
-      period_help: Fiscal period to preflight (YYYY-MM or modelo period)
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year for --period (e.g. 2024).
     track:
       help: Show the event lineage for one ledger transaction
       transaction_id_help: Ledger transaction id to inspect
@@ -2707,21 +2802,6 @@ cli:
       text_template: '%{message}
 
         Next: %{command}'
-    retired:
-      archive_reason: archive is consolidated under config bucket.
-      data_reason: data work is consolidated under app ledger.
-      declaration_reason: declaration work is consolidated under app modelo.
-      filing_reason: filing work is consolidated under app modelo.
-      financial_reason: financial work is consolidated under app ledger.
-      invoice_reason: invoice work is consolidated under app ledger.
-      llm_reason: classification is exposed under app ledger classify.
-      preflight_reason: preflight belongs to modelo verification.
-      presentation_reason: exports belong to app modelo export.
-      sanitize_reason: ledger checks are exposed under app ledger check.
-      setup_reason: setup and config are consolidated under the config root.
-      submit_reason: live submission is permanently disabled.
-      topic_reason: topic lookup is consolidated under app registry citations.
-      workflow_reason: workflow operations are consolidated under app modelo.
   overview:
     agenda:
       allow_incomplete_help: Render the agenda even when profile data is incomplete.
@@ -2763,7 +2843,8 @@ cli:
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
     period: Period
-    period_help: Tax period to review (for example, 2026-Q1)
+    period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
+      (months). Combine with --year to choose the year.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No legacy declaration drafts are saved - this
@@ -2812,6 +2893,7 @@ cli:
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.
     verbose_help: Show details and next action when available
+    year_help: Filing year for --period (e.g. 2024).
   registry:
     app_help: Tax models registry management
     audit_oracles_environment_help: Live parity catalogue environment to audit against
@@ -2986,7 +3068,7 @@ cli:
       welcome_no_profile: Welcome. No active profile is configured yet, so start with
         setup.
       welcome_profile: Welcome back. Active profile is `%{profile}`.
-    language_help: Interface language (e.g. en, es, ca).
+    language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
     startup_import_error: 'Internal error: application module failed to load at startup
@@ -3707,7 +3789,7 @@ errors:
     locked_storage_bucket_busy: The storage bucket is in use by another process. Wait
       for that process to finish and try again.
     locked_storage_bucket_session: This operation requires an unlocked storage bucket.
-      Run `aeat config unlock` and try again.
+      Run `aeat config switch` and try again.
     locked_storage_lock_acquisition: The exclusive file lock could not be acquired
       within the timeout. Another process holds it; wait and try again.
     locked_storage_master_key_keychain: The operating-system keychain is locked. Unlock
@@ -3719,7 +3801,7 @@ errors:
     auth_profile_identity_mismatch: The active profile identity cannot own the requested
       authentication session.
     bootstrap_already_complete: Secure storage bootstrap is already complete. Use
-      aeat config unlock NAME to activate an existing profile or aeat config profile
+      aeat config switch NAME to activate an existing profile or aeat config profile
       create NAME to add another profile.
     censo_apply_conflict: The censo cannot be applied because there is in-flight work
       on a dependent unit. Resolve the pending state first.
@@ -3762,11 +3844,11 @@ errors:
     modelo_work_selector_revision_conflict: The selected modelo work unit belongs
       to a different revision.
     profile_already_registered: A profile with that name already exists. Use aeat
-      config unlock NAME to switch to it.
+      config switch NAME to switch to it.
     profile_import_collision: The imported profile identifier collides with an existing
       one.
     profile_locked: This operation requires an unlocked profile. Run `aeat config
-      unlock` and try again.
+      switch` and try again.
     profile_name_collision: The profile name provided is already in use. Choose a
       different name.
     reconciliation_cross_bucket: The addressed work unit belongs to a bucket other
@@ -3942,13 +4024,13 @@ errors:
     refused_storage_bucket_no_active: No active bucket could be resolved. Select a
       profile and try again.
     refused_storage_master_key_no_active_session: Encryption requires an active session.
-      Run `aeat config unlock` and try again.
+      Run `aeat config switch` and try again.
     refused_storage_passphrase_too_short: The passphrase is too short. It must be
       at least 8 characters long.
     refused_storage_secret_already_exists: A secret with that key already exists.
       Use the overwrite option to replace it.
     refused_storage_session_expired: The active session expired due to inactivity.
-      Re-activate it with aeat config unlock NAME.
+      Re-activate it with aeat config switch NAME.
     refused_storage_unsecured_mode: The unsecured storage backend was requested without
       the required opt-in. It is not safe for real data.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
@@ -3984,7 +4066,11 @@ errors:
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
   snapshot:
+    ambiguous_revision_selection: 'More than one registry revision matches modelo
+      %{modelo_id}: %{candidate_ids}.'
     modelo_not_registered: Model is not registered in the registry.
+    no_revision_for_period: No registry revision covers modelo %{modelo_id} filing
+      year %{filing_year} period %{period}.
   storage:
     engine:
       create_failed: The storage database engine could not be created. Check the configured
@@ -4005,7 +4091,7 @@ errors:
         before an active profile bucket is selected.
       cold_bootstrap_explicit_database_refused: Cold-bootstrap storage cannot bypass
         an explicit database route.
-      no_active_session: No active bucket session is open. Run aeat config unlock
+      no_active_session: No active bucket session is open. Run aeat config switch
         NAME to unlock a profile.
       no_detail: No detailed readiness issue was reported.
       not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
@@ -4014,9 +4100,9 @@ errors:
         bucket.
       session_changed: The active bucket session changed. Unlock the target profile
         again.
-      session_expired: The active bucket session has expired. Run aeat config unlock
+      session_expired: The active bucket session has expired. Run aeat config switch
         NAME to re-activate the profile.
-      session_sealed: The active bucket session is sealed. Run aeat config unlock
+      session_sealed: The active bucket session is sealed. Run aeat config switch
         NAME to re-activate the profile.
       unsecured_backend: The active bucket session uses the unsecured backend. Production
         profile-bound storage requires file or keyring custody.
@@ -4076,7 +4162,7 @@ profile:
   keys:
     description: Profile configuration keys and their descriptions
     tax:
-      id: 'Tax identifier (NIF/CIF/DNI/NIE)'
+      id: Tax identifier (NIF/CIF/DNI/NIE)
 review:
   adapters:
     errors:
@@ -4184,7 +4270,9 @@ topic:
       in some cases, the prior year.
     title: IRPF advance payment
   profile:
-    body: 'The local profile carries your tax identifier (NIF/CIF/DNI/NIE), main activity, IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario). Edit it with ''aeat config profile edit NAME''.'
+    body: The local profile carries your tax identifier (NIF/CIF/DNI/NIE), main activity,
+      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario).
+      Edit it with 'aeat config profile edit NAME'.
     title: Taxpayer profile
   providers:
     body: Supported authentication providers; each has distinct prerequisites. 'aeat
@@ -4246,7 +4334,12 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "The guided setup needs an interactive terminal, and this run does not have one.\nNothing has been saved yet.\n\nYou can finish creating this profile in one of two ways:\n\n1. Run the command again from an interactive terminal to use the guided setup:\n     aeat config profile create NAME\n\n2. Or create it in one step by supplying the required details as flags:\n     aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
+    unsupported_console: "The guided setup needs an interactive terminal, and this\
+      \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
+      \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
+      \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
+      2. Or create it in one step by supplying the required details as flags:\n  \
+      \   aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
@@ -4424,7 +4517,7 @@ wizard:
       surnames:
         help: Surnames or company name for export headers
       tax-id:
-        help: 'Tax identifier (NIF/CIF/DNI/NIE) for the active profile'
+        help: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
       tax-residence-ccaa:
         help: 'Tax-residence autonomous community. One of: %{choices}.'
       taxation-type:
@@ -4449,7 +4542,14 @@ wizard:
         help: Third-party transactions exceed Modelo 347 threshold
       uses-objective-estimation-irpf:
         help: Files IRPF under objective estimation
-    intro: "Guided tax profile setup\nThis prepares the local profile the app uses for ledger work and tax-form checks. Expect %{section_total} sections. Only %{required_total} answers are required to start; the rest can be left blank when you do not know them yet. Have your NIF/CIF/DNI/NIE, a short activity description, IVA/IRPF regime details, tax residence, and family details if they apply. After saving, check progress with `aeat config profile status`."
+    intro: 'Guided tax profile setup
+
+      This prepares the local profile the app uses for ledger work and tax-form checks.
+      Expect %{section_total} sections. Only %{required_total} answers are required
+      to start; the rest can be left blank when you do not know them yet. Have your
+      NIF/CIF/DNI/NIE, a short activity description, IVA/IRPF regime details, tax
+      residence, and family details if they apply. After saving, check progress with
+      `aeat config profile status`.'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR
@@ -4553,7 +4653,7 @@ wizard:
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:
-        prompt: 'Tax identifier (NIF/CIF/DNI/NIE) for the active profile'
+        prompt: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
       taxation-type:
         choices:
           individual:

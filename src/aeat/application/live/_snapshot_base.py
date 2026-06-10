@@ -506,10 +506,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         return envelope.payload
 
     def _envelope_cls(self) -> type[Envelope[TPayload]]:
-        # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-RUNTIME-GENERIC-SPECIALIZATION:
-        # Envelope[self._payload_model] uses an instance attribute as a generic
-        # parameter; mypy cannot verify runtime-evaluated specialization.
-        return Envelope[self._payload_model]  # type: ignore[valid-type]
+        return Envelope.for_payload_type(self._payload_model)
 
 
 def _snapshot_id_of(payload: BaseModel) -> str:

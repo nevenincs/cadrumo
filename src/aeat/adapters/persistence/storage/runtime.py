@@ -234,7 +234,7 @@ def inspect_storage_runtime(
                 code=StorageRuntimeReadinessCode.NO_ACTIVE_SESSION,
                 message_key="errors.storage.runtime.no_active_session",
                 message=(
-                    "no active bucket session; run `aeat config unlock NAME` "
+                    "no active bucket session; run `aeat config switch NAME` "
                     "to unlock a profile before invoking profile-bound storage."
                 ),
             )
@@ -254,7 +254,7 @@ def inspect_storage_runtime(
                     code=StorageRuntimeReadinessCode.SESSION_SEALED,
                     message_key="errors.storage.runtime.session_sealed",
                     message=(
-                        "the active bucket session is sealed; run `aeat config unlock NAME` to re-activate the profile."
+                        "the active bucket session is sealed; run `aeat config switch NAME` to re-activate the profile."
                     ),
                 )
             )
@@ -264,7 +264,7 @@ def inspect_storage_runtime(
                     code=StorageRuntimeReadinessCode.SESSION_EXPIRED,
                     message_key="errors.storage.runtime.session_expired",
                     message=(
-                        "the active bucket session has expired; run `aeat config unlock NAME` "
+                        "the active bucket session has expired; run `aeat config switch NAME` "
                         "to re-activate the profile."
                     ),
                 )

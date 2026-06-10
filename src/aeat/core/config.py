@@ -1235,8 +1235,16 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # explicitly set plus the override keys themselves.
     explicit_fields = current.model_fields_set | set(overrides.keys())
     object.__setattr__(new_settings, "__pydantic_fields_set__", explicit_fields)
+    # The output-language cache keys an override block by ``id(override)``; a
+    # GC'd block's Settings address can be reused by the next block, so the
+    # cache must be invalidated at both boundaries or a stale language leaks
+    # across blocks. Lazy import: ``i18n._render`` imports this module.
+    from .i18n._render import clear_output_language_cache
+
     token = _settings_override.set(new_settings)
+    clear_output_language_cache()
     try:
         yield new_settings
     finally:
         _settings_override.reset(token)
+        clear_output_language_cache()

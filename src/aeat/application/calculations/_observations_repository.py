@@ -54,6 +54,17 @@ class _ObservationEnvelopePayload(BaseModel):
     `payload` field) and to leave room for future per-observation
     metadata (e.g., `captured_from`, `captured_at`, evidence
     pointer) without breaking the inner record.
+
+    The ``stamped_revision_id`` field is the registry revision id the
+    source filing resolved to at capture time (ADR
+    ``2026-06-10-period-revision-resolution-adr``, Ruling 3 / R2).
+    It is ``None`` for legacy records persisted before this field
+    was introduced; carry-read code MUST treat a missing stamp as a
+    non-blocking advisory rather than a blocker so historical data
+    degrades loudly rather than being silently refused or silently
+    accepted. New records MUST stamp the revision id from the
+    :class:`RegistrySnapshot` the producer already holds at write
+    time.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -75,6 +86,17 @@ class _ObservationEnvelopePayload(BaseModel):
             "overwriting one another — the cross-member fan-in the 353<-322 "
             "per_grupo_member aggregation enumerates. None preserves the "
             "single-filer (modelo, filing_year, period) key bit-for-bit."
+        ),
+    )
+    stamped_revision_id: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=128,
+        description=(
+            "Registry revision id the source filing resolved to at capture time "
+            "(ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2). "
+            "None for legacy records — carry-read must surface a non-blocking "
+            "advisory rather than blocking or silently accepting unstamped records."
         ),
     )
 
@@ -161,21 +183,6 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
     return f"iva-wallet-decision-event:{digest}"
 
 
-def _legacy_iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: str) -> str:
-    """Pre-hardening cleartext key kept only as a read fallback.
-
-    Migration bridge: this fallback can be removed once persisted records are
-    confirmed migrated (grep _data/ for cleartext iva-wallet-decision:<NIF>
-    keys; if count == 0 across all environments, delete this function and the
-    load_decision fallback call).
-    """
-    safe_repository_id(taxpayer_nif, context="taxpayer_nif")
-    safe_repository_id(target_period, context="target_period")
-    if not 2000 <= target_year <= 2099:
-        raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
-    return f"{taxpayer_nif}:{target_year}:{target_period}"
-
-
 class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelopePayload]):
     """Repository over encrypted SQL-backed past-filing observations."""
 
@@ -207,6 +214,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         source_kind: str,
         captured_at: datetime | None = None,
         member_nif: str | None = None,
+        stamped_revision_id: str | None = None,
     ) -> None:
         """Persist `observation` keyed by its (modelo, filing_year, period).
 
@@ -216,6 +224,13 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         same (modelo, filing_year, period) persist as separate rows instead of
         overwriting — the cross-member fan-in the 353<-322 ``per_grupo_member``
         aggregation enumerates. When ``None`` the single-filer key is unchanged.
+
+        ``stamped_revision_id`` is the registry revision id the source filing
+        resolved to at capture time (ADR 2026-06-10-period-revision-resolution-adr,
+        Ruling 3 / R2). Producers that hold a :class:`RegistrySnapshot` MUST
+        pass ``snapshot.revision.id`` here. Legacy callers that do not yet have
+        access to the revision id should leave this ``None``; the carry-read gate
+        will surface a non-blocking advisory rather than blocking silently.
         """
         when = captured_at if captured_at is not None else now()
         payload = _ObservationEnvelopePayload(
@@ -223,6 +238,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
             captured_at=when,
             source_kind=source_kind,
             member_nif=member_nif,
+            stamped_revision_id=stamped_revision_id,
         )
         self.save(payload)
 
@@ -295,8 +311,6 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     ) -> IvaCompensationReconciliationDecision | None:
         """Return the latest persisted :class:`IvaCompensationReconciliationDecision` for the given period."""
         payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
-        if payload is None:
-            payload = super().load(_legacy_iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
         return payload.decision if payload is not None else None
 
     def list_decisions(self) -> tuple[IvaCompensationReconciliationDecision, ...]:

@@ -1,4 +1,8 @@
-"""Profile repair command registration for ``aeat config repair``."""
+"""Profile repair command registration for ``aeat config repair``.
+
+Reads the active :class:`UserProfileRecord` through the injected record reader
+to diagnose and repair the bucket-backed profile state.
+"""
 
 from __future__ import annotations
 
@@ -254,7 +258,7 @@ def _emit_profile_record_status(
         "registered_bucket": True,
         "profile_record_present": True,
         "status": record.status.value,
-        "next_action": f"aeat config unlock {pointer.label}",
+        "next_action": f"aeat config switch {pointer.label}",
     }
     repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
     _emit_envelope(

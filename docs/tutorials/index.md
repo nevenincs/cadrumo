@@ -186,7 +186,7 @@ period.
 For task-focused procedures, read the [how-to guides](../how-to/index.md). To
 understand the advanced filing workspace and revision model, read
 [The filing workflow: work units and calculation revisions](../how-to/filing-spine.md).
-For the underlying concepts, read [How calculations work](../explanation/ledger-to-calculation.md).
+For the underlying concepts, read [How your records become tax figures](../explanation/from-records-to-figures.md).
 For manual casilla values, offsets, and binding mechanics, read
 [Review and supply calculation inputs](../how-to/review-calculation-values.md).
 

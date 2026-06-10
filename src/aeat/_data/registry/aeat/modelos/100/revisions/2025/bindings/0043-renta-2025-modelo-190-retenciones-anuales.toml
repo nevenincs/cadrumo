@@ -1,6 +1,6 @@
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-190-retenciones-anuales"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "190", source_output = "decl.retenciones-total" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]

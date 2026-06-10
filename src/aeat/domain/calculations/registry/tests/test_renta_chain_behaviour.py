@@ -93,7 +93,11 @@ def _base_2025_inputs() -> dict[str, Decimal]:
     }
 
 
-def _scenario_2025(scenario_id: str, overrides: dict[str, Decimal], expected: tuple) -> RegistryCalculationScenario:
+def _scenario_2025(
+    scenario_id: str,
+    overrides: dict[str, Decimal],
+    expected: tuple[RegistryScenarioExpectedOutput, ...],
+) -> RegistryCalculationScenario:
     inputs = _base_2025_inputs()
     inputs.update(overrides)
     return RegistryCalculationScenario(

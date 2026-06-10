@@ -33,6 +33,7 @@ from ._schema import (
 # modelo-specific loader behaviour.
 _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     {
+        "orden_aplicabilidad",
         "parameters",
         "casillas",
         "formulas",

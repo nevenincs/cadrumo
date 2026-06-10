@@ -17,6 +17,7 @@ from ._validate_label_artifacts import validate_no_label_artifacts
 from ._validate_relation_sources import (
     validate_previous_filing_binding_closure,
     validate_relation_closure,
+    validate_slot_source_hygiene,
 )
 from ._validate_revision_identity import _duplicates
 from ._validate_semantic_roles import (
@@ -43,6 +44,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     if len(modelos_by_id) == len(modelo_tuple):
         failures.extend(validate_relation_closure(modelo_tuple, modelos_by_id))
         failures.extend(validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
+        failures.extend(validate_slot_source_hygiene(modelo_tuple, modelos_by_id))
 
     failures.extend(_validate_binding_selector_shapes(modelo_tuple))
     failures.extend(_validate_semantic_role_consistency(modelo_tuple))

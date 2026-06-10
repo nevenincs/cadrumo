@@ -5,7 +5,7 @@ secure-object repository: every repository call polls the active
 :class:`BucketSession` against its idle deadline, touches it forward
 on success, and raises :class:`SessionExpiredError` once the window
 has elapsed. The CLI error decorator translates that into an operator
-refusal that names ``aeat config unlock`` as the recovery verb.
+refusal that names ``aeat config switch`` as the recovery verb.
 
 This roundtrip drives the full cycle with real adapters — a real
 bucket-session helper that opens and activates a real
@@ -17,7 +17,7 @@ bucket-session helper that opens and activates a real
    (the ``touch`` contract).
 3. Expire the session and confirm the next repository call refuses
    with ``SessionExpiredError``.
-4. Confirm the expiry refusal names the ``config unlock`` recovery
+4. Confirm the expiry refusal names the ``config switch`` recovery
    verb — no traceback, no generic catch-all.
 
 No mocks: the expiry is forced by rolling the live session's own idle
@@ -161,8 +161,8 @@ def test_session_lifecycle_full_roundtrip_open_verb_expiry_refusal(_runtime_prof
         _load(repository)
 
 
-def test_expired_session_refusal_names_unlock_recovery_verb() -> None:
-    """The expiry refusal renders an operator message naming ``config unlock``.
+def test_expired_session_refusal_names_switch_recovery_verb() -> None:
+    """The expiry refusal renders an operator message naming ``config switch``.
 
     The session lifecycle contract requires the idle-expiry refusal to name a
     recovery verb that actually works. ``SessionExpiredError`` carries
@@ -171,10 +171,10 @@ def test_expired_session_refusal_names_unlock_recovery_verb() -> None:
     """
 
     error = SessionExpiredError(
-        "the active profile session has expired; run `aeat config unlock NAME` to re-activate.",
+        "the active profile session has expired; run `aeat config switch NAME` to re-activate.",
     )
     rendered = str(error)
-    assert "config unlock" in rendered
+    assert "config switch" in rendered
     assert "expired" in rendered
 
 

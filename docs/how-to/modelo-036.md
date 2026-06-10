@@ -55,8 +55,30 @@ The command prints the saved record:
 - When the record was saved.
 - The justificante, if you gave one.
 
-That printed output is your confirmation. Save it with your records - no command yet
-lists recorded declarations afterwards.
+That printed output is your confirmation. Save it with your records.
+
+## List and view recorded declarations
+
+List the declarations you have recorded in the active profile:
+
+```bash
+aeat app modelo m036 list
+```
+
+The list shows each declaration's id, event kind, declared-on date, recorded-at
+timestamp, and whether you gave a justificante. An empty list means you have recorded
+no declarations yet.
+
+View one declaration in full by its id (or an unambiguous prefix of it):
+
+```bash
+aeat app modelo m036 view <declaration-id>
+```
+
+The view shows the full record, including the justificante and your note if you gave
+them. An id that matches no recorded declaration is refused.
+
+No command edits or deletes a recorded declaration.
 
 ## If you typed something wrong
 

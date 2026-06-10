@@ -44,8 +44,9 @@ def _load_disk_cache() -> dict[str, str]:
         return _DISK_CACHE
     try:
         with open(cache_path, encoding="utf-8") as f:
-            _DISK_CACHE = json.load(f)
-            return _DISK_CACHE
+            loaded: dict[str, str] = json.load(f)
+            _DISK_CACHE = loaded
+            return loaded
     except Exception:
         _DISK_CACHE = {}
         return _DISK_CACHE

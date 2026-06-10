@@ -63,14 +63,15 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _oracle_rules() -> list[dict]:
+def _oracle_rules() -> list[dict[str, object]]:
     manifest = json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
     return manifest["rules"]
 
 
-def _match(description: str, rules: list[dict]) -> dict | None:
+def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:
     for rule in rules:
-        if rule["match"] in description:
+        match_val = rule.get("match")
+        if isinstance(match_val, str) and match_val in description:
             return rule
     return None
 
@@ -81,16 +82,17 @@ def _import_corpus() -> None:
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
-def _list_rows() -> list[dict]:
+def _list_rows() -> list[dict[str, object]]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
 
 
-def _is_q1_2025(row: dict) -> bool:
+def _is_q1_2025(row: dict[str, object]) -> bool:
     """Marta only wants the January-March 2025 rows for her 1T close."""
-    date = str(row.get("date") or "")
+    date_val = row.get("date")
+    date = str(date_val) if date_val is not None else ""
     return date.startswith("2025-01") or date.startswith("2025-02") or date.startswith("2025-03")
 
 
@@ -126,16 +128,22 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     classify_lines = ["transaction_id,classification,category_id"]
     expected: dict[str, str] = {}
     for row in q1_rows:
-        rule = _match(row["description"], rules)
+        desc = row.get("description")
+        tx_id = row.get("transaction_id")
+        assert isinstance(desc, str)
+        assert isinstance(tx_id, str)
+        rule = _match(desc, rules)
         if rule is None:
             continue
-        if rule["classification"] == "MIXED":
+        if rule.get("classification") == "MIXED":
             continue
         if rule.get("base_mode") == "gated":
             continue
         category = rule.get("category_id") or ""
-        classify_lines.append(f"{row['transaction_id']},{rule['classification']},{category}")
-        expected[row["transaction_id"]] = rule["classification"]
+        classification_val = rule.get("classification")
+        assert isinstance(classification_val, str)
+        classify_lines.append(f"{tx_id},{classification_val},{category}")
+        expected[tx_id] = classification_val
 
     assert len(expected) >= 10, f"Marta's quarter should carry a meaningful classify workload, got {len(expected)}"
 
@@ -152,36 +160,40 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     assert bulk_result["applied"] == len(expected), bulk_result
 
     # Verify the classifications actually stuck (Marta re-lists to confirm).
-    by_id = {r["transaction_id"]: r for r in _list_rows()}
+    by_id = {r.get("transaction_id"): r for r in _list_rows() if isinstance(r.get("transaction_id"), str)}
     for tx_id, classification in expected.items():
-        assert by_id[tx_id]["business_classification"] == classification, tx_id
+        assert by_id.get(tx_id, {}).get("business_classification") == classification, tx_id
 
     # --- Classify one MIXED home-office expense the long way ---------------
     # `--from-csv` can't carry the business proportion, so Marta classifies her
     # mixed-use rows one at a time with --business-pct. She picks her Q1 fibra
     # internet line (oracle business_pct 0.30).
-    internet = next(
-        (r for r in q1_rows if "Factura internet fibra oficina" in r["description"]),
-        None,
-    )
+    internet = None
+    for r in q1_rows:
+        desc_val = r.get("description")
+        if isinstance(desc_val, str) and "Factura internet fibra oficina" in desc_val:
+            internet = r
+            break
     if internet is not None:
-        mixed = _RUNNER.invoke(
-            app,
-            [
-                "app",
-                "ledger",
-                "classify",
-                "--id",
-                internet["transaction_id"],
-                "--classification",
-                "MIXED",
-                "--business-pct",
-                "0.30",
-                "--category-id",
-                "suministros_home_office_internet",
-            ],
-        )
-        assert mixed.exit_code == 0, mixed.output
+        tx_id_val = internet.get("transaction_id")
+        if isinstance(tx_id_val, str):
+            mixed = _RUNNER.invoke(
+                app,
+                [
+                    "app",
+                    "ledger",
+                    "classify",
+                    "--id",
+                    tx_id_val,
+                    "--classification",
+                    "MIXED",
+                    "--business-pct",
+                    "0.30",
+                    "--category-id",
+                    "suministros_home_office_internet",
+                ],
+            )
+            assert mixed.exit_code == 0, mixed.output
 
     # --- Readiness gates --------------------------------------------------
     # Marta runs preflight for the quarter to see what's still missing.

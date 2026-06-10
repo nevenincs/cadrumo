@@ -104,8 +104,8 @@ not submit a filing to AEAT.
 Use this after transaction review and classification:
 
 ```bash
-aeat app ledger preflight --period 2026Q1
-aeat app ledger status --period 2026Q1
+aeat app ledger preflight --year 2026 --period 1T
+aeat app ledger status --year 2026 --period 1T
 ```
 
 If the ledger still has missing categories, IVA fields, currency, or

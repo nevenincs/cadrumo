@@ -41,6 +41,7 @@ from ...domain.calculations.registry import (
     RegistryRelationSourceRequirement,
     RegistrySnapshot,
     RegistryValidationError,
+    materialize_relation_binding_values,
     relation_source_requirements,
 )
 from ..aggregation._source_mesh import (
@@ -288,10 +289,24 @@ class RelationPrefillSourceResolver:
                 error=exc,
             )
         resolved = tuple(item for item in relation_values.values if item.value is not None)
+        resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
+        # Materialise the resolved relation values into their declared
+        # ``target_binding`` slots HERE, inside the resolver, so the merged
+        # resolution carries them in ``binding_values`` and the mesh
+        # ``_claim_binding`` exclusive-ownership guard adjudicates any collision
+        # with another resolver loudly (aggregation-taxonomy ADR ruling 4). This
+        # replaces the silent post-mesh merge that previously let every other
+        # source override a relation-materialised value without a finding.
+        binding_values = materialize_relation_binding_values(
+            snapshot.revision,
+            resolved_relation_values,
+            period=context.period,
+        )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            relation_values={item.relation: item.value for item in resolved if item.value is not None},
+            relation_values=resolved_relation_values,
+            binding_values=binding_values,
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="relation_prefill",

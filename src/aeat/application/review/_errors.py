@@ -29,7 +29,7 @@ class FilterParseError(ReviewError):
 
     Attributes:
         raw_token: The string the operator supplied (e.g. ``"status="`` or
-            ``"period: 2026-Q1"``). Kept for internal compatibility,
+            ``"period: 2026-1T"``). Kept for internal compatibility,
             but omitted from rendered messages and context because
             filter values may include free-text search strings or
             imported identifiers.

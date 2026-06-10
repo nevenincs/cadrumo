@@ -25,6 +25,7 @@ Submodules
    aeat.application.modelo._decimal_binding_value
    aeat.application.modelo._export
    aeat.application.modelo._external_import_actions
+   aeat.application.modelo._filed_revision_observation
    aeat.application.modelo._filing_actions
    aeat.application.modelo._history
    aeat.application.modelo._iva_wallet_gate

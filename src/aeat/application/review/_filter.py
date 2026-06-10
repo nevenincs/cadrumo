@@ -3,10 +3,10 @@
 The CLI routes every record-list command through ``--filter KEY=VALUE``
 flags. Representative invocations:
 
-- ``aeat app ledger review --filter status=pending --filter period=2026-Q1``
-- ``aeat app ledger review --filter issue=gap --filter period=2026-Q1``
-- ``aeat app ledger review --filter issue=duplicate --filter period=2026-Q1``
-- ``aeat app ledger review --filter import=import_003 --filter period=2026-Q1``
+- ``aeat app ledger review --filter status=pending --filter period=2026-1T``
+- ``aeat app ledger review --filter issue=gap --filter period=2026-1T``
+- ``aeat app ledger review --filter issue=duplicate --filter period=2026-1T``
+- ``aeat app ledger review --filter import=import_003 --filter period=2026-1T``
 - invoice evidence and modelo work-unit queue filters
 - modelo status filters by period and modelo code
 
@@ -132,8 +132,9 @@ class LedgerReviewFilterKey(StrEnum):
     Attributes:
         STATUS: Lifecycle state of the row (``pending`` / ``reviewed``
             / ``skipped``).
-        PERIOD: Calendar period the row falls into (``YYYY-Qn``,
-            ``YYYYQn``, ``YYYY-MM``, or ``YYYY``).
+        PERIOD: Filing period the row falls into, as a year-qualified AEAT
+            token: ``YYYY-1T``..``YYYY-4T`` (quarters), ``YYYY-0A`` (annual),
+            or ``YYYY-01``..``YYYY-12`` (months).
         ISSUE: Filters to rows that carry an import-time diagnostic
             (``gap`` / ``duplicate`` / ``original-file`` / ``parser``).
         IMPORT: Filters to rows from a specific import-batch id.
@@ -305,7 +306,8 @@ class LedgerReviewFilterSpec(BaseModel):
             command is invoked without ``--filter``.
         status: Resolved :class:`LedgerReviewStatus` if ``status=`` was
             provided.
-        period: Raw calendar-period string if ``period=`` was provided.
+        period: Raw year-qualified AEAT period token (e.g. ``2024-1T``) if
+            ``period=`` was provided.
             Period parsing is delegated to the consuming use-case so
             this layer does not duplicate
             :class:`aeat.application.aggregation.Period`.

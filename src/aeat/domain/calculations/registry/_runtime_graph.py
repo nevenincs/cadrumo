@@ -171,9 +171,16 @@ def _collect_parameter_refs(expression: FormulaExpression, refs: list[str]) -> N
         _collect_parameter_refs(arg, refs)
 
 
-_RESOLVER_CACHE: dict[int, dict[str, str]] = {}
-_ALIAS_MAP_CACHE: dict[int, dict[str, str]] = {}
-_EVALUATION_ORDER_CACHE: dict[int, tuple[str, ...]] = {}
+# The resolver / alias-map / evaluation-order builders below intentionally
+# carry NO memoization, for the same reason the expression walkers above do
+# not: a prior implementation keyed module-global caches on ``id(revision)``,
+# but CPython reuses an object's address after garbage collection, so a fresh
+# short-lived revision could collide with a stale entry left by a now-collected
+# revision and receive the wrong resolver / order. ``ModeloRevision`` is frozen
+# but not hashable (it nests ``FormulaExpression`` whose ``dispatch_table`` is a
+# ``Mapping``), and same-coordinate revisions differ under ``model_copy`` (so a
+# coordinate key is unsafe too). Each build is a single pass over the casilla /
+# formula set — cheap — so they simply recompute on every call.
 
 
 def _casilla_reference_resolver(revision: ModeloRevision) -> dict[str, str]:
@@ -196,9 +203,6 @@ def _casilla_reference_resolver(revision: ModeloRevision) -> dict[str, str]:
     no-op: multi-segment numbers resolve correctly while single-segment
     dependency ordering is unchanged.
     """
-    k = id(revision)
-    if k in _RESOLVER_CACHE:
-        return _RESOLVER_CACHE[k]
     resolver: dict[str, str] = {casilla.id: casilla.id for casilla in revision.casillas}
     number_counts: dict[str, int] = {}
     for casilla in revision.casillas:
@@ -206,7 +210,6 @@ def _casilla_reference_resolver(revision: ModeloRevision) -> dict[str, str]:
     for casilla in revision.casillas:
         if number_counts[casilla.number] == 1:
             resolver.setdefault(casilla.number, casilla.id)
-    _RESOLVER_CACHE[k] = resolver
     return resolver
 
 
@@ -231,9 +234,6 @@ def input_casilla_alias_map(revision: ModeloRevision) -> dict[str, str]:
         revision: The :class:`ModeloRevision` whose casilla identifiers
             are indexed into the returned alias map.
     """
-    k = id(revision)
-    if k in _ALIAS_MAP_CACHE:
-        return _ALIAS_MAP_CACHE[k]
     canonical_ids = {casilla.id for casilla in revision.casillas}
     number_counts: dict[str, int] = {}
     form_number_counts: dict[str, int] = {}
@@ -251,7 +251,6 @@ def input_casilla_alias_map(revision: ModeloRevision) -> dict[str, str]:
             and form_number_counts[casilla.form_number] == 1
         ):
             resolver.setdefault(casilla.form_number, casilla.id)
-    _ALIAS_MAP_CACHE[k] = resolver
     return resolver
 
 
@@ -268,9 +267,6 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:
     Args:
         revision: The :class:`ModeloRevision` whose formulas to topologically sort.
     """
-    k = id(revision)
-    if k in _EVALUATION_ORDER_CACHE:
-        return _EVALUATION_ORDER_CACHE[k]
     resolver = _casilla_reference_resolver(revision)
     computed_targets = {resolver.get(formula.target, formula.target) for formula in revision.formulas}
     sorter: TopologicalSorter[str] = TopologicalSorter()
@@ -282,6 +278,4 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:
             if (resolved := resolver.get(casilla, casilla)) in computed_targets
         ]
         sorter.add(target, *dependencies)
-    val = tuple(sorter.static_order())
-    _EVALUATION_ORDER_CACHE[k] = val
-    return val
+    return tuple(sorter.static_order())

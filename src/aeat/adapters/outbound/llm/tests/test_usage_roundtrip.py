@@ -68,7 +68,7 @@ def test_llm_usage_records_survive_encrypted_storage_roundtrip(
     assert len(all_loaded) == 2
     # Identity preserved across the encrypted append-only sink:
     # both records sit in the loaded tuple bit-for-bit.
-    assert set(all_loaded) == {record_today, record_yesterday}
+    assert frozenset(all_loaded) == frozenset([record_today, record_yesterday])
 
     # Date-axis filter must yield exactly the today-side record.
     only_today = recorder.load_records(since=today.date(), until=today.date())

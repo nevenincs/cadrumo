@@ -48,7 +48,7 @@ _GUARDED_PREDICATE_PATHS: tuple[str, ...] = (
 )
 
 _UNGARDED_PREDICATE_PATHS: tuple[str, ...] = (
-    "config unlock does-not-exist",
+    "config switch does-not-exist",
     "app registry inspect",
     "app ledger list",
     "app ledger view tx",
@@ -205,10 +205,10 @@ def test_bootstrap_safe_probes_still_run_on_root_fallback_database(tmp_path: Pat
     assert "No active profile" not in _combined_output(result)
 
 
-def test_config_unlock_remains_recovery_path_on_root_fallback_database(tmp_path: Path) -> None:
-    """`config unlock` reaches profile resolution instead of the root-fallback guard."""
+def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path: Path) -> None:
+    """`config switch` reaches profile resolution instead of the root-fallback guard."""
 
-    result = _run_aeat(tmp_path, ("config", "unlock", "does-not-exist"))
+    result = _run_aeat(tmp_path, ("config", "switch", "does-not-exist"))
 
     assert result.returncode == 2, _combined_output(result)
     output = _combined_output(result)
@@ -225,7 +225,7 @@ def test_root_fallback_guard_predicate_covers_profile_bound_mutations(verb_path:
 
 @pytest.mark.parametrize("verb_path", _UNGARDED_PREDICATE_PATHS)
 def test_root_fallback_guard_predicate_leaves_read_and_recovery_paths_open(verb_path: str) -> None:
-    """The central guard does not capture read-only probes or profile-unlock recovery."""
+    """The central guard does not capture read-only probes or profile-switch recovery."""
 
     assert not is_profile_bound_write_verb_path(verb_path)
 

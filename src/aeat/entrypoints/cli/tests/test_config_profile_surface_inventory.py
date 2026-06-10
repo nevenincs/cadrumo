@@ -1,14 +1,9 @@
 """Inventory tests for the `aeat config profile` operator surface.
 
-Pins the ten plain-English operator-target verbs the
-profile surface contract mandates as reachable on the
-`aeat config profile` subgroup. Future regressions that
-accidentally rename or unmount a verb surface here, not in a
-shipped operator session.
-
-The legacy `view` / `use` / `remove` names and field-at-a-time
-`get` / `set` / `unset` diagnostics verbs MUST NOT resolve on the
-operator surface.
+Pins the plain-English operator-target verbs the profile surface
+contract mandates as reachable on the `aeat config profile` subgroup.
+Future regressions that accidentally rename or unmount a verb surface
+here, not in a shipped operator session.
 """
 
 from __future__ import annotations
@@ -38,16 +33,6 @@ _OPERATOR_VERBS = (
     "list",
 )
 
-_RETIRED_VERBS = (
-    "switch",
-    "view",
-    "use",
-    "remove",
-    "get",
-    "set",
-    "unset",
-)
-
 
 @pytest.mark.parametrize("verb", _OPERATOR_VERBS)
 def test_operator_verb_is_mounted(verb: str, runner: CliRunner) -> None:
@@ -56,13 +41,3 @@ def test_operator_verb_is_mounted(verb: str, runner: CliRunner) -> None:
     result = runner.invoke(profile_app, [verb, "--help"])
 
     assert result.exit_code == 0, result.output
-
-
-@pytest.mark.parametrize("verb", _RETIRED_VERBS)
-def test_retired_verb_is_not_mounted(verb: str, runner: CliRunner) -> None:
-    """Renamed verbs must not be reachable under their previous names."""
-
-    result = runner.invoke(profile_app, [verb, "--help"])
-
-    assert result.exit_code != 0
-    assert "No such command" in result.output or "Usage" in result.output

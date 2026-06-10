@@ -13,7 +13,7 @@ import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 from urllib.parse import quote, urljoin, urlsplit
 
 from bs4 import BeautifulSoup, Tag
@@ -977,7 +977,33 @@ def _has_wallet_table(html: str) -> bool:
     return False
 
 
-def _wallet_page_shape_context(html: str, *, landing_url: str) -> dict[str, object]:
+class _WalletFormShape(TypedDict):
+    id: str
+    name: str
+    method: str
+    action_path: str
+
+
+class _WalletInputShape(TypedDict):
+    id: str
+    name: str
+    type: str
+
+
+class _WalletPageShape(TypedDict):
+    landing_url: str | None
+    wallet_executed_empty_shape: bool
+    heading_count: int
+    table_count: int
+    form_count: int
+    wallet_entrypoint_count: int
+    wallet_entrypoint_paths: tuple[str, ...]
+    forms: tuple[_WalletFormShape, ...]
+    inputs: tuple[_WalletInputShape, ...]
+    raw_sha256: str
+
+
+def _wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShape:
     soup = BeautifulSoup(html, "html.parser")
     wallet_entrypoints = tuple(
         entrypoint
@@ -987,35 +1013,35 @@ def _wallet_page_shape_context(html: str, *, landing_url: str) -> dict[str, obje
         )
         if entrypoint is not None
     )
-    forms = tuple(
-        {
-            "id": _bounded_text(form.get("id", "")),
-            "name": _bounded_text(form.get("name", "")),
-            "method": _bounded_text(form.get("method", "")),
-            "action_path": urlsplit(str(form.get("action", ""))).path,
-        }
+    forms: tuple[_WalletFormShape, ...] = tuple(
+        _WalletFormShape(
+            id=_bounded_text(form.get("id", "")),
+            name=_bounded_text(form.get("name", "")),
+            method=_bounded_text(form.get("method", "")),
+            action_path=urlsplit(str(form.get("action", ""))).path,
+        )
         for form in soup.find_all("form")[:8]
     )
-    inputs = tuple(
-        {
-            "id": _bounded_text(input_node.get("id", "")),
-            "name": _bounded_text(input_node.get("name", "")),
-            "type": _bounded_text(input_node.get("type", "")),
-        }
+    inputs: tuple[_WalletInputShape, ...] = tuple(
+        _WalletInputShape(
+            id=_bounded_text(input_node.get("id", "")),
+            name=_bounded_text(input_node.get("name", "")),
+            type=_bounded_text(input_node.get("type", "")),
+        )
         for input_node in soup.find_all("input")[:20]
     )
-    return {
-        "landing_url": _redacted_url(landing_url),
-        "wallet_executed_empty_shape": _looks_like_executed_empty_wallet_page(soup),
-        "heading_count": len(soup.find_all(["h1", "h2", "h3"])),
-        "table_count": len(soup.find_all("table")),
-        "form_count": len(soup.find_all("form")),
-        "wallet_entrypoint_count": len(wallet_entrypoints),
-        "wallet_entrypoint_paths": wallet_entrypoints[:8],
-        "forms": forms,
-        "inputs": inputs,
-        "raw_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest(),
-    }
+    return _WalletPageShape(
+        landing_url=_redacted_url(landing_url),
+        wallet_executed_empty_shape=_looks_like_executed_empty_wallet_page(soup),
+        heading_count=len(soup.find_all(["h1", "h2", "h3"])),
+        table_count=len(soup.find_all("table")),
+        form_count=len(soup.find_all("form")),
+        wallet_entrypoint_count=len(wallet_entrypoints),
+        wallet_entrypoint_paths=wallet_entrypoints[:8],
+        forms=forms,
+        inputs=inputs,
+        raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
+    )
 
 
 def _redacted_url(value: object) -> str | None:

@@ -64,8 +64,8 @@ __all__ = [
     "derive_invoice_id",
     "invoice_line_to_iva_observation",
     "iva_rate_percentage",
-    "numeric_iva_rate_percentages",
     "link_transaction",
+    "numeric_iva_rate_percentages",
     "suggest_reconciliations",
     "verify_link_consistency",
 ]

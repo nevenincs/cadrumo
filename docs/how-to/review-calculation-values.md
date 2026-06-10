@@ -10,19 +10,19 @@ period.
 Describe the modelo and available revisions:
 
 ```bash
-aeat app modelo describe 130 --period 2026Q1
+aeat app modelo describe 130 --period 1T
 ```
 
 List casillas:
 
 ```bash
-aeat app modelo casillas 130 --period 2026Q1
+aeat app modelo casillas 130 --period 1T
 ```
 
 Show only required manual casillas:
 
 ```bash
-aeat app modelo casillas 130 --period 2026Q1 --input-kind manual --required
+aeat app modelo casillas 130 --period 1T --input-kind manual --required
 ```
 
 The `casillas` command shows the registry casilla id, printed form number,
@@ -32,7 +32,7 @@ input kind, required flag, and label. Use this before providing any
 Inspect formulas and their legal/source references:
 
 ```bash
-aeat app modelo formulas 130 --period 2026Q1 --explain
+aeat app modelo formulas 130 --period 1T --explain
 ```
 
 ## Review a saved calculation
@@ -65,7 +65,7 @@ export.
 Use `--casilla` only when aeat asks you to supply a specific box value by
 hand. Use the box number printed on the official AEAT form — the same number
 you see on the paper or PDF version of the modelo. Run
-`aeat app modelo casillas 130 --period 2026Q1` to see the list.
+`aeat app modelo casillas 130 --period 1T` to see the list.
 
 Example:
 
@@ -125,6 +125,19 @@ Use `--amount 0` only for a true first Modelo 303 period with no previous IVA
 compensation balance. Use a positive amount only when you have the pending
 compensation amount from earlier Modelo 303 filings prepared outside this local
 history.
+
+Seeding refuses if a record already exists for the period. To fix a wrong
+opening amount you seeded earlier, correct it:
+
+```bash
+aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
+```
+
+The correction overwrites the seeded amount and records your `--reason` in an
+audit event. It refuses when no record exists for the period (seed it first) and
+when an already-filed Modelo 303 has consumed the seeded basis — correcting it
+then would change a return you have already filed. In that case file a
+complementaria instead (see [Correct an already filed local record](#correct-an-already-filed-local-record)).
 
 For registry relation values, calculation accepts repeatable
 `--relation KEY=VALUE` inputs. Use them only when the relevant modelo's

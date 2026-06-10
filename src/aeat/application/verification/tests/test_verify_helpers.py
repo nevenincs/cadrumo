@@ -36,6 +36,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -291,7 +292,7 @@ def test_compute_coverage_is_monotonic_in_provided_set() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _classified(*causes: DiscrepancyCause) -> tuple:
+def _classified(*causes: DiscrepancyCause) -> tuple[Any, ...]:
     from .._schema import ClassifiedDiscrepancy
 
     return tuple(

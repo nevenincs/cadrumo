@@ -24,7 +24,7 @@ without spinning up a real browser.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, TypeGuard, runtime_checkable
 
 from pydantic import AnyUrl
 
@@ -123,9 +123,9 @@ class VerifyBrowserSessionLike(Protocol):
     async def create_context(
         self,
         *,
-        provisioner: Any = ...,
-        storage_state_path: Any = ...,
-        storage_state: Any = ...,
+        provisioner: Any | None = None,
+        storage_state_path: Any | None = None,
+        storage_state: Any | None = None,
     ) -> VerifyBrowserContextLike:
         """Create and return a configured :class:`VerifyBrowserContextLike`."""
         ...
@@ -137,6 +137,19 @@ class VerifyBrowserSessionLike(Protocol):
 
 VerifyBrowserSessionFactory = Callable[[], Awaitable[VerifyBrowserSessionLike]]
 """Callable that builds a self-owned browser session."""
+
+
+def _is_verify_browser_session_like(obj: object) -> TypeGuard[VerifyBrowserSessionLike]:
+    """Return ``True`` when ``obj`` structurally satisfies :class:`VerifyBrowserSessionLike`.
+
+    Checks the two method names the protocol requires; a
+    :class:`TypeGuard` annotation tells the type checker the narrowed
+    type after the guard without relying on
+    :func:`isinstance` against a ``@runtime_checkable`` protocol (which
+    pyright flags when a concrete class shares method names but has
+    covariant return types).
+    """
+    return callable(getattr(obj, "create_context", None)) and callable(getattr(obj, "close", None))
 
 
 async def _build_default_browser_session(
@@ -159,7 +172,7 @@ async def _build_default_browser_session(
     settings = load_settings()
     resolved_factory = factory or default_browser_session_factory
     session = await resolved_factory(settings)
-    if not isinstance(session, VerifyBrowserSessionLike):
+    if not _is_verify_browser_session_like(session):
         raise _BrowserAdapterTypeError(
             f"default_browser_session_factory returned an incompatible type: {type(session)}"
         )

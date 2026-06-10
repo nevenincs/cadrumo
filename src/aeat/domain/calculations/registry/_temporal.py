@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ._errors import RegistrySnapshotError
+from ._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
 from ._schema import ModeloDefinition, ModeloRevision
 
 
@@ -54,10 +54,15 @@ def select_revision(
             continue
         candidates.append(revision)
     if not candidates:
-        raise RegistrySnapshotError(
-            f"modelo {modelo.id}: no revision for year={filing_year!r} period={period!r} revision={revision_id!r}"
+        raise NoRevisionForPeriodError(
+            modelo_id=modelo.id,
+            filing_year=filing_year,
+            period=period,
+            revision_id=revision_id,
         )
     if len(candidates) > 1:
-        ids = ", ".join(sorted(revision.id for revision in candidates))
-        raise RegistrySnapshotError(f"modelo {modelo.id}: ambiguous revision selection: {ids}")
+        raise AmbiguousRevisionSelectionError(
+            modelo_id=modelo.id,
+            candidate_ids=tuple(revision.id for revision in candidates),
+        )
     return candidates[0]

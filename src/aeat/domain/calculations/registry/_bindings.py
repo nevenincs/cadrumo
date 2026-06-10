@@ -268,6 +268,33 @@ def resolve_bound_casilla_inputs(
 _ManualInputDataType = Literal["boolean", "integer", "text", "decimal", "money"]
 
 
+class _RelationPrefillSelector(BaseModel):
+    """Strict validator for a ``relation_prefill`` slot-binding selector.
+
+    A ``relation_prefill`` binding is a materialisation SLOT for a registry
+    relation's ``target_binding``: the cross-modelo (or period-variant)
+    fold-in value is produced by :class:`RelationPrefillSourceResolver`
+    folding prior filed observations through the relation's aggregation op,
+    and written into this binding's slot. The selector therefore mirrors the
+    relation's source descriptor (``source_modelo`` plus the output it pulls)
+    rather than carrying its own resolution logic — the relation is the
+    authority for periods, year alignment, and aggregation. The slot exists
+    only so a bound casilla can consume the materialised Decimal.
+
+    This is the canonical declared replacement for the mis-stamped
+    ``previous_filing`` non-direct slots (aggregation-taxonomy ADR ruling 3):
+    a slot binding declares ``source = "relation_prefill"``, never
+    ``previous_filing``.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_modelo: str = Field(min_length=1, max_length=8)
+    source_output: str | None = Field(default=None, min_length=1)
+    source_casillas: tuple[str, ...] = ()
+    source_periods: tuple[str, ...] = ()
+
+
 class _ProfileSelector(BaseModel):
     """Strict validator for the selector mapping of a profile-source binding.
 
@@ -446,6 +473,7 @@ def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelect
 
 _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "previous_filing": _PreviousModeloSelector,
+    "relation_prefill": _RelationPrefillSelector,
     AggregationSourceKind.INVOICE: _InvoiceSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +

@@ -132,12 +132,14 @@ reconciliation gate:
 ```bash
 aeat app modelo iva-wallet balance --as-of-year 2025
 aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
 aeat app live iva-wallet history
 aeat app live iva-wallet capture-history
 ```
 
 Use `seed` only when you have a real opening compensation balance from before
-the local Modelo 303 history.
+the local Modelo 303 history. If you seeded a wrong amount, `correct` overwrites
+it (it refuses once an already-filed Modelo 303 has consumed that basis).
 
 ## Create the annual work unit
 
@@ -154,8 +156,8 @@ aeat app modelo work status --modelo 390 --year 2025 --period 0A
 aeat app modelo work history --modelo 390 --year 2025 --period 0A
 aeat app modelo bindings list --modelo 390 --year 2025 --period 0A
 aeat app modelo bindings list --modelo 390 --year 2025 --period 0A --missing
-aeat app modelo casillas 390 --period 2025
-aeat app modelo formulas 390 --period 2025 --explain
+aeat app modelo casillas 390 --period 0A
+aeat app modelo formulas 390 --period 0A --explain
 ```
 
 The binding list should show ledger IVA aggregation bindings and `previous_filing`
@@ -169,8 +171,8 @@ record automatically.
 Check the annual ledger window before calculation:
 
 ```bash
-aeat app ledger preflight --period 2025
-aeat app ledger status --period 2025
+aeat app ledger preflight --year 2025 --period 0A
+aeat app ledger status --year 2025 --period 0A
 ```
 
 Run the annual calculation:

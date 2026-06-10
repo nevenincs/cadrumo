@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
+from ._period_offset_math import apply_period_offset
 from ._schema import ModeloRevision, RelationDefinition
 
 __all__ = [
@@ -252,14 +253,6 @@ def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> 
     return filing_year + delta
 
 
-_QUARTERLY_PERIOD_ORDINAL: dict[str, int] = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}
-_ORDINAL_TO_QUARTERLY: dict[int, str] = {ordinal: code for code, ordinal in _QUARTERLY_PERIOD_ORDINAL.items()}
-_PAGO_FRACCIONADO_PERIOD_ORDINAL: dict[str, int] = {"1P": 1, "2P": 2, "3P": 3}
-_ORDINAL_TO_PAGO_FRACCIONADO: dict[int, str] = {
-    ordinal: code for code, ordinal in _PAGO_FRACCIONADO_PERIOD_ORDINAL.items()
-}
-
-
 def _derive_offset_source_period(relation: RelationDefinition, *, target_period: str) -> str | None:
     anchor = _derive_offset_source_anchor(relation, target_period=target_period)
     return None if anchor is None else anchor[1]
@@ -270,24 +263,19 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
 
     Supports quarterly period codes (``1T``..``4T``), pago-fraccionado period
     codes used by modelo 202 (``1P``..``3P``), and zero-padded monthly codes
-    (``01``..``12``). Offsets wrap across calendar-year boundaries and return
-    the period plus the relative year delta.
+    (``01``..``12``). Delegates arithmetic to
+    :func:`_period_offset_math.apply_period_offset`.
     """
     offset = relation.source_period_offset_from_target
     if offset is None:
         return None
-    if target_period in _QUARTERLY_PERIOD_ORDINAL:
-        year_delta, zero_based = divmod(_QUARTERLY_PERIOD_ORDINAL[target_period] - 1 + offset, 4)
-        return year_delta, _ORDINAL_TO_QUARTERLY[zero_based + 1]
-    if target_period in _PAGO_FRACCIONADO_PERIOD_ORDINAL:
-        year_delta, zero_based = divmod(_PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] - 1 + offset, 3)
-        return year_delta, _ORDINAL_TO_PAGO_FRACCIONADO[zero_based + 1]
-    if len(target_period) == 2 and target_period.isdigit():
-        year_delta, zero_based = divmod(int(target_period) - 1 + offset, 12)
-        return year_delta, f"{zero_based + 1:02d}"
-    raise RegistryValidationError(
-        f"relation {relation.id!r} source_period_offset_from_target cannot interpret target period {target_period!r}"
-    )
+    try:
+        return apply_period_offset(offset, target_period=target_period)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(
+            f"relation {relation.id!r} source_period_offset_from_target "
+            f"cannot interpret target period {target_period!r}"
+        ) from exc
 
 
 def _observed_requirement_values(

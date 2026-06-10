@@ -64,7 +64,7 @@ def _seed_work_unit(
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "revision_id", "binding_id"),
     [
-        ("303", 2026, "1T", "2009-y-siguientes", "modelo-303-iva-repercutido-general-cuota"),
+        ("303", 2026, "1T", "2023-y-siguientes", "modelo-303-iva-repercutido-general-cuota"),
         ("100", 2025, "0A", "2025", "renta-2025-ledger-expense-0199-deductible"),
     ],
 )
@@ -104,7 +104,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "revision_id", "casilla_id"),
     [
-        ("303", 2026, "1T", "2009-y-siguientes", "iva.repercutido.general"),
+        ("303", 2026, "1T", "2023-y-siguientes", "iva.repercutido.general"),
         ("100", 2025, "0A", "2025", "0199"),
     ],
 )

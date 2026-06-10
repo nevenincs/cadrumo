@@ -33,6 +33,7 @@ from .. import (
     LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
     LIVE_CENSO_SNAPSHOT_NAMESPACE,
     LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+    LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
     LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
     LIVE_VERIFY_OBSERVATION_NAMESPACE,
     LLM_CACHE_NAMESPACE,
@@ -98,6 +99,20 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     assert declaration.namespace == "aeat.application.modelo.m036_declaration"
     assert declaration.sensitivity is SensitivityClass.IDENTITY
     assert declaration.object_key_grammar == "m036-declaration:{bucket_id}:{declaration_id}"
+
+
+def test_secure_object_registry_names_live_justificante_capture_namespace() -> None:
+    """The live justificante-capture verb persists the pulled receipt
+    through this bucket-scoped FINANCIAL namespace. Authority:
+    2026-06-10-live-justificante-reconcile-adr.
+    """
+    capture = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_justificante_capture_snapshot")
+
+    assert capture == LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
+    assert capture.namespace == "aeat.application.live.justificante_capture_snapshot"
+    assert capture.sensitivity is SensitivityClass.FINANCIAL
+    assert capture.object_key_grammar == "justificante-capture-snapshot:{bucket_id}:{snapshot_id}"
+    assert capture.scope is StorageNamespaceScope.BUCKET_LOCAL
 
 
 def test_singleton_object_keys_are_named_registry_values() -> None:

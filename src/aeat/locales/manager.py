@@ -1,9 +1,9 @@
 """Locale file management: loading, scaffolding, and structural health checks."""
 
 import re
-from collections.abc import Iterator
+from collections.abc import Hashable, Iterator
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 import yaml
 
@@ -26,7 +26,7 @@ class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys."""
 
     @override
-    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Hashable, Any]:
         """Construct a mapping node, raising ``LocaleError`` on duplicate keys.
 
         Args:

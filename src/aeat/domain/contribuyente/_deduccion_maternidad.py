@@ -18,4 +18,6 @@ def compute_deduccion_maternidad_0611(meses_por_hijo: list[tuple[str, int]]) -> 
     :data:`DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`))`` for each ``(hijo_id, meses)`` pair.
     Returns an integer euros amount.
     """
-    return sum(min(meses * DEDUCCION_MATERNIDAD_MENSUAL_EUR, DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR) for _, meses in meses_por_hijo)
+    return sum(
+        min(meses * DEDUCCION_MATERNIDAD_MENSUAL_EUR, DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR) for _, meses in meses_por_hijo
+    )

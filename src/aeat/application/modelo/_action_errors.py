@@ -111,6 +111,17 @@ class ModeloApplicabilityFilterError(ModeloError):
     """Raised when an unknown applicability filter name is encountered."""
 
 
+class WorkUnitRevisionDivergenceError(ModeloError):
+    """Raised when the registry's law-determined revision diverges from the work unit's pinned revision.
+
+    This can only happen when the registry's law-mapping was corrected after the
+    work unit was created (the creation gate now enforces resolver-equality), or
+    for work units persisted before the strengthened creation gate landed.  The
+    resolution is to re-create the work unit so its identity reflects the
+    corrected law-determined revision.
+    """
+
+
 __all__ = [
     "WORKFLOW_GATE_LEGAL_REFS",
     "AmendmentEvidenceMissingError",
@@ -132,4 +143,5 @@ __all__ = [
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
+    "WorkUnitRevisionDivergenceError",
 ]

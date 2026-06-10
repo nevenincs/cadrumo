@@ -48,7 +48,7 @@ class NonTtyRefusedError(AeatError):
             suggestion: Recovery hint to attach to the refusal message.
         """
         super().__init__(suggestion=suggestion.strip() or None)
-        self.suggestion: str = suggestion
+        self.suggestion = suggestion
 
 
 def _isatty(stream: object) -> bool:

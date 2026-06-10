@@ -19,7 +19,7 @@ def assert_public_profile_id_not_leaked(output: str, raw_profile_id: str) -> Non
     assert raw_profile_id not in output
 
 
-def assert_public_profile_payload_redacted(output: str, raw_profile_id: str) -> dict:
+def assert_public_profile_payload_redacted(output: str, raw_profile_id: str) -> dict[str, object]:
     """Return a JSON envelope payload after asserting profile-id redaction."""
     payload = unwrap_schema_envelope(output)
     assert payload["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER

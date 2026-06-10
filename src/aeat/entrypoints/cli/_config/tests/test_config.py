@@ -94,14 +94,14 @@ def test_aeat_error_from_config_profile_show_unknown_name_emits_typed_envelope()
     assert isinstance(result.exception, SystemExit) or result.exit_code != 0
 
 
-def test_aeat_error_from_config_unlock_missing_profile_emits_typed_envelope() -> None:
-    """config unlock on an unregistered profile name emits a refused boundary.
+def test_aeat_error_from_config_switch_missing_profile_emits_typed_envelope() -> None:
+    """config switch on an unregistered profile name emits a refused boundary.
 
     _read_profile_bucket returns None for an unknown name; _CliRefusedBoundaryError
     (an AeatError) is raised.  The command_error_boundary catches it verbatim
     and emits a structured error payload with a non-zero exit code.
     """
-    result = invoke_cached_cli(["config", "unlock", "no-such-profile"])
+    result = invoke_cached_cli(["config", "switch", "no-such-profile"])
 
     assert result.exit_code != 0
 

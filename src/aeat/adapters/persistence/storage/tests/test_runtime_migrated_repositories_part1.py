@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
 from ._runtime_migrated_repositories_support import (
@@ -315,7 +317,11 @@ def test_auth_session_store_default_isolates_active_profile_writes(tmp_path: Pat
     assert isinstance(cookies, list)
     first_cookie = cookies[0]
     assert isinstance(first_cookie, dict)
-    assert first_cookie["value"] == "bucket-a"
+    # storage_state is the untyped Playwright Mapping[str, object]; the cookie
+    # entries are str-keyed dicts at runtime. The cast restores the str key type
+    # the isinstance-narrowed dict[Unknown, Unknown] erases (key type Never).
+    cookie_fields = cast("dict[str, object]", first_cookie)
+    assert cookie_fields["value"] == "bucket-a"
 
 
 def test_transaction_repository_default_isolates_bucket_writes(tmp_path: Path) -> None:

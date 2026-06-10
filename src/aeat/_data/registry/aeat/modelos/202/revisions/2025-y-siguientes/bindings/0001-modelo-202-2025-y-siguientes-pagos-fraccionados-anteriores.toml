@@ -1,6 +1,6 @@
 [[revisions.2025-y-siguientes.bindings]]
 id = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "202", source_output = "34" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]

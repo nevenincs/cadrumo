@@ -31,6 +31,7 @@ from ...domain.modelos._row_models import ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
+from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS as _DEFERRED_SOURCE_KINDS
 from ..live import Borrador100SnapshotRepository
 from . import _iva_wallet_gate
 from ._action_errors import (
@@ -40,6 +41,7 @@ from ._action_errors import (
     ModeloAggregationBindingError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    WorkUnitRevisionDivergenceError,
 )
 from ._binding_resolution import (
     resolve_bound_casilla_inputs_for_available_bindings,
@@ -80,18 +82,106 @@ class BucketAggregationCalculationResult:
     revision: CalculationRevision
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
+
 _apply_iva_compensation_decision_binding = _iva_wallet_gate.apply_iva_compensation_decision_binding
 _taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
 iva_wallet_blocked_message = _iva_wallet_gate.iva_wallet_blocked_message
 resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva_compensation_decision_for_calculation
 
 
+# S26 boundary gate — the COMPLETE set of source kinds that the live calculate
+# path handles, either through an enrolled resolver (ENROLLED) or through an
+# explicitly-deferred advisory (DEFERRED, per W02.P06.S10).  A registry binding
+# whose source is not in this set would compile and silently blank; instead the
+# gate rejects it at calculation time so the novel source never reaches the
+# engine undetected.
+#
+# ENROLLED — covered by an active ModeloSourceResolver in the live mesh:
+#   ledger_iva_aggregation        — LedgerIvaAggregationSourceResolver
+#   ledger_renta_expense_aggregation — LedgerRentaExpenseAggregationSourceResolver
+#   ledger_renta_income_aggregation  — LedgerRentaIncomeAggregationSourceResolver (S09)
+#   ledger_oss_aggregation           — OssIossLedgerSourceResolver (S09)
+#   collectible_invoice              — InvoiceCatalogueSourceResolver (S09)
+#   payable_invoice                  — InvoiceCatalogueSourceResolver (S09, declared no
+#                                      registry binding yet — live capacity headroom)
+#   previous_filing                  — PreviousFilingSourceResolver
+#   relation_prefill                 — RelationPrefillSourceResolver (S13) — folds
+#                                      prior observations through registry relations
+#                                      and materialises target_binding slots
+#   profile                          — ProfileSourceResolver (pre-mesh gate)
+#   borrador                         — Borrador100 source (pre-mesh gate)
+#   iva_wallet_decision              — IvaWalletDecisionSourceResolver (pre-mesh gate)
+#   manual_input                     — operator-supplied, never enrolled in resolver
+#
+# DEFERRED — no resolver yet; emit advisory instead of silently blanking (S10):
+#   withholding, atribucion_member, related_party_operation, foreign_asset, refund_operation
 _BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
     {
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
+        "ledger_renta_income_aggregation",
+        "ledger_oss_aggregation",
+        "collectible_invoice",
+        "payable_invoice",
+        "previous_filing",
+        "relation_prefill",
+        "profile",
+        "borrador",
+        "iva_wallet_decision",
+        "manual_input",
     }
 )
+
+# Caller-override lock set — the subset of OWNED sources whose resolvers are
+# deterministic and always return values from the bucket (so callers MUST NOT
+# override their bindings / casillas on the aggregation path).  This is a strict
+# subset of _BUCKET_AGGREGATION_OWNED_SOURCES; optional-return resolvers like
+# previous_filing, profile, and the OSS/invoice resolvers are intentionally absent
+# so test fixtures and carry-forward overrides remain valid.
+_BUCKET_AGGREGATION_LOCK_SOURCES = frozenset(
+    {
+        "ledger_iva_aggregation",
+        "ledger_renta_expense_aggregation",
+        "ledger_renta_income_aggregation",
+        "ledger_oss_aggregation",
+        "collectible_invoice",
+        "payable_invoice",
+    }
+)
+
+# Explicitly-deferred source kinds (S10): advisory fires on source_diagnostics,
+# never enrolled as manual_sources (which would silence the advisory).
+# Canonical definition: DEFERRED_SOURCE_KINDS in aggregation._source_mesh.
+
+# ---------------------------------------------------------------------------
+# Declared precedence ladder (W03.P09.S15 — codifies D2/D3 out of inline notes).
+#
+# For the decimal binding channel, lowest -> highest precedence:
+#
+#   1. profile resolver           (pre-mesh taxpayer facts)
+#   2. mesh backend resolvers     (ledger aggregations, previous_filing,
+#                                  relation_prefill) — EXCLUSIVE intra-mesh
+#                                  ownership: a duplicate claim is a hard
+#                                  AggregationValidationError via _claim_binding,
+#                                  never a quiet override
+#   3. borrador                   (M100 prefill)
+#   4. caller overrides           (--binding / --casilla) — permitted ONLY for
+#                                  the auto-CARRIED sources below; REFUSED with a
+#                                  hard error for ledger-owned sources (the
+#                                  persisted revision must reflect the sources it
+#                                  claims to aggregate)
+#
+# iva_wallet_decision sits OUTSIDE this ladder as an exclusive owner with
+# refusal-on-conflict semantics: the M303 compensación binding is stripped from
+# the previous-filing resolution pre-mesh (D3) and any conflicting caller/backend
+# value raises ModeloIvaWalletReconciliationBlocked rather than being out-ranked.
+#
+# Caller-overridable carried sources (the D2 carve-out, extended to relation
+# carries by the same logic): an operator override of an auto-carried PRIOR value
+# is legitimate — the engine's consistency check adjudicates divergence. A caller
+# --binding for one of these reaches the engine; for every other mesh-owned
+# (ledger) source it is refused.
+_CALLER_OVERRIDABLE_CARRY_SOURCES = frozenset({"previous_filing", "relation_prefill"})
 
 
 def _canonical_decimal_str(value: Decimal) -> str:
@@ -458,9 +548,13 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         CalculationSourceContext,
         LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
+        LedgerRentaIncomeAggregationSourceResolver,
+        OssIossLedgerSourceResolver,
+        collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
-    from ..calculations import PreviousFilingSourceResolver
+    from ..calculations import PreviousFilingSourceResolver, RelationPrefillSourceResolver
+    from ..invoices import InvoiceCatalogueSourceResolver
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     work_units = wu_repo.load()
@@ -493,6 +587,25 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
             context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
         ) from exc
+    # D1 calc-time assertion: the law-determined revision must equal the
+    # revision the work unit was created against.  The work unit's revision_id
+    # is an identity claim, not a resolution input (per the period-revision-
+    # resolution ADR ruling 2).
+    if snapshot.revision.id != work_unit.revision_id:
+        raise WorkUnitRevisionDivergenceError(
+            f"work unit {work_unit.work_unit_id!r} was created against registry revision "
+            f"{work_unit.revision_id!r}, but the law-determined revision for "
+            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period!r} "
+            f"is now {snapshot.revision.id!r}. "
+            f"The registry's law-mapping was corrected after this work unit was created. "
+            f"Re-create the work unit (discard this one and run `aeat app modelo work ensure`) "
+            f"to bind it to the current law-determined revision.",
+        )
+
+    # S26 boundary gate: reject any binding source that is neither enrolled in
+    # the live resolver mesh nor explicitly deferred.  This converts a silent
+    # blank into a loud error so a novel TOML source cannot slip through.
+    assert_no_novel_source_kinds(snapshot.revision)
 
     # Normalise operator-supplied casilla aliases (registry number / BOE
     # form number) to canonical ids before the source-collision and
@@ -500,9 +613,13 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     if casilla_inputs is not None:
         casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, casilla_inputs)
 
+    # Use the LOCK set (deterministic ledger resolvers only) for the pre-merge
+    # caller-override guard.  Optional-return resolvers (previous_filing, profile,
+    # OSS, invoices) are absent from the lock so carry-forward overrides and
+    # test fixtures remain valid.  See _BUCKET_AGGREGATION_LOCK_SOURCES.
     _reject_caller_overrides_of_source_bindings(
         revision=snapshot.revision,
-        owned_sources=_BUCKET_AGGREGATION_OWNED_SOURCES,
+        owned_sources=_BUCKET_AGGREGATION_LOCK_SOURCES,
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
@@ -520,6 +637,22 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 transaction_repository=transaction_repository,
                 invoice_repository=invoice_repository,
             ).resolve(context),
+            # S09: M130 actividad-económica income (ledger_renta_income_aggregation).
+            LedgerRentaIncomeAggregationSourceResolver(
+                transaction_repository=transaction_repository,
+            ).resolve(context),
+            # S09: M369 OSS/IOSS (ledger_oss_aggregation).  Candidates are substrate-
+            # classified lines; on the pure-ledger calculate path they come in empty —
+            # the resolver returns an empty resolution without penalty so no casilla
+            # blanks silently.  Pre-classified callers (Sheets calc-sync) pass
+            # candidates via the OssIossLedgerSourceResolver constructor directly.
+            OssIossLedgerSourceResolver(candidates=()).resolve(context),
+            # S09: M349 collectible / payable invoices (collectible_invoice,
+            # payable_invoice).  Loads the encrypted invoice catalogue and resolves
+            # binding values for intra-community transactions in scope.
+            InvoiceCatalogueSourceResolver(
+                invoice_repository=invoice_repository,
+            ).resolve(context),
             # Cross-period carry: prior-filing observations flow through the
             # backend-binding channel so an automatically-carried previous_filing
             # value fills the binding gap, while a caller --binding still
@@ -530,17 +663,49 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             _previous_filing_resolution_excluding_iva_compensation(
                 PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)
             ),
+            # W03.P08.S13 — relation canonical for cross-modelo fold-in. The
+            # relation resolver folds prior filed observations through each
+            # declared relation's aggregation op and MATERIALISES the result into
+            # the relation's target_binding slot (now declared
+            # source = "relation_prefill"). The materialised binding values ride
+            # in this resolution's binding_values so the mesh _claim_binding
+            # exclusive-ownership guard adjudicates any collision loudly
+            # (aggregation-taxonomy ADR rulings 2+4). This brings the entire
+            # relation corpus (M100 pagos-fraccionados + retenciones credits,
+            # M180/M190/M193 reconciliations, M200/M202 carries) live on the
+            # operator calculate path for the first time.
+            RelationPrefillSourceResolver(registry_snapshot=snapshot).resolve(context),
         )
     )
-    # NOTE (ADR ruling D2): re-run the guard against the merged owned-sources,
-    # but EXCLUDE "previous_filing" — a caller --binding override of an
-    # automatically-carried previous_filing value is legitimate and must reach
-    # the engine, where the casilla-lift no-ops on the already-resolved binding
-    # and the engine's consistency check adjudicates any divergence. Every other
-    # dynamically-discovered source (the ledger aggregations) stays guarded.
+    # S08 — safety net: collect non-blocking advisories for every binding whose
+    # declared source has no enrolled resolver and is not explicitly deferred.
+    # handled_sources covers all enrolled-resolver owned_sources plus the three
+    # pre-mesh-handled source kinds (profile, borrador, iva_wallet_decision).
+    # DEFERRED_SOURCE_KINDS are NOT on the manual_sources allowlist so they still
+    # emit an advisory (W02.P06.S10).
+    _pre_mesh_handled: frozenset[str] = frozenset({"profile", "borrador", "iva_wallet_decision"})
+    _handled = frozenset(source_resolution.owned_sources) | _pre_mesh_handled
+    _unhandled_diagnostics = collect_unhandled_source_diagnostics(
+        snapshot.revision,
+        handled_sources=_handled,
+        manual_sources=frozenset({"manual_input"}),
+    )
+    if _unhandled_diagnostics:
+        source_resolution = source_resolution.model_copy(
+            update={"diagnostics": source_resolution.diagnostics + _unhandled_diagnostics}
+        )
+    # Precedence ladder step 4 (ADR ruling D2, extended): re-run the guard against
+    # the merged owned-sources, but EXCLUDE the caller-overridable CARRY sources
+    # (previous_filing + relation_prefill). A caller --binding override of an
+    # automatically-CARRIED prior value (a previous-filing carry or a relation
+    # fold-in) is legitimate and must reach the engine, where the casilla-lift
+    # no-ops on the already-resolved binding and the engine's consistency check
+    # adjudicates any divergence. Every other dynamically-discovered mesh source
+    # (the ledger aggregations) stays guarded so the persisted revision reflects
+    # the sources it claims to aggregate.
     _reject_caller_overrides_of_source_bindings(
         revision=snapshot.revision,
-        owned_sources=frozenset(source_resolution.owned_sources) - {PreviousFilingSourceResolver.owned_sources[0]},
+        owned_sources=frozenset(source_resolution.owned_sources) - _CALLER_OVERRIDABLE_CARRY_SOURCES,
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
@@ -552,6 +717,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             source_resolution.binding_values,
         ),
     )
+    # Feed the relation-resolver's resolved relation_values onto the engine's
+    # first-class relation channel so computed casillas that reference
+    # ``{ relation = ... }`` operands fire. A caller --relation override still
+    # wins (precedence ladder step 4, D2 carve-out for relation carries): an
+    # operator override of an auto-carried relation value is legitimate.
+    merged_relation_values = {**source_resolution.relation_values, **dict(relation_values or {})}
     revision = calculate_modelo_revision(
         work_unit_id,
         actor=actor,
@@ -564,7 +735,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         ledger_preflight_transaction_repository=transaction_repository,
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
-        relation_values=relation_values,
+        relation_values=merged_relation_values,
         source_transaction_ids=tuple(source_resolution.source_transaction_ids),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
@@ -623,11 +794,40 @@ def _previous_filing_resolution_excluding_iva_compensation(
     return resolution.model_copy(
         update={
             "binding_values": {k: v for k, v in resolution.binding_values.items() if k != excluded},
-            "provenance": tuple(
-                item for item in resolution.provenance if not item.source_ref.endswith(f":{excluded}")
-            ),
+            "provenance": tuple(item for item in resolution.provenance if not item.source_ref.endswith(f":{excluded}")),
         }
     )
+
+
+def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
+    """Raise if any binding source kind is unknown to the live mesh (S26 boundary gate).
+
+    A binding whose ``source`` is not in the enrolled-resolver union, the
+    explicitly-deferred set, or ``manual_input`` would silently blank on every
+    calculation.  This gate converts that silent blank into a loud
+    :exc:`ModeloAggregationBindingError` at calculation time so a novel TOML
+    source cannot compile into a silently-zero revision.
+
+    The accepted set is:
+
+    * ``_BUCKET_AGGREGATION_OWNED_SOURCES`` — enrolled resolvers + pre-mesh
+      gates + ``manual_input``.
+    * ``_DEFERRED_SOURCE_KINDS`` — explicitly deferred, emit advisory.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings are checked.
+
+    Raises:
+        ModeloAggregationBindingError: When a binding carries a source kind
+            absent from both the enrolled and the deferred sets.
+    """
+    _accepted = _BUCKET_AGGREGATION_OWNED_SOURCES | _DEFERRED_SOURCE_KINDS
+    novel = sorted({str(binding.source) for binding in revision.bindings if str(binding.source) not in _accepted})
+    if novel:
+        raise ModeloAggregationBindingError(
+            translated_message="application.modelo.errors.novel_source_kind_rejected",
+            context={"novel_source_kinds": novel, "revision_id": revision.id},
+        )
 
 
 def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:

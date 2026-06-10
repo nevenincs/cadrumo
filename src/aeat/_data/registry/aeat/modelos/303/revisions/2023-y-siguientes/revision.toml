@@ -1,6 +1,7 @@
 [revisions.2023-y-siguientes]
 label = "Modelo 303 ejercicios 2023 y siguientes (Orden EHA/3786/2008, modificada por sucesivas ordenes anuales)"
 valid_from = 2023-01-01
+orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 

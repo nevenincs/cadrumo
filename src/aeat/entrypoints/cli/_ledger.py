@@ -24,13 +24,16 @@ from ...application.ledger import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     apply_llm_classification,
+    apply_saturated_llm_classification,
     create_manual_transaction,
     is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_result_payload,
     ledger_transaction_review_status,
     list_manual_transactions,
+    resolve_lineage_transaction_id,
     resolve_transaction_id,
+    saturate_llm_classification,
     suggest_llm_classification,
     update_manual_transaction_fields,
 )
@@ -51,6 +54,7 @@ from ...domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
+    TransactionValidationError,
 )
 from ._common import (
     _bad,
@@ -253,39 +257,76 @@ def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[s
     return tuple(result.transaction.transaction_id for result in results)
 
 
-def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
-    """Resolve a CLI-supplied id or unambiguous prefix to a full transaction id.
+def _prefix_error_bad(exc: TransactionIdPrefixError, prefix: str) -> typer.BadParameter:
+    """Translate a :exc:`TransactionIdPrefixError` into a localized ``_bad``.
 
-    Wraps the domain-layer :exc:`TransactionIdPrefixError` into ``tr()``-
-    rendered messages routed through ``_bad`` so the operator sees a
-    locale-translated explanation rather than a raw Python exception
-    string. Four distinct refusal keys are emitted depending on which
-    invariant was violated.
+    Wraps the domain-layer exception into ``tr()``-rendered messages so the
+    operator sees a locale-translated explanation rather than a raw Python
+    exception string. Five distinct refusal keys are emitted depending on
+    which invariant was violated.
+    """
+    raw_message = str(exc)
+    if "is empty" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_empty"))
+    if "non-hex" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix))
+    if "longer than" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix))
+    if "no transaction" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix))
+    if "matches" in raw_message:
+        # collision — surface the candidate ids inline so the
+        # operator can lengthen the prefix.
+        _, _, candidates = raw_message.partition(":")
+        return _bad(
+            tr(
+                "cli.ledger.errors.id_prefix_collision",
+                prefix=prefix,
+                candidates=candidates.strip() or "?",
+            )
+        )
+    return _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message))
+
+
+def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
+    """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
+
+    Used by the *mutation* verbs (update, classify, allocate, link,
+    archive, stash, restore, ...). It matches only ids of rows still in the
+    catalogue, because a mutation always targets a live row; an ``update``
+    additionally requires the target to be ACTIVE. Read verbs use
+    :func:`_resolve_read_id` instead, which also follows edit lineage.
     """
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
     except TransactionIdPrefixError as exc:
-        raw_message = str(exc)
-        if "is empty" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_empty")) from exc
-        if "non-hex" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix)) from exc
-        if "longer than" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix)) from exc
-        if "no transaction" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix)) from exc
-        if "matches" in raw_message:
-            # collision — surface the candidate ids inline so the
-            # operator can lengthen the prefix.
-            _, _, candidates = raw_message.partition(":")
-            raise _bad(
-                tr(
-                    "cli.ledger.errors.id_prefix_collision",
-                    prefix=prefix,
-                    candidates=candidates.strip() or "?",
-                )
-            ) from exc
-        raise _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message)) from exc
+        raise _prefix_error_bad(exc, prefix) from exc
+
+
+def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
+    """Resolve a CLI-supplied id for the *read* verbs, following edit lineage.
+
+    This is the D3 stable-lineage-handle resolution path for
+    ``ledger history`` / ``view`` / ``track``. It first resolves ``prefix``
+    against live catalogue ids exactly as :func:`_resolve_id` does; when no
+    live row matches, it walks the edit-lineage chain so a superseded
+    (pre-``update``) id written down by the operator still resolves to the
+    current row — see
+    :func:`aeat.application.ledger.resolve_lineage_transaction_id`. The
+    content-addressed id stays authoritative; this is a read-side lookup
+    convenience, never a change to how ids are minted.
+    """
+    if not isinstance(transaction_repository, TransactionCatalogueRepository):
+        # Read verbs always receive a real catalogue repository through
+        # _tx_repo; the structural Protocol is only used by mutation
+        # helpers. Fall back to the live-id resolver if a non-catalogue
+        # repository is ever supplied so the read path never crashes.
+        return _resolve_id(transaction_repository, prefix)
+    catalogue = transaction_repository.load()
+    try:
+        return resolve_lineage_transaction_id(prefix, catalogue)
+    except TransactionIdPrefixError as exc:
+        raise _prefix_error_bad(exc, prefix) from exc
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
@@ -567,9 +608,22 @@ def ledger_classify(
     reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
     llm: LLMProvider | None = typer.Option(None, "--llm", help=tr("cli.ledger.classify.llm_help")),
     apply: bool = typer.Option(False, "--apply", help=tr("cli.ledger.classify.apply_help")),
+    saturate: bool = typer.Option(False, "--saturate", help=tr("cli.ledger.classify.saturate_help")),
 ) -> None:
     """Classify one ledger transaction (--id), via LLM (--llm), or in bulk (--from-csv)."""
     if llm is not None:
+        if saturate:
+            _ledger_saturate_llm(
+                ctx,
+                transaction_id=transaction_id,
+                classification=classification,
+                from_csv=from_csv,
+                business_pct=business_pct,
+                provider=llm,
+                apply=apply,
+                actor=actor,
+            )
+            return
         _ledger_classify_llm(
             ctx,
             transaction_id=transaction_id,
@@ -581,6 +635,13 @@ def ledger_classify(
             actor=actor,
         )
         return
+    if saturate:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.saturate_requires_llm",
+                default="--saturate only applies to the --llm path; supply --llm <provider>.",
+            )
+        )
     state = _state()
     transaction_repository = _tx_repo(state)
 
@@ -805,6 +866,160 @@ def _ledger_classify_llm(
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 
 
+def _ledger_saturate_llm(
+    ctx: typer.Context,
+    *,
+    transaction_id: str | None,
+    classification: BusinessClassification | None,
+    from_csv: str | None,
+    business_pct: str | None,
+    provider: LLMProvider,
+    apply: bool,
+    actor: str | None,
+) -> None:
+    """Run the saturating LLM suggest / apply loop for ``classify --llm --saturate``.
+
+    Extends the stage-1 loop to the rich tax substrate: the model selects an
+    :class:`aeat.domain.iva.IvaCategory` and the system DERIVES the rate, base,
+    and amount from the registry — never the model. Without ``--apply`` the full
+    saturated suggestion is previewed and nothing is persisted; with ``--apply``
+    it is written through the manual-command write with ``llm:<model>``
+    provenance. Manual ``classify`` flags remain the explicit per-field
+    override; rejecting is simply not applying.
+    """
+    from ._ledger_payloads import LedgerClassifyResult
+
+    if classification is not None or from_csv is not None:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_exclusive",
+                default="--llm cannot be combined with --classification or --from-csv; "
+                "the manual path is the explicit operator override.",
+            )
+        )
+    if transaction_id is None:
+        raise _bad(tr("cli.ledger.classify.id_required", default="--id is required when --from-csv is not provided."))
+    if not is_llm_provider_available(provider):
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_provider_unavailable",
+                provider=provider.value,
+                default=(
+                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
+                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
+                    "or run 'aeat app ledger providers' to list usable providers."
+                ),
+            )
+        )
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    try:
+        suggestion = saturate_llm_classification(
+            bucket_id=transaction_repository.bucket_id,
+            transaction_id=resolved_id,
+            provider=provider,
+            transaction_repository=transaction_repository,
+        )
+    except LLMClassifierError as exc:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_failed",
+                reason=str(exc),
+                default=f"LLM classification failed: {exc}",
+            )
+        ) from exc
+
+    iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
+    iva_rate_value = format(suggestion.iva_rate, "f") if suggestion.iva_rate is not None else None
+    taxable_base_value = format(suggestion.taxable_base, "f") if suggestion.taxable_base is not None else None
+    iva_amount_value = format(suggestion.iva_amount, "f") if suggestion.iva_amount is not None else None
+    derived_fields = {
+        "iva_category": iva_category_value,
+        "iva_rate": iva_rate_value,
+        "taxable_base": taxable_base_value,
+        "iva_amount": iva_amount_value,
+        "rate_derivable": suggestion.rate_derivable,
+        "derivation_note": suggestion.derivation_note or None,
+    }
+
+    if not apply:
+        classify_result = LedgerClassifyResult.model_validate(
+            {
+                "llm": True,
+                "persisted": False,
+                "transaction_id": suggestion.transaction_id,
+                "provider": suggestion.provider.value,
+                "classification": suggestion.classification.value,
+                "category": suggestion.category.value if suggestion.category is not None else None,
+                "confidence": format(suggestion.confidence, "f"),
+                "reason": suggestion.reason,
+                "provenance": suggestion.provenance,
+                **derived_fields,
+            }
+        )
+        lines = [
+            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+            f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
+            f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
+            f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
+        ]
+        if suggestion.rate_derivable:
+            lines.extend(
+                [
+                    f"{tr('cli.ledger.labels.taxable_base')}\t{taxable_base_value}",
+                    f"{tr('cli.ledger.labels.iva_rate')}\t{iva_rate_value}",
+                    f"{tr('cli.ledger.labels.iva_amount')}\t{iva_amount_value}",
+                ]
+            )
+        elif suggestion.iva_category is not None:
+            lines.append(f"{tr('cli.ledger.classify.saturate_non_derivable')}\t{suggestion.derivation_note}")
+        lines.append(f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}")
+        lines.append(tr("cli.ledger.classify.llm_review_hint"))
+        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+        return
+
+    try:
+        result = apply_saturated_llm_classification(
+            suggestion,
+            bucket_id=transaction_repository.bucket_id,
+            business_pct=_parse_decimal(business_pct, label="business-pct"),
+            actor=actor or resolve_active_bucket_id() or "operator",
+            transaction_repository=transaction_repository,
+        )
+    except TransactionValidationError as exc:
+        raise _bad(str(exc)) from exc
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
+
+    transaction_payload = ledger_transaction_payload(result.transaction)
+    review_status = ledger_transaction_review_status(result.transaction)
+    classify_result = LedgerClassifyResult.model_validate(
+        {
+            "llm": True,
+            "persisted": True,
+            "provider": suggestion.provider.value,
+            "provenance": suggestion.provenance,
+            "confidence": format(suggestion.confidence, "f"),
+            "reason": suggestion.reason,
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+            **derived_fields,
+        }
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
+        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
+        f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+
+
 @app.command("allocate", help=tr("cli.ledger.allocate.help"))
 def ledger_allocate(
     ctx: typer.Context,
@@ -828,9 +1043,7 @@ def ledger_allocate(
     transaction_repository = _tx_repo(state)
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    parsed_business_pct = _validate_business_pct_range(
-        _parse_required_decimal(business_pct, label="business-pct")
-    )
+    parsed_business_pct = _validate_business_pct_range(_parse_required_decimal(business_pct, label="business-pct"))
     assert parsed_business_pct is not None
     # The classification follows the proportion: a 100% allocation is
     # BUSINESS, a 0% allocation is PERSONAL, and anything strictly
@@ -1012,7 +1225,7 @@ def ledger_link(
     )
 
 
-register_read_commands(app, resolve_transaction_id=_resolve_id)
+register_read_commands(app, resolve_transaction_id=_resolve_read_id)
 
 
 def _resolve_source_jurisdiction(

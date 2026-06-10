@@ -1,23 +1,18 @@
 """Conformance gate for the CLI reference documentation.
 
-Three independent conformance assertions:
+Two independent conformance assertions:
 
-1. **Docs-versus-tree completeness** — every non-retired live leaf command is
-   documented in the generated reference; every documented command path
-   resolves to a real CLI leaf; no retired surface appears as a live command.
+1. **Docs-versus-tree completeness** — every live leaf command is documented in
+   the generated reference; every documented command path resolves to a real
+   CLI leaf.
 
 2. **Schema-registry conformance** — every entry in :data:`SCHEMA_REGISTRY`
    maps to a real CLI leaf path (or a known group-callback emit site); the
    documented output-schema class for each command matches the registered
    schema; no registry key is an orphan.
 
-3. **Retired-surface non-presence** — surfaces listed in
-   :data:`RETIRED_OPERATOR_SURFACES` are not reachable as live CLI commands,
-   confirming that the reference's redirect notes describe genuinely retired
-   paths rather than active commands.
-
-All three walk the live materialised CLI tree via a subprocess, so they are
-honest about the actual command surface rather than any curated contract tuple.
+Both walk the live materialised CLI tree via a subprocess, so they are honest
+about the actual command surface rather than any curated contract tuple.
 Each test carries the active ``unit`` and ``hex_entrypoint`` markers.
 
 Language pinning: a fresh subprocess with ``AEAT_OUTPUT_LANGUAGE=en`` ensures
@@ -41,9 +36,7 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app"
 #: Generated pages that carry navigation or root-level behaviour rather than
 #: per-command sections.  Only the family pages emit ``**Registry key:**``
 #: lines, so these are excluded from the per-command parsing helpers.
-_NON_FAMILY_PAGES: frozenset[str] = frozenset(
-    {"cli/index.rst", "cli/automation.rst", "cli/schemas.rst", "cli/retired.rst"}
-)
+_NON_FAMILY_PAGES: frozenset[str] = frozenset({"cli/index.rst", "cli/automation.rst", "cli/schemas.rst"})
 
 
 def _project_root() -> Path:
@@ -282,66 +275,5 @@ def test_documented_schema_classes_match_registry() -> None:
     assert not mismatches, (
         f"Documented schema classes do not match the registry ({len(mismatches)}):\n"
         + "\n".join(f"  - {m}" for m in mismatches)
-        + "\nThe reference is generated at build time from the live command tree."
-    )
-
-
-# ---------------------------------------------------------------------------
-# Gate 3: retired-surface non-presence
-# ---------------------------------------------------------------------------
-
-
-def test_retired_surfaces_are_not_live_commands() -> None:
-    """Retired surfaces must not be reachable as top-level commands in the live tree.
-
-    The operator-surface contract declares a set of retired root-level names
-    (``setup``, ``archive``, ``data``, etc.).  This gate asserts that none of
-    those names appear as a direct child of the ``aeat`` root in the live tree,
-    confirming that the reference's redirect notes describe genuinely retired
-    paths.
-
-    The gate walks the live tree in-process (no subprocess needed) because it
-    only checks the root-level command list, which does not require lazy import
-    materialisation of deep subtrees.
-    """
-    import click
-    from typer.main import get_command as _typer_get_command
-
-    from aeat.application.operator_surface import RETIRED_OPERATOR_SURFACES
-    from aeat.entrypoints.cli import app
-
-    root_cmd = _typer_get_command(app)
-    root_cmd.name = app.info.name or "aeat"
-    retired_names = {s.name for s in RETIRED_OPERATOR_SURFACES}
-
-    with click.Context(root_cmd, info_name=root_cmd.name) as ctx:
-        live_top_level = set(root_cmd.list_commands(ctx))
-
-    live_retired = sorted(retired_names & live_top_level)
-    assert not live_retired, (
-        f"Retired surfaces still present as live top-level commands ({len(live_retired)}):\n"
-        + "\n".join(f"  - aeat {name}" for name in live_retired)
-        + "\nRemove these commands from the CLI or update the retired-surface contract."
-    )
-
-
-def test_retired_surfaces_appear_in_retired_page_as_redirect_notes() -> None:
-    """Every retired surface must be mentioned in the rendered ``cli/retired`` page.
-
-    The reference must not silently omit retired surfaces — operators using an
-    older ``aeat`` version need redirect guidance even when those roots no
-    longer appear in ``aeat --help``.
-    """
-    from aeat.application.operator_surface import RETIRED_OPERATOR_SURFACES
-
-    retired_text = _rendered_reference()["cli/retired.rst"]
-    missing: list[str] = []
-    for surface in RETIRED_OPERATOR_SURFACES:
-        if surface.name not in retired_text:
-            missing.append(surface.name)
-
-    assert not missing, (
-        f"Retired surfaces missing from docs/cli/retired.rst ({len(missing)}):\n"
-        + "\n".join(f"  - {name}" for name in missing)
         + "\nThe reference is generated at build time from the live command tree."
     )

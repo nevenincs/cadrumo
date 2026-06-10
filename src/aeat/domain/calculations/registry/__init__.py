@@ -109,7 +109,14 @@ from ._coverage import (
     build_model_law_coverage_ledger,
 )
 from ._cross_revision_divergence import CrossRevisionCasillaDivergence
-from ._errors import RegistryError, RegistryLoadError, RegistrySnapshotError, RegistryValidationError
+from ._errors import (
+    AmbiguousRevisionSelectionError,
+    NoRevisionForPeriodError,
+    RegistryError,
+    RegistryLoadError,
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from ._export import (
     ResolvedExportLayout,
     derive_export_layouts_from_bindings,
@@ -368,6 +375,7 @@ __all__ = [
     "M210_RATE_SENTINELS",
     "AeatNifIvaCheckerOracle",
     "AeatNifIvaObservation",
+    "AmbiguousRevisionSelectionError",
     "ApplicabilityVerdict",
     "ApplicationLinkDefinition",
     "ApplicationLinkId",
@@ -461,6 +469,7 @@ __all__ = [
     "ModeloRevisionSource",
     "ModeloScheduleDefinition",
     "ModeloSource",
+    "NoRevisionForPeriodError",
     "OracleEnvironment",
     "OracleId",
     "OracleModeloObservation",

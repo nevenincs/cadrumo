@@ -1,6 +1,6 @@
 [[revisions."2022".bindings]]
 id = "renta-2022-modelo-123-retenciones-periodicas"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "123", source_output = "03-legacy" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii"]

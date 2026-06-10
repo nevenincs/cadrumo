@@ -375,7 +375,10 @@ def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:
             clock=_T1,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
-    assert exc_info.value.context is not None and "9999" in exc_info.value.context["casillas"]
+    assert exc_info.value.context is not None
+    casillas_obj = exc_info.value.context.get("casillas", [])
+    assert isinstance(casillas_obj, (list, tuple))
+    assert "9999" in casillas_obj
 
 
 def test_import_refuses_empty_casilla_values(repos: _Repos) -> None:

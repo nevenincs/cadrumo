@@ -81,6 +81,7 @@ from .. import (
     query_ledger_review_rows,
     remove_manual_transaction,
     reset_ledger_catalogue,
+    restore_manual_transaction,
     stash_manual_transaction,
     summarize_manual_transactions,
     update_manual_transaction,

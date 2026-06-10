@@ -126,7 +126,7 @@ def test_unsupported_casilla_data_type_error_is_localized() -> None:
     assert exc_info.value.context == {"data_type": "blob"}
 
 
-def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine: tm.TimeMachineFixture) -> None:
+def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine: tm.TimeMachineFixture) -> None:  # ty: ignore[possibly-missing-attribute]  # time_machine ships no typed TimeMachineFixture export
     """_registry_tree_fingerprint must cache results with a 1-second TTL and support clearing."""
     import os
 

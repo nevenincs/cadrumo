@@ -263,10 +263,17 @@ class ProfileRepository:
         kdf_params = _default_kdf_params()
         created_at = now()
         bucket_dek_path = keystore_path(self._root, resolved_id) / BUCKET_DEK_FILENAME
-        key_schedule = (
-            BucketKeySchedule.BUCKET_DEK_V1 if bucket_dek_path.is_file() else BucketKeySchedule.LEGACY_MASTER_KEY
-        )
-        manifest_schema_version = 2 if key_schedule is BucketKeySchedule.BUCKET_DEK_V1 else 1
+        if not bucket_dek_path.is_file():
+            # The create span mints the per-bucket wrapped DEK before this
+            # repository writes the manifest. A missing DEK here is a torn
+            # create, not a valid schedule — fail closed rather than register
+            # a bucket whose only key schedule is BUCKET_DEK_V1 with no DEK.
+            raise StorageValidationError(
+                f"bucket {resolved_id!r} has no wrapped DEK at {bucket_dek_path}; "
+                "the create span must mint the per-bucket DEK before manifest registration.",
+            )
+        key_schedule = BucketKeySchedule.BUCKET_DEK_V1
+        manifest_schema_version = 2
 
         # Step 1: stage the bucket directory tree + the plaintext
         # manifest — the point at which the bucket becomes a registered

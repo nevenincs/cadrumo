@@ -6,12 +6,15 @@ through :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
+from typing import cast
+
 import click
 import typer
+import typer._click.types as typer_click_types
 
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
 from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
-from ....application.modelo import ModeloWorkRegistryYearMismatchError
+from ....application.modelo import ModeloWorkRegistryYearMismatchError as _ModeloWorkRegistryYearMismatchError
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard import build_wizard_command as _build_wizard_command
@@ -46,6 +49,14 @@ from ._repair_profile import (
 from ._repair_profile import register_repair_profile_command
 
 _log = _get_logger(__name__)
+
+# CAST-RATIONALE-CONFIG-RESET-SCOPE-CHOICE: typer vendors its own copy of click, so
+# click.Choice is a click.types.ParamType while typer.Option's click_type expects
+# typer._click.types.ParamType. They are the same object at runtime (the vendored
+# click), so the cast only bridges the static type duality — no Any escape.
+_CONFIG_RESET_SCOPE_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType, click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES)
+)
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
 _wizard_edit_command = _build_wizard_command(_get_setup_flow(), mode="edit")
@@ -460,7 +471,11 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
     ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
     """
     from ....application.modelo import resolve_registry_revision_for_work_target
-    from ....domain.calculations.registry import RegistrySnapshotError
+    from ....domain.calculations.registry import (
+        AmbiguousRevisionSelectionError,
+        NoRevisionForPeriodError,
+        RegistrySnapshotError,
+    )
 
     try:
         return resolve_registry_revision_for_work_target(
@@ -469,24 +484,30 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
             period=period,
             registry_revision_id=revision_id,
         )
-    except RegistrySnapshotError as exc:
-        message = str(exc)
-        # ``select_revision`` raises ``RegistrySnapshotError`` for both the
-        # ambiguous case ("ambiguous revision selection: <ids>") and the
-        # no-candidate case ("no revision for ..."). Surface the candidate
-        # ids when present, otherwise point the operator at the discovery
-        # command, never a bare unresolved error.
-        if "ambiguous revision selection:" in message:
-            candidates = message.split("ambiguous revision selection:", 1)[1].strip()
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.preflight_revision_ambiguous",
-                context={"modelo": modelo, "period": period, "candidates": candidates},
-            ) from exc
+    except AmbiguousRevisionSelectionError as exc:
+        # ``select_revision`` selected more than one revision. The candidate
+        # revision ids ride on the typed ``candidate_ids`` field, so the
+        # refusal lists them without parsing the human-readable message.
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_ambiguous",
+            context={"modelo": modelo, "period": period, "candidates": ", ".join(exc.candidate_ids)},
+        ) from exc
+    except NoRevisionForPeriodError as exc:
+        # The natural key resolved no revision. Point the operator at the
+        # discovery command rather than emitting a bare unresolved error.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period},
         ) from exc
-    except ModeloWorkRegistryYearMismatchError as exc:
+    except RegistrySnapshotError as exc:
+        # Any residual snapshot failure not modelled by the two typed
+        # subclasses above still refuses instructively via the discovery
+        # pointer rather than surfacing a bare error to the operator.
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+        ) from exc
+    except _ModeloWorkRegistryYearMismatchError as exc:
         # An explicit ``--revision-id`` override that is unknown to the
         # modelo or does not cover the filing year. List the registered
         # revisions so the operator can correct the override.
@@ -699,7 +720,7 @@ def config_profile_delete(
     # unknown name surfaces a clear "unknown profile" refusal distinct
     # from any session-state diagnostic — the operator can always tell
     # whether the name exists. ``delete`` does not require a pre-existing
-    # session: like ``unlock``, it opens its own scoped to the target.
+    # session: like ``switch``, it opens its own scoped to the target.
     pointer = _resolve_profile_by_label(name)
     deleting_active_profile = pointer.bucket_id == _resolve_active_bucket_id()
     try:
@@ -1109,7 +1130,7 @@ def config_reset(
     scope: str = typer.Option(
         "all",
         "--scope",
-        click_type=click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
+        click_type=_CONFIG_RESET_SCOPE_CHOICE,
         help=tr("cli.config.reset.scope_help"),
     ),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),

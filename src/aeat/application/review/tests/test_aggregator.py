@@ -162,7 +162,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
     return settings
 
 
-def _collect(settings: Settings, **kwargs: Any) -> tuple:
+def _collect(settings: Settings, **kwargs: Any) -> tuple[Any, ...]:
     with profile_storage_session("test"):
         return ReviewQueue.collect(settings, bucket_id="test", **kwargs)
 

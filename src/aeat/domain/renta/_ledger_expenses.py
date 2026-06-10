@@ -8,10 +8,9 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from ...core import Modelo
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core import Modelo
 from ..categories import (
     CategoryCitation,
     CategoryProfile,

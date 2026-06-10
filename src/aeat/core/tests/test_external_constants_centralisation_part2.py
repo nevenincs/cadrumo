@@ -383,7 +383,7 @@ def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]
             continue
         if not all(isinstance(e, ast.Constant) and isinstance(e.value, str) for e in node.elts):
             continue
-        if {e.value for e in node.elts} == target_set:  # type: ignore[union-attr]
+        if {e.value for e in node.elts if isinstance(e, ast.Constant)} == target_set:
             return True
     return False
 

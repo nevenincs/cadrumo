@@ -101,17 +101,6 @@ class RootSurface(BaseModel):
         return value
 
 
-class RetiredOperatorSurface(BaseModel):
-    """Rejected historical surface and the accepted replacement direction."""
-
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-    name: str = Field(min_length=1)
-    replacement: str | None
-    suggestion: str | None
-    reason: str = Field(min_length=1)
-
-
 class HelpEntry(BaseModel):
     """One command row in a curated help section."""
 
@@ -238,7 +227,6 @@ class OperatorSurfaceLogFields(BaseModel):
 
     contract_name: str = "operator_surface"
     root_count: int
-    retired_surface_count: int
     lifecycle: str
     source_kind_count: int
 
@@ -247,7 +235,6 @@ class OperatorSurfaceLogFields(BaseModel):
         return {
             "contract_name": self.contract_name,
             "root_count": self.root_count,
-            "retired_surface_count": self.retired_surface_count,
             "lifecycle": self.lifecycle,
             "source_kind_count": self.source_kind_count,
         }
@@ -260,7 +247,6 @@ class OperatorSurfaceContract(BaseModel):
 
     schema_version: str = "1"
     roots: tuple[RootSurface, ...]
-    retired_surfaces: tuple[RetiredOperatorSurface, ...]
     lifecycle: LifecycleContract
     source_kinds: tuple[SourceKind, ...]
     source_kind_aliases: tuple[SourceKindAlias, ...]

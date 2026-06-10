@@ -267,6 +267,7 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
 
         imported_bucket_id = resolve_active_bucket_id()
         # D5: imported profile_id must equal the source's.
+        assert isinstance(imported_bucket_id, str)
         assert imported_bucket_id == source_bucket_id
 
         with (

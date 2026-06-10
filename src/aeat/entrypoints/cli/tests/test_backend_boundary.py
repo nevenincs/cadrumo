@@ -14,6 +14,7 @@ from contextlib import redirect_stdout
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
+from typing import cast
 
 import click
 import pytest
@@ -131,14 +132,17 @@ def _ledger_help_by_command() -> dict[str, str]:
     # command-group hierarchy is recognised without a brittle private-module
     # import (mirrors the production fix in ``cli/_errors.py``, which derives the
     # vendored ``ClickException`` from ``typer.BadParameter.__mro__``).
-    vendored_command = next(
-        base for base in type(group).__mro__ if base.__name__ == "Command"
-    )
+    vendored_command = next(base for base in type(group).__mro__ if base.__name__ == "Command")
     assert isinstance(group, vendored_command)
     assert hasattr(group, "commands")
-    parent = group.make_context("ledger", [], resilient_parsing=True)
-    help_by_command = {"ledger": _render_click_help(group, parent)}
-    for name, command in group.commands.items():
+    # The runtime asserts above prove ``group`` is the vendored TyperGroup
+    # (command-group shaped). It is structurally identical to upstream
+    # click.Group; the casts bridge the static vendored/upstream duality so the
+    # help-rendering helpers and ``.commands`` map type-check against click.
+    click_group = cast(click.Group, group)
+    parent = click_group.make_context("ledger", [], resilient_parsing=True)
+    help_by_command = {"ledger": _render_click_help(click_group, parent)}
+    for name, command in click_group.commands.items():
         ctx = command.make_context(name, ["--help"], parent=parent, resilient_parsing=True)
         help_by_command[name] = _render_click_help(command, ctx)
     return help_by_command
@@ -191,8 +195,7 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     # ledger backend package so the backend-owned tokens are found wherever the
     # decomposition relocated them.
     ledger_backend = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted((PROJECT_ROOT / "src/aeat/application/ledger").glob("*.py"))
+        path.read_text(encoding="utf-8") for path in sorted((PROJECT_ROOT / "src/aeat/application/ledger").glob("*.py"))
     )
     forbidden_cli_tokens = (
         "CsvProvider",

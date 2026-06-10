@@ -74,6 +74,7 @@ class BucketEventType(StrEnum):
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
     MODELO_RECONCILED = "modelo.reconciled"
     MODELO_EXPORTED = "modelo.exported"
+    MODELO_IVA_WALLET_CORRECTED = "modelo.iva_wallet.corrected"
     # Work-unit lifecycle
     MODELO_WORK_UNIT_CREATED = "modelo.work_unit.created"
     MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"
@@ -135,6 +136,7 @@ class BucketEventType(StrEnum):
     LEDGER_TRANSACTION_REMOVED = "ledger.transaction.removed"
     LEDGER_TRANSACTION_ARCHIVED = "ledger.transaction.archived"
     LEDGER_TRANSACTION_STASHED = "ledger.transaction.stashed"
+    LEDGER_TRANSACTION_RESTORED = "ledger.transaction.restored"
     LEDGER_TRANSACTION_EXPORTED = "ledger.transaction.exported"
     LEDGER_TRANSACTION_SPLIT = "ledger.transaction.split"
     LEDGER_TRANSACTION_MERGED = "ledger.transaction.merged"

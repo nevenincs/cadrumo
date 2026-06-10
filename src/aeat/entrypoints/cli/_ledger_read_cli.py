@@ -27,6 +27,7 @@ from ...application.review import FilterParseError
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...domain.buckets import (
+    BucketEvent,
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
@@ -37,7 +38,7 @@ from ...domain.categories import (
     SpendingCategoryFamily,
 )
 from ...domain.transactions import Transaction, TransactionCatalogueRepository
-from ._common import _bad, _canonical_period, _emit_envelope, _state, _tx_repo
+from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 from ._ledger_list import parse_ledger_list_filter_spec, project_ledger_list
 from ._ledger_review_cli import register_ledger_review_command
 
@@ -51,6 +52,7 @@ _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
     BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
     BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
     BucketEventType.LEDGER_TRANSACTION_STASHED,
+    BucketEventType.LEDGER_TRANSACTION_RESTORED,
     BucketEventType.LEDGER_TRANSACTION_REMOVED,
     BucketEventType.LEDGER_TRANSACTION_EXPORTED,
     BucketEventType.LEDGER_TRANSACTION_SPLIT,
@@ -261,15 +263,23 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             "--period",
             help=tr(
                 "cli.ledger.preflight.period_help",
-                default="Canonical period (e.g. 2026Q1, 2026-03, 2026).",
+                default=(
+                    "Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), "
+                    "01-12 (months). Combine with --year to choose the year."
+                ),
             ),
+        ),
+        year: int = typer.Option(
+            ...,
+            "--year",
+            help=tr("cli.ledger.preflight.year_help", default="Filing year (e.g. 2024)."),
         ),
     ) -> None:
         """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
         from ...application.ledger import preflight_ledger_tax_readiness
 
         transaction_repository = _tx_repo(_state())
-        canonical = _canonical_period(period)
+        canonical = _canonical_period(period, year=year)
         report = preflight_ledger_tax_readiness(
             bucket_id=transaction_repository.bucket_id,
             period=canonical,
@@ -360,8 +370,16 @@ def _register_ledger_export_command(app: typer.Typer) -> None:
             "--period",
             help=tr(
                 "cli.ledger.export.period_help",
-                default="Restrict the export to one filing period (e.g. 2025Q1, 2025).",
+                default=(
+                    "Restrict the export to one filing period, as an AEAT token: "
+                    "1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year."
+                ),
             ),
+        ),
+        year: int | None = typer.Option(
+            None,
+            "--year",
+            help=tr("cli.ledger.export.year_help", default="Filing year for --period (e.g. 2024)."),
         ),
         actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
     ) -> None:
@@ -373,7 +391,7 @@ def _register_ledger_export_command(app: typer.Typer) -> None:
                 export_format=export_kind,
                 include_inactive=include_inactive,
                 output_path=output,
-                period=_canonical_period(period) if period else None,
+                period=_optional_canonical_period(period, year=year),
                 actor=actor or resolve_active_bucket_id() or "operator",
                 source_command="aeat app ledger export",
             ),
@@ -499,12 +517,17 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
     def ledger_status(
         ctx: typer.Context,
         period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.status.period_help")),
+        year: int | None = typer.Option(
+            None,
+            "--year",
+            help=tr("cli.ledger.status.year_help", default="Filing year for --period (e.g. 2024)."),
+        ),
     ) -> None:
         """Summarize active-bucket ledger state through the backend status service."""
         transaction_repository = _tx_repo(_state())
         report = summarize_manual_transactions(
             bucket_id=transaction_repository.bucket_id,
-            period=_canonical_period(period) if period else None,
+            period=_optional_canonical_period(period, year=year),
             transaction_repository=transaction_repository,
         )
         transactions = transaction_repository.load()
@@ -614,11 +637,29 @@ def _history_object_ids(
     resolved_id: str,
     include_split_siblings: bool,
 ) -> list[str]:
-    """Return ``[resolved_id, ...siblings]`` when the operator opts in."""
-    object_ids = [resolved_id]
+    """Return every event-anchor id whose events belong to ``resolved_id``.
+
+    Always includes ``resolved_id`` plus every prior id in its edit-lineage
+    chain. An ``update`` that edits an id-affecting fact anchors the pre-edit
+    events (create, import) on the *old* id and the post-edit events on the
+    *new* id; walking the lineage means an operator who wrote down an old id
+    before the correction still sees the full chronological chain, and the
+    superseded id resolves to (and surfaces) the lineage rather than failing
+    with id-not-found. Split siblings are added only when the operator opts in.
+
+    The content-addressed id stays authoritative; this is a read-side
+    lineage lookup over the same edit-lineage chain the finalized-modelo
+    guard walks.
+    """
+    catalogue = transaction_repository.load()
+    transaction = catalogue.get(resolved_id)
+    object_ids: list[str] = [resolved_id]
+    if transaction is not None:
+        for entry in transaction.edit_lineage:
+            if entry.previous_transaction_id not in object_ids:
+                object_ids.append(entry.previous_transaction_id)
     if not include_split_siblings:
         return object_ids
-    transaction = transaction_repository.load().get(resolved_id)
     if transaction is None or transaction.split_lineage is None:
         return object_ids
     for sibling in transaction.split_lineage.sibling_transaction_ids:
@@ -627,10 +668,10 @@ def _history_object_ids(
     return object_ids
 
 
-def _collect_ledger_history_events(object_ids: list[str]) -> list:
+def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
     """Return the chronological union of LEDGER-history events across ``object_ids``."""
     event_catalogue = BucketEventHistoryRepository().load()
-    matches: list = []
+    matches: list[BucketEvent] = []
     for object_id in object_ids:
         matches.extend(
             event

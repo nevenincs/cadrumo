@@ -120,7 +120,7 @@ _RELATION_VALUES_2024 = {
 }
 
 
-def _binding_values() -> dict:
+def _binding_values() -> dict[str, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),

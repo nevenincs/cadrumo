@@ -41,6 +41,12 @@ if TYPE_CHECKING:
         UserProfileRecord,
         UserProfileStatus,
     )
+    from ._bundle import (
+        SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
+        UnsupportedBundleSchemaVersionError,
+        deserialize_profile_bundle,
+        serialize_profile_bundle,
+    )
     from ._censo_errors import (
         CensoApplyConflictError,
         CensoFieldValidationError,
@@ -82,9 +88,34 @@ if TYPE_CHECKING:
         CustodyRecoveryStatus,
         CustodyRecoveryVerification,
         CustodyRekeyResult,
+        inspect_recovery_status,
+        mint_recovery_code,
+        recover_secret_store,
+        recovery_wrap_path,
+        rekey_secret_store,
+        verify_recovery_code,
     )
     from ._lifecycle import ProfileLifecycleService
+    from ._orchestration import (
+        ProfileAlreadyRegisteredError,
+        build_lifecycle_service,
+        delete_profile_with_lifecycle_span,
+        fact_value,
+        logout_active_profile,
+        profile_create_storage_span,
+        profile_storage_session,
+        read_active_profile,
+        register_active_profile,
+        remove_active_profile,
+        remove_profile_bucket_directory,
+        rename_profile,
+        select_profile,
+        select_profile_with_lifecycle_span,
+        set_active_field,
+        set_active_fields,
+    )
     from ._preflight import ProfilePreflightService
+    from ._profile_repository import ProfileRepository
     from ._projections import (
         facts_to_values,
         projection_for_taxpayer,
