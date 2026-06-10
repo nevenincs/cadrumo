@@ -136,6 +136,7 @@ class TestResultSummaryNarrowing:
             {
                 "work_unit_id": uuid.UUID("00000000-0000-0000-0000-000000000001"),
                 "revision_id": uuid.UUID("00000000-0000-0000-0000-000000000002"),
+                "calculation_revision_id": uuid.UUID("00000000-0000-0000-0000-000000000003"),
                 "casilla_values": {},
             },
         )()
