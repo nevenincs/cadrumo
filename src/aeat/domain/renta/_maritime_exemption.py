@@ -13,7 +13,7 @@ Active exemption axes (2024/2025):
     tax. Annual cap: 60,100 EUR.
     Formula: min(annual_salary / 365 * qualifying_days, 60_100)
 
-  REBECA 50% exemption (Ley 19/1994, Arts. 73.2 73.3 75.1 75.3, BOE-A-1994-16100)
+  REBECA 50% exemption (Ley 19/1994, Arts. 73.2 73.3 75.1 75.3, BOE-A-1994-15794)
     Crew of REBECA-registered vessels or scheduled Canary Islands routes.
     Exempt 50% is excluded from the Modelo 111 withholding base by employer.
 
@@ -62,10 +62,10 @@ RENTA_EXENTA_CASILLA: CasillaId = "0525"
 # trabajador_del_mar.toml binding entries.
 _ART_7P_LEGAL_REFS: tuple[str, ...] = ("Ley 35/2006 Art. 7.p) BOE-A-2006-20764",)
 _REBECA_LEGAL_REFS: tuple[str, ...] = (
-    "Ley 19/1994 Art. 73.2 BOE-A-1994-16100",
-    "Ley 19/1994 Art. 73.3 BOE-A-1994-16100",
-    "Ley 19/1994 Art. 75.1 BOE-A-1994-16100",
-    "Ley 19/1994 Art. 75.3 BOE-A-1994-16100",
+    "Ley 19/1994 Art. 73.2 BOE-A-1994-15794",
+    "Ley 19/1994 Art. 73.3 BOE-A-1994-15794",
+    "Ley 19/1994 Art. 75.1 BOE-A-1994-15794",
+    "Ley 19/1994 Art. 75.3 BOE-A-1994-15794",
 )
 _DA41_LEGAL_REFS: tuple[str, ...] = (
     "Ley 35/2006 DA 41 BOE-A-2006-20764",
@@ -181,7 +181,7 @@ def rebeca_eligible(facts: MaritimeWorkerFacts) -> bool:
     REBECA-registered company vessels enrolled in other EU/EEA member state
     registries (Ley 19/1994 Art. 75.1).
 
-    Legal authority: Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100.
+    Legal authority: Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794.
     """
     if facts.worker_class != "trabajador_del_mar":
         return False
@@ -277,7 +277,7 @@ def calculate_rebeca_exemption(
 ) -> CasillaObservation:
     """Calculate the REBECA 50% exempt amount and return a typed CasillaObservation.
 
-    Formula (Ley 19/1994 Arts. 73-75 BOE-A-1994-16100):
+    Formula (Ley 19/1994 Arts. 73-75 BOE-A-1994-15794):
         exempt_amount = gross_navigation_income * 0.50
 
     The 50% fraction is statutory and not variable by election.

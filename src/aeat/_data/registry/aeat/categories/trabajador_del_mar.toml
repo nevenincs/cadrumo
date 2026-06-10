@@ -47,26 +47,26 @@ vessel_registry = ["REBECA", "rebeca_eu_eea", "scheduled_canary_route"]
 
 [[exemption_bindings.legal_refs]]
 reference = "Ley 19/1994 Art. 73.2"
-document_id = "BOE-A-1994-16100"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-16100"
+document_id = "BOE-A-1994-15794"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794"
 notes = "REBECA regime: 50% exemption on gross employment income from navigation for crew of vessels enrolled in the Registro Especial de Buques y Empresas Navieras de Canarias or on scheduled routes between the Canary Islands and mainland Spain."
 
 [[exemption_bindings.legal_refs]]
 reference = "Ley 19/1994 Art. 73.3"
-document_id = "BOE-A-1994-16100"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-16100"
+document_id = "BOE-A-1994-15794"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794"
 notes = "REBECA conditions: vessel enrolled in REBECA register; crew employment contract governed by the vessel operator; navigation income taxed at source via withholding on 50% of gross pay by employer (Modelo 111 withholding base adjustment)."
 
 [[exemption_bindings.legal_refs]]
 reference = "Ley 19/1994 Art. 75.1"
-document_id = "BOE-A-1994-16100"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-16100"
+document_id = "BOE-A-1994-15794"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794"
 notes = "REBECA extension scope: since 1 January 2021 applies to crews of vessels of REBECA-registered companies enrolled in other EU/EEA member state registries."
 
 [[exemption_bindings.legal_refs]]
 reference = "Ley 19/1994 Art. 75.3"
-document_id = "BOE-A-1994-16100"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-16100"
+document_id = "BOE-A-1994-15794"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794"
 notes = "REBECA withholding: exempt 50% is excluded from the Modelo 111 withholding base by the employer. The 50% fraction is statutory and not variable by election."
 
 [[exemption_bindings]]

@@ -2033,7 +2033,7 @@ cli:
       preflight_modelo_help: Numeric modelo identifier (e.g. 303).
       preflight_period_help: Period code (e.g. 1T, 1P, 0A, 01).
       preflight_revision_help: Registry revision id.
-      preflight_revision_id_help: Registry revision id (e.g. 2024-0A).
+      preflight_revision_id_help: 'Optional registry revision id override for exact replay (e.g. 2024-0A); defaults to the active revision for the modelo, filing year, and period.'
       preflight_year_help: Filing year.
       remove_help: Tombstone a profile (immutable filing snapshots are retained)
       remove_name_help: Profile id to tombstone
@@ -2056,6 +2056,9 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
+      preflight_revision_ambiguous: 'More than one registry revision matches modelo %{modelo} period %{period}: %{candidates}. Re-run with --revision-id naming one of them.'
+      preflight_revision_unresolved: 'No registry revision covers modelo %{modelo} filing year %{filing_year} period %{period}. Run `aeat app modelo describe %{modelo}` to see the valid periods and revisions.'
+      preflight_revision_override_invalid: 'Registry revision override is not valid for modelo %{modelo} filing year %{filing_year}: %{detail}. Run `aeat app modelo describe %{modelo}` to list the registered revisions.'
     recover:
       help: Recover the file secret store with a recovery key and bind it to a new
         passphrase.

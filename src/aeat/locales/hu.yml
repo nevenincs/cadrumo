@@ -2114,7 +2114,7 @@ cli:
       preflight_modelo_help: Számozott modelo azonosító (pl. 303).
       preflight_period_help: Időszak kód (pl. 1T, 1P, 0A, 01).
       preflight_revision_help: Nyilvántartási revízió azonosítója.
-      preflight_revision_id_help: Regiszter revízió azonosító (pl. 2024-0A).
+      preflight_revision_id_help: 'Opcionalis registry-revizio-azonosito felulbiralas pontos visszajatszashoz (pl. 2024-0A); alapertelmezetten a modellhez, bevallasi evhez es idoszakhoz tartozo aktiv reviziot hasznalja.'
       preflight_year_help: Benyújtási év.
       remove_help: Profil lezárása (a megváltoztathatatlan benyújtási pillanatképek
         megmaradnak).
@@ -2141,6 +2141,9 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
+      preflight_revision_ambiguous: 'Egynel tobb registry-revizio illeszkedik a(z) %{modelo} modellhez, %{period} idoszakhoz: %{candidates}. Futtassa ujra a --revision-id kapcsoloval, egyikuket megadva.'
+      preflight_revision_unresolved: 'Egyetlen registry-revizio sem fedi le a(z) %{modelo} modellt, %{filing_year} bevallasi evet, %{period} idoszakot. Futtassa az `aeat app modelo describe %{modelo}` parancsot az ervenyes idoszakok es reviziok megtekintesehez.'
+      preflight_revision_override_invalid: 'A registry-revizio felulbiralas nem ervenyes a(z) %{modelo} modellhez, %{filing_year} bevallasi evhez: %{detail}. Futtassa az `aeat app modelo describe %{modelo}` parancsot a regisztralt reviziok listazasahoz.'
     recover:
       help: A fajlalapu titkos tar helyreallitasa helyreallitasi kulccsal es uj passphrase
         ertekhez kotese.

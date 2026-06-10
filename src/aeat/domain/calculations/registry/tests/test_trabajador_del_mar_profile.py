@@ -72,7 +72,7 @@ def test_worker_class_carries_legal_refs_for_all_three_maritime_axes() -> None:
     assert any("Art. 7.p)" in ref for ref in field.legal_refs)
     assert any("BOE-A-2006-20764" in ref for ref in field.legal_refs)
     # REBECA exemption
-    assert any("BOE-A-1994-16100" in ref for ref in field.legal_refs)
+    assert any("BOE-A-1994-15794" in ref for ref in field.legal_refs)
     # DA 41 inactive binding and its enabling law
     assert any("DA 41" in ref for ref in field.legal_refs)
     assert any("BOE-A-2018-9268" in ref for ref in field.legal_refs)
@@ -114,7 +114,7 @@ def test_vessel_registry_fact_is_enum_covering_rebeca_variants() -> None:
     assert "rebeca_eu_eea" in field.enum_values
     assert "scheduled_canary_route" in field.enum_values
     assert field.required is False
-    assert any("BOE-A-1994-16100" in ref for ref in field.legal_refs)
+    assert any("BOE-A-1994-15794" in ref for ref in field.legal_refs)
 
 
 def test_retmar_registered_fact_is_boolean_with_schedule_predicate() -> None:
@@ -179,7 +179,7 @@ def test_rebeca_binding_has_required_fields_and_legal_refs() -> None:
     legal_refs = binding.get("legal_refs", [])
     assert isinstance(legal_refs, list) and len(legal_refs) >= 2, "REBECA binding must carry at least 2 legal_refs"
     combined = " ".join(str(r.get("reference", "")) + " " + str(r.get("document_id", "")) for r in legal_refs)
-    assert "BOE-A-1994-16100" in combined, "REBECA legal_refs must cite Ley 19/1994 BOE-A-1994-16100"
+    assert "BOE-A-1994-15794" in combined, "REBECA legal_refs must cite Ley 19/1994 BOE-A-1994-15794"
     assert "73" in combined, "REBECA legal_refs must reference Art. 73"
     assert "75" in combined, "REBECA legal_refs must reference Art. 75"
 

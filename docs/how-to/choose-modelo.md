@@ -54,13 +54,15 @@ Fix the missing facts by hand with the [profile setup guide](profile-setup.md), 
 
 ## Check readiness for one filing
 
-When you already know which modelo, year, and period you're aiming at, ask for a preflight check instead. The preflight also needs the revision ID - take it from the `Revision` line of `aeat app modelo describe 303`:
+When you already know which modelo, year, and period you're aiming at, ask for a preflight check instead:
 
 ```bash
-aeat config profile preflight --modelo 303 --revision-id 2023-y-siguientes --filing-year 2026 --period 1T
+aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
 ```
 
 The preflight reports the profile facts still missing for that specific filing context. Where `overview explain` answers whether the form applies, preflight answers whether you're ready to work on it.
+
+The preflight picks the active revision for that modelo, year, and period automatically. Add `--revision-id` only when you need to pin an exact past revision for replay.
 
 ## Browse the catalogue
 
