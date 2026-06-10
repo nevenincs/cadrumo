@@ -44,7 +44,7 @@ Some answers also include a scheduling note. Treat it as a pointer, not a calend
 
 An incomplete verdict usually means the decision depends on facts your profile doesn't declare yet. The main groups:
 
-- **Who you are** - your taxpayer type and entity form (an individual with a NIF, DNI, or NIE; a company with a CIF; an entity in atribución de rentas).
+- **Who you are** - your taxpayer type and entity form (an individual identified by NIF; a company identified by NIF or CIF; an entity in atribución de rentas).
 - **Your income-tax situation** - your IRPF estimation regime and which income categories you receive.
 - **Your IVA situation** - your IVA regime and any special enrolments, such as the ROI (Registro de Operadores Intracomunitarios), the OSS (One-Stop Shop), or intra-community operations.
 - **Whether you employ or withhold** - employees on payroll, or withholdings on professional fees, rent, or capital payments.

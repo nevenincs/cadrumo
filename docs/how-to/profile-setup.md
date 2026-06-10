@@ -111,8 +111,9 @@ legal-entity form applies to legal entities.
 
 `--tax-id`
 : The taxpayer identifier (NIF, CIF, DNI, NIE, or NII). Spanish citizens use
-  DNI or NIF, foreign individuals use NIE, companies or legal entities use
-  NIF or CIF, and certain foreign entities or EU operators use NII or NIF-IVA.
+  their DNI number as their tax identifier (NIF); foreign individuals use
+  their NIE number as theirs; companies or legal entities use a NIF or CIF;
+  certain foreign entities or EU operators use NII or NIF-IVA.
   This is the only unconditionally required creation flag in non-interactive mode.
 
 `--name` and `--surnames`
