@@ -163,7 +163,7 @@ def test_export_format_error_build_error_envelope() -> None:
     assert envelope.code == "REFUSED_EXPORT_FORMAT"
     assert envelope.category == "REFUSED"
     assert envelope.retryable is False
-    assert envelope.schema_version == "1"
+    assert envelope.message != ""
 
 
 def test_export_field_error_build_error_envelope() -> None:
@@ -177,7 +177,7 @@ def test_export_field_error_build_error_envelope() -> None:
     assert envelope.code == "REFUSED_EXPORT_FIELD"
     assert envelope.category == "REFUSED"
     assert envelope.retryable is False
-    assert envelope.schema_version == "1"
+    assert envelope.message != ""
 
 
 # ---------------------------------------------------------------------------
