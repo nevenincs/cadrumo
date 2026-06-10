@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -453,7 +454,8 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos)
             clock=_T4,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
-    assert exc_info.value.context is not None and "9999" in exc_info.value.context["casillas"]
+    assert exc_info.value.context is not None
+    assert "9999" in cast("list[str]", exc_info.value.context["casillas"])
 
 
 def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:

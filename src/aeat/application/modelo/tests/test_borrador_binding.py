@@ -55,8 +55,17 @@ def snapshot_repository(tmp_path: Path) -> Generator[Borrador100SnapshotReposito
         )
 
 
+_ServiceRepositories = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+    Borrador100SnapshotRepository,
+    SecureObjectRepository,
+]
+
+
 @pytest.fixture
-def service_repositories(tmp_path: Path) -> Generator[tuple]:
+def service_repositories(tmp_path: Path) -> Generator[_ServiceRepositories]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         yield (
@@ -310,7 +319,7 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
 
 
 def test_calculate_modelo_revision_consumes_borrador_snapshot_through_application_service(
-    service_repositories,
+    service_repositories: _ServiceRepositories,
 ) -> None:
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
@@ -385,7 +394,7 @@ def test_borrador_binding_error_has_stable_service_error_code() -> None:
 
 
 def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_backend(
-    service_repositories,
+    service_repositories: _ServiceRepositories,
 ) -> None:
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories

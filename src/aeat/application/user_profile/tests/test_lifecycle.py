@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -80,7 +81,7 @@ def test_register_rejects_schema_violations(
     assert tr(error.translated_message) != error.translated_message
     assert error.context is not None
     assert error.context["profile_id"] == "operator"
-    assert "required_field_missing" in error.context["issue_codes"]
+    assert "required_field_missing" in cast("list[str]", error.context["issue_codes"])
 
 
 def test_register_persists_when_all_required_facts_present(

@@ -133,17 +133,20 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
         audit_metadata["filed_by"] = "tester"
     if state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO:
         audit_metadata["superseded_at"] = when
-    revision = CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit_id,
-        state=state,
-        inputs_snapshot={},
-        binding_overrides={},
-        casilla_values=casilla_values,
-        created_at=when,
-        updated_at=when,
+    revision_fields: dict[str, object] = {
+        "calculation_revision_id": revision_id,
+        "work_unit_id": work_unit_id,
+        "state": state,
+        "inputs_snapshot": {},
+        "binding_overrides": {},
+        "casilla_values": casilla_values,
+        "created_at": when,
+        "updated_at": when,
         **audit_metadata,
-    )
+    }
+    # model_validate (not **splat) so the dict[str, object] audit_metadata does
+    # not redden the type checker on every field; validators run identically.
+    revision = CalculationRevision.model_validate(revision_fields)
     wu_repo = WorkUnitCatalogueRepository()
     wu_repo.save(upsert_work_unit(wu_repo.load(), work_unit))
     rev_repo = CalculationRevisionCatalogueRepository()

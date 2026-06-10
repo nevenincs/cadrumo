@@ -12,6 +12,12 @@ from decimal import Decimal
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.modelos import (
+    CalculationRevisionCatalogue,
+    ModeloRecordCatalogue,
+    WorkUnit,
+    WorkUnitCatalogue,
+)
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -286,10 +292,10 @@ def _persist_amendment_side_effects(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
-    revisions,
-    filing_catalogue,
-    work_units,
-    work_unit,
+    revisions: CalculationRevisionCatalogue,
+    filing_catalogue: ModeloRecordCatalogue,
+    work_units: WorkUnitCatalogue,
+    work_unit: WorkUnit,
     baseline: ModeloRecord,
     new_revision_id: str,
     new_filing_id: str,
