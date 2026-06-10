@@ -36,12 +36,12 @@ samples captured 2026-05-07.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Mapping
-from typing import TYPE_CHECKING, Literal
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
-    from playwright.async_api import Page
+    from playwright.async_api import Locator, Page
 
 from pydantic import AnyUrl, Field
 
@@ -55,7 +55,7 @@ from .....domain.calculations.registry import (
     RemoteOperation,
     RemoteStateGuardPolicy,
 )
-from ..browser import BrowserError, default_browser_session_factory
+from ..browser import BrowserError, BrowserSession, default_browser_session_factory
 from ._adapter_utils import (
     _SedeCheckerModel,
     assert_query_browser_action_for,
@@ -71,6 +71,26 @@ from ._browser_constants import (
 )
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
+
+
+class _LocateHelper(Protocol):
+    """Callable protocol for the ``_locate`` helper produced by :func:`make_locate_helper`.
+
+    Parameters are positional-only to match the
+    ``Callable[[Page, tuple[str, ...], str, str, int], Coroutine[Any, Any, Locator]]``
+    return annotation on :func:`make_locate_helper`.
+    """
+
+    def __call__(
+        self,
+        page: Page,
+        selectors: tuple[str, ...],
+        stage: str,
+        description: str,
+        timeout_ms: int,
+        /,
+    ) -> Coroutine[Any, Any, Locator]: ...
+
 
 logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
@@ -125,7 +145,7 @@ _playwright_stage = build_playwright_stage_runner(
     logger=logger,
 )
 
-_locate = make_locate_helper("GROI", _groi_shape_suggestion())
+_locate: _LocateHelper = make_locate_helper("GROI", _groi_shape_suggestion())
 
 
 class GroiNifVerdict(_SedeCheckerModel):
@@ -266,7 +286,7 @@ async def collect_groi_observations(
     expected: Mapping[str, object],
     settings: Settings | None = None,
     timeout_ms: int = DEFAULT_GROI_TIMEOUT_MS,
-    browser_session_factory: Callable[[Settings], Awaitable[object]] | None = None,
+    browser_session_factory: Callable[[Settings], Awaitable[BrowserSession]] | None = None,
 ) -> GroiResult:
     """Drive the GROI form per declared NIF and return a :class:`GroiResult` with one observation each."""
     del payload
@@ -344,16 +364,16 @@ async def _open_groi_form(page: Page, *, timeout_ms: int) -> None:
     await _locate(
         page,
         _NIF_INPUT_SELECTORS,
-        stage="open-groi-form:nif",
-        description="GROI NIF input",
-        timeout_ms=timeout_ms,
+        "open-groi-form:nif",
+        "GROI NIF input",
+        timeout_ms,
     )
     await _locate(
         page,
         _SUBMIT_SELECTORS,
-        stage="open-groi-form:submit",
-        description="GROI submit button",
-        timeout_ms=timeout_ms,
+        "open-groi-form:submit",
+        "GROI submit button",
+        timeout_ms,
     )
     await _assert_form_action_is_consult_endpoint(page, timeout_ms=timeout_ms)
 
@@ -403,9 +423,9 @@ async def _check_single_nif(
     nif_input = await _locate(
         page,
         _NIF_INPUT_SELECTORS,
-        stage=f"check-nif-{nif}:nif",
-        description="GROI NIF input",
-        timeout_ms=timeout_ms,
+        f"check-nif-{nif}:nif",
+        "GROI NIF input",
+        timeout_ms,
     )
     await _playwright_stage(
         nif_input.fill(nif, timeout=timeout_ms),
@@ -417,9 +437,9 @@ async def _check_single_nif(
     submit = await _locate(
         page,
         _SUBMIT_SELECTORS,
-        stage=f"check-nif-{nif}:submit",
-        description="GROI submit button",
-        timeout_ms=timeout_ms,
+        f"check-nif-{nif}:submit",
+        "GROI submit button",
+        timeout_ms,
     )
     await _playwright_stage(
         submit.click(timeout=timeout_ms),
