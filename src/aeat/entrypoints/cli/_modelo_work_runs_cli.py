@@ -20,6 +20,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ._common import _emit_envelope
 from ._modelo_cli_support import (
+    OutputLanguageOpt,
     parse_revision_selector,
     validate_calculation_revision_id,
     validate_work_unit_id,
@@ -48,12 +49,7 @@ def register_work_run_commands(
     )
     def work_runs(
         ctx: typer.Context,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
+        output_language: OutputLanguageOpt = None,
     ) -> None:
         """List persisted workflow runs so an operator can discover run ids."""
         activate_output_language(ctx, output_language)
@@ -155,12 +151,7 @@ def register_work_run_commands(
             str | None,
             typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
         ] = None,
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
+        output_language: OutputLanguageOpt = None,
     ) -> None:
         """Surface the workflow-resume preconditions and resumable context."""
         activate_output_language(ctx, output_language)
