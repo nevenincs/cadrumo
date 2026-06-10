@@ -75,8 +75,8 @@ def _run_console(args: list[str], env: dict[str, str]) -> subprocess.CompletedPr
 # The English and Spanish help descriptions for ``config profile create`` are
 # distinct, locale-authored strings (``cli.config.profile.create_help``). They
 # are the observable proof that help text rendered in the chosen language.
-_CREATE_HELP_EN = "Initialize a new active profile and config bucket."
-_CREATE_HELP_ES = "Inicializa un nuevo perfil activo y su bucket"
+_CREATE_HELP_EN = "Initialize a new active profile."
+_CREATE_HELP_ES = "Inicializa un nuevo perfil activo."
 
 
 def test_language_flag_renders_english_leaf_help(tmp_path: Path) -> None:

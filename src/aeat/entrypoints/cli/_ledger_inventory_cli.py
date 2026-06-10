@@ -91,7 +91,7 @@ inventory_valuation_app = typer.Typer(
 @inventory_app.command(
     "list",
     help=tr(
-        "cli.app.ledger.inventory.list_help", default="List every per-actividad inventory ledger on the active bucket."
+        "cli.app.ledger.inventory.list_help", default="List every per-actividad inventory ledger on the active profile."
     ),
 )
 def inventory_list(ctx: typer.Context) -> None:

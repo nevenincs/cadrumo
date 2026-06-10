@@ -1185,7 +1185,7 @@ cli:
         create_help: Crea un llibre d'existències per a una activitat i exercici
         group_help: Llibres d'existències per activitat, moviments i valoració
         iva_rate_help: Tipus d'IVA en percentatge
-        list_help: Llista els llibres d'existències del bucket actiu
+        list_help: 'Llista els llibres d''existències del perfil actiu'
         movement_add_help: Afegeix un moviment de compra, venda o ajust al llibre
         movement_date_help: Data del moviment (AAAA-MM-DD)
         movement_group_help: Gestiona moviments del llibre d'existències
@@ -1221,7 +1221,7 @@ cli:
         category_help: Id de categoria de despesa (p. ex. USAGE_RATIO_VEHICLE)
         eligible_help: Llista les categories que admeten proporció específica
         group_help: Proporcions d'ús professional per categoria de despesa
-        list_help: Llista les proporcions per categoria del bucket actiu
+        list_help: 'Llista les proporcions per categoria del perfil actiu'
         no_override_error: No hi ha cap proporció desada per a la categoria {category!r}
           al bucket {bucket_id!r}
         ratio_help: Proporció aplicable entre 0 i 1
@@ -1324,7 +1324,7 @@ cli:
       justificante:
         app_help: 'Captures de justificants AEAT (només lectura): descarrega un justificant presentat i concilia-hi.'
         capture_help: 'Descarrega en viu el justificant AEAT d''un període presentat i el desa com a evidència oficial.'
-        list_help: 'Llista les captures de justificants desades al bucket actiu.'
+        list_help: 'Llista les captures de justificants desades al perfil actiu.'
         snapshot_id_help: 'Id d''instantània (o prefix inequívoc).'
         view_help: 'Mostra una captura de justificant.'
       limit_help: Nombre màxim de files a capturar
@@ -1482,7 +1482,7 @@ cli:
           inequívoc).
       filing_record:
         app_help: Inspeccionar els filing records interns registrats
-        bucket_id_help: Filtrar per bucket
+        bucket_id_help: 'Filtrar per perfil'
         evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
         evidence_reference_id_help: Identificador estable de l'evidència importada
@@ -1664,7 +1664,7 @@ cli:
           no ambigu). Els seus valors de binding s'usen només per a bindings marcats
           aeat_prefilled; les sobrescriptures --binding de l'operador sempre tenen
           prioritat.
-        bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
+        bucket_id_help: 'Perfil al qual pertany la unitat de treball'
         calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
           de treball
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
@@ -1787,8 +1787,7 @@ cli:
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
         kv_format_error: '{flag} ha de tenir el format {key_label}={value_label};
           s''ha rebut {spec}.'
-        list_help: Llistar les unitats de treball registrades, opcionalment filtrades
-          per bucket
+        list_help: 'Llistar les unitats de treball registrades, opcionalment filtrades per perfil'
         meses_trabajo_con_hijo_menor_3_help: 'Mesos treballats mentre el fill menor
           de 3 anys era a la unitat familiar (Art. 81 LIRPF deducció maternitat).
           Format: FILL_ID=MESOS. Repetible per cada fill. FILL_ID és un identificador
@@ -2002,8 +2001,7 @@ cli:
       login_help: Adquirir o verificar una sessió AEAT en viu.
       login_reset_lock_help: Eliminar un bloqueig d'adquisició d'autenticació obsolet
         abans de començar.
-      no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config profile
-        create NAME' abans de configurar l'autenticació.
+      no_active_bucket: 'No hi ha un perfil actiu. Executa ''aeat config profile create NAME'' abans de configurar l''autenticació.'
       output_language_help: Idioma del text de sortida (es, en, ca, hu).
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
       providers:
@@ -2156,7 +2154,7 @@ cli:
       drafts_dir_help: Directory to store local filing drafts
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
-      help: Initialize a new active profile and config bucket.
+      help: 'Inicialitza un perfil actiu nou.'
       iva_regime_help: IVA regime (general, simplificado, exento, etc.)
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
@@ -2184,7 +2182,7 @@ cli:
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
       create_epilog: 'Perfil mínim per a autònom: --entity-type natural_person --tax-id
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
-      create_help: Inicialitza un perfil actiu nou i el seu bucket de configuració.
+      create_help: 'Inicialitza un perfil actiu nou.'
       delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
         s'ha esborrat. Executa aeat config switch NAME o aeat config profile create
         NAME per tornar a treballar.
@@ -2316,7 +2314,7 @@ cli:
       profile_clear_active_mismatch: --clear-active només pot esborrar el punter del
         perfil actiu; '%{profile}' no està actiu.
       profile_help: Inspeccionar i reparar el punter de perfil actiu.
-      profile_name_help: Inspeccionar un bucket de perfil registrat concret.
+      profile_name_help: 'Inspeccionar un perfil registrat concret.'
       profile_one_action: Tria --clear-active o --repair-manifest-status, no tots
         dos.
       profile_repair_manifest_status_help: Reomplir l'estat d'un manifest legacy del
@@ -2331,24 +2329,16 @@ cli:
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
         --yes per confirmar.
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
-      reset_progress_dry_run_help: Informar l'empremta de l'envoltori sense eliminar
-        la fila
-      reset_progress_help: Descartar l'envoltori il·legible de l'estat del flux de
-        treball (destructiu; requereix --yes)
-      reset_progress_requires_yes: Aquesta operació és destructiva. Torna a executar
-        amb --yes per confirmar o passa --dry-run per inspeccionar l'empremta.
-      reset_progress_yes_help: Confirmar explícitament el reinici de l'estat del flux
-        de treball
+      reset_progress_dry_run_help: 'Mostra què s''esborraria sense eliminar-ho'
+      reset_progress_help: 'Esborra el progrés encallat desat d''una ordre interrompuda (destructiu; requereix --yes)'
+      reset_progress_requires_yes: 'Aquesta operació és destructiva. Torna a executar amb --yes per confirmar o passa --dry-run per veure què s''esborraria.'
+      reset_progress_yes_help: 'Confirmar l''esborrat del progrés desat'
       yes_help: Confirmar la reparació.
     reset:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
       requires_yes: El reinici és destructiu. Torna a executar amb --yes per confirmar.
-      scope_help: 'Àmbit a reiniciar. profile: esborra tots els buckets de perfil
-        (manifests, DEKs, declaracions, revisions de llibre major i factures). auth:
-        neteja la sessió d''autenticació AEAT/SEDE persistida. data: posa en quarantena
-        les files d''objectes segurs il·legibles a tots els espais de noms. all: aplica
-        profile, auth i data junts.'
+      scope_help: 'Àmbit a reiniciar. profile: esborra tots els perfils (manifests, DEKs, declaracions, revisions de llibre major i factures). auth: neteja la sessió d''autenticació AEAT/SEDE persistida. data: posa en quarantena les files d''objectes segurs il·legibles a tots els espais de noms. all: aplica profile, auth i data junts.'
       yes_help: Confirmar explícitament l'operació de reinici
     set:
       help: Assignar un valor a una clau de configuració
@@ -2361,7 +2351,7 @@ cli:
       errors:
         missing_required_flags: Falten banderes obligatòries per al mode --quiet;
           proporciona un valor per a cada pregunta obligatòria.
-      help: Configuració inicial guiada del perfil tributari
+      help: 'Configuració inicial guiada del perfil tributari'
       profile_name_help: Nom del perfil on s'escriuen les respostes
       quiet_help: Executa sense interacció usant només els valors dels flags indicats;
         els flags requerits sense valor provoquen un error. Suficient per si sol;
@@ -2461,7 +2451,7 @@ cli:
   ledger:
     add:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      amount_help: Import signat de la transacció en la moneda del bucket
+      amount_help: 'Import signat de la transacció en la moneda de la transacció'
       attachment_help: Id d'adjunt segur addicional; es pot repetir
       business_pct_help: Proporció d'ús professional de 0 a 1
       category_help: Id de categoria de despesa deduïble (només moviments de despesa;
@@ -2472,7 +2462,7 @@ cli:
       date_help: Data comptable de la transacció (AAAA-MM-DD)
       description_help: Descripció no buida de la transacció
       direction_help: Sentit de la transacció (INCOMING, OUTGOING o INTERNAL_TRANSFER)
-      help: Afegeix una transacció manual al llibre del perfil actiu
+      help: 'Afegeix una transacció manual al llibre del perfil actiu'
       idempotency_key_help: Clau d'idempotència aportada pel cridador
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
@@ -2507,7 +2497,7 @@ cli:
     app_help: Gestió de llibres comptables i registres d'IVA
     archive:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      help: Arxivar un moviment del llibre al bucket del perfil actiu
+      help: 'Arxivar un moviment del llibre al perfil actiu'
       id_help: Id del moviment del llibre a arxivar
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma l'arxivament de la transacció del llibre
@@ -2531,10 +2521,8 @@ cli:
       usage_example: Passa l'id sense prefix, p. ex. --category-id {example} (no una
         clau composta ni amb prefix de família).
     check:
-      bucket_id_help: Id del bucket a examinar (per defecte el bucket del perfil actiu).
-      help: Examina els moviments del llibre del bucket adreçat (per defecte el bucket
-        del perfil actiu) i informa de files amb anomalies agregades a través de cada
-        període que els moviments toquin. Local; mai contacta amb AEAT.
+      bucket_id_help: 'Id del bucket a examinar (per defecte el perfil actiu).'
+      help: 'Examina els moviments del llibre del perfil adreçat (per defecte el perfil actiu) i informa de files amb anomalies agregades a través de cada període que els moviments toquin. Local; mai contacta amb AEAT.'
     classify:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       apply_help: 'Persisteix el suggeriment de l''LLM amb procedencia llm: en lloc
@@ -2557,7 +2545,7 @@ cli:
       from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
-      help: Classificar un moviment del llibre al bucket del perfil actiu
+      help: 'Classificar un moviment del llibre al perfil actiu'
       id_help: Id del moviment del llibre a classificar
       id_required: --id és obligatori quan no s'usa --from-csv.
       irpf_category_help: Categoria d'IRPF per a càlculs de models
@@ -2632,7 +2620,7 @@ cli:
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       format_help: Format de serialització d'exportació
-      help: Exportar moviments canònics del llibre des del bucket del perfil actiu
+      help: 'Exportar moviments canònics del llibre des del perfil actiu'
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Ruta on escriure el fitxer exportat del llibre
       period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
@@ -2746,7 +2734,7 @@ cli:
         Feu servir --offset/--limit per paginar.
       group_filter_help: Mostra nomes les files d'aquesta etiqueta de grup.
       header: MOVIMENTS DEL LLIBRE COMPTABLE
-      help: Llistar moviments del llibre al bucket del perfil actiu
+      help: 'Llistar moviments del llibre al perfil actiu'
       limit_help: 'Nombre maxim de files a mostrar (per defecte: totes).'
       offset_help: 'Omet aquest nombre de files abans de llistar (per defecte: 0).'
       ungrouped_label: (sense grup)
@@ -2759,9 +2747,7 @@ cli:
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la fusió de les transaccions filles
     preflight:
-      help: Informa de les dades comptables que falten (categoria, base imposable,
-        import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
-        bucket actiu en un període donat. Local; mai contacta amb AEAT.
+      help: 'Informa de les dades comptables que falten (categoria, base imposable, import/tipus d''IVA, moneda, referència de prorrata) per als moviments del perfil actiu en un període donat. Local; mai contacta amb AEAT.'
       period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2024).
@@ -2770,14 +2756,14 @@ cli:
     remove:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       dry_run_help: Informar els efectes sense eliminar el moviment del llibre
-      help: Eliminar un moviment del llibre del bucket del perfil actiu
+      help: 'Eliminar un moviment del llibre del perfil actiu'
       id_help: Id del moviment del llibre a eliminar
       reason_help: Motiu registrat a l'historial d'eliminació
       yes_help: Confirmar l'eliminació del moviment del llibre
     reset:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       dry_run_help: Informar els efectes sense buidar el catàleg del llibre
-      help: Reiniciar el catàleg del llibre del bucket del perfil actiu
+      help: 'Reiniciar el catàleg del llibre del perfil actiu'
       reason_help: Motiu registrat a l'historial de reinici
       yes_help: Confirmar el buidatge del catàleg actiu del llibre
     restore:
@@ -2807,13 +2793,12 @@ cli:
       yes_help: Confirma la divisió de la transacció
     stash:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      help: Apartar un moviment del llibre al bucket del perfil actiu
+      help: 'Apartar un moviment del llibre al perfil actiu'
       id_help: Id del moviment del llibre a apartar
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma l'enviament de la transacció a la reserva
     status:
-      help: Resumir l'estat del llibre i la preparació de càlcul del bucket del perfil
-        actiu
+      help: 'Resumir l''estat del llibre i la preparació de càlcul del perfil actiu'
       period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       year_help: Any de declaració per a --period (p. ex. 2024).
@@ -2838,7 +2823,7 @@ cli:
       taxable_base_help: Nou import de base imposable
       value_date_help: Nova data valor (AAAA-MM-DD)
     view:
-      help: Mostra una transacció del llibre
+      help: 'Mostra una transacció del llibre'
       transaction_id_help: Id de la transacció (o prefix no ambigu)
   locales:
     app_help: Auditar i generar catàlegs de traducció
@@ -2890,8 +2875,7 @@ cli:
         modelo_list: Llistar els models fiscals disponibles.
         modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
         overview_status: Mostrar l'estat general de la declaracio activa.
-        paragraph_operational_workflow: 'Flux operatiu: configureu el perfil -> importeu
-          transaccions -> treballeu el model -> reviseu -> exporteu.'
+        paragraph_operational_workflow: 'Flux operatiu: configureu el perfil -> importeu transaccions -> treballeu el model -> reviseu -> exporteu.'
         registry_inspect: Inspeccionar el registre de models fiscals.
         registry_verify: Verificar la integritat del registre de models.
         review_queue: Mostrar la cua de revisio pending.
@@ -2911,7 +2895,7 @@ cli:
         diagnostics_quarantine: Gestionar els elements en quarantena.
         diagnostics_repair: Executar comprovacions de salut i reparar l'estat de l'aplicacio.
         diagnostics_reset_progress: Reiniciar l'estat intern de l'aplicacio.
-        first_run_bootstrap: Inicialitzar la configuracio en el primer us.
+        first_run_bootstrap: 'Inicialitzar la configuracio en el primer us.'
         first_run_edit: Editar la configuracio inicial.
         footer: Executeu 'aeat config <ordre> --help' per obtenir mes informacio sobre
           cada ordre.
@@ -2968,7 +2952,7 @@ cli:
         section_modelo_lifecycle: Cicle de vida del model
         section_setup: Configuracio
         setup_configure_auth: Configurar l'autenticacio amb l'AEAT.
-        setup_create_profile: Crear un nou perfil de contribuent.
+        setup_create_profile: 'Crear un nou perfil de contribuent.'
         setup_inspect_profile: Inspeccionar el perfil de contribuent actiu.
     landing:
       active_profile_message: 'Perfil actiu: %{profile}.'

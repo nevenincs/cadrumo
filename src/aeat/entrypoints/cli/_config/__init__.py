@@ -835,7 +835,7 @@ _config_profile_create_callback = profile_app.command(
     "create",
     help=tr(
         "cli.config.profile.create_help",
-        default="Initialize a new active profile and config bucket.",
+        default="Initialize a new active profile.",
     ),
     epilog=tr(
         "cli.config.profile.create_epilog",
