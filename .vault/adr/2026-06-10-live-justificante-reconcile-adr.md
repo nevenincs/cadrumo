@@ -50,6 +50,11 @@ The decision space and the user-approved choice:
   capture` and `aeat app live notifications capture`), keeping the live-gate owner
   distinct from the local `reconcile` verb. A `--from-sede` flag on `reconcile`
   was rejected as it blurs the local/live boundary at the operator surface.
+  **(CLI NAMING SUPERSEDED by `2026-06-10-cli-pull-file-standard-adr`.** The
+  capture verb is renamed `aeat app live justificante pull`, and the reconcile
+  sources become a `reconcile pull` / `reconcile file --file` subgroup. The
+  separation principle here is preserved; only the verb/flag naming is
+  superseded. The application layer is unchanged.)**
 - **A mature pattern already exists.** `application/live/` is a package of
   read-only live snapshot services (`ExpedientesService`, `NotificationsService`,
   `CensoService`, `Borrador100`) built on the shared `_snapshot_base`
