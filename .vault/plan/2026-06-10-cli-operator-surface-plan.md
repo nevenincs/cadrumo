@@ -1,0 +1,298 @@
+---
+tags:
+  - '#plan'
+  - '#cli-operator-surface'
+date: '2026-06-10'
+tier: L3
+related:
+  - '[[2026-06-10-cli-operator-surface-adr]]'
+  - '[[2026-06-10-cli-operator-surface-research]]'
+  - '[[2026-06-10-cli-operator-surface-audit]]'
+  - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
+---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #plan) and one feature tag.
+     Replace cli-operator-surface with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
+     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
+     Phases above Steps. L4 = Epic above Waves above Phases above
+     Steps; PM association required. Pre-existing plans without this
+     field default to L2.
+
+     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'. The related field
+     carries the AUTHORISING documents (ADR, research, reference, prior
+     plan) for every Step in this plan; Steps inherit this chain;
+     per-row reference footers do not exist.
+
+     DO NOT add frontmatter fields
+     outside the frontmatter. -->
+
+
+<!-- HIERARCHY AND TIERS:
+     Epic > Wave > Phase > Step. Step is the canonical leaf-row
+     noun. Execution-log artifact: <Step Record>.
+     Tier is declared in frontmatter as tier: L1/L2/L3/L4
+     (mandatory for new plans; pre-existing plans without the
+     field default to L2 and the writer adds the field on first
+     edit). The tier selects containers:
+       L1 = Steps only.
+       L2 = Phases above Steps.
+       L3 = Waves above Phases above Steps.
+       L4 = Epic above Waves above Phases above Steps; MUST declare
+            a project-management association in the Epic intent
+            block prose.
+     Selection is by complexity criteria, not container counting.
+     Writer never invents containers to qualify a tier. -->
+
+<!-- IDENTIFIERS AND ROW CONTRACT:
+     S##, P##, W## are flat, per-document, append-only, immutable.
+     Promotion adds containers without renumbering. Gaps are not
+     reused.
+     Display paths are computed from current grouping:
+       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
+       Phase heading:        L2 P##       L3/L4 W##.P##
+       Wave heading:                      L3/L4 W##
+     Row format:
+       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
+     Two-state checkboxes only ([ ] open, [x] closed). No per-row
+     reference footers; wiki-links and markdown links are forbidden
+     in plan body. Authorising documents go in the plan's `related:`
+     frontmatter once.
+     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
+     (U+2013) are forbidden. Step rows within a Phase are
+     contiguous. -->
+
+<!-- NO COMPRESSION:
+     N self-similar actions = N rows. Never collapse into "for each
+     X, do Y" / "across all callers, do Z" / "in every module,
+     replace W". The rule applies at every tier including L1. -->
+
+<!-- VAULTSPEC-CORE VAULT PLAN CLI:
+     The `vaultspec-core vault plan` CLI is the canonical surface for
+     structural manipulation of this plan document. Writers and
+     executors MUST use `vaultspec-core vault plan step add/insert/move/
+     remove/check/uncheck/toggle/edit`,
+     `vaultspec-core vault plan phase add/move/remove/edit`,
+     `vaultspec-core vault plan wave add/move/remove/edit`,
+     `vaultspec-core vault plan epic intent`, and
+     `vaultspec-core vault plan tier promote/demote` for every
+     identifier-affecting change rather than hand-editing the row
+     grammar. Hand edits are tolerated by the parser but flagged by
+     `vaultspec-core vault plan check`; canonical-identifier preservation is
+     guaranteed only when the CLI performs the mutation. See the
+     CLI ADR (2026-05-06-plan-hardening-adr) for the full
+     subcommand surface. -->
+
+# `cli-operator-surface` `operator surface hardening rollout` plan
+
+## Wave `W01` - honesty quick wins
+
+Land the independent, low-coupling honesty repairs that need no cross-file relocation: the D8 preflight active-revision default, the D6 --language help-text honesty contract, and the D5 self-referential-string conformance gate that lands before the W03 renames so it protects them, including fixing the known enum-choice offenders under the new gate. Backed by the operator-surface ADR D5/D6/D8, the surface audit F5/F6/F8, and the CRUD audit. No downstream Wave depends on W01 except that W03's renames are protected by the W01 D5 gate.
+
+<!-- One-line headline summary plan. -->
+
+### Phase `W01.P01` - self-referential-string conformance gate (D5)
+
+Add the conformance gate that pins command-naming hint strings and enum-choice-vs-handler sets against the live tree, then fix the known enum-choice offenders under it. The gate lands first so it protects the W03 renames.
+
+- [ ] `W01.P01.S01` - add a test-time conformance gate that pins next-action and failure-hint strings naming a command path to a live command, mirroring the documented-command gate mechanism; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
+- [ ] `W01.P01.S02` - extend the conformance gate to assert every Typer option typed as an enum has its advertised choice set equal to the set the handler accepts, failing on any advertised member the handler refuses; `src/aeat/entrypoints/cli/tests`.
+- [ ] `W01.P01.S03` - narrow the doclink --source enum choice to the three members the handler accepts or widen the handler so the advertised set matches, satisfying the new gate; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [ ] `W01.P01.S04` - narrow the work verify --select choices to the states verify accepts so latest-verified and filed stop being advertised-but-impossible, satisfying the new gate; `src/aeat/application/modelo/_selectors.py`.
+- [ ] `W01.P01.S05` - correct the evidence-id help string that promises unambiguous prefix to state exact-equality matching, via the aeat.locales CLI; `src/aeat/locales/en.yml`.
+- [ ] `W01.P01.S06` - run the documented-command conformance gate and the new D5 gate to confirm zero drift across hint strings and enum-choice sets; `src/aeat/entrypoints/cli/tests`.
+
+### Phase `W01.P02` - preflight active-revision default (D8)
+
+Default preflight to the active revision for the natural key so the readiness question stops demanding an internal revision id, keeping --revision-id as an explicit override, and simplify the choose-modelo guide in the same commit.
+
+- [ ] `W01.P02.S07` - default preflight --revision-id to the active revision resolved from modelo, filing_year, and period through the modelo-addressing resolver, keeping --revision-id as an explicit override and refusing with a candidate list when the natural key is ambiguous; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `W01.P02.S08` - add real-behavior tests proving preflight answers from the natural key alone, that the explicit --revision-id override still selects an exact revision, and that an ambiguous natural key refuses with candidates; `src/aeat/entrypoints/cli/tests`.
+- [ ] `W01.P02.S09` - simplify the choose-modelo guide to remove the run modelo describe, read out the revision id, paste it back detour in the same commit; `docs/how-to/choose-modelo.md`.
+- [ ] `W01.P02.S10` - update locale strings for the preflight help text via the aeat.locales CLI and regenerate the CLI reference for the changed signature; `src/aeat/locales/en.yml`.
+
+### Phase `W01.P03` - honest --language help-text contract (D6)
+
+Resolve the eager --language flag's silent help-text failure per the accepted ordering work-then-remove-then-warn, after a feasibility spike on deferred help rendering.
+
+- [ ] `W01.P03.S11` - run a feasibility spike on deferring help-text rendering until after eager-option resolution to determine whether --language can be made to actually localize help text without destabilising the import-time i18n model; `src/aeat/entrypoints/cli/__init__.py`.
+- [ ] `W01.P03.S12` - implement the highest feasible D6 outcome in ordering work-then-remove-then-warn: make --language localize help text if the spike succeeds, else remove it from the help surface it cannot affect, else emit a one-line warning naming AEAT_OUTPUT_LANGUAGE; `src/aeat/entrypoints/cli/__init__.py`.
+- [ ] `W01.P03.S13` - add real-behavior tests proving --language no longer silently fails for help text, asserting the chosen outcome and leaving the profile-owned precedence and AEAT_OUTPUT_LANGUAGE override unchanged; `src/aeat/entrypoints/cli/tests`.
+- [ ] `W01.P03.S14` - update locale strings via the aeat.locales CLI for any new warning text and regenerate the CLI reference if the flag surface changes; `src/aeat/locales/en.yml`.
+
+## Wave `W02` - reversal and lineage
+
+Close the single highest-leverage CRUD gap (D2 ledger restore to ACTIVE) and the ledger row identity-churn gap (D3 lineage-resolving history/view/track), each bundling domain transition, application action, CLI verb, audit event, real-behavior tests, locale updates, and same-commit docs edits. Backed by ADR D2/D3, surface audit F2/F3, and CRUD audit F-01 plus journeys (a) and (e). W02 lands before W03's grammar work only where the same ledger files collide.
+
+### Phase `W02.P04` - ledger restore to ACTIVE (D2)
+
+Build the restore-to-ACTIVE lifecycle transition, application action, CLI verb, and audit event with full operator-hardening guarantees and real-behavior tests including the bulk-stash recovery journey, updating the honest-permanence docs in the same commit.
+
+- [ ] `W02.P04.S15` - add a public restore-to-ACTIVE lifecycle transition over the state-generic primitive that moves STASHED to ACTIVE and ARCHIVED to ACTIVE, keeping SPLIT and MERGED lineage out of scope; `src/aeat/application/ledger/_actions_lifecycle.py`.
+- [ ] `W02.P04.S16` - add a restore_manual_transaction application action that honours the finalized-modelo guard and records --reason into its own audit event, mirroring the forward archive and stash actions; `src/aeat/application/ledger/_actions_lifecycle.py`.
+- [ ] `W02.P04.S17` - add a new ledger restore BucketEventType audit event distinct from the forward set-aside events; `src/aeat/application/ledger/_actions_lifecycle.py`.
+- [ ] `W02.P04.S18` - add the aeat app ledger restore --id ID CLI verb accepting the _resolve_id prefix form and carrying --yes and --reason, with the enum-choice and hint strings conforming to the W01 D5 gate; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [ ] `W02.P04.S19` - add real-behavior roundtrip and anti-tautology tests for the restore transition with every defaultable field populated non-default, asserting STASHED-to-ACTIVE and ARCHIVED-to-ACTIVE round-trip and the finalized-modelo guard refusal; `src/aeat/application/ledger/tests`.
+- [ ] `W02.P04.S20` - add a real-behavior test reproducing the bulk-stash recovery journey end to end, stashing several rows then restoring them to active without a whole-ledger reset; `src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P04.S21` - add restore help and event locale strings via the aeat.locales CLI; `src/aeat/locales/en.yml`.
+- [ ] `W02.P04.S22` - remove the Both are permanent honest-limitation sentence and document the restore verb in the correct-ledger-entries guide in the same commit; `docs/how-to/correct-ledger-entries.md`.
+- [ ] `W02.P04.S23` - remove the matching permanent-stash sentence from the import-bank-statements guide in the same commit; `docs/how-to/import-bank-statements.md`.
+- [ ] `W02.P04.S24` - run the documented-command conformance gate and regenerate the CLI reference for the new restore verb; `src/aeat/entrypoints/cli/tests`.
+
+### Phase `W02.P05` - stable ledger lineage handle across edits (D3)
+
+Make ledger history/view/track resolve any id in a row's edit-lineage chain to the current row so an old written-down id keeps answering after a correction, with real tests proving the old id still resolves.
+
+- [ ] `W02.P05.S25` - make ledger history resolve any id in a row's TransactionEditLineageEntry chain to the current row so an old written-down id keeps answering after an edit re-derives the transaction_id; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [ ] `W02.P05.S26` - make ledger view resolve any id in the edit-lineage chain to the current row so a pre-edit id still views the corrected row; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [ ] `W02.P05.S27` - make ledger track resolve any id in the edit-lineage chain to the current row so the lineage handle survives a correction; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [ ] `W02.P05.S28` - keep the content-addressed transaction_id authoritative for storage and audit while exposing the lineage resolution at the operator read boundary, not freezing the id across edits; `src/aeat/domain/transactions/_models.py`.
+- [ ] `W02.P05.S29` - add real-behavior tests recording an id, editing the row, and asserting the old id still resolves through history, view, and track to the current row; `src/aeat/entrypoints/cli/tests`.
+- [ ] `W02.P05.S30` - update locale strings for any changed lineage help text via the aeat.locales CLI and update the correct-ledger-entries guide id-churn note in the same commit; `docs/how-to/correct-ledger-entries.md`.
+- [ ] `W02.P05.S31` - run the documented-command conformance gate and the D5 gate to confirm the lineage surface introduces no hint drift; `src/aeat/entrypoints/cli/tests`.
+
+## Wave `W03` - hard renames and one grammar
+
+Execute the strict no-alias hard renames (D1 switch-replaces-unlock as one atomic relocation commit; the queued reset-state and bucket renames under the same discipline) and the D4 one-period-grammar conversion layer. Backed by ADR D1/D4, surface audit F1/F4. Depends on W01's D5 gate being in place to protect the rename, and coordinates with W02 where ledger period sites overlap the restore/lineage files. The D1 rename is exclusive: it touches many files and must coordinate with peers in this shared worktree.
+
+### Phase `W03.P06` - switch-replaces-unlock hard rename (D1)
+
+Replace unlock with the intent-named switch verb as one atomic relocation commit: rename, every caller, the retired-verb test, locale strings, docs sweep, and regenerated CLI reference in the same change, tagged relocation:switch. Exclusive file-heavy step; coordinate with peers.
+
+- [ ] `W03.P06.S32` - rename unlock to switch at the config surface as one atomic relocation commit tagged relocation:switch: the canonical-site rename, every caller, the _RETIRED_VERBS test recording unlock as retired, locale strings via the aeat.locales CLI, the docs sweep, and the regenerated CLI reference all in one git index with clean pytest collection observed before commit; `src/aeat/entrypoints/cli/_config/_custody.py`.
+- [ ] `W03.P06.S33` - update the retired-verb inventory test to record unlock as retired and switch as the live intent verb within the same atomic commit; `src/aeat/entrypoints/cli/tests/test_config_profile_surface_inventory.py`.
+- [ ] `W03.P06.S34` - sweep every how-to guide that taught unlock onto switch within the same atomic commit, removing the switch by unlocking gloss; `docs/how-to`.
+- [ ] `W03.P06.S35` - add real-behavior tests proving switch performs the session-unlock mechanics underneath, that unlock resolves to no command, and that no alias or deprecation surface survives; `src/aeat/entrypoints/cli/tests`.
+
+### Phase `W03.P07` - queued leaked-term hard renames
+
+Apply the same hard-rename discipline to the other storage-leak terms the ADR queued: config repair reset-state and the operator-facing bucket noun, each as a separate atomic relocation commit with one intent-named spelling replacing the leaked term outright.
+
+- [ ] `W03.P07.S36` - rename config repair reset-state to its intent-named spelling as a separate atomic relocation commit replacing the storage-mechanic term outright with no coexisting alias, including callers, the retired-verb test, locale strings via the aeat.locales CLI, docs sweep, and regenerated CLI reference; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W03.P07.S37` - rename the operator-facing bucket noun to profile across CLI help and locale strings as a separate atomic relocation commit, keeping bucket only where it names the internal encrypted-storage concept, via the aeat.locales CLI with docs sweep and regenerated CLI reference; `src/aeat/locales/en.yml`.
+- [ ] `W03.P07.S38` - add real-behavior tests asserting the renamed verbs and nouns resolve, the leaked terms are retired with no alias, and the D5 gate and documented-command gate stay green; `src/aeat/entrypoints/cli/tests`.
+
+### Phase `W03.P08` - one operator period grammar (D4)
+
+Make the AEAT token grammar canonical everywhere while the ledger --period sites accept and convert their calendar shapes internally, with refusal messages naming both notations and the troubleshooting trap section updated in the same commit.
+
+- [ ] `W03.P08.S39` - make the ledger --period parser accept the canonical AEAT tokens (1T-4T, 0A, 01-12, plus the registry union members) in addition to the calendar shapes, normalising each to the internal representation each store needs and validating against the registry period union; `src/aeat/entrypoints/cli/_common.py`.
+- [ ] `W03.P08.S40` - lead the ledger --period --help with the canonical AEAT tokens so operators are taught one grammar while the calendar shapes remain accepted-and-converted; `src/aeat/entrypoints/cli/_common.py`.
+- [ ] `W03.P08.S41` - make ledger period refusal messages name both notations (AEAT tokens and calendar shapes) and the accepted set, via the aeat.locales CLI; `src/aeat/locales/en.yml`.
+- [ ] `W03.P08.S42` - add real-behavior tests proving the ledger --period site accepts both AEAT tokens and calendar shapes for the same period, normalises to one internal representation, and passes the registry validator for advertised codes including the EVENT-N member; `src/aeat/entrypoints/cli/tests`.
+- [ ] `W03.P08.S43` - update the troubleshooting period-trap section to teach the one canonical grammar and note the ledger conversion in the same commit; `docs/how-to/troubleshooting.md`.
+- [ ] `W03.P08.S44` - run the documented-command conformance gate and regenerate the CLI reference for the changed period help text; `src/aeat/entrypoints/cli/tests`.
+
+## Wave `W04` - read-back baseline
+
+Establish the D7 read-back baseline guarantee for record-creating verbs in audit priority order: M036 list/view first, then reconciliation history, then the IVA wallet correction path, closing the in-scope backlog surfaces and deferring the filing-record unfile decision per the ADR. Backed by ADR D7, surface audit F7, and CRUD audit F-03/F-05/F-07 plus journey (b). Lands last; depends on no other Wave but benefits from the W01 D5 gate guarding its new hint strings.
+
+### Phase `W04.P09` - M036 read-back (D7)
+
+Add m036 list and m036 view reading through the already-shipped declaration repository with no parallel read path, removing the modelo-036 honest-limitation sentences in the same commit.
+
+- [ ] `W04.P09.S45` - add a list_declarations read surface in the M036 lifecycle application module reading through the already-shipped declaration repository with no parallel read path; `src/aeat/application/modelo/_m036_lifecycle.py`.
+- [ ] `W04.P09.S46` - add the aeat app modelo m036 list and m036 view CLI verbs over the declaration read surface with hint strings conforming to the W01 D5 gate; `src/aeat/entrypoints/cli/_modelo_m036_cli.py`.
+- [ ] `W04.P09.S47` - add real-behavior tests recording an M036 declaration then listing and viewing it back, asserting the read path reads through the owning repository; `src/aeat/application/modelo/tests`.
+- [ ] `W04.P09.S48` - remove the no command yet lists recorded declarations honest-limitation sentence from the modelo-036 guide in the same commit; `docs/how-to/modelo-036.md`.
+- [ ] `W04.P09.S49` - add m036 list and view locale strings via the aeat.locales CLI and regenerate the CLI reference for the new verbs; `src/aeat/locales/en.yml`.
+
+### Phase `W04.P10` - reconciliation history and IVA wallet correction (D7)
+
+Add the reconciliation-history list surface and the IVA wallet correction/read path under the read-back baseline guarantee, closing the in-scope CRUD surfaces and deferring the filing-record unfile decision per the ADR.
+
+- [ ] `W04.P10.S50` - add a reconciliation-history list surface so past reconciliation verdicts are enumerable, reading through the owning repository with no parallel read path; `src/aeat/application/modelo`.
+- [ ] `W04.P10.S51` - add the aeat app modelo reconciliation-history CLI verb with hint strings conforming to the D5 gate; `src/aeat/entrypoints/cli`.
+- [ ] `W04.P10.S52` - add a guarded IVA wallet correction path so a wrong seed for a pre-history period can be corrected or re-read rather than being unrecoverable, gated on --confirm; `src/aeat/application/modelo`.
+- [ ] `W04.P10.S53` - add the aeat app modelo iva-wallet correction CLI verb with the read path and hint strings conforming to the D5 gate; `src/aeat/entrypoints/cli`.
+- [ ] `W04.P10.S54` - add real-behavior tests for the reconciliation-history list and the IVA wallet correction path asserting round-trip read-back; `src/aeat/application/modelo/tests`.
+- [ ] `W04.P10.S55` - update the affected how-to guides removing the no reconciliation-history and seed-once honest-limitation sentences and add locale strings via the aeat.locales CLI in the same commits, regenerating the CLI reference; `docs/how-to`.
+
+## Description
+
+Rollout plan for the accepted operator-surface ADR (2026-06-10-cli-operator-surface-adr, accepted with three operator caveats: strict no-alias hard renames, user-choice input overrides welcome, guessability as the verb acceptance test). The ADR's eight decisions D1 through D8 reconcile the operator-surface weaknesses catalogued by the surface audit (findings F1 to F8, with file and line evidence) and the CRUD matrix audit (capability matrix, journey verdicts (a) through (e), findings F-01 to F-08), both synthesised by the research document. The plan delivers four sequenced waves: W01 lands the independent honesty quick wins (D5 conformance gate first so it protects everything after it, D8 preflight natural-key default, D6 --language honesty contract in the accepted ordering work-then-remove-then-warn); W02 closes the highest-leverage recovery and identity gaps (D2 ledger restore to ACTIVE, D3 lineage-resolving read verbs); W03 executes the strict hard renames (D1 switch-replaces-unlock as one atomic relocation commit, the queued reset-state and bucket renames, D4 one-period-grammar conversion); W04 establishes the D7 read-back baseline (M036 list and view first, then reconciliation history and the IVA wallet correction path). The filing-record unfile decision and the gestor cross-profile bulk gap (CRUD F-04) are explicitly deferred per the ADR. Every operator-surface Step bundles real-behavior tests with no mocks or skips, locale updates through the `python -m aeat.locales` CLI only, same-commit docs updates, the documented-command conformance gate, and CLI-reference regeneration when the command tree changes; Steps that change `src/aeat` module structure also run `python -m dev.docs.apidocs scaffold`. The never-live-submission gate is untouched throughout.
+
+## Steps
+
+<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
+`L4`) determines the structure under this section:
+
+- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
+- `L2`: one or more `### Phase` blocks each containing Step rows.
+- `L3`: one or more `## Wave` blocks each containing Phase blocks.
+- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
+
+<!-- Replace this scaffold with the tier-appropriate structure for your plan.
+Format examples for each block type are embedded below as commented
+templates. -->
+
+<!-- IMPORTANT: This document must be updated between execution runs to
+     track progress. -->
+
+<!-- PHASE BLOCK FORMAT (L2, L3, L4):
+     ### Phase `P02` - rewrite the writer-agent contract
+
+     One sentence stating what this Phase delivers.
+
+     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
+     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
+
+     At L3/L4 the Phase heading uses the ancestor-aware path
+     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
+
+<!-- WAVE BLOCK FORMAT (L3, L4):
+     ## Wave `W01` - language-only convention rollout
+
+     One paragraph stating what this Wave delivers, which downstream
+     Wave depends on it, and which authorising documents back it.
+
+     ### Phase `W01.P01` - ...
+     ### Phase `W01.P02` - ...
+
+     The Wave intent paragraph is mandatory. -->
+
+<!-- EPIC INTENT BLOCK FORMAT (L4 only):
+     ## Epic intent
+
+     One paragraph stating the strategic goal, the external project-
+     management association (milestone name, project board identifier,
+     roadmap entry), the timeline horizon, and the teams or agents
+     involved.
+
+     ## Wave `W01` - ...
+     ## Wave `W02` - ...
+
+     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
+     L3. The plan title (the level-one # heading at the top of the
+     document) is the Epic title; no separate Epic heading is emitted. -->
+
+## Parallelization
+
+Waves are sequenced by default: W01 lands before W02, W02 before W03, W03 before W04. The binding ordering constraints inside that default are: the W01.P01 D5 gate MUST land before any W03 rename so the gate protects the renamed hint strings and enum choices; W02 must land before W03.P08's grammar work only where the two touch the same ledger CLI files (`src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`, `src/aeat/entrypoints/cli/_common.py`); and within W01 the three Phases P01, P02, P03 are mutually independent and may run in parallel under three agents. Within W02, P04 (restore) and P05 (lineage) share `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py` and should be serialised or coordinated on that one file. W03.P06 (the D1 switch rename) is EXCLUSIVE: it is one atomic relocation commit touching the custody module, every caller, the retired-verb inventory test, locale catalogues, the docs sweep, and the regenerated CLI reference; in this shared multi-agent worktree the executing agent must announce the rename, check `git diff -- <file>` for peer WIP on every touched file before editing, and land the whole change in one explicit-path commit tagged relocation:switch. The two W03.P07 renames follow the same exclusive discipline, each as its own atomic commit. W04's two Phases are independent of each other and may parallelise. Suggested personas: vaultspec-high-executor for W02.P04, W03.P06, and W03.P08 (lifecycle and relocation core logic); vaultspec-standard-executor for W01, W02.P05, W03.P07, and W04; vaultspec-code-reviewer dispatched after each Wave closes per the swarm audit cadence.
+
+## Verification
+
+The plan is complete when every Step in every Wave is closed. Each Wave additionally closes against these concrete, runnable gates:
+
+- Documented-command conformance gate stays green after every command-tree change: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`.
+- The new D5 self-referential-string gate (W01.P01) passes from its landing onward, proving every command-naming hint resolves to a live command and every advertised Typer enum choice is acceptable to its handler; the doclink --source and work verify --select offenders enumerate as fixed under it.
+- Locale gates stay green after every locale change: `python -m aeat.locales scaffold --check` exits clean and `python -m aeat.locales audit` reports no drift; the inter-locale parity and translation-honesty pytest gates pass.
+- Docs drift gates: `python -m dev.docs.apidocs scaffold --check` exits clean after any `src/aeat` module-tree change, and the Sphinx nitpicky build gate `pytest dev/docs/tests/test_docs_build.py` passes after every docs sweep.
+- CLI-reference regeneration is committed in the same change as every command-tree mutation (W02.P04 restore verb, W03.P06 and W03.P07 renames, W03.P08 period help, W04 read-back verbs).
+- CRUD-audit journey re-runs as acceptance evidence: after W02 the bulk-stash recovery journey (CRUD audit journey (e), finding F-01) MUST PASS end to end without `ledger reset` - stash several rows, restore them, assert active; after W02 plus W03 the quarter-end loop (journey (a)) re-runs with its id-churn sharp edge resolved - an id written down before `ledger update` still answers through history, view, and track.
+- W03 rename acceptance: `unlock` resolves to no command, `switch` performs the session-unlock mechanics, `_RETIRED_VERBS` records the retirement, no alias or deprecation surface exists, and the relocation commit passes `uv run --no-sync pytest --collect-only -q` clean immediately before landing.
+- W04 read-back acceptance: an M036 declaration recorded by alta is listed by `m036 list` and shown by `m036 view`; the modelo-036 guide no longer carries the no-read-back honest-limitation sentence; reconciliation history and the IVA wallet correction path round-trip in real-behavior tests.
+- All new tests are real-behavior per the quality-gates rule: no mocks, skips, xfail, stubs, or tautological assertions; lifecycle roundtrips populate every defaultable field non-default per the roundtrip discipline.
+- Closure gate: per the campaign-close honesty review rule, a fresh-context honesty review runs against the closing summary before this plan is declared structurally complete, and `uv run --no-sync vaultspec-core vault check all` stays green throughout.
