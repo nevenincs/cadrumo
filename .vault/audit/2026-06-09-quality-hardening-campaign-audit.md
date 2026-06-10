@@ -7,21 +7,7 @@ related:
   - "[[2026-06-08-repo-health-diagnostics-audit]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace quality-hardening-campaign with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `quality-hardening-campaign` audit: `justfile audit baseline: 2026-06-09 quality hardening kickoff`
 
@@ -604,3 +590,32 @@ flat tail (top non-locked file is 5). Known transient noise: peer M303
 legal-grounding WIP currently fails `modelo/tests/test_actions.py` and the
 M200/M303 registry suites on in-flight `legal_refs` — peer-owned, expected to
 clear when that campaign commits.
+
+## QHC-018 | coordinator checkpoint (2026-06-10) | complexity 17 -> 13; QHC-016/017 staleness corrected
+
+QHC-005 drift-slice review verdict: PASS on all eleven production commits and
+three sampled test commits (behaviour preservation, the single rationale-marked
+production `cast`, festivos boundary models adversarially confirmed loud on
+malformed input, no provenance surface touched, no diagnostic displacement).
+The M131/M200 advisory localisation also landed (`390d59fd2`): five finding
+keys in all four locales via the locales CLI, parity + translation-honesty
+gates green, `tr()` resolves real sentences.
+
+QHC-003 slice 2 cleared four hotspots — `_apply_styling` (27),
+`RemoteStateGuardPolicy._validate_policy` (27),
+`_semantic_role_looks_like_typo` (27),
+`_capture_filed_declaration_observation_from_row` (26) — commits `6ec53306d`,
+`fc0c7eba3`, `b3b37ffec`, `2f7c9e7dc`; over-threshold count **17 -> 13**.
+Independent review in flight (first reviewer dispatch lost to a session limit;
+re-dispatched). The new worst remaining hotspot,
+`_secure_object_migration.py::ensure_deterministic_object_keys` (26), was
+HONESTLY SKIPPED: it owns the secure-storage `object_key` HMAC derivation and
+byte-identical recomputation could not be proven within the slice — deferred to
+a dedicated slice that builds a roundtrip-proof harness first.
+
+Staleness corrections to QHC-016/017 prose: the peer locks recorded there have
+partially cleared at HEAD — `calc_sheets/_workbook_export.py` was clean (and is
+now refactored + pyright-relevant), so "peer-WIP-locked" claims in earlier
+sections must be re-derived from `git status` at action time, not read from
+this audit. Slice agents regenerating the live inventory before acting (rather
+than trusting audit prose) is the correct standing procedure.
