@@ -119,6 +119,8 @@ def test_ledger_filing_evidence_roundtrips_through_encrypted_revision(objects: S
     assert loaded is not None
     assert loaded == original
     assert loaded.ledger_filing_evidence == evidence
+    # Narrow ledger_filing_evidence to non-None for safe attribute access.
+    assert loaded.ledger_filing_evidence is not None
     assert loaded.ledger_filing_evidence.rows[0].document_link_ids == ("drive-doc-1",)
     assert loaded.ledger_filing_evidence.manual_entries[0].note == "resultado contable"
 
