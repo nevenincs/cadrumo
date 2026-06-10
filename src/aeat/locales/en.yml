@@ -2379,8 +2379,7 @@ cli:
       llm_exclusive: --llm cannot be combined with --classification or --from-csv;
         the manual path is the explicit operator override.
       llm_failed: 'LLM classification failed: {reason}'
-      llm_help: Ask a local LLM provider (claude/gemini/codex) to classify the transaction;
-        preview by default, persist with --apply.
+      llm_help: 'Ask a local LLM provider (claude/antigravity/codex) to classify the transaction; preview by default, persist with --apply.'
       llm_provider_unavailable: 'LLM provider ''{provider}'' is unavailable: its CLI
         is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH, or
         run ''aeat app ledger providers'' to list usable providers.'

@@ -242,12 +242,12 @@ def test_llm_unavailable_provider_refuses_instructively(tmp_path: Path) -> None:
     previous_path = os.environ.get("PATH", "")
     os.environ["PATH"] = str(empty_dir)
     try:
-        result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--llm", "gemini"])
+        result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--llm", "antigravity"])
     finally:
         os.environ["PATH"] = previous_path
 
     assert result.exit_code != 0
-    assert "gemini" in result.output
+    assert "antigravity" in result.output
     # Instructive: names PATH and the discovery command.
     assert "PATH" in result.output
 
@@ -273,7 +273,7 @@ def test_llm_invalid_provider_lists_choices(tmp_path: Path) -> None:
     result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--llm", "not-a-provider"])
     assert result.exit_code != 0
     # Typer renders the Choice([...]) accepted-value set on a bad enum value.
-    assert "claude" in result.output and "gemini" in result.output and "codex" in result.output
+    assert "claude" in result.output and "antigravity" in result.output and "codex" in result.output
 
 
 def test_providers_lists_availability(tmp_path: Path) -> None:
@@ -281,6 +281,6 @@ def test_providers_lists_availability(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     names = {p["provider"] for p in payload["providers"]}
-    assert names == {"claude", "gemini", "codex"}
+    assert names == {"claude", "antigravity", "codex"}
     for p in payload["providers"]:
         assert isinstance(p["available"], bool)

@@ -9,8 +9,8 @@ aeat app ledger classify --id <transaction-id> --llm claude
 ```
 
 That command asks the `claude` provider for a suggestion and previews the
-result. It does not save anything. Use `gemini` or `codex` instead of `claude`
-when that is the provider CLI you have configured.
+result. It does not save anything. Use `antigravity` or `codex` instead of
+`claude` when that is the provider CLI you have configured.
 
 ## What the command does
 

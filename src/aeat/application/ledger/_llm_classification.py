@@ -87,20 +87,23 @@ _BUCKET_EVENT_PAYLOAD_VERSION = 1
 class LLMProvider(StrEnum):
     """Subprocess LLM provider names accepted by the classify surface.
 
-    Each value names a local CLI (``claude`` / ``gemini`` / ``codex``) the
+    Each value names a local CLI (``claude`` / ``antigravity`` / ``codex``) the
     :class:`aeat.domain.transactions.SubprocessLLMClassifier` shells out to.
+    ``antigravity`` shells to ``agy``, Google's agentic CLI and the supported
+    successor to the retired standalone ``gemini`` CLI.
     """
 
     CLAUDE = "claude"
-    GEMINI = "gemini"
+    ANTIGRAVITY = "antigravity"
     CODEX = "codex"
 
 
 # The CLI binary each subprocess provider shells out to. Used by
 # :func:`available_llm_providers` to probe PATH without spawning the process.
+# ``antigravity`` resolves to the ``agy`` binary.
 _PROVIDER_CLI_BINARY: dict[LLMProvider, str] = {
     LLMProvider.CLAUDE: "claude",
-    LLMProvider.GEMINI: "gemini",
+    LLMProvider.ANTIGRAVITY: "agy",
     LLMProvider.CODEX: "codex",
 }
 
