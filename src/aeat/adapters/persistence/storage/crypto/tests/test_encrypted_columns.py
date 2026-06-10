@@ -293,7 +293,7 @@ class TestHashedLookup:
 
     def test_invalid_plaintext_type_carries_storage_validation_locale_key(self) -> None:
         with pytest.raises(StorageValidationError) as excinfo:
-            HashedLookup.compute(b"not-str")  # type: ignore[arg-type]
+            HashedLookup.compute(b"not-str")  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
         assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 

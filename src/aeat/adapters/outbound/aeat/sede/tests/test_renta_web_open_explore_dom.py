@@ -17,7 +17,7 @@ Buscar casilla dialog opens as a virtual widget that doesn't appear in
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 import pytest
 
@@ -118,7 +118,7 @@ async def _snapshot_zk_layer(page: Page, label: str) -> str:
     return "\n".join(lines)
 
 
-def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None) -> list[str]:
+def _render_a11y_node(node: dict[str, object], depth: int = 0, lines: list[str] | None = None) -> list[str]:
     """Walk an accessibility-tree node and emit one line per descendant.
 
     Surfaces role + name + value + checked/expanded state for every node
@@ -144,8 +144,15 @@ def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None
         prefix = "  " * depth
         extras_str = (" " + " ".join(extras)) if extras else ""
         lines.append(f"{prefix}[{role}] {name!r}{extras_str}")
-    for child in node.get("children", []) or []:
-        _render_a11y_node(child, depth + 1, lines)
+    children = node.get("children", [])
+    if isinstance(children, list):
+        for child in children:
+            if isinstance(child, dict):
+                # The Playwright a11y tree is untyped; isinstance narrows the
+                # child to dict[Unknown, Unknown], which dict-invariance rejects
+                # against dict[str, object]. The cast restores the str-keyed
+                # node shape the recursion expects.
+                _render_a11y_node(cast("dict[str, object]", child), depth + 1, lines)
     return lines
 
 
