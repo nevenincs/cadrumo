@@ -25,14 +25,20 @@ from __future__ import annotations
 
 import base64
 import binascii
-from collections.abc import Sequence
+import contextlib
+import os
+import tempfile
+from collections.abc import Iterator, Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import Declaracion, Expediente
+    from ...domain.justificante import Justificante
+    from ..modelo import ModeloReconciliationReport
 
 from ...adapters.persistence.storage import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE as JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,
@@ -493,6 +499,70 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
         )
 
 
+@contextlib.contextmanager
+def _materialized_capture_pdf(snapshot: JustificanteCaptureSnapshot) -> Iterator[Path]:
+    """Yield a transient on-disk path to the captured PDF, deleted on exit.
+
+    The justificante parser and the local reconciler are path-only, so the
+    persisted bytes are written to a private temporary file for the duration
+    of the read and unlinked afterwards. The file never outlives the call;
+    the parser's path-redaction behaviour keeps the transient path out of any
+    surfaced error.
+    """
+    file_descriptor, raw_name = tempfile.mkstemp(suffix=".pdf")
+    pdf_path = Path(raw_name)
+    try:
+        with os.fdopen(file_descriptor, "wb") as handle:
+            handle.write(snapshot.decoded_pdf_bytes())
+        yield pdf_path
+    finally:
+        with contextlib.suppress(FileNotFoundError):
+            pdf_path.unlink()
+
+
+def parse_capture_to_justificante(snapshot: JustificanteCaptureSnapshot) -> Justificante:
+    """Parse a persisted capture's PDF into a strict domain :class:`Justificante`.
+
+    Materialises the encrypted snapshot's bytes to a transient path and runs the
+    existing inbound parser. Used to register the captured receipt as official
+    filing evidence and to reconcile against it.
+    """
+    from ...adapters.inbound.justificante import parse_justificante
+
+    with _materialized_capture_pdf(snapshot) as pdf_path:
+        return parse_justificante(pdf_path)
+
+
+def reconcile_capture(
+    *,
+    work_unit_id: str,
+    snapshot: JustificanteCaptureSnapshot,
+    actor: str = "operator",
+) -> ModeloReconciliationReport:
+    """Reconcile a work unit against a persisted live capture.
+
+    Materialises the captured PDF to a transient path and delegates to the
+    existing local-only ``modelo_reconcile``; the reconciler never contacts
+    AEAT. This is the live-sourced equivalent of the operator hand-passing a
+    downloaded justificante via ``--from-justificante``.
+    """
+    from ..modelo import (
+        ModeloReconciliationCommand,
+        ModeloReconciliationSourceKind,
+        modelo_reconcile,
+    )
+
+    with _materialized_capture_pdf(snapshot) as pdf_path:
+        return modelo_reconcile(
+            ModeloReconciliationCommand(
+                work_unit_id=work_unit_id,
+                source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+                source_path=pdf_path,
+                actor=actor,
+            ),
+        )
+
+
 __all__ = [
     "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
@@ -502,5 +572,7 @@ __all__ = [
     "JustificanteCaptureSnapshotService",
     "derive_justificante_capture_snapshot_id",
     "justificante_capture_snapshot_object_key",
+    "parse_capture_to_justificante",
+    "reconcile_capture",
     "resolve_period_expediente",
 ]
