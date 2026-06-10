@@ -74,6 +74,76 @@
     }
   }
 
+  /* ── Command-block decoration ──────────────────────────────────────────
+   * Pygments tokenizes bash strings/numbers but leaves command words and
+   * --flags as plain text. Wrap those in spans so shell transcripts read
+   * like a modern terminal. Only text nodes are touched, so the copy
+   * button's textContent-based extraction is unaffected. */
+
+  var COMMAND_HEAD = /(^|\n)((?:\$ |PS> )?)(aeat(?:\s+[a-z][\w-]*)*)/g;
+  var FLAG = /(^|[\s=])(--?[A-Za-z][\w-]*)(?=[\s=,)"']|$)/g;
+
+  function decorateTextNode(node) {
+    var text = node.nodeValue;
+    var ranges = [];
+    var match;
+    COMMAND_HEAD.lastIndex = 0;
+    while ((match = COMMAND_HEAD.exec(text)) !== null) {
+      var commandStart = match.index + match[1].length + match[2].length;
+      ranges.push([commandStart, commandStart + match[3].length, "aeat-tok-cmd"]);
+    }
+    FLAG.lastIndex = 0;
+    while ((match = FLAG.exec(text)) !== null) {
+      var flagStart = match.index + match[1].length;
+      ranges.push([flagStart, flagStart + match[2].length, "aeat-tok-flag"]);
+    }
+    if (!ranges.length) return;
+    ranges.sort(function (a, b) {
+      return a[0] - b[0];
+    });
+    var fragment = document.createDocumentFragment();
+    var pos = 0;
+    ranges.forEach(function (range) {
+      if (range[0] < pos) return;
+      if (range[0] > pos) {
+        fragment.appendChild(document.createTextNode(text.slice(pos, range[0])));
+      }
+      var span = document.createElement("span");
+      span.className = range[2];
+      span.textContent = text.slice(range[0], range[1]);
+      fragment.appendChild(span);
+      pos = range[1];
+    });
+    if (pos < text.length) {
+      fragment.appendChild(document.createTextNode(text.slice(pos)));
+    }
+    node.parentNode.replaceChild(fragment, node);
+  }
+
+  function initCommandBlocks() {
+    var selector = [
+      'div[class*="highlight-bash"] pre',
+      'div[class*="highlight-console"] pre',
+      'div[class*="highlight-shell"] pre',
+      'div[class*="highlight-sh"] pre',
+      'div[class*="highlight-default"] pre',
+      'div[class*="highlight-text"] pre',
+      'div[class*="highlight-powershell"] pre',
+    ].join(", ");
+    document.querySelectorAll(selector).forEach(function (pre) {
+      // Pygments wraps whitespace runs in <span class="w">, splitting the
+      // text into single-word nodes; unwrap them so command runs are
+      // contiguous text the decorators can see.
+      pre.querySelectorAll("span.w").forEach(function (ws) {
+        ws.replaceWith(document.createTextNode(ws.textContent));
+      });
+      pre.normalize();
+      Array.prototype.slice.call(pre.childNodes).forEach(function (node) {
+        if (node.nodeType === Node.TEXT_NODE) decorateTextNode(node);
+      });
+    });
+  }
+
   /* ── Command palette ───────────────────────────────────────────────── */
 
   function navIndex() {
@@ -292,6 +362,7 @@
   ready(function () {
     initBroadcast();
     initNavActive();
+    initCommandBlocks();
     initPalette();
   });
 })();

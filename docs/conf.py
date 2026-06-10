@@ -429,15 +429,18 @@ pygments_style = "friendly"
 pygments_dark_style = "github-dark"
 
 # ── Mermaid diagrams ────────────────────────────────────────────────────────
-# ```mermaid fences render as client-side mermaid.js diagrams. The theme is
-# chosen once at page load from the Furo light/dark state.
-mermaid_init_js = (
-    'const aeatDocsDark = document.body.dataset.theme === "dark" || '
-    '(document.body.dataset.theme !== "light" && '
-    'window.matchMedia("(prefers-color-scheme: dark)").matches);\n'
-    "mermaid.initialize({ startOnLoad: true, theme: aeatDocsDark ? "
-    '"dark" : "neutral", fontFamily: \'"Geist", "Segoe UI", sans-serif\' });'
-)
+# ```mermaid fences render as client-side mermaid.js diagrams. The extension
+# observes the Furo light/dark state and re-renders on toggle; the grayscale
+# "neutral" theme matches the documentation's neutral palette in light mode.
+mermaid_light_theme = "neutral"
+mermaid_dark_theme = "dark"
+# The extension serialises this dict into a JS template literal via
+# JSON.parse, so values must stay free of double quotes — CSS accepts the
+# unquoted multi-word family names.
+mermaid_init_config = {
+    "startOnLoad": False,
+    "fontFamily": "Geist, Segoe UI, system-ui, sans-serif",
+}
 
 # ── Copy buttons ────────────────────────────────────────────────────────────
 copybutton_prompt_text = r">>> |\.\.\. |\$ |PS> "
