@@ -73,18 +73,22 @@ constants, unlike the rental reduction rates in `_tier_resolver.py` which
 already read from the registry with a constant fallback. Routing these two
 through the same pattern closes the gap.
 
-**Disposition (P04) - deferred, blocked on verified corpus.** The registry has
-no parameter for either rate, and the legal catalogue lacks `rd-439-2007:art-14`
-and `ley-19-1994:art-73`. The `registry-calculation-legal-grounding` rule
-requires a new registry parameter to cite a binding provision that resolves to a
-legal-catalogue entry with a `corpus_ref` whose `required_text` the evidence
-gate validates against the real BOE text. Authoring those entries needs the
-verified BOE corpus for both provisions; fabricating legal text is forbidden.
-The leaf constants are already correct and grounded in their docstrings, so the
-current state is sound. P04 is deferred to a focused session that can fetch and
-verify the BOE corpus for RD 439/2007 art. 14.2 and Ley 19/1994 art. 73, then
-author parameter TOMLs, the catalogue entries, the `_resolve_` wrappers, and
-grounding tests.
+**Disposition (P04) - delivered with verified BOE corpus.** The BOE text for
+both provisions was fetched from the BOE Datos Abiertos consolidated-legislation
+API (per-block endpoints `bloque/a14` and `bloque/a75`). RD 439/2007 art. 14 is
+the value-establishing provision for the 3 por ciento amortisation, and Ley
+19/1994 art. 75.1 (not art. 73, which is eligibility only) for the 50 por 100
+REBECA exemption. Amortisation is fully registry-grounded: a full-text corpus
+excerpt, the `rd-439-2007:art-14` catalogue entry, per-ejercicio parameters
+2020-2025, and `_resolve_amortizacion_inmueble_rate` reading the registry with
+the grounded constant as fallback, plus a grounding test. REBECA is
+catalogue-grounded (corpus + `ley-19-1994:art-75` entry); a per-year registry
+resolver was consciously NOT added because the maritime calculation has no
+filing-year context and the 50 por 100 is a durable statutory fraction (the
+leaf `REBECA_MARITIME_EXEMPTION_FRACTION` remains the value, now bound to the
+catalogue). A pre-existing grounding bug was fixed in passing: the REBECA refs
+cited the non-existent `BOE-A-1994-16100`; corrected to `BOE-A-1994-15794`. See
+the verify-pass audit for the full disposition.
 
 **Disposition (P03) - deferred, low value against high churn.** The member
 versus `.value` inconsistency is benign because a `StrEnum` member equals,
