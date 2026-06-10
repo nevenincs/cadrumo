@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
+from .....core import Modelo
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.i18n import tr
@@ -164,7 +165,7 @@ def _observed_casillas_from_submitted_file(
     try:
         resolved = resolve_export_layout(snapshot)
     except RegistryValidationError as exc:
-        if snapshot.modelo.id == "303" and "has no exports" in str(exc):
+        if snapshot.modelo.id == Modelo.M303 and "has no exports" in str(exc):
             return _observed_modelo_303_casillas_from_submitted_file(declaration=declaration, body=body)
         raise
     try:
@@ -175,7 +176,7 @@ def _observed_casillas_from_submitted_file(
             sources=snapshot.sources,
         )
     except RegistryValidationError:
-        if snapshot.modelo.id == "303":
+        if snapshot.modelo.id == Modelo.M303:
             return _observed_modelo_303_casillas_from_submitted_file(declaration=declaration, body=body)
         raise
     _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
@@ -498,7 +499,7 @@ def _with_derived_303_compensation_available_observation(
 ) -> FiledDeclaracionObservation:
     """Add Modelo 303 carry-forward availability derived from filed casillas 87 and 69."""
     target_id = "iva.compensacion-disponible-fin-periodo"
-    if observation.modelo != "303" or any(casilla.casilla_id == target_id for casilla in observation.casillas):
+    if observation.modelo != Modelo.M303 or any(casilla.casilla_id == target_id for casilla in observation.casillas):
         return observation
     values: dict[str, Decimal] = {}
     for casilla in observation.casillas:
