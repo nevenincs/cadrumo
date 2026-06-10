@@ -5,6 +5,7 @@ tags:
   - '#period-revision-resolution'
 date: '2026-06-10'
 related:
+  - '[[2026-06-10-period-revision-resolution-adr]]'
   - '[[2026-06-10-period-revision-resolution-research]]'
 ---
 
@@ -13,6 +14,10 @@ related:
 Auto-generated index of all documents tagged with `#period-revision-resolution`.
 
 ## Documents
+
+### adr
+
+- `2026-06-10-period-revision-resolution-adr` - `period-revision-resolution` adr: `Period to revision resolution engine` | (**status:** `accepted`)
 
 ### research
 

@@ -5,6 +5,7 @@ tags:
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-10'
 related:
+  - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-research]]'
 ---
 
@@ -13,6 +14,10 @@ related:
 Auto-generated index of all documents tagged with `#calculation-aggregation-taxonomy`.
 
 ## Documents
+
+### adr
+
+- `2026-06-10-calculation-aggregation-taxonomy-adr` - `calculation-aggregation-taxonomy` adr: `Canonical aggregation mechanism per calculation type` | (**status:** `accepted`)
 
 ### research
 
