@@ -4,14 +4,18 @@
 :class:`PurchaseInvoiceEvidence` pydantic record. Audit events are emitted
 to a :class:`BucketEventHistoryRepository` on every mutating verb.
 
-File-type scope is restricted to PDF and image inputs handled by the OCR
-path. Plaintext, email body, and Drive-URL evidence sources are out of
-scope. ``add`` refuses non-PDF/non-image
-source paths with a typed :class:`PurchaseInvoiceEvidenceInputError`.
+File-type scope is restricted to PDF and image inputs. Plaintext, email
+body, and Drive-URL evidence sources are out of scope. ``add`` refuses
+non-PDF/non-image source paths with a typed
+:class:`PurchaseInvoiceEvidenceInputError`.
 
-Persistence is bucket-scoped encrypted secure-object storage. Source
-files remain operator-selected inputs; the durable evidence catalogue is
-not a bucket-local plaintext JSONL side store.
+Persistence is bucket-scoped encrypted secure-object storage. At ``add``
+time the source file's bytes are copied into the encrypted
+:class:`AttachmentStore` (active bucket) and the resulting content-addressed
+``attachment_id`` is recorded on the evidence record; the bytes thereafter
+live only in secure storage. ``source_path`` is retained as a provenance
+breadcrumb and is never read for bytes
+(``sensitive-financial-data-secure-storage-only``).
 """
 
 from __future__ import annotations
@@ -26,14 +30,15 @@ from typing import override
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...adapters.persistence.storage import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
+from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import PDF_EXTENSION
-from ...core.hashing import sha256_file as _sha256_file
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
+from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -47,7 +52,26 @@ from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
 
+# Concrete MIME types by source extension. The on-host vision reader needs a
+# concrete MIME (image/png vs image/jpeg), which `MediaKind` alone cannot supply.
+_SUFFIX_MIME = {
+    PDF_EXTENSION: "application/pdf",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".tif": "image/tiff",
+    ".tiff": "image/tiff",
+    ".webp": "image/webp",
+    ".heic": "image/heic",
+    ".heif": "image/heif",
+}
+
 _DEFERRED_ADR_REF = "evidence-source-expansion (deferred; only PDF and image inputs are accepted)"
+
+
+def _attachment_kind_for(media_kind: MediaKind) -> AttachmentKind:
+    """Map a purchase-invoice ``MediaKind`` to the attachment manifest kind."""
+    return AttachmentKind.INVOICE_PDF if media_kind is MediaKind.PDF else AttachmentKind.RECEIPT_IMAGE
 
 
 class MediaKind(StrEnum):
@@ -74,6 +98,10 @@ class PurchaseInvoiceEvidence(BaseModel):
     bucket_id: BucketId
     source_path: str = Field(min_length=1)
     source_sha256: str = Field(min_length=64, max_length=64)
+    # In-store byte home: the bytes live encrypted in the AttachmentStore under this
+    # content-addressed id. `source_path` is a provenance breadcrumb only and is never
+    # read for bytes (sensitive-financial-data-secure-storage-only).
+    attachment_id: str | None = Field(default=None, min_length=64, max_length=64)
     media_kind: MediaKind
     supplier: str | None = None
     invoice_number: str | None = None
@@ -302,13 +330,33 @@ class PurchaseInvoiceEvidenceService:
                 suggestion="aeat app ledger evidence list",
             )
         media_kind = _resolve_media_kind(resolved)
-        digest = _sha256_file(resolved)
         now = _utc_now()
+        # Store the bytes in the encrypted AttachmentStore (active bucket) so they live
+        # in secure storage; `source_path` is never the byte source thereafter
+        # (sensitive-financial-data-secure-storage-only).
+        store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, self._settings))
+        digest, bytes_size = store.put_file(resolved)
+        store.write_manifest(
+            Attachment(
+                attachment_id=digest,
+                kind=_attachment_kind_for(media_kind),
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference=str(resolved),
+                sha256=digest,
+                mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
+                bytes_size=bytes_size,
+                captured_at=now,
+                bucket_id=bucket_id,
+                captured_by=actor,
+                source_command="aeat app ledger evidence add",
+            )
+        )
         record = PurchaseInvoiceEvidence(
             evidence_id=uuid.uuid4().hex[:16],
             bucket_id=bucket_id,
             source_path=str(resolved),
             source_sha256=digest,
+            attachment_id=digest,
             media_kind=media_kind,
             supplier=supplier,
             invoice_number=invoice_number,
