@@ -58,7 +58,7 @@ CalculationSourceDiagnosticReason = Literal[
 # while keeping them off the manual_sources allowlist (W02.P06.S10).
 DEFERRED_SOURCE_KINDS: frozenset[str] = frozenset(
     {
-        "withholding",          # M190/M193 per-perceptor rollup — resolver BUILT in S27
+        "withholding",          # M190/M193 per-perceptor detalle — no live source; defer-with-advisory (S27)
         "atribucion_member",    # M184 — Sheets-pull-only, no live resolver yet
         "related_party_operation",  # M232 — Sheets-pull-only
         "foreign_asset",        # M720 — Sheets-pull-only
