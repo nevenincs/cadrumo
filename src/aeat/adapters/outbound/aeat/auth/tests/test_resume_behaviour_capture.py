@@ -44,6 +44,7 @@ from typing import cast
 
 import pytest
 
+from ......core.config import Settings
 from .. import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
@@ -52,7 +53,7 @@ from .. import (
     LoadedCertificate,
     _session_store,
 )
-from .._authenticator_types import _PersistedSessionInvalidError
+from .._authenticator_types import BrowserSessionFactory, _PersistedSessionInvalidError
 from ._authenticator_support import (
     _HandshakeVerifier,
     _load_test_session,
@@ -448,16 +449,17 @@ async def test_capture_failure_drops_context_and_nulls_state(
     assert browser_session.closed is True
 
 
-def _factory_returning(session: object):
+def _factory_returning(session: object) -> BrowserSessionFactory:
     """Return an async browser-session factory yielding ``session``.
 
-    Mirrors the production ``BrowserSessionFactory`` Protocol shape (an
-    async callable taking the resolved :class:`Settings`). Used so the
+    Mirrors the production :class:`BrowserSessionFactory` Protocol shape
+    (an async callable taking the resolved :class:`Settings`). Used so the
     resume flow treats the session as authenticator-owned
     (``owns_session`` True), exercising the owned-teardown branches.
     """
 
-    async def _factory(_settings: object) -> object:
-        return session
+    async def _factory(settings: Settings) -> BrowserSessionLike:
+        del settings
+        return cast(BrowserSessionLike, session)
 
-    return _factory
+    return cast(BrowserSessionFactory, _factory)
