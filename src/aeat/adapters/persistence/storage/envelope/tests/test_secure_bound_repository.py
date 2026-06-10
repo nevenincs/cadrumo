@@ -14,7 +14,7 @@ subsequent steps.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, override
 
 import pytest
 from pydantic import BaseModel, ConfigDict
@@ -51,6 +51,7 @@ class _DummyRepository(SecureBoundRepository[_DummyPayload]):
     schema_version: ClassVar[int] = 1
     payload_type: ClassVar[type[BaseModel]] = _DummyPayload
 
+    @override
     def extract_identifier(self, payload: _DummyPayload) -> str:
         return payload.id
 

@@ -1,7 +1,7 @@
 """Unit tests for BrowserSession factory."""
 
 from pathlib import Path
-from typing import ClassVar, cast
+from typing import ClassVar, cast, override
 
 import pytest
 from playwright.async_api import BrowserContext, Page, Playwright
@@ -27,6 +27,7 @@ class _RecordingEvasion(EvasionStrategy):
     def __init__(self) -> None:
         self.called = False
 
+    @override
     async def apply(self, context: BrowserContext) -> None:
         """Record the call."""
         self.called = True
@@ -102,6 +103,7 @@ class RecordingPlaywright:
 class FailingLaunchChromium(RecordingChromium):
     """Chromium adapter that fails before a browser exists."""
 
+    @override
     async def launch(self, **kwargs) -> RecordingBrowser:
         """Raise from the launch boundary."""
         del kwargs
@@ -119,6 +121,7 @@ class FailingLaunchPlaywright(RecordingPlaywright):
 class FailingNewContextBrowser(RecordingBrowser):
     """Browser whose ``new_context`` path fails after launch."""
 
+    @override
     async def new_context(self, **kwargs) -> RecordingContext:
         del kwargs
         raise RuntimeError("boom from new_context")
@@ -127,6 +130,7 @@ class FailingNewContextBrowser(RecordingBrowser):
 class FailingNewContextChromium(RecordingChromium):
     """Chromium double that returns a failing browser."""
 
+    @override
     async def launch(self, **kwargs) -> RecordingBrowser:
         del kwargs
         self.launch_calls += 1
@@ -154,6 +158,7 @@ class FailingClosePlaywright(RecordingPlaywright):
 class FailingEvasion(EvasionStrategy):
     """Evasion strategy that fails after context creation."""
 
+    @override
     async def apply(self, context: BrowserContext) -> None:
         """Raise from the evasion boundary."""
         del context

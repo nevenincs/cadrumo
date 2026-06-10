@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 from functools import cache
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -374,16 +375,19 @@ class _FileWriteVisitor(ast.NodeVisitor):
         self.function_stack: list[str] = []
         self.calls: list[tuple[str, str, str]] = []
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self.function_stack.append(node.name)
         self.generic_visit(node)
         self.function_stack.pop()
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self.function_stack.append(node.name)
         self.generic_visit(node)
         self.function_stack.pop()
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         dotted = _dotted_call_name(node)
         name = _call_name(node)
