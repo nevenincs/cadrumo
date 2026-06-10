@@ -22,6 +22,7 @@ import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Never
 
 from pydantic import ValidationError
 
@@ -45,7 +46,7 @@ _EVENTS_FILENAME = "events.jsonl"
 _RUN_ID_PATTERN = re.compile(r"^[0-9a-f]{16}$")
 
 
-def _raise_persistence_error(operation: str, target: Path, exc: OSError) -> None:
+def _raise_persistence_error(operation: str, target: Path, exc: OSError) -> Never:
     """Raise a registered observability persistence error from ``exc``."""
     raise RunTracePersistenceError(operation=operation, path=target) from exc
 

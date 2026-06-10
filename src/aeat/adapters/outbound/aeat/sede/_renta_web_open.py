@@ -46,7 +46,7 @@ from .....domain.calculations.registry import (
     parse_renta_web_open_live_payload,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ..browser import BrowserError, BrowserSession, default_browser_session_factory
+from ..browser import BrowserError, BrowserSession, DefaultBrowserSession, default_browser_session_factory
 from ._adapter_utils import registry_failure_message
 from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE, default_viewport
 from ._browser_stage import build_playwright_stage_runner
@@ -191,7 +191,7 @@ async def collect_renta_web_open_observation(
 
 
 async def _open_renta_web_open_session(
-    browser_session: BrowserSession, *, live_payload: RentaWebOpenLivePayload
+    browser_session: BrowserSession | DefaultBrowserSession, *, live_payload: RentaWebOpenLivePayload
 ) -> tuple[Page, BrowserContext]:
     """Create a Playwright context, install safety nets, and navigate to the open simulator app.
 
