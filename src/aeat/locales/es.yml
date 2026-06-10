@@ -1555,6 +1555,7 @@ cli:
         errors:
           bad_declared_on: --declared-on debe ser una fecha ISO (AAAA-MM-DD); recibido
             {value}.
+          declaration_not_found: 'Ninguna declaración M036 coincide con {value!r}. Ejecuta ''aeat app modelo m036 list'' para ver las declaraciones registradas.'
         group_help: Registra una declaración M036 presentada en sede (alta / modificacion
           / baja). La aplicación local nunca presenta; AEAT es la autoridad.
         justificante_help: Identificador opcional del acuse de recibo emitido por
@@ -1562,6 +1563,10 @@ cli:
         modificacion_help: Registra una declaración M036 de modificación (actualización
           censal) presentada en sede.
         note_help: Nota opcional del operador (hasta 512 caracteres).
+        list_help: 'Lista las declaraciones M036 registradas en el perfil activo.'
+        view_help: 'Muestra una declaración M036 registrada por su id (o un prefijo inequívoco).'
+        declaration_id_help: 'El id de la declaración (o un prefijo inequívoco) que se desea mostrar.'
+        list_empty: 'Aún no hay declaraciones M036 registradas.'
       project:
         binding_help: Valor de enlace con la sintaxis KEY=VALUE (repetible).
         casilla_help: Valor de casilla con la sintaxis CASILLA=DECIMAL (repetible).

@@ -7,12 +7,23 @@ from typing import Annotated
 
 import typer
 
-from ...application.modelo import M036DeclarationCommand, record_m036_declaration
+from ...application.modelo import (
+    M036DeclarationCommand,
+    M036DeclarationResult,
+    list_m036_declarations,
+    read_m036_declaration,
+    record_m036_declaration,
+)
 from ...core.i18n import tr
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import CensoModeloEventKind
 from ._common import _emit_envelope
-from ._modelo_payloads import M036DeclarationRecordResult
+from ._modelo_payloads import (
+    M036DeclarationListResult,
+    M036DeclarationRecordResult,
+    M036DeclarationRowPayload,
+    M036DeclarationShowResult,
+)
 
 
 def register_m036_commands(
@@ -188,6 +199,124 @@ def register_m036_commands(
             sede_justificante=sede_justificante,
             note=note,
         )
+
+    @m036_app.command(
+        "list",
+        help=tr(
+            "cli.app.modelo.m036.list_help",
+            default="List the M036 declarations recorded in the active profile.",
+        ),
+    )
+    def m036_list(ctx: typer.Context) -> None:
+        """List the active profile's recorded M036 declarations."""
+        require_active_profile()
+        bucket_id = active_bucket_id()
+        declarations = list_m036_declarations(bucket_id=bucket_id)
+        result = M036DeclarationListResult(
+            bucket_id=bucket_id,
+            declaration_count=len(declarations),
+            declarations=[_declaration_row(declaration) for declaration in declarations],
+        )
+        lines = [
+            "operation\tmodelo.m036.list",
+            f"bucket_id\t{bucket_id}",
+            f"declaration_count\t{len(declarations)}",
+        ]
+        if declarations:
+            lines.append("declaration_id\tevent_kind\tdeclared_on\trecorded_at\tjustificante_present")
+            lines.extend(
+                "\t".join(
+                    (
+                        declaration.declaration_id,
+                        declaration.event_kind.value,
+                        declaration.declared_on.isoformat(),
+                        declaration.recorded_at.isoformat(),
+                        "yes" if declaration.sede_justificante is not None else "no",
+                    )
+                )
+                for declaration in declarations
+            )
+        else:
+            lines.append(
+                tr(
+                    "cli.app.modelo.m036.list_empty",
+                    default="No M036 declarations recorded yet.",
+                )
+            )
+        _emit_envelope(ctx, command="modelo.m036.list", result=result, lines=lines)
+
+    @m036_app.command(
+        "view",
+        help=tr(
+            "cli.app.modelo.m036.view_help",
+            default="View one recorded M036 declaration by id (or unambiguous prefix).",
+        ),
+    )
+    def m036_view(
+        ctx: typer.Context,
+        declaration_id: Annotated[
+            str,
+            typer.Argument(
+                help=tr(
+                    "cli.app.modelo.m036.declaration_id_help",
+                    default="The declaration id (or an unambiguous prefix of it) to view.",
+                ),
+            ),
+        ],
+    ) -> None:
+        """View one recorded M036 declaration in full."""
+        require_active_profile()
+        bucket_id = active_bucket_id()
+        try:
+            declaration = read_m036_declaration(declaration_id, bucket_id=bucket_id)
+        except KeyError as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.m036.errors.declaration_not_found",
+                    value=declaration_id,
+                    default=(
+                        f"No M036 declaration matches {declaration_id!r}. "
+                        "Run 'aeat app modelo m036 list' to see recorded declarations."
+                    ),
+                )
+            ) from exc
+
+        result = M036DeclarationShowResult(
+            declaration_id=declaration.declaration_id,
+            bucket_id=declaration.bucket_id,
+            profile_id=declaration.profile_id,
+            event_kind=declaration.event_kind.value,
+            declared_on=declaration.declared_on.isoformat(),
+            sede_justificante=declaration.sede_justificante,
+            note=declaration.note,
+            recorded_at=declaration.recorded_at.isoformat(),
+        )
+        lines = [
+            "operation\tmodelo.m036.view",
+            f"declaration_id\t{declaration.declaration_id}",
+            f"event_kind\t{declaration.event_kind.value}",
+            f"declared_on\t{declaration.declared_on.isoformat()}",
+            f"recorded_at\t{declaration.recorded_at.isoformat()}",
+        ]
+        if declaration.sede_justificante is not None:
+            lines.append(f"sede_justificante\t{declaration.sede_justificante}")
+        if declaration.note is not None:
+            lines.append(f"note\t{declaration.note}")
+        _emit_envelope(ctx, command="modelo.m036.view", result=result, lines=lines)
+
+
+def _declaration_row(declaration: M036DeclarationResult) -> M036DeclarationRowPayload:
+    """Project a persisted declaration into its JSON-serialisable row payload."""
+    return M036DeclarationRowPayload(
+        declaration_id=declaration.declaration_id,
+        bucket_id=declaration.bucket_id,
+        profile_id=declaration.profile_id,
+        event_kind=declaration.event_kind.value,
+        declared_on=declaration.declared_on.isoformat(),
+        sede_justificante=declaration.sede_justificante,
+        note=declaration.note,
+        recorded_at=declaration.recorded_at.isoformat(),
+    )
 
 
 __all__ = ["register_m036_commands"]

@@ -1528,6 +1528,7 @@ cli:
         errors:
           bad_declared_on: --declared-on ha de ser una data ISO (AAAA-MM-DD); rebut
             {value}.
+          declaration_not_found: 'Cap declaració M036 coincideix amb {value!r}. Executa ''aeat app modelo m036 list'' per veure les declaracions registrades.'
         group_help: Registra una declaració M036 presentada a seu (alta / modificacion
           / baja). L'aplicació local mai presenta; AEAT és l'autoritat.
         justificante_help: Identificador opcional de l'acús de recepció emès per seu
@@ -1535,6 +1536,10 @@ cli:
         modificacion_help: Registra una declaració M036 de modificació (actualització
           censal) presentada a seu.
         note_help: Nota opcional de l'operador (fins a 512 caràcters).
+        list_help: 'Llista les declaracions M036 registrades al perfil actiu.'
+        view_help: 'Mostra una declaració M036 registrada pel seu id (o un prefix inequívoc).'
+        declaration_id_help: 'L''id de la declaració (o un prefix inequívoc) que es vol mostrar.'
+        list_empty: 'Encara no hi ha declaracions M036 registrades.'
       project:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casilla amb la sintaxi CASILLA=DECIMAL (repetible).

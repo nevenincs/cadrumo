@@ -1196,7 +1196,10 @@ __all__ = [
     "IvaWalletBalanceResult",
     "IvaWalletSeedResult",
     "LedgerIssuePayload",
+    "M036DeclarationListResult",
     "M036DeclarationRecordResult",
+    "M036DeclarationRowPayload",
+    "M036DeclarationShowResult",
     "M100ProjectionPayload",
     "M130AccumulatedPayload",
     "ModeloAggregateResult",
@@ -1266,4 +1269,54 @@ class M036DeclarationRecordResult(OutputSchema):
     event_kind: str
     declared_on: str
     sede_justificante: str | None = None
+    note: str | None = None
+    recorded_at: str
+
+
+class M036DeclarationRowPayload(OutputSchema):
+    """One recorded M036 declaration row surfaced by ``m036 list`` / ``m036 view``.
+
+    Projects the persisted ``aeat.application.modelo.M036DeclarationResult``
+    into a JSON-serialisable row, preserving every field (the content-address
+    ``declaration_id``, the canonical ``event_kind``, the ``declared_on`` and
+    ``recorded_at`` dates, and the optional ``sede_justificante`` / ``note``).
+    """
+
+    declaration_id: str
+    bucket_id: BucketId
+    profile_id: str
+    event_kind: str
+    declared_on: str
+    sede_justificante: str | None = None
+    note: str | None = None
+    recorded_at: str
+
+
+@register_schema("modelo.m036.list")
+class M036DeclarationListResult(OutputSchema):
+    """Listing returned by ``aeat app modelo m036 list``.
+
+    Enumerates the active bucket's recorded M036 declarations. An empty
+    ``declarations`` list is the clean "no declarations recorded yet" signal,
+    not an error.
+    """
+
+    operation: str = "modelo.m036.list"
+    bucket_id: BucketId
+    declaration_count: int
+    declarations: list[M036DeclarationRowPayload]
+
+
+@register_schema("modelo.m036.view")
+class M036DeclarationShowResult(OutputSchema):
+    """Detail returned by ``aeat app modelo m036 view``."""
+
+    operation: str = "modelo.m036.view"
+    declaration_id: str
+    bucket_id: BucketId
+    profile_id: str
+    event_kind: str
+    declared_on: str
+    sede_justificante: str | None = None
+    note: str | None = None
     recorded_at: str

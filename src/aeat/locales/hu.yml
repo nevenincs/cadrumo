@@ -1479,6 +1479,7 @@ cli:
         errors:
           bad_declared_on: --declared-on ISO dátum kell legyen (ÉÉÉÉ-HH-NN); kapott
             {value}.
+          declaration_not_found: 'Egyetlen M036 nyilatkozat sem egyezik ezzel: {value!r}. Futtassa az ''aeat app modelo m036 list'' parancsot a rögzített nyilatkozatok megtekintéséhez.'
         group_help: M036 nyilatkozat rögzítése, amelyet az operátor a sede portálon
           nyújtott be (alta / modificacion / baja). A helyi alkalmazás soha nem nyújt
           be; az AEAT a hatóság.
@@ -1487,6 +1488,10 @@ cli:
         modificacion_help: Rögzítse az M036 modificacion nyilatkozatot (adónyilvántartási
           frissítés), amelyet a sede portálon nyújtottak be.
         note_help: Opcionális operátori megjegyzés (legfeljebb 512 karakter).
+        list_help: 'Az aktív profilban rögzített M036 nyilatkozatok listázása.'
+        view_help: 'Egy rögzített M036 nyilatkozat megtekintése azonosító (vagy egyértelmű előtag) alapján.'
+        declaration_id_help: 'A megtekintendő nyilatkozat azonosítója (vagy annak egyértelmű előtagja).'
+        list_empty: 'Még nincs rögzített M036 nyilatkozat.'
       project:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
         casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető).

@@ -1441,6 +1441,7 @@ cli:
         declared_on_help: ISO date (YYYY-MM-DD) the operator filed the M036 at sede.
         errors:
           bad_declared_on: --declared-on must be an ISO date (YYYY-MM-DD); got {value}.
+          declaration_not_found: 'No M036 declaration matches {value!r}. Run ''aeat app modelo m036 list'' to see recorded declarations.'
         group_help: Record an M036 declaration filed at sede (alta / modificacion
           / baja). The local app never files; AEAT is the authority.
         justificante_help: Optional AEAT acuse de recibo identifier emitted by sede
@@ -1448,6 +1449,10 @@ cli:
         modificacion_help: Record an M036 modificacion declaration (census update)
           filed at sede.
         note_help: Optional operator note (up to 512 chars).
+        list_help: 'List the M036 declarations recorded in the active profile.'
+        view_help: 'View one recorded M036 declaration by id (or unambiguous prefix).'
+        declaration_id_help: 'The declaration id (or an unambiguous prefix of it) to view.'
+        list_empty: 'No M036 declarations recorded yet.'
       project:
         binding_help: Additional M100 binding override as KEY=VALUE. Repeat for multiple.
           Retenciones bindings default to zero when not supplied.
