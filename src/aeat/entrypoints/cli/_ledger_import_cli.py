@@ -16,7 +16,7 @@ from ...application.ledger import (
 )
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
-from ._common import _bad, _canonical_period, _emit_envelope, _state, _tx_repo
+from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 
 
 def _known_import_providers() -> tuple[str, ...]:
@@ -62,6 +62,11 @@ def register_import_commands(app: typer.Typer) -> None:
         source: Path | None = typer.Option(None, "--source", help=tr("cli.ledger.import.source_help")),
         verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.import.verbose_help")),
         period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.import.period_help")),
+        year: int | None = typer.Option(
+            None,
+            "--year",
+            help=tr("cli.ledger.import.year_help", default="Filing year for --period (e.g. 2024)."),
+        ),
     ) -> None:
         """Import a financial-statement file via the existing provider registry."""
         normalised_provider = _validate_import_provider(provider)
@@ -85,7 +90,7 @@ def register_import_commands(app: typer.Typer) -> None:
         from ...domain.currency import CurrencyNormalizationService
 
         currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
-        canonical_period = _canonical_period(period) if period else None
+        canonical_period = _optional_canonical_period(period, year=year)
         import_paths = _resolve_import_paths(path)
         file_results = [
             import_ledger_source(

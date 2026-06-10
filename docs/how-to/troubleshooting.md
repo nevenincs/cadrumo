@@ -42,13 +42,13 @@ Switch by unlocking the right profile with `aeat config unlock <profile-name>` -
 The refusal looks like this:
 
 ```text
-ledger preflight blocks modelo calculation: ... Run `aeat app ledger preflight --period <PERIOD>` before calculating
+ledger preflight blocks modelo calculation: ... Run `aeat app ledger preflight --year <YEAR> --period <TOKEN>` before calculating
 ```
 
-The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - the ledger preflight takes a calendar period such as `2026Q1`, `2026-03`, or `2026`:
+The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - the ledger preflight takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) with `--year`:
 
 ```bash
-aeat app ledger preflight --period 2026Q1
+aeat app ledger preflight --year 2026 --period 1T
 aeat app ledger status
 ```
 
@@ -73,31 +73,30 @@ Replace the modelo, year, and period with your own. The full workflow for supply
 
 ## The period token is rejected
 
-Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. [Filing periods](filing-periods.md) explains which form uses which period.
+Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. Every command takes the year separately with `--year`. [Filing periods](filing-periods.md) explains which form uses which period.
 
-Modelo commands take the year separately with `--year`, so a bare token works there:
+Modelo and ledger commands share the same shape - the AEAT token with `--year`:
+
+```bash
+aeat app ledger preflight --year 2026 --period 1T
+aeat app ledger status --year 2026 --period 0A
+aeat app ledger preflight --year 2026 --period 03
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+```
+
+The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and `overview status`. A bare token with no `--year` is refused with the year fix:
+
+```text
+Period token '1T' needs a year on this command. Add --year (e.g. --period 1T --year 2024).
+```
+
+A modelo token that is not valid for the form lists the accepted tokens:
 
 ```text
 --period '<token>' is not a valid period token for modelo <modelo>. ... Valid tokens: ...
 ```
 
-The error lists the valid tokens for your modelo.
-
-Ledger commands (`ledger preflight`, `ledger status`, `ledger export`, `ledger import`, `overview status`) take no `--year`, so qualify the token with its year:
-
-```bash
-aeat app ledger preflight --period 2026-1T
-aeat app ledger status --period 2026-0A
-aeat app ledger preflight --period 2026-03
-```
-
-A bare token on a ledger command is refused with the year fix:
-
-```text
-Period '1T' needs a year on this command. Use the year-qualified AEAT token 1T like 2026-1T, or the calendar shape (2026Q1, 2026-03, 2026).
-```
-
-The calendar shapes `2026Q1`, `2026-03`, and `2026` are also accepted on ledger commands and mean the same period - use whichever you prefer.
+Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; use the AEAT token with `--year`.
 
 ## An export refuses because no verified calculation exists
 

@@ -16,7 +16,7 @@ from ...application.ledger import (
 from ...application.review import LedgerReviewFilterSpec
 from ...core.i18n import tr
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol
-from ._common import _canonical_period
+from ._common import _filter_canonical_period
 
 
 @dataclass(frozen=True)
@@ -115,7 +115,7 @@ def _filter_results_by_review_spec(
     matching = query_ledger_review_rows(
         LedgerReviewQuery(
             bucket_id=bucket_id,
-            period=_canonical_period(spec.period) if spec.period else None,
+            period=_filter_canonical_period(spec.period) if spec.period else None,
             status=spec.status.value if spec.status is not None else None,
             issue=spec.issue.value if spec.issue is not None else None,
             import_id=spec.import_id,

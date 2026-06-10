@@ -38,7 +38,7 @@ from ...domain.categories import (
     SpendingCategoryFamily,
 )
 from ...domain.transactions import Transaction, TransactionCatalogueRepository
-from ._common import _bad, _canonical_period, _emit_envelope, _state, _tx_repo
+from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 from ._ledger_list import parse_ledger_list_filter_spec, project_ledger_list
 from ._ledger_review_cli import register_ledger_review_command
 
@@ -264,18 +264,22 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             help=tr(
                 "cli.ledger.preflight.period_help",
                 default=(
-                    "Filing period. Use the canonical AEAT tokens with their year: "
-                    "2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 "
-                    "(months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted."
+                    "Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), "
+                    "01-12 (months). Combine with --year to choose the year."
                 ),
             ),
+        ),
+        year: int = typer.Option(
+            ...,
+            "--year",
+            help=tr("cli.ledger.preflight.year_help", default="Filing year (e.g. 2024)."),
         ),
     ) -> None:
         """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
         from ...application.ledger import preflight_ledger_tax_readiness
 
         transaction_repository = _tx_repo(_state())
-        canonical = _canonical_period(period)
+        canonical = _canonical_period(period, year=year)
         report = preflight_ledger_tax_readiness(
             bucket_id=transaction_repository.bucket_id,
             period=canonical,
@@ -367,11 +371,15 @@ def _register_ledger_export_command(app: typer.Typer) -> None:
             help=tr(
                 "cli.ledger.export.period_help",
                 default=(
-                    "Restrict the export to one filing period. Use the canonical AEAT "
-                    "tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), "
-                    "2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026 are also accepted."
+                    "Restrict the export to one filing period, as an AEAT token: "
+                    "1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year."
                 ),
             ),
+        ),
+        year: int | None = typer.Option(
+            None,
+            "--year",
+            help=tr("cli.ledger.export.year_help", default="Filing year for --period (e.g. 2024)."),
         ),
         actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
     ) -> None:
@@ -383,7 +391,7 @@ def _register_ledger_export_command(app: typer.Typer) -> None:
                 export_format=export_kind,
                 include_inactive=include_inactive,
                 output_path=output,
-                period=_canonical_period(period) if period else None,
+                period=_optional_canonical_period(period, year=year),
                 actor=actor or resolve_active_bucket_id() or "operator",
                 source_command="aeat app ledger export",
             ),
@@ -509,12 +517,17 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
     def ledger_status(
         ctx: typer.Context,
         period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.status.period_help")),
+        year: int | None = typer.Option(
+            None,
+            "--year",
+            help=tr("cli.ledger.status.year_help", default="Filing year for --period (e.g. 2024)."),
+        ),
     ) -> None:
         """Summarize active-bucket ledger state through the backend status service."""
         transaction_repository = _tx_repo(_state())
         report = summarize_manual_transactions(
             bucket_id=transaction_repository.bucket_id,
-            period=_canonical_period(period) if period else None,
+            period=_optional_canonical_period(period, year=year),
             transaction_repository=transaction_repository,
         )
         transactions = transaction_repository.load()

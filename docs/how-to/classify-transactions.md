@@ -137,13 +137,13 @@ Recommended workflow:
 1. Select rows with `ledger list`:
 
    ```bash
-   aeat app ledger list --filter period=2026Q1 --filter classification=NOT_YET_PROCESSED
+   aeat app ledger list --filter period=2026-1T --filter classification=NOT_YET_PROCESSED
    ```
 
 2. Export the period as a review snapshot:
 
    ```bash
-   aeat app ledger export --output ./ledger-2026-q1.csv --period 2026Q1
+   aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
    ```
 
 3. Prepare a narrow CSV containing only the rows you mean to change:
@@ -158,8 +158,8 @@ Recommended workflow:
 
    ```bash
    aeat app ledger classify --from-csv ./classifications.csv
-   aeat app ledger list --filter period=2026Q1
-   aeat app ledger preflight --period 2026Q1
+   aeat app ledger list --filter period=2026-1T
+   aeat app ledger preflight --year 2026 --period 1T
    ```
 
 Keep a copy of the file — it gives you a record of how you classified that
@@ -196,8 +196,8 @@ provider, preview, apply, and override flow.
 Run preflight after classification:
 
 ```bash
-aeat app ledger preflight --period 2026Q1
-aeat app ledger status --period 2026Q1
+aeat app ledger preflight --year 2026 --period 1T
+aeat app ledger status --year 2026 --period 1T
 ```
 
 Preflight names rows that still need category, taxable base, IVA amount, IVA

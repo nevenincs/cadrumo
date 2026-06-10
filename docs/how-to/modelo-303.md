@@ -91,15 +91,16 @@ you need. Reference-number workflows are covered in
 
 The period you pass to the work unit controls the ledger window used by
 calculation. Calculation selects ledger rows for the requested modelo, year,
-and period through registry bindings and period conversion. For example,
-`--year 2026 --period 1T` maps to the ledger aggregation period `2026Q1`;
-monthly period `01` maps to `2026-01`.
+and period through registry bindings and period conversion. The ledger and
+modelo surfaces share one grammar: pass the AEAT token with `--year`. For
+example, `--year 2026 --period 1T` is the first quarter; monthly token `01`
+with `--year 2026` is January.
 
 Check that period before calculating:
 
 ```bash
-aeat app ledger preflight --period 2026Q1
-aeat app ledger status --period 2026Q1
+aeat app ledger preflight --year 2026 --period 1T
+aeat app ledger status --year 2026 --period 1T
 ```
 
 The row window uses the transaction operation date: `raw.value_date` when
@@ -142,7 +143,7 @@ before adding values:
 
 ```bash
 aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
-aeat app modelo casillas 303 --period 2026Q1 --required
+aeat app modelo casillas 303 --period 1T --required
 ```
 
 Only provide `--binding`, `--casilla`, `--relation`, or Modelo 303-specific
