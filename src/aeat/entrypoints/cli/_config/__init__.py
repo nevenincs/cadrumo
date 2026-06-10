@@ -6,8 +6,11 @@ through :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
+from typing import cast
+
 import click
 import typer
+import typer._click.types as typer_click_types
 
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
 from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
@@ -46,6 +49,14 @@ from ._repair_profile import (
 from ._repair_profile import register_repair_profile_command
 
 _log = _get_logger(__name__)
+
+# CAST-RATIONALE-CONFIG-RESET-SCOPE-CHOICE: typer vendors its own copy of click, so
+# click.Choice is a click.types.ParamType while typer.Option's click_type expects
+# typer._click.types.ParamType. They are the same object at runtime (the vendored
+# click), so the cast only bridges the static type duality — no Any escape.
+_CONFIG_RESET_SCOPE_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType, click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES)
+)
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
 _wizard_edit_command = _build_wizard_command(_get_setup_flow(), mode="edit")
@@ -1119,7 +1130,7 @@ def config_reset(
     scope: str = typer.Option(
         "all",
         "--scope",
-        click_type=click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
+        click_type=_CONFIG_RESET_SCOPE_CHOICE,
         help=tr("cli.config.reset.scope_help"),
     ),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
