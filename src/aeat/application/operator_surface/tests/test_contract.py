@@ -6,6 +6,7 @@ import importlib
 import inspect
 from collections.abc import Iterator
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 from pydantic import ValidationError
@@ -36,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture(autouse=True)
-def _pin_english_locale() -> Iterator[None]:
+def _pin_english_locale() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction] - autouse fixture
     """Pin the operator-surface contract tests to the English locale.
 
     The contract surface (help paragraphs, error messages, retired-surface
@@ -53,8 +54,8 @@ def _pin_english_locale() -> Iterator[None]:
     call rebuilds against the reloaded constants.
     """
     with override_settings(aeat_output_language="en"):
-        contract_module = importlib.import_module("aeat.application.operator_surface._contract")
-        package_module = importlib.import_module("aeat.application.operator_surface")
+        contract_module: ModuleType = importlib.import_module("aeat.application.operator_surface._contract")
+        package_module: ModuleType = importlib.import_module("aeat.application.operator_surface")
         original_retired = contract_module.RETIRED_OPERATOR_SURFACES
         # Rebuild the retired-surface tuple under the active (English)
         # locale by re-running the module-level tr() calls. The
@@ -65,14 +66,20 @@ def _pin_english_locale() -> Iterator[None]:
         # Re-bind the package-level re-export and any symbols the test
         # module imported eagerly so they point at the freshly-reloaded
         # contract module.
-        package_module.RETIRED_OPERATOR_SURFACES = rebuilt
-        package_module.get_operator_surface_contract = contract_module.get_operator_surface_contract
-        package_module.require_accepted_root = contract_module.require_accepted_root
-        package_module.retired_surface_suggestion = contract_module.retired_surface_suggestion
+        package_module.RETIRED_OPERATOR_SURFACES = rebuilt  # pyright: ignore[reportAttributeAccessIssue]
+        package_module.get_operator_surface_contract = (  # pyright: ignore[reportAttributeAccessIssue]
+            contract_module.get_operator_surface_contract
+        )
+        package_module.require_accepted_root = (  # pyright: ignore[reportAttributeAccessIssue]
+            contract_module.require_accepted_root
+        )
+        package_module.retired_surface_suggestion = (  # pyright: ignore[reportAttributeAccessIssue]
+            contract_module.retired_surface_suggestion
+        )
         try:
             yield
         finally:
-            contract_module.RETIRED_OPERATOR_SURFACES = original_retired
+            contract_module.RETIRED_OPERATOR_SURFACES = original_retired  # pyright: ignore[reportAttributeAccessIssue]
             contract_module.get_operator_surface_contract.cache_clear()
 
 
@@ -186,9 +193,9 @@ def test_contract_models_are_strict_and_immutable() -> None:
 def test_operator_surface_application_package_has_no_typer_dependency() -> None:
     module_sources = [
         inspect.getsource(operator_surface),
-        inspect.getsource(operator_surface._contract),
-        inspect.getsource(operator_surface._help),
-        inspect.getsource(operator_surface._models),
+        inspect.getsource(operator_surface._contract),  # pyright: ignore[reportPrivateUsage] - boundary test
+        inspect.getsource(operator_surface._help),  # pyright: ignore[reportPrivateUsage] - boundary test
+        inspect.getsource(operator_surface._models),  # pyright: ignore[reportPrivateUsage] - boundary test
     ]
     joined = "\n".join(module_sources)
 
@@ -319,7 +326,7 @@ def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
     # outside of the FilingStatus import/usage lines.  We inspect the source and
     # verify every occurrence of the token '"filed"' is the FilingStatus import or
     # usage, not a stand-alone bare literal in a tuple or keyword argument.
-    contract_source = inspect.getsource(operator_surface._contract)
+    contract_source = inspect.getsource(operator_surface._contract)  # pyright: ignore[reportPrivateUsage] - boundary test
     # All occurrences of the raw token must be attributable to FilingStatus references.
     bare_literal_count = contract_source.count('"filed"')
     # Each FilingStatus reference in the source accounts for one use of the token
