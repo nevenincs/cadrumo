@@ -16,10 +16,10 @@ as ``aeat --version``.
 from __future__ import annotations
 
 import re as _re
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import date as _date
 from decimal import Decimal
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -40,6 +40,7 @@ from ...core.output_rendering import render_command_output
 if TYPE_CHECKING:
     from ...application.auth import AuthProviderListing
     from ...application.workflow import WorkflowState
+    from ...core.json_contract import Notice
     from ...domain.calculations.registry import ModeloRevision
     from ...domain.contribuyente import ProfileKey
     from ...domain.deadlines import TaxpayerProfile
@@ -74,13 +75,15 @@ def _emit_envelope(
     command: str,
     result: object,
     lines: Iterable[str],
+    notices: Sequence[Notice] | None = None,
 ) -> None:
     """Render a typed result through :class:`SchemaEnvelope` for JSON or as text lines.
 
     JSON mode goes through :func:`emit_json_success` so the payload is
-    wrapped in ``{"schema_version": ..., "command": ..., "result": ...,
-    "warnings": ...}``; text mode keeps the existing line iterator
-    unchanged so terminal output is unaffected.
+    wrapped in the shared spine ``{"schema_version": ..., "command": ...,
+    "status": ..., "result": ..., "notices": ...}``; ``status`` is derived
+    from the supplied notice severities. Text mode keeps the existing line
+    iterator unchanged so terminal output is unaffected.
 
     Args:
         ctx: Typer context (used to discover the requested output format).
@@ -92,12 +95,17 @@ def _emit_envelope(
             conformance gate enforces this at test time.
         lines: Iterable of pre-formatted text lines (used unchanged
             for text mode).
+        notices: Optional typed non-blocking diagnostics (warnings,
+            advisories, next-step hints) surfaced on the envelope's
+            ``notices`` channel. The text-mode rendering is unchanged;
+            callers fold the same notices into ``lines`` themselves so
+            JSON and text cannot drift.
     """
     from ...core.json_contract import emit_json_success
 
     format_name = _format_of(ctx)
     if format_name == _FORMAT_JSON:
-        emit_json_success(command, result)
+        emit_json_success(command, result, notices=notices)
         return
     # Route non-JSON paths through render_command_output so unsupported
     # ``--format`` values (e.g. ``xml``) raise the same refusal contract
@@ -127,10 +135,6 @@ def _no_active_profile_refusal() -> Exception:
     return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
 
 
-def _exit(code: int) -> NoReturn:
-    raise typer.Exit(code=code)
-
-
 def _state() -> WorkflowState:
     from ...application.workflow import workflow_state_repository
     from ...core import resolve_active_bucket_id
@@ -143,23 +147,6 @@ def _state() -> WorkflowState:
     if resolve_active_bucket_id() is None:
         raise _no_active_profile_refusal()
     return workflow_state_repository().load()
-
-
-def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
-    """Return (state, active_profile_name) or exit code 2 with a typed payload."""
-    from ...core import resolve_active_bucket_id
-
-    active = resolve_active_bucket_id()
-    if active is None:
-        _error_value = tr("cli.common.errors.no_active_profile_error_value")
-        _next_value = tr("cli.common.next.create_profile_command")
-        _emit(
-            ctx,
-            {"error": _error_value, "next": _next_value},
-            [f"error\t{_error_value}", f"next\t{_next_value}"],
-        )
-        _exit(2)
-    return _state(), active
 
 
 def _description_for(entry: AuthProviderListing | ProfileKey) -> str:

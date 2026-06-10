@@ -870,25 +870,37 @@ def _run_wizard_persistence_path(
 
 
 def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
-    """Emit the success payload in JSON or tabular CLI form."""
+    """Emit the success payload in JSON or tabular CLI form.
+
+    The post-create / post-edit next-step hint rides on the envelope
+    ``notices`` channel (an ``info``-severity :class:`Notice` whose
+    ``suggestion`` is the follow-on command) rather than as a bespoke
+    ``next`` payload field, so next-step guidance is uniform with every
+    other command's notices.
+    """
     import typer as _typer
 
     from ...core.click_context import json_output_requested
-    from ...core.json_contract import emit_json_success
+    from ...core.json_contract import Notice, NoticeSeverity, emit_json_success
     from ...core.output_rendering import render_command_output
 
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
+    next_command = "aeat app modelo work create"
+    next_notice = Notice(
+        severity=NoticeSeverity.INFO,
+        code=f"config.profile.{'create' if mode == 'create' else 'edit'}.next_step",
+        message=tr("application.wizard.output_labels.next"),
+        suggestion=next_command,
+    )
     payload: dict[str, object] = {
         "profile_name": profile_name,
         "status": verb,
-        "next": "aeat app modelo work create",
-        "next_label": tr("application.wizard.output_labels.next"),
     }
     if mode == "create":
         payload["active_profile"] = profile_name
     if json_output_requested():
         command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-        emit_json_success(command_path, payload)
+        emit_json_success(command_path, payload, notices=[next_notice])
         return
 
     lines = [
@@ -897,7 +909,7 @@ def _emit_wizard_success(mode: WizardPersistMode, profile_name: str) -> None:
     ]
     if mode == "create":
         lines.append(f"active_profile\t{profile_name}")
-    lines.append(f"next\t{payload['next']}")
+    lines.append(f"next\t{next_command}")
     rendered = render_command_output(format_name="text", payload=payload, lines=lines)
     _typer.echo(rendered.text)
 

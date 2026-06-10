@@ -15,10 +15,11 @@ def test_unwrap_returns_result_mapping_when_envelope_present() -> None:
     """SchemaEnvelope payloads yield the inner ``result`` mapping."""
     payload = json.dumps(
         {
-            "schema_version": 1,
+            "schema_version": "2",
             "command": "test.cmd",
+            "status": "success",
             "result": {"key": "value", "count": 3},
-            "warnings": [],
+            "notices": [],
         }
     )
     assert unwrap_schema_envelope(payload) == {"key": "value", "count": 3}

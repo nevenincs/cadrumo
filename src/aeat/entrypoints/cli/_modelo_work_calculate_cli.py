@@ -22,11 +22,13 @@ from ...application.modelo import (
 )
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistryValidationError
 from ._common import _emit_envelope
 from ._modelo_cli_support import OutputLanguageOpt
-from ._modelo_payloads import SourceAdvisoryPayload, WorkCalculateResult
+from ._modelo_payloads import WorkCalculateResult
 from ._modelo_rendering import (
+    advisory_notice,
     calculation_revision_lines,
     calculation_revision_payload,
     work_unit_plazo_lines,
@@ -379,11 +381,11 @@ def _run_work_calculate(
     unit_for_modality = calculation_result.work_unit
     saved_confirmation = _work_calculate_saved_confirmation(calculation_revision, unit_for_modality)
     modality_payload, modality_lines = _work_calculate_modality_output(calculation_result)
-    authorization_payload, authorization_lines = _work_calculate_authorization_output(
+    authorization_payload, authorization_notices, authorization_lines = _work_calculate_authorization_output(
         calculation_result,
         work_unit=unit_for_modality,
     )
-    source_advisory_payload, source_advisory_lines = _work_calculate_source_advisory_output(calculation_result)
+    source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(calculation_result)
     result = WorkCalculateResult.model_validate(
         {
             "saved": True,
@@ -391,7 +393,6 @@ def _run_work_calculate(
             **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
             **modality_payload,
             **authorization_payload,
-            **source_advisory_payload,
         }
     )
     lines = [
@@ -403,7 +404,13 @@ def _run_work_calculate(
         *source_advisory_lines,
         saved_confirmation,
     ]
-    _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
+    _emit_envelope(
+        ctx,
+        command="modelo.work.calculate",
+        result=result,
+        lines=lines,
+        notices=[*authorization_notices, *source_advisory_notices],
+    )
 
 
 def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit: WorkUnit) -> str:
@@ -443,10 +450,17 @@ def _work_calculate_authorization_output(
     calculation_result: ModeloWorkCalculationServiceResult,
     *,
     work_unit: WorkUnit,
-) -> tuple[dict[str, object], list[str]]:
+) -> tuple[dict[str, object], list[Notice], list[str]]:
+    """Project the unauthorized-backend advisory onto a notice + payload state + lines.
+
+    ``authorization_state`` remains structured result data (the backend's
+    authorization lifecycle state); the advisory prose moves onto the
+    uniform notices channel so it is no longer a bespoke
+    ``authorization_advisory`` payload field. The text lines are unchanged.
+    """
     advisory = calculation_result.authorization_advisory
     if advisory is None:
-        return {}, []
+        return {}, [], []
     advisory_text = tr(
         "cli.app.modelo.work.calculate_unauthorized_advisory",
         modelo=str(work_unit.modelo),
@@ -458,49 +472,58 @@ def _work_calculate_authorization_output(
         ),
     )
     return (
-        {
-            "authorization_advisory": advisory_text,
-            "authorization_state": advisory.state,
-        },
+        {"authorization_state": advisory.state},
+        [
+            advisory_notice(
+                "modelo.work.calculate.unauthorized_backend",
+                advisory_text,
+                context={"authorization_state": str(advisory.state)},
+            )
+        ],
         [f"authorization_state\t{advisory.state}", advisory_text],
     )
 
 
 def _work_calculate_source_advisory_output(
     calculation_result: ModeloWorkCalculationServiceResult,
-) -> tuple[dict[str, object], list[str]]:
-    """Project NON-blocking source diagnostics into the calculate payload + human lines.
+) -> tuple[list[Notice], list[str]]:
+    """Project NON-blocking source diagnostics into notices + human lines.
 
     Each diagnostic the source mesh raised while resolving the bucket ledger
     (notably the unconsumed-declarable-IVA advisory) becomes one
-    :class:`SourceAdvisoryPayload` in the JSON ``source_advisories`` list and
-    one human-facing ADVISORY line. The calculation succeeded; these advisories
-    keep an unrouted declarable observation from being silently under-declared
-    (no-silent-under-declaration). The diagnostic ``message`` already carries
-    the observation's category / rate / flow provenance, so no legal_ref or
-    context is fabricated here.
+    warning-severity :class:`Notice` on the envelope ``notices`` channel and
+    one human-facing ADVISORY line. The structured provenance (``reason`` /
+    ``source_kind`` / ``resolver_id``) rides on the notice ``context`` so no
+    machine-queryable field is lost relative to the former bespoke
+    ``source_advisories`` payload list. The calculation succeeded; these
+    advisories keep an unrouted declarable observation from being silently
+    under-declared (no-silent-under-declaration). The diagnostic ``message``
+    already carries the observation's category / rate / flow provenance.
     """
     diagnostics = calculation_result.source_diagnostics
     if not diagnostics:
-        return {}, []
-    advisories = tuple(
-        SourceAdvisoryPayload(
-            reason=str(diagnostic.reason),
-            source_kind=diagnostic.source_kind,
-            message=diagnostic.message,
-            resolver_id=diagnostic.resolver_id,
+        return [], []
+    notices = [
+        advisory_notice(
+            "modelo.work.calculate.source_advisory",
+            diagnostic.message,
+            context={
+                "reason": str(diagnostic.reason),
+                "source_kind": diagnostic.source_kind,
+                **({"resolver_id": diagnostic.resolver_id} if diagnostic.resolver_id else {}),
+            },
         )
         for diagnostic in diagnostics
-    )
+    ]
     lines = [
         tr(
             "cli.app.modelo.work.calculate_source_advisory",
-            message=advisory.message,
+            message=diagnostic.message,
             default="ADVISORY: %{message}",
         )
-        for advisory in advisories
+        for diagnostic in diagnostics
     ]
-    return ({"source_advisories": advisories}, lines)
+    return (notices, lines)
 
 
 __all__ = ["register_work_calculate_commands"]

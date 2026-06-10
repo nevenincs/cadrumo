@@ -1,10 +1,10 @@
 """Shared test helper: unwrap the CLI ``--json`` SchemaEnvelope.
 
 Envelope-aware CLI commands emit a typed payload shaped as
-``{"schema_version": int, "command": str, "result": {...},
-"warnings": [...]}`` through ``_emit_envelope``. Test assertions
-generally target the inner ``result`` mapping; commands that return a
-plain payload directly are passed through unchanged.
+``{"schema_version": str, "command": str, "status": str,
+"result": {...}, "notices": [...]}`` through ``_emit_envelope``. Test
+assertions generally target the inner ``result`` mapping; commands that
+return a plain payload directly are passed through unchanged.
 
 This module is the single source of the helper that multiple test
 modules previously duplicated inline under the name ``_payload``
@@ -39,3 +39,16 @@ def unwrap_schema_envelope(output: str) -> dict[str, Any]:
     if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
         return raw["result"]
     return raw
+
+
+def unwrap_envelope_notices(output: str) -> list[dict[str, Any]]:
+    """Return the outer envelope ``notices`` list from a CLI ``--json`` document.
+
+    Notices (warnings, advisories, next-step hints) ride on the envelope
+    spine alongside ``result``, not inside it. Returns an empty list when
+    the payload is not an envelope or carries no notices.
+    """
+    raw = json.loads(output)
+    if isinstance(raw, dict) and isinstance(raw.get("notices"), list):
+        return raw["notices"]
+    return []

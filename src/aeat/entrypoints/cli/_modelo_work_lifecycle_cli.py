@@ -28,6 +28,7 @@ from ...application.modelo import (
 from ...core import Modelo
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
 from ._common import _emit_envelope
@@ -38,7 +39,7 @@ from ._modelo_payloads import (
     WorkRenameResult,
     WorkStatusResult,
 )
-from ._modelo_rendering import work_unit_lines, work_unit_list_lines, work_unit_payload
+from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
 
 _FILING_YEAR_MIN = 2000
 _FILING_YEAR_MAX = 2099
@@ -300,8 +301,9 @@ def _emit_work_create_result(
         *work_unit_lines(unit),
         status_message,
     ]
-    lines.extend(_modelo_100_obligation_advisory_lines(unit))
-    _emit_envelope(ctx, command="modelo.work.create", result=result, lines=lines)
+    obligation_notices, obligation_lines = _modelo_100_obligation_advisory_output(unit)
+    lines.extend(obligation_lines)
+    _emit_envelope(ctx, command="modelo.work.create", result=result, lines=lines, notices=obligation_notices)
 
 
 def _reused_work_status_message(*, name: str | None, name_applied: str | None) -> tuple[str, str]:
@@ -340,19 +342,28 @@ def _reused_work_status_message(*, name: str | None, name_applied: str | None) -
     )
 
 
-def _modelo_100_obligation_advisory_lines(unit) -> list[str]:
+def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str]]:
+    """Project M100 filing-obligation advisories onto notices and text lines.
+
+    The advisory rides on the envelope ``notices`` channel (warning
+    severity) so JSON consumers receive the same filing-obligation
+    guidance the text surface already showed; the text lines are
+    rebuilt from the same advisory messages so the two cannot drift.
+    """
     if unit.modelo != Modelo.M100:
-        return []
+        return [], []
     from ...application.overview import build_filing_obligation_advisories
     from ...application.user_profile import ProfileRepository, record_to_values
     from ...core import resolve_active_bucket_id
 
     bucket = resolve_active_bucket_id()
     if bucket is None:
-        return []
+        return [], []
     record = ProfileRepository().load(bucket)
     raw = record_to_values(record.record) if record is not None else None
-    return [tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw)]
+    messages = [tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw)]
+    notices = [advisory_notice("modelo.work.create.filing_obligation", message) for message in messages]
+    return notices, messages
 
 
 def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
