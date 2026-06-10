@@ -2486,6 +2486,9 @@ cli:
       reaffirm_help: Egy már besorolt tranzakció besorolásának megerősítése.
       reaffirmed: Besorolás megerősítve.
       taxable_base_help: Adóköteles alapösszeg.
+      saturate_help: 'Telites LLM-mel: az IVA-kategoria kivalasztasa, valamint a kulcs, az alap es az IVA-osszeg szarmaztatasa.'
+      saturate_requires_llm: 'A --saturate kapcsolo csak a --llm uttal hasznalhato; adja meg a --llm opciot egy szolgaltatoval.'
+      saturate_non_derivable: 'A kulcs nem szarmaztathato'
     doclink:
       actor_help: Operátor címke.
       help: Gmail/Drive/URL dokumentumhivatkozás rögzítése egy főkönyvi soron (sosem
@@ -2611,6 +2614,7 @@ cli:
       warning: Figyelmeztetés
       warnings: Figyelmeztetések
       'yes': Igen
+      iva_category: 'IVA-kategoria'
     link:
       actor_help: A bucket esemenyekhez rogzitett operatori cimke.
       errors:

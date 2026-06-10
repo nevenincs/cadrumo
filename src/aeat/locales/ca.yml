@@ -2524,6 +2524,9 @@ cli:
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.
       reaffirmed: Classificació reafirmada.
       taxable_base_help: Import de base imposable
+      saturate_help: 'Satura amb IA: selecciona tambe la categoria d''IVA i deriva el tipus, la base i la quota.'
+      saturate_non_derivable: 'Tipus no derivable'
+      saturate_requires_llm: 'L''opcio --saturate nomes s''aplica amb --llm; indiqueu --llm amb un proveidor.'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Registra un enllaç a un document de Gmail/Drive/URL en una fila del llibre
@@ -2650,6 +2653,7 @@ cli:
       warning: Avís
       warnings: Avisos
       'yes': Sí
+      iva_category: 'Categoria d''IVA'
     link:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:
