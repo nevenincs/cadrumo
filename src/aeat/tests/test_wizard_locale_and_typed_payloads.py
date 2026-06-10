@@ -232,8 +232,8 @@ def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
     assert len(rows) == 1
     row = rows[0]
     # TypedDict at runtime is just a dict — verify field access works
-    assert row["kind"] == "received"
-    assert row["currency"] == "EUR"
+    assert row.get("kind") == "received"
+    assert row.get("currency") == "EUR"
 
 
 def test_parse_invoice_payload_end_to_end_json() -> None:

@@ -92,7 +92,8 @@ def test_profile_is_frozen_dataclass() -> None:
 
     profile = resolve_profile("claude")
     with pytest.raises(FrozenInstanceError, match=r"model_id"):
-        profile.model_id = "changed"
+        # Negative test: verify frozen constraint raises FrozenInstanceError
+        profile.model_id = "changed"  # type: ignore
 
 
 def test_every_profile_has_a_non_empty_alias() -> None:

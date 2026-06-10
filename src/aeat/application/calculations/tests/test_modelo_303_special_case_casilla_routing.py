@@ -153,6 +153,8 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -
 
 def _recargo_purchase() -> Transaction:
     """A recargo-equivalencia retailer purchase: input IVA + RE surcharge, non-deductible."""
+    from ....domain.transactions._models import derive_transaction_id
+
     raw = RawTransaction(
         transaction_id="recargo-purchase-001",
         booked_date=date(2025, 2, 1),
@@ -172,6 +174,7 @@ def _recargo_purchase() -> Transaction:
         raw_fields={"source_kind": "ledger_transaction"},
     )
     return Transaction(
+        transaction_id=derive_transaction_id(raw),
         raw=raw,
         direction=TransactionDirection.OUTGOING,
         business_classification=BusinessClassification.BUSINESS,
