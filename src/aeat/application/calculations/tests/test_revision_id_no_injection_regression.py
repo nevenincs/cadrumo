@@ -27,8 +27,10 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 # ---------------------------------------------------------------------------
-# Named exemptions (ADR call-site sweep, 2026-06-10)
+# Named exemptions confirmed by the registry call-site review
 # ---------------------------------------------------------------------------
 # Paths relative to the ``aeat`` package root (``src/aeat/``).  The path
 # separator is ``/`` regardless of host OS so the set comparison is portable.
@@ -50,8 +52,6 @@ _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
         "domain/calculations/registry/_scenarios.py",
     }
 )
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _aeat_src_root() -> Path:
