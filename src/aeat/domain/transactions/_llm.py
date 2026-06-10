@@ -228,7 +228,7 @@ PIPELINE_ONLY_CLASSIFICATIONS: frozenset[BusinessClassification] = frozenset(
         BusinessClassification.NOT_YET_PROCESSED,
         BusinessClassification.SKIPPED_BY_RULE,
         BusinessClassification.FAILED_VALIDATION,
-    }
+    },
 )
 
 
@@ -487,7 +487,7 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction, *, evidence_text:
                 "",
                 "When classification is BUSINESS or MIXED, also pick exactly one SpendingCategory:",
                 category_block,
-            ]
+            ],
         )
         schema_fields.append('"category": "<one SpendingCategory or null>"')
     if spec.iva_categories:
@@ -498,7 +498,7 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction, *, evidence_text:
                 "Also pick exactly one iva_category — the IVA situation that fits this transaction. "
                 "Pick the category only; do NOT compute or output any rate, base, or IVA amount.",
                 iva_block,
-            ]
+            ],
         )
         schema_fields.append('"iva_category": "<one IvaCategory or null>"')
         schema_fields.append('"business_pct": <0.0-1.0 when MIXED, else null>')
@@ -517,7 +517,7 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction, *, evidence_text:
             "Respond ONLY with a single JSON object. No prose before or after. No markdown fences.",
             f"Schema: {schema_line}",
             f"Example response format: {example}",
-        ]
+        ],
     )
     return "\n".join(sections)
 
@@ -590,8 +590,129 @@ def parse_response(
     if not any_candidate_seen:
         raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:400]!r}")
     raise LLMClassifierError(
-        f"no JSON candidate matched schema + spec; tried {len(failures)}: " + "; ".join(failures[:3])
+        f"no JSON candidate matched schema + spec; tried {len(failures)}: " + "; ".join(failures[:3]),
     )
+
+
+def build_split_prompt(
+    transaction: Transaction,
+    *,
+    spec: PromptSpec | None = None,
+    evidence_text: str | None = None,
+) -> str:
+    """Build a prompt asking the model to propose an evidence-driven N-way split.
+
+    The model reads the attached invoice and proposes per-child *proportions* plus
+    selections; it must never emit a euro amount (the application derives the
+    amounts from the parent gross and the tax substrate from the registry).
+    """
+    resolved_spec = spec or default_prompt_spec()
+    raw = transaction.raw
+    effective_date = (raw.value_date or raw.booked_date).isoformat()
+    sections = [
+        "You are dividing one Spanish autonomo bank transaction into the lines of its attached invoice.",
+        "",
+        "Transaction:",
+        f"  Date: {effective_date}",
+        f"  Amount: {raw.amount} {raw.currency}",
+        f"  Counterparty: {raw.counterparty or '(unknown)'}",
+        f"  Description: {raw.description}",
+        "",
+        *(_evidence_section(evidence_text) if evidence_text else []),
+        "Propose how to divide this transaction into TWO OR MORE children, one per distinct line or "
+        "category on the invoice. For each child give a proportion (a fraction of the total; all "
+        "proportions MUST sum to 1.0), a spending category, an iva_category, and a short "
+        "evidence_citation naming the line. Do NOT output any euro amount, rate, base, or IVA figure.",
+    ]
+    if resolved_spec.categories:
+        category_block = _render_choices((choice.value.value, choice.hint) for choice in resolved_spec.categories)
+        sections.extend(["", "Pick each child's spending category from:", category_block])
+    if resolved_spec.iva_categories:
+        iva_block = _render_choices((choice.value.value, choice.hint) for choice in resolved_spec.iva_categories)
+        sections.extend(["", "Pick each child's iva_category from:", iva_block])
+    sections.extend(
+        [
+            "",
+            "Respond ONLY with a single JSON object. No prose before or after. No markdown fences.",
+            'Schema: {"reason": "<one sentence>", "children": [{"proportion": <0..1>, '
+            '"category": "<SpendingCategory or null>", "iva_category": "<IvaCategory or null>", '
+            '"evidence_citation": "<short>"}, ...]}',
+        ]
+    )
+    return "\n".join(sections)
+
+
+def _extract_json_object(text: str) -> str | None:
+    """Return the first balanced top-level JSON object substring, or ``None``.
+
+    Unlike the flat :data:`_JSON_OBJECT_RE`, this walks brace depth (ignoring
+    braces inside strings) so a nested object -- such as a split proposal whose
+    ``children`` is an array of objects -- is captured whole.
+    """
+    start = text.find("{")
+    if start < 0:
+        return None
+    depth = 0
+    in_string = False
+    escaped = False
+    for index in range(start, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : index + 1]
+    return None
+
+
+def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMSplitResponse:
+    """Extract and validate an N-way split proposal from LLM stdout.
+
+    Finds the first balanced JSON object, validates it as
+    :class:`LLMSplitResponse`, and rejects any child whose ``category`` or
+    ``iva_category`` falls outside the spec's allow-list -- the same hallucination
+    guard :func:`parse_response` applies to a flat classification.
+
+    Args:
+        stdout: Raw stdout captured from the LLM CLI.
+        spec: Prompt spec whose allow-lists each child must satisfy.
+
+    Returns:
+        A validated :class:`LLMSplitResponse`.
+
+    Raises:
+        LLMClassifierError: When no JSON object is present, the schema is
+            violated, or a child selection is outside the allow-list.
+    """
+    resolved_spec = spec or default_prompt_spec()
+    allowed_categories = resolved_spec.allowed_categories()
+    allowed_iva_categories = resolved_spec.allowed_iva_categories()
+    payload = _extract_json_object(stdout)
+    if payload is None:
+        raise LLMClassifierError(f"no JSON object in LLM split output: {stdout[:400]!r}")
+    try:
+        response = LLMSplitResponse.model_validate_json(payload)
+    except ValueError as exc:
+        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:200]}") from exc
+    for child in response.children:
+        if child.category is not None and (not allowed_categories or child.category not in allowed_categories):
+            raise LLMClassifierError(f"disallowed split child category {child.category.value!r}")
+        if child.iva_category is not None and (
+            not allowed_iva_categories or child.iva_category not in allowed_iva_categories
+        ):
+            raise LLMClassifierError(f"disallowed split child iva_category {child.iva_category.value!r}")
+    return response
 
 
 # ── subprocess-based classifier ───────────────────────────────────
@@ -690,7 +811,7 @@ class SubprocessLLMClassifier:
                 transaction.transaction_id,
             )
             raise LLMClassifierError(
-                f"{self.name} CLI exited with {completed.returncode}: {(completed.stderr or completed.stdout)[:400]!r}"
+                f"{self.name} CLI exited with {completed.returncode}: {(completed.stderr or completed.stdout)[:400]!r}",
             )
         response = parse_response(completed.stdout, spec=self.spec)
         _logger.debug(
@@ -776,7 +897,7 @@ def build_antigravity_classifier(
         ``prompt_via_argument=True``.
     """
     resolved_model = _resolve_model_id(
-        provider="antigravity", alias=alias, explicit_model=model, minimum_tier=minimum_tier
+        provider="antigravity", alias=alias, explicit_model=model, minimum_tier=minimum_tier,
     )
     command = ("agy", "--prompt") if not resolved_model else ("agy", "--model", resolved_model, "--prompt")
     return SubprocessLLMClassifier(
