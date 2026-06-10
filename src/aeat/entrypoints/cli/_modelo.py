@@ -1088,7 +1088,7 @@ def modelo_history(
     ] = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
-    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...domain.buckets import BucketEvent, BucketEventHistoryRepository, BucketEventType
 
     repo = BucketEventHistoryRepository()
     catalogue = repo.load()
@@ -1104,7 +1104,7 @@ def modelo_history(
         BucketEventType.MODELO_AUDIT_VERIFIED,
         BucketEventType.MODELO_AUDIT_EXPORTED,
     }
-    matches: list = []
+    matches: list[BucketEvent] = []
     for event in catalogue.events.values():
         if event.event_type not in modelo_event_types:
             continue
