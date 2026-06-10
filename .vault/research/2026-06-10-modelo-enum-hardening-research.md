@@ -22,9 +22,22 @@ assumption. All counts are over production code with test files excluded.
 A raw count found 81 `Modelo.M###.value` string uses against 67 bare-member
 `Modelo.M###` uses, with most converted files mixing both. The agents that drove
 much of the sweep defaulted to `.value` even where strict-pydantic and StrEnum
-comparison accept the member directly. Decision: prefer the member in
-comparison, membership, dict-key, and str-field positions; reserve `.value` for
-a genuine plain-str contract.
+comparison accept the member directly.
+
+**Refined convention and resolution (P03.S04).** Closer analysis showed the
+member-vs-`.value` choice is not "drop all `.value`": for a pydantic field
+value, a call argument, a parameter or CLI-option default, or a return that
+feeds a `str` contract, `.value` yields a clean plain `str` whose stored/passed
+type is stable across a JSON round-trip, so `.value` is the correct form there.
+The member is unambiguously better only in comparison, membership, and dict-key
+positions, where `Modelo.M303 == x` reads cleaner and is behaviour-identical.
+Under this convention most existing `.value` uses are already correct and the
+actionable set is small. The clean comparison-position sites were converted
+(`_registry_provider`, `_iva_wallet_gate`, `_verification_actions`,
+`_filed_observation_persistence`); the remaining comparison-position cases live
+in files a peer is converting organically, so they are left to that pass to
+avoid concurrent-edit conflicts in the shared worktree. P03 is closed on the
+convention plus the clean-site conversion rather than an 80-site churn.
 
 ### F2 - Literal-annotation defaults (5 sites)
 

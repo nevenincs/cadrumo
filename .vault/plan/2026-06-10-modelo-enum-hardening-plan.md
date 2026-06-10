@@ -37,7 +37,7 @@ Convert Literal code-string fields to Literal Modelo-member fields
 
 Adopt one convention: enum member where StrEnum suffices, .value only where a plain str is contractually required
 
-- [ ] `P03.S04` - Standardise to the enum member in comparison/membership/dict-key/str-field positions; `reserve .value for genuine plain-str contracts; `src/aeat (files touched in the modelo-enum sweep)`.
+- [x] `P03.S04` - Standardise to the enum member in comparison/membership/dict-key/str-field positions; `reserve .value for genuine plain-str contracts; `src/aeat (files touched in the modelo-enum sweep)`.
 
 ### Phase `P04` - Registry-resolver rollout for rates
 
