@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
 from re import compile
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 from unicodedata import category, normalize
 
 if TYPE_CHECKING:
@@ -29,6 +29,28 @@ from ._errors import SedeFailureMode, SedeParseError
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
+
+
+class _LocateHelper(Protocol):
+    """Callable protocol for the ``_locate`` helper produced by :func:`make_locate_helper`.
+
+    Both ``_groi_check`` and ``_nif_iva_check`` previously defined this Protocol
+    locally; it is canonical here so drivers import one shared definition.
+
+    Parameters are positional-only to match the
+    ``Callable[[Page, tuple[str, ...], str, str, int], Coroutine[Any, Any, Locator]]``
+    return annotation on :func:`make_locate_helper`.
+    """
+
+    def __call__(
+        self,
+        page: Page,
+        selectors: tuple[str, ...],
+        stage: str,
+        description: str,
+        timeout_ms: int,
+        /,
+    ) -> Coroutine[Any, Any, Locator]: ...
 
 
 class _SedeCheckerModel(BaseModel):
@@ -204,6 +226,7 @@ async def first_visible_locator(
 
 
 __all__ = [
+    "_LocateHelper",
     "_SedeCheckerModel",
     "assert_query_browser_action_for",
     "first_visible_locator",
