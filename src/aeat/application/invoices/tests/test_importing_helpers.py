@@ -54,7 +54,7 @@ def test_decode_invoice_payload_decodes_single_json_object() -> None:
     result = _decode_invoice_payload(raw)
 
     assert len(result) == 1
-    assert result[0]["invoice_id"] == "inv-1"
+    assert result[0].get("invoice_id") == "inv-1"
 
 
 def test_decode_invoice_payload_decodes_json_array_of_objects() -> None:
@@ -63,7 +63,7 @@ def test_decode_invoice_payload_decodes_json_array_of_objects() -> None:
     result = _decode_invoice_payload(raw)
 
     assert len(result) == 2
-    assert [item["invoice_id"] for item in result] == ["inv-1", "inv-2"]
+    assert [item.get("invoice_id") for item in result] == ["inv-1", "inv-2"]
 
 
 def test_decode_invoice_payload_handles_leading_whitespace_before_json() -> None:
@@ -75,7 +75,7 @@ def test_decode_invoice_payload_handles_leading_whitespace_before_json() -> None
     result = _decode_invoice_payload(raw)
 
     assert len(result) == 1
-    assert result[0]["invoice_id"] == "inv-1"
+    assert result[0].get("invoice_id") == "inv-1"
 
 
 def test_decode_invoice_payload_rejects_json_with_scalar_top_level() -> None:
@@ -113,8 +113,8 @@ def test_decode_invoice_payload_decodes_csv_when_no_json_anchor() -> None:
     result = _decode_invoice_payload(raw)
 
     assert len(result) == 2
-    assert result[0]["invoice_id"] == "inv-1"
-    assert result[1]["base_total"] == "200"
+    assert result[0].get("invoice_id") == "inv-1"
+    assert result[1].get("base_total") == "200"
 
 
 def test_decode_invoice_payload_csv_returns_empty_tuple_for_header_only() -> None:
