@@ -440,17 +440,22 @@ def resolve_modelo_ledger_binding_values_from_repositories(
 
 
 def aggregation_period_for_modelo(*, filing_year: int, period: str) -> str:
-    """Translate registry/modelo period tokens to aggregation period tokens."""
+    """Translate a canonical ``StandardPeriodCode`` token to an aggregation period token.
+
+    Accepts only the span-shaped canonical AEAT tokens the calc engine and the
+    CLI ledger filter share: quarters (``1T``-``4T`` -> ``YYYYQn``), the annual
+    period (``0A`` -> bare ``YYYY``), and months (``01``-``12`` -> ``YYYY-MM``).
+    The result is the internal calendar string consumed by
+    :meth:`Period.model_validate`, whose :meth:`Period.contains` boundary is the
+    single shared filter authority. Any other token raises
+    :class:`AggregationValidationError`.
+    """
     normalized = period.strip().upper()
     quarter_map = {"1T": "Q1", "2T": "Q2", "3T": "Q3", "4T": "Q4"}
     if normalized in quarter_map:
         return f"{filing_year}{quarter_map[normalized]}"
-    if normalized in {"Q1", "Q2", "Q3", "Q4"}:
-        return f"{filing_year}{normalized}"
-    if normalized in {"0A", "A", "ANUAL", "ANNUAL"}:
+    if normalized == "0A":
         return str(filing_year)
-    if normalized.startswith("M") and len(normalized) == 3 and normalized[1:].isdigit():
-        return f"{filing_year}-{normalized[1:]}"
     if len(normalized) == 2 and normalized.isdigit():
         return f"{filing_year}-{normalized}"
     raise AggregationValidationError(
