@@ -17,7 +17,7 @@ The exported surface comprises :class:`Attachment`, :class:`AttachmentCatalogue`
 
 from __future__ import annotations
 
-from ._enums import AttachmentKind, AttachmentSource
+from ._enums import AttachmentKind, AttachmentSource, DocumentLinkSource
 from ._errors import (
     AttachmentError,
     AttachmentNotFoundError,
@@ -37,4 +37,5 @@ __all__ = [
     "AttachmentSource",
     "AttachmentStoreProtocol",
     "AttachmentValidationError",
+    "DocumentLinkSource",
 ]
