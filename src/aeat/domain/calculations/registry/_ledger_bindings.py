@@ -7,6 +7,8 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
+from ....core import Modelo
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...iva import (
@@ -456,7 +458,7 @@ class RentaExpenseObservationProtocol(Protocol):
     this protocol without any explicit declaration.
 
     Properties are declared read-only so that Literal-typed concrete attributes
-    (e.g. ``modelo: Literal["100"]``) satisfy the protocol under strict
+    (e.g. ``modelo: Literal[Modelo.M100]``) satisfy the protocol under strict
     covariant checking.
     """
 
@@ -478,7 +480,7 @@ class _RentaLedgerExpenseSelector(BaseModel):
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
-    modelo: Literal["100"] = "100"
+    modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"
     target_casilla: str = Field(min_length=4, max_length=4)
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
@@ -563,7 +565,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
-    modelo: Literal["130"] = "130"
+    modelo: Literal[Modelo.M130] = Modelo.M130
     target_casilla: str = Field(min_length=2, max_length=8)
     fact: Literal["gross_income_sum", "taxable_base_sum"] = "gross_income_sum"
 
