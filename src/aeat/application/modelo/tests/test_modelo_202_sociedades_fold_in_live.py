@@ -467,13 +467,13 @@ def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(
 ) -> None:
     """E2E: the three filed M202 instalments fold into M200 casilla DP200014B:00611.
 
-    Reconciles the S19 false-alarm: the M200 <- M202 pagos fold is NOT dead — it
+    Reconciles a prior dead-wiring false-alarm: the M200 <- M202 pagos fold is NOT dead — it
     reaches the *computed* casilla ``DP200014B:00611`` ("cuota diferencial") via
     the formula ``00611 = subtract(DP200014B:00599, relation[
     modelo-200-2024-rel-202-pagos-fraccionados])`` through the enrolled
     ``RelationPrefillSourceResolver`` (source_modelo 202, output 34, periods
     1P/2P/3P, sum). It does NOT flow through the manual ``is_pagos_fraccionados``
-    casillas 00601/00447, which S19 tested by mistake. The three DISTINCT seeded
+    casillas 00601/00447, which an earlier test exercised by mistake. The three DISTINCT seeded
     pagos make the fold unmistakable: the cuota-diferencial subtraction must drop
     by exactly the seeded sum.
     """
