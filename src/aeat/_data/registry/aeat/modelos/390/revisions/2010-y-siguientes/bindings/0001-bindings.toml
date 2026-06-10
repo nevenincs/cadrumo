@@ -67,8 +67,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-prev-303-cuota-devengada-total"
-source = "previous_filing"
-selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.cuota-devengada-total"] }
+source = "relation_prefill"
+selector = { source_modelo = "303", source_output = "iva.cuota-devengada-total" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -79,8 +79,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-prev-303-cuota-deducible-total"
-source = "previous_filing"
-selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.cuota-deducible-total"] }
+source = "relation_prefill"
+selector = { source_modelo = "303", source_output = "iva.cuota-deducible-total" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -91,8 +91,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-prev-303-resultado-regimen-general"
-source = "previous_filing"
-selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.resultado-regimen-general"] }
+source = "relation_prefill"
+selector = { source_modelo = "303", source_output = "iva.resultado-regimen-general" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -103,8 +103,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-prev-303-compensacion-ultimo-periodo"
-source = "previous_filing"
-selector = { source_modelo = "303", filing_year_delta = 0, period = "4T", source_casillas = ["iva.compensacion-generada-periodo"] }
+source = "relation_prefill"
+selector = { source_modelo = "303", source_output = "iva.compensacion-generada-periodo" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
@@ -115,8 +115,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
-source = "previous_filing"
-selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T"], source_casillas = ["iva.compensacion-generada-periodo"] }
+source = "relation_prefill"
+selector = { source_modelo = "303", source_output = "iva.compensacion-generada-periodo" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]

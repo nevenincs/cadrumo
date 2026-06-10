@@ -509,6 +509,7 @@ application:
   calculations:
     iva_compensation:
       errors:
+        correction_missing: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}; a javítás egy meglévő beállítást ír felül, nem hoz létre újat.'
         modelo_303_only: Az IVA-kompenzációs előzmények csak Modelo 303 megfigyeléseket
           fogadnak el.
         modelo_390_only: Az éves áfa-kompenzációs összesítő csak Modelo 390 megfigyeléseket
@@ -815,6 +816,8 @@ application:
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
     iva_wallet:
+      correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}. Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás egy meglévő beállítást ír felül.'
+      correct_sealed_blocked: 'A javítás elutasítva: egy már benyújtott Modelo 303 (%{blocking_filing_year}/%{blocking_period}) felhasználta ezt a beállított kompenzációs alapot. Módosítása egy benyújtott bevallást változtatna meg.'
       seed_negative_amount: A vetőösszeg nem lehet negatív.
       seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
         az aktiv profilhoz a vetoosszeg letrehozasa elott.
@@ -945,7 +948,8 @@ application:
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
-      profile_already_exists: 'A(z) %{profile} profil mar letezik; futtasd aeat config switch NAME az aktivalashoz, vagy aeat config profile delete NAME a torleshez.'
+      profile_already_exists: A(z) %{profile} profil mar letezik; futtasd aeat config
+        switch NAME az aktivalashoz, vagy aeat config profile delete NAME a torleshez.
       profile_bucket_directory_removal_failed: A profil konyvtara nem tavolithato
         el.
       profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
@@ -1456,6 +1460,14 @@ cli:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
           from local Modelo 303 history.
+        correct_amount_help: 'A javított átvihető egyenleg összege EUR-ban (tizedes, pl. 1200.50).'
+        correct_confirm_help: 'Kötelező megerősítő jelző. Tudomásul veszi, hogy ez felülír egy korábban beállított átvihető egyenleget, és a bevallás pontossága az új értéktől függ.'
+        correct_confirm_required: 'Adja meg a --confirm jelzőt a megerősítéshez: ez felülírja a megadott időszakhoz korábban beállított M303 átvihető egyenleget.'
+        correct_filing_year_help: 'A javítandó beállított Modelo 303 időszak bevallási éve.'
+        correct_help: 'A helyi előzményeket megelőző időszakra korábban beállított, hibás Modelo 303 nyitó átvihető egyenleg javítása. Felülírja a meglévő beállított összeget; elutasítja, ha az időszakhoz nincs rekord (előbb seed), és ha egy már benyújtott Modelo 303 felhasználta a beállított alapot (annak módosítása egy benyújtott bevallást változtatna meg). A --reason értéket auditeseménybe rögzíti. Szükséges a --confirm.'
+        correct_period_help: 'A javítandó beállított Modelo 303 rekord időszaka (pl. 4T, 3T).'
+        correct_reason_help: 'A javítás indoka, az auditeseménybe rögzítve.'
+        correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja a nyitó egyenleget; nem lehet üres.'
         group_help: Local IVA compensation wallet balance commands.
         seed_amount_help: Az IVA-kompenzáció kezdő összege decimálisban.
         seed_confirm_help: Erősítse meg a vetőösszeg műveletet.
@@ -1541,6 +1553,10 @@ cli:
           formával. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
         justificante_path_help: Az AEAT justificante PDF-jének elérési útja az egyeztetéshez.
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
+      reconciliation_history:
+        empty: 'Még nincs rögzített egyeztetés.'
+        help: 'Az aktív profilhoz rögzített korábbi egyeztetések listázása. A csak hozzáfűzhető MODELO_RECONCILED bucket-eseménynaplót olvassa; az egyeztetések igény szerint megismételhetők, ezért ez kényelmi visszaolvasás, nem tárolt rekord.'
+        work_unit_id_help: 'Opcionális munkaegység-azonosító az előzmények egyetlen munkaegységre szűkítéséhez.'
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
@@ -1998,7 +2014,8 @@ cli:
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
           befejezéséhez: {detail}'
         network: 'Nem sikerült elérni a Google-t: {detail}'
-        profile_unbound: 'Nincs aktiv profil. Futtasd aeat config switch NAME, vagy add meg a --profile kapcsolot.'
+        profile_unbound: Nincs aktiv profil. Futtasd aeat config switch NAME, vagy
+          add meg a --profile kapcsolot.
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
           Futtassa: `aeat config google login` és fogadjon el minden engedélyt.'
         storage: 'Nem sikerült elérni a Google Drive tárolót: {detail}'
@@ -2119,7 +2136,9 @@ cli:
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'
       create_help: Új aktív profil és konfigurációs bucket inicializálása.
-      delete_active_cleared: 'A torolt profil volt az aktiv; az aktiv profil mutato torolve lett. Futtasd aeat config switch NAME vagy aeat config profile create NAME a folytatashoz.'
+      delete_active_cleared: A torolt profil volt az aktiv; az aktiv profil mutato
+        torolve lett. Futtasd aeat config switch NAME vagy aeat config profile create
+        NAME a folytatashoz.
       delete_help: Profil és lemezen lévő állapot törlése (--yes megerősíti).
       delete_name_help: A törölni kívánt profil neve.
       delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `aeat config
@@ -2149,7 +2168,10 @@ cli:
       import_path_help: A profilcsomag JSON-fájljának elérési útja.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       logout_help: Kijelentkezés az aktív profilból a helyi mutató törlésével.
-      logout_session_warning: 'A kijelentkezes torolte az aktiv profil mutatot. Ebben a terminalban a kovetkezo parancsok NoActiveBucketSessionError hibaval elutasitanak, amig nem futtatod az aeat config switch NAME parancsot, vagy nem nyitsz uj terminalt es valasztasz ujra.'
+      logout_session_warning: A kijelentkezes torolte az aktiv profil mutatot. Ebben
+        a terminalban a kovetkezo parancsok NoActiveBucketSessionError hibaval elutasitanak,
+        amig nem futtatod az aeat config switch NAME parancsot, vagy nem nyitsz uj
+        terminalt es valasztasz ujra.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
@@ -2299,9 +2321,11 @@ cli:
       help: Az aktuális konfigurációs profil készenléti állapotának megjelenítése.
       next_step: 'Következő lépés: `aeat app overview status`'
     switch:
-      help: 'Az aktiv profil valtasa a profil kivalasztasaval es a tarolasi munkamenet megnyitasaval.'
-      name_help: 'A profil neve, amelyre valtani szeretne. Ha nincs megadva, az aktivprofil-mutato az alapertelmezett.'
-    unlock:
+      help: Az aktiv profil valtasa a profil kivalasztasaval es a tarolasi munkamenet
+        megnyitasaval.
+      name_help: A profil neve, amelyre valtani szeretne. Ha nincs megadva, az aktivprofil-mutato
+        az alapertelmezett.
+    unlock: null
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -4120,12 +4144,14 @@ errors:
       bucket-tel.
     refused_storage_bucket_no_active: Nem oldható fel aktív bucket. Válasszon ki egy
       profilt, és próbálja újra.
-    refused_storage_master_key_no_active_session: 'A titkosításhoz aktív munkamenet szükséges. Futtassa: `aeat config switch NAME`, majd próbálja újra.'
+    refused_storage_master_key_no_active_session: 'A titkosításhoz aktív munkamenet
+      szükséges. Futtassa: `aeat config switch NAME`, majd próbálja újra.'
     refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakterből
       kell állnia.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
-    refused_storage_session_expired: 'Az aktiv munkamenet inaktivitas miatt lejart. Aktivald ujra az aeat config switch NAME paranccsal.'
+    refused_storage_session_expired: Az aktiv munkamenet inaktivitas miatt lejart.
+      Aktivald ujra az aeat config switch NAME paranccsal.
     refused_storage_unsecured_mode: A nem biztonságos tároló háttérrendszert az szükséges
       engedélyezés nélkül kérték. Valós adatokhoz nem biztonságos.
     refused_taxation_comparison: A közös-vs-egyéni adózás összehasonlítása nem végezhető
@@ -4187,7 +4213,8 @@ errors:
         bucket kiválasztása előtt érhető el.
       cold_bootstrap_explicit_database_refused: A hidegindítási tároló nem kerülheti
         meg a megadott adatbázis-útvonalat.
-      no_active_session: 'Nincs aktiv bucket-munkamenet. Futtasd aeat config switch NAME a profil feloldasahoz.'
+      no_active_session: Nincs aktiv bucket-munkamenet. Futtasd aeat config switch
+        NAME a profil feloldasahoz.
       no_detail: Nem jelentetett részletes készültségi problémát.
       not_ready: 'A tárolási futtatókörnyezet nem áll készen profil-kötött tároláshoz:
         %{details}'
@@ -4195,8 +4222,10 @@ errors:
       route_not_active_bucket: Az adatbázis-útvonal nincs aktív profil bucket-hez
         csatolva.
       session_changed: Az aktív bucket-munkamenet megváltozott. Oldja fel újra a célprofilt.
-      session_expired: 'Az aktiv bucket-munkamenet lejart. Futtasd aeat config switch NAME a profil ujraaktivalasahoz.'
-      session_sealed: 'Az aktiv bucket-munkamenet le van zarva. Futtasd aeat config switch NAME a profil ujraaktivalasahoz.'
+      session_expired: Az aktiv bucket-munkamenet lejart. Futtasd aeat config switch
+        NAME a profil ujraaktivalasahoz.
+      session_sealed: Az aktiv bucket-munkamenet le van zarva. Futtasd aeat config
+        switch NAME a profil ujraaktivalasahoz.
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos háttérrendszert
         használja. A gyártási profil-kötött tároláshoz fájl- vagy kulcstár-felügyelet
         szükséges.

@@ -2,9 +2,9 @@
 
 The annual IVA resumen (Modelo 390) reconciles the four quarterly Modelo
 303 autoliquidaciones filed during the ejercicio (Orden EHA/3111/2009 art.
-1, RD 1624/1992 art. 71). The registry models this with ``previous_filing``
-bindings whose selector sums a 303 result casilla across the four quarters
-of the same filing year:
+1, RD 1624/1992 art. 71). The registry models this with ``relation_prefill``
+bindings backed by ``cross_model_output`` relations that fold a 303 result
+casilla across the four quarters of the same filing year:
 
 - ``modelo-390-prev-303-cuota-devengada-total`` → casilla
   ``iva.anual.reconciliacion.devengada-303`` (sum of the four 303
@@ -14,29 +14,27 @@ of the same filing year:
 - ``modelo-390-prev-303-resultado-regimen-general`` →
   ``iva.anual.reconciliacion.resultado-303``
 
-Unlike Modelo 303's compensación carry (a ``previous_period`` *relation*
-with ``source_period_offset_from_target = -1``), these are *direct*
-``previous_filing`` bindings carrying ``source_casillas`` and
-``source_periods = ["1T","2T","3T","4T"]``, so they resolve through
-:func:`resolve_bindings_from_local_store` rather than the relation path.
+These bindings resolve through :func:`resolve_relations_from_local_store`
+and :func:`materialize_relation_binding_values` (the relation path), not
+the ``previous_filing`` path.
 
 This module is the multi-year-renta authorization enrollment for Modelo
 390. It drives the REAL backend (real encrypted-SQLite observation store,
 the real registry authority, the real registry calculation engine, the
-real ``previous_filing`` binding resolver — no mocks) across two distinct
-renta years: for each of 2025 and 2026 it computes the four 303 quarters,
-persists them as filed observations, then computes the 390/0A annual and
-asserts the annual reconciliation casillas equal the sum of the four
-quarters. Both annual computations are recorded through the
-:class:`EnrollmentRecorder` and cross-checked against the authorization
-manifest via :func:`assert_enrollment_matches_manifest`.
+real relation resolver — no mocks) across two distinct renta years: for
+each of 2025 and 2026 it computes the four 303 quarters, persists them as
+filed observations, then computes the 390/0A annual and asserts the annual
+reconciliation casillas equal the sum of the four quarters. Both annual
+computations are recorded through the :class:`EnrollmentRecorder` and
+cross-checked against the authorization manifest via
+:func:`assert_enrollment_matches_manifest`.
 
 Grounding (non-tautological): each 303 quarter's totals are produced by
 the engine, never hand-computed; the load-bearing assertion is the
 reconciliation invariant — the 390 annual computed total equals the
-``previous_filing``-summed reconciliation casilla, which is exactly the
-390↔303 consistency the resumen exists to express. The R2 registry-gap
-workaround (``modelo-303-autoconsumo-promotor-base = 0`` and
+relation-resolved reconciliation casilla, which is exactly the 390↔303
+consistency the resumen exists to express. The R2 registry-gap workaround
+(``modelo-303-autoconsumo-promotor-base = 0`` and
 ``modelo-303-profile-state-attribution-ratio = 100``) is applied when
 building the source 303 quarters; 390's own casillas carry no
 profile-source binding.
@@ -57,14 +55,15 @@ from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
+    materialize_relation_binding_values,
     resolve_bound_casilla_inputs,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
-from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
+from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -77,8 +76,9 @@ _RENTA_YEARS = (2025, 2026)
 #: Quarterly periods of a renta year, summed by the 390 previous_filing bindings.
 _QUARTERS = ("1T", "2T", "3T", "4T")
 
-#: 390 annual computed totals and the parallel reconciliation casillas pulled
-#: from the four 303 quarters. The wiring invariant asserts each pair is equal.
+#: 390 annual computed totals and the parallel reconciliation casillas filled
+#: from the four 303 quarters via the relation resolver. The wiring invariant
+#: asserts each pair is equal.
 _RECONCILIATION_PAIRS = (
     ("iva.anual.cuota-devengada-total", "iva.anual.reconciliacion.devengada-303"),
     ("iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"),
@@ -203,19 +203,24 @@ def _calculate_390_annual(
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL 390/0A annual calculation reconciling the year's 303 quarters.
 
-    Resolves the direct ``previous_filing`` bindings (the 303-quarter sums) from
-    the local observation store and the 390 annual ledger_iva_aggregation
-    bindings from the full year's IVA ledger (the union of the four quarters'
-    lines), resolves bound casilla inputs, and evaluates the engine. The annual
-    computed totals (from the ledger) and the reconciliation casillas (from the
-    303 quarter sums) describe the same ejercicio, so they must agree. Returns
-    the result plus its produced-value count (the enrollment evidence).
+    Resolves the ``relation_prefill`` bindings (the 303-quarter sums) from
+    the local observation store via the relation resolver and the 390 annual
+    ledger_iva_aggregation bindings from the full year's IVA ledger (the union
+    of the four quarters' lines), resolves bound casilla inputs, and evaluates
+    the engine. The annual computed totals (from the ledger) and the
+    reconciliation casillas (from the 303 quarter sums via relation resolver)
+    describe the same ejercicio, so they must agree. Returns the result plus
+    its produced-value count (the enrollment evidence).
     """
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="0A")
-    prefill = resolve_bindings_from_local_store(snapshot, repository=repository)
+    relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
+    relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
+    relation_binding_values = materialize_relation_binding_values(
+        snapshot.revision, relation_values_map, period="0A"
+    )
     binding_values = {
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, annual_ledger),
-        **prefill.binding_values,
+        **relation_binding_values,
     }
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
@@ -257,7 +262,7 @@ def test_390_annual_reconciles_to_sum_of_303_quarters(tmp_path: Path) -> None:
     """The 390 annual reconciliation casillas equal the sum of the four 303 quarters.
 
     The load-bearing wiring invariant: for each (computed annual total,
-    previous_filing reconciliation) casilla pair the two are equal, and the
+    relation-resolved reconciliation) casilla pair the two are equal, and the
     devengada reconciliation independently equals the arithmetic sum of the
     four quarters' ``iva.cuota-devengada-total``. Engine-produced quarter
     values; non-tautological.
@@ -283,7 +288,8 @@ def test_390_reconciliation_isolates_renta_years(tmp_path: Path) -> None:
 
     Files distinct quarter sets for two renta years into one store and asserts
     each year's 390 reconciliation reflects only its own quarters — the
-    cross-renta isolation the ``filing_year_delta = 0`` selector guarantees.
+    cross-renta isolation that the relation's ``source_revision_selector``
+    and ``filing_year`` derivation guarantees.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()

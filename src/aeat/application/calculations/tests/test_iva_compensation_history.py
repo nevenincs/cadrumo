@@ -34,8 +34,8 @@ from ....domain.iva_compensation._errors import (
     IvaCompensationYearRangeError,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._binding_prefill import resolve_bindings_from_local_store
 from .._errors import IvaCompensationModeloError
+from .._relation_prefill import resolve_relations_from_local_store
 from .._iva_compensation_history import (
     IvaCompensationHistoryRepository,
     cross_check_iva_compensation_annual_summary,
@@ -316,61 +316,76 @@ def test_modelo_390_cross_check_keeps_expired_prior_year_lots_out_of_annual_fiel
 
 
 def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_path: Path) -> None:
+    """M390←M303 bindings are now ``relation_prefill``; resolve via the relation path.
+
+    The five M390←M303 fold bindings migrated from ``previous_filing`` to
+    ``relation_prefill`` backed by ``cross_model_output`` relations (W04.P10.S16).
+    The compensación bindings (ultimo-periodo + generada-ejercicio-no-97) read
+    ``iva.compensacion-generada-periodo`` from M303 casilla observations — not
+    from the IVA compensation history repository.  This test verifies the
+    relation resolver resolves all five bindings from M303 observations that
+    include the compensación casilla.
+    """
+    # Quarter observations: (period, devengada, deducible, regimen_general, compensacion_generada)
+    # The compensacion-generada-periodo casilla must be present so the
+    # relation resolver can populate the two compensacion fold bindings.
+    quarter_data = [
+        ("1T", Decimal("100.00"), Decimal("40.00"), Decimal("60.00"), Decimal("20.00")),
+        ("2T", Decimal("80.00"), Decimal("30.00"), Decimal("50.00"), Decimal("10.00")),
+        ("3T", Decimal("120.00"), Decimal("50.00"), Decimal("70.00"), Decimal("20.00")),
+        ("4T", Decimal("90.00"), Decimal("60.00"), Decimal("30.00"), Decimal("100.00")),
+    ]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="m390-compensation-history"):
         observation_repo = CalculationObservationRepository()
-        history_repo = IvaCompensationHistoryRepository()
-        for period, resultado, devengada, deducible, regimen_general in (
-            ("1T", Decimal("-50.00"), Decimal("100.00"), Decimal("40.00"), Decimal("60.00")),
-            ("2T", Decimal("0.00"), Decimal("80.00"), Decimal("30.00"), Decimal("50.00")),
-            ("3T", Decimal("0.00"), Decimal("120.00"), Decimal("50.00"), Decimal("70.00")),
-            ("4T", Decimal("-100.00"), Decimal("90.00"), Decimal("60.00"), Decimal("30.00")),
-        ):
+        for period, devengada, deducible, regimen_general, compensacion in quarter_data:
             observation_repo.save_observation(
-                _filed_303_annual_reconciliation_observation(
+                RegistryModeloObservation(
+                    modelo="303",
                     filing_year=2026,
                     period=period,
-                    devengada=devengada,
-                    deducible=deducible,
-                    regimen_general=regimen_general,
+                    observations=(
+                        CasillaObservation(casilla_id="iva.cuota-devengada-total", value=devengada),
+                        CasillaObservation(casilla_id="iva.cuota-deducible-total", value=deducible),
+                        CasillaObservation(casilla_id="iva.resultado-regimen-general", value=regimen_general),
+                        CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=compensacion),
+                    ),
                 ),
                 source_kind="app_filing",
                 captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
             )
-            history_repo.save_period(
-                iva_compensation_state_from_filed_observation(
-                    _filed_303_compensation_observation(
-                        filing_year=2026,
-                        period=period,
-                        resultado=resultado,
-                    )
-                )
-            )
 
         snapshot = resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
-        prefill = resolve_bindings_from_local_store(
+        relation_vals = resolve_relations_from_local_store(
             snapshot,
             repository=observation_repo,
-            iva_history_repository=history_repo,
             captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
         )
 
-    assert prefill.binding_values["modelo-390-prev-303-cuota-devengada-total"] == Decimal("390.00")
-    assert prefill.binding_values["modelo-390-prev-303-cuota-deducible-total"] == Decimal("180.00")
-    assert prefill.binding_values["modelo-390-prev-303-resultado-regimen-general"] == Decimal("210.00")
-    assert prefill.binding_values["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == Decimal("50.00")
-    assert prefill.binding_values["modelo-390-prev-303-compensacion-ultimo-periodo"] == Decimal("100.00")
-    provenance = {item.binding_id: item for item in prefill.prefilled}
-    assert provenance["modelo-390-prev-303-cuota-devengada-total"].source_kind == "app_filing"
-    assert provenance["modelo-390-prev-303-cuota-deducible-total"].source_kind == "app_filing"
-    assert provenance["modelo-390-prev-303-resultado-regimen-general"].source_kind == "app_filing"
-    assert (
-        provenance["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].source_kind
-        == "aeat_sede_iva_compensation_history"
-    )
-    assert (
-        provenance["modelo-390-prev-303-compensacion-ultimo-periodo"].source_kind
-        == "aeat_sede_iva_compensation_history"
-    )
+    from ....domain.calculations.registry import materialize_relation_binding_values
+
+    relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
+    resolved = materialize_relation_binding_values(snapshot.revision, relation_values_map, period="0A")
+
+    # 100+80+120+90 = 390
+    assert resolved["modelo-390-prev-303-cuota-devengada-total"] == Decimal("390.00")
+    # 40+30+50+60 = 180
+    assert resolved["modelo-390-prev-303-cuota-deducible-total"] == Decimal("180.00")
+    # 60+50+70+30 = 210
+    assert resolved["modelo-390-prev-303-resultado-regimen-general"] == Decimal("210.00")
+    # compensacion-generada-no-97: sum of 1T+2T+3T = 20+10+20 = 50
+    assert resolved["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == Decimal("50.00")
+    # compensacion-ultimo-periodo: copy of 4T = 100
+    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == Decimal("100.00")
+    # All five resolved from local_filing provenance (no iva_history fallback needed)
+    resolved_rels = {rv.relation for rv in relation_vals.values if rv.value is not None}
+    assert resolved_rels >= {
+        "modelo-390-rel-303-cuota-devengada-total",
+        "modelo-390-rel-303-cuota-deducible-total",
+        "modelo-390-rel-303-resultado-regimen-general",
+        "modelo-390-rel-303-compensacion-ultimo-periodo",
+        "modelo-390-rel-303-compensacion-generada-ejercicio-no-97",
+    }
+    assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
 
 
 def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path: Path) -> None:

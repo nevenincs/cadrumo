@@ -17,6 +17,7 @@ from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
 from ...domain.manuals import (
     ManualId,
     ManualPart,
+    ManualVerificationIssue,
     ManualVerificationReport,
     RuleKind,
     find_rules,
@@ -756,7 +757,7 @@ def _normative_issue_projection(issue: NormativeVerificationIssue) -> RegistryCo
     )
 
 
-def _manual_issue_projection(issue) -> RegistryCorpusIssueProjection:
+def _manual_issue_projection(issue: ManualVerificationIssue) -> RegistryCorpusIssueProjection:
     return RegistryCorpusIssueProjection(
         level=issue.level,
         code=issue.code,

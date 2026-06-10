@@ -10,15 +10,6 @@ related:
   - '[[2026-06-04-cli-ledger-testimonials-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `cli-ledger-testimonials` `CLI ledger-operator hardening: testimonial findings to fixes` plan
 
@@ -59,6 +50,7 @@ Discoverability and consistency papercuts surfaced by the testimonials.
 Re-run skeptic, foreign, and crossyear personas to close the still-open safety, casilla-routing, and prior-year-carry items.
 
 - [x] `P05.S13` - Re-run skeptic/foreign/crossyear personas post-fix to close still-open: silent-under-declaration on calculated return, M303 special-IVA casilla routing, prior-year previous_filing carry across a filed period; `.vault-scratch/personas`.
+- [x] `P05.S14` - Land independent-review findings for commit 4deddd89f: correct legal attribution in M131 advisory TOML comments (art. 110.1.b vs instructions vs art. 110.4), align C02 label to registry ('Pago fraccionado previo por datos-base'), fix test docstring; `add locale keys for M131 and M200 advisory finding messages (blocked by peer locale WIP); `src/aeat/_data/registry/aeat/modelos/131/revisions/*/verification_expectations/0002-verification_predicates.toml, src/aeat/application/modelo/tests/test_verification_substance.py, src/aeat/locales/*.yml`.
 
 ## Description
 

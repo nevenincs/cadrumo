@@ -33,12 +33,13 @@ from .. import (
     RegistryModeloObservation,
     RegistryValidationError,
     calculate_registry_snapshot,
+    materialize_relation_binding_values,
     resolve_bound_casilla_inputs,
     resolve_ledger_iva_aggregation_binding_values,
-    resolve_previous_filing_binding_values,
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
 )
+from .._relations import resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -123,21 +124,20 @@ def _calculate_390_from_observations_and_303_filings(
 ) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot("390", filing_year=filing_year, period="0A")
     ledger_binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
-    previous_filing_values = resolve_previous_filing_binding_values(
-        snapshot.revision,
-        (
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=filing_year,
-                period=period,
-                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
-            )
-            for period, result in quarterly_results.items()
-        ),
-        filing_year=filing_year,
-        period="0A",
+    m303_observations = tuple(
+        RegistryModeloObservation(
+            modelo="303",
+            filing_year=filing_year,
+            period=period,
+            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        )
+        for period, result in quarterly_results.items()
     )
-    binding_values = {**ledger_binding_values, **previous_filing_values}
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision, m303_observations, filing_year=filing_year, period="0A"
+    )
+    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
+    binding_values = {**ledger_binding_values, **relation_binding_values}
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,

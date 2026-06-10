@@ -32,7 +32,7 @@ def _project_metadata() -> dict[str, object]:
 _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
 _DOCS_BASE_URL = os.environ.get("AEAT_DOCS_BASE_URL", "").rstrip("/")
-_DOCS_FONT_STACK = '"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+_DOCS_FONT_STACK = '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
 _DOCS_HEADING_FONT_STACK = '"Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
 _DOCS_MONO_FONT_STACK = '"Geist Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace'
 _REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))
@@ -58,6 +58,7 @@ extensions = [
     "sphinx_design",
     "sphinxext.opengraph",
     "notfound.extension",
+    "sphinxcontrib.mermaid",
     "myst_parser",
 ]
 if _DOCS_BASE_URL:
@@ -243,82 +244,114 @@ html_favicon = "_static/aeat-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
 html_css_files = ["aeat-docs.css"]
-html_js_files = ["aeat-banner-shader.js"]
+html_js_files = ["aeat-docs.js"]
+# The left sidebar carries the command-palette trigger and the navigation tree;
+# brand and the stock search box move into the sticky site header / palette.
+html_sidebars = {
+    "**": [
+        "sidebar/aeat-search.html",
+        "sidebar/scroll-start.html",
+        "sidebar/navigation.html",
+        "sidebar/scroll-end.html",
+    ],
+}
 html_theme_options = {
     "light_logo": "aeat-mark-light.svg",
     "dark_logo": "aeat-mark-dark.svg",
     "sidebar_hide_name": True,
     "announcement": "aeat-site-broadcast",
     "light_css_variables": {
-        # Vercel Geist-style product docs tokens mapped to Furo semantics.
-        "color-brand-primary": "#000000",
-        "color-brand-content": "#0070f3",
-        "color-brand-visited": "#4b5563",
-        "color-foreground-primary": "#000000",
-        "color-foreground-secondary": "#666666",
-        "color-foreground-muted": "#888888",
-        "color-foreground-border": "#999999",
+        # 2026 design-token pass: zinc neutral scale + Geist blue accent
+        # mapped onto Furo's semantic variables.
+        "color-brand-primary": "#18181b",
+        "color-brand-content": "#0068d6",
+        "color-brand-visited": "#0068d6",
+        "color-foreground-primary": "#18181b",
+        "color-foreground-secondary": "#52525b",
+        "color-foreground-muted": "#71717a",
+        "color-foreground-border": "#d4d4d8",
         "color-background-primary": "#ffffff",
         "color-background-secondary": "#fafafa",
-        "color-background-hover": "#f5f5f5",
-        "color-background-hover--transparent": "#f5f5f500",
-        "color-background-border": "#eaeaea",
-        "color-card-border": "#eaeaea",
+        "color-background-hover": "#f4f4f5",
+        "color-background-hover--transparent": "#f4f4f500",
+        "color-background-border": "#e4e4e7",
+        "color-card-border": "#e4e4e7",
         "color-card-background": "transparent",
         "color-card-marginals-background": "#fafafa",
-        "color-link": "#0070f3",
-        "color-link--hover": "#005bd1",
-        "color-link--visited": "#4b5563",
-        "color-link--visited--hover": "#005bd1",
-        "color-link-underline": "#dcdcdc",
-        "color-link-underline--hover": "#0070f3",
-        "color-link-underline--visited": "#d1d5db",
-        "color-link-underline--visited--hover": "#005bd1",
-        "color-inline-code-background": "#fafafa",
+        "color-link": "#0068d6",
+        "color-link--hover": "#0054ad",
+        "color-link--visited": "#0068d6",
+        "color-link--visited--hover": "#0054ad",
+        "color-link-underline": "transparent",
+        "color-link-underline--hover": "#0068d6",
+        "color-link-underline--visited": "transparent",
+        "color-link-underline--visited--hover": "#0068d6",
+        "color-inline-code-background": "#f4f4f5",
         "color-admonition-background": "#fafafa",
-        "color-admonition-title": "#000000",
-        "color-admonition-title-background": "#fafafa",
-        "color-admonition-title-background--important": "#fafafa",
-        "color-admonition-title--important": "#000000",
-        "color-admonition-title-background--warning": "#fafafa",
-        "color-admonition-title--warning": "#000000",
+        "color-admonition-title": "#18181b",
+        "color-admonition-title-background": "transparent",
+        "color-admonition-title-background--important": "transparent",
+        "color-admonition-title--important": "#18181b",
+        "color-admonition-title-background--warning": "transparent",
+        "color-admonition-title--warning": "#18181b",
+        "color-sidebar-background": "transparent",
+        "color-sidebar-background-border": "transparent",
+        "color-sidebar-link-text": "#52525b",
+        "color-sidebar-link-text--top-level": "#3f3f46",
+        "color-sidebar-item-background--current": "#f4f4f5",
+        "color-sidebar-item-background--hover": "#f4f4f5",
+        "color-toc-background": "transparent",
+        "color-toc-item-text": "#52525b",
+        "color-toc-item-text--hover": "#18181b",
+        "color-toc-item-text--active": "#0068d6",
+        "color-toc-title-text": "#71717a",
         "font-stack": _DOCS_FONT_STACK,
         "font-stack--headings": _DOCS_HEADING_FONT_STACK,
         "font-stack--monospace": _DOCS_MONO_FONT_STACK,
-        "font-size--normal": "105%",
     },
     "dark_css_variables": {
-        "color-brand-primary": "#ffffff",
-        "color-brand-content": "#3291ff",
-        "color-brand-visited": "#a1a1a1",
+        "color-brand-primary": "#fafafa",
+        "color-brand-content": "#52a8ff",
+        "color-brand-visited": "#52a8ff",
         "color-foreground-primary": "#ededed",
-        "color-foreground-secondary": "#a1a1a1",
-        "color-foreground-muted": "#888888",
-        "color-foreground-border": "#777777",
-        "color-background-primary": "#000000",
-        "color-background-secondary": "#111111",
-        "color-background-hover": "#1a1a1a",
-        "color-background-hover--transparent": "#1a1a1a00",
-        "color-background-border": "#333333",
-        "color-card-border": "#333333",
+        "color-foreground-secondary": "#a1a1aa",
+        "color-foreground-muted": "#8f8f98",
+        "color-foreground-border": "#3f3f46",
+        "color-background-primary": "#0a0a0a",
+        "color-background-secondary": "#121214",
+        "color-background-hover": "#1d1d20",
+        "color-background-hover--transparent": "#1d1d2000",
+        "color-background-border": "#26262a",
+        "color-card-border": "#26262a",
         "color-card-background": "transparent",
-        "color-card-marginals-background": "#111111",
-        "color-link": "#3291ff",
-        "color-link--hover": "#52a8ff",
-        "color-link--visited": "#a1a1a1",
-        "color-link--visited--hover": "#52a8ff",
-        "color-link-underline": "#333333",
-        "color-link-underline--hover": "#3291ff",
-        "color-link-underline--visited": "#4a4a4a",
+        "color-card-marginals-background": "#121214",
+        "color-link": "#52a8ff",
+        "color-link--hover": "#7ec0ff",
+        "color-link--visited": "#52a8ff",
+        "color-link--visited--hover": "#7ec0ff",
+        "color-link-underline": "transparent",
+        "color-link-underline--hover": "#52a8ff",
+        "color-link-underline--visited": "transparent",
         "color-link-underline--visited--hover": "#52a8ff",
-        "color-inline-code-background": "#111111",
-        "color-admonition-background": "#111111",
+        "color-inline-code-background": "#1b1b1f",
+        "color-admonition-background": "#121214",
         "color-admonition-title": "#ededed",
-        "color-admonition-title-background": "#111111",
-        "color-admonition-title-background--important": "#111111",
+        "color-admonition-title-background": "transparent",
+        "color-admonition-title-background--important": "transparent",
         "color-admonition-title--important": "#ededed",
-        "color-admonition-title-background--warning": "#111111",
+        "color-admonition-title-background--warning": "transparent",
         "color-admonition-title--warning": "#ededed",
+        "color-sidebar-background": "transparent",
+        "color-sidebar-background-border": "transparent",
+        "color-sidebar-link-text": "#a1a1aa",
+        "color-sidebar-link-text--top-level": "#d4d4d8",
+        "color-sidebar-item-background--current": "#1d1d20",
+        "color-sidebar-item-background--hover": "#1d1d20",
+        "color-toc-background": "transparent",
+        "color-toc-item-text": "#a1a1aa",
+        "color-toc-item-text--hover": "#ededed",
+        "color-toc-item-text--active": "#52a8ff",
+        "color-toc-title-text": "#8f8f98",
     },
     "source_repository": _REPOSITORY_URL,
     "source_branch": "main",
@@ -327,6 +360,14 @@ html_theme_options = {
 }
 
 html_context = {
+    "aeat_repository_url": _REPOSITORY_URL,
+    "aeat_nav": [
+        {"label": "Guides", "doc": "how-to/index"},
+        {"label": "Tutorial", "doc": "tutorials/index"},
+        {"label": "CLI reference", "doc": "cli/index"},
+        {"label": "How it works", "doc": "explanation/index"},
+        {"label": "API", "doc": "api/aeat"},
+    ],
     "aeat_broadcasts": [
         {
             "label": "Pre-alpha",
@@ -377,6 +418,25 @@ ogp_description_length = 180
 ogp_type = "website"
 ogp_image = "_static/aeat-mark-light.svg"
 
+# ── Syntax highlighting ─────────────────────────────────────────────────────
+# Bare code fences are overwhelmingly operator command transcripts; lexing them
+# as ``console`` colours the ``$``/``PS>`` prompts and keeps plain output calm.
+# Explicit ```bash fences keep their bash lexer.
+highlight_language = "console"
+pygments_style = "friendly"
+pygments_dark_style = "github-dark"
+
+# ── Mermaid diagrams ────────────────────────────────────────────────────────
+# ```mermaid fences render as client-side mermaid.js diagrams. The theme is
+# chosen once at page load from the Furo light/dark state.
+mermaid_init_js = (
+    'const aeatDocsDark = document.body.dataset.theme === "dark" || '
+    '(document.body.dataset.theme !== "light" && '
+    'window.matchMedia("(prefers-color-scheme: dark)").matches);\n'
+    "mermaid.initialize({ startOnLoad: true, theme: aeatDocsDark ? "
+    '"dark" : "neutral", fontFamily: \'"Geist", "Segoe UI", sans-serif\' });'
+)
+
 # ── Copy buttons ────────────────────────────────────────────────────────────
 copybutton_prompt_text = r">>> |\.\.\. |\$ |PS> "
 copybutton_prompt_is_regexp = True
@@ -391,6 +451,8 @@ myst_enable_extensions = [
     "tasklist",
 ]
 myst_heading_anchors = 3
+# Route ```mermaid fences to the mermaid directive instead of a literal block.
+myst_fence_as_directive = ["mermaid"]
 
 # ── Nitpicky cross-reference baseline ─────────────────────────────────────────
 # docs-check builds with -n -W. The autodoc_mock_imports above replace heavy

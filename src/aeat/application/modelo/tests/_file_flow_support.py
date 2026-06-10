@@ -30,7 +30,7 @@ from ....domain.calculations.registry import (
 from ....domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ....domain.modelos._filing_record import ExternalEvidenceKind, ModeloRecordStatus
+from ....domain.modelos._filing_record import ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._verification_report import (
@@ -311,10 +311,10 @@ def _seed_clean_cross_period_sources(
 def _target_filing_records(
     records: tuple[object, ...],
     work_unit: WorkUnit,
-) -> tuple[object, ...]:
-    result = []
+) -> tuple[ModeloRecord, ...]:
+    result: list[ModeloRecord] = []
     for record in records:
-        if hasattr(record, "work_unit_id") and record.work_unit_id == work_unit.work_unit_id:  # type: ignore[attr-defined]
+        if isinstance(record, ModeloRecord) and record.work_unit_id == work_unit.work_unit_id:
             result.append(record)
     return tuple(result)
 

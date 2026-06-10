@@ -413,7 +413,10 @@ application:
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
           not resolve to an existing file. Run `aeat config auth configure --provider
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
-        dangling_active_profile: 'Active profile pointer ''%{active_profile}'' does not resolve to a registered profile bucket. Run aeat config profile list to inspect registered profiles, then aeat config switch NAME or aeat config profile create NAME.'
+        dangling_active_profile: Active profile pointer '%{active_profile}' does not
+          resolve to a registered profile bucket. Run aeat config profile list to
+          inspect registered profiles, then aeat config switch NAME or aeat config
+          profile create NAME.
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
@@ -494,6 +497,7 @@ application:
   calculations:
     iva_compensation:
       errors:
+        correction_missing: 'No seeded compensation record exists for %{filing_year}/%{period}; correction overwrites an existing seed, it does not create one.'
         modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
         modelo_390_only: IVA compensation annual summary only accepts Modelo 390 observations.
         seed_conflict: An IVA compensation state already exists for this period; seeding
@@ -795,6 +799,8 @@ application:
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
     iva_wallet:
+      correct_no_record: 'No seeded compensation record exists for %{filing_year}/%{period}. Run ''aeat app modelo iva-wallet seed'' first; correction overwrites an existing seed.'
+      correct_sealed_blocked: 'Correction refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period}) has consumed this seeded compensation basis. Changing it would alter a filed return.'
       seed_negative_amount: The seed amount cannot be negative.
       seed_no_nif: No NIF defined for the seed operation; associate one with the active
         profile before seeding.
@@ -929,7 +935,8 @@ application:
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       no_active_profile_selected: No active profile selected.
-      profile_already_exists: 'Profile ''%{profile}'' already exists; run aeat config switch NAME to activate it or aeat config profile delete NAME first.'
+      profile_already_exists: Profile '%{profile}' already exists; run aeat config
+        switch NAME to activate it or aeat config profile delete NAME first.
       profile_bucket_directory_removal_failed: Profile bucket directory could not
         be removed.
       profile_create_route_mismatch: Profile create route '%{route}' does not match
@@ -1407,6 +1414,14 @@ cli:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
           from local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
+        correct_amount_help: 'Corrected carry-forward balance amount in EUR (decimal, e.g. 1200.50).'
+        correct_confirm_help: 'Required confirmation flag. Acknowledge that this overwrites a previously seeded carry-forward balance and filing accuracy depends on the new value.'
+        correct_confirm_required: 'Pass --confirm to acknowledge: this overwrites the previously seeded M303 carry-forward balance for the specified period.'
+        correct_filing_year_help: 'Filing year of the seeded Modelo 303 period to correct.'
+        correct_help: 'Correct a wrong opening Modelo 303 carry-forward balance previously seeded for a pre-history period. Overwrites the existing seeded amount; refuses when no record exists for the period (seed first) and when an already-filed Modelo 303 has consumed the seeded basis (correcting it would change a filed return). Records --reason into an audit event. Requires --confirm.'
+        correct_period_help: 'Period of the seeded Modelo 303 record to correct (e.g. 4T, 3T).'
+        correct_reason_help: 'Reason for the correction, recorded into the audit event.'
+        correct_reason_required: 'Provide --reason: record why the opening balance is being corrected; it must not be blank.'
         group_help: Local IVA compensation wallet balance commands.
         seed_amount_help: Carry-forward balance amount in EUR (decimal, e.g. 1200.50).
           This is the compensación pendiente de periodos anteriores for the NEXT period
@@ -1498,6 +1513,10 @@ cli:
           with the flag-based form. Local-only; never contacts AEAT.
         justificante_path_help: Path to the AEAT justificante PDF to reconcile against.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
+      reconciliation_history:
+        empty: 'No reconciliations recorded yet.'
+        help: 'List past reconciliations recorded for the active profile. Reads the append-only MODELO_RECONCILED bucket-event history; reconciliations are repeatable on demand, so this is a convenience read-back, not a stored record.'
+        work_unit_id_help: 'Optional work unit id to narrow the history to one work unit.'
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
@@ -1926,7 +1945,7 @@ cli:
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
         network: 'Could not reach Google: {detail}'
-        profile_unbound: 'No active profile. Run aeat config switch NAME or pass --profile.'
+        profile_unbound: No active profile. Run aeat config switch NAME or pass --profile.
         scope_insufficient: The access granted for Google is missing required permissions.
           Run `aeat config google login` and accept every permission.
         storage: 'Could not reach Google Drive storage: {detail}'
@@ -2034,7 +2053,9 @@ cli:
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile and config bucket.
-      delete_active_cleared: 'The deleted profile was the active one; the active-profile pointer has been cleared. Run aeat config switch NAME or aeat config profile create NAME to resume work.'
+      delete_active_cleared: The deleted profile was the active one; the active-profile
+        pointer has been cleared. Run aeat config switch NAME or aeat config profile
+        create NAME to resume work.
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
@@ -2064,7 +2085,9 @@ cli:
       import_path_help: Path to the profile bundle JSON file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Sign out of the active profile by clearing the local pointer
-      logout_session_warning: 'Logout cleared the active-profile pointer. Subsequent verbs in this terminal will refuse with NoActiveBucketSessionError until you run aeat config switch NAME or open a new terminal and re-select.'
+      logout_session_warning: Logout cleared the active-profile pointer. Subsequent
+        verbs in this terminal will refuse with NoActiveBucketSessionError until you
+        run aeat config switch NAME or open a new terminal and re-select.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -2201,9 +2224,9 @@ cli:
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
     switch:
-      help: 'Switch the active profile by selecting it and opening its storage session.'
-      name_help: 'Profile name to switch to. Defaults to the active profile pointer.'
-    unlock:
+      help: Switch the active profile by selecting it and opening its storage session.
+      name_help: Profile name to switch to. Defaults to the active profile pointer.
+    unlock: null
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -3765,7 +3788,8 @@ errors:
       is locked or unreachable. Unlock the keychain and try again.
     locked_storage_bucket_busy: The storage bucket is in use by another process. Wait
       for that process to finish and try again.
-    locked_storage_bucket_session: 'This operation requires an unlocked storage bucket. Run `aeat config switch` and try again.'
+    locked_storage_bucket_session: This operation requires an unlocked storage bucket.
+      Run `aeat config switch` and try again.
     locked_storage_lock_acquisition: The exclusive file lock could not be acquired
       within the timeout. Another process holds it; wait and try again.
     locked_storage_master_key_keychain: The operating-system keychain is locked. Unlock
@@ -3776,7 +3800,9 @@ errors:
       try again.
     auth_profile_identity_mismatch: The active profile identity cannot own the requested
       authentication session.
-    bootstrap_already_complete: 'Secure storage bootstrap is already complete. Use aeat config switch NAME to activate an existing profile or aeat config profile create NAME to add another profile.'
+    bootstrap_already_complete: Secure storage bootstrap is already complete. Use
+      aeat config switch NAME to activate an existing profile or aeat config profile
+      create NAME to add another profile.
     censo_apply_conflict: The censo cannot be applied because there is in-flight work
       on a dependent unit. Resolve the pending state first.
     censo_field_validation: The AEAT censo returned a value the schema cannot accept.
@@ -3817,10 +3843,12 @@ errors:
       a modelo work unit.
     modelo_work_selector_revision_conflict: The selected modelo work unit belongs
       to a different revision.
-    profile_already_registered: 'A profile with that name already exists. Use aeat config switch NAME to switch to it.'
+    profile_already_registered: A profile with that name already exists. Use aeat
+      config switch NAME to switch to it.
     profile_import_collision: The imported profile identifier collides with an existing
       one.
-    profile_locked: 'This operation requires an unlocked profile. Run `aeat config switch` and try again.'
+    profile_locked: This operation requires an unlocked profile. Run `aeat config
+      switch` and try again.
     profile_name_collision: The profile name provided is already in use. Choose a
       different name.
     reconciliation_cross_bucket: The addressed work unit belongs to a bucket other
@@ -3995,12 +4023,14 @@ errors:
       that already exists.
     refused_storage_bucket_no_active: No active bucket could be resolved. Select a
       profile and try again.
-    refused_storage_master_key_no_active_session: 'Encryption requires an active session. Run `aeat config switch` and try again.'
+    refused_storage_master_key_no_active_session: Encryption requires an active session.
+      Run `aeat config switch` and try again.
     refused_storage_passphrase_too_short: The passphrase is too short. It must be
       at least 8 characters long.
     refused_storage_secret_already_exists: A secret with that key already exists.
       Use the overwrite option to replace it.
-    refused_storage_session_expired: 'The active session expired due to inactivity. Re-activate it with aeat config switch NAME.'
+    refused_storage_session_expired: The active session expired due to inactivity.
+      Re-activate it with aeat config switch NAME.
     refused_storage_unsecured_mode: The unsecured storage backend was requested without
       the required opt-in. It is not safe for real data.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
@@ -4061,7 +4091,8 @@ errors:
         before an active profile bucket is selected.
       cold_bootstrap_explicit_database_refused: Cold-bootstrap storage cannot bypass
         an explicit database route.
-      no_active_session: 'No active bucket session is open. Run aeat config switch NAME to unlock a profile.'
+      no_active_session: No active bucket session is open. Run aeat config switch
+        NAME to unlock a profile.
       no_detail: No detailed readiness issue was reported.
       not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
       route_bucket_mismatch: The database route does not match the active bucket session.
@@ -4069,8 +4100,10 @@ errors:
         bucket.
       session_changed: The active bucket session changed. Unlock the target profile
         again.
-      session_expired: 'The active bucket session has expired. Run aeat config switch NAME to re-activate the profile.'
-      session_sealed: 'The active bucket session is sealed. Run aeat config switch NAME to re-activate the profile.'
+      session_expired: The active bucket session has expired. Run aeat config switch
+        NAME to re-activate the profile.
+      session_sealed: The active bucket session is sealed. Run aeat config switch
+        NAME to re-activate the profile.
       unsecured_backend: The active bucket session uses the unsecured backend. Production
         profile-bound storage requires file or keyring custody.
     stored_data_validation_boundary: A stored profile or workflow record no longer

@@ -8,6 +8,17 @@ related:
   - '[[2026-06-03-llm-ledger-classification-adr]]'
   - '[[2026-06-03-llm-ledger-classification-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `llm-ledger-classification` `Wire LLM-assisted ledger classification (MVP): application use case, CLI surface, tests, docs` plan
 
 ### Phase `P01` - Application layer: suggest, apply, provider availability
@@ -30,8 +41,8 @@ Expose the suggest/apply loop on aeat app ledger classify with override and reje
 Lock the contract with real-behavior tests, document the surface, and verify with a naive persona.
 
 - [x] `P03.S06` - Add real-behavior tests for suggest, apply-persists-llm-provenance, manual-override-wins, reject-leaves-unchanged, and unavailable-provider refusal; `src/aeat/entrypoints/cli/`.
-- [ ] `P03.S07` - Author a how-to for LLM-assisted classification and keep the command-validation gate green; `docs/how-to/`.
-- [ ] `P03.S08` - Re-run a naive persona to confirm leverage, override, and reject end to end; `docs/`.
+- [x] `P03.S07` - Author a how-to for LLM-assisted classification and keep the command-validation gate green; `docs/how-to/`.
+- [x] `P03.S08` - Re-run a naive persona to confirm leverage, override, and reject end to end; `docs/`.
 
 ## Description
 

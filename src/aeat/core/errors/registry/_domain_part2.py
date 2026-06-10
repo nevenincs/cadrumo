@@ -457,6 +457,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletCorrectionNoRecordError",
+        ErrorCode(
+            code="REFUSED_MODELO_IVA_WALLET_CORRECTION_NO_RECORD",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.iva_wallet.correct_no_record",
+            default_suggestion="aeat app modelo iva-wallet seed --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletCorrectionSealedError",
+        ErrorCode(
+            code="REFUSED_MODELO_IVA_WALLET_CORRECTION_SEALED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.iva_wallet.correct_sealed_blocked",
+            default_suggestion="aeat app modelo work revisions",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._action_errors.ModeloRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",

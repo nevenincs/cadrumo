@@ -120,6 +120,8 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
 _SEED_STATUS = "seeded"
 _SEED_EXPEDIENTE_ID = "manual-seed"
 _SEED_SOURCE_OBS_PREFIX = "303:seed"
+_CORRECTED_EXPEDIENTE_ID = "manual-correction"
+_CORRECTED_SOURCE_OBS_PREFIX = "303:correction"
 
 
 def seed_iva_compensation_period(
@@ -166,6 +168,64 @@ def seed_iva_compensation_period(
         generated_amount=_ZERO,
         available_end_amount=amount,
         source_observation_key=f"{_SEED_SOURCE_OBS_PREFIX}:{filing_year}:{period}",
+        source_artefact_sha256=None,
+    )
+    repo.save_period(state)
+    return state
+
+
+def correct_iva_compensation_period(
+    *,
+    taxpayer_nif: str,
+    filing_year: int,
+    period: str,
+    amount: Decimal,
+    repository: IvaCompensationHistoryRepository | None = None,
+    corrected_at: datetime | None = None,
+) -> IvaCompensationPeriodState:
+    """Overwrite a manually-seeded carry-forward balance for one Modelo 303 period.
+
+    Returns the corrected :class:`IvaCompensationPeriodState`.
+
+    The single-writer companion of :func:`seed_iva_compensation_period`: where
+    seeding refuses if a record already exists, correction is the deliberate
+    re-write path for a wrong opening compensation balance whose period
+    pre-dates local history. It writes through the same
+    :class:`IvaCompensationHistoryRepository` (no parallel write path), so the
+    corrected state replaces the stored record at the same period key.
+
+    The guard that a sealed (already-filed) Modelo 303 must not have its
+    compensation basis silently changed lives one layer up, in the modelo
+    application facade that resolves the bucket's taxpayer and revisions; this
+    primitive is the unguarded write the facade delegates to once that guard has
+    passed. It refuses to fabricate a record from nothing: an absent period is a
+    seed, not a correction, and raises ``IvaCompensationSeedConflictError`` with
+    a ``correction-on-missing`` marker so the facade can surface the seed-first
+    guidance.
+    """
+    repo = repository if repository is not None else IvaCompensationHistoryRepository()
+    existing = repo.load_period(filing_year, period)
+    if existing is None:
+        raise IvaCompensationSeedConflictError(
+            translated_message="application.calculations.iva_compensation.errors.correction_missing",
+            context={"filing_year": filing_year, "period": period, "existing_status": "absent"},
+        )
+    when = corrected_at if corrected_at is not None else now()
+    state = IvaCompensationPeriodState(
+        taxpayer_nif=taxpayer_nif,
+        filing_year=filing_year,
+        period=period,
+        expediente_id=_CORRECTED_EXPEDIENTE_ID,
+        status=_SEED_STATUS,
+        presented_at=when,
+        prior_pending_amount=None,
+        applied_amount=None,
+        pending_for_later_amount=amount,
+        period_result_amount=None,
+        final_result_amount=None,
+        generated_amount=_ZERO,
+        available_end_amount=amount,
+        source_observation_key=f"{_CORRECTED_SOURCE_OBS_PREFIX}:{filing_year}:{period}",
         source_artefact_sha256=None,
     )
     repo.save_period(state)
@@ -318,6 +378,7 @@ __all__ = [
     "IvaCompensationAnnualCrossCheck",
     "IvaCompensationAnnualSummary",
     "IvaCompensationHistoryRepository",
+    "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",

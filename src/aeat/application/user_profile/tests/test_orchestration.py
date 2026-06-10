@@ -11,6 +11,7 @@ from ....core import resolve_active_bucket_id
 from ....core.resources import resources
 from ....domain.user_profile import (
     ProfileNotFoundError,
+    ProfileSchemaDefinition,
     UserProfileFact,
     UserProfileStatus,
 )
@@ -43,11 +44,11 @@ def _storage_root(tmp_path: Path):
 
 
 @pytest.fixture(scope="module")
-def schema():
+def schema() -> ProfileSchemaDefinition:
     return resources().user_profile_schema.singleton
 
 
-def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
+def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
     facts: list[UserProfileFact] = []
     for section in schema.sections:
         if section.repeatable:
@@ -58,7 +59,7 @@ def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
     return tuple(facts)
 
 
-def test_register_active_profile_threads_state_and_emits_events(schema) -> None:
+def test_register_active_profile_threads_state_and_emits_events(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
     with profile_create_storage_span("default") as routing_profile_id:
         updated = register_active_profile(
@@ -82,13 +83,13 @@ def test_register_active_profile_threads_state_and_emits_events(schema) -> None:
     assert actions == ("profile.created", "profile.selected", "profile.values.updated")
 
 
-def test_select_profile_refuses_when_missing(schema) -> None:
+def test_select_profile_refuses_when_missing(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
     with pytest.raises(ProfileNotFoundError):
         select_profile(state, profile_id="ghost", schema=schema)
 
 
-def test_set_active_field_appends_workflow_event(schema) -> None:
+def test_set_active_field_appends_workflow_event(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
     with profile_create_storage_span("default") as routing_profile_id:
         state = register_active_profile(
@@ -117,7 +118,7 @@ def test_set_active_field_appends_workflow_event(schema) -> None:
         assert cleared.action == "profile.values.cleared"
 
 
-def test_set_active_fields_bulk_threads_each_workflow_event(schema) -> None:
+def test_set_active_fields_bulk_threads_each_workflow_event(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
     with profile_create_storage_span("default") as routing_profile_id:
         state = register_active_profile(
@@ -137,7 +138,7 @@ def test_set_active_fields_bulk_threads_each_workflow_event(schema) -> None:
         assert len(bulk_events) == 2
 
 
-def test_read_active_profile_returns_record(schema) -> None:
+def test_read_active_profile_returns_record(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
     with profile_create_storage_span("default") as routing_profile_id:
         state = register_active_profile(
@@ -154,7 +155,9 @@ def test_read_active_profile_returns_record(schema) -> None:
         assert record.status is UserProfileStatus.ACTIVE
 
 
-def test_read_active_profile_logs_missing_selected_record(caplog: pytest.LogCaptureFixture, schema) -> None:
+def test_read_active_profile_logs_missing_selected_record(
+    caplog: pytest.LogCaptureFixture, schema: ProfileSchemaDefinition
+) -> None:
     """A torn active pointer degrades to no record with debug evidence."""
 
     with profile_create_storage_span("ghost"):
@@ -166,7 +169,7 @@ def test_read_active_profile_logs_missing_selected_record(caplog: pytest.LogCapt
     assert "active profile selection resolved to a missing profile record" in caplog.text
 
 
-def test_remove_active_profile_tombstones_and_clears_pointer(schema) -> None:
+def test_remove_active_profile_tombstones_and_clears_pointer(schema: ProfileSchemaDefinition) -> None:
     state = WorkflowState()
     with profile_create_storage_span("default") as routing_profile_id:
         state = register_active_profile(

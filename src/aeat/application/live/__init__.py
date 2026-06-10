@@ -9,6 +9,13 @@ to the correct revision.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._expedientes import ExpedientesCapture, ExpedientesService
+    from ._notifications import NotificationsService
+    from ._verify import VerifyService, VerifySurface, VerifyVerdict
+
 from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
 from ...adapters.outbound.aeat.sede import open_declarations_register as _open_declarations_register
 from ...adapters.outbound.aeat.sede import shared_playwright as _shared_playwright

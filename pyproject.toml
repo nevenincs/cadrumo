@@ -190,6 +190,10 @@ dev = [
   "sphinx-notfound-page>=1.1",
   "sphinxext-opengraph>=0.9",
   "sphinx-sitemap>=2.6",
+  # Live-reloading docs dev server (`just docs-serve`): wraps the Sphinx build
+  # with a filesystem watcher and a livereload websocket so edits to docs/ and
+  # the src/aeat/ docstring surface refresh the browser without a manual rebuild.
+  "sphinx-autobuild>=2024.10",
   # Documentation conformance enforcement: docstring presence/style,
   # signature-vs-docstring accuracy, and RST formatting.
   "pydoclint>=0.6",
@@ -207,6 +211,7 @@ dev = [
   "radon>=6.0.1",
   "complexipy>=3.3.0",
   "vulture>=2.16",
+  "sphinxcontrib-mermaid>=1.0",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────

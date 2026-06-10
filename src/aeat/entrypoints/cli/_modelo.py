@@ -1149,6 +1149,7 @@ register_reconcile_commands(
     require_active_profile=_require_active_profile,
     resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
     resolve_default_actor=_resolve_default_actor,
+    active_bucket_id=_active_bucket_id,
 )
 
 
