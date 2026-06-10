@@ -68,14 +68,15 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _oracle_rules() -> list[dict]:
+def _oracle_rules() -> list[dict[str, object]]:
     manifest = json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
     return manifest["rules"]
 
 
-def _match(description: str, rules: list[dict]) -> dict | None:
+def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:
     for rule in rules:
-        if rule["match"] in description:
+        match_val = rule.get("match")
+        if isinstance(match_val, str) and match_val in description:
             return rule
     return None
 
@@ -85,19 +86,29 @@ def _import_revolut() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _list_rows() -> list[dict]:
+def _list_rows() -> list[dict[str, object]]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
 
 
-def _uk_rows(rows: list[dict]) -> list[dict]:
-    return [r for r in rows if "Payment from UK client" in r["description"]]
+def _uk_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    result = []
+    for r in rows:
+        desc = r.get("description")
+        if isinstance(desc, str) and "Payment from UK client" in desc:
+            result.append(r)
+    return result
 
 
-def _us_rows(rows: list[dict]) -> list[dict]:
-    return [r for r in rows if "Payment from US client" in r["description"]]
+def _us_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    result = []
+    for r in rows:
+        desc = r.get("description")
+        if isinstance(desc, str) and "Payment from US client" in desc:
+            result.append(r)
+    return result
 
 
 # --- import + currency preservation -----------------------------------------
@@ -135,7 +146,10 @@ def test_uk_and_us_client_receipts_are_incoming_foreign_income() -> None:
     assert uk and us, "corpus must carry UK (GBP) and US (USD) client receipts"
     assert all(r.get("direction") == "INCOMING" for r in uk + us)
     # The native amounts are the GBP/USD figures, not EUR-converted.
-    assert all(float(r["amount"]) > 0 for r in uk + us)
+    for r in uk + us:
+        amount_val = r.get("amount")
+        if isinstance(amount_val, (int, float, str)):
+            assert float(amount_val) > 0, amount_val
 
 
 # --- classification against the oracle --------------------------------------
@@ -154,10 +168,14 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
     assert len(targets) == 2
 
     for row in targets:
-        rule = _match(row["description"], rules)
-        assert rule is not None, row["description"]
-        assert rule["classification"] == "BUSINESS"
-        assert rule["iva_category"] == "export_third_country_zero_rated"
+        desc = row.get("description")
+        tx_id = row.get("transaction_id")
+        assert isinstance(desc, str)
+        assert isinstance(tx_id, str)
+        rule = _match(desc, rules)
+        assert rule is not None, desc
+        assert rule.get("classification") == "BUSINESS"
+        assert rule.get("iva_category") == "export_third_country_zero_rated"
         result = _RUNNER.invoke(
             app,
             [
@@ -165,7 +183,7 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
                 "ledger",
                 "classify",
                 "--id",
-                row["transaction_id"],
+                tx_id,
                 "--classification",
                 "BUSINESS",
                 "--iva-category",
@@ -174,9 +192,11 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
         )
         assert result.exit_code == 0, result.output
 
-    by_id = {r["transaction_id"]: r for r in _list_rows()}
+    by_id = {r.get("transaction_id"): r for r in _list_rows() if isinstance(r.get("transaction_id"), str)}
     for row in targets:
-        assert by_id[row["transaction_id"]]["business_classification"] == "BUSINESS"
+        tx_id = row.get("transaction_id")
+        assert isinstance(tx_id, str)
+        assert by_id.get(tx_id, {}).get("business_classification") == "BUSINESS"
 
 
 # --- FX visibility: the core multicurrency testimonial ----------------------

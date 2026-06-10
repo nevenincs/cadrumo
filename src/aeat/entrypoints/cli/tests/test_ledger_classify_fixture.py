@@ -35,13 +35,14 @@ _ACCOUNT = "bbva-business-eur.csv"
 _FIXTURE = _CORPUS / "classify" / "bbva-business-eur.classify.csv"
 
 
-def _rules() -> list[dict]:
+def _rules() -> list[dict[str, object]]:
     return json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))["rules"]
 
 
-def _match(description: str, rules: list[dict]) -> dict | None:
+def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:
     for rule in rules:
-        if rule["match"] in description:
+        match_val = rule.get("match")
+        if isinstance(match_val, str) and match_val in description:
             return rule
     return None
 
