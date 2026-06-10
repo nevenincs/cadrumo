@@ -14,6 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core import Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
@@ -646,7 +647,7 @@ def _require_cross_period_clean_state(
 
 def _iva_wallet_decision_covers_cross_period_dependency(
     verdict: CrossPeriodCleanStateVerdict,
-    evidence,
+    evidence: CrossPeriodDependencyEvidence,
     decision: object | None,
 ) -> bool:
     """Return whether a persisted Modelo 303 wallet decision covers the dependency."""
@@ -654,8 +655,8 @@ def _iva_wallet_decision_covers_cross_period_dependency(
         return False
     requirement = evidence.requirement
     if (
-        verdict.target_modelo != "303"
-        or requirement.source_modelo != "303"
+        verdict.target_modelo != Modelo.M303.value
+        or requirement.source_modelo != Modelo.M303.value
         or not (
             set(requirement.origin_ids)
             & {

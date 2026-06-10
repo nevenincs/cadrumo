@@ -100,6 +100,7 @@ from ._saturation import (
     split_gross_at_rate,
 )
 from ._schema import (
+    CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
     IvaCatalogue,
     IvaCategory,
@@ -115,6 +116,7 @@ from ._schema import (
 from ._verify import verify_catalogue
 
 __all__ = [
+    "CUOTA_LESS_M303_IVA_CATEGORIES",
     "DEDUCIBLE_FLOW_DIRECTIONS",
     "DEVENGADA_FLOW_DIRECTIONS",
     "REGIME_PERIODICITY",

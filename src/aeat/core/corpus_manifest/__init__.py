@@ -29,6 +29,7 @@ import tempfile
 from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path, PurePosixPath
+from typing import TypedDict
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -46,11 +47,18 @@ _MANIFEST_VERSION = 1
 _MANIFEST_FILENAME = "corpus.manifest.json"
 """Canonical filename for the manifest sidecar inside each corpus root."""
 
+
 # Sha-256 content-fingerprint shape shared by the per-entry file digest and
 # the self-attesting manifest digest. Stays bare-str under ADR Rule 7
 # (fingerprint, not identity); factored to a single module-local constraint
 # kwargs mapping to remove the duplication of the shape literal.
-_CORPUS_SHA256_KWARGS: dict[str, object] = {
+class _Sha256FieldKwargs(TypedDict):
+    min_length: int
+    max_length: int
+    pattern: str
+
+
+_CORPUS_SHA256_KWARGS: _Sha256FieldKwargs = {
     "min_length": 64,
     "max_length": 64,
     "pattern": r"^[0-9a-f]{64}$",

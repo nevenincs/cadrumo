@@ -13,6 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import time_machine as tm
 
 from ....core.resources import resources
 from ....domain.filing import ModeloBuilderError
@@ -125,7 +126,7 @@ def test_unsupported_casilla_data_type_error_is_localized() -> None:
     assert exc_info.value.context == {"data_type": "blob"}
 
 
-def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine) -> None:
+def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine: tm.TimeMachineFixture) -> None:
     """_registry_tree_fingerprint must cache results with a 1-second TTL and support clearing."""
     import os
 

@@ -21,6 +21,7 @@ real formula engine — no mocks, no stubs, no tautological assertions.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -42,6 +43,7 @@ from ....domain.modelos._verification_report import (
     VerificationCompletenessStatus,
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.modelos._work_unit import WorkUnit
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, cross_period_dependency_requirements
@@ -54,6 +56,14 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    BucketEventHistoryRepository,
+]
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
@@ -103,7 +113,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, p
 
 
 @pytest.fixture
-def repos(tmp_path):
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
@@ -116,7 +126,7 @@ def repos(tmp_path):
 
 
 def _seed_clean_cross_period_sources_for_m130(
-    work_unit,
+    work_unit: WorkUnit,
     *,
     work_unit_repository: WorkUnitCatalogueRepository,
     calculation_repository: CalculationRevisionCatalogueRepository,
@@ -180,7 +190,7 @@ def _seed_clean_cross_period_sources_for_m130(
     return observation_repository
 
 
-def test_verify_refuses_when_required_casillas_absent_m130(repos) -> None:
+def test_verify_refuses_when_required_casillas_absent_m130(repos: _Repos) -> None:
     """M130 revision with no required casilla is NOT granted verificado_completo.
 
     The test uses the real M130 registry to determine which casillas are
@@ -260,7 +270,7 @@ def test_verify_refuses_when_required_casillas_absent_m130(repos) -> None:
         assert casilla_id in report.missing_required_casillas
 
 
-def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
+def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> None:
     """M130 revision with all required casillas present is granted verificado_completo."""
     wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
     required = _required_manual_casillas_for_m130()
@@ -336,7 +346,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
     assert {entry.casilla for entry in verified.ledger_filing_evidence.manual_entries} >= set(casilla_inputs)
 
 
-def test_tampered_revision_raises_drift_error(repos) -> None:
+def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
     """_assert_revision_content_integrity raises StoredCalculationDriftError on drift.
 
     contract regression: verify_modelo_revision calls _assert_revision_content_integrity

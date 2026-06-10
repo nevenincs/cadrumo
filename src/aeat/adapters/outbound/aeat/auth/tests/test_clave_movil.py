@@ -20,7 +20,7 @@ import time
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import pytest
 from pydantic import SecretStr
@@ -178,6 +178,7 @@ class _RecordingPage:
 
 
 class _InitialNavigationTimeoutPage(_RecordingPage):
+    @override
     async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
         del timeout
         self.gotos.append(url)
@@ -185,6 +186,7 @@ class _InitialNavigationTimeoutPage(_RecordingPage):
 
 
 class _RepresentationAlertPage(_RecordingPage):
+    @override
     async def content(self) -> str:
         return f"""
         <div id="{_PRE303_SURFACE.alert_modal_selector.lstrip("#")}" class="modal show">
@@ -194,6 +196,7 @@ class _RepresentationAlertPage(_RecordingPage):
 
 
 class _OwnNameInputOnlyRepresentationPage(_RecordingPage):
+    @override
     async def wait_for_selector(self, selector: str, *, timeout: float | None = None) -> None:
         del timeout
         if selector == _PRE303_SURFACE.representation_own_name_label_selector:
@@ -204,6 +207,7 @@ class _OwnNameInputOnlyRepresentationPage(_RecordingPage):
 
 
 class _SelectorDispatchPage(_RecordingPage):
+    @override
     async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
         del timeout
         self.gotos.append(url)
@@ -214,6 +218,7 @@ class _SelectorDispatchPage(_RecordingPage):
 
         return _RecordingResponse()
 
+    @override
     async def click(self, selector: str) -> None:
         self.clicks.append(selector)
         if selector == _CLAVE_SURFACE.authorize_button_selector:
@@ -221,6 +226,7 @@ class _SelectorDispatchPage(_RecordingPage):
 
 
 class _PendingPetitionPage(_RecordingPage):
+    @override
     async def content(self) -> str:
         return (
             "<html><body>No ha sido posible generar una nueva petición de autenticación "
@@ -229,6 +235,7 @@ class _PendingPetitionPage(_RecordingPage):
 
 
 class _NoPushWaitStatePage(_RecordingPage):
+    @override
     async def content(self) -> str:
         return "<html><body>Servicio no disponible temporalmente</body></html>"
 
@@ -296,11 +303,13 @@ class _RecordingContext:
 
 
 class _HangingCloseContext(_RecordingContext):
+    @override
     async def close(self) -> None:
         await asyncio.sleep(60)
 
 
 class _SelectorDispatchContext(_RecordingContext):
+    @override
     async def new_page(self) -> _SelectorDispatchPage:
         page = _SelectorDispatchPage(target_path=self._target_path)
         self.pages.append(page)
@@ -308,6 +317,7 @@ class _SelectorDispatchContext(_RecordingContext):
 
 
 class _InitialNavigationTimeoutContext(_RecordingContext):
+    @override
     async def new_page(self) -> _InitialNavigationTimeoutPage:
         page = _InitialNavigationTimeoutPage(target_path=self._target_path)
         self.pages.append(page)
@@ -354,11 +364,13 @@ class _RecordingBrowserSession:
 
 
 class _HangingCloseBrowserSession(_RecordingBrowserSession):
+    @override
     async def close(self) -> None:
         await asyncio.sleep(60)
 
 
 class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
+    @override
     async def create_context(
         self,
         *,
@@ -373,6 +385,7 @@ class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
 
 
 class _InitialNavigationTimeoutBrowserSession(_RecordingBrowserSession):
+    @override
     async def create_context(
         self,
         *,

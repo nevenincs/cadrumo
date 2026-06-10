@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from ...core import Modelo
 from ...core.i18n import tr
 from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ...domain.modelos._calculation_revision import CalculationRevision
@@ -86,7 +87,7 @@ def apply_iva_compensation_decision_binding(
 
     Use of :class:`ModeloRevision` for compliance.
     """
-    if modelo != "303":
+    if modelo != Modelo.M303.value:
         return
     binding_id = _M303_PRIOR_COMPENSATION_BINDING_ID
     bound_casilla_id = _M303_PRIOR_COMPENSATION_CASILLA_ID
@@ -179,7 +180,7 @@ def require_persisted_iva_compensation_decision_for_work_unit(
     repository: IvaWalletDecisionRepository | None = None,
 ) -> object:
     """Require a supplied Modelo 303 wallet decision to match the persisted decision."""
-    if work_unit.modelo != "303":
+    if work_unit.modelo != Modelo.M303.value:
         return supplied_decision
     persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if persisted is None:
@@ -200,7 +201,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
     """Load and return the :class:`IvaCompensationReconciliationDecision` for a work unit."""
-    if work_unit.modelo != "303":
+    if work_unit.modelo != Modelo.M303.value:
         return None
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
@@ -257,7 +258,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
 
     Use of :class:`RegistrySnapshot` for compliance.
     """
-    if work_unit.modelo != "303":
+    if work_unit.modelo != Modelo.M303.value:
         return None
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
@@ -288,7 +289,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
 
     Uses :class:`CalculationRevision` for the revision match check.
     """
-    if work_unit.modelo != "303":
+    if work_unit.modelo != Modelo.M303.value:
         return None
     decision = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if decision is None:

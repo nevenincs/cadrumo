@@ -15,7 +15,7 @@ from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_i
 from ....core.config import AuthProviderKindSetting, Settings
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistrySnapshot
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation._reconciliation import (
     IvaCompensationOverride,
@@ -909,7 +909,7 @@ def test_wallet_divergence_blocks_real_modelo_303_engine_before_persisting_revis
 
 def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
     *,
-    snapshot,
+    snapshot: RegistrySnapshot,
     decision: IvaCompensationReconciliationDecision,
     expected_divergence: str,
 ) -> None:

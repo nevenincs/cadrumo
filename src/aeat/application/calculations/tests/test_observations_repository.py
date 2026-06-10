@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -178,7 +179,7 @@ def test_observation_key_error_is_value_error() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_load_decision_returns_hashed_key_record(tmp_path) -> None:
+def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
     """load_decision finds records written under the current hashed key.
 
     Exercises the primary (non-fallback) path of load_decision: a record
@@ -215,7 +216,7 @@ def test_load_decision_returns_hashed_key_record(tmp_path) -> None:
     assert loaded == decision, f"Expected decision to be found via hashed key; got {loaded!r}"
 
 
-def test_load_decision_falls_back_to_legacy_cleartext_key(tmp_path) -> None:
+def test_load_decision_falls_back_to_legacy_cleartext_key(tmp_path: Path) -> None:
     """load_decision finds pre-hardening records written under the cleartext key.
 
     Simulates a record that was persisted before the sha256-key hardening

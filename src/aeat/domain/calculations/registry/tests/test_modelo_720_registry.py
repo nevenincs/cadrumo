@@ -12,6 +12,7 @@ from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
     InputKind,
+    ModeloRevision,
     RegistryValidator,
     build_snapshot,
     load_registry_tree,
@@ -191,7 +192,7 @@ def test_committed_modelo_720_deadline_window_is_january_to_march_following_ejer
     assert window.closes_on == expected_close
 
 
-def _layout_bindings_for(revision, record_name: str):
+def _layout_bindings_for(revision: ModeloRevision, record_name: str):
     return tuple(
         binding
         for binding in revision.bindings

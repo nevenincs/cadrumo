@@ -1743,6 +1743,7 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        calculate_source_advisory: 'ADVISORY: %{message} The calculation completed, but this declarable amount is not routed to any casilla and is not declared on this filing; review it before filing.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found

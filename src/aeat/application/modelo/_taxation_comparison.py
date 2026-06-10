@@ -26,6 +26,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core import Modelo
 from ...core.errors import CoreError
 from ...domain.calculations.registry import (
     RegistrySnapshot,
@@ -61,7 +62,7 @@ class TaxationComparisonResult(BaseModel):
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     filing_year: int
-    modelo: str = "100"
+    modelo: str = Modelo.M100.value
     revision: str
 
     # Cuota resultante autoliquidación (casilla 0595) for each path.

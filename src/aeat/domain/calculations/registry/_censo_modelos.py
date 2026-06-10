@@ -15,6 +15,7 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
+from ....core import Modelo
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.logging import get_logger
 from ....core.resources import resources
@@ -83,7 +84,7 @@ class CensoModeloOwnership:
     superseded_by: str | None = None
 
 
-_ACTIVE_CENSO_MODELO = "036"
+_ACTIVE_CENSO_MODELO = Modelo.M036.value
 _HISTORICAL_CENSO_MODELO = "037"
 _HISTORICAL_037_SOURCE_REF = "boe-modelo-037-historical-suppression"
 _CENSO_FOUNDATION_YEAR = 2025
@@ -96,7 +97,7 @@ class CensoModeloFoundationContract(BaseModel):
 
     schema_version: str = "1"
     service_owner: str = Field(default=CENSO_MODELO_SERVICE_OWNER, pattern=r"^aeat\.domain\.calculations\.registry$")
-    active_modelo: str = Field(default="036", min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
+    active_modelo: str = Field(default=Modelo.M036.value, min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
     historical_modelos: tuple[str, ...] = ("037",)
     event_kinds: tuple[CensoModeloEventKind, ...]
     error_codes: tuple[str, ...]
@@ -106,7 +107,7 @@ class CensoModeloFoundationContract(BaseModel):
     def _historical_modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(value) != len(set(value)):
             raise RegistryValidationError("historical censo modelos must be unique")
-        if "036" in value:
+        if Modelo.M036.value in value:
             raise RegistryValidationError("active censo modelo 036 must not be historical")
         return value
 
@@ -179,7 +180,7 @@ class CensoModeloFoundationResult(BaseModel):
 
     @model_validator(mode="after")
     def _validate_censo_result(self) -> Self:
-        if self.modelo == "036":
+        if self.modelo == Modelo.M036:
             self._validate_active_036_shape()
             return self
         if self.modelo == "037":
@@ -206,7 +207,7 @@ class CensoModeloFoundationResult(BaseModel):
             raise RegistryValidationError("modelo 037 result must use historical_metadata role")
         if self.event_kind is not None or self.event_kinds:
             raise RegistryValidationError("modelo 037 result must not expose active event kinds")
-        if self.active_work_unit_allowed or self.superseded_by != "036":
+        if self.active_work_unit_allowed or self.superseded_by != Modelo.M036:
             raise RegistryValidationError("modelo 037 result must be inactive and superseded by 036")
 
 

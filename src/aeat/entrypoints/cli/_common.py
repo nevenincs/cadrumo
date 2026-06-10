@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, NoReturn
 
 import typer
 
+from ...core import Modelo
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.output_rendering import render_command_output
@@ -289,7 +290,7 @@ def _aggregate_filing_inputs(modelo: str, period: str, state: WorkflowState) -> 
     intentional: callers may merge or extend the result before passing it
     downstream. Mapping would block that mutation.
     """
-    if modelo.strip() == "100" and _annual_filing_year(period) is not None:
+    if modelo.strip() == Modelo.M100 and _annual_filing_year(period) is not None:
         filing_year = _annual_filing_year(period)
         assert filing_year is not None
         bucket_id = _active_bucket_id_or_bad(state)
@@ -313,10 +314,10 @@ def _aggregate_renta_filing_inputs(
     from ...core.resources import resources
 
     authority = resources().modelos.authority
-    snapshot = authority.snapshot("100", filing_year=filing_year, period="0A")
+    snapshot = authority.snapshot(Modelo.M100.value, filing_year=filing_year, period="0A")
     aggregation = resolve_modelo_ledger_binding_values_from_repositories(
         bucket_id=bucket_id,
-        modelo="100",
+        modelo=Modelo.M100.value,
         revision=snapshot.revision,
         filing_year=filing_year,
         period="0A",

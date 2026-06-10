@@ -149,7 +149,7 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
 
 
 def test_config_repair_report_contains_registry_and_setup_checks(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         report = build_config_repair_report()
@@ -170,7 +170,7 @@ def test_config_repair_report_contains_registry_and_setup_checks(
 
 
 def test_render_config_repair_text_is_operator_readable(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         rendered = render_config_repair_text(build_config_repair_report())
@@ -220,7 +220,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
 
 
 def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_master_key(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """A namespace populated under master key K1 must be reported as unreadable under K2.
 
@@ -265,7 +265,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
 
 
 def test_secure_objects_integrity_check_reports_ok_on_clean_database(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """An empty or fully-decryptable secure-objects table renders ``ok``."""
 
@@ -277,7 +277,7 @@ def test_secure_objects_integrity_check_reports_ok_on_clean_database(
 
 
 def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """The helper consumed by overview status returns the aggregate count.
 
@@ -306,7 +306,7 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
 
 
 def test_secure_object_unreadable_total_is_zero_on_clean_database(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Aggregate returns zero when no namespace has unreadable rows."""
 
@@ -357,7 +357,7 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
     assert "route does not match the active bucket session" in caplog.text
 
 
-def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> None:
+def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path) -> None:
     """``aeat config repair`` and ``aeat config status`` must read auth readiness from one source.
 
     Repair and the wizard status surface share one projection: both
@@ -406,7 +406,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> No
 
 
 def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Quarantine archives the undecryptable rows; readable rows stay put.
 
@@ -453,7 +453,7 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
 
 
 def test_preview_quarantine_reports_unreadable_rows_without_mutating(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """``preview_quarantine_*`` counts the rows the verb would move and moves none.
 

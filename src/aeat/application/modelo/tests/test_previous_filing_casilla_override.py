@@ -16,8 +16,10 @@ Oracle: 3T scenario, cumulative carry-forward override of €2,694.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -29,6 +31,12 @@ from .. import calculate_modelo_revision, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+]
+
 _CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
 
 # ---------------------------------------------------------------------------
@@ -37,7 +45,7 @@ _CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture
-def repos(tmp_path):
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over an isolated profile — no mocks."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
@@ -52,7 +60,7 @@ def repos(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def _work_unit_3t(repos):
+def _work_unit_3t(repos: _Repos):
     wu_repo, cr_repo, bv_repo = repos
     return (
         create_work_unit(
@@ -75,7 +83,7 @@ def _work_unit_3t(repos):
 # ---------------------------------------------------------------------------
 
 
-def test_casilla_15_override_accepted_at_3t(repos) -> None:
+def test_casilla_15_override_accepted_at_3t(repos: _Repos) -> None:
     """``--casilla "15=2694"`` at 3T is accepted when no prior-quarter binding is available.
 
     When the operator manually declares the cumulative carry-forward (casilla 15)
@@ -122,7 +130,7 @@ def test_casilla_15_override_accepted_at_3t(repos) -> None:
     )
 
 
-def test_casilla_15_override_flows_into_casilla_17(repos) -> None:
+def test_casilla_15_override_flows_into_casilla_17(repos: _Repos) -> None:
     """Casilla 17 (diferencia) reflects the casilla-15 override at 3T.
 
     Formula: casilla 17 = casilla 14 - casilla 15 - casilla 16.
@@ -184,7 +192,7 @@ def test_casilla_15_override_flows_into_casilla_17(repos) -> None:
     )
 
 
-def test_casilla_15_binding_already_supplied_is_not_overwritten(repos) -> None:
+def test_casilla_15_binding_already_supplied_is_not_overwritten(repos: _Repos) -> None:
     """When ``--binding modelo-130-resultados-negativos-anteriores=X`` is explicitly
     supplied the lift helper must NOT overwrite it with the casilla-15 override.
 

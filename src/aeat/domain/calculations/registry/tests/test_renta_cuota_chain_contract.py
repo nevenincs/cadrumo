@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import load_registry_tree
+from .. import ModeloDefinition, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -88,7 +88,7 @@ def _modelo_100():
     return next(m for m in modelos if m.id == "100"), _catalogues
 
 
-def _formula_target_casillas_for_revision(modelo, revision_id: str) -> frozenset[str]:
+def _formula_target_casillas_for_revision(modelo: ModeloDefinition, revision_id: str) -> frozenset[str]:
     revision = modelo.revisions.get(revision_id)
     if revision is None:
         return frozenset()

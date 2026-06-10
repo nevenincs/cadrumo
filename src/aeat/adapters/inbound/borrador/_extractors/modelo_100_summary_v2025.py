@@ -13,6 +13,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
+from .....core import Modelo
 from .....core.time import now
 from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf._shared import ExtractedCasilla
@@ -115,7 +116,7 @@ class Modelo100ObservedV2025Extractor:
 
         source_pdf_sha256 = sha256_file(pdf_path)
         return BorradorObservation(
-            modelo="100",
+            modelo=Modelo.M100.value,
             ejercicio=ejercicio,
             tax_id=tax_id.upper(),
             artefact_kind=artefact_kind,

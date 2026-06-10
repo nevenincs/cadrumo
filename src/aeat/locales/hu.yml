@@ -1798,6 +1798,7 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        calculate_source_advisory: 'FIGYELMEZTETÉS: %{message} A számítás befejeződött, de ezt a bevallható összeget egyetlen rovat sem fogadja be, és nem szerepel a bevallásban; ellenőrizze benyújtás előtt.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található

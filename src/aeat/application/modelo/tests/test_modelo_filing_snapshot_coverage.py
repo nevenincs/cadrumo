@@ -33,6 +33,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ...aggregation._ledger_filing_snapshot import (
+    LedgerFilingSnapshot,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
     stale_filed_revisions,
@@ -85,7 +86,7 @@ def _tx(
     )
 
 
-def _revision(modelo: str, *, source_ids: tuple[str, ...], snapshot) -> CalculationRevision:
+def _revision(modelo: str, *, source_ids: tuple[str, ...], snapshot: LedgerFilingSnapshot) -> CalculationRevision:
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period="1T", revision_id="r1")
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
@@ -147,7 +148,9 @@ def test_filed_revision_snapshot_is_immutable() -> None:
         rev.ledger_filing_snapshot = None  # frozen model: attribute set is refused
 
 
-def _verified_revision(modelo: str, *, source_ids: tuple[str, ...], snapshot) -> CalculationRevision:
+def _verified_revision(
+    modelo: str, *, source_ids: tuple[str, ...], snapshot: LedgerFilingSnapshot
+) -> CalculationRevision:
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period="1T", revision_id="r1")
     rid = derive_calculation_revision_id(
         work_unit_id=wid, inputs_snapshot={}, binding_overrides={}, casilla_values={}, source_transaction_ids=source_ids

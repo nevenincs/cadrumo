@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry import RegistryValidationError, parse_export_payload
+from ....domain.calculations.registry import ExportLayoutDefinition, RegistryValidationError, parse_export_payload
 from ....domain.filing import FilingExportError
 from ....domain.submission import ModeloDraftStatus
 from .. import (
@@ -1034,7 +1034,7 @@ def test_export_payload_parser_rejects_layout_literal_drift(tmp_path: Path) -> N
         parse_export_payload(layout, bytes(payload))
 
 
-def _field_slice(layout, record_id: str, field_id: str) -> slice:
+def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) -> slice:
     cursor = 0
     for record in sorted(layout.records, key=lambda item: item.order):
         record_length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)

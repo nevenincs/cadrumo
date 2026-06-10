@@ -25,6 +25,7 @@ from ...application.modelo import (
     rename_work_unit,
     resolve_registry_revision_for_work_target,
 )
+from ...core import Modelo
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...domain.calculations.registry import RegistrySnapshotError
@@ -340,7 +341,7 @@ def _reused_work_status_message(*, name: str | None, name_applied: str | None) -
 
 
 def _modelo_100_obligation_advisory_lines(unit) -> list[str]:
-    if unit.modelo != "100":
+    if unit.modelo != Modelo.M100:
         return []
     from ...application.overview import build_filing_obligation_advisories
     from ...application.user_profile import ProfileRepository, record_to_values

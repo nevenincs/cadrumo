@@ -14,6 +14,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...core import Modelo
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import COUNTERPART_SOURCE_KINDS, CounterpartSourceKind, counterpart_source_kind
 from ...core.parsing._dates import _parse_iso8601_date
@@ -107,7 +108,7 @@ def resolve_per_modelo_registry_binding_values(
             provider=result.provider,
             source_observation_count=0,
         )
-    if result.provider is not PerModeloAggregationProvider.COUNTERPART or result.modelo != "349":
+    if result.provider is not PerModeloAggregationProvider.COUNTERPART or result.modelo != Modelo.M349.value:
         raise AggregationUnsupportedModeloError(
             t("aggregation.per_modelo.registry.errors.unsupported_provider"),
             context={"modelo": result.modelo, "provider": result.provider.value},

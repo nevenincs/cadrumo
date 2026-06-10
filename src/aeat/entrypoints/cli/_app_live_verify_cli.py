@@ -2,17 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from typing import Annotated
+from collections.abc import Callable
+from typing import Annotated, TypedDict
 
 import typer
 
+from ...application.live import VerifyVerdict
 from ...core.i18n import tr
 from ...core.time import now
 from ._common import _emit_envelope
 
 _active_bucket_id: Callable[[], str] | None = None
-_verify_expected: Callable[[str | None], object | None] | None = None
+_verify_expected: Callable[[str | None], VerifyVerdict | None] | None = None
+
+
+class _VerifyRow(TypedDict):
+    observation_id: str
+    surface: str
+    nif: str
+    verdict: str
+    expected: str | None
+    matched_expectation: bool | None
+    checked_at: str
+
 
 verify_app = typer.Typer(
     name="verify",
@@ -26,7 +38,7 @@ def register_verify_commands(
     app: typer.Typer,
     *,
     active_bucket_id: Callable[[], str],
-    verify_expected: Callable[[str | None], object | None],
+    verify_expected: Callable[[str | None], VerifyVerdict | None],
 ) -> None:
     """Mount live verify commands on the live app."""
     global _active_bucket_id
@@ -43,22 +55,22 @@ def _bucket_id() -> str:
     return _active_bucket_id()
 
 
-def _expected(value: str | None):
+def _expected(value: str | None) -> VerifyVerdict | None:
     if _verify_expected is None:
         raise RuntimeError("live verify commands were not registered")
     return _verify_expected(value)
 
 
-def _verify_row(observation) -> Mapping[str, object]:
-    return {
-        "observation_id": observation.observation_id,
-        "surface": observation.surface.value,
-        "nif": observation.nif,
-        "verdict": observation.verdict,
-        "expected": observation.expected,
-        "matched_expectation": observation.matched_expectation,
-        "checked_at": observation.checked_at.isoformat(),
-    }
+def _verify_row(observation) -> _VerifyRow:
+    return _VerifyRow(
+        observation_id=observation.observation_id,
+        surface=observation.surface.value,
+        nif=observation.nif,
+        verdict=observation.verdict,
+        expected=observation.expected,
+        matched_expectation=observation.matched_expectation,
+        checked_at=observation.checked_at.isoformat(),
+    )
 
 
 @verify_app.command(
@@ -106,12 +118,7 @@ def verify_list(
     result = VerifyListResult(
         bucket_id=bucket_id,
         count=len(rows),
-        rows=[
-            # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LIST:
-            # _verify_row returns Mapping[str, object]; splat matches payload fields here.
-            VerifyObservationSummaryPayload(**_verify_row(r))
-            for r in rows
-        ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-LIST-MAPPING-SPLAT
+        rows=[VerifyObservationSummaryPayload(**_verify_row(r)) for r in rows],
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
@@ -141,12 +148,7 @@ def verify_show(
 
     bucket_id = _bucket_id()
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
-    result = VerifyViewResult(
-        bucket_id=bucket_id,
-        **_verify_row(record),
-        # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-VIEW:
-        # _verify_row returns Mapping[str, object]; splat matches VerifyViewResult fields here.
-    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-VIEW-MAPPING-SPLAT
+    result = VerifyViewResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
 
@@ -210,12 +212,7 @@ def verify_latest(
             ],
         )
         return
-    result = VerifyLatestResult(
-        bucket_id=bucket_id,
-        **_verify_row(record),
-        # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LATEST:
-        # _verify_row returns Mapping[str, object]; splat matches VerifyLatestResult fields here.
-    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-LATEST-MAPPING-SPLAT
+    result = VerifyLatestResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
 
@@ -267,12 +264,7 @@ def verify_nif_iva(
         expected=expected_verdict,
         raw_evidence_locator=observation.raw_evidence_locator,
     )
-    result = VerifyNifIvaResult(
-        bucket_id=bucket_id,
-        **_verify_row(record),
-        # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-NIF-IVA:
-        # _verify_row returns Mapping[str, object]; splat matches VerifyNifIvaResult fields here.
-    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-NIF-IVA-MAPPING-SPLAT
+    result = VerifyNifIvaResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
 
@@ -323,12 +315,7 @@ def verify_tgvi(
         expected=expected_verdict,
         raw_evidence_locator=observation.raw_evidence_locator,
     )
-    result = VerifyTgviResult(
-        bucket_id=bucket_id,
-        **_verify_row(record),
-        # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-TGVI:
-        # _verify_row returns Mapping[str, object]; splat matches VerifyTgviResult fields here.
-    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-VERIFY-TGVI-MAPPING-SPLAT
+    result = VerifyTgviResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
 

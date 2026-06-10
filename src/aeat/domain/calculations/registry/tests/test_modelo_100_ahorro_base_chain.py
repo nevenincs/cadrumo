@@ -37,7 +37,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import calculate_registry_snapshot
+from .. import RegistrySnapshot, calculate_registry_snapshot
 from .._authority import ValidatedRegistryAuthority
 from .._relations import resolve_relation_values
 
@@ -99,7 +99,7 @@ def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
 # ── helper ────────────────────────────────────────────────────────────────────
 
 
-def _run_2024(snapshot, inputs: dict[str, Decimal]) -> dict[str, Decimal]:
+def _run_2024(snapshot: RegistrySnapshot, inputs: dict[str, Decimal]) -> dict[str, Decimal]:
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -119,7 +119,7 @@ def _run_2024(snapshot, inputs: dict[str, Decimal]) -> dict[str, Decimal]:
 # ── Sergio shape: 0029 = 20 000 EUR dividends ─────────────────────────────────
 
 
-def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot) -> None:
+def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Sergio shape: casilla 0029 (dividendos) = 20 000 EUR.
 
     Oracle (Art. 49.1.a LIRPF): with no offsetting losses or prior-period
@@ -148,7 +148,7 @@ def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot) -> None:
     )
 
 
-def test_sergio_0460_equals_0029_when_no_losses_or_gp(m100_2024_snapshot) -> None:
+def test_sergio_0460_equals_0029_when_no_losses_or_gp(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Art. 49.1 oracle: 0460 = 0041 when ganancias patrimoniales saldo = 0.
 
     With no ganancias-patrimoniales inputs (0422=0, 0423=0) the only base-ahorro
@@ -168,7 +168,7 @@ def test_sergio_0460_equals_0029_when_no_losses_or_gp(m100_2024_snapshot) -> Non
 # ── Carla shape: 0027 = 1 200 EUR cuenta-corriente interest ──────────────────
 
 
-def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot) -> None:
+def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Carla shape: casilla 0027 (intereses cuenta corriente) = 1 200 EUR.
 
     Oracle (Art. 49.1.a LIRPF): 0460 = 1 200 EUR when 0037 and 0039 are zero.
@@ -191,7 +191,7 @@ def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot) -> Non
 # ── Aitor shape: 0029 = 6 000 EUR dividends SAL ───────────────────────────────
 
 
-def test_aitor_0029_dividends_6000_populates_0460(m100_2024_snapshot) -> None:
+def test_aitor_0029_dividends_6000_populates_0460(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Aitor shape: casilla 0029 (dividendos SAL) = 6 000 EUR.
 
     Oracle (Art. 49.1.a LIRPF): 0460 = 6 000 EUR.
@@ -207,7 +207,7 @@ def test_aitor_0029_dividends_6000_populates_0460(m100_2024_snapshot) -> None:
 # ── Anti-tautology: proportional scaling ─────────────────────────────────────
 
 
-def test_0460_scales_proportionally_with_capital_mobiliario_input(m100_2024_snapshot) -> None:
+def test_0460_scales_proportionally_with_capital_mobiliario_input(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Anti-tautology: doubling the dividends input must double 0460.
 
     This test cannot pass against a formula that always returns 0 or any
@@ -229,7 +229,7 @@ def test_0460_scales_proportionally_with_capital_mobiliario_input(m100_2024_snap
 # ── 2025 revision: same defect must also be fixed ─────────────────────────────
 
 
-def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot) -> None:
+def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySnapshot) -> None:
     """2025 revision: same Art. 49.1.a chain must hold.
 
     Both the 2024 and 2025 formulas had the same missing-0041 defect.

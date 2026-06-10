@@ -22,6 +22,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
+from ...core import Modelo
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core.time import now
 from ...domain.iva_compensation._carry_forward import (
@@ -175,7 +176,7 @@ def iva_compensation_state_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationPeriodState:
     """Build and return an :class:`IvaCompensationPeriodState` from a filed Modelo 303 observation."""
-    if observation.modelo != "303":
+    if observation.modelo != Modelo.M303.value:
         raise IvaCompensationModeloError(
             translated_message="application.calculations.iva_compensation.errors.modelo_303_only",
             context={"modelo": observation.modelo},
@@ -220,7 +221,7 @@ def iva_compensation_annual_summary_from_filed_observation(
     included in casilla 97. The summary is evidence for cross-checking the
     Modelo 303 carry-forward projection; it is not stored as a period state.
     """
-    if observation.modelo != "390":
+    if observation.modelo != Modelo.M390.value:
         raise IvaCompensationModeloError(
             translated_message="application.calculations.iva_compensation.errors.modelo_390_only",
             context={"modelo": observation.modelo},

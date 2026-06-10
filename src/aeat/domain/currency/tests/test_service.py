@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from typing import override
 
 import pytest
 
@@ -13,6 +14,7 @@ from .._service import CurrencyNormalizationService, ExchangeRateProvider
 
 
 class _TableRateProvider(ExchangeRateProvider):
+    @override
     def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
         if currency == "USD":
             return Decimal("0.85")

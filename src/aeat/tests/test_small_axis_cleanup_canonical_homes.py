@@ -24,6 +24,7 @@ import inspect
 import sys
 from datetime import date
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -165,9 +166,11 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
             source_format = None  # type: ignore[assignment]
             provisional_pending_specimen = False
 
+            @override
             def ingest(self, path: Path) -> Iterator[RawTransaction]:  # pragma: no cover
                 return iter([])
 
+            @override
             def validate_source(self, path: Path) -> ProviderValidation:  # pragma: no cover
                 return ProviderValidation(is_valid=True)
 
@@ -192,9 +195,11 @@ def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional(
             verification_source = "no_corpus"
             provisional_pending_specimen = False  # wrong: must be True
 
+            @override
             def ingest(self, path: Path) -> Iterator[RawTransaction]:  # pragma: no cover
                 return iter([])
 
+            @override
             def validate_source(self, path: Path) -> ProviderValidation:  # pragma: no cover
                 return ProviderValidation(is_valid=True)
 
@@ -216,9 +221,11 @@ def test_financial_provider_init_subclass_accepts_valid_provider() -> None:
         verification_source = "no_corpus"
         provisional_pending_specimen = True
 
+        @override
         def ingest(self, path: Path) -> Iterator[RawTransaction]:  # pragma: no cover
             return iter([])
 
+        @override
         def validate_source(self, path: Path) -> ProviderValidation:  # pragma: no cover
             return ProviderValidation(is_valid=True)
 

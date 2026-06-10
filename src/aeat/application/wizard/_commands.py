@@ -29,10 +29,17 @@ import typing
 from collections import deque
 from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
+
+if TYPE_CHECKING:
+    from ...core.errors import AeatError
+
+import contextlib
 
 import click
+import click.types
 import typer
+import typer._click.types
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._catalogue import SETUP_FLOW
@@ -47,6 +54,24 @@ from ._prompter import (
     WizardUnsupportedConsoleError,
 )
 from ._runner import run_flow
+
+
+def _choice(values: list[str]) -> typer._click.types.ParamType:
+    """Wrap ``click.Choice`` and present it as ``typer._click.types.ParamType``.
+
+    ``click.Choice`` is generic (``Choice[T]``), but the ``typer.Option``
+    overload that accepts ``click_type`` declares it as
+    ``typer._click.types.ParamType | None``.  Typer vendors its own copy of
+    click; the static type hierarchies are unrelated even though at runtime
+    ``click.Choice`` is exactly the object typer passes through to click.
+
+    CAST-RATIONALE-CHOICE-PARAM-TYPE: ``typing.cast`` is used here for the
+    same reason as in ``build_wizard_command`` — the runtime object is always a
+    real ``click.Choice`` instance.  Only the static view is narrowed to the
+    typer-internal ``ParamType`` so the ``typer.Option`` overload resolver
+    accepts it without an ``Any`` escape.
+    """
+    return typing.cast("typer._click.types.ParamType", click.Choice(values))
 
 
 def _ccaa_choice_values() -> list[str]:
@@ -171,22 +196,22 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "taxation-type": typer.Option(
         "--taxation-type",
-        click_type=click.Choice(["1", "2"]),
+        click_type=_choice(["1", "2"]),
         help=tr("wizard.setup.flags.taxation-type.help"),
     ),
     "output-language": typer.Option(
         "--output-language",
-        click_type=click.Choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
+        click_type=_choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
         help=tr("wizard.setup.flags.output-language.help"),
     ),
     "taxpayer-sex": typer.Option(
         "--taxpayer-sex",
-        click_type=click.Choice(["H", "M"]),
+        click_type=_choice(["H", "M"]),
         help=tr("wizard.setup.flags.taxpayer-sex.help"),
     ),
     "taxpayer-marital-status": typer.Option(
         "--taxpayer-marital-status",
-        click_type=click.Choice(["1", "2", "3", "4"]),
+        click_type=_choice(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
     ),
     "taxpayer-marriage-date": typer.Option(
@@ -199,7 +224,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "taxpayer-disability-grade": typer.Option(
         "--taxpayer-disability-grade",
-        click_type=click.Choice(["1", "2", "3", "4"]),
+        click_type=_choice(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.taxpayer-disability-grade.help"),
     ),
     "taxpayer-death-date": typer.Option(
@@ -215,12 +240,12 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "spouse-sex": typer.Option(
         "--spouse-sex",
-        click_type=click.Choice(["H", "M"]),
+        click_type=_choice(["H", "M"]),
         help=tr("wizard.setup.flags.spouse-sex.help"),
     ),
     "spouse-disability-grade": typer.Option(
         "--spouse-disability-grade",
-        click_type=click.Choice(["1", "2", "3", "4"]),
+        click_type=_choice(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.spouse-disability-grade.help"),
     ),
     "spouse-non-resident-irpf": typer.Option(
@@ -245,7 +270,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "iva-regime": typer.Option(
         "--iva-regime",
-        click_type=click.Choice(_IVA_REGIME_CHOICE_VALUES),
+        click_type=_choice(_IVA_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.iva-regime.help"),
     ),
     "iva-roi-enrolled": typer.Option(
@@ -306,7 +331,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "fiscal-residency": typer.Option(
         "--fiscal-residency",
-        click_type=click.Choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
+        click_type=_choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.fiscal-residency.help"),
     ),
     "country-of-fiscal-residence": typer.Option(
@@ -323,7 +348,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "tax-residence-ccaa": typer.Option(
         "--tax-residence-ccaa",
-        click_type=click.Choice(_CCAA_CHOICE_VALUES),
+        click_type=_choice(_CCAA_CHOICE_VALUES),
         # The 15 CCAA choices form one ~150-char metavar that Rich
         # wraps mid-token (`com` / `unidad_valenciana`). A short
         # explicit metavar plus `show_choices=False` keeps the metavar
@@ -339,17 +364,17 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "notes": typer.Option("--notes", help=tr("wizard.setup.flags.notes.help")),
     "entity-type": typer.Option(
         "--entity-type",
-        click_type=click.Choice(_ENTITY_TYPE_CHOICE_VALUES),
+        click_type=_choice(_ENTITY_TYPE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.entity-type.help"),
     ),
     "legal-entity-form": typer.Option(
         "--legal-entity-form",
-        click_type=click.Choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
+        click_type=_choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
         help=tr("wizard.setup.flags.legal-entity-form.help"),
     ),
     "irpf-income-categories": typer.Option(
         "--irpf-income-categories",
-        click_type=click.Choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
+        click_type=_choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-income-categories.help"),
     ),
     "incn-prior-12-months": typer.Option(
@@ -362,12 +387,12 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "irpf-estimation-regime": typer.Option(
         "--irpf-estimation-regime",
-        click_type=click.Choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
+        click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
     ),
     "irpf-special-regime": typer.Option(
         "--irpf-special-regime",
-        click_type=click.Choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
+        click_type=_choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-special-regime.help"),
     ),
     "irpf-special-regime-start-date": typer.Option(
@@ -376,7 +401,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "situacion-familiar": typer.Option(
         "--situacion-familiar",
-        click_type=click.Choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
+        click_type=_choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
         help=tr("wizard.setup.flags.situacion-familiar.help"),
     ),
     "iva-sii-enrolled": typer.Option(
@@ -731,7 +756,7 @@ def _run_full_flow(
         )
 
 
-def _enter_requested_output_language(kwargs: dict[str, object], language_stack: typing.Any) -> None:
+def _enter_requested_output_language(kwargs: dict[str, object], language_stack: contextlib.ExitStack) -> None:
     """Apply a command-line output-language override for the command body."""
     from ...core.config import override_settings
 
@@ -740,9 +765,9 @@ def _enter_requested_output_language(kwargs: dict[str, object], language_stack: 
         language_stack.enter_context(override_settings(aeat_output_language=requested_language))
 
 
-def _render_error_inside_language_override(exc: typing.Any) -> None:
+def _render_error_inside_language_override(exc: AeatError) -> None:
     """Freeze a translated AEAT error message before locale overrides unwind."""
-    translated_key = getattr(exc, "translated_message", None)
+    translated_key = exc.translated_message
     if not isinstance(translated_key, str) or not translated_key:
         return
 

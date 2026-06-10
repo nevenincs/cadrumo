@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 from pydantic import ValidationError
 
@@ -64,6 +66,7 @@ class _DummyRepository(ResourceCacheRepository[str, _DummyKey]):
         super().__init__()
         self._load_calls = 0
 
+    @override
     def _load(self, key: _DummyKey) -> str:
         self._load_calls += 1
         return key.name.upper()

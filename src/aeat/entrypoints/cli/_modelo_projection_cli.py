@@ -20,6 +20,7 @@ from ...application.modelo import (
     compare_modelo_years,
     project_modelo_100_from_m130,
 )
+from ...core import Modelo
 from ...core.i18n import tr
 from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
 from ._common import _emit_envelope
@@ -259,7 +260,7 @@ def _register_modelo_compare_command(
                     default="Modelo number to compare (e.g. 100, 130).",
                 ),
             ),
-        ] = "100",
+        ] = Modelo.M100.value,
     ) -> None:
         """Compare two filing-year revisions for the same modelo casilla-by-casilla."""
         require_active_profile()

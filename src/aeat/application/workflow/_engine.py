@@ -16,6 +16,7 @@ Safety invariants enforced by this module:
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import NoReturn
 
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
@@ -903,7 +904,10 @@ class WorkflowEngine:
                     summary=errors_summary,
                     details={
                         "error_count": str(len(error_findings)),
-                        "next_action": ("Run: aeat app modelo work verification-report list <calculation_revision_id>"),
+                        "next_action": (
+                            "Run: aeat app modelo verification-report list"
+                            " --calculation-revision-id <calculation_revision_id>"
+                        ),
                     },
                 )
             )
@@ -1117,7 +1121,7 @@ class WorkflowEngine:
         started: datetime,
         exc: BaseException,
         steps: list[WorkflowStep],
-    ) -> None:
+    ) -> NoReturn:
         record_unhandled(stage=stage, started=started, exc=exc, steps=steps)
 
     def _record_site_unavailable(
@@ -1127,7 +1131,7 @@ class WorkflowEngine:
         started: datetime,
         exc: SiteHealthError,
         steps: list[WorkflowStep],
-    ) -> None:
+    ) -> NoReturn:
         record_site_unavailable(
             stage=stage,
             started=started,

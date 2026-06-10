@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....domain.deadlines import IVARegime, Schedule, TaxpayerProfile
+from ....domain.filing import ModeloInputs
 from .. import default_engine
 from .._errors import WorkflowError
 
@@ -25,7 +26,7 @@ def _profile() -> TaxpayerProfile:
 
 
 class _DeadlineEngine:
-    def compute(self, profile: TaxpayerProfile, year: int, *, today=None) -> Schedule:
+    def compute(self, profile: TaxpayerProfile, year: int, *, today: date | None = None) -> Schedule:
         del year, today
         return Schedule(
             profile=profile,
@@ -36,7 +37,9 @@ class _DeadlineEngine:
 
 
 class _DraftBuilder:
-    def build(self, *, modelo: str, period: str, profile: TaxpayerProfile, inputs, fail_on_warning: bool = False):
+    def build(
+        self, *, modelo: str, period: str, profile: TaxpayerProfile, inputs: ModeloInputs, fail_on_warning: bool = False
+    ):
         del modelo, period, profile, inputs, fail_on_warning
         raise AssertionError("draft builder should not run while constructing default_engine")
 

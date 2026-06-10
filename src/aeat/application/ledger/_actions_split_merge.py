@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 from ...domain.buckets import (
     BucketEvent,
+    BucketEventHistoryRepository,
     BucketEventType,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -36,6 +37,7 @@ from ...domain.transactions import (
     SplitRole,
     Transaction,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionLifecycleLineageEntry,
     TransactionLifecycleState,
     TransactionValidationError,
@@ -499,7 +501,7 @@ def merge_transactions(
 
     _persist_merged_transactions(
         catalogue=catalogue,
-        transaction_repository=transaction_repository,
+        transaction_repository=repository,
         event_repository=event_repository,
         parent_after=parent_after,
         archived_children=tuple(archived_children),
@@ -679,8 +681,8 @@ def _build_merge_event(
 def _persist_merged_transactions(
     *,
     catalogue: TransactionCatalogue,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    event_repository: BucketEventHistoryRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
     parent_after: Transaction,
     archived_children: tuple[Transaction, ...],
     merged_transaction: Transaction,

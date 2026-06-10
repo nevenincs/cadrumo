@@ -307,6 +307,32 @@ def test_unsupported_ledger_iva_observations_identifies_unbound_regimes() -> Non
     assert unsupported_ledger_iva_observations(revision, (supported, unsupported)) == (unsupported,)
 
 
+def test_unsupported_excludes_cuota_less_by_law_categories() -> None:
+    """#64 refinement: cuota-less-by-law categories must not be flagged as unsupported.
+
+    An ``INTRA_COMMUNITY_SUPPLY`` repercutido observation (entrega
+    intracomunitaria exenta, Ley 37/1992 art. 25) bears zero M303 cuota and
+    correctly matches no cuota binding; it must be excluded from the unsupported
+    set, whereas a ``DOMESTIC_REVERSE_CHARGE`` observation that genuinely bears a
+    cuota but is routed by no binding yet must still be flagged.
+    """
+    revision = _revision_with_bindings(_binding())
+    exempt_supply = _observation(
+        ledger_id="intra-community-supply",
+        category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        flow=IvaFlowDirection.REPERCUTIDO,
+        iva=Decimal("0"),
+    )
+    reverse_charge = _observation(
+        ledger_id="domestic-reverse-charge",
+        category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        flow=IvaFlowDirection.SOPORTADO,
+        iva=Decimal("42.00"),
+    )
+
+    assert unsupported_ledger_iva_observations(revision, (exempt_supply, reverse_charge)) == (reverse_charge,)
+
+
 def test_resolve_handles_multiple_bindings_independently() -> None:
     revision = _revision_with_bindings(
         _binding("modelo-303-iva-repercutido-general-cuota"),

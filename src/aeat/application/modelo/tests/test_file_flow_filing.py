@@ -23,6 +23,7 @@ from ._file_flow_support import (
     WorkflowStage,
     _AuthProvider,
     _file_revision,
+    _Repos,
     _seed_work_unit,
     _target_filing_records,
     _verify_revision,
@@ -39,7 +40,7 @@ from ._file_flow_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_file_requires_verificado_completo_state(repos) -> None:
+def test_file_requires_verificado_completo_state(repos: _Repos) -> None:
     """A borrador revision cannot be filed; only verificado-completo
     revisions are eligible."""
 
@@ -67,7 +68,7 @@ def test_file_requires_verificado_completo_state(repos) -> None:
         )
 
 
-def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
+def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None:
     """The happy-path file flow: calculate → mark verified-complete
     → file. After file: a ModeloRecord exists, the revision is in
     FILED state, the work unit's filed_calculation_revision_id and
@@ -142,7 +143,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
     assert current.filing_record_id == filing.filing_record_id
 
 
-def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks(repos) -> None:
+def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks(repos: _Repos) -> None:
     """The file transition is gated by WorkflowEngine.run_for_period.
 
     When submission preflight refuses, the calculation revision remains
@@ -200,7 +201,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
     assert filed_events == ()
 
 
-def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos) -> None:
+def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: _Repos) -> None:
     """The ``NO_PENDING_OBLIGATION`` guard stays on the filing path.
 
     Deadline-independence applies to ``verify`` only. Filing a modelo
@@ -270,7 +271,7 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos) ->
     assert "filing-obligation window is not open" in gate_error.value.result.summary
 
 
-def test_filing_record_supersession_preserves_audit_history(repos) -> None:
+def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> None:
     """Re-filing a later verified revision supersedes the prior
     filing. The prior filing record moves to SUPERSEDED with the
     supersession metadata captured; the prior calculation revision
@@ -394,7 +395,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     assert refreshed_wu.current_filing_record_id == filing_two.filing_record_id
 
 
-def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
+def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> None:
     """The default listing surfaces operator-visible state (current
     filings). Pass include_superseded=True to walk audit history."""
 
@@ -469,7 +470,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
     assert len(_target_filing_records(with_history, work_unit)) == 2
 
 
-def test_get_filing_record_raises_on_missing_id(repos) -> None:
+def test_get_filing_record_raises_on_missing_id(repos: _Repos) -> None:
     _, _, fr_repo, _, _ = repos
     with pytest.raises(ModeloRecordNotFoundError) as excinfo:
         get_filing_record(

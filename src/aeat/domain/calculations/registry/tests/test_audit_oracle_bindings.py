@@ -15,6 +15,7 @@ from .....core.resources import bundled_path, resources
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .._live_parity import (
     LiveParityCatalogue,
+    OracleEnvironment,
     audit_oracle_bindings,
     audit_registry_oracle_bindings,
 )
@@ -42,9 +43,9 @@ def _bind_oracle_id_on_first_cross_reference(modelo: ModeloDefinition, oracle_id
 def test_no_bindings_produces_empty_audit() -> None:
     modelo = _modelo_130()
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, catalogue, environment=OracleEnvironment.PRODUCTION)
 
     assert failures == ()
 
@@ -64,9 +65,9 @@ def test_binding_to_production_oracle_passes_under_production() -> None:
     modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, new_revision.id: new_revision}})
 
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, catalogue, environment=OracleEnvironment.PRODUCTION)
 
     assert failures == ()
 
@@ -74,9 +75,9 @@ def test_binding_to_production_oracle_passes_under_production() -> None:
 def test_binding_to_test_environment_oracle_fails_under_production() -> None:
     modelo = _bind_oracle_id_on_first_cross_reference(_modelo_130(), ORACLE_ID)
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="test_environment")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.TEST_ENVIRONMENT)
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, catalogue, environment=OracleEnvironment.PRODUCTION)
 
     assert len(failures) == 1
     message = failures[0]
@@ -89,9 +90,9 @@ def test_binding_to_unregistered_oracle_fails_with_unknown_oracle_message() -> N
     modelo = _bind_oracle_id_on_first_cross_reference(_modelo_130(), "absent-oracle")
     catalogue = LiveParityCatalogue()
     # Register an unrelated oracle so the catalogue is non-empty and the audit runs.
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, catalogue, environment=OracleEnvironment.PRODUCTION)
 
     assert len(failures) == 1
     message = failures[0]
@@ -108,9 +109,11 @@ def test_aggregate_audit_collects_failures_across_modelos() -> None:
     bound_111 = _bind_oracle_id_on_first_cross_reference(modelo_111, "missing-111")
 
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
 
-    failures = audit_registry_oracle_bindings((bound_130, bound_111), catalogue, environment="production")
+    failures = audit_registry_oracle_bindings(
+        (bound_130, bound_111), catalogue, environment=OracleEnvironment.PRODUCTION
+    )
 
     assert len(failures) == 2
     assert any("modelo 130" in m and "missing-130" in m for m in failures)
@@ -121,7 +124,7 @@ def test_empty_catalogue_reports_bound_oracle_as_unknown() -> None:
     modelo = _bind_oracle_id_on_first_cross_reference(_modelo_130(), "would-fail-if-checked")
     catalogue = LiveParityCatalogue()
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, catalogue, environment=OracleEnvironment.PRODUCTION)
 
     assert len(failures) == 1
     message = failures[0]
@@ -133,7 +136,7 @@ def test_aggregate_empty_catalogue_reports_bound_oracles() -> None:
     modelo = _bind_oracle_id_on_first_cross_reference(_modelo_130(), "missing-130")
     catalogue = LiveParityCatalogue()
 
-    failures = audit_registry_oracle_bindings((modelo,), catalogue, environment="production")
+    failures = audit_registry_oracle_bindings((modelo,), catalogue, environment=OracleEnvironment.PRODUCTION)
 
     assert len(failures) == 1
     assert "missing-130" in failures[0]

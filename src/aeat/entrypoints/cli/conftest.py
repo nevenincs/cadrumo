@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
 import typer
@@ -24,6 +24,7 @@ class _TyperAwareCliRunner(CliRunner):
     # KWARGS-ANY-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE: click.testing.CliRunner.
     # invoke accepts varargs/kwargs that change across click minor versions;
     # typing them concretely couples this subclass to a specific click release.
+    @override
     def invoke(self, cli: Any, *args: Any, **kwargs: Any) -> Result:  # type: ignore[override]  # TYPE-IGNORE-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE
         if isinstance(cli, typer.Typer):
             cli = typer.main.get_command(cli)

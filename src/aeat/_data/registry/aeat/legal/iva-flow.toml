@@ -117,6 +117,160 @@ required_text = [
     "entregas de bienes a viajeros",
 ]
 
+[legal."ley-37-1992:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-7.html#a7"
+document_id = "BOE-A-1992-28740"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a7"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmision de unidad economica autonoma, muestras gratuitas, entregas publicitarias, servicios en regimen de dependencia, operaciones de Administraciones Publicas sin contraprestacion, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificacion no-sujeta en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Operaciones no sujetas al impuesto",
+    "No estarán sujetas al impuesto",
+    "constituyan o sean susceptibles de constituir una unidad económica autónoma",
+]
+
+[legal."ley-37-1992:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-13.html#a13"
+document_id = "BOE-A-1992-28740"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a13"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 13: hecho imponible de las adquisiciones intracomunitarias de bienes. Sujeta las adquisiciones intracomunitarias efectuadas a titulo oneroso por empresarios, profesionales o personas juridicas, asi como las adquisiciones de medios de transporte nuevos. Base sustantiva del hecho imponible intracomunitario en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Las adquisiciones intracomunitarias de bienes efectuadas a título oneroso",
+    "Estarán sujetas las siguientes operaciones realizadas en el ámbito espacial de aplicación del Impuesto",
+]
+
+[legal."ley-37-1992:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-15.html#a15"
+document_id = "BOE-A-1992-28740"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a15"
+published_at = 1992-12-29
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 15: concepto de adquisicion intracomunitaria de bienes. Define la adquisicion intracomunitaria como la obtencion del poder de disposicion sobre bienes muebles corporales expedidos o transportados al territorio de aplicacion del Impuesto desde otro Estado miembro. Base definitoria del enrutamiento intracomunitario M303 (Tier-2 routing)."
+required_text = [
+    "Concepto de adquisición intracomunitaria de bienes",
+    "Se entenderá por adquisición intracomunitaria de bienes",
+    "La obtención del poder de disposición sobre bienes muebles corporales",
+]
+
+[legal."ley-37-1992:art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-17.html#a17"
+document_id = "BOE-A-1992-28740"
+article = "17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a17"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 17: hecho imponible de las importaciones de bienes. Sujeta al impuesto las importaciones de bienes cualquiera que sea el fin a que se destinen y la condicion del importador. Base sustantiva del hecho imponible de importacion en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Estarán sujetas al impuesto las importaciones de bienes",
+    "cualquiera que sea el fin a que se destinen y la condición del importador",
+]
+
+[legal."ley-37-1992:art-20"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 20: exenciones en operaciones interiores. Enumera las exenciones limitadas (sin derecho a deduccion) aplicables a las operaciones interiores: servicio postal, sanidad, educacion, asistencia social, operaciones financieras y de seguros, arrendamientos y entregas de inmuebles, entre otras. Base sustantiva de la clasificacion exenta interior en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Exenciones en operaciones interiores",
+    "Estarán exentas de este impuesto las siguientes operaciones",
+]
+
+[legal."ley-37-1992:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-22.html#a22"
+document_id = "BOE-A-1992-28740"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a22"
+published_at = 1992-12-29
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 22: exenciones en las operaciones asimiladas a las exportaciones. Exime entregas y servicios relativos a buques afectos a navegacion maritima internacional, aeronaves de companias que se dediquen al trafico internacional, operaciones con organismos internacionales y misiones diplomaticas. Base sustantiva de la clasificacion exenta asimilada a exportacion en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Exenciones en las operaciones asimiladas a las exportaciones",
+    "los buques aptos para navegar por alta mar",
+]
+
+[legal."ley-37-1992:art-25"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-25.html#a25"
+document_id = "BOE-A-1992-28740"
+article = "25"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a25"
+published_at = 1992-12-29
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 25: exenciones en las entregas de bienes destinados a otro Estado miembro (entregas intracomunitarias). Exime las entregas de bienes expedidos o transportados al territorio de otro Estado miembro cuando el adquirente disponga de un NIF-IVA asignado por otro Estado miembro y la operacion se incluya en la declaracion recapitulativa. Base sustantiva de la clasificacion exenta intracomunitaria en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Exenciones en las entregas de bienes destinados a otro Estado miembro",
+    "expedidos o transportados, por el vendedor, por el adquirente o por un tercero",
+]
+
+[legal."ley-37-1992:art-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-26.html#a26"
+document_id = "BOE-A-1992-28740"
+article = "26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a26"
+published_at = 1992-12-29
+effective_from = 2010-03-03
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operacion triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaria no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operacion triangular y aquellas con derecho a devolucion total. Base sustantiva de la exencion intracomunitaria y la triangulacion en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Exenciones en las adquisiciones intracomunitarias de bienes",
+    "Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado",
+]
+
 [legal."ley-37-1992:art-117-bis"]
 evidence_tier = "legal_authority"
 authority = "boe"

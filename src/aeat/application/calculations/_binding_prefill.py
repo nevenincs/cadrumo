@@ -23,6 +23,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core import Modelo
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -211,7 +212,7 @@ def _gather_observations(
         gathered: _GatheredObservation | None = None
         if payload is not None:
             gathered = _gathered_observation(payload.observation, source_kind=payload.source_kind)
-        if requirement.modelo == "303" and iva_history_repository is not None:
+        if requirement.modelo == Modelo.M303.value and iva_history_repository is not None:
             state = iva_history_repository.load_period(requirement.filing_year, requirement.period)
             if state is not None:
                 history_gathered = _gathered_observation(
@@ -267,7 +268,7 @@ def _observation_from_iva_compensation_history(
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
     snapshot = resources().modelos.authority.snapshot(
-        "303",
+        Modelo.M303.value,
         filing_year=state.filing_year,
         period=state.period,
     )
@@ -299,7 +300,7 @@ def _observation_from_iva_compensation_history(
         )
 
     return RegistryModeloObservation(
-        modelo="303",
+        modelo=Modelo.M303.value,
         filing_year=state.filing_year,
         period=state.period,
         observations=(
@@ -495,7 +496,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     ``None`` when no compensation binding is present) and the underlying
     :class:`BindingPrefillReport`.
     """
-    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
         from ..modelo._actions import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError("local IVA compensation recurrence extraction only applies to Modelo 303")

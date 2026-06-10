@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from .. import __version__
+from ..core import Modelo
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
@@ -653,7 +654,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
         authority.snapshot(
-            "100",
+            Modelo.M100.value,
             filing_year=_REGISTRY_INTEGRITY_PROBE_YEAR,
             period="0A",
             on=_REGISTRY_INTEGRITY_PROBE_DATE,

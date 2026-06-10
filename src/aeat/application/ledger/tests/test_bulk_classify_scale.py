@@ -17,6 +17,7 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -46,6 +47,7 @@ class _CountingTxRepo(TransactionCatalogueRepository):
         super().__init__(*args, **kwargs)
         self.save_calls = 0
 
+    @override
     def save_with_secure_object_writes(self, catalogue, writes):  # type: ignore[no-untyped-def]
         self.save_calls += 1
         return super().save_with_secure_object_writes(catalogue, writes)

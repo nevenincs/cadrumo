@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ._referential_integrity_support import (
@@ -529,7 +531,7 @@ def test_dangling_modelo_source_refs() -> None:
         _check_all_id_references(snapshot)
 
 
-def test_config_repair_report_includes_registry_integrity_check(tmp_path) -> None:
+def test_config_repair_report_includes_registry_integrity_check(tmp_path: Path) -> None:
     """build_config_repair_report produces a registry.integrity DiagnosticCheck.
 
     The report walks SecureObject storage to surface bucket-side health,

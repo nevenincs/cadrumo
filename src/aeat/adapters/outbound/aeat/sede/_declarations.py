@@ -33,6 +33,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
+from .....core import Modelo
 from .....core.config import Settings, load_settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
@@ -935,7 +936,7 @@ async def _capture_filed_declaration_observation_from_row(
                 try:
                     resolved_layout = resolve_export_layout(snapshot)
                 except RegistryValidationError as exc:
-                    if snapshot.modelo.id == "303" and "has no exports" in str(exc):
+                    if snapshot.modelo.id == Modelo.M303 and "has no exports" in str(exc):
                         extraction_coverage["submitted_file"] = 1.0
                     else:
                         raise

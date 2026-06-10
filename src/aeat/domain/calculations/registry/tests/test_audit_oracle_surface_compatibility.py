@@ -19,6 +19,7 @@ from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import (
     _COMPATIBLE_SURFACE_PAIRS,
     LiveParityCatalogue,
+    OracleEnvironment,
     audit_oracle_bindings,
 )
 from .._renta_web_open_oracle import RentaWebOpenOracle
@@ -41,9 +42,9 @@ _COMPATIBLE_BEHAVIOURAL_CASES: tuple[tuple[str, str, str], ...] = (
 
 def _build_catalogue() -> LiveParityCatalogue:
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
-    catalogue.register(GroiOracle(), environment="production")
-    catalogue.register(RentaWebOpenOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(GroiOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(RentaWebOpenOracle(), environment=OracleEnvironment.PRODUCTION)
     return catalogue
 
 
@@ -74,7 +75,7 @@ def _bind_first_cross_reference(
 def test_compatible_pair_passes_audit() -> None:
     modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=ORACLE_ID, surface="public_read_surface")
 
-    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment=OracleEnvironment.PRODUCTION)
 
     assert failures == ()
 
@@ -82,7 +83,7 @@ def test_compatible_pair_passes_audit() -> None:
 def test_static_official_documentation_surface_rejects_every_oracle() -> None:
     modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=ORACLE_ID, surface="static_official_documentation")
 
-    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment=OracleEnvironment.PRODUCTION)
 
     assert len(failures) == 1
     message = failures[0]
@@ -96,7 +97,7 @@ def test_authenticated_read_surface_rejects_open_simulator_oracle() -> None:
         _modelo_130(), oracle_id="modelo-100-renta-web-open", surface="authenticated_read_surface"
     )
 
-    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment=OracleEnvironment.PRODUCTION)
 
     assert len(failures) == 1
     message = failures[0]
@@ -109,7 +110,7 @@ def test_lookup_failure_does_not_double_report_surface_incompatibility() -> None
 
     modelo = _bind_first_cross_reference(_modelo_130(), oracle_id="absent", surface="static_official_documentation")
 
-    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment=OracleEnvironment.PRODUCTION)
 
     assert len(failures) == 1
     message = failures[0]
@@ -128,7 +129,7 @@ def test_real_oracle_compatible_pair_passes_audit(oracle_id: str, surface: str, 
     assert (surface, surface_kind) in _COMPATIBLE_SURFACE_PAIRS
     modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=oracle_id, surface=surface)
 
-    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment=OracleEnvironment.PRODUCTION)
 
     assert failures == ()
 

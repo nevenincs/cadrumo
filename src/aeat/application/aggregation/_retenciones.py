@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core import Modelo
 from ...core.aggregation import AggregationSourceKind, RetencionScheme
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
@@ -141,12 +142,12 @@ _MODELO_123_SCHEMES: frozenset[RetencionScheme] = frozenset(
 # Modelo 180/190/193 are annual summaries of 115/111/123 respectively;
 # they consume the same observation set widened over a full year period.
 _MODELO_SCHEME_CATALOGUE: dict[str, frozenset[RetencionScheme]] = {
-    "111": _MODELO_111_SCHEMES,
-    "115": _MODELO_115_SCHEMES,
-    "123": _MODELO_123_SCHEMES,
-    "180": _MODELO_115_SCHEMES,
-    "190": _MODELO_111_SCHEMES,
-    "193": _MODELO_123_SCHEMES,
+    Modelo.M111.value: _MODELO_111_SCHEMES,
+    Modelo.M115.value: _MODELO_115_SCHEMES,
+    Modelo.M123.value: _MODELO_123_SCHEMES,
+    Modelo.M180.value: _MODELO_115_SCHEMES,
+    Modelo.M190.value: _MODELO_111_SCHEMES,
+    Modelo.M193.value: _MODELO_123_SCHEMES,
 }
 
 
@@ -217,7 +218,7 @@ def aggregate_retenciones_111(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo="111", period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo.M111.value, period=period)
 
 
 def aggregate_retenciones_115(
@@ -232,7 +233,7 @@ def aggregate_retenciones_115(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for Modelo 115.
     """
-    return _aggregate_for_modelo(observations, modelo="115", period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo.M115.value, period=period)
 
 
 def aggregate_retenciones_123(
@@ -245,7 +246,7 @@ def aggregate_retenciones_123(
     Covers rendimientos del capital mobiliario: intereses, dividendos, y otros.
     In-scope schemes: CAPITAL_INTEREST, CAPITAL_DIVIDEND, CAPITAL_OTHER.
     """
-    return _aggregate_for_modelo(observations, modelo="123", period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo.M123.value, period=period)
 
 
 def aggregate_retenciones_180(
@@ -263,7 +264,7 @@ def aggregate_retenciones_180(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo="180", period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo.M180.value, period=period)
 
 
 def aggregate_retenciones_190(
@@ -279,7 +280,7 @@ def aggregate_retenciones_190(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for the annual summary.
     """
-    return _aggregate_for_modelo(observations, modelo="190", period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo.M190.value, period=period)
 
 
 def aggregate_retenciones_193(
@@ -292,7 +293,7 @@ def aggregate_retenciones_193(
     Resumen anual de retenciones sobre capital mobiliario.
     Shares the 123 scheme catalogue.
     """
-    return _aggregate_for_modelo(observations, modelo="193", period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo.M193.value, period=period)
 
 
 __all__ = [

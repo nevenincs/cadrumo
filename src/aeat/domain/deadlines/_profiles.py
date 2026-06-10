@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from ...core import Modelo
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
 from ...core.setup_answers import SetupAnswers, project_answers
@@ -276,7 +277,7 @@ def _parse_group_member_roster_key(key: str) -> tuple[str | None, int | None, st
         if len(parts) == 3 and parts[1].isdigit():
             return parts[0], int(parts[1]), parts[2]
         if len(parts) == 2 and parts[0].isdigit():
-            return "322", int(parts[0]), parts[1]
+            return Modelo.M322.value, int(parts[0]), parts[1]
     return None, None, None
 
 

@@ -31,6 +31,7 @@ from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import (
     CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,
+    OracleEnvironment,
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
 )
@@ -55,9 +56,9 @@ def _full_production_catalogue() -> LiveParityCatalogue:
     """Register every production-grade oracle adapter shipped with the project."""
 
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
-    catalogue.register(GroiOracle(), environment="production")
-    catalogue.register(RentaWebOpenOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(GroiOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(RentaWebOpenOracle(), environment=OracleEnvironment.PRODUCTION)
     return catalogue
 
 
@@ -110,8 +111,8 @@ def test_collect_orphan_oracle_ids_returns_empty_when_every_catalogue_id_is_boun
     """Catalogue limited to the two oracles bound by the committed registry."""
     modelos = _committed_modelos()
     catalogue = LiveParityCatalogue()
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
-    catalogue.register(GroiOracle(), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(GroiOracle(), environment=OracleEnvironment.PRODUCTION)
 
     orphans = collect_orphan_oracle_ids(modelos, catalogue)
 
@@ -131,7 +132,7 @@ def test_collect_orphan_oracle_ids_treats_cross_reference_without_oracle_id_as_n
     assert has_none_binding, "committed registry must expose at least one None-bound cross-reference"
 
     catalogue = LiveParityCatalogue()
-    catalogue.register(RentaWebOpenOracle(), environment="production")
+    catalogue.register(RentaWebOpenOracle(), environment=OracleEnvironment.PRODUCTION)
     orphans = collect_orphan_oracle_ids(modelos, catalogue)
 
     assert RENTA_WEB_OPEN_ORACLE_ID in orphans
@@ -142,7 +143,7 @@ def test_collect_orphan_oracle_ids_consumes_iterable_once() -> None:
     callers passing a generator would silently see an empty bound set
     on subsequent walks."""
     catalogue = LiveParityCatalogue()
-    catalogue.register(RentaWebOpenOracle(), environment="production")
+    catalogue.register(RentaWebOpenOracle(), environment=OracleEnvironment.PRODUCTION)
 
     def _modelos_once() -> Iterator[ModeloDefinition]:
         yielded = False

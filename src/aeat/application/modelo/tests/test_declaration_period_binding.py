@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
@@ -44,7 +45,7 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _seed_taxpayer_profile(objects) -> None:
+def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
     """Seed the bucket profile with the taxpayer NIF so the IVA wallet
     reconciliation gate added to ``calculate_modelo_revision`` resolves
     the work-unit taxpayer identity."""

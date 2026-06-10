@@ -22,6 +22,7 @@ Design:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 
 import pytest
@@ -129,7 +130,7 @@ def _collect_verdicts_from_explain(
     ids=["autonomo", "sociedad_limitada", "landlord", "attribution_entity"],
 )
 def test_calendar_and_explain_agree_on_applicability_verdict(
-    profile_factory,
+    profile_factory: Callable[[], TaxpayerProfile],
 ) -> None:
     """Calendar and explain surfaces agree on the verdict for every modelo.
 

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, TypedDict
 
 import typer
 
@@ -17,6 +17,17 @@ from ._app_live_payloads import (
     Borrador100ViewResult,
 )
 from ._common import _emit_envelope
+
+
+class _BorradorRow(TypedDict):
+    snapshot_id: str
+    filing_year: int
+    period: str
+    captured_at: str
+    source_url: str
+    binding_count: int
+    state: str
+
 
 borrador_app = typer.Typer(
     name="borrador",
@@ -68,7 +79,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             bucket_id=bucket_id,
             count=len(rows),
             rows=[Borrador100SnapshotSummaryPayload(**_borrador_row(row)) for row in rows],
-        )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-BORRADOR-LIST-MAPPING-SPLAT
+        )
         lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
         for row in rows:
             lines.append(
@@ -107,7 +118,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             bucket_id=bucket_id,
             **_borrador_row(record),
             binding_values=binding_values,
-        )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-BORRADOR-VIEW-MAPPING-SPLAT
+        )
         lines = [
             f"bucket\t{bucket_id}",
             f"snapshot_id\t{record.snapshot_id}",
@@ -172,16 +183,16 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
         _emit_envelope(ctx, command="app.live.borrador.100.latest", result=result, lines=lines)
 
 
-def _borrador_row(snapshot) -> Mapping[str, object]:
-    return {
-        "snapshot_id": snapshot.snapshot_id,
-        "filing_year": snapshot.filing_year,
-        "period": snapshot.period,
-        "captured_at": snapshot.captured_at.isoformat(),
-        "source_url": snapshot.source_url,
-        "binding_count": len(snapshot.binding_values),
-        "state": snapshot.state.value,
-    }
+def _borrador_row(snapshot) -> _BorradorRow:
+    return _BorradorRow(
+        snapshot_id=snapshot.snapshot_id,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+        captured_at=snapshot.captured_at.isoformat(),
+        source_url=snapshot.source_url,
+        binding_count=len(snapshot.binding_values),
+        state=snapshot.state.value,
+    )
 
 
 __all__ = ["borrador_100_app", "borrador_app", "register_borrador_commands"]

@@ -10,6 +10,7 @@ Direct exports:
 * :data:`STRICT_FROZEN_CONFIG` — the frozen-strict pydantic ``ConfigDict``
   shared by immutable boundary models.
 * :class:`StandardPeriodCode` — the closed set of AEAT filing-period tokens.
+* :class:`Modelo` — the closed set of AEAT modelo identifier codes.
 * :class:`AggregationSourceKind` — provenance kinds for aggregated ledger
   values, resolved lazily to avoid an import cycle.
 
@@ -27,6 +28,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._modelo import Modelo
 from ._models import STRICT_FROZEN_CONFIG
 from ._period import StandardPeriodCode
 
@@ -39,6 +41,7 @@ if TYPE_CHECKING:
 __all__: list[str] = [
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
+    "Modelo",
     "StandardPeriodCode",
     "require_active_bucket_id",
     "resolve_active_bucket_id",

@@ -11,9 +11,11 @@ consumes these records as its baseline.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -62,6 +64,13 @@ from ._file_flow_support import _file_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    BucketEventHistoryRepository,
+]
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
@@ -72,7 +81,7 @@ _T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture
-def repos(tmp_path):
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Yield the five catalogue repositories over an encrypted SQLite db."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
@@ -85,7 +94,7 @@ def repos(tmp_path):
         yield wu, cr, fr, vr, bv
 
 
-def _seed_work_unit(wu_repo):
+def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository):
     """Modelo 130 1T 2026 — registry-resolvable for the
     ``calculate_modelo_revision`` formula-engine path used by the
     locally-filed regression test."""
@@ -119,7 +128,7 @@ class _ImportOutcome:
     filing: ModeloRecord
 
 
-def _drive_import_persists_filing(repos) -> _ImportOutcome:  # type: ignore[no-untyped-def]
+def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
     """Run the seed-work-unit + import-evidence scenario and bundle the observable state."""
     wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
@@ -138,13 +147,13 @@ def _drive_import_persists_filing(repos) -> _ImportOutcome:  # type: ignore[no-u
     return _ImportOutcome(work_unit=work_unit, filing=filing)
 
 
-def test_import_filing_is_current_and_accepted(repos) -> None:  # type: ignore[no-untyped-def]
+def test_import_filing_is_current_and_accepted(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     assert outcome.filing.status is ModeloRecordStatus.VIGENTE
     assert outcome.filing.aeat_accepted is True
 
 
-def test_import_filing_carries_external_evidence_metadata(repos) -> None:  # type: ignore[no-untyped-def]
+def test_import_filing_carries_external_evidence_metadata(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     evidence = outcome.filing.external_evidence
     assert evidence is not None
@@ -153,7 +162,7 @@ def test_import_filing_carries_external_evidence_metadata(repos) -> None:  # typ
     assert evidence.imported_at == _T1
 
 
-def test_import_filing_records_no_amendment_link(repos) -> None:  # type: ignore[no-untyped-def]
+def test_import_filing_records_no_amendment_link(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     assert outcome.filing.amends_filing_record_id is None
     assert outcome.filing.filed_at == _T1
@@ -165,7 +174,7 @@ _IMPORTED_REVISION_CASILLAS = (
 )
 
 
-def test_import_persists_filed_calculation_revision(repos) -> None:  # type: ignore[no-untyped-def]
+def test_import_persists_filed_calculation_revision(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, cr_repo, _, _, _ = repos
     revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
@@ -173,7 +182,7 @@ def test_import_persists_filed_calculation_revision(repos) -> None:  # type: ign
     assert revision.amendment_kind is None  # import is not an amendment
 
 
-def test_import_persists_registry_grounded_casilla_observations(repos) -> None:  # type: ignore[no-untyped-def]
+def test_import_persists_registry_grounded_casilla_observations(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, cr_repo, _, _, _ = repos
     revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
@@ -190,14 +199,14 @@ def test_import_persists_registry_grounded_casilla_observations(repos) -> None: 
 
 
 @pytest.mark.parametrize(("casilla_id", "expected"), _IMPORTED_REVISION_CASILLAS)
-def test_import_persists_casilla_value(repos, casilla_id: str, expected: Decimal) -> None:  # type: ignore[no-untyped-def]
+def test_import_persists_casilla_value(repos: _Repos, casilla_id: str, expected: Decimal) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, cr_repo, _, _, _ = repos
     revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
     assert revision.casilla_values[casilla_id] == expected
 
 
-def test_import_work_unit_pointers_advance_to_new_filing(repos) -> None:  # type: ignore[no-untyped-def]
+def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     wu_repo, _, _, _, _ = repos
     refreshed_wu = get_work_unit(outcome.work_unit.work_unit_id, repository=wu_repo)
@@ -205,7 +214,7 @@ def test_import_work_unit_pointers_advance_to_new_filing(repos) -> None:  # type
     assert refreshed_wu.current_filing_record_id == outcome.filing.filing_record_id
 
 
-def test_import_emits_single_modelo_filing_imported_event(repos) -> None:  # type: ignore[no-untyped-def]
+def test_import_emits_single_modelo_filing_imported_event(repos: _Repos) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, _, _, _, bv_repo = repos
     events = bv_repo.load().for_bucket(
@@ -226,7 +235,7 @@ _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("payload_key", "expected"), _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS)
-def test_import_event_payload_records_field(repos, payload_key: str, expected: str) -> None:  # type: ignore[no-untyped-def]
+def test_import_event_payload_records_field(repos: _Repos, payload_key: str, expected: str) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, _, _, _, bv_repo = repos
     events = bv_repo.load().for_bucket(
@@ -236,7 +245,7 @@ def test_import_event_payload_records_field(repos, payload_key: str, expected: s
     assert events[0].payload[payload_key] == expected
 
 
-def test_import_supersedes_prior_current_filing(repos) -> None:
+def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
     """A second import for the same (bucket, modelo, year, period)
     supersedes the prior current filing. The supersession metadata
     is captured; the new filing's bucket-event references the prior
@@ -290,7 +299,7 @@ def test_import_supersedes_prior_current_filing(repos) -> None:
     assert imports[1].payload["supersedes_filing_record_id"] == first.filing_record_id
 
 
-def test_import_then_amend_unlocks_amendment_path(repos) -> None:
+def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
     """The import path produces a baseline the amend path accepts.
     This is the canonical production flow for correcting an
     externally-filed return: import official evidence, then amend
@@ -344,7 +353,7 @@ def test_import_then_amend_unlocks_amendment_path(repos) -> None:
     )
 
 
-def test_import_refuses_casilla_ids_not_in_registry(repos) -> None:
+def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:
     """The import path refuses casilla ids the registry does not
     declare for the work unit's modelo / filing_year / period.
     Imported baselines are the legal source of truth for amend
@@ -369,7 +378,7 @@ def test_import_refuses_casilla_ids_not_in_registry(repos) -> None:
     assert exc_info.value.context is not None and "9999" in exc_info.value.context["casillas"]
 
 
-def test_import_refuses_empty_casilla_values(repos) -> None:
+def test_import_refuses_empty_casilla_values(repos: _Repos) -> None:
     """The import path requires at least one casilla value — a
     zero-value mapping doesn't represent any real receipt."""
 
@@ -391,7 +400,7 @@ def test_import_refuses_empty_casilla_values(repos) -> None:
     assert raised.value.translated_message == "application.modelo.errors.external_filing_no_casilla_values"
 
 
-def test_import_refuses_empty_evidence_reference(repos) -> None:
+def test_import_refuses_empty_evidence_reference(repos: _Repos) -> None:
     """The import path requires a non-empty evidence reference id —
     without it the baseline can't be traced back to the receipt."""
 
@@ -413,7 +422,7 @@ def test_import_refuses_empty_evidence_reference(repos) -> None:
     assert raised.value.translated_message == "application.modelo.errors.external_filing_evidence_reference_blank"
 
 
-def test_import_refuses_discarded_work_unit(repos) -> None:
+def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
     """A discarded work unit cannot accept new imports."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
@@ -440,7 +449,7 @@ def test_import_refuses_discarded_work_unit(repos) -> None:
         )
 
 
-def test_import_refuses_unknown_work_unit(repos) -> None:
+def test_import_refuses_unknown_work_unit(repos: _Repos) -> None:
     """A work_unit_id absent from the catalogue is rejected."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
@@ -458,7 +467,7 @@ def test_import_refuses_unknown_work_unit(repos) -> None:
         )
 
 
-def test_amend_locally_filed_still_refused_after_import_path_exists(repos) -> None:
+def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repos) -> None:
     """Adding the import path does NOT loosen the amend evidence
     gate — a locally-filed record still has no ``external_evidence``
     and the amend path still refuses it."""

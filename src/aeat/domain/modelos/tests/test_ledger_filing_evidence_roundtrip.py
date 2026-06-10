@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -27,7 +28,7 @@ _TX_ID = "c" * 64
 
 
 @pytest.fixture
-def objects(tmp_path) -> Iterator[SecureObjectRepository]:
+def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         yield profile.repository
 

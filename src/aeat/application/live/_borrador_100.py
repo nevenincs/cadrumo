@@ -23,6 +23,7 @@ from typing import Any, override
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core import Modelo
 from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
 )
@@ -68,7 +69,7 @@ class Borrador100Snapshot(BaseModel):
 
     snapshot_id: str = Field(min_length=1, max_length=128)
     bucket_id: BucketId
-    modelo: str = Field(pattern=r"^100$")
+    modelo: str = Field(pattern=f"^{Modelo.M100.value}$")
     filing_year: int = Field(ge=1900, le=9999)
     period: str = Field(min_length=1, max_length=16)
     captured_at: datetime
@@ -122,7 +123,7 @@ def derive_borrador_100_snapshot_id(
     """
     return derive_snapshot_id_from_json(
         {
-            "modelo": "100",
+            "modelo": Modelo.M100.value,
             "filing_year": filing_year,
             "period": period.strip(),
             "captured_at": captured_at.isoformat(),
@@ -336,7 +337,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
         return Borrador100Snapshot(
             snapshot_id=snapshot_id,
             bucket_id=self._repository.bucket_id,
-            modelo="100",
+            modelo=Modelo.M100.value,
             filing_year=kwargs["filing_year"],
             period=kwargs["period"].strip(),
             captured_at=kwargs["captured_at"],

@@ -47,6 +47,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
+from ...core import Modelo
 from ...core._toml import read_toml
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
@@ -183,7 +184,7 @@ class DeadlineShift(BaseModel):
 #: falls on a Spanish holiday or weekend. Adding new modelos to this
 #: tuple keeps the exception list data-driven; :func:`shift_deadline`
 #: never grows a switch statement.
-MODELOS_WITHOUT_SHIFT: tuple[str, ...] = ("369",)
+MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo.M369,)
 
 
 # ---------------------------------------------------------------------------

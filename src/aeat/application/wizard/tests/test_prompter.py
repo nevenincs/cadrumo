@@ -5,6 +5,7 @@ implementation.
 from __future__ import annotations
 
 from collections import deque
+from typing import override
 
 import pytest
 
@@ -104,9 +105,11 @@ def test_questionary_prompter_translates_no_console_error() -> None:
         ``prompt_toolkit.output.win32.NoConsoleScreenBufferError``.
         """
 
+        @override
         def write(self, data: str) -> None:  # pragma: no cover - first call raises
             raise OSError("No console screen buffer attached")
 
+        @override
         def write_raw(self, data: str) -> None:  # pragma: no cover - first call raises
             raise OSError("No console screen buffer attached")
 

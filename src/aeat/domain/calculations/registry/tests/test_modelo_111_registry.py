@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -37,7 +37,9 @@ def modelo_111_registry():
 
 
 @pytest.mark.parametrize("period", ["1T", "01"])
-def test_modelo_111_validated_snapshot_owns_workflow_surfaces(modelo_111_registry, period: str) -> None:
+def test_modelo_111_validated_snapshot_owns_workflow_surfaces(
+    modelo_111_registry: tuple[ModeloDefinition, RegistryCatalogues], period: str
+) -> None:
     modelo, catalogues = modelo_111_registry
     snapshot = build_snapshot(
         modelo,

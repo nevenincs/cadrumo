@@ -23,14 +23,14 @@ sede entry subdomain and the www1 form-servlet subdomain.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Mapping
-from typing import TYPE_CHECKING, Literal
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, Field
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -41,12 +41,13 @@ from .....domain.calculations.registry import (
     RegistryValidationError,
     RemoteOperation,
     RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ..browser import BrowserError, default_browser_session_factory
+from ..browser import BrowserError, BrowserSession, default_browser_session_factory
 from ._adapter_utils import (
-    first_visible_locator,
+    _SedeCheckerModel,
+    assert_query_browser_action_for,
+    make_locate_helper,
     normalize_response_text,
     registry_failure_message,
 )
@@ -55,10 +56,29 @@ from ._browser_constants import (
 )
 from ._browser_constants import (
     default_viewport,
-    selector_probe_timeout_ms,
 )
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
+
+
+class _LocateHelper(Protocol):
+    """Callable protocol for the ``_locate`` helper produced by :func:`make_locate_helper`.
+
+    Parameters are positional-only to match the
+    ``Callable[[Page, tuple[str, ...], str, str, int], Coroutine[Any, Any, Locator]]``
+    return annotation on :func:`make_locate_helper`.
+    """
+
+    def __call__(
+        self,
+        page: Page,
+        selectors: tuple[str, ...],
+        stage: str,
+        description: str,
+        timeout_ms: int,
+        /,
+    ) -> Coroutine[Any, Any, Locator]: ...
+
 
 logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
@@ -82,10 +102,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 
 
 def _assert_query_browser_action(action: str) -> None:
-    assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="browser_action", action=action),
-    )
+    assert_query_browser_action_for(_READ_GUARD_POLICY, action)
 
 
 def _nif_iva_shape_suggestion() -> str:
@@ -99,26 +116,7 @@ _playwright_stage = build_playwright_stage_runner(
     logger=logger,
 )
 
-
-async def _locate(
-    page: Page,
-    selectors: tuple[str, ...],
-    *,
-    stage: str,
-    description: str,
-    timeout_ms: int,
-) -> Locator:
-    return await first_visible_locator(
-        page,
-        selectors,
-        stage=stage,
-        description=description,
-        timeout_ms=timeout_ms,
-        probe_timeout_ms=selector_probe_timeout_ms(),
-        surface_label="NIF-IVA",
-        shape_suggestion=_nif_iva_shape_suggestion(),
-    )
-
+_locate: _LocateHelper = make_locate_helper("NIF-IVA", _nif_iva_shape_suggestion())
 
 DEFAULT_NIF_IVA_TIMEOUT_MS: int = 30000
 _COUNTRY_SELECTORS: tuple[str, ...] = (
@@ -154,7 +152,7 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
 )
 
 
-class NifIvaCheckObservation(BaseModel):
+class NifIvaCheckObservation(_SedeCheckerModel):
     """One observation emitted per declared NIF after live navigation.
 
     ``verdict`` is the AEAT/VIES-rendered validity for that NIF:
@@ -162,22 +160,18 @@ class NifIvaCheckObservation(BaseModel):
     structurally unanswerable (network error mid-query, etc.).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
     nif: str = Field(min_length=1, max_length=32)
     verdict: Literal["valid", "invalid", "unknown"]
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
 
 
-class NifIvaCheckResult(BaseModel):
+class NifIvaCheckResult(_SedeCheckerModel):
     """Aggregate live-driver result across all declared NIFs for one browser pass.
 
     Each entry in ``observations`` corresponds to one NIF submitted to the
     AEAT-hosted VIES proxy form. An empty tuple signals that no NIFs were
     queried (caller-side guard: ``expected`` was empty before the driver ran).
     """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     observations: tuple[NifIvaCheckObservation, ...] = ()
 
@@ -359,7 +353,7 @@ async def collect_nif_iva_check_observations(
     expected: Mapping[str, object],
     settings: Settings | None = None,
     timeout_ms: int = DEFAULT_NIF_IVA_TIMEOUT_MS,
-    browser_session_factory: Callable[[Settings], Awaitable[object]] | None = None,
+    browser_session_factory: Callable[[Settings], Awaitable[BrowserSession]] | None = None,
 ) -> NifIvaCheckResult:
     """Open the NIF-IVA form, query each declared NIF, scrape verdicts into a :class:`NifIvaCheckResult`.
 
@@ -478,16 +472,16 @@ async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:
     await _locate(
         page,
         _COUNTRY_SELECTORS,
-        stage="open-nif-iva-form:country",
-        description="NIF-IVA country-code control",
-        timeout_ms=timeout_ms,
+        "open-nif-iva-form:country",
+        "NIF-IVA country-code control",
+        timeout_ms,
     )
     await _locate(
         page,
         _IVA_NUMBER_SELECTORS,
-        stage="open-nif-iva-form:iva-number",
-        description="NIF-IVA IVA-number control",
-        timeout_ms=timeout_ms,
+        "open-nif-iva-form:iva-number",
+        "NIF-IVA IVA-number control",
+        timeout_ms,
     )
 
 
@@ -577,9 +571,9 @@ async def _select_country_code(page: Page, country_code: str, *, timeout_ms: int
     locator = await _locate(
         page,
         _COUNTRY_SELECTORS,
-        stage="check-nif:country",
-        description="NIF-IVA country-code control",
-        timeout_ms=timeout_ms,
+        "check-nif:country",
+        "NIF-IVA country-code control",
+        timeout_ms,
     )
     try:
         await locator.select_option(value=country_code, timeout=timeout_ms)
@@ -599,9 +593,9 @@ async def _fill_iva_number(page: Page, iva_number: str, *, timeout_ms: int) -> N
     locator = await _locate(
         page,
         _IVA_NUMBER_SELECTORS,
-        stage="check-nif:iva-number",
-        description="NIF-IVA IVA-number control",
-        timeout_ms=timeout_ms,
+        "check-nif:iva-number",
+        "NIF-IVA IVA-number control",
+        timeout_ms,
     )
     await _fill_expected(
         locator,
@@ -616,9 +610,9 @@ async def _click_query_button(page: Page, *, timeout_ms: int) -> None:
     locator = await _locate(
         page,
         _SUBMIT_SELECTORS,
-        stage="check-nif:submit",
-        description="NIF-IVA query button",
-        timeout_ms=timeout_ms,
+        "check-nif:submit",
+        "NIF-IVA query button",
+        timeout_ms,
     )
     await _click_expected(locator, stage="check-nif:submit", description="NIF-IVA query button", timeout_ms=timeout_ms)
 

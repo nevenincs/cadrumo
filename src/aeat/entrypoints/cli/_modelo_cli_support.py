@@ -213,11 +213,11 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
             k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
         }
         if row_type == "miembro":
-            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
+            return Modelo184MemberRow.model_validate({"row_type": "miembro", **kv_pairs})
         if row_type == "vinculada":
-            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
+            return Modelo232VinculadaRow.model_validate({"row_type": "vinculada", **kv_pairs})
         if row_type == "operador":
-            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
+            row_m349 = Modelo349OperadorRow.model_validate({"row_type": "operador", **kv_pairs})
             nif = str(kv_pairs.get("nif_comunitario", ""))
             pais = str(kv_pairs.get("codigo_pais", ""))
             if nif and pais and not validate_m349_nif_format(nif, pais):
@@ -234,7 +234,7 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                     )
                 )
             return row_m349
-        return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-MODELO-ROW-SPLAT  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO-ROW-SPLAT
+        return Modelo347ContraparteRow.model_validate({"row_type": "contraparte", **kv_pairs})
     except typer.BadParameter:
         raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:

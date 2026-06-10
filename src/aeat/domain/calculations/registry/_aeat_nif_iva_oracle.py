@@ -24,10 +24,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Literal, Protocol, override
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AnyUrl, Field, field_validator
 
 from ....core.config import Settings
 from ._checker_oracle_flow import (
+    _CheckerBaseModel,
     compare_verdict_field,
     decode_replay_observation,
     normalize_expected_verdicts,
@@ -48,13 +49,7 @@ from ._remote_state_guard import RemoteOperation
 ORACLE_ID = "aeat-nif-iva-checker"
 
 
-class AeatNifIvaModel(BaseModel):
-    """Strict frozen base for AEAT NIF-IVA parity records."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-
-class AeatNifIvaObservation(AeatNifIvaModel):
+class AeatNifIvaObservation(_CheckerBaseModel):
     """Observed NIF-IVA verdicts returned by an executable adapter."""
 
     values: dict[str, str] = Field(default_factory=dict)

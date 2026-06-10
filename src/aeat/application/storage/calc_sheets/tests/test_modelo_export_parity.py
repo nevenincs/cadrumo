@@ -20,6 +20,7 @@ from datetime import date
 import pytest
 
 from .....core.resources import resources
+from .....domain.calculations.registry import RegistrySnapshot
 from .. import build_export_plan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -42,7 +43,7 @@ def _snapshot(modelo: str, year: int, period: str, on: date):
     return resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
 
 
-def _plan_casilla_keys(snapshot) -> set[tuple[str, str | None]]:
+def _plan_casilla_keys(snapshot: RegistrySnapshot) -> set[tuple[str, str | None]]:
     """Return the (number, segmento) key for every casilla the plan emits a cell for."""
     by_id = {c.id: c for c in snapshot.revision.casillas}
     plan = build_export_plan(snapshot)

@@ -34,6 +34,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core import Modelo
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.transactions import (
     BusinessClassification,
@@ -227,7 +228,7 @@ def aggregate_renta_income_ledger(
 
     casilla_aggregation = _income_casilla_aggregation(resolved_period, observations)
     return RentaIncomeLedgerAggregation(
-        modelo="130",
+        modelo=Modelo.M130.value,
         period=resolved_period,
         observations=tuple(observations),
         issues=tuple(issues),
@@ -366,7 +367,7 @@ def _income_casilla_aggregation(
             )
         )
     return CasillaAggregation(
-        modelo="130",
+        modelo=Modelo.M130.value,
         period=period,
         casilla_values=totals,
         provenance=tuple(provenance_rows),

@@ -5,9 +5,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -125,8 +127,17 @@ _DEFAULT_180_BINDING_VALUES: dict[str, Decimal] = {
 }
 
 
+_Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    BucketEventHistoryRepository,
+]
+
+
 @pytest.fixture
-def repos(tmp_path):
+def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Yield the five catalogue repositories over an encrypted SQLite
     database through the shared active-profile runtime. Tuple shape:
     ``(work_unit, calculation_revision, filing_record,
@@ -143,7 +154,7 @@ def repos(tmp_path):
 
 
 def _seed_work_unit(
-    wu_repo,
+    wu_repo: WorkUnitCatalogueRepository,
     *,
     bucket_id: str = "default",
     modelo: str = "130",
@@ -526,7 +537,7 @@ def _verify_revision(
     )
 
 
-def _seed_modelo_180_work_unit(wu_repo):
+def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
     return create_work_unit(
         bucket_id="default",
         modelo=_VERIFY_MODELO,

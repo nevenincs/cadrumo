@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
@@ -20,12 +20,20 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...domain.calculations.registry import RegistryValidationError
 from ._common import _emit_envelope
-from ._modelo_payloads import WorkCalculateResult
+from ._modelo_payloads import SourceAdvisoryPayload, WorkCalculateResult
 from ._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
     work_unit_plazo_lines,
 )
+
+if TYPE_CHECKING:
+    # Annotation-only imports: ``from __future__ import annotations`` keeps these
+    # as lazy strings so the state-free CLI surface (test_lazy_command_tree) pays
+    # no runtime registry-import cost, while pyright and the any-param ratchet see
+    # the concrete result/record types instead of a bare ``Any``.
+    from ...application.modelo import ModeloWorkCalculationServiceResult, WorkUnit
+    from ...domain.modelos import CalculationRevision
 
 
 @dataclass(frozen=True, slots=True)
@@ -371,6 +379,7 @@ def _run_work_calculate(
         calculation_result,
         work_unit=unit_for_modality,
     )
+    source_advisory_payload, source_advisory_lines = _work_calculate_source_advisory_output(calculation_result)
     result = WorkCalculateResult.model_validate(
         {
             "saved": True,
@@ -378,6 +387,7 @@ def _run_work_calculate(
             **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
             **modality_payload,
             **authorization_payload,
+            **source_advisory_payload,
         }
     )
     lines = [
@@ -386,12 +396,13 @@ def _run_work_calculate(
         *modality_lines,
         *work_unit_plazo_lines(unit_for_modality),
         *authorization_lines,
+        *source_advisory_lines,
         saved_confirmation,
     ]
     _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
 
 
-def _work_calculate_saved_confirmation(revision: Any, work_unit: Any) -> str:
+def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit: WorkUnit) -> str:
     return tr(
         "cli.app.modelo.work.calculate_saved",
         default=(
@@ -409,7 +420,9 @@ def _work_calculate_saved_confirmation(revision: Any, work_unit: Any) -> str:
     )
 
 
-def _work_calculate_modality_output(calculation_result: Any) -> tuple[dict[str, object], list[str]]:
+def _work_calculate_modality_output(
+    calculation_result: ModeloWorkCalculationServiceResult,
+) -> tuple[dict[str, object], list[str]]:
     modality = calculation_result.modality
     if modality is None:
         return {}, []
@@ -423,9 +436,9 @@ def _work_calculate_modality_output(calculation_result: Any) -> tuple[dict[str, 
 
 
 def _work_calculate_authorization_output(
-    calculation_result: Any,
+    calculation_result: ModeloWorkCalculationServiceResult,
     *,
-    work_unit: Any,
+    work_unit: WorkUnit,
 ) -> tuple[dict[str, object], list[str]]:
     advisory = calculation_result.authorization_advisory
     if advisory is None:
@@ -447,6 +460,43 @@ def _work_calculate_authorization_output(
         },
         [f"authorization_state\t{advisory.state}", advisory_text],
     )
+
+
+def _work_calculate_source_advisory_output(
+    calculation_result: ModeloWorkCalculationServiceResult,
+) -> tuple[dict[str, object], list[str]]:
+    """Project NON-blocking source diagnostics into the calculate payload + human lines.
+
+    Each diagnostic the source mesh raised while resolving the bucket ledger
+    (notably the unconsumed-declarable-IVA advisory) becomes one
+    :class:`SourceAdvisoryPayload` in the JSON ``source_advisories`` list and
+    one human-facing ADVISORY line. The calculation succeeded; these advisories
+    keep an unrouted declarable observation from being silently under-declared
+    (no-silent-under-declaration). The diagnostic ``message`` already carries
+    the observation's category / rate / flow provenance, so no legal_ref or
+    context is fabricated here.
+    """
+    diagnostics = calculation_result.source_diagnostics
+    if not diagnostics:
+        return {}, []
+    advisories = tuple(
+        SourceAdvisoryPayload(
+            reason=str(diagnostic.reason),
+            source_kind=diagnostic.source_kind,
+            message=diagnostic.message,
+            resolver_id=diagnostic.resolver_id,
+        )
+        for diagnostic in diagnostics
+    )
+    lines = [
+        tr(
+            "cli.app.modelo.work.calculate_source_advisory",
+            message=advisory.message,
+            default="ADVISORY: %{message}",
+        )
+        for advisory in advisories
+    ]
+    return ({"source_advisories": advisories}, lines)
 
 
 __all__ = ["register_work_calculate_commands"]

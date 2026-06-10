@@ -8,18 +8,19 @@ from typing import Annotated
 
 import typer
 
+from ...application.modelo import ModeloReconciliationReport, WorkUnit
 from ...core.i18n import tr
 
-_require_active_profile: Callable[[], object] | None = None
-_resolve_work_unit_for_cli: Callable[..., object] | None = None
+_require_active_profile: Callable[[], None] | None = None
+_resolve_work_unit_for_cli: Callable[..., WorkUnit] | None = None
 _resolve_default_actor: Callable[[], str] | None = None
 
 
 def register_reconcile_commands(
     app: typer.Typer,
     *,
-    require_active_profile: Callable[[], object],
-    resolve_work_unit_for_cli: Callable[..., object],
+    require_active_profile: Callable[[], None],
+    resolve_work_unit_for_cli: Callable[..., WorkUnit],
     resolve_default_actor: Callable[[], str],
 ) -> None:
     """Register local-only modelo reconciliation commands."""
@@ -72,7 +73,7 @@ def _resolve_work_unit(
     period: str | None,
     revision: str | None,
     bucket_id: str | None,
-) -> object:
+) -> WorkUnit:
     if _resolve_work_unit_for_cli is None:
         raise RuntimeError("modelo reconcile commands were not registered")
     return _resolve_work_unit_for_cli(
@@ -87,11 +88,11 @@ def _resolve_work_unit(
 
 def _render_reconciliation_report(
     ctx: typer.Context,
-    report: object,
+    report: ModeloReconciliationReport,
     *,
     command: str,
 ) -> None:
-    """Render a ModeloReconciliationReport through the typed envelope."""
+    """Render a :class:`~aeat.application.modelo.ModeloReconciliationReport` through the typed envelope."""
     from ._common import _emit_envelope
     from ._modelo_payloads import (
         ModeloReconcileResult,

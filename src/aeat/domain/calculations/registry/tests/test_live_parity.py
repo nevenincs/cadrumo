@@ -181,12 +181,12 @@ def test_catalogue_register_and_lookup_round_trip() -> None:
         ),
     )
 
-    catalogue.register(oracle, environment="production")
+    catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
 
     assert catalogue.is_registered("aeat-public-vies")
     assert catalogue.ids() == ("aeat-public-vies",)
     assert catalogue.lookup("aeat-public-vies") is oracle
-    assert catalogue.environment_of("aeat-public-vies") == "production"
+    assert catalogue.environment_of("aeat-public-vies") == OracleEnvironment.PRODUCTION
 
 
 def test_catalogue_rejects_duplicate_oracle_id() -> None:
@@ -197,10 +197,10 @@ def test_catalogue_rejects_duplicate_oracle_id() -> None:
         operations=(),
         verdict=ParityResult(oracle_id="dup", cross_reference_id="c", verdict="match", narrative="x"),
     )
-    catalogue.register(oracle, environment="production")
+    catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
 
     with pytest.raises(RegistryValidationError, match="already registered"):
-        catalogue.register(oracle, environment="production")
+        catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
 
 
 def test_catalogue_lookup_unknown_id_raises() -> None:
@@ -223,13 +223,13 @@ def test_catalogue_test_environment_oracle_not_visible_to_production_lookup() ->
             narrative="canned",
         ),
     )
-    catalogue.register(oracle, environment="test_environment")
+    catalogue.register(oracle, environment=OracleEnvironment.TEST_ENVIRONMENT)
 
     with pytest.raises(RegistryValidationError, match="not available under requested environment"):
-        catalogue.lookup("aeat-tgvi-preproduccion", environment="production")
+        catalogue.lookup("aeat-tgvi-preproduccion", environment=OracleEnvironment.PRODUCTION)
 
     # Test-environment lookup succeeds.
-    assert catalogue.lookup("aeat-tgvi-preproduccion", environment="test_environment") is oracle
+    assert catalogue.lookup("aeat-tgvi-preproduccion", environment=OracleEnvironment.TEST_ENVIRONMENT) is oracle
 
 
 def test_catalogue_production_oracle_not_visible_to_test_environment_lookup() -> None:
@@ -245,10 +245,10 @@ def test_catalogue_production_oracle_not_visible_to_test_environment_lookup() ->
             narrative="canned",
         ),
     )
-    catalogue.register(oracle, environment="production")
+    catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
 
     with pytest.raises(RegistryValidationError, match="not available under requested environment"):
-        catalogue.lookup("aeat-vies-public", environment="test_environment")
+        catalogue.lookup("aeat-vies-public", environment=OracleEnvironment.TEST_ENVIRONMENT)
 
 
 def test_catalogue_both_environment_oracle_visible_to_either_lookup() -> None:
@@ -264,10 +264,10 @@ def test_catalogue_both_environment_oracle_visible_to_either_lookup() -> None:
             narrative="canned",
         ),
     )
-    catalogue.register(oracle, environment="both")
+    catalogue.register(oracle, environment=OracleEnvironment.BOTH)
 
-    assert catalogue.lookup("aeat-static-doc", environment="production") is oracle
-    assert catalogue.lookup("aeat-static-doc", environment="test_environment") is oracle
+    assert catalogue.lookup("aeat-static-doc", environment=OracleEnvironment.PRODUCTION) is oracle
+    assert catalogue.lookup("aeat-static-doc", environment=OracleEnvironment.TEST_ENVIRONMENT) is oracle
 
 
 def test_catalogue_ids_filter_by_environment() -> None:
@@ -290,13 +290,13 @@ def test_catalogue_ids_filter_by_environment() -> None:
         operations=(),
         verdict=ParityResult(oracle_id="both", cross_reference_id="c", verdict="match", narrative="x"),
     )
-    catalogue.register(prod_oracle, environment="production")
-    catalogue.register(test_oracle, environment="test_environment")
-    catalogue.register(both_oracle, environment="both")
+    catalogue.register(prod_oracle, environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(test_oracle, environment=OracleEnvironment.TEST_ENVIRONMENT)
+    catalogue.register(both_oracle, environment=OracleEnvironment.BOTH)
 
     assert catalogue.ids() == ("both", "prod", "test")
-    assert catalogue.ids(environment="production") == ("both", "prod")
-    assert catalogue.ids(environment="test_environment") == ("both", "test")
+    assert catalogue.ids(environment=OracleEnvironment.PRODUCTION) == ("both", "prod")
+    assert catalogue.ids(environment=OracleEnvironment.TEST_ENVIRONMENT) == ("both", "test")
 
 
 # ── contract: OracleEnvironment StrEnum round-trip ───────────────────────────────

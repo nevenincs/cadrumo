@@ -1847,6 +1847,7 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però aquest import declarable no s''assigna a cap casella i no es declara en aquesta presentació; revisa''l abans de presentar.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat

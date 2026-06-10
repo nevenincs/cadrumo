@@ -134,7 +134,9 @@ aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
 ```
 
 These commands record that you filed the Modelo 036 alta, modificacion, or baja
-through AEAT. They never file with AEAT themselves.
+through AEAT. They never file with AEAT themselves. For the flags, the success
+output, and what the record does and does not change, see
+[Record a Modelo 036 declaration you filed at AEAT](modelo-036.md).
 
 ## Check the profile afterwards
 

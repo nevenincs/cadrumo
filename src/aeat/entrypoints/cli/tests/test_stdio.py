@@ -31,6 +31,7 @@ from __future__ import annotations
 import io
 import logging
 import os
+from typing import override
 
 import pytest
 
@@ -323,6 +324,7 @@ class _CapturingHandler(logging.Handler):
         super().__init__(level=logging.DEBUG)
         self.records: list[logging.LogRecord] = []
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         self.records.append(record)
 

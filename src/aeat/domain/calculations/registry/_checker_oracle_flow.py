@@ -1,12 +1,31 @@
-"""Shared verdict-flow helpers for read-only checker oracles."""
+"""Shared verdict-flow helpers for read-only checker oracles.
+
+Provides the :class:`_CheckerBaseModel` base, shared flow helpers, and
+the :func:`decode_replay_observation` convenience used by every
+:class:`~aeat.domain.calculations.registry._live_parity.BaseCheckerOracle`
+subclass (GROI, NIF-IVA, and future sibling checkers).
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 
+from pydantic import BaseModel, ConfigDict
+
 from ._errors import RegistryValidationError
 from ._live_parity import ParityFieldComparison, decode_replay_json_payload
 from ._remote_state_guard import RemoteOperation
+
+
+class _CheckerBaseModel(BaseModel):
+    """Strict frozen base for checker-oracle parity records.
+
+    Every :class:`~aeat.domain.calculations.registry._live_parity.BaseCheckerOracle`
+    observation and aggregate result type inherits this base to guarantee a
+    consistent strict-frozen-forbid Pydantic config across all checker surfaces.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 def normalize_verdict_mapping(values: Mapping[str, str], *, blank_message: str) -> dict[str, str]:

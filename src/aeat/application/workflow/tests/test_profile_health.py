@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage import SecureObjectRepository
 from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ....adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
@@ -37,7 +38,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 )
 
 
-def _seed_ready_profile_record(bucket_id: str, repository) -> None:
+def _seed_ready_profile_record(bucket_id: str, repository: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id, objects=repository).save(
         UserProfileRecord(
             profile_id=bucket_id,
