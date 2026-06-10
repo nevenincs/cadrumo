@@ -619,3 +619,29 @@ now refactored + pyright-relevant), so "peer-WIP-locked" claims in earlier
 sections must be re-derived from `git status` at action time, not read from
 this audit. Slice agents regenerating the live inventory before acting (rather
 than trusting audit prose) is the correct standing procedure.
+
+## QHC-019 | coordinator checkpoint (2026-06-10) | complexity 13 -> 12; secure-key slice review-passed
+
+QHC-003 slice 2 review verdict: PASS on all four commits (export transports
+content-identical, refusal messages verbatim, De Morgan tail equivalence
+proven, provenance untouched).
+
+The dedicated secure-storage slice then cleared the worst remaining hotspot
+under a harness-first protocol: a roundtrip proof harness (`2213be104`, five
+real-adapter tests — byte-exact `HashedLookup` digest capture, duplicate
+collapse, idempotency, unmigratable quarantine, anti-tautology drift check)
+landed and passed against the unmodified function BEFORE the refactor
+(`f42ad2622`, `ensure_deterministic_object_keys` cognitive 26 -> 9).
+Independent review PASS with commit-ancestry proof the harness predates and is
+structurally independent of the refactor, and byte-for-byte equivalence of the
+SELECT, grouping, winner sort key, quarantine gate, and conditional UPDATE.
+The review's one LOW hardening (isolate the `written_at` sort discriminator
+from the `id` tiebreak in the gamma fixture) landed as `ea3d972d7`.
+
+Lane positions: complexity **12** over threshold 20 (from 28 at baseline);
+check-types **360** (from 3282); duplication **47** clone groups (from 51).
+Every cleared function and every landed slice carries an independent review
+verdict. Next slices: remaining duplication families (modelo work CLI blocks,
+registry binding builders, `_google_sync_calc` intra-file repeats — re-derive
+peer-lock state at action time), the flat types tail, and the peer M303
+registry noise re-check once that campaign commits.
