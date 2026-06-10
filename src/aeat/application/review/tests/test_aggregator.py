@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -161,7 +162,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
     return settings
 
 
-def _collect(settings: Settings, **kwargs) -> tuple:
+def _collect(settings: Settings, **kwargs: Any) -> tuple:
     with profile_storage_session("test"):
         return ReviewQueue.collect(settings, bucket_id="test", **kwargs)
 
