@@ -1232,11 +1232,11 @@ cli:
           gates only continue in own-name mode.
         taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
       justificante:
-        app_help: cli.app.live.justificante.app_help
-        capture_help: cli.app.live.justificante.capture_help
-        list_help: cli.app.live.justificante.list_help
-        snapshot_id_help: cli.app.live.justificante.snapshot_id_help
-        view_help: cli.app.live.justificante.view_help
+        app_help: 'AEAT justificante captures (read-only): pull a filed receipt and reconcile against it.'
+        capture_help: 'Live-pull the AEAT justificante for a filed period and persist it as official evidence.'
+        list_help: 'List persisted justificante captures in the active bucket.'
+        snapshot_id_help: 'Snapshot id (or unambiguous prefix).'
+        view_help: 'View one justificante capture.'
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
       notifications:
