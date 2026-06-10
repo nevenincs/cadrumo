@@ -182,7 +182,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[_ObservationEnvelopePayload]] = _ObservationEnvelopePayload
+    payload_type: ClassVar[type[BaseModel]] = _ObservationEnvelopePayload
 
     @override
     def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
@@ -261,7 +261,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     history_namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[_IvaWalletDecisionEnvelopePayload]] = _IvaWalletDecisionEnvelopePayload
+    payload_type: ClassVar[type[BaseModel]] = _IvaWalletDecisionEnvelopePayload
 
     @override
     def extract_identifier(self, payload: _IvaWalletDecisionEnvelopePayload) -> str:

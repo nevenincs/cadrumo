@@ -442,6 +442,7 @@ def _observed_casillas_from_declaration_pdf(
             translated_message=tr("adapters.sede.errors.parse_failed"),
         )
 
+    assert filing is not None  # parse_failed branch raises; filing is set in the try block
     observations: list[ObservedCasillaValue] = []
     for casilla in filing.values:
         if casilla.printed_value is None:

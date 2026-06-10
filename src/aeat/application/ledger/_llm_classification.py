@@ -282,7 +282,12 @@ def apply_llm_classification(
         )
     occurred = coerce_utc_aware(occurred_at or now())
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    _event_repo_arg = bucket_event_repository or BucketEventHistoryRepository()
+    assert isinstance(_event_repo_arg, BucketEventHistoryRepository), (
+        "apply_llm_classification requires a concrete BucketEventHistoryRepository "
+        "(to_secure_object_write is not on the protocol)"
+    )
+    event_repository = _event_repo_arg
     catalogue = repository.load()
     current = catalogue.get(suggestion.transaction_id)
     if current is None:

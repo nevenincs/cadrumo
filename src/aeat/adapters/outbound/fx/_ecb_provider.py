@@ -81,6 +81,8 @@ def _parse_eurofxref(path: Path) -> dict[date, dict[str, Decimal]]:
         if time_attr is None:
             continue
         day = parse_iso8601_date(time_attr)
+        if day is None:
+            continue
         rates: dict[str, Decimal] = {}
         for child in node:
             if not child.tag.endswith("Cube"):

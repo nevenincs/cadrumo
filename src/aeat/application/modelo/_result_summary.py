@@ -75,7 +75,7 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
     except (LookupError, KeyError, AttributeError, AeatError) as exc:
         _log.warning(
             "modelo result summary: unable to resolve work unit for revision=%s",
-            revision.revision_id,
+            revision.calculation_revision_id,
             exc_info=exc,
         )
         return None
