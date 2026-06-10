@@ -19,6 +19,7 @@ from ...application.calculations import (
     iva_compensation_state_from_filed_observation,
     observation_key,
 )
+from ...core import Modelo
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...domain.iva_compensation._carry_forward import derive_303_compensation_available
@@ -39,7 +40,7 @@ def persist_filed_calculation_observation(
         source_kind="aeat_sede_justificante",
         captured_at=observation.presented_at,
     )
-    if observation.modelo == "303":
+    if observation.modelo == Modelo.M303.value:
         IvaCompensationHistoryRepository().save_period(iva_compensation_state_from_filed_observation(observation))
     return observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
 
@@ -70,7 +71,7 @@ def persist_iva_compensation_history_observations_strict(
     """Persist latest Modelo 303 observations and verify each history row reloads."""
     latest: dict[tuple[int, str], FiledDeclaracionObservation] = {}
     for observation in observations:
-        if observation.modelo != "303":
+        if observation.modelo != Modelo.M303.value:
             raise LiveApplicationInputError(
                 translated_message="live.errors.iva_history_modelo_303_only",
                 context={"modelo": observation.modelo},
