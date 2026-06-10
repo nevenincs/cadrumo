@@ -1,10 +1,10 @@
-"""F5 regression: pull-path == calculate-path casilla parity for a shared revision.
+"""Pull-path == calculate-path casilla parity for a shared revision.
 
-Epic ``calculation-engine-foundations`` W04.P12.S29: the six ``assemble_*``
+The six ``assemble_*``
 row-set helpers and ``resolve_relations_from_local_store`` historically could
 populate casillas that the live ``calculate_modelo_revision_from_bucket_aggregation``
 produces differently because both paths persisted to the same revision without any
-cross-path comparison.  W03 centralised relation handling so that:
+cross-path comparison.  The relation-canonicalisation work centralised relation handling so that:
 
 * The **live bucket-aggregation calculate path** enrolls
   :class:`~aeat.application.calculations._relation_prefill.RelationPrefillSourceResolver`
@@ -149,9 +149,9 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
         directly against the same observation store, feeding its resolved
         ``relation_values`` into :func:`calculate_registry_snapshot`).
 
-    This is the F5 regression lock: W03 centralised both paths onto one shared
-    ``resolve_relations_from_local_store`` call so divergence is structurally
-    prevented, and this test enforces that guarantee with real adapters.
+    This locks the parity guarantee: the relation-canonicalisation work centralised both
+    paths onto one shared ``resolve_relations_from_local_store`` call so divergence is
+    structurally prevented, and this test enforces that guarantee with real adapters.
 
     Non-tautological: the four distinct bases (1200 / 1350 / 900 / 1100 EUR)
     sum to 4550 EUR — not zero.  A silent blank (Decimal("0")) would fail the
