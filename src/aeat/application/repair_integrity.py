@@ -635,7 +635,7 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             namespace_policies=_all_secure_object_namespace_policies(),
         ),
         _surface(
-            "config repair reset-state",
+            "config repair reset-progress",
             command_family="repair",
             owner_domains=("workflow_state",),
             namespace_policies=(

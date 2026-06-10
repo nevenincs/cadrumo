@@ -186,7 +186,7 @@ class WorkflowStateRepository:
         concrete failure). When ``None`` the classification is derived
         from the envelope itself.
 
-        The ``repair reset-state`` recovery verb is bootstrap-exempt
+        The ``repair reset-progress`` recovery verb is bootstrap-exempt
         and may run on a cold root where ``aeat_database_url`` does
         not resolve (no active profile). In that case there is no
         state envelope to reset; the fingerprint records empty
@@ -217,7 +217,7 @@ class WorkflowStateRepository:
             # The fingerprint path is the recovery route for an unreadable
             # envelope; surfacing the envelope failure here would defeat
             # the purpose. ``SecretStoreError`` covers the
-            # bootstrap-exempt ``repair reset-state`` case where no
+            # bootstrap-exempt ``repair reset-progress`` case where no
             # active session is bound (``NoActiveBucketSessionError``)
             # or the session has expired (``SessionExpiredError``) —
             # the recovery verb must still delete the row by key.
@@ -249,7 +249,7 @@ class WorkflowStateRepository:
         self,
         *,
         actor: str = "aeat.application.workflow",
-        source: str = "aeat config repair reset-state",
+        source: str = "aeat config repair reset-progress",
         reason_class: str | None = None,
     ) -> WorkflowStateResetFingerprint:
         """Delete the workflow-state envelope and emit a reset event.
@@ -381,7 +381,7 @@ def workflow_state_repository() -> WorkflowStateRepository:
 def reset_workflow_state(
     *,
     actor: str = "aeat.application.workflow",
-    source: str = "aeat config repair reset-state",
+    source: str = "aeat config repair reset-progress",
     reason_class: str | None = None,
 ) -> WorkflowStateResetFingerprint:
     """Module-level helper around :meth:`WorkflowStateRepository.reset_workflow_state`.

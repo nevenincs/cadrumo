@@ -321,8 +321,8 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.diagnostics_quarantine"),
                     ),
                     HelpEntry(
-                        command="aeat config repair reset-state",
-                        description=tr("cli.operator_surface.help.config.diagnostics_reset_state"),
+                        command="aeat config repair reset-progress",
+                        description=tr("cli.operator_surface.help.config.diagnostics_reset_progress"),
                     ),
                 ),
             ),

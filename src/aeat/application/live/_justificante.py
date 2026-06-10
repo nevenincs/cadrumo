@@ -15,8 +15,8 @@ capture supersedes the prior ACTIVE one, and it persists each snapshot
 through a :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
 at FINANCIAL sensitivity under the justificante-capture namespace.
 
-The captured PDF bytes ride inside the encrypted snapshot envelope as a
-base64 ``str`` (binary cannot survive the JSON envelope verbatim); the
+The captured PDF bytes ride inside the encrypted snapshot :class:`Envelope`
+as a base64 ``str`` (binary cannot survive the JSON envelope verbatim); the
 raw-bytes ``pdf_sha256`` is the content address used for snapshot-id
 derivation and dedup.
 """
