@@ -253,6 +253,60 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing
     )
 
 
+def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecord:
+    work_unit_id = hashlib.sha256(f"130:2026:1T:{csv}".encode()).hexdigest()
+    revision_id = hashlib.sha256(f"rev:{csv}".encode()).hexdigest()
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=_CLOCK,
+        filed_by="aeat-live-capture-test",
+    )
+    return ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period="1T",
+        filed_at=_CLOCK,
+        filed_by="aeat-live-capture-test",
+        aeat_accepted=True,
+        status=ModeloRecordStatus.VIGENTE,
+        external_evidence=ExternalEvidence(kind=kind, reference_id=csv, imported_at=_CLOCK),
+    )
+
+
+def test_live_capture_evidence_clears_justificante_verification(tmp_path: Path) -> None:
+    """A filing stamped with AEAT_LIVE_CAPTURE evidence clears the justificante gate."""
+    from ....domain.justificante import JustificanteRepository
+    from .._cross_period_clean_state import _filing_external_evidence_blockers
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        csv = "LIVECAP130ABCD01"
+        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
+
+        blockers = _filing_external_evidence_blockers(filing, "app_filing", JustificanteRepository())
+
+        assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers
+        assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers
+
+
+def test_csv_register_evidence_still_requires_justificante_verification(tmp_path: Path) -> None:
+    """A non-justificante evidence kind (CSV register) still trips the justificante gate."""
+    from ....domain.justificante import JustificanteRepository
+    from .._cross_period_clean_state import _filing_external_evidence_blockers
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        filing = _live_capture_filing(csv="CSVREG130ABCD01", kind=ExternalEvidenceKind.AEAT_CSV_REGISTER)
+
+        blockers = _filing_external_evidence_blockers(filing, "aeat_csv_register", JustificanteRepository())
+
+        assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION in blockers
+
+
 def _seed_official_303_source_filings(
     *,
     observation_repository: CalculationObservationRepository,
