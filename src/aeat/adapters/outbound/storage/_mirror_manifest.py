@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterable
+from datetime import datetime
 
 from pydantic import ValidationError
 
@@ -29,11 +30,13 @@ def build_remote_mirror_namespace_manifest(
 ) -> RemoteMirrorNamespaceManifest:
     """Build a :class:`RemoteMirrorNamespaceManifest` from raw ciphertext rows for one namespace."""
     entries = tuple(_remote_mirror_object_manifest(row) for row in rows if row.namespace == namespace)
-    latest = max(
-        (entry for entry in entries if entry.revision_written_at is not None),
-        key=lambda entry: entry.revision_written_at,
-        default=None,
-    )
+    timed_entries = tuple(entry for entry in entries if entry.revision_written_at is not None)
+
+    def _revision_written_at(entry: RemoteMirrorObjectManifest) -> datetime:
+        assert entry.revision_written_at is not None
+        return entry.revision_written_at
+
+    latest = max(timed_entries, key=_revision_written_at, default=None)
     return RemoteMirrorNamespaceManifest(
         manifest_schema_version=REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
         namespace=namespace,
