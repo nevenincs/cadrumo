@@ -117,6 +117,7 @@ def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: P
     ):
         settings = load_settings()
 
+    assert settings.aeat_secret_passphrase is not None
     assert settings.aeat_secret_passphrase.get_secret_value() == expected
     assert dev_test_database_password(settings) == expected
 

@@ -21,6 +21,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from .....adapters.persistence.storage.bucket import (
     bucket_paths,
@@ -121,7 +122,7 @@ _DEDICATED_REFUSAL_FRAGMENT = "Use the profile UUID to disambiguate"
 _WORKFLOW_LAYER_FRAGMENT = "active buckets carry it"
 
 
-def _assert_clean_ambiguity_refusal(result: object) -> None:
+def _assert_clean_ambiguity_refusal(result: Result) -> None:
     """Assert a clean refusal routed through the dedicated CLI ambiguity key.
 
     Distinguishes the post-fix dedicated CLI refusal from the pre-fix
