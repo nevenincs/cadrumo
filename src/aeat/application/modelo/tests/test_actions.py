@@ -13,11 +13,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
+from typing import cast
 
 import pytest
 
 from ....domain.calculations.registry import InputKind
-from ....domain.calculations.registry._schema import VerificationPredicateDefinition
+from ....domain.calculations.registry._schema import ModeloRevision, VerificationPredicateDefinition
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -346,7 +347,9 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
             2026,
             "1T",
             bucket_id="bucket-1",
-            revision=SimpleNamespace(),
+            # The unsupported-decision-type guard raises before the revision is read,
+            # so an empty structural double suffices for this path.
+            revision=cast(ModeloRevision, SimpleNamespace()),
             taxpayer_nif="12345678Z",
             caller_binding_values={},
             backend_binding_values={},
@@ -359,9 +362,13 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
 
 
 def test_source_bound_casilla_override_error_is_localised() -> None:
-    revision = SimpleNamespace(
-        bindings=(SimpleNamespace(id="ledger_iva_base", source="ledger_iva_aggregation"),),
-        casillas=(SimpleNamespace(id="0001", input_kind=InputKind.BOUND, binding="ledger_iva_base"),),
+    # Structural double carrying only the bindings/casillas slice the guard reads.
+    revision = cast(
+        ModeloRevision,
+        SimpleNamespace(
+            bindings=(SimpleNamespace(id="ledger_iva_base", source="ledger_iva_aggregation"),),
+            casillas=(SimpleNamespace(id="0001", input_kind=InputKind.BOUND, binding="ledger_iva_base"),),
+        ),
     )
 
     with pytest.raises(ModeloAggregationBindingError) as raised:
@@ -374,7 +381,10 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
 
     assert raised.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
     assert raised.value.context == {"casillas": ["0001"]}
-    assert raised.value.context is not None and "0001" in raised.value.context["casillas"]
+    assert raised.value.context is not None
+    rejected_casillas = raised.value.context["casillas"]
+    assert isinstance(rejected_casillas, list)
+    assert "0001" in rejected_casillas
 
 
 # ---------------------------------------------------------------------------
@@ -401,11 +411,9 @@ class TestWorkflowInputMismatchError:
         revision = _minimal_calculation_revision(work_unit)
         return _RevisionInputsProvider(revision=revision, work_unit=work_unit)
 
-    def _stub_profile(self) -> object:
-        """Return a minimal stub satisfying the TaxpayerProfile structural need."""
-        from types import SimpleNamespace
-
-        return SimpleNamespace()
+    def _stub_profile(self) -> TaxpayerProfile:
+        """Return a minimal real profile (load_inputs discards it via ``del``)."""
+        return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
 
     def test_matching_request_does_not_raise(self) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""
@@ -418,7 +426,7 @@ class TestWorkflowInputMismatchError:
         result = provider.load_inputs(
             modelo="100",
             period=expected_period,
-            profile=self._stub_profile(),  # type: ignore[arg-type]
+            profile=self._stub_profile(),
         )
         assert isinstance(result, dict)
 
@@ -435,7 +443,7 @@ class TestWorkflowInputMismatchError:
             provider.load_inputs(
                 modelo="303",
                 period=correct_period,
-                profile=self._stub_profile(),  # type: ignore[arg-type]
+                profile=self._stub_profile(),
             )
 
         exc = exc_info.value
@@ -454,7 +462,7 @@ class TestWorkflowInputMismatchError:
             provider.load_inputs(
                 modelo="303",
                 period="2026-2T",
-                profile=self._stub_profile(),  # type: ignore[arg-type]
+                profile=self._stub_profile(),
             )
 
         exc = exc_info.value
@@ -481,7 +489,7 @@ class TestWorkflowInputMismatchError:
             provider.load_inputs(
                 modelo="999",
                 period="2026",
-                profile=self._stub_profile(),  # type: ignore[arg-type]
+                profile=self._stub_profile(),
             )
         except WorkflowInputMismatchError as exc:
             code = get_registered_error_code(exc)
@@ -585,5 +593,6 @@ def test_dt12_reduccion_advisory_next_action_differs_from_hardcoded_string() -> 
     finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
 
     assert finding is not None
+    assert finding.next_action is not None
     # The pre-contract hardcoded substring that should no longer appear.
     assert "to aeat app modelo work calculate to auto-inject" not in finding.next_action
