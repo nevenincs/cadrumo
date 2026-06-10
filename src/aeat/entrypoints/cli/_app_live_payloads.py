@@ -490,6 +490,66 @@ class VerifyObservationPayload(OutputSchema):
     checked_at: str
 
 
+# ---------------------------------------------------------------------------
+# Justificante capture leaves
+# ---------------------------------------------------------------------------
+
+
+@register_schema("app.live.justificante.capture")
+class JustificanteCaptureResult(OutputSchema):
+    """Payload for ``aeat app live justificante capture``."""
+
+    bucket_id: str
+    snapshot_id: str
+    modelo: str
+    filing_year: int
+    period: str
+    expediente_id: str
+    csv: str
+    pdf_sha256: str
+    source_kind: str
+    state: str
+    captured_at: str
+
+
+class JustificanteSnapshotSummaryPayload(OutputSchema):
+    """One justificante-capture snapshot summary row in a listing."""
+
+    snapshot_id: str
+    modelo: str
+    filing_year: int
+    period: str
+    pdf_sha256: str
+    state: str
+    captured_at: str
+
+
+@register_schema("app.live.justificante.list")
+class JustificanteListResult(OutputSchema):
+    """Payload for ``aeat app live justificante list``."""
+
+    bucket_id: str
+    count: int
+    rows: list[JustificanteSnapshotSummaryPayload]
+
+
+@register_schema("app.live.justificante.view")
+class JustificanteViewResult(OutputSchema):
+    """Payload for ``aeat app live justificante view``."""
+
+    bucket_id: str
+    snapshot_id: str
+    modelo: str
+    filing_year: int
+    period: str
+    expediente_id: str
+    csv: str
+    pdf_sha256: str
+    source_kind: str
+    state: str
+    captured_at: str
+
+
 class VerifyObservationSummaryPayload(OutputSchema):
     """One row in the verify-list result (no bucket_id field per row)."""
 
