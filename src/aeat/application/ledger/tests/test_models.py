@@ -24,6 +24,36 @@ from .. import CLASSIFIED_BY_MANUAL, ManualLedgerTransactionCommand, ManualLedge
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _command(**overrides: object) -> ManualLedgerTransactionCommand:
+    """Build a minimal valid command, overriding the field under test."""
+
+    fields: dict[str, object] = {
+        "bucket_id": "bucket-a",
+        "booked_date": date(2026, 5, 1),
+        "amount": Decimal("-121.00"),
+        "direction": TransactionDirection.OUTGOING,
+        "description": "material oficina",
+    }
+    fields.update(overrides)
+    return ManualLedgerTransactionCommand(**fields)
+
+
+def test_source_jurisdiction_accepts_iso_3166_alpha2_and_strips_whitespace() -> None:
+    """A two-letter uppercase ISO 3166-1 code is accepted; surrounding space is stripped."""
+
+    assert _command(source_jurisdiction="ES").source_jurisdiction == "ES"
+    assert _command(source_jurisdiction=" DE ").source_jurisdiction == "DE"
+    assert _command(source_jurisdiction=None).source_jurisdiction is None
+
+
+@pytest.mark.parametrize("bad", ["es", "ESP", "E1", "e", ""])
+def test_source_jurisdiction_rejects_non_iso_3166_alpha2(bad: str) -> None:
+    """Lowercase, wrong-length, and non-alphabetic codes are refused at the boundary."""
+
+    with pytest.raises(ValidationError, match="ISO 3166-1 alpha-2 uppercase"):
+        _command(source_jurisdiction=bad)
+
+
 def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
     command = ManualLedgerTransactionCommand(
         bucket_id=" bucket-a ",
