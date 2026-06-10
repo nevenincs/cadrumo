@@ -208,7 +208,7 @@ def expedientes_capture_all(
     "list",
     help=tr(
         "cli.app.live.expedientes.list_help",
-        default="List persisted expedientes snapshots in the active bucket.",
+        default="List persisted expedientes snapshots in the active profile.",
     ),
 )
 def expedientes_list(ctx: typer.Context) -> None:
@@ -300,7 +300,7 @@ def expedientes_show(
     "latest",
     help=tr(
         "cli.app.live.expedientes.latest_help",
-        default="Show the most recent expedientes snapshot in the active bucket.",
+        default="Show the most recent expedientes snapshot in the active profile.",
     ),
 )
 def expedientes_latest(ctx: typer.Context) -> None:

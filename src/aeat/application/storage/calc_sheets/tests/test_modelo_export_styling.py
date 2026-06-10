@@ -107,7 +107,7 @@ def test_offline_workbook_renders_the_palette_and_font() -> None:
 
 
 def test_offline_workbook_applies_print_setup_to_every_tab() -> None:
-    # The print-setup phase of _apply_styling: landscape, fit-to-one-page-width,
+    # The print-setup step in _apply_styling: landscape, fit-to-one-page-width,
     # repeat the header row on every printed page, on every tab.
     plan = _m130_plan()
     workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)), data_only=False)

@@ -39,7 +39,7 @@ def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
     _register_repair_root_callback(repair_app)
     _register_repair_logs_command(repair_app)
     _register_repair_quarantine_command(repair_app)
-    _register_repair_reset_state_command(repair_app)
+    _register_repair_reset_progress_command(repair_app)
     _register_repair_integrity_commands(repair_app)
     _register_repair_connectivity_command(repair_app)
 
@@ -160,27 +160,27 @@ def _register_repair_quarantine_command(repair_app: typer.Typer) -> None:
         )
 
 
-def _register_repair_reset_state_command(repair_app: typer.Typer) -> None:
-    @repair_app.command("reset-state", help=tr("cli.config.repair.reset_state_help"))
-    def repair_reset_state(
+def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
+    @repair_app.command("reset-progress", help=tr("cli.config.repair.reset_progress_help"))
+    def repair_reset_progress(
         ctx: typer.Context,
-        yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.reset_state_yes_help")),
+        yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.reset_progress_yes_help")),
         dry_run: bool = typer.Option(
             False,
             "--dry-run/--no-dry-run",
-            help=tr("cli.config.repair.reset_state_dry_run_help"),
+            help=tr("cli.config.repair.reset_progress_dry_run_help"),
         ),
     ) -> None:
-        """Reset the workflow-state pointer file after reporting its corruption fingerprint."""
-        from .._config_payloads import RepairResetStateResult, WorkflowFingerprintPayload
+        """Reset the saved interrupted-command progress after reporting its corruption fingerprint."""
+        from .._config_payloads import RepairResetProgressResult, WorkflowFingerprintPayload
 
         if not dry_run and not yes:
-            raise _CliRefusedBoundaryError(translated_message="cli.config.repair.reset_state_requires_yes")
+            raise _CliRefusedBoundaryError(translated_message="cli.config.repair.reset_progress_requires_yes")
         if _resolve_active_bucket_id() is None:
-            result = RepairResetStateResult(reset=False, reason="nothing to reset")
+            result = RepairResetProgressResult(reset=False, reason="nothing to reset")
             _emit_envelope(
                 ctx,
-                command="config.repair.reset_state",
+                command="config.repair.reset_progress",
                 result=result,
                 lines=("reset\tfalse", "reason\tnothing to reset"),
             )
@@ -196,7 +196,7 @@ def _register_repair_reset_state_command(repair_app: typer.Typer) -> None:
                 reason_class=fingerprint.reason_class,
                 recovered_bucket_id=fingerprint.recovered_bucket_id or None,
             )
-            result = RepairResetStateResult(dry_run=True, fingerprint=fp)
+            result = RepairResetProgressResult(dry_run=True, fingerprint=fp)
             lines = (
                 "dry_run\ttrue",
                 f"schema_version\t{fingerprint.schema_version if fingerprint.schema_version is not None else '<none>'}",
@@ -205,7 +205,7 @@ def _register_repair_reset_state_command(repair_app: typer.Typer) -> None:
                 f"reason_class\t{fingerprint.reason_class}",
                 f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
             )
-            _emit_envelope(ctx, command="config.repair.reset_state", result=result, lines=lines)
+            _emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
             return
         fingerprint = reset_workflow_state()
         fp = WorkflowFingerprintPayload(
@@ -215,7 +215,7 @@ def _register_repair_reset_state_command(repair_app: typer.Typer) -> None:
             reason_class=fingerprint.reason_class,
             recovered_bucket_id=fingerprint.recovered_bucket_id or None,
         )
-        result = RepairResetStateResult(dry_run=False, fingerprint=fp)
+        result = RepairResetProgressResult(dry_run=False, fingerprint=fp)
         lines = (
             "dry_run\tfalse",
             f"schema_version\t{fingerprint.schema_version if fingerprint.schema_version is not None else '<none>'}",
@@ -224,7 +224,7 @@ def _register_repair_reset_state_command(repair_app: typer.Typer) -> None:
             f"reason_class\t{fingerprint.reason_class}",
             f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
         )
-        _emit_envelope(ctx, command="config.repair.reset_state", result=result, lines=lines)
+        _emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
 
 
 def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:

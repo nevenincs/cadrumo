@@ -1,8 +1,7 @@
 """Real-runtime read-back tests for the M036 declaration list / view surface.
 
-Authority: ``2026-06-10-cli-operator-surface-adr`` decision D7 (read-back
-baseline guarantee), plan ``2026-06-10-cli-operator-surface-plan`` step
-W04.P09.S47.
+Authority: the operator-surface decision D7 (read-back
+baseline guarantee).
 
 Drives the production persistence + read path end to end: a real bucket
 runtime, real encrypted ``SecureObjectRepository`` write, real

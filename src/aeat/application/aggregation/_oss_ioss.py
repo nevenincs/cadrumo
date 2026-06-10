@@ -46,6 +46,7 @@ from ...domain.iva import (
 from ._errors import AggregationValidationError, t
 from ._source_mesh import (
     CalculationSourceContext,
+    CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
@@ -253,6 +254,22 @@ class OssIossLedgerSourceResolver:
         ``resolve_ledger_oss_aggregation_binding_values`` to aggregate the
         matched lines per binding selector.
 
+        When the resolver is constructed with **no candidates** (the live
+        operator calculate path always passes ``candidates=()`` — there is no
+        bucket-substrate projection that can populate an
+        :class:`OssIossLedgerCandidate`, because neither the invoice nor the
+        transaction model carries the OSS ``regime`` or goods/services
+        ``transaction_kind`` axis the binding selectors require), the resolver
+        still CLAIMS ``ledger_oss_aggregation`` (so the binding compiles and is
+        not flagged as a novel source) but surfaces one non-blocking
+        ``oss_no_live_source`` advisory per declared OSS binding. This keeps a
+        Modelo 369 OSS cuota from resolving to a SILENT claimed-zero: an
+        operator with OSS sales is explicitly told the OSS cuotas are not
+        auto-computed from the bucket and must be supplied manually
+        (no-silent-under-declaration; parity with the deferred-detalle-kinds
+        advisory). Pre-classified callers (the Sheets calc-sync caller) pass
+        candidates and fold them normally with no advisory.
+
         Args:
             context: The :class:`CalculationSourceContext` carrying the
                 ``ModeloRevision`` whose ``ledger_oss_aggregation`` bindings
@@ -261,13 +278,21 @@ class OssIossLedgerSourceResolver:
         Returns:
             A :class:`CalculationSourceResolution` with resolved
             binding values, source transaction ids, and per-observation
-            provenance records.
+            provenance records — or, when no candidates were supplied, an
+            empty resolution carrying one ``oss_no_live_source`` advisory per
+            declared OSS binding.
 
         Raises:
             AggregationValidationError: When any candidate's persisted IVA
                 amount disagrees with the destination Member State rate by
                 more than one cent.
         """
+        if not self._candidates:
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                diagnostics=self._no_live_source_diagnostics(context),
+            )
         observations = validate_oss_ioss_observations(self._candidates)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
@@ -281,6 +306,31 @@ class OssIossLedgerSourceResolver:
                 )
                 for observation in observations
             ),
+        )
+
+    def _no_live_source_diagnostics(self, context: CalculationSourceContext) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Return one ``oss_no_live_source`` advisory per OSS binding on the revision.
+
+        Surfaced only when the resolver was constructed with no candidates and
+        the revision actually declares ``ledger_oss_aggregation`` bindings, so
+        a modelo with no OSS bindings produces no spurious advisory.
+        """
+        return tuple(
+            CalculationSourceDiagnostic(
+                reason="oss_no_live_source",
+                source_kind="ledger_oss_aggregation",
+                resolver_id=self.resolver_id,
+                binding_id=binding.id,
+                message=(
+                    f"binding {binding.id!r} declares source 'ledger_oss_aggregation' but no "
+                    "bucket substrate can be projected into an OSS/IOSS ledger candidate "
+                    "(neither the invoice nor the transaction model carries the OSS regime or "
+                    "goods/services transaction-kind axis the selector requires); the OSS cuota "
+                    "is NOT auto-computed and must be supplied manually"
+                ),
+            )
+            for binding in context.revision.bindings
+            if str(binding.source) == "ledger_oss_aggregation"
         )
 
 

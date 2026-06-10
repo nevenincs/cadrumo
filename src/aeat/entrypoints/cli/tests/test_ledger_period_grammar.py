@@ -1,7 +1,7 @@
 """One-strict-period-grammar tests for the ledger ``--period`` surface (D4 rework).
 
-The operator-surface ADR decision D4, as amended 2026-06-10 by operator
-directive, makes the AEAT modelo tokens the *only* operator period grammar
+The operator-surface decision makes the AEAT modelo tokens the *only* operator
+period grammar
 everywhere. The ledger ``--period`` sites accept exactly the AEAT tokens
 (``0A`` / ``1T``-``4T`` / ``01``-``12``) and take a separate ``--year`` to
 supply the year the calendar shape used to embed, so ``--period 1T --year

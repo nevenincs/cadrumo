@@ -1,8 +1,7 @@
 """Real-behavior tests for the reconciliation-history read-back surface.
 
-Authority: ``2026-06-10-cli-operator-surface-adr`` decision D7 (read-back
-baseline guarantee), plan ``2026-06-10-cli-operator-surface-plan`` step
-W04.P10.S50; CRUD-matrix audit finding F-07 (no reconciliation-history list).
+Authority: ``2026-06-10-cli-operator-surface`` decision D7 (read-back
+baseline guarantee); CRUD-matrix audit finding F-07 (no reconciliation-history list).
 
 ``modelo_reconcile`` persists no stored record; its durable trace is the
 append-only ``MODELO_RECONCILED`` bucket event. ``list_modelo_reconciliations``

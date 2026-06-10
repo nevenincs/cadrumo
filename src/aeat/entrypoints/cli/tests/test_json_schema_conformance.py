@@ -68,6 +68,20 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _APP_NAMESPACE_PASSTHROUGH = frozenset({"live"})
 _APP_NAMESPACE_FLATTEN = frozenset({"ledger", "modelo", "overview", "registry", "review"})
 
+# Intentional, asserted command-path → registry-key divergences.
+#
+# The append-only event-history verb moved from ``config bucket history`` to
+# ``config profile history`` (D1 family rename: the operator means their
+# profile, not the storage bucket). The JSON envelope token
+# ``config.bucket.history`` is a STABLE MACHINE API and is deliberately kept
+# unchanged so existing machine consumers are not broken by the operator-facing
+# verb relocation. The leaf path therefore diverges from its registry key by
+# design; this map records the divergence so the no-allowlist gate stays exact
+# without silently masking an accidental mismatch elsewhere.
+_PATH_KEY_OVERRIDES: dict[str, str] = {
+    "config.profile.history": "config.bucket.history",
+}
+
 
 def _normalise_command_path(path: tuple[str, ...]) -> str:
     """Project a Typer leaf-command path onto the registry key convention."""
@@ -80,7 +94,8 @@ def _normalise_command_path(path: tuple[str, ...]) -> str:
             tokens = tokens[1:]
         elif head in _APP_NAMESPACE_PASSTHROUGH:
             pass  # keep ``app.`` prefix
-    return ".".join(tokens)
+    normalised = ".".join(tokens)
+    return _PATH_KEY_OVERRIDES.get(normalised, normalised)
 
 
 # ---------------------------------------------------------------------

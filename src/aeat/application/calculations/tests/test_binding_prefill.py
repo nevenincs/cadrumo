@@ -100,8 +100,8 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
     """M390←M303 bindings are now ``relation_prefill``; resolve via the relation path.
 
     The five M390←M303 fold bindings migrated from ``previous_filing`` to
-    ``relation_prefill`` backed by ``cross_model_output`` relations
-    (W04.P10.S16). This test verifies that persisted 303 quarterly observations
+    ``relation_prefill`` backed by ``cross_model_output`` relations.
+    This test verifies that persisted 303 quarterly observations
     resolve through :func:`resolve_relations_from_local_store` and that the
     annual reconciliation casillas equal the ledger-derived annual totals.
     """

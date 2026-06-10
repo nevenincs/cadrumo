@@ -635,7 +635,7 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             namespace_policies=_all_secure_object_namespace_policies(),
         ),
         _surface(
-            "config repair reset-state",
+            "config repair reset-progress",
             command_family="repair",
             owner_domains=("workflow_state",),
             namespace_policies=(
@@ -692,7 +692,7 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             command_family="recovery",
             owner_domains=("secure_storage",),
         ),
-        _surface("config bucket history", command_family="audit", owner_domains=("bucket_lifecycle",)),
+        _surface("config profile history", command_family="audit", owner_domains=("bucket_lifecycle",)),
         _surface(
             "app ledger import",
             command_family="recovery",

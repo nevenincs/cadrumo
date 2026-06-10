@@ -118,7 +118,7 @@ def _seed_303_work_unit(
         period=period,
         # The law-determined M303 revision for filing_year 2026 is
         # ``2023-y-siguientes`` (``2009-y-siguientes`` covers only 2009-2022).
-        # The W01.P01 calc-time assertion (snapshot.revision.id ==
+        # The calc-time assertion (snapshot.revision.id ==
         # work_unit.revision_id) refuses the stale pin.
         revision_id="2023-y-siguientes",
         repository=work_unit_repository,

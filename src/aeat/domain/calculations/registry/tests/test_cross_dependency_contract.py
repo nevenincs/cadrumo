@@ -249,11 +249,11 @@ def _assert_relation_binding_mirrors_source(*, binding, relation, scope: str) ->
     selector_periods = selector.get("source_periods")
 
     # A relation's target_binding is canonically a ``relation_prefill`` slot
-    # (aggregation-taxonomy ADR ruling 3): the relation owns the cross-period
+    # (aggregation-taxonomy decision ruling 3): the relation owns the cross-period
     # fold-in and the slot only materialises the resolved Decimal. The single
     # documented exception is the iva-wallet-owned M303 compensación binding,
     # which stays ``previous_filing`` (resolved pre-mesh by the iva-wallet gate,
-    # ADR ruling D3).
+    # ruling D3).
     _iva_wallet_owned = binding.id == "modelo-303-compensacion-pendiente-anteriores"
     assert binding.source == ("previous_filing" if _iva_wallet_owned else "relation_prefill"), scope
     assert selector_modelo == relation.source_modelo, scope

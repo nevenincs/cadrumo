@@ -553,7 +553,9 @@ application:
   calculations:
     iva_compensation:
       errors:
-        correction_missing: 'No existe ningún registro de compensación sembrado para %{filing_year}/%{period}; la corrección sobrescribe una siembra existente, no la crea.'
+        correction_missing: No existe ningún registro de compensación sembrado para
+          %{filing_year}/%{period}; la corrección sobrescribe una siembra existente,
+          no la crea.
         modelo_303_only: El historial de compensación de IVA solo acepta observaciones
           del Modelo 303.
         modelo_390_only: El resumen anual de compensación de IVA solo acepta observaciones
@@ -876,8 +878,12 @@ application:
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
     iva_wallet:
-      correct_no_record: 'No existe ningún registro de compensación sembrado para %{filing_year}/%{period}. Ejecuta primero ''aeat app modelo iva-wallet seed''; la corrección sobrescribe una siembra existente.'
-      correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period}) ha consumido esta base de compensación sembrada. Cambiarla alteraría una declaración presentada.'
+      correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
+        Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
+        una siembra existente.
+      correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period})
+        ha consumido esta base de compensación sembrada. Cambiarla alteraría una declaración
+        presentada.'
       seed_negative_amount: El importe inicial no puede ser negativo.
       seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
         al perfil activo.
@@ -1186,7 +1192,7 @@ cli:
         create_help: Crea un libro de existencias para una actividad y ejercicio
         group_help: Libros de existencias por actividad, movimientos y valoración
         iva_rate_help: Tipo de IVA en porcentaje
-        list_help: Lista los libros de existencias del bucket activo
+        list_help: 'Lista los libros de existencias del perfil activo'
         movement_add_help: Añade un movimiento de compra, venta o ajuste al libro
         movement_date_help: Fecha del movimiento (AAAA-MM-DD)
         movement_group_help: Gestiona movimientos del libro de existencias
@@ -1222,7 +1228,7 @@ cli:
         category_help: Id de categoría de gasto (p. ej. USAGE_RATIO_VEHICLE)
         eligible_help: Lista las categorías que admiten proporción específica
         group_help: Proporciones de uso profesional por categoría de gasto
-        list_help: Lista las proporciones por categoría del bucket activo
+        list_help: 'Lista las proporciones por categoría del perfil activo'
         no_override_error: No hay proporción guardada para la categoría {category!r}
           en el bucket {bucket_id!r}
         ratio_help: Proporción aplicable entre 0 y 1
@@ -1321,6 +1327,12 @@ cli:
           de lectura protegida de cartera; las puertas de representación solo continuan
           en modo nombre propio.
         taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
+      justificante:
+        app_help: 'Capturas de justificantes AEAT (solo lectura): descarga un justificante presentado y concilia contra él.'
+        capture_help: 'Descarga en vivo el justificante AEAT de un periodo presentado y lo guarda como evidencia oficial.'
+        list_help: 'Lista las capturas de justificantes guardadas en el perfil activo.'
+        snapshot_id_help: 'Id de instantánea (o prefijo inequívoco).'
+        view_help: 'Muestra una captura de justificante.'
       limit_help: Número máximo de filas a capturar
       modelo_help: Código de modelo
       notifications:
@@ -1488,7 +1500,7 @@ cli:
           inequívoco).
       filing_record:
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
-        bucket_id_help: Filtrar por bucket
+        bucket_id_help: 'Filtrar por perfil'
         evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
         evidence_reference_id_help: Identificador estable de la evidencia importada
@@ -1528,14 +1540,26 @@ cli:
           del saldo arrastrado.
         balance_help: Muestra el saldo acumulado del crédito IVA por compensación
           calculado a partir del historial local del Modelo 303.
-        correct_amount_help: 'Importe corregido del saldo a compensar en EUR (decimal, p. ej. 1200.50).'
-        correct_confirm_help: 'Indicador de confirmación obligatorio. Reconoce que esto sobrescribe un saldo a compensar sembrado previamente y que la exactitud de la declaración depende del nuevo valor.'
-        correct_confirm_required: 'Pasa --confirm para confirmar: esto sobrescribe el saldo a compensar del M303 sembrado previamente para el periodo indicado.'
-        correct_filing_year_help: 'Ejercicio del periodo del Modelo 303 sembrado que se va a corregir.'
-        correct_help: 'Corrige un saldo de compensación inicial del Modelo 303 introducido erróneamente para un periodo anterior al historial local. Sobrescribe el importe sembrado existente; se rechaza si no existe ningún registro para el periodo (siembra primero) y si un Modelo 303 ya presentado ha consumido la base sembrada (corregirla cambiaría una declaración presentada). Registra --reason en un evento de auditoría. Requiere --confirm.'
-        correct_period_help: 'Periodo del registro del Modelo 303 sembrado que se va a corregir (p. ej. 4T, 3T).'
-        correct_reason_help: 'Motivo de la corrección, registrado en el evento de auditoría.'
-        correct_reason_required: 'Indica --reason: registra por qué se corrige el saldo inicial; no puede estar vacío.'
+        correct_amount_help: Importe corregido del saldo a compensar en EUR (decimal,
+          p. ej. 1200.50).
+        correct_confirm_help: Indicador de confirmación obligatorio. Reconoce que
+          esto sobrescribe un saldo a compensar sembrado previamente y que la exactitud
+          de la declaración depende del nuevo valor.
+        correct_confirm_required: 'Pasa --confirm para confirmar: esto sobrescribe
+          el saldo a compensar del M303 sembrado previamente para el periodo indicado.'
+        correct_filing_year_help: Ejercicio del periodo del Modelo 303 sembrado que
+          se va a corregir.
+        correct_help: Corrige un saldo de compensación inicial del Modelo 303 introducido
+          erróneamente para un periodo anterior al historial local. Sobrescribe el
+          importe sembrado existente; se rechaza si no existe ningún registro para
+          el periodo (siembra primero) y si un Modelo 303 ya presentado ha consumido
+          la base sembrada (corregirla cambiaría una declaración presentada). Registra
+          --reason en un evento de auditoría. Requiere --confirm.
+        correct_period_help: Periodo del registro del Modelo 303 sembrado que se va
+          a corregir (p. ej. 4T, 3T).
+        correct_reason_help: Motivo de la corrección, registrado en el evento de auditoría.
+        correct_reason_required: 'Indica --reason: registra por qué se corrige el
+          saldo inicial; no puede estar vacío.'
         group_help: Comandos de saldo local de la cartera de compensación IVA.
         seed_amount_help: Importe inicial de la compensación de IVA en decimal.
         seed_confirm_help: Confirme la operación de importe inicial.
@@ -1630,9 +1654,13 @@ cli:
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
       reconciliation_history:
-        empty: 'Aún no se han registrado conciliaciones.'
-        help: 'Lista las conciliaciones registradas para el perfil activo. Lee el historial de eventos MODELO_RECONCILED, que es de solo anexado; las conciliaciones se pueden repetir cuando se desee, por lo que esta es una lectura de conveniencia, no un registro almacenado.'
-        work_unit_id_help: 'Id de unidad de trabajo opcional para limitar el historial a una sola unidad de trabajo.'
+        empty: Aún no se han registrado conciliaciones.
+        help: Lista las conciliaciones registradas para el perfil activo. Lee el historial
+          de eventos MODELO_RECONCILED, que es de solo anexado; las conciliaciones
+          se pueden repetir cuando se desee, por lo que esta es una lectura de conveniencia,
+          no un registro almacenado.
+        work_unit_id_help: Id de unidad de trabajo opcional para limitar el historial
+          a una sola unidad de trabajo.
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
@@ -1665,7 +1693,7 @@ cli:
           no ambiguo). Sus valores de binding se usan solo para bindings marcados
           aeat_prefilled; las sobrescrituras --binding del operador siempre tienen
           prioridad.
-        bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
+        bucket_id_help: 'Perfil al que pertenece la unidad de trabajo'
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
           (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
@@ -1786,8 +1814,7 @@ cli:
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
         kv_format_error: '{flag} debe tener el formato {key_label}={value_label};
           se recibió {spec}.'
-        list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
-          por bucket
+        list_help: 'Listar las unidades de trabajo registradas, opcionalmente filtradas por perfil'
         meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo menor
           de 3 años estaba en la unidad familiar (Art. 81 LIRPF deducción maternidad).
           Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador
@@ -2002,8 +2029,7 @@ cli:
       login_help: Adquirir o verificar una sesión AEAT en vivo.
       login_reset_lock_help: Eliminar un bloqueo de adquisición de autenticación obsoleto
         antes de empezar.
-      no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config profile
-        create NAME' antes de configurar la autenticación.
+      no_active_bucket: 'No hay un perfil activo. Ejecuta ''aeat config profile create NAME'' antes de configurar la autenticación.'
       output_language_help: Idioma del texto de salida (es, en, ca, hu).
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers:
@@ -2017,25 +2043,7 @@ cli:
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
-    bucket:
-      actor_help: Filtrar el historial a eventos registrados por un actor concreto
-        (coincidencia exacta)
-      bucket_id_help: Identificador del bucket cuyo historial de eventos se inspecciona
-      event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
-      help: Inspeccionar el almacenamiento por bucket y su historial de eventos
-      history:
-        invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
-          válidos: {valid}.'
-        invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
-          se recibió {raw}.'
-        since_after_until: --since debe ser anterior o igual a --until.
-      history_help: Mostrar el historial de eventos solo-append de un bucket
-      object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia
-        exacta)
-      since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601 (p.
-        ej. 2026-04-01T00:00:00+00:00)
-      until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601
-        (p. ej. 2026-04-30T23:59:59+00:00)
+    bucket: null
     custody:
       confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
       confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto
@@ -2176,7 +2184,7 @@ cli:
       drafts_dir_help: Directory to store local filing drafts
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
-      help: Initialize a new active profile and config bucket.
+      help: 'Inicializa un nuevo perfil activo.'
       iva_regime_help: IVA regime (general, simplificado, exento, etc.)
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
@@ -2204,7 +2212,7 @@ cli:
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
-      create_help: Inicializa un nuevo perfil activo y su bucket de configuración.
+      create_help: 'Inicializa un nuevo perfil activo.'
       delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
         activo se ha borrado. Ejecuta aeat config switch NAME o aeat config profile
         create NAME para volver a trabajar.
@@ -2223,6 +2231,25 @@ cli:
       export_name_help: Perfil que quieres exportar; por defecto, el activo
       export_out_help: Ruta de destino para el paquete JSON
       help: Gestionar valores de configuración del perfil activo
+      history:
+        invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
+          válidos: {valid}.'
+        invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00);
+          se recibió {raw}.'
+        since_after_until: --since debe ser anterior o igual a --until.
+      history_actor_help: Filtrar el historial a eventos registrados por un actor
+        concreto (coincidencia exacta)
+      history_bucket_id_help: Identificador del bucket cuyo historial de eventos se
+        inspecciona
+      history_event_type_help: Filtrar el historial por uno o varios tipos de evento
+        (repetible)
+      history_help: Mostrar el historial de eventos solo-append de un perfil
+      history_object_id_help: Filtrar el historial a eventos sobre un object_id concreto
+        (coincidencia exacta)
+      history_since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601
+        (p. ej. 2026-04-01T00:00:00+00:00)
+      history_until_help: Filtrar el historial a eventos en o antes de esta marca
+        ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
       import_help: Registra un paquete portátil de perfil desde un JSON
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
@@ -2319,7 +2346,7 @@ cli:
       profile_clear_active_mismatch: --clear-active solo puede borrar el puntero del
         perfil activo; '%{profile}' no está activo.
       profile_help: Inspeccionar y reparar el puntero de perfil activo.
-      profile_name_help: Inspeccionar un bucket de perfil registrado concreto.
+      profile_name_help: 'Inspeccionar un perfil registrado concreto.'
       profile_one_action: Elige --clear-active o --repair-manifest-status, no ambos.
       profile_repair_manifest_status_help: Rellenar el estado de un manifiesto legacy
         del bucket activo desde el registro cifrado del perfil.
@@ -2334,24 +2361,16 @@ cli:
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
-      reset_state_dry_run_help: Informar la huella del envoltorio sin eliminar la
-        fila
-      reset_state_help: Descartar el envoltorio ilegible del estado del flujo de trabajo
-        (destructivo; requiere --yes)
-      reset_state_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
-        --yes para confirmar o pasa --dry-run para inspeccionar la huella.
-      reset_state_yes_help: Confirmar explícitamente el reinicio del estado del flujo
-        de trabajo
+      reset_progress_dry_run_help: 'Muestra qué se borraría sin eliminarlo'
+      reset_progress_help: 'Borra el progreso atascado guardado de un comando interrumpido (destructivo; requiere --yes)'
+      reset_progress_requires_yes: 'Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar o pasa --dry-run para ver qué se borraría.'
+      reset_progress_yes_help: 'Confirmar el borrado del progreso guardado'
       yes_help: Confirmar la reparación.
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
       requires_yes: El reinicio es destructivo. Vuelve a ejecutar con --yes para confirmar.
-      scope_help: 'Ámbito a reiniciar. profile: borra todos los buckets de perfil
-        (manifiestos, DEKs, declaraciones, revisiones de libro mayor y facturas).
-        auth: limpia la sesión de autenticación AEAT/SEDE persistida. data: pone en
-        cuarentena las filas de objetos seguros ilegibles en todos los espacios de
-        nombres. all: aplica profile, auth y data juntos.'
+      scope_help: 'Ámbito a reiniciar. profile: borra todos los perfiles (manifiestos, DEKs, declaraciones, revisiones de libro mayor y facturas). auth: limpia la sesión de autenticación AEAT/SEDE persistida. data: pone en cuarentena las filas de objetos seguros ilegibles en todos los espacios de nombres. all: aplica profile, auth y data juntos.'
       yes_help: Confirmar explícitamente la operación de reinicio
     set:
       help: Asignar un valor a una clave de configuración
@@ -2364,7 +2383,7 @@ cli:
       errors:
         missing_required_flags: Faltan banderas obligatorias para el modo --quiet;
           proporciona un valor para cada pregunta obligatoria.
-      help: Configuración inicial guiada del perfil tributario
+      help: 'Configuración inicial guiada del perfil tributario'
       profile_name_help: Nombre del perfil donde guardar las respuestas
       quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados;
         los flags requeridos sin valor provocan un error. Suficiente por sí solo;
@@ -2387,7 +2406,7 @@ cli:
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
     switch:
-      help: Cambiar el perfil activo seleccionandolo y abriendo su sesion de almacenamiento.
+      help: Cambia a un perfil y conviértelo en el activo.
       name_help: Nombre del perfil al que cambiar. Si se omite, se usa el puntero
         del perfil activo.
     unlock: null
@@ -2465,7 +2484,7 @@ cli:
   ledger:
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
-      amount_help: Importe firmado de la transacción en la moneda del bucket
+      amount_help: 'Importe firmado de la transacción en la moneda de la transacción'
       attachment_help: Id de adjunto seguro adicional; se puede repetir
       business_pct_help: Proporción de uso profesional de 0 a 1
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
@@ -2476,7 +2495,7 @@ cli:
       date_help: Fecha contable de la transacción (AAAA-MM-DD)
       description_help: Descripción no vacía de la transacción
       direction_help: Sentido de la transacción (INCOMING, OUTGOING o INTERNAL_TRANSFER)
-      help: Añade una transacción manual al libro del perfil activo
+      help: 'Añade una transacción manual al libro del perfil activo'
       idempotency_key_help: Clave de idempotencia aportada por el llamador
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
@@ -2513,7 +2532,7 @@ cli:
     app_help: Gestión de libros contables y registros de IVA
     archive:
       actor_help: Nombre del operador registrado en el evento del bucket
-      help: Archivar un movimiento del libro en el bucket del perfil activo
+      help: 'Archivar un movimiento del libro en el perfil activo'
       id_help: Id del movimiento del libro a archivar
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma el archivo de la transacción del libro
@@ -2537,11 +2556,8 @@ cli:
       usage_example: Pasa el id sin prefijo, p. ej. --category-id {example} (no una
         clave compuesta ni con prefijo de familia).
     check:
-      bucket_id_help: Id del bucket a examinar (por defecto el bucket del perfil activo).
-      help: Examina los movimientos del libro del bucket direccionado (por defecto
-        el bucket del perfil activo) e informa de filas con anomalías agregadas a
-        través de cada período que los movimientos toquen. Local; nunca contacta con
-        AEAT.
+      bucket_id_help: 'Id del bucket a examinar (por defecto el perfil activo).'
+      help: 'Examina los movimientos del libro del perfil direccionado (por defecto el perfil activo) e informa de filas con anomalías agregadas a través de cada período que los movimientos toquen. Local; nunca contacta con AEAT.'
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       apply_help: 'Persiste la sugerencia del LLM con procedencia llm: en lugar de
@@ -2564,7 +2580,7 @@ cli:
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
-      help: Clasificar un movimiento del libro en el bucket del perfil activo
+      help: 'Clasificar un movimiento del libro en el perfil activo'
       id_help: Id del movimiento del libro a clasificar
       id_required: --id es obligatorio cuando no se usa --from-csv.
       irpf_category_help: Categoría de IRPF para cálculos de modelos
@@ -2639,7 +2655,7 @@ cli:
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación
-      help: Exportar movimientos canónicos del libro desde el bucket del perfil activo
+      help: 'Exportar movimientos canónicos del libro desde el perfil activo'
       include_inactive_help: Incluir movimientos archivados y apartados
       output_help: Ruta donde escribir el archivo exportado del libro
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
@@ -2754,7 +2770,7 @@ cli:
         Use --offset/--limit para paginar.
       group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
       header: MOVIMIENTOS DEL LIBRO CONTABLE
-      help: Listar movimientos del libro en el bucket del perfil activo
+      help: 'Listar movimientos del libro en el perfil activo'
       limit_help: 'Numero maximo de filas a mostrar (por defecto: todas).'
       offset_help: 'Omitir este numero de filas antes de listar (por defecto: 0).'
       ungrouped_label: (sin grupo)
@@ -2767,9 +2783,7 @@ cli:
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la fusión de las transacciones hijas
     preflight:
-      help: Informa de los datos contables que faltan (categoría, base imponible,
-        importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
-        del bucket activo en un período dado. Local; nunca contacta con AEAT.
+      help: 'Informa de los datos contables que faltan (categoría, base imponible, importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos del perfil activo en un período dado. Local; nunca contacta con AEAT.'
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2024).
@@ -2778,14 +2792,14 @@ cli:
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
-      help: Eliminar un movimiento del libro del bucket del perfil activo
+      help: 'Eliminar un movimiento del libro del perfil activo'
       id_help: Id del movimiento del libro a eliminar
       reason_help: Motivo registrado en el historial de eliminación
       yes_help: Confirmar la eliminación del movimiento del libro
     reset:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin vaciar el catálogo del libro
-      help: Reiniciar el catálogo del libro del bucket del perfil activo
+      help: 'Reiniciar el catálogo del libro del perfil activo'
       reason_help: Motivo registrado en el historial de reinicio
       yes_help: Confirmar el vaciado del catálogo activo del libro
     restore:
@@ -2815,13 +2829,12 @@ cli:
       yes_help: Confirma la división de la transacción
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
-      help: Apartar un movimiento del libro en el bucket del perfil activo
+      help: 'Apartar un movimiento del libro en el perfil activo'
       id_help: Id del movimiento del libro a apartar
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma el envío de la transacción a la reserva
     status:
-      help: Resumir el estado del libro y la preparación de cálculo del bucket del
-        perfil activo
+      help: 'Resumir el estado del libro y la preparación de cálculo del perfil activo'
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       year_help: Año de declaración para --period (p. ej. 2024).
@@ -2846,7 +2859,7 @@ cli:
       taxable_base_help: Nuevo importe de base imponible
       value_date_help: Nueva fecha valor (AAAA-MM-DD)
     view:
-      help: Muestra una transacción del libro
+      help: 'Muestra una transacción del libro'
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
@@ -2898,8 +2911,7 @@ cli:
         modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
           exportar.'
         overview_status: Mostrar el estado general de la declaracion activa.
-        paragraph_operational_workflow: 'Flujo operativo: configure el perfil -> importe
-          transacciones -> trabaje el modelo -> revise -> exporte.'
+        paragraph_operational_workflow: 'Flujo operativo: configure el perfil -> importe transacciones -> trabaje el modelo -> revise -> exporte.'
         registry_inspect: Inspeccionar el registro de modelos fiscales.
         registry_verify: Verificar la integridad del registro de modelos.
         review_queue: Mostrar la cola de revision pendiente.
@@ -2915,13 +2927,12 @@ cli:
         auth_providers: Listar los proveedores de autenticacion disponibles.
         auth_status: Mostrar el estado actual de la autenticacion con la AEAT.
         auth_test: Probar la autenticacion con la AEAT.
-        bucket_history: Inspecciona el historial append-only de eventos del bucket.
         diagnostics_logs: Consultar los registros de diagnostico de la aplicacion.
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
           la aplicacion.
-        diagnostics_reset_state: Reiniciar el estado interno de la aplicacion.
-        first_run_bootstrap: Inicializar la configuracion en el primer uso.
+        diagnostics_reset_progress: Reiniciar el estado interno de la aplicacion.
+        first_run_bootstrap: 'Inicializar la configuracion en el primer uso.'
         first_run_edit: Editar la configuracion inicial.
         footer: Ejecute 'aeat config <comando> --help' para obtener mas informacion
           sobre cada comando.
@@ -2931,13 +2942,13 @@ cli:
         profile_censo: Mostrar el estado del censo del perfil activo.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
+        profile_history: Inspecciona el historial append-only de eventos del perfil.
         profile_list: Listar los perfiles de contribuyente disponibles.
         profile_rename: Renombrar un perfil de contribuyente.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
-        profile_switch: Desbloquear y activar un perfil.
+        profile_switch: Switch to a profile and make it the active one.
         section_authentication: Autenticacion AEAT
-        section_bucket_inspection: Inspeccion de bucket
         section_diagnostics: Diagnostico
         section_first_run: Primera ejecucion
         section_profile_inspection: Inspeccion de perfil
@@ -2979,7 +2990,7 @@ cli:
         section_modelo_lifecycle: Ciclo de vida del modelo
         section_setup: Configuracion
         setup_configure_auth: Configurar la autenticacion con la AEAT.
-        setup_create_profile: Crear un nuevo perfil de contribuyente.
+        setup_create_profile: 'Crear un nuevo perfil de contribuyente.'
         setup_inspect_profile: Inspeccionar el perfil de contribuyente activo.
     landing:
       active_profile_message: 'Perfil activo: %{profile}.'
@@ -4221,6 +4232,8 @@ errors:
       Modelo 036 con el identificador indicado.
     refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes
       con el identificador indicado.
+    refused_live_justificante_capture_snapshot_not_found: No existe ninguna captura
+      de justificante
     refused_live_notifications_snapshot_not_found: No existe ningún snapshot de notificaciones
       con el identificador indicado.
     refused_live_portal_not_found: No existe ningún portal de la AEAT con el identificador

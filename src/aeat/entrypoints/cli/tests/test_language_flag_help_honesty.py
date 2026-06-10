@@ -1,9 +1,9 @@
 """Real-behavior tests pinning the ``--language`` help-text honesty contract.
 
-The operator-surface ADR decision D6 (``2026-06-10-cli-operator-surface-adr``)
-requires the root ``--language`` / ``--lang`` flag to be honest about help text:
-it must not silently fail to do what it advertises. Per the accepted ordering
-(work, then remove, then warn), the feasibility spike found the highest outcome —
+The operator-surface decision requires the root ``--language`` / ``--lang`` flag
+to be honest about help text: it must not silently fail to do what it advertises.
+Per the accepted ordering (work, then remove, then warn), the feasibility spike
+found the highest outcome —
 *make it work* — was cheaply achievable by promoting an explicit ``--language``
 flag to ``AEAT_OUTPUT_LANGUAGE`` in the console entry point, before the lazily
 imported subcommand modules render their ``tr(...)``-bound help. These tests pin
@@ -75,8 +75,8 @@ def _run_console(args: list[str], env: dict[str, str]) -> subprocess.CompletedPr
 # The English and Spanish help descriptions for ``config profile create`` are
 # distinct, locale-authored strings (``cli.config.profile.create_help``). They
 # are the observable proof that help text rendered in the chosen language.
-_CREATE_HELP_EN = "Initialize a new active profile and config bucket."
-_CREATE_HELP_ES = "Inicializa un nuevo perfil activo y su bucket"
+_CREATE_HELP_EN = "Initialize a new active profile."
+_CREATE_HELP_ES = "Inicializa un nuevo perfil activo."
 
 
 def test_language_flag_renders_english_leaf_help(tmp_path: Path) -> None:
@@ -133,7 +133,7 @@ def test_explicit_language_flag_overrides_ambient_env(tmp_path: Path) -> None:
 def test_env_var_still_controls_help_without_flag(tmp_path: Path) -> None:
     """The ``AEAT_OUTPUT_LANGUAGE`` override path is unchanged when no flag is given.
 
-    D6 corrects only the eager flag's silent-failure-on-help behaviour; the
+    The fix corrects only the eager flag's silent-failure-on-help behaviour; the
     profile-owned precedence and the env override must keep working untouched.
     """
     result = _run_console(

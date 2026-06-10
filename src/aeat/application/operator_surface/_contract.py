@@ -39,7 +39,6 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "recover",
             "show-recovery",
             "verify-recovery",
-            "bucket",
             "auth",
             "repair",
         ),
@@ -87,6 +86,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "logout",
             "status",
             "censo",
+            "history",
         ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -145,15 +145,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
-        domain=MountedCommandDomain.BUCKET,
-        root=RootSurfaceName.CONFIG,
-        child="bucket",
-        operator_question="inspect bucket manifests and append-only bucket-event history",
-        service_owner="aeat.domain.buckets",
-        commands=("history",),
-        mutability=OperatorMutability.READ_ONLY,
-    ),
-    MountedCommandFamily(
         domain=MountedCommandDomain.AUTH,
         root=RootSurfaceName.CONFIG,
         child="auth",
@@ -168,7 +159,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="repair",
         operator_question="diagnose local configuration, logs, connectivity, and secure-object integrity",
         service_owner="aeat.application.diagnostics",
-        commands=("connectivity", "integrity", "quarantine", "reset-state", "logs"),
+        commands=("connectivity", "integrity", "quarantine", "reset-progress", "logs"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -265,7 +256,7 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
     ServiceOwner(
         capability="bucket_event_history",
         owner="aeat.domain.buckets",
-        notes="owns append-only bucket-event history records exposed by config bucket history",
+        notes="owns append-only bucket-event history records exposed by config profile history",
     ),
     ServiceOwner(
         capability="workflow_state",

@@ -1,4 +1,4 @@
-"""CLI tests for ``aeat config repair reset-state``."""
+"""CLI tests for ``aeat config repair reset-progress``."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def _seed_workflow_state() -> None:
 
     ``config profile create`` is bootstrap-exempt: it provisions the
     profile bucket, opens its session, and writes the workflow-state
-    secure-object row that ``reset-state`` later discards.
+    secure-object row that ``reset-progress`` later discards.
     """
 
     created = invoke_cached_cli(
@@ -72,14 +72,14 @@ def _row_exists() -> bool:
         return secure_object_repository_for_active_bucket().exists("aeat.workflow", "state")
 
 
-def test_reset_state_dry_run_returns_fingerprint_without_deleting_row() -> None:
+def test_reset_progress_dry_run_returns_fingerprint_without_deleting_row() -> None:
     _seed_workflow_state()
 
-    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-state", "--dry-run"])
+    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--dry-run"])
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
-    assert envelope["command"] == "config.repair.reset_state"
+    assert envelope["command"] == "config.repair.reset_progress"
     payload = envelope["result"]
     assert payload["dry_run"] is True
     fingerprint = payload["fingerprint"]
@@ -92,25 +92,25 @@ def test_reset_state_dry_run_returns_fingerprint_without_deleting_row() -> None:
     assert _row_exists()
 
 
-def test_reset_state_without_yes_or_dry_run_raises_refusal_and_keeps_row() -> None:
+def test_reset_progress_without_yes_or_dry_run_raises_refusal_and_keeps_row() -> None:
     _seed_workflow_state()
 
-    result = invoke_cached_cli(["config", "repair", "reset-state"])
+    result = invoke_cached_cli(["config", "repair", "reset-progress"])
 
     assert result.exit_code != 0
     assert _row_exists()
 
 
-def test_reset_state_with_yes_deletes_row_emits_event_and_reload_is_empty() -> None:
+def test_reset_progress_with_yes_deletes_row_emits_event_and_reload_is_empty() -> None:
     _seed_workflow_state()
     with activate_master_key_provider(get_master_key_provider()):
         history_before = len(BucketEventHistoryRepository().load().events)
 
-    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-state", "--yes"])
+    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--yes"])
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
-    assert envelope["command"] == "config.repair.reset_state"
+    assert envelope["command"] == "config.repair.reset_progress"
     payload = envelope["result"]
     assert payload["dry_run"] is False
     # The seeded envelope is healthy, so the reset fingerprint records
@@ -131,3 +131,17 @@ def test_reset_state_with_yes_deletes_row_emits_event_and_reload_is_empty() -> N
         reloaded = workflow_state_repository().load()
     fresh = WorkflowState()
     assert reloaded.model_dump(exclude={"updated_at"}) == fresh.model_dump(exclude={"updated_at"})
+
+
+def test_retired_reset_state_verb_no_longer_resolves() -> None:
+    """The pre-D1 ``reset-state`` verb is a hard rename, not an alias.
+
+    Per the D1 operator-surface policy the retired spelling must fail to
+    resolve at the click tree — no shim, no deprecation path. A click
+    "No such command" exit guards against a silent re-introduction.
+    """
+
+    result = invoke_cached_cli(["config", "repair", "reset-state", "--dry-run"])
+
+    assert result.exit_code != 0
+    assert "No such command" in result.output or "reset-state" in result.output

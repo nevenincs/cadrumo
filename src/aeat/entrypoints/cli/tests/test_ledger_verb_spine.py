@@ -206,33 +206,22 @@ def test_modelo_top_level_verb_roster_matches_canonical_spine() -> None:
     assert not extras, f"modelo verbs added without test update: {sorted(n for n in extras if n)}"
 
 
-# Bucket_app maintenance-verb pre-landing state pinned.
-# The bucket noun-group will gain
-# six maintenance verbs (browse, search, export, import, rename, delete)
-# once BucketMaintenanceService lands. Until then, only `history` is
-# mounted. This test pins the current state so when contract lands the
-# implementer is forced to update EXPECTED_BUCKET_APP_VERBS, preventing
-# a silent partial-landing where some verbs ship without the others.
-EXPECTED_BUCKET_APP_VERBS: frozenset[str] = frozenset({"history"})
+# The append-only event-history verb is the sole operator-facing bucket
+# surface and now mounts under the `config profile` group as
+# `config profile history` (D1 family rename: the operator means their
+# profile, not the storage bucket). This pins that the verb is present on
+# `profile_app` so a regression that drops or re-homes it is caught.
+def test_profile_history_verb_is_mounted_on_profile_app() -> None:
+    """`config profile history` is the only operator-facing event-history verb.
 
+    The standalone `config bucket` group was retired; the `history` verb
+    merged into the existing `config profile` group. This asserts the verb
+    is registered on `profile_app` so the merge is not silently undone."""
 
-def test_bucket_app_verb_roster_pins_pre_maintenance_state() -> None:
-    """Bucket noun-group today carries only `history`; the six maintenance
-    verbs are not yet mounted.
+    from .._config import profile_app
 
-    When contract lands this assertion fires, which is the intended flag:
-    the implementer must update :data:`EXPECTED_BUCKET_APP_VERBS` to
-    include the new maintenance verbs (browse / search / export /
-    import / rename / delete) so the test continues to pass and the
-    service + verb landing stays coordinated."""
-
-    from .._config import bucket_app
-
-    registered = frozenset(n for n in (cmd.name for cmd in bucket_app.registered_commands) if n)
-    expected = sorted(EXPECTED_BUCKET_APP_VERBS)
-    actual = sorted(registered)
-    assert registered == EXPECTED_BUCKET_APP_VERBS, (
-        f"bucket_app verbs drifted from the pre-landing state: expected {expected!r}, got {actual!r}. "
-        "When the bucket maintenance verbs land, update EXPECTED_BUCKET_APP_VERBS to include "
-        "browse / search / export / import / rename / delete."
+    registered = frozenset(n for n in (cmd.name for cmd in profile_app.registered_commands) if n)
+    assert "history" in registered, (
+        f"`config profile history` is not mounted on profile_app; registered verbs: {sorted(registered)!r}. "
+        "The D1 family rename merged `history` into the profile group; do not drop or re-home it."
     )

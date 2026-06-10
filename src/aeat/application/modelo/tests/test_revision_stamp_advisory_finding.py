@@ -1,6 +1,6 @@
-"""Finding 2 proof: the legacy/indeterminate revision-stamp advisory is operator-visible.
+"""Proof: the indeterminate revision-stamp advisory is operator-visible.
 
-ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2 mandates that a
+The period-revision-resolution decision (Ruling 3) mandates that a
 cross-period carry from a prior filing with no re-confirmable registry revision
 stamp MUST surface a NON-BLOCKING operator-facing advisory finding — never a
 silent grant. These tests prove the WARNING ``ADVISORY`` finding IS PRODUCED by

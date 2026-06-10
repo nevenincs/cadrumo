@@ -1,7 +1,8 @@
 """Application facade for Modelo IVA wallet seed and correction operations.
 
 This module uses :class:`IvaCompensationPeriodState` for seeding and correcting
-the IVA compensation history. :func:`correct_iva_compensation_period_for_bucket`
+the IVA compensation history. Every mutation appends a typed audit event via
+:class:`BucketEventHistoryRepository`. :func:`correct_iva_compensation_period_for_bucket`
 guards the correction against a sealed (already-filed) Modelo 303 revision that
 consumed the seeded compensation basis, reusing the same
 :class:`~aeat.domain.modelos._calculation_revision.CalculationRevisionState`

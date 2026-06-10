@@ -151,7 +151,7 @@ def _register_profile_import_command(
         "import",
         help=tr(
             "cli.config.profile.import_help",
-            default="Register a portable profile bundle from PATH into the active bucket.",
+            default="Register a portable profile bundle from PATH into the active profile.",
         ),
     )
     def config_profile_import(

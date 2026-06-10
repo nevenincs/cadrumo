@@ -2,7 +2,7 @@
 a stored, literal, or operator-supplied ``revision_id`` into
 ``authority.snapshot()`` resolution.
 
-Ratifies Ruling 1 of the period-revision-resolution ADR (2026-06-10):
+Ratifies Ruling 1 of the period-revision-resolution decision (2026-06-10):
 ``select_revision``, reached exclusively through
 ``ValidatedRegistryAuthority.snapshot`` (or, for work-unit addressing,
 ``resolve_registry_revision_for_work_target``), is THE single
@@ -11,7 +11,7 @@ law-determined period-to-revision resolver.  The ``revision_id`` parameter on
 parameter*: legitimate only for (i) registry-derived enumeration and
 (ii) fixture / scenario replay pinning.
 
-The three benign exemptions confirmed by the ADR call-site sweep are pinned
+The three benign exemptions confirmed by the registry call-site sweep are pinned
 here as named constants.  Any new call site passing a ``revision_id`` into
 ``authority.snapshot()`` outside these exemptions is a defect and this test
 will FAIL.

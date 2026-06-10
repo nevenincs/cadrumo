@@ -247,7 +247,7 @@ def test_previous_filing_requirements_are_declared_from_registry_binding_selecto
 def test_relation_requirements_cover_all_source_periods_for_annual_summary(
     committed_modelo_180_snapshot: RegistrySnapshot,
 ) -> None:
-    # M180 ← M115 is canonically a RELATION fold-in (aggregation-taxonomy ADR
+    # M180 ← M115 is canonically a RELATION fold-in (aggregation-taxonomy
     # ruling 2): the slot bindings declare source = "relation_prefill" and the
     # requirement set is produced by the relation requirement resolver, not the
     # previous-filing one (which now skips relation_prefill slots by design).

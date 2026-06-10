@@ -867,6 +867,17 @@ body .docutils.literal span.pre {
   user-select: none;
 }
 
+/* Client-side command decoration (aeat-docs.js): the command head and its
+ * flags, which Pygments leaves as plain text in shell transcripts. */
+.content .highlight .aeat-tok-cmd {
+  color: var(--color-brand-content);
+  font-weight: 550;
+}
+
+.content .highlight .aeat-tok-flag {
+  color: light-dark(#7c3aed, #c4b5fd);
+}
+
 .content .highlight .go {
   color: var(--color-foreground-secondary);
 }

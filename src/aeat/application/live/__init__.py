@@ -12,6 +12,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Sequence
+
+    from ...adapters.outbound.aeat.auth import AeatSession
+    from ...adapters.outbound.aeat.sede import Declaracion, Expediente, SedeCapture
+    from ...core.config import Settings
     from ._expedientes import ExpedientesCapture, ExpedientesService
     from ._notifications import NotificationsService
     from ._verify import VerifyService, VerifySurface, VerifyVerdict
@@ -79,6 +84,17 @@ from ._iva_remote_state import (
     load_iva_remote_state_acquisition_manifest,
     persist_and_reconcile_iva_compensation_wallet,
     persist_iva_remote_state_acquisition_report,
+)
+from ._justificante import (
+    JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+    JUSTIFICANTE_CAPTURE_SOURCE_KIND,
+    JustificanteCaptureSnapshot,
+    JustificanteCaptureSnapshotNotFoundError,
+    JustificanteCaptureSnapshotRepository,
+    JustificanteCaptureSnapshotService,
+    derive_justificante_capture_snapshot_id,
+    justificante_capture_snapshot_object_key,
+    resolve_period_expediente,
 )
 from ._remote_state_models import (
     BulkFiledDataCaptureReport,
@@ -242,6 +258,93 @@ async def capture_notifications(*, bucket_id: str):
     return persisted
 
 
+async def _default_justificante_session() -> tuple[AeatSession, Settings]:
+    return await _active_verified_session(operation="live-justificante-read")
+
+
+async def _default_justificante_declarations(
+    session: AeatSession,
+    settings: Settings,
+    *,
+    modelo: str,
+    year: int,
+) -> tuple[Declaracion, ...]:
+    async with (
+        _shared_playwright(session) as playwright,
+        _open_declarations_register(session, settings=settings, playwright=playwright) as register,
+    ):
+        return tuple(await register.walk(modelo=modelo, ejercicio=year))
+
+
+async def _default_justificante_expedientes(
+    session: AeatSession,
+    settings: Settings,
+    *,
+    modelo: str,
+) -> tuple[Expediente, ...]:
+    from ...adapters.outbound.aeat.sede import walk_expedientes_tree
+
+    return await walk_expedientes_tree(session, modelo=modelo, settings=settings)
+
+
+async def _default_justificante_capture(
+    session: AeatSession,
+    settings: Settings,
+    *,
+    expediente: Expediente,
+) -> SedeCapture:
+    from ...adapters.outbound.aeat.sede import capture_justificante
+
+    return await capture_justificante(session, expediente, settings=settings)
+
+
+async def capture_justificante_snapshot(
+    *,
+    bucket_id: str,
+    modelo: str,
+    year: int,
+    period: str,
+    session_provider: Callable[[], Awaitable[tuple[AeatSession, Settings]]] = _default_justificante_session,
+    declarations_provider: Callable[..., Awaitable[Sequence[Declaracion]]] = _default_justificante_declarations,
+    expedientes_provider: Callable[..., Awaitable[Sequence[Expediente]]] = _default_justificante_expedientes,
+    justificante_provider: Callable[..., Awaitable[SedeCapture]] = _default_justificante_capture,
+) -> JustificanteCaptureSnapshot:
+    """Live-pull the AEAT justificante for one work unit and persist it.
+
+    The flow gates entry through ``_active_verified_session`` (the
+    ``require_live_read`` + authenticated-session boundary), resolves the
+    period-correct expediente by cross-referencing the period-bearing
+    declarations register against the procedure tree
+    (:func:`resolve_period_expediente`), pulls the signed PDF via
+    ``capture_justificante``, and persists it through
+    :class:`JustificanteCaptureSnapshotService` under the active bucket.
+
+    The four ``*_provider`` seams default to the live sede implementations;
+    tests inject canned typed records to exercise the wiring offline without
+    a network round-trip. The persistence path always uses the real service.
+    """
+    session, settings = await session_provider()
+    declarations = await declarations_provider(session, settings, modelo=modelo, year=year)
+    expedientes = await expedientes_provider(session, settings, modelo=modelo)
+    expediente = resolve_period_expediente(
+        declarations=declarations,
+        expedientes=expedientes,
+        modelo=modelo,
+        period=period,
+    )
+    capture = await justificante_provider(session, settings, expediente=expediente)
+    return JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        expediente_id=capture.expediente.expediente_id,
+        csv=capture.ref.csv,
+        pdf_bytes=capture.pdf_bytes,
+        pdf_sha256=capture.pdf_sha256,
+        captured_at=now(),
+    )
+
+
 def __getattr__(name: str):
     """Lazy-load the heavy service classes through the package boundary.
 
@@ -270,6 +373,8 @@ def __getattr__(name: str):
 
 __all__ = [
     "BORRADOR_100_SNAPSHOT_NAMESPACE",
+    "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
+    "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
     "Borrador100SnapshotService",
@@ -295,6 +400,10 @@ __all__ = [
     "IvaRemoteStateStoredEvidenceReport",
     "IvaWalletAuthorityDecisionRow",
     "IvaWalletCaptureReport",
+    "JustificanteCaptureSnapshot",
+    "JustificanteCaptureSnapshotNotFoundError",
+    "JustificanteCaptureSnapshotRepository",
+    "JustificanteCaptureSnapshotService",
     "LiveApplicationError",
     "LiveApplicationInputError",
     "LiveIvaAcquisitionFailureMode",
@@ -329,12 +438,15 @@ __all__ = [
     "capture_iva_compensation_history",
     "capture_iva_compensation_wallet",
     "capture_iva_remote_state",
+    "capture_justificante_snapshot",
     "capture_notifications",
     "capture_source_filed_data",
     "classify_live_iva_acquisition_failure",
     "derive_borrador_100_snapshot_id",
+    "derive_justificante_capture_snapshot_id",
     "filed_data_capture_failure_row",
     "filed_data_listing_row",
+    "justificante_capture_snapshot_object_key",
     "list_filed_data",
     "list_iva_compensation_history",
     "list_iva_remote_state_acquisition_manifests",
@@ -343,5 +455,6 @@ __all__ = [
     "persist_and_reconcile_iva_compensation_wallet",
     "persist_filed_calculation_observation",
     "persist_iva_remote_state_acquisition_report",
+    "resolve_period_expediente",
     "select_declarations_for_capture",
 ]

@@ -35,8 +35,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # dedicated tests because they run the slower registry probe.
 _FAST_REPAIR_VERBS: tuple[tuple[str, ...], ...] = (
     ("config", "repair", "logs"),
-    ("config", "repair", "reset-state", "--yes"),
-    ("config", "repair", "reset-state", "--dry-run"),
+    ("config", "repair", "reset-progress", "--yes"),
+    ("config", "repair", "reset-progress", "--dry-run"),
     ("config", "repair", "quarantine", "--yes"),
     ("config", "repair", "profile"),
     ("config", "repair", "connectivity"),
@@ -123,10 +123,10 @@ def test_quarantine_on_fresh_root_reports_nothing_to_quarantine(_fresh_storage_r
     assert "aeat_database_url is empty" not in result.output
 
 
-def test_reset_state_on_fresh_root_reports_nothing_to_reset(_fresh_storage_root: Path) -> None:
-    """The cold-root reset-state guard reports a clean no-op, not a crash."""
+def test_reset_progress_on_fresh_root_reports_nothing_to_reset(_fresh_storage_root: Path) -> None:
+    """The cold-root reset-progress guard reports a clean no-op, not a crash."""
 
-    result = invoke_cached_cli(["config", "repair", "reset-state", "--yes"])
+    result = invoke_cached_cli(["config", "repair", "reset-progress", "--yes"])
 
     assert result.exit_code == 0, result.output
     assert "reset\tfalse" in result.output

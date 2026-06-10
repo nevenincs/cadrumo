@@ -1,4 +1,4 @@
-"""W04.P11.S17 — M100 annual 0604 folds in M130 1T-4T pagos fraccionados (LIVE path).
+"""M100 annual 0604 folds in M130 1T-4T pagos fraccionados (LIVE path).
 
 The annual IRPF declaration (Modelo 100) casilla ``0604`` ("Pagos fraccionados
 ingresados") is a *computed* casilla whose registry formula
@@ -12,7 +12,7 @@ ingresados") is a *computed* casilla whose registry formula
 Each relation materialises into its declared ``target_binding``
 (``renta-2024-modelo-130-pagos-fraccionados`` / ``-131-``), whose registry
 binding declares ``source='relation_prefill'`` with a ``sum`` aggregation over
-``source_output``. W03 enrolled :class:`RelationPrefillSourceResolver` in the
+``source_output``. :class:`RelationPrefillSourceResolver` is enrolled in the
 live source mesh, making the relation canonical for cross-modelo fold-in. This
 module proves the wiring works end-to-end on the LIVE operator calculate path
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`):
@@ -304,7 +304,7 @@ def test_m100_partial_prior_m130_filings_current_behaviour(secure_objects: Secur
     This pins the OBSERVED current behaviour: a partial prior filing does NOT
     silently partial-fold; it raises. The blank-vs-zero-vs-raise decision (should
     a partial or absent prior filing yield a blank cell, a zero contribution, or a
-    hard raise) is a coordinator adjudication tracked as a separate W04 finding.
+    hard raise) is a coordinator adjudication tracked as a separate finding.
     No engine semantics are changed here; this test only documents the status quo
     and fails loudly if it drifts. (xfail/skip-free per the testing mandate.)
     """
@@ -325,7 +325,7 @@ def test_m100_no_prior_m130_filing_current_behaviour(secure_objects: SecureObjec
     '...' has no supplied value`` — the same shape confirmed for M190 in a
     different harness. The live mesh does NOT silently materialise an absent
     relation as zero. The blank-vs-zero-vs-raise decision is a coordinator
-    adjudication (separate W04 finding); this test only pins the status quo.
+    adjudication (separate finding); this test only pins the status quo.
     """
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
         _calculate_m100_annual(secure_objects)

@@ -574,7 +574,7 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
 
 
 def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero() -> None:
-    """AIC official-box parity (Wave B2): boxes 10/11 devengado + 36/37 deducible, net-zero.
+    """AIC official-box parity: boxes 10/11 devengado + 36/37 deducible, net-zero.
 
     An ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`` observation on the
     ``INVERSION_SUJETO_PASIVO`` flow is consumed by BOTH new official-box parity
@@ -655,7 +655,7 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
 
 
 def test_resolve_import_third_country_routes_deducible_only() -> None:
-    """Third-country import deducible routing (Wave B2): box 33, real deduction.
+    """Third-country import deducible routing: box 33, real deduction.
 
     An ``IMPORT_THIRD_COUNTRY`` observation on the ``SOPORTADO`` flow (the only
     leg that reaches M303 — output IVA is settled at customs/DUA) is consumed by
@@ -748,8 +748,8 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
     and the non-declarable sentinels) projected on the canonical flow the
     application classifier emits for it (via ``derive_flow_for_classification``,
     with the rate kind that matches the category), no observation lands in the
-    unconsumed-declarable advisory's flagged set — the M303 routing tail (Wave
-    A2 reverse-charge + Wave B2 AIC parity + import deducible) leaves no
+    unconsumed-declarable advisory's flagged set — the M303 routing tail (reverse-charge
+    + AIC parity + import deducible routing) leaves no
     cuota-bearing declarable category unrouted.
 
     The synthesised observation uses the rate kind the category implies
@@ -793,7 +793,7 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
 
 
 def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
-    """Box 59 (Wave B2): substantive ground is LIVA art. 25, not the generic art. 88/92.
+    """Box 59: substantive ground is LIVA art. 25, not the generic art. 88/92.
 
     Casilla 59 reports the base of exempt intra-community supplies; its
     substantive legal_ref is ``ley-37-1992:art-25`` (exención entregas
@@ -811,7 +811,7 @@ def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
 
 
 def test_box_60_carries_substantive_export_grounding() -> None:
-    """Box 60 (Wave B2): substantive grounds are LIVA art. 21 + art. 22.
+    """Box 60: substantive grounds are LIVA art. 21 + art. 22.
 
     Casilla 60 reports the base of exempt exports and operations treated as
     exports; its substantive legal_refs are ``ley-37-1992:art-21`` (exenciones

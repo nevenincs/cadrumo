@@ -21,6 +21,7 @@ Submodules
    aeat.application.live._filed_data_capture
    aeat.application.live._filed_observation_persistence
    aeat.application.live._iva_remote_state
+   aeat.application.live._justificante
    aeat.application.live._notifications
    aeat.application.live._remote_state_models
    aeat.application.live._remote_state_outcomes

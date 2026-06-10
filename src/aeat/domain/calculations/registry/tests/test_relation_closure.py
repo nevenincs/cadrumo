@@ -238,12 +238,12 @@ def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
 
 
 def test_registry_validator_rejects_nondirect_previous_filing_binding() -> None:
-    """S12 gate (a): a previous_filing binding with a non-direct selector is rejected.
+    """A previous_filing binding with a non-direct selector is rejected.
 
     The M100 cross-modelo slot bindings carry a non-direct selector
     ({source_modelo, source_output}, no period anchor). They are canonically
     ``relation_prefill``; re-stamping one back to ``previous_filing`` must trip
-    the slot-source hygiene gate (aggregation-taxonomy ADR ruling 3).
+    the slot-source hygiene gate (aggregation-taxonomy ruling 3).
     """
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "100")
@@ -263,12 +263,12 @@ def test_registry_validator_rejects_nondirect_previous_filing_binding() -> None:
 
 
 def test_registry_validator_rejects_relation_targeted_previous_filing_binding() -> None:
-    """S12 gate (b): a binding both relation-targeted and previous_filing is rejected.
+    """A binding both relation-targeted and previous_filing is rejected.
 
     The M180 perceptores slot is relation-targeted and canonically
     ``relation_prefill``. Re-stamping it back to ``previous_filing`` (even with
     its direct selector intact) must trip the relation-vs-previous_filing
-    collision gate (aggregation-taxonomy ADR ruling 3) — the two mechanisms must
+    collision gate (aggregation-taxonomy ruling 3) — the two mechanisms must
     have disjoint declared ownership.
     """
     modelos, catalogues = _committed_tree()

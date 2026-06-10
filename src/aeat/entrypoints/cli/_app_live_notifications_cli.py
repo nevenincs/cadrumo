@@ -91,7 +91,7 @@ def notifications_capture(ctx: typer.Context) -> None:
     "list",
     help=tr(
         "cli.app.live.notifications.list_help",
-        default="List persisted DEHu notification snapshots in the active bucket.",
+        default="List persisted DEHu notification snapshots in the active profile.",
     ),
 )
 def notifications_list(ctx: typer.Context) -> None:
@@ -172,7 +172,7 @@ def notifications_show(
     "latest",
     help=tr(
         "cli.app.live.notifications.latest_help",
-        default="Show the most recent DEHu notification snapshot in the active bucket.",
+        default="Show the most recent DEHu notification snapshot in the active profile.",
     ),
 )
 def notifications_latest(ctx: typer.Context) -> None:

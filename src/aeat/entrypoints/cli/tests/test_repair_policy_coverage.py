@@ -1,4 +1,4 @@
-"""Policy coverage gate for repair, recovery, import, export, and bucket commands."""
+"""Policy coverage gate for repair, recovery, import, export, and profile-history commands."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ _POLICY_COMMAND_MODULES: tuple[tuple[Path, str, tuple[str, ...]], ...] = (
     (_CLI_DIR / "_config" / "__init__.py", "app", ("config",)),
     (_CLI_DIR / "_config" / "_custody.py", "app", ("config",)),
     (_CLI_DIR / "_config" / "_custody_secret.py", "app", ("config",)),
-    (_CLI_DIR / "_config" / "_bucket_history.py", "bucket_app", ("config", "bucket")),
+    (_CLI_DIR / "_config" / "_bucket_history.py", "profile_app", ("config", "profile")),
     (_CLI_DIR / "_config" / "_profile_bundle.py", "profile_app", ("config", "profile")),
     (_CLI_DIR / "_config" / "_repair_cli.py", "repair_app", ("config", "repair")),
     (_CLI_DIR / "_config" / "_repair_profile.py", "repair_app", ("config", "repair")),
@@ -33,7 +33,7 @@ _POLICY_COMMAND_MODULES: tuple[tuple[Path, str, tuple[str, ...]], ...] = (
 )
 
 
-def test_policy_command_surface_catalog_covers_cli_repair_import_export_and_bucket_commands() -> None:
+def test_policy_command_surface_catalog_covers_cli_repair_import_export_and_profile_history_commands() -> None:
     discovered = _policy_relevant_command_paths_from_sources()
     catalogued = {surface.command_path for surface in build_repair_policy_command_surface_catalog()}
 
@@ -77,7 +77,7 @@ def test_repair_secure_object_surfaces_use_registry_metadata_instead_of_role_mar
         policy.namespace_classification.role for policy in quarantine_policies
     )
 
-    reset_policies = surfaces["config repair reset-state"].namespace_policies
+    reset_policies = surfaces["config repair reset-progress"].namespace_policies
     assert tuple(policy.registered_namespace for policy in reset_policies) == (WORKFLOW_STATE_NAMESPACE.namespace,)
     assert reset_policies[0].owner_domain == WORKFLOW_STATE_NAMESPACE.owner
 
@@ -166,4 +166,10 @@ def _requires_policy_coverage(command_path: str) -> bool:
         "show-recovery",
         "verify-recovery",
     }
-    return "repair" in tokens or "bucket" in tokens or tokens[-1] in recovery_leaves
+    # `config profile history` is the append-only event-history audit surface
+    # (formerly `config bucket history`, D1 family rename). It is the only
+    # `history` verb that requires policy coverage — `app ledger history` and
+    # other read verbs do not. Scope the match to the config-rooted history
+    # verb so unrelated `history` leaves are not pulled into the gate.
+    config_history = "config" in tokens and "history" in tokens
+    return "repair" in tokens or config_history or tokens[-1] in recovery_leaves
