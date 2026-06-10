@@ -645,3 +645,45 @@ verdict. Next slices: remaining duplication families (modelo work CLI blocks,
 registry binding builders, `_google_sync_calc` intra-file repeats — re-derive
 peer-lock state at action time), the flat types tail, and the peer M303
 registry noise re-check once that campaign commits.
+
+## QHC-020 | check-types floor + docstring/fixture gates + module-size deferral (2026-06-10)
+
+Flat types tail driven to its peer-WIP floor. A single-session slice cleared
+the addressable check-types surface: the shared `unwrap_schema_envelope` helper
+retyped to `dict[str, Any]` (one root-cause edit clearing ~48 diagnostics
+across seven modelo-work CLI test modules), `UserProfileSchemaRepository.singleton`
+typed to `ProfileSchemaDefinition` (clears three persistence-roundtrip
+fixtures), the `_is_command_group` walk given a `TypeGuard[click.Group]` plus a
+documented vendored-typer→click cast, and a ten-file long-tail of truthful
+narrowings (utcoffset/end_lineno/casilla binding, AST-Constant comprehension
+filter, `type[BaseException]` param, dict-key-invariance re-materialisation,
+three documented third-party/negative-test ty-ignores). Residual at action
+time: **ty 3 + pyright 9 = 12, every one inside dirty peer-WIP files**
+(`test_borrador_binding`, `_amendment_actions`, `test_lifecycle`,
+`test_amend_flow` — the amendment-flow campaign mid-edit). Confirms the
+standing finding: the absolute ratchet floats with peer commits and the
+single-session floor is the dirty-WIP set, not zero.
+
+Adjacent gates closed in the same slice: the `test_docstring_core_struct_links`
+ratchet (five modules + two public-function params given truthful `:class:`
+cross-references; the one residual, `aeat.application.registry`, is dirty
+peer-WIP) and a `FakeRevision` fixture drift (production
+`calculation_result_summary` now reads `calculation_revision_id`; the duck-typed
+fake gained the field).
+
+A linter auto-rewrote `core/resources/_repos/user_profile.py`'s `TYPE_CHECKING`
+import of `ProfileSchemaDefinition` into a top-level runtime import, introducing
+a **global circular import** (`core.resources → domain.user_profile →
+core.config` partial-init) that reddened the entire suite; restored the
+`TYPE_CHECKING` guard, which is the load-bearing form. Watch for re-introduction.
+
+**Module-size gate deferred by operator decision (2026-06-10).** `test_cli_module_size`
+flags `_ledger.py` (1323) and `_modelo_payloads.py` (1322) over the 1250-line
+budget. Both are hot feature files (five recent peer feature commits each:
+m036 read-back, ledger classify `--llm`, IVA advisory). A behaviour-preserving
+section-extraction is feasible but (a) regrows past budget on the next feature
+commit and (b) carries real collision risk against in-flight peer edits in the
+single shared working tree. Operator chose **defer to the owning feature
+campaigns**, which extract a section when their work settles — not a
+mid-churn coordinator refactor for temporary green. This is an explicit,
+owner-acknowledged deferral, not a silent gap.
