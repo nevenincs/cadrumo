@@ -187,25 +187,126 @@ def _fmt_decimal(value: Decimal | None) -> str:
 # ---------------------------------------------------------------------
 # Period normaliser
 # ---------------------------------------------------------------------
+#
+# The ledger ``--period`` surface speaks ONE canonical operator grammar:
+# the AEAT modelo tokens (``0A`` annual, ``1T``-``4T`` quarters, ``01``-``12``
+# months) the modelo surfaces already teach, per the operator-surface ADR
+# decision D4 (one period grammar, AEAT tokens canonical). Those tokens carry
+# no year of their own, while the ledger stores each period in a calendar
+# shape that embeds the year (``2026Q1`` / ``2026-03`` / ``2026``). An AEAT
+# token is therefore accepted in its year-qualified form — ``2026-1T``,
+# ``2026-0A``, ``2026-03`` — which the registry period union validates and
+# this normaliser converts to the internal calendar shape. The legacy
+# calendar shapes (``2026Q1`` / ``2026-03`` / ``2026``) remain accepted as an
+# alternate input override (ADR D4 caveat 2) and normalise to the same value.
+# A *bare* AEAT token (``1T`` / ``0A`` / ``03``) is a valid grammar token with
+# no year source on these year-less ledger commands; rather than guess a year,
+# the refusal instructs the operator to qualify it (``2026-1T``) or use the
+# calendar shape (``2026Q1``).
 
+# Legacy calendar shapes: ``2026Q1`` / ``2026-Q1`` / ``2026-03`` / ``2026``.
 _PERIOD_RE = _re.compile(r"^(?P<year>\d{4})(?:[-]?Q(?P<quarter>[1-4])|-(?P<month>0[1-9]|1[0-2]))?$", _re.IGNORECASE)
+
+# Year-qualified AEAT modelo tokens: ``2026-1T`` / ``2026-0A`` / ``2026-01``.
+# The trailing token is validated against the registry period union; this
+# regex only splits the year off so the token can be classified.
+_YEAR_QUALIFIED_AEAT_RE = _re.compile(r"^(?P<year>\d{4})-(?P<token>[0-9A-Za-z]+)$")
+
+# Bare AEAT modelo token (no year): ``1T`` / ``0A`` / ``03``. Matched only to
+# produce the instructive missing-year refusal, never silently converted.
+_BARE_AEAT_TOKEN_RE = _re.compile(r"^[0-9A-Za-z-]+$")
+
+
+def _aeat_token_to_calendar(year: str, registry_period: str) -> str | None:
+    """Map a ledger-meaningful registry token onto the internal calendar shape.
+
+    The ledger filters transactions by a calendar date span, so only the
+    span-shaped :class:`StandardPeriodCode` members convert: quarters
+    (``1T``-``4T`` → ``YYYYQn``), the annual period (``0A`` → bare ``YYYY``),
+    and months (``01``-``12`` → ``YYYY-MM``). Instalment claves (``1P``-``4P``,
+    Modelo 202 pago fraccionado) are payment events, not a ledger date span,
+    so they have no ledger calendar shape; this returns ``None`` for them and
+    the caller refuses with the instructive message.
+    """
+    if registry_period.endswith("T") and len(registry_period) == 2 and registry_period[0].isdigit():
+        return f"{year}Q{registry_period[0]}"
+    if registry_period == "0A":
+        return year
+    if registry_period.isdigit():  # Monthly token ``01``-``12``.
+        return f"{year}-{registry_period}"
+    return None
+
+
+def _ledger_aeat_token(token: str) -> str | None:
+    """Return the normalised ledger-meaningful registry token, or ``None``.
+
+    Validates ``token`` against the registry period union and accepts it only
+    when it is a span-shaped :class:`StandardPeriodCode` member the ledger can
+    filter by (quarters, months, annual). Extended-union members the ledger
+    does not filter by (``EXT-*``, ``AD-HOC``, ``EVENT-N``) and instalment
+    claves (``1P``-``4P``) return ``None``.
+    """
+    from ...core._period import StandardPeriodCode, _validate_period_against_registry
+
+    try:
+        registry_period = _validate_period_against_registry(token)
+    except ValueError:
+        return None
+    if registry_period not in frozenset(StandardPeriodCode):
+        return None
+    return registry_period
 
 
 def _canonical_period(raw: str) -> str:
-    """Return the upper-case, un-hyphenated period ID or raise _bad."""
-    if not raw.strip():
+    """Return the internal calendar-shape period ID or raise an instructive ``_bad``.
+
+    Accepts the canonical AEAT modelo tokens in their year-qualified form
+    (``2026-1T`` / ``2026-0A`` / ``2026-03``) and the legacy calendar shapes
+    (``2026Q1`` / ``2026-03`` / ``2026``), converting both to the internal
+    representation the ledger stores. A bare AEAT token with no year, or a
+    genuinely-invalid token, raises a refusal naming both notations.
+    """
+    stripped = raw.strip()
+    if not stripped:
         raise _bad(tr("cli.common.errors.period_empty"))
-    match = _PERIOD_RE.fullmatch(raw.strip())
-    if match is None:
-        raise _bad(tr("cli.common.errors.period_unrecognised", raw=raw))
-    year = match.group("year")
-    quarter = match.group("quarter")
-    month = match.group("month")
-    if quarter is not None:
-        return f"{year}Q{quarter}"
-    if month is not None:
-        return f"{year}-{month}"
-    return year
+
+    # Legacy calendar shapes (the alternate input override) — accepted as-is.
+    match = _PERIOD_RE.fullmatch(stripped)
+    if match is not None:
+        year = match.group("year")
+        quarter = match.group("quarter")
+        month = match.group("month")
+        if quarter is not None:
+            return f"{year}Q{quarter}"
+        if month is not None:
+            return f"{year}-{month}"
+        return year
+
+    # Year-qualified AEAT modelo token: split the year, validate the token
+    # against the registry period union, convert to the calendar shape.
+    qualified = _YEAR_QUALIFIED_AEAT_RE.fullmatch(stripped)
+    if qualified is not None:
+        registry_period = _ledger_aeat_token(qualified.group("token"))
+        if registry_period is not None:
+            calendar = _aeat_token_to_calendar(qualified.group("year"), registry_period)
+            if calendar is not None:
+                return calendar
+
+    # A bare ledger-meaningful AEAT token (no year) is valid grammar but
+    # under-specified on these year-less commands: instruct the operator to
+    # supply the year rather than guess one. The reachability check excludes
+    # instalment claves (``1P``-``4P``) — qualifying them with a year still
+    # has no ledger calendar shape, so they fall through to the
+    # accepted-set refusal instead of a misleading add-a-year hint.
+    bare_registry_period = _ledger_aeat_token(stripped)
+    if (
+        _BARE_AEAT_TOKEN_RE.fullmatch(stripped)
+        and bare_registry_period is not None
+        and _aeat_token_to_calendar("2000", bare_registry_period) is not None
+    ):
+        raise _bad(tr("cli.common.errors.period_missing_year", token=stripped))
+
+    raise _bad(tr("cli.common.errors.period_unrecognised", raw=raw))
 
 
 def _parse_iso_date(raw: str, *, label: str) -> _date:
