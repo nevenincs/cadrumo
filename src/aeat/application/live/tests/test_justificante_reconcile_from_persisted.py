@@ -17,6 +17,15 @@ from pathlib import Path
 import pytest
 
 from ....core import Modelo
+from ....domain.justificante import JustificanteRepository
+from ....domain.modelos import (
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogueRepository,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+    upsert_filing_record,
+)
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
@@ -29,6 +38,7 @@ from ...workflow._persistence import workflow_state_repository
 from .._justificante import (
     JustificanteCaptureSnapshotService,
     reconcile_capture,
+    register_capture_as_filing_evidence,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -142,3 +152,71 @@ def test_reconcile_from_malformed_capture_raises_without_leaking_temp_path() -> 
 
     with pytest.raises(ReconciliationEvidenceInvalidError):
         reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot)
+
+
+def _seed_unverified_filing(*, work_unit_id: str, modelo: str, filing_year: int, period: str) -> None:
+    bucket_id = _active_bucket_id()
+    revision_id = hashlib.sha256(f"rev:{work_unit_id}".encode()).hexdigest()
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+        filed_by="operator",
+    )
+    repo = ModeloRecordCatalogueRepository()
+    repo.save(
+        upsert_filing_record(
+            repo.load(),
+            ModeloRecord(
+                filing_record_id=filing_id,
+                work_unit_id=work_unit_id,
+                calculation_revision_id=revision_id,
+                bucket_id=bucket_id,
+                modelo=ModeloCode(modelo),
+                filing_year=filing_year,
+                period=period,
+                filed_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+                filed_by="operator",
+                aeat_accepted=False,
+                status=ModeloRecordStatus.VIGENTE,
+                external_evidence=None,
+            ),
+        )
+    )
+
+
+def test_stamp_registers_justificante_and_marks_filing_live_captured() -> None:
+    """register_capture_as_filing_evidence registers the receipt and stamps the filing."""
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
+    snapshot = _persist_capture(
+        pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
+        modelo=Modelo.M130.value,
+        filing_year=2026,
+        period="1T",
+    )
+
+    stamped = register_capture_as_filing_evidence(snapshot=snapshot)
+
+    assert stamped.external_evidence is not None
+    assert stamped.external_evidence.kind is ExternalEvidenceKind.AEAT_LIVE_CAPTURE
+    assert stamped.external_evidence.reference_id == "ABCD1234EFGH5678"
+    assert stamped.aeat_accepted is True
+    # The receipt is registered and loadable by the evidence reference id.
+    assert JustificanteRepository().load("ABCD1234EFGH5678") is not None
+
+
+def test_stamp_refuses_when_no_current_filing_exists() -> None:
+    """Stamping refuses when the captured period has no filing record yet."""
+    from .._errors import LiveApplicationInputError
+
+    _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    snapshot = _persist_capture(
+        pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
+        modelo=Modelo.M130.value,
+        filing_year=2026,
+        period="1T",
+    )
+
+    with pytest.raises(LiveApplicationInputError, match="no current filing record"):
+        register_capture_as_filing_evidence(snapshot=snapshot)
