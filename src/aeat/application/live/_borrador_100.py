@@ -123,7 +123,7 @@ def derive_borrador_100_snapshot_id(
     """
     return derive_snapshot_id_from_json(
         {
-            "modelo": "100",
+            "modelo": Modelo.M100.value,
             "filing_year": filing_year,
             "period": period.strip(),
             "captured_at": captured_at.isoformat(),
@@ -337,7 +337,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
         return Borrador100Snapshot(
             snapshot_id=snapshot_id,
             bucket_id=self._repository.bucket_id,
-            modelo="100",
+            modelo=Modelo.M100.value,
             filing_year=kwargs["filing_year"],
             period=kwargs["period"].strip(),
             captured_at=kwargs["captured_at"],

@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
+from ...core import Modelo
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
@@ -299,7 +300,7 @@ def _normalise_casilla_key(key: str, revision: object) -> str:
 
 def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalitySummary | None:
     """Return a :class:`Modelo202ModalitySummary` for a work unit, or ``None`` when not applicable."""
-    if str(work_unit.modelo) != "202":
+    if str(work_unit.modelo) != Modelo.M202:
         return None
 
     from ...application.user_profile import projection_for_taxpayer

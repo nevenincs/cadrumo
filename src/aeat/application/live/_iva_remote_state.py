@@ -37,6 +37,7 @@ from ...application.calculations import IvaCompensationHistoryRepository as _Iva
 from ...application.calculations import IvaWalletDecisionRepository as _IvaWalletDecisionRepository
 from ...application.calculations import iva_wallet_decision_key as _iva_wallet_decision_key
 from ...application.calculations import reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation
+from ...core import Modelo
 from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
@@ -231,11 +232,11 @@ async def _capture_iva_compensation_history_with_session(
                 progress_context.update(
                     {
                         "stage": "walk_declarations_register",
-                        "modelo": "303",
+                        "modelo": Modelo.M303.value,
                         "ejercicio": year,
                     }
                 )
-            declarations = await register.walk(modelo="303", ejercicio=year)
+            declarations = await register.walk(modelo=Modelo.M303.value, ejercicio=year)
             for declaration in _latest_declarations_by_period(declarations):
                 if progress_context is not None:
                     progress_context.update(
@@ -478,7 +479,7 @@ def persist_and_reconcile_iva_compensation_wallet(
     if reloaded != observation:
         raise LiveApplicationError("persisted IVA wallet observation did not reload with identical evidence")
     snapshot = _resources().modelos.authority.snapshot(
-        "303",
+        Modelo.M303.value,
         filing_year=reloaded.target_year,
         period=reloaded.target_period,
     )
@@ -668,7 +669,7 @@ async def _capture_iva_remote_state_for_active_storage(
         try:
             filed_progress: dict[str, object] = {
                 "stage": "not_started",
-                "modelo": "303",
+                "modelo": Modelo.M303.value,
                 "year_from": year_from,
                 "year_to": year_to,
             }
@@ -752,7 +753,7 @@ async def _capture_iva_compensation_history_by_year_with_session(
             progress_context.update(
                 {
                     "stage": "capture_year",
-                    "modelo": "303",
+                    "modelo": Modelo.M303.value,
                     "ejercicio": year,
                     "year_from": year_from,
                     "year_to": year_to,
