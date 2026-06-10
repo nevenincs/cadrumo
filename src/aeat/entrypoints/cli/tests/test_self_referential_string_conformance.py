@@ -64,7 +64,7 @@ import pytest
 from ....application.modelo import ModeloCalculationRevisionSelector
 from ....core.errors import ERROR_REGISTRY
 from ....core.i18n._render import _locale_map
-from ....domain.attachments._enums import AttachmentSource
+from ....domain.attachments import AttachmentSource
 from .test_documented_command_conformance import (
     _AEAT_TOKEN_RE,
     _CitedCommand,
