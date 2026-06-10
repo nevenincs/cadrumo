@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -39,6 +40,7 @@ class _CaptureHandler(logging.Handler):
         super().__init__(level=logging.DEBUG)
         self.records: list[logging.LogRecord] = []
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         self.records.append(record)
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -163,6 +163,7 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
     def capture(self, *, axis_label: str, captured_at: datetime, payload_text: str) -> ProbeSnapshot:
         return self._capture_with_lifecycle(axis_label=axis_label, captured_at=captured_at, payload_text=payload_text)
 
+    @override
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_snapshot_id_from_json(
             {
@@ -172,6 +173,7 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
             }
         )
 
+    @override
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> ProbeSnapshot:
         return ProbeSnapshot(
             snapshot_id=snapshot_id,
@@ -182,18 +184,23 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
             state=SnapshotLifecycleState.ACTIVE,
         )
 
+    @override
     def _payload_axis_key(self, payload: ProbeSnapshot) -> tuple[Any, ...]:
         return (payload.axis_label,)
 
+    @override
     def _payload_captured_at(self, payload: ProbeSnapshot) -> datetime:
         return payload.captured_at
 
+    @override
     def _payload_snapshot_id(self, payload: ProbeSnapshot) -> str:
         return payload.snapshot_id
 
+    @override
     def _payload_state(self, payload: ProbeSnapshot) -> SnapshotLifecycleState:
         return payload.state
 
+    @override
     def _demote_to_superseded(self, payload: ProbeSnapshot, *, superseded_by: str) -> ProbeSnapshot:
         return payload.model_copy(
             update={

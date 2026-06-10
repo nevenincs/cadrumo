@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -49,12 +50,14 @@ class _TranslatableContractVisitor(ast.NodeVisitor):
         self.path = path
         self.violations: list[str] = []
 
+    @override
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
             if alias.asname == "tr":
                 self.violations.append(_location(self.path, node, "imports a non-i18n symbol as reserved name 'tr'"))
         self.generic_visit(node)
 
+    @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         for alias in node.names:
             bound_name = alias.asname or alias.name
@@ -70,62 +73,75 @@ class _TranslatableContractVisitor(ast.NodeVisitor):
                 self.violations.append(_location(self.path, node, "binds reserved name 'tr' from a non-i18n import"))
         self.generic_visit(node)
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._check_named_binding(node.name, node)
         self._check_arguments(node.args, node)
         self.generic_visit(node)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._check_named_binding(node.name, node)
         self._check_arguments(node.args, node)
         self.generic_visit(node)
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._check_named_binding(node.name, node)
         self.generic_visit(node)
 
+    @override
     def visit_Assign(self, node: ast.Assign) -> None:
         for target in node.targets:
             self._check_targets(target, node)
         self.generic_visit(node)
 
+    @override
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         self._check_targets(node.target, node)
         self.generic_visit(node)
 
+    @override
     def visit_AugAssign(self, node: ast.AugAssign) -> None:
         self._check_targets(node.target, node)
         self.generic_visit(node)
 
+    @override
     def visit_For(self, node: ast.For) -> None:
         self._check_targets(node.target, node)
         self.generic_visit(node)
 
+    @override
     def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
         self._check_targets(node.target, node)
         self.generic_visit(node)
 
+    @override
     def visit_With(self, node: ast.With) -> None:
         for item in node.items:
             if item.optional_vars is not None:
                 self._check_targets(item.optional_vars, node)
         self.generic_visit(node)
 
+    @override
     def visit_AsyncWith(self, node: ast.AsyncWith) -> None:
         for item in node.items:
             if item.optional_vars is not None:
                 self._check_targets(item.optional_vars, node)
         self.generic_visit(node)
 
+    @override
     def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
         if node.name is not None:
             self._check_named_binding(node.name, node)
         self.generic_visit(node)
 
+    @override
     def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
         self._check_targets(node.target, node)
         self.generic_visit(node)
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         if isinstance(node.func, ast.Name):
             if node.func.id == "Translatable":

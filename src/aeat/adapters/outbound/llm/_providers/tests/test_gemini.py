@@ -9,7 +9,7 @@ import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from queue import Queue
-from typing import ClassVar
+from typing import ClassVar, override
 
 import pytest
 
@@ -46,6 +46,7 @@ class _ObservedGeminiRequest(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(encoded)
 
+    @override
     def log_message(self, _format: str, *_args: object) -> None:
         """Silence stdlib request logging during tests."""
 
