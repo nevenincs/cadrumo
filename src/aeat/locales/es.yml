@@ -2936,29 +2936,6 @@ cli:
       no_active_profile_message: No hay ningun perfil activo. Ejecute 'aeat config
         first-run' para comenzar.
       text_template: '%{message} Comando sugerido: %{command}'
-    retired:
-      archive_reason: 'Comando retirado: use el subcomando de archivo del libro.'
-      data_reason: 'Comando retirado: acceda a los datos a traves del libro o del
-        perfil.'
-      declaration_reason: 'Comando retirado: use ''aeat app modelo work'' para gestionar
-        declaraciones.'
-      filing_reason: 'Comando retirado: use ''aeat app modelo work'' para preparar
-        la declaracion.'
-      financial_reason: 'Comando retirado: use ''aeat app ledger'' para el libro de
-        transacciones.'
-      invoice_reason: 'Comando retirado: las facturas se gestionan desde el libro
-        de transacciones.'
-      llm_reason: 'Comando retirado: las funciones de asistencia IA se han eliminado.'
-      preflight_reason: 'Comando retirado: las comprobaciones previas se ejecutan
-        automaticamente.'
-      presentation_reason: 'Comando retirado: use el flujo de exportacion del modelo.'
-      sanitize_reason: 'Comando retirado: el saneamiento de datos es automatico.'
-      setup_reason: 'Comando retirado: use ''aeat config first-run'' para la configuracion
-        inicial.'
-      submit_reason: 'Comando retirado: la presentacion debe realizarse manualmente
-        a traves de la Sede Electronica.'
-      topic_reason: 'Comando retirado: consulte la documentacion del modelo correspondiente.'
-      workflow_reason: 'Comando retirado: use el flujo principal de ''aeat app''.'
   overview:
     agenda:
       allow_incomplete_help: Generar la agenda aunque los datos del perfil estén incompletos.

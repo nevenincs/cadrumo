@@ -2752,21 +2752,6 @@ cli:
       text_template: '%{message}
 
         Next: %{command}'
-    retired:
-      archive_reason: archive is consolidated under config bucket.
-      data_reason: data work is consolidated under app ledger.
-      declaration_reason: declaration work is consolidated under app modelo.
-      filing_reason: filing work is consolidated under app modelo.
-      financial_reason: financial work is consolidated under app ledger.
-      invoice_reason: invoice work is consolidated under app ledger.
-      llm_reason: classification is exposed under app ledger classify.
-      preflight_reason: preflight belongs to modelo verification.
-      presentation_reason: exports belong to app modelo export.
-      sanitize_reason: ledger checks are exposed under app ledger check.
-      setup_reason: setup and config are consolidated under the config root.
-      submit_reason: live submission is permanently disabled.
-      topic_reason: topic lookup is consolidated under app registry citations.
-      workflow_reason: workflow operations are consolidated under app modelo.
   overview:
     agenda:
       allow_incomplete_help: Render the agenda even when profile data is incomplete.

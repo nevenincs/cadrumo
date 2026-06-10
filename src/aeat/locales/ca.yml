@@ -2899,28 +2899,6 @@ cli:
       no_active_profile_message: No hi ha cap perfil actiu. Executeu 'aeat config
         first-run' per comecar.
       text_template: '%{message} Ordre suggerida: %{command}'
-    retired:
-      archive_reason: 'Ordre retirada: useu la subordre d''arxiu del llibre.'
-      data_reason: 'Ordre retirada: accediu a les dades a traves del llibre o del
-        perfil.'
-      declaration_reason: 'Ordre retirada: useu ''aeat app modelo work'' per gestionar
-        declaracions.'
-      filing_reason: 'Ordre retirada: useu ''aeat app modelo work'' per preparar la
-        declaracio.'
-      financial_reason: 'Ordre retirada: useu ''aeat app ledger'' per al llibre de
-        transaccions.'
-      invoice_reason: 'Ordre retirada: les factures es gestionen des del llibre de
-        transaccions.'
-      llm_reason: 'Ordre retirada: les funcions d''assistencia d''IA s''han eliminat.'
-      preflight_reason: 'Ordre retirada: les comprovacions previes s''executen automaticament.'
-      presentation_reason: 'Ordre retirada: useu el flux d''exportacio del model.'
-      sanitize_reason: 'Ordre retirada: el sanejament de dades es automatic.'
-      setup_reason: 'Ordre retirada: useu ''aeat config first-run'' per a la configuracio
-        inicial.'
-      submit_reason: 'Ordre retirada: la presentacio s''ha de fer manualment a la
-        Seu Electronica.'
-      topic_reason: 'Ordre retirada: consulteu la documentacio del model corresponent.'
-      workflow_reason: 'Ordre retirada: useu el flux principal d''''aeat app''.'
   overview:
     agenda:
       allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
