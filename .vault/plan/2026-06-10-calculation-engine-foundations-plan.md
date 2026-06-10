@@ -60,7 +60,7 @@ Turn the sonnet+opus audit-swarm inventory into an explicit tracked list of ever
 
 Consolidate the sonnet+opus audit-swarm inventory into one explicit tracked list of every dormant/ignored/unconnected calculation part (resolvers, source kinds, relations, per-modelo aggregation, orphans) across renta/iva/sociedades/grupo/informativas.
 
-- [ ] `W02.P04.S07` - Consolidate the sonnet+opus audit-swarm inventory into an explicit dormant-parts table in this plan (per item kind, file:line, affected modelos, disposition enroll-or-defer); `.vault audit doc + this plan`.
+- [x] `W02.P04.S07` - Consolidate the sonnet+opus audit-swarm inventory into an explicit dormant-parts table in this plan (per item kind, file:line, affected modelos, disposition enroll-or-defer); `.vault audit doc + this plan`.
 - [ ] `W02.P04.S25` - Adjudicate the orphan MultiYearResolver (zero callers, no test, PreviousFilingSourceResolver does not delegate to it) and the vestigial cross_period_dependency_inventory/_requirements top-level re-exports: wire into a live path, delete, or document as a named deferral with a follow-up (F7); `application/calculations/_multi_year.py + application/calculations/__init__.py`.
 
 ### Phase `W02.P05` - Wire the unhandled-source safety net
