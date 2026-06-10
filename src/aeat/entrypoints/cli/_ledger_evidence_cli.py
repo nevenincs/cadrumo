@@ -140,7 +140,7 @@ def _register_evidence_list_command() -> None:
         "list",
         help=tr(
             "cli.app.ledger.evidence.list_help",
-            default="List every purchase invoice evidence record in the active bucket.",
+            default="List every purchase invoice evidence record in the active profile.",
         ),
     )
     def evidence_list(ctx: typer.Context) -> None:

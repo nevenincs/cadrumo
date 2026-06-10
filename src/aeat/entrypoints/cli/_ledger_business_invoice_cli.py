@@ -227,7 +227,7 @@ def payable_invoice_view(
 @payable_invoice_app.command(
     "list",
     help=tr(
-        "cli.app.ledger.payable_invoice.list_help", default="List every payable invoice record on the active bucket."
+        "cli.app.ledger.payable_invoice.list_help", default="List every payable invoice record on the active profile."
     ),
 )
 def payable_invoice_list(ctx: typer.Context) -> None:
@@ -447,7 +447,7 @@ def collectible_invoice_view(
     "list",
     help=tr(
         "cli.app.ledger.collectible_invoice.list_help",
-        default="List every collectible invoice record on the active bucket.",
+        default="List every collectible invoice record on the active profile.",
     ),
 )
 def collectible_invoice_list(ctx: typer.Context) -> None:

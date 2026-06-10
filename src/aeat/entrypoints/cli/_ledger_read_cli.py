@@ -161,7 +161,7 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
             "--bucket-id",
             help=tr(
                 "cli.ledger.check.bucket_id_help",
-                default="Bucket id to probe (defaults to the active profile bucket).",
+                default="Bucket id to probe (defaults to the active profile).",
             ),
         ),
     ) -> None:

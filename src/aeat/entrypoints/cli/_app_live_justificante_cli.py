@@ -73,9 +73,7 @@ def justificante_capture(
 
     bucket_id = _bucket_id()
     _run_auth_preflight()
-    persisted = asyncio.run(
-        capture_justificante_snapshot(bucket_id=bucket_id, modelo=modelo, year=year, period=period)
-    )
+    persisted = asyncio.run(capture_justificante_snapshot(bucket_id=bucket_id, modelo=modelo, year=year, period=period))
     result = JustificanteCaptureResult(
         bucket_id=bucket_id,
         snapshot_id=persisted.snapshot_id,
@@ -107,7 +105,7 @@ def justificante_capture(
     "list",
     help=tr(
         "cli.app.live.justificante.list_help",
-        default="List persisted justificante captures in the active bucket.",
+        default="List persisted justificante captures in the active profile.",
     ),
 )
 def justificante_list(ctx: typer.Context) -> None:
