@@ -133,8 +133,9 @@ def file_modelo_revision(
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     obs_repo = calculation_observation_repository or CalculationObservationRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    run_repo = WorkflowRunRepository(objects=bv_repo.secure_object_repository)
+    bv_repo: BucketEventHistoryRepositoryProtocol = bucket_event_repository or BucketEventHistoryRepository()
+    _concrete_bv = bv_repo if isinstance(bv_repo, BucketEventHistoryRepository) else BucketEventHistoryRepository()
+    run_repo = WorkflowRunRepository(objects=_concrete_bv.secure_object_repository)
 
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)

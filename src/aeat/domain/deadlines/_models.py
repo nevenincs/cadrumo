@@ -590,7 +590,8 @@ class TaxpayerProfile(BaseModel):
         """
         if not isinstance(data, dict):
             return data
-        regime = data.get("irpf_estimation_regime")
+        data_map: dict[object, object] = {k: v for k, v in data.items()}
+        regime = data_map.get("irpf_estimation_regime")
         if regime is None or "uses_objective_estimation_irpf" in data:
             return data
         parsed = regime if isinstance(regime, IrpfEstimationRegime) else IrpfEstimationRegime(regime)
