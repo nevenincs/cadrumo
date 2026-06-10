@@ -244,7 +244,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         calculated_at=_T1,
     )
     # Run the same mesh that calculate_modelo_revision_from_bucket_aggregation_with_diagnostics uses.
-    from aeat.domain.transactions import TransactionCatalogueRepository as TxRepo
+    from ....domain.transactions import TransactionCatalogueRepository as TxRepo
 
     tx_repo_real: TxRepo = tx_repo  # type: ignore[assignment]
     from ...aggregation import (
