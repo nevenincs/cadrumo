@@ -385,3 +385,43 @@ The owner adjudicated every open item:
   SUPPORTS (no longer in general use, but supported); supporting it is a current
   product feature, not backwards-compatibility for our own old data. AEAT
   regulatory status is never evidence of code legacy.
+
+---
+
+## Execution close (2026-06-10)
+
+All five DELETE-NOW slices landed and verified; the rule is codified and synced.
+
+- **Slice 3 (attachment pre-envelope tolerance → refusal):** `4c3649511`. Blobs
+  now raise `AttachmentValidationError` on a missing envelope prefix.
+- **Slice 4 (iva-wallet cleartext-key bridge):** `c3118ec50`. Function + fallback
+  deleted; 376 application/modelo tests green.
+- **Slice 5 (profile-binding string coercion):** `6d06f755a`. Branch deleted after
+  confirming the `UserProfileFact.value` validator types every value at the
+  persistence boundary, so no live caller passes a string to the Decimal channel.
+- **Slices 1+2 (secure-object key migration + revision-metadata ALTER):** the
+  deletion content is at HEAD (the module + harness are gone, call sites clean,
+  zero symbol hits). NOTE: the deletion was bundled into peer commit `d97413e5d`
+  under an unrelated `types(ledger-persona-test)` subject — a broad-commit
+  hygiene defect (staged work swept without an explicit pathspec), not a content
+  error; the end state is coherent. Independent crypto review: PASS — CREATE
+  alone materialises every lineage+integrity column; the revision-integrity chain
+  and quarantine repair verb are intact; no current read/write path weakened.
+- **JUDGMENT 2 (LEGACY_MASTER_KEY bucket schedule):** `7639316e6` (11 files, one
+  atomic explicit-pathspec commit). Enum member + KEK==DEK path + legacy-manifest
+  fallback deleted; default → BUCKET_DEK_V1; `_profile_repository` fail-closes.
+  The shared test fixture was reworked to mint a real BUCKET_DEK_V1 wrapped DEK
+  through the production span path (not a reintroduced shortcut); 4 profile test
+  files migrated to `profile_create_storage_span`. Independent crypto review:
+  PASS — fresh-bucket create→write→read roundtrip works, fail-closed guard
+  retained and tested, per-bucket DEK distinctness preserved, no crypto guarantee
+  weakened. `sql/__init__.py`'s "forward-only, no migration history" docstring is
+  now literally true.
+
+Both crypto purges passed an opus independent review with no CRITICAL/HIGH
+findings (delete-legacy-not-weaken-current confirmed); 1011 storage/profile/
+bucket/setup tests green. The two review LOWs (period-offset error-context, kept
+in QHC-004 `cce074b1f`; stale migration-backfill test prose, `d5226720b`) are
+landed. Struck JUDGMENT items 1 (retired CLI redirects — wrong list) and 3 (M037
+— a real supported modelo) per the owner; the rule now carries the
+AEAT-status-vs-code-legacy distinction so the category error does not recur.
