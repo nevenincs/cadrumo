@@ -659,8 +659,8 @@ def _iva_wallet_decision_covers_cross_period_dependency(
         return False
     requirement = evidence.requirement
     if (
-        verdict.target_modelo != Modelo.M303.value
-        or requirement.source_modelo != Modelo.M303.value
+        verdict.target_modelo != Modelo.M303
+        or requirement.source_modelo != Modelo.M303
         or not (
             set(requirement.origin_ids)
             & {

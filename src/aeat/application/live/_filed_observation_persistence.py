@@ -41,7 +41,7 @@ def persist_filed_calculation_observation(
         source_kind="aeat_sede_justificante",
         captured_at=observation.presented_at,
     )
-    if observation.modelo == Modelo.M303.value:
+    if observation.modelo == Modelo.M303:
         IvaCompensationHistoryRepository().save_period(iva_compensation_state_from_filed_observation(observation))
     return observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
 
@@ -72,7 +72,7 @@ def persist_iva_compensation_history_observations_strict(
     """Persist latest Modelo 303 observations and verify each history row reloads."""
     latest: dict[tuple[int, str], FiledDeclaracionObservation] = {}
     for observation in observations:
-        if observation.modelo != Modelo.M303.value:
+        if observation.modelo != Modelo.M303:
             raise LiveApplicationInputError(
                 translated_message="live.errors.iva_history_modelo_303_only",
                 context={"modelo": observation.modelo},
