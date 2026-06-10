@@ -12,12 +12,41 @@ this test verifies that surface end-to-end.
 
 from __future__ import annotations
 
+from typing import cast
+
+import click
 import pytest
+import typer
 from click.testing import CliRunner
 
 from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _get_cli_command() -> click.Command:
+    """Get the AEAT CLI as a click.Command for CliRunner.invoke.
+
+    The app is a typer.Typer which converts to a typer.core.TyperGroup
+    (vendored Click Command). The vendored and upstream Click Commands have
+    identical runtime interfaces and both work with CliRunner.invoke, though
+    they are distinct types from the static type-checker perspective.
+
+    This function validates at runtime that the returned object is Command-like
+    (has a Command in its MRO) before returning it cast to click.Command.
+    The cast is sound because both types have the same structure and methods.
+    """
+    cmd = typer.main.get_command(app)
+    # Verify the command has a Command base in its MRO (both types do)
+    vendored_command_class = next(
+        (b for b in type(cmd).__mro__ if b.__name__ == "Command"),
+        None,
+    )
+    assert vendored_command_class is not None, f"Expected Command-like object, got {type(cmd)}"
+    assert isinstance(cmd, vendored_command_class), f"Object {cmd} is not an instance of {vendored_command_class}"
+    # Cast the vendored Command to upstream click.Command for type satisfaction.
+    # Both have identical structure and methods; the cast is safe at runtime.
+    return cast(click.Command, cmd)
 
 
 @pytest.fixture(autouse=True)
@@ -44,7 +73,7 @@ def test_root_callback_language_flag_routes_through_override_settings(
     would fall back to the production default (``es``) regardless of
     the flag.
     """
-    result = cli_runner.invoke(app, ["--language", "ca", "--help"])
+    result = cli_runner.invoke(_get_cli_command(), ["--language", "ca", "--help"])
     assert result.exit_code == 0, result.output
     # The flag-routed language must be honoured. Asserting on a CLI-
     # localised token that exists in the ca locale (the help heading
@@ -68,7 +97,7 @@ def test_root_callback_language_flag_does_not_mutate_process_env(
 
     monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
     pre_value = os.environ.get("AEAT_OUTPUT_LANGUAGE")
-    result = cli_runner.invoke(app, ["--language", "hu", "--help"])
+    result = cli_runner.invoke(_get_cli_command(), ["--language", "hu", "--help"])
     post_value = os.environ.get("AEAT_OUTPUT_LANGUAGE")
     assert result.exit_code == 0, result.output
     assert pre_value == post_value, (
