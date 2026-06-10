@@ -68,7 +68,7 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
         ("adapters/outbound/google/_document_link_resolver.py", 121),
         ("adapters/outbound/aeat/verify/__init__.py", 123),
         ("application/transactions/_import.py", 42),
-        ("application/modelo/_iva_wallet_gate.py", 354),
+        ("application/modelo/_iva_wallet_gate.py", 355),
         ("core/i18n/_translatable.py", 20),
         ("core/logging.py", 129),
         ("core/logging.py", 133),
@@ -86,7 +86,7 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
         # (ModeloWorkCalculationServiceResult / CalculationRevision / WorkUnit)
         # via a TYPE_CHECKING import, so only the DI-hook site remains.
         ("entrypoints/cli/_modelo_work_calculate_cli.py", 224),
-        ("entrypoints/cli/_modelo_work_lifecycle_cli.py", 58),
+        ("entrypoints/cli/_modelo_work_lifecycle_cli.py", 59),
         ("entrypoints/cli/_modelo_work_revision_cli.py", 28),
         ("entrypoints/cli/_modelo_work_verification_cli.py", 31),
         ("entrypoints/cli/_modelo_work_verification_cli.py", 62),
