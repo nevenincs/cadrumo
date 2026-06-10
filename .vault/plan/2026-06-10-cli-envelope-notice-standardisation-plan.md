@@ -141,7 +141,7 @@ Move config next-step fields and overview next-step guidance onto notices, and r
 Migrate config and overview next-step hints onto notices and close the un-enveloped no-active-profile refusal.
 
 - [x] `W03.P04.S14` - Migrate the config next-step fields onto notices and remove the bespoke next field from config payloads; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W03.P04.S15` - Migrate overview next-step guidance onto notices on the overview status result; `src/aeat/entrypoints/cli/_overview.py`.
+- [x] `W03.P04.S15` - Migrate overview next-step guidance onto notices on the overview status result; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W03.P04.S16` - Route _active_profile_or_exit through the typed refusal path so no un-enveloped error shape remains; `src/aeat/entrypoints/cli/_common.py`.
 
 ## Wave `W04` - Sweep and closeout

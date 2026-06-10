@@ -2,6 +2,23 @@ from __future__ import annotations
 
 from ...application.overview import OverviewStatusReport
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
+
+
+def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
+    """Surface the workspace-state next-step guidance as ``info`` notices.
+
+    Mirrors the text-mode ``_next_step_lines`` guidance so JSON consumers
+    receive the same forward guidance the text surface already shows,
+    through the uniform envelope ``notices`` channel rather than a bespoke
+    payload field. Info severity keeps the envelope ``status`` at
+    ``success``.
+    """
+    return [
+        Notice(severity=NoticeSeverity.INFO, code="overview.status.next_step", message=line.strip())
+        for line in _next_step_lines(report)
+        if line.strip()
+    ]
 
 
 def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
