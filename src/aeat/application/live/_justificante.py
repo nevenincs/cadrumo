@@ -188,6 +188,13 @@ def resolve_period_expediente(
     different period's expediente: a missing or unmatched declaration raises
     rather than falling back to a wrong-quarter receipt.
 
+    The within-period tiebreak ranks the accepted (``ALTA``) declaration ahead
+    of ``presented_at``, matching the two sibling period-resolution surfaces
+    (``latest_declarations_by_period`` and the sede walker's latest-selection),
+    so a later cancellation / correction row (a non-``ALTA`` ``estado`` such as
+    ``Anulada`` or ``Baja``) presented after the accepted filing does not win
+    and pull the wrong-state receipt.
+
     Raises:
         LiveApplicationInputError: when no declaration matches the requested
             period, or the matched declaration's expediente is absent from
@@ -204,7 +211,14 @@ def resolve_period_expediente(
             f"no filed declaration for modelo={modelo!r} period={target_period!r}; "
             "cannot resolve a justificante expediente for this period",
         )
-    chosen = max(candidates, key=lambda declaration: declaration.presented_at)
+    chosen = max(
+        candidates,
+        key=lambda declaration: (
+            declaration.estado.upper() == "ALTA",
+            declaration.presented_at,
+            declaration.expediente_id,
+        ),
+    )
     for expediente in expedientes:
         if expediente.expediente_id == chosen.expediente_id:
             return expediente
