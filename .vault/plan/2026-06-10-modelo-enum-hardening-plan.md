@@ -43,8 +43,8 @@ Adopt one convention: enum member where StrEnum suffices, .value only where a pl
 
 Route amortisation 3pct and REBECA 50pct through the registry-backed resolver with legal grounding
 
-- [ ] `P04.S05` - Route AMORTIZACION_INMUEBLE_RATE through a registry parameter and _resolve_ fallback with legal grounding and a grounding test; `src/aeat/domain/fincas/_amortization_ledger.py, src/aeat/_data/registry/aeat/..., legal catalogue`.
-- [ ] `P04.S06` - Route REBECA_MARITIME_EXEMPTION_FRACTION through a registry parameter and _resolve_ fallback with legal grounding and a grounding test; `src/aeat/domain/renta/_maritime_exemption.py, src/aeat/_data/registry/aeat/..., legal catalogue`.
+- [x] `P04.S05` - Route AMORTIZACION_INMUEBLE_RATE through a registry parameter and _resolve_ fallback with legal grounding and a grounding test; `src/aeat/domain/fincas/_amortization_ledger.py, src/aeat/_data/registry/aeat/..., legal catalogue`.
+- [x] `P04.S06` - Route REBECA_MARITIME_EXEMPTION_FRACTION through a registry parameter and _resolve_ fallback with legal grounding and a grounding test; `src/aeat/domain/renta/_maritime_exemption.py, src/aeat/_data/registry/aeat/..., legal catalogue`.
 
 ### Phase `P05` - Typed modelo fields
 
