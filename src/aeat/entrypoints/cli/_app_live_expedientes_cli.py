@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping
-from typing import Annotated
+from collections.abc import Callable
+from typing import Annotated, TypedDict
 
 import typer
 
@@ -52,12 +52,20 @@ def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
 
 
-def _expedientes_row(snapshot) -> Mapping[str, object]:
+class _ExpedientesRowDict(TypedDict):
+    snapshot_id: str
+    captured_at: str
+    source_url: str
+    declaration_count: int
+
+
+def _expedientes_row(snapshot: object) -> _ExpedientesRowDict:
+    captured_at = snapshot.captured_at
     return {
-        "snapshot_id": snapshot.snapshot_id,
-        "captured_at": snapshot.captured_at.isoformat(),
-        "source_url": snapshot.source_url,
-        "declaration_count": len(snapshot.declarations),
+        "snapshot_id": str(getattr(snapshot, "snapshot_id", "")),
+        "captured_at": captured_at.isoformat(),
+        "source_url": str(getattr(snapshot, "source_url", "")),
+        "declaration_count": len(getattr(snapshot, "declarations", ())),
     }
 
 

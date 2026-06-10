@@ -33,6 +33,7 @@ from ...application.modelo import (
     CalculationRevisionAmendmentKind,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
@@ -213,7 +214,7 @@ def _resolve_revision_for_cli(
     registry_revision: str | None,
     bucket_id: str | None = None,
     selector: str = ModeloCalculationRevisionSelector.CURRENT.value,
-    default_for: str | None = None,
+    default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
     parsed_selector = _parse_revision_selector(selector)
     validated_revision_id = (
@@ -367,7 +368,7 @@ def _period_token_error(
     )
 
 
-def _bare_period_error(modelo: str, period: str, *, fallback: str) -> str:
+def _bare_period_error(modelo: str, period: str, *, fallback: str = "") -> str:
     """Build an operator-facing error for an invalid bare ``--period`` token.
 
     Used by surfaces (``describe``, ``casillas``) that take a bare
@@ -851,6 +852,14 @@ def work_history(
     _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines)
 
 
+def _calculation_revision_not_found_bad_parameter_wide(
+    calculation_revision_id: str, exc: BaseException
+) -> typer.BadParameter:
+    """Widen the exc parameter to BaseException for the register_work_verification_commands contract."""
+    assert isinstance(exc, CalculationRevisionNotFoundError)
+    return _calculation_revision_not_found_bad_parameter(calculation_revision_id, exc)
+
+
 register_work_verification_commands(
     work_app,
     activate_output_language=activate_subcommand_output_language,
@@ -858,7 +867,7 @@ register_work_verification_commands(
     resolve_revision_for_cli=_resolve_revision_for_cli,
     resolve_default_actor=_resolve_default_actor,
     bad_parameter_from_error=_bad_parameter_from_error,
-    calculation_revision_not_found_bad_parameter=_calculation_revision_not_found_bad_parameter,
+    calculation_revision_not_found_bad_parameter=_calculation_revision_not_found_bad_parameter_wide,
 )
 
 

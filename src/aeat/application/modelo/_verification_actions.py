@@ -33,7 +33,11 @@ from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+)
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._ledger_filing_snapshot import (
@@ -711,7 +715,8 @@ def verify_modelo_revision(
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     obs_repo = calculation_observation_repository or CalculationObservationRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    run_repo = WorkflowRunRepository(objects=bv_repo.secure_object_repository)
+    _secure_objects = bv_repo.secure_object_repository if isinstance(bv_repo, BucketEventHistoryRepository) else None
+    run_repo = WorkflowRunRepository(objects=_secure_objects)
 
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
@@ -844,7 +849,7 @@ def _persist_verified_revision_evidence(
     target: CalculationRevision,
     actor: str,
     now: datetime,
-    revisions,
+    revisions: CalculationRevisionCatalogue,
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepository | None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,

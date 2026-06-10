@@ -14,6 +14,7 @@ from ...core import Modelo
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
+from ...domain.calculations.registry import ModeloRevision
 from ...domain.contribuyente._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
@@ -245,7 +246,7 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
         raise ValueError(f"{flag} value for {key!r} is not a decimal: {raw_value!r}") from exc
 
 
-def _revision_for_work_unit(work_unit_id: str):
+def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
     from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
@@ -257,7 +258,7 @@ def _revision_for_work_unit(work_unit_id: str):
     return snapshot.revision
 
 
-def _guard_casilla_data_type(casilla_id: str, revision: object) -> None:
+def _guard_casilla_data_type(casilla_id: str, revision: ModeloRevision) -> None:
     casilla_def = next((casilla for casilla in revision.casillas if str(casilla.id) == casilla_id), None)
     if casilla_def is None:
         return
@@ -268,7 +269,7 @@ def _guard_casilla_data_type(casilla_id: str, revision: object) -> None:
         )
 
 
-def _normalise_casilla_key(key: str, revision: object) -> str:
+def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
     if not _BARE_NUMERIC_RE.fullmatch(key):
         return key
     key_numeric = int(key)
@@ -357,7 +358,7 @@ def apply_calculation_shortcut_inputs(
         resolved_casillas[_semantic_role_casilla_id(work_unit_id, _INSS_EXENTA_SEMANTIC_ROLE)] = prestacion_inss_exenta
 
     if meses_trabajo_con_hijo_menor_3:
-        deduccion = compute_deduccion_maternidad_0611(meses_trabajo_con_hijo_menor_3)
+        deduccion = compute_deduccion_maternidad_0611(list(meses_trabajo_con_hijo_menor_3))
         resolved_casillas[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = Decimal(
             deduccion
         )
