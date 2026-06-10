@@ -1276,22 +1276,19 @@ cli:
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
-        capture_all_help: Captura todos los datos del registro de declaraciones de
-          AEAT y guarda instantaneas.
         capture_all_modelo_help: Limita capture-all a este modelo.
-        capture_help: Captura de AEAT el registro de declaraciones y guarda un snapshot
         latest_help: Muestra el snapshot de expedientes más reciente
         list_help: Lista los snapshots de expedientes guardados
+        pull_all_help: cli.app.live.expedientes.pull_all_help
+        pull_help: cli.app.live.expedientes.pull_help
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de expedientes
       filed:
-        capture_all_help: Captura todos los datos de declaraciones presentadas desde
-          AEAT. Solo lectura; no presenta declaraciones.
         capture_all_modelo_help: Limita capture-all a este modelo.
-        capture_help: Capturar datos de declaraciones presentadas desde AEAT
-        capture_sources_help: Capturar observaciones presentadas requeridas por una
-          declaración objetivo
         list_help: Listar declaraciones presentadas sin descargar artefactos
+        pull_all_help: cli.app.live.filed.pull_all_help
+        pull_help: cli.app.live.filed.pull_help
+        pull_sources_help: cli.app.live.filed.pull_sources_help
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -1313,12 +1310,6 @@ cli:
           de cartera).
         as_of_year_help: Ejercicio usado para calcular la antigüedad de los saldos
           de compensación de IVA.
-        capture_history_help: Captura en directo el historial de Modelo 303 presentados
-          y persiste el estado seguro de compensación de IVA. No se envian opciones
-          de presentación AEAT ni formularios de cartera.
-        capture_remote_state_help: Captura en directo el historial de Modelo 303 presentado
-          e intenta la lectura de la cartera de IVA AEAT como una adquisición tipada
-          de solo lectura.
         history_help: Lista el historial local seguro de compensación de IVA, saldos
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
@@ -1326,22 +1317,23 @@ cli:
           de la AEAT. La única acción de formulario AEAT permitida es la consulta
           de lectura protegida de cartera; las puertas de representación solo continuan
           en modo nombre propio.
+        pull_history_help: cli.app.live.iva_wallet.pull_history_help
+        pull_remote_state_help: cli.app.live.iva_wallet.pull_remote_state_help
         taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
       justificante:
         app_help: 'Capturas de justificantes AEAT (solo lectura): descarga un justificante
           presentado y concilia contra él.'
-        capture_help: Descarga en vivo el justificante AEAT de un periodo presentado
-          y lo guarda como evidencia oficial.
         list_help: Lista las capturas de justificantes guardadas en el perfil activo.
+        pull_help: cli.app.live.justificante.pull_help
         snapshot_id_help: Id de instantánea (o prefijo inequívoco).
         view_help: Muestra una captura de justificante.
       limit_help: Número máximo de filas a capturar
       modelo_help: Código de modelo
       notifications:
         app_help: Snapshots de notificaciones DEHú de solo lectura
-        capture_help: Captura notificaciones DEHú y guarda un snapshot
         latest_help: Muestra la instantanea de notificacion DEHU mas reciente.
         list_help: Lista los snapshots de notificaciones DEHú guardados
+        pull_help: cli.app.live.notifications.pull_help
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de notificaciones DEHú
       output_root_help: Directorio para observaciones capturadas de declaraciones
@@ -1635,13 +1627,18 @@ cli:
       readiness_help: Informa de si el perfil activo está listo para presentar un
         modelo / ejercicio / periodo.
       reconcile:
-        app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT: pull descarga el justificante de AEAT y concilia; file concilia un PDF local; history lista las conciliaciones anteriores.'
-        file_help: 'Concilia una unidad de trabajo contra un PDF de justificante local. Solo local; nunca contacta con AEAT.'
-        file_path_help: 'Ruta al PDF del justificante AEAT con el que conciliar.'
-        history_empty: 'Aun no hay conciliaciones registradas.'
-        history_help: 'Lista las conciliaciones registradas para el perfil activo.'
-        history_work_unit_id_help: 'Id de unidad de trabajo opcional para acotar el historial a una unidad.'
-        pull_help: 'Descarga de AEAT el justificante de una unidad de trabajo y concilia contra el. Contacta con AEAT (solo lectura).'
+        app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT:
+          pull descarga el justificante de AEAT y concilia; file concilia un PDF local;
+          history lista las conciliaciones anteriores.'
+        file_help: Concilia una unidad de trabajo contra un PDF de justificante local.
+          Solo local; nunca contacta con AEAT.
+        file_path_help: Ruta al PDF del justificante AEAT con el que conciliar.
+        history_empty: Aun no hay conciliaciones registradas.
+        history_help: Lista las conciliaciones registradas para el perfil activo.
+        history_work_unit_id_help: Id de unidad de trabajo opcional para acotar el
+          historial a una unidad.
+        pull_help: Descarga de AEAT el justificante de una unidad de trabajo y concilia
+          contra el. Contacta con AEAT (solo lectura).
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
       verification_report:
@@ -2192,6 +2189,7 @@ cli:
           AEAT
         compare_help: Compara campo a campo el censo AEAT con este perfil
         help: Sincroniza el censo 036 de AEAT con este perfil
+        pull_help: cli.config.profile.censo.pull_help
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
@@ -2569,6 +2567,8 @@ cli:
       counterparty_eu_member_state_help: Estado miembro de la UE de la contraparte
         (ISO 3166-1 alfa-2 minúsculas, p. ej. de); obligatorio con --iva-category
         intra_community_supply, prohibido con export_third_country_zero_rated
+      evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
+        en la nube la sube fuera de tu equipo (lo exige la verificacion de consentimiento).
       from_csv_exclusive: --from-csv no puede combinarse con --id ni --classification.
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
@@ -2600,6 +2600,8 @@ cli:
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
+      read_evidence_help: Lee en local la evidencia adjunta de la transaccion y la
+        pasa al clasificador.
       reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.
       reaffirmed: Clasificación reafirmada.
       saturate_help: 'Satura con IA: selecciona tambien la categoria de IVA y deriva
@@ -2670,6 +2672,7 @@ cli:
         son una vista previa de lo que una importación real añadiría y omitiría.'
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
+      file_help: cli.ledger.import.file_help
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción que ya está en el libro pero tienen una descripción distinta:
@@ -2683,7 +2686,6 @@ cli:
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       provider_help: 'Proveedor del formato del extracto. Valores reconocidos: {providers}'
-      source_help: Archivo original para verificar las filas importadas
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
       year_help: Año de declaración para --period (p. ej. 2024).

@@ -494,6 +494,12 @@ def ledger_classify(
     llm: LLMProvider | None = typer.Option(None, "--llm", help=tr("cli.ledger.classify.llm_help")),
     apply: bool = typer.Option(False, "--apply", help=tr("cli.ledger.classify.apply_help")),
     saturate: bool = typer.Option(False, "--saturate", help=tr("cli.ledger.classify.saturate_help")),
+    read_evidence: bool = typer.Option(
+        False, "--read-evidence", help=tr("cli.ledger.classify.read_evidence_help")
+    ),
+    evidence_acknowledged: bool = typer.Option(
+        False, "--evidence-acknowledged", help=tr("cli.ledger.classify.evidence_acknowledged_help")
+    ),
 ) -> None:
     """Classify one ledger transaction (--id), via LLM (--llm), or in bulk (--from-csv)."""
     if llm is not None:
@@ -507,6 +513,8 @@ def ledger_classify(
                 provider=llm,
                 apply=apply,
                 actor=actor,
+                read_evidence=read_evidence,
+                evidence_acknowledged=evidence_acknowledged,
             )
             return
         _ledger_classify_llm(
@@ -518,6 +526,8 @@ def ledger_classify(
             provider=llm,
             apply=apply,
             actor=actor,
+            read_evidence=read_evidence,
+            evidence_acknowledged=evidence_acknowledged,
         )
         return
     if saturate:
@@ -632,6 +642,8 @@ def _ledger_classify_llm(
     provider: LLMProvider,
     apply: bool,
     actor: str | None,
+    read_evidence: bool = False,
+    evidence_acknowledged: bool = False,
 ) -> None:
     """Run the LLM suggest / apply loop for ``aeat app ledger classify --llm``.
 
@@ -678,6 +690,8 @@ def _ledger_classify_llm(
             transaction_id=resolved_id,
             provider=provider,
             transaction_repository=transaction_repository,
+            read_evidence=read_evidence,
+            evidence_acknowledged=evidence_acknowledged,
         )
     except LLMClassifierError as exc:
         raise _bad(
@@ -761,6 +775,8 @@ def _ledger_saturate_llm(
     provider: LLMProvider,
     apply: bool,
     actor: str | None,
+    read_evidence: bool = False,
+    evidence_acknowledged: bool = False,
 ) -> None:
     """Run the saturating LLM suggest / apply loop for ``classify --llm --saturate``.
 
@@ -806,6 +822,8 @@ def _ledger_saturate_llm(
             transaction_id=resolved_id,
             provider=provider,
             transaction_repository=transaction_repository,
+            read_evidence=read_evidence,
+            evidence_acknowledged=evidence_acknowledged,
         )
     except LLMClassifierError as exc:
         raise _bad(

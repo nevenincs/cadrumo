@@ -1270,22 +1270,19 @@ cli:
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
-        capture_all_help: Captura totes les dades del registre de declaracions de
-          l'AEAT i desa instantanies.
         capture_all_modelo_help: Limita capture-all a aquest model.
-        capture_help: Captura d'AEAT el registre de declaracions i desa un snapshot
         latest_help: Mostra el snapshot d'expedients més recent
         list_help: Llista els snapshots d'expedients desats
+        pull_all_help: cli.app.live.expedientes.pull_all_help
+        pull_help: cli.app.live.expedientes.pull_help
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
       filed:
-        capture_all_help: Captura totes les dades de declaracions presentades des
-          de l'AEAT. Només lectura; no presenta declaracions.
         capture_all_modelo_help: Limita capture-all a aquest model.
-        capture_help: Capturar dades de declaracions presentades des d'AEAT
-        capture_sources_help: Capturar observacions presentades requerides per una
-          declaració objectiu
         list_help: Llistar declaracions presentades sense descarregar artefactes
+        pull_all_help: cli.app.live.filed.pull_all_help
+        pull_help: cli.app.live.filed.pull_help
+        pull_sources_help: cli.app.live.filed.pull_sources_help
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
@@ -1307,12 +1304,6 @@ cli:
           de cartera).
         as_of_year_help: Exercici usat per calcular l'antiguitat dels saldos de compensació
           d'IVA.
-        capture_history_help: Captura en directe l'historial de Modelo 303 presentats
-          i persisteix l'estat segur de compensació d'IVA. No s'envien opcions de
-          presentació AEAT ni formularis de cartera.
-        capture_remote_state_help: Captura en directe l'historial de Model 303 presentat
-          i intenta la lectura de la cartera d'IVA AEAT com una adquisició tipada
-          de només lectura.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
           arrossegats i decisions d'autoritat de cartera persistides derivades de
           les captures de Modelo 303 presentats.
@@ -1320,22 +1311,23 @@ cli:
           de l'AEAT. L'única acció de formulari AEAT permesa és la consulta de lectura
           protegida de cartera; les portes de representació només continuen en mode
           nom propi.
+        pull_history_help: cli.app.live.iva_wallet.pull_history_help
+        pull_remote_state_help: cli.app.live.iva_wallet.pull_remote_state_help
         taxpayer_nif_help: NIF del contribuent; per defecte, la identitat autenticada.
       justificante:
         app_help: 'Captures de justificants AEAT (només lectura): descarrega un justificant
           presentat i concilia-hi.'
-        capture_help: Descarrega en viu el justificant AEAT d'un període presentat
-          i el desa com a evidència oficial.
         list_help: Llista les captures de justificants desades al perfil actiu.
+        pull_help: cli.app.live.justificante.pull_help
         snapshot_id_help: Id d'instantània (o prefix inequívoc).
         view_help: Mostra una captura de justificant.
       limit_help: Nombre màxim de files a capturar
       modelo_help: Codi de model
       notifications:
         app_help: Snapshots de notificacions DEHú de només lectura
-        capture_help: Captura notificacions DEHú i desa un snapshot
         latest_help: Mostra la instantania de notificacio DEHU mes recent.
         list_help: Llista els snapshots de notificacions DEHú desats
+        pull_help: cli.app.live.notifications.pull_help
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot de notificacions DEHú
       output_root_help: Directori per a observacions capturades de declaracions presentades
@@ -1607,13 +1599,18 @@ cli:
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
         / exercici / període.
       reconcile:
-        app_help: 'Concilia una unitat de treball de model amb el seu justificant AEAT: pull descarrega el justificant d''AEAT i concilia; file concilia un PDF local; history llista les conciliacions anteriors.'
-        file_help: 'Concilia una unitat de treball contra un PDF de justificant local. Nomes local; mai contacta amb AEAT.'
-        file_path_help: 'Cami al PDF del justificant AEAT amb el qual conciliar.'
-        history_empty: 'Encara no hi ha conciliacions registrades.'
-        history_help: 'Llista les conciliacions registrades per al perfil actiu.'
-        history_work_unit_id_help: 'Id d''unitat de treball opcional per acotar l''historial a una unitat.'
-        pull_help: 'Descarrega d''AEAT el justificant d''una unitat de treball i concilia-hi. Contacta amb AEAT (nomes lectura).'
+        app_help: 'Concilia una unitat de treball de model amb el seu justificant
+          AEAT: pull descarrega el justificant d''AEAT i concilia; file concilia un
+          PDF local; history llista les conciliacions anteriors.'
+        file_help: Concilia una unitat de treball contra un PDF de justificant local.
+          Nomes local; mai contacta amb AEAT.
+        file_path_help: Cami al PDF del justificant AEAT amb el qual conciliar.
+        history_empty: Encara no hi ha conciliacions registrades.
+        history_help: Llista les conciliacions registrades per al perfil actiu.
+        history_work_unit_id_help: Id d'unitat de treball opcional per acotar l'historial
+          a una unitat.
+        pull_help: Descarrega d'AEAT el justificant d'una unitat de treball i concilia-hi.
+          Contacta amb AEAT (nomes lectura).
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
           inequívoc).
       verification_report:
@@ -2162,6 +2159,7 @@ cli:
         apply_help: Sobrescriu el perfil amb els valors censals comunicats per AEAT
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
         help: Sincronitza el cens 036 d'AEAT amb aquest perfil
+        pull_help: cli.config.profile.censo.pull_help
         refresh_help: Descarrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
@@ -2534,6 +2532,8 @@ cli:
       counterparty_eu_member_state_help: Estat membre de la UE de la contrapart (ISO
         3166-1 alfa-2 minúscules, p. ex. de); obligatori amb --iva-category intra_community_supply,
         prohibit amb export_third_country_zero_rated
+      evidence_acknowledged_help: Confirma que llegir l'evidencia amb un proveidor
+        al nuvol la puja fora del teu equip (ho exigeix la verificacio de consentiment).
       from_csv_exclusive: --from-csv no pot combinar-se amb --id ni --classification.
       from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
@@ -2565,6 +2565,8 @@ cli:
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
         fila com a BUSINESS o PERSONAL.
+      read_evidence_help: Llegeix en local l'evidencia adjunta de la transaccio i
+        la passa al classificador.
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.
       reaffirmed: Classificació reafirmada.
       saturate_help: 'Satura amb IA: selecciona tambe la categoria d''IVA i deriva
@@ -2635,6 +2637,7 @@ cli:
         són una vista prèvia del que una importació real afegiria i ometria.'
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
+      file_help: cli.ledger.import.file_help
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
         amb una transacció que ja és al llibre però tenen una descripció diferent:
@@ -2648,7 +2651,6 @@ cli:
       period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       provider_help: 'Proveïdor del format de l''extracte. Valors reconeguts: {providers}'
-      source_help: Fitxer original per verificar les files importades
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
       year_help: Any de declaració per a --period (p. ex. 2024).

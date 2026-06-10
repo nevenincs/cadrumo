@@ -1213,23 +1213,19 @@ cli:
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.
-        capture_all_help: Az AEAT bevallasi nyilvantartas osszes adatanak rogzitese
-          es pillanatkepek mentese.
         capture_all_modelo_help: A capture-all muvelet korlatozasa erre a modellora.
-        capture_help: AEAT bevallási nyilvántartási adatok rögzítése és pillanatkép
-          mentése.
         latest_help: A legfrissebb expediente pillanatkép megjelenítése.
         list_help: Mentett expediente pillanatképek listázása.
+        pull_all_help: cli.app.live.expedientes.pull_all_help
+        pull_help: cli.app.live.expedientes.pull_help
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
       filed:
-        capture_all_help: Az összes benyújtott bevallási adat rögzítése az AEAT-ból.
-          Csak olvasás; nem nyújt be bevallást.
         capture_all_modelo_help: A capture-all korlátozása erre a nyomtatványra.
-        capture_help: Benyújtott bevallási adatok rögzítése az AEAT-ból.
-        capture_sources_help: Egy célbenyújtáshoz szükséges benyújtott megfigyelések
-          rögzítése.
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
+        pull_all_help: cli.app.live.filed.pull_all_help
+        pull_help: cli.app.live.filed.pull_help
+        pull_sources_help: cli.app.live.filed.pull_sources_help
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:
@@ -1250,33 +1246,28 @@ cli:
           saját nevű képviseletet és a védett pénztárca-lekérdezést engedélyez).
         as_of_year_help: Az IVA-kompenzációs átviteli tételek korosításához használt
           év.
-        capture_history_help: Benyújtott Modelo 303 előzmények élő rögzítése és biztonságos
-          IVA-kompenzációs állapot megőrzése. Az AEAT-nak nem nyújt be bevallást és
-          nem végez pénztárca-formanyomtatvány-műveletet.
-        capture_remote_state_help: Élőben rögzíti a benyújtott Modelo 303 előzményeket,
-          és egy típusos, csak olvasható beszerzésként megkísérli az AEAT IVA cartera
-          lekérdezését.
         history_help: Helyi biztonságos IVA-kompenzációs előzmények, átviteli tételek
           és Modelo 303 rögzítésekből származó megőrzött pénztárca-döntések listázása.
         pull_help: Az AEAT IVA-kompenzációs pénztárcájának élő lekérése és megőrzése.
           Az egyetlen engedélyezett AEAT-formanyomtatvány-művelet a védett pénztárca-lekérdezés;
           képviseleti kapuk csak saját nevű módban folytatódnak.
+        pull_history_help: cli.app.live.iva_wallet.pull_history_help
+        pull_remote_state_help: cli.app.live.iva_wallet.pull_remote_state_help
         taxpayer_nif_help: 'Az adóalany NIF-je; alapértelmezés: a hitelesített azonosság.'
       justificante:
         app_help: 'AEAT igazolás-rögzítések (csak olvasható): tölts le egy benyújtott
           igazolást és egyeztess vele.'
-        capture_help: Élőben letölti egy benyújtott időszak AEAT igazolását, és hivatalos
-          bizonyítékként menti.
         list_help: Listázza az aktív profil mentett igazolás-rögzítéseit.
+        pull_help: cli.app.live.justificante.pull_help
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Megjelenít egy igazolás-rögzítést.
       limit_help: Rögzítendő sorok maximális száma.
       modelo_help: Nyomtatványkód.
       notifications:
         app_help: Csak olvasható DEHú értesítés-pillanatképek.
-        capture_help: DEHú értesítések rögzítése és pillanatkép mentése.
         latest_help: A legutobbi DEHU ertesitesi pillanatkep megjelenitese.
         list_help: Mentett DEHú értesítés-pillanatképek listázása.
+        pull_help: cli.app.live.notifications.pull_help
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: DEHú értesítés-pillanatkép megjelenítése.
       output_root_help: Könyvtár a rögzített benyújtott bevallás-megfigyelésekhez.
@@ -1560,13 +1551,18 @@ cli:
       readiness_help: Jelentés arról, hogy az aktív profil készen áll-e egy nyomtatvány/év/időszak
         benyújtására.
       reconcile:
-        app_help: 'Egyeztet egy modelo munkaegyseget az AEAT igazolasaval: a pull letolti az igazolast az AEAT-tol es egyeztet; a file egy helyi PDF-et egyeztet; a history a korabbi futtatasokat listazza.'
-        file_help: 'Egyeztet egy munkaegyseget egy helyi igazolas PDF ellen. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.'
-        file_path_help: 'Az AEAT igazolas PDF utvonala, amellyel egyeztetni kell.'
-        history_empty: 'Meg nincsenek rogzitett egyeztesek.'
-        history_help: 'Listazza az aktiv profilhoz rogzitett egyeztteseket.'
-        history_work_unit_id_help: 'Opcionalis munkaegyseg-azonosito a tortenet egy egysegre szukitesehez.'
-        pull_help: 'Letolti egy munkaegyseg igazolasat az AEAT-tol, es egyeztet ellene. Kapcsolatba lep az AEAT-tal (csak olvasas).'
+        app_help: 'Egyeztet egy modelo munkaegyseget az AEAT igazolasaval: a pull
+          letolti az igazolast az AEAT-tol es egyeztet; a file egy helyi PDF-et egyeztet;
+          a history a korabbi futtatasokat listazza.'
+        file_help: Egyeztet egy munkaegyseget egy helyi igazolas PDF ellen. Csak helyi;
+          soha nem lep kapcsolatba az AEAT-tal.
+        file_path_help: Az AEAT igazolas PDF utvonala, amellyel egyeztetni kell.
+        history_empty: Meg nincsenek rogzitett egyeztesek.
+        history_help: Listazza az aktiv profilhoz rogzitett egyeztteseket.
+        history_work_unit_id_help: Opcionalis munkaegyseg-azonosito a tortenet egy
+          egysegre szukitesehez.
+        pull_help: Letolti egy munkaegyseg igazolasat az AEAT-tol, es egyeztet ellene.
+          Kapcsolatba lep az AEAT-tal (csak olvasas).
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
@@ -2119,6 +2115,7 @@ cli:
           profilt.
         compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
         help: Az AEAT 036-os nyilvántartási adatok szinkronizálása ezzel a profillal.
+        pull_help: cli.config.profile.censo.pull_help
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
           mentése.
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
@@ -2499,6 +2496,8 @@ cli:
       counterparty_eu_member_state_help: A szerződő fél EU-tagállama (ISO 3166-1 alpha-2
         kisbetűs, pl. de); kötelező --iva-category intra_community_supply esetén,
         tiltott export_third_country_zero_rated esetén.
+      evidence_acknowledged_help: Erositse meg, hogy a bizonyitek felhoszolgaltatoval
+        valo beolvasasa feltolti azt a geperol (a hozzajarulasi kapu megkoveteli).
       from_csv_exclusive: --from-csv cannot be combined with --id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
@@ -2531,6 +2530,8 @@ cli:
       mixed_requires_business_pct: Elutasítva. A --classification MIXED értékhez üzleti
         arány szükséges. Adjon meg --business-pct értéket 0 és 1 között, vagy sorolja
         be a sort BUSINESS vagy PERSONAL kategóriába.
+      read_evidence_help: Olvassa be helyben a tranzakcio csatolt bizonyitekat, es
+        adja at az osztalyozonak.
       reaffirm_help: Egy már besorolt tranzakció besorolásának megerősítése.
       reaffirmed: Besorolás megerősítve.
       saturate_help: 'Telites LLM-mel: az IVA-kategoria kivalasztasa, valamint a kulcs,
@@ -2602,6 +2603,7 @@ cli:
       dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
+      file_help: cli.ledger.import.file_help
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
         a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
@@ -2614,7 +2616,6 @@ cli:
       period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
       provider_help: 'Kivonatformátum-szolgáltató. Elismert értékek: {providers}'
-      source_help: Az importált sorok ellenőrzéséhez használt eredeti fájl.
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Bejegyzések ellenőrzése importálás után.
       year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).

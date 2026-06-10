@@ -159,9 +159,9 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand() -> None:
 
     TESTIMONIAL CORE: the year-end Renta picture (full-year income vs
     deductible expense) has no first-class surface. We classify the full 2025
-    business income + expenses via the oracle, then tally direction-signed
-    amounts from ``list`` JSON. The sums are asserted only for internal
-    consistency, never against a tax formula.
+    business income + expenses via the oracle, then tally the non-negative
+    amount magnitudes from ``list`` JSON grouped by direction. The sums are
+    asserted only for internal consistency, never against a tax formula.
     """
     _import_corpus()
     rules = _oracle_rules()
@@ -204,7 +204,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand() -> None:
     income_rows = [r for r in business_2025 if r.get("direction") == "INCOMING"]
     income = sum(Decimal(str(r.get("amount", "0"))) for r in income_rows)
     expense_rows = [r for r in business_2025 if r.get("direction") == "OUTGOING"]
-    expense = sum(-Decimal(str(r.get("amount", "0"))) for r in expense_rows)
+    expense = sum(Decimal(str(r.get("amount", "0"))) for r in expense_rows)
     # Internal-consistency checks only (anti-tautology): a real autónoma year
     # has positive business income and positive deductible expense.
     assert income > 0, f"expected positive 2025 business income, got {income}"
