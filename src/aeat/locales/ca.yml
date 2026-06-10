@@ -799,6 +799,7 @@ application:
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      work_unit_revision_divergence: 'La unitat de treball %{work_unit_id} es va crear amb la revisio de registre %{work_unit_revision}, pero la revisio determinada per llei per al model %{modelo} %{filing_year} %{period} ara es %{law_revision}. Torneu a crear la unitat de treball per vincular-la a la revisio actual.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.

@@ -806,6 +806,7 @@ application:
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      work_unit_revision_divergence: 'La unidad de trabajo %{work_unit_id} se creo con la revision de registro %{work_unit_revision}, pero la revision determinada por ley para el modelo %{modelo} %{filing_year} %{period} es ahora %{law_revision}. Vuelva a crear la unidad de trabajo para vincularla a la revision actual.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.

@@ -1,9 +1,9 @@
 """Backend-owned operator-surface contract for the CLI command tree.
 
 Declares, in the application layer, the shape the CLI must present: the
-accepted root command families, the canonical CRUD verb vocabulary, the
-retired-surface redirects, and the help/landing documents. The CLI is a
-thin renderer of this contract rather than its author.
+accepted root command families, the canonical CRUD verb vocabulary, and
+the help/landing documents. The CLI is a thin renderer of this contract
+rather than its author.
 
 Major declarations:
 
@@ -12,8 +12,6 @@ Major declarations:
   :data:`MOUNTED_COMMAND_FAMILIES` — the root-surface definition.
 * :class:`CrudVerb` and :data:`CANONICAL_CRUD_VERBS` with
   :class:`MutatingNounGroupContract` — the orthogonal CRUD vocabulary.
-* :class:`RetiredOperatorSurface` and :func:`retired_surface_suggestion` —
-  the forward redirects for retired command roots.
 * :func:`build_help_document` and :func:`build_root_landing_report` with
   :class:`HelpDocument` and :class:`RootLandingReport` — the rendered
   help and landing surfaces.
@@ -25,13 +23,11 @@ from __future__ import annotations
 from ._contract import (
     ACCEPTED_ROOTS,
     MOUNTED_COMMAND_FAMILIES,
-    RETIRED_OPERATOR_SURFACES,
     SOURCE_KIND_ALIASES,
     build_operator_surface_contract,
     get_operator_surface_contract,
     require_accepted_root,
     resolve_source_kind_alias,
-    retired_surface_suggestion,
 )
 from ._crud_contract import (
     CANONICAL_CRUD_VERBS,
@@ -66,7 +62,6 @@ from ._models import (
     OperatorMutability,
     OperatorSurfaceContract,
     OperatorSurfaceLogFields,
-    RetiredOperatorSurface,
     RootLandingReport,
     RootSurface,
     RootSurfaceName,
@@ -80,7 +75,6 @@ __all__ = [
     "BUILTIN_CRUD_CATALOGUE",
     "CANONICAL_CRUD_VERBS",
     "MOUNTED_COMMAND_FAMILIES",
-    "RETIRED_OPERATOR_SURFACES",
     "SOURCE_KIND_ALIASES",
     "BucketEventSuffix",
     "CrudContractCatalogue",
@@ -103,7 +97,6 @@ __all__ = [
     "OperatorSurfaceContractError",
     "OperatorSurfaceLogFields",
     "OrthogonalAxis",
-    "RetiredOperatorSurface",
     "RootLandingReport",
     "RootSurface",
     "RootSurfaceName",
@@ -120,5 +113,4 @@ __all__ = [
     "render_root_landing_text",
     "require_accepted_root",
     "resolve_source_kind_alias",
-    "retired_surface_suggestion",
 ]
