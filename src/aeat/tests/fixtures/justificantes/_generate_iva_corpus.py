@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import TypedDict
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -12,10 +13,21 @@ from reportlab.pdfgen import canvas
 from ._generate_base import _SEDE_ORIGIN
 
 
+class _M303PrimitivesDict(TypedDict):
+    """TypedDict for M303 primitive cuota fields."""
+
+    repercutido_general: Decimal
+    repercutido_reducido: Decimal
+    repercutido_super_reducido: Decimal
+    autorepercutido_intracomunitaria: Decimal
+    soportado_interiores: Decimal
+    autoconsumo_promotor_base: Decimal
+
+
 def _fmt_spanish(d: Decimal) -> str:
-    """Format a Decimal as Spanish-locale monetary string (e.g. Decimal('5000.00') -> '5.000,00')."""
-    s = f"{d:,.2f}"
-    # Python locale-independent: '5,000.00' â†’ '5.000,00'
+    """Format a Decimal as Spanish-locale monetary string (e.g. Decimal(‘5000.00’) -> ‘5.000,00’)."""
+    s: str = f"{d:,.2f}"
+    # Python locale-independent: ‘5,000.00’ â†’ ‘5.000,00’
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
 
@@ -109,20 +121,20 @@ def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal,
     Arithmetic grounded in Orden EHA/3786/2008 art. 1 (box 46) and Orden HAC/819/2024
     art. 1 (boxes 64/66/69/71). Registry formula expressions in 2023-y-siguientes/revision.toml.
     """
-    c46 = (c27 - c45).quantize(Decimal("0.01"))
+    c46: Decimal = (c27 - c45).quantize(Decimal("0.01"))
     # Standard single-regime: c58=0, c76=0 â†’ c64 = c46
-    c64 = c46.quantize(Decimal("0.01"))
+    c64: Decimal = c46.quantize(Decimal("0.01"))
     # territorio comÃºn: c65=100 â†’ c66 = c64 Ã— 100 / 100 = c64
-    c66 = c64.quantize(Decimal("0.01"))
+    c66: Decimal = c64.quantize(Decimal("0.01"))
     # No importation IVA (c77=0), no joint-taxation (c68=0), no prior compensation (c78=0):
     #   c69 = c66 - 0 = c66
-    c69 = c66.quantize(Decimal("0.01"))
+    c69: Decimal = c66.quantize(Decimal("0.01"))
     # No prior filings (c70=0), no returns (c109=0): c71 = c69
-    c71 = c69.quantize(Decimal("0.01"))
+    c71: Decimal = c69.quantize(Decimal("0.01"))
     return c46, c64, c66, c69, c71
 
 
-def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> dict[str, Decimal]:
+def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> _M303PrimitivesDict:
     """Compute single-rate M303 primitives whose engine-summed totals equal c27/c29.
 
     Single-rate filer pattern: place all devengada cuota on
@@ -133,8 +145,8 @@ def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> dict[str, Decimal]:
     - ``iva.cuota-devengada-total`` = repercutido.general (+ 0 + 0 + 0 + 0) = c27.
     - ``iva.cuota-deducible-total`` = soportado.interiores (+ 0) = c29.
     - ``iva.resultado-regimen-general`` = c27 âˆ’ c29 = c46 (existing fixtures all
-      satisfy c45 = c29, so the engine's resultado-regimen-general matches the
-      fixture's c46 bit-for-bit).
+      satisfy c45 = c29, so the engine’s resultado-regimen-general matches the
+      fixture’s c46 bit-for-bit).
 
     Returns a six-field dict suitable for ``**_compute_m303_primitives(c27, c29)``
     splat into ``_Modelo303CorpusFixture(...)``. ``autoconsumo_promotor_base`` is
@@ -143,11 +155,11 @@ def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> dict[str, Decimal]:
     because the legacy extraction profile does not target it.
 
     Grounded in 2026-06-03-m303-synthetic-generator-primitive-spec-adr (Findings
-    section's corrected 6-field encoding) and Route A of
+    section’s corrected 6-field encoding) and Route A of
     2026-06-02-m303-parser-engine-totals-impedance-adr.
     """
-    zero = Decimal("0.00")
-    return {
+    zero: Decimal = Decimal("0.00")
+    result: _M303PrimitivesDict = {
         "repercutido_general": c27,
         "repercutido_reducido": zero,
         "repercutido_super_reducido": zero,
@@ -155,6 +167,7 @@ def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> dict[str, Decimal]:
         "soportado_interiores": c29,
         "autoconsumo_promotor_base": zero,
     }
+    return result
 
 
 _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
@@ -450,7 +463,7 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
     at generation time).
     """
     _, height = A4
-    y = height - 25 * mm
+    y: float = height - 25 * mm
     c.setFont("Helvetica-Bold", 12)
     c.drawString(
         20 * mm,
@@ -467,7 +480,7 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
     # Named-label rows: label text verbatim from the extraction profile pattern.
     # Accents stripped to stay within ASCII-safe pdfplumber extraction path.
     # Value follows on the same line after a space; named_label parser captures it.
-    zero_fmt = _fmt_spanish(Decimal("0.00"))
+    zero_fmt: str = _fmt_spanish(Decimal("0.00"))
 
     # ---- Primitive cuota leaves (Route A of the parser-engine-totals-impedance ADR)
     # The extraction profile targets these so the engine recomputes
@@ -696,20 +709,20 @@ def _compute_m130_closure(c03: Decimal) -> Decimal:
       registry formulas/0002-formulas.toml (casilla 13 step function, 100 at â‰¤9000)
     """
     # c04 = max(0, c03 * 20/100)
-    rate = Decimal("20") / Decimal("100")
-    c04 = max(Decimal("0"), (c03 * rate).quantize(Decimal("0.01")))
+    rate: Decimal = Decimal("20") / Decimal("100")
+    c04: Decimal = max(Decimal("0"), (c03 * rate).quantize(Decimal("0.01")))
     # c07 = c04 - 0 - 0
-    c07 = c04
+    c07: Decimal = c04
     # c12 = max(0, c07 + 0)
-    c12 = max(Decimal("0"), c07)
+    c12: Decimal = max(Decimal("0"), c07)
     # c13 = 100 (prev_year_income=0 â‰¤ 9000)
-    c13 = Decimal("100.00")
+    c13: Decimal = Decimal("100.00")
     # c14 = c12 - c13
-    c14 = (c12 - c13).quantize(Decimal("0.01"))
+    c14: Decimal = (c12 - c13).quantize(Decimal("0.01"))
     # c17 = (c14 - 0) - 0 = c14  [c01=0 â†’ standard path]
-    c17 = c14
+    c17: Decimal = c14
     # c19 = c17 - 0
-    c19 = c17.quantize(Decimal("0.01"))
+    c19: Decimal = c17.quantize(Decimal("0.01"))
     return c19
 
 
@@ -870,7 +883,7 @@ def _draw_modelo_130_corpus(c: canvas.Canvas, fixture: _Modelo130CorpusFixture) 
     generation time).
     """
     _, height = A4
-    y = height - 25 * mm
+    y: float = height - 25 * mm
     c.setFont("Helvetica-Bold", 12)
     c.drawString(20 * mm, y, "Impuesto sobre la Renta de las Personas Fisicas  Modelo 130")
     y -= 10 * mm
@@ -992,9 +1005,9 @@ def _compute_m390_closure(
     Arithmetic grounded in Orden EHA/3111/2009 art. 1 and the registry formula
     expressions in formulas/0001-formulas.toml.
     """
-    c47 = (c06 + c04 + c02 + c26).quantize(Decimal("0.01"))
-    c64 = (c49 + c26).quantize(Decimal("0.01"))
-    c65 = (c47 - c64).quantize(Decimal("0.01"))
+    c47: Decimal = (c06 + c04 + c02 + c26).quantize(Decimal("0.01"))
+    c64: Decimal = (c49 + c26).quantize(Decimal("0.01"))
+    c65: Decimal = (c47 - c64).quantize(Decimal("0.01"))
     return c47, c64, c65
 
 
@@ -1010,7 +1023,7 @@ def _m390_fixture(
     c04=c02=c26=0 for all specimens in this suite (no reduced-rate activities,
     no intracomunitaria acquisitions).  c47/c64/c65 are derived via the formula.
     """
-    _zero = Decimal("0.00")
+    _zero: Decimal = Decimal("0.00")
     c47, c64, c65 = _compute_m390_closure(c06, _zero, _zero, _zero, c49)
     return _Modelo390CorpusFixture(
         filename=filename,
@@ -1076,7 +1089,7 @@ def _draw_modelo_390_corpus(c: canvas.Canvas, fixture: _Modelo390CorpusFixture) 
     NIF line: _TAX_ID_RE matches "NIF: <tax_id>" (consistent with M303 corpus layout).
     """
     _, height = A4
-    y = height - 25 * mm
+    y: float = height - 25 * mm
     c.setFont("Helvetica-Bold", 12)
     c.drawString(
         20 * mm,
