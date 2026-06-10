@@ -1,0 +1,2341 @@
+# Pag. 1
+
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+NNº PPoossiicc.. LLoonngg.. TTiippoo DDeessccrriippcciióónn VVaalliiddaacciióónn CCoonntteenniiddoo
+1 1 17 An Constante. <T + modelo + discriminante + Ejercicio devengo + periodo + tipo + > "<T100020120A0000>"
+2 18 5 An Constante "<AUX>"
+3 23 30 An Reservado para la Administración. Rellenar con blancos BLANCOS
+4 53 1 An Idioma de la declaración (**) "E", "C", "G", "V"
+5 54 39 An Reservado para la Administración. Rellenar con blancos BLANCOS
+66 9933 44 AAnn VVeerrssiióónn ddeell PPrrooggrraammaa ((**))
+7 97 4 An Reservado para la Administración. Rellenar con blancos BLANCOS
+8 101 9 An NIF Empresa Desarrollo (**)
+9 110 213 An Reservado para la Administración. Rellenar con blancos BLANCOS
+10 323 6 An Constante "</AUX>"
+11 329 8 An Constante "<VECTOR>"
+Vector de páginas. Para su cumplimentación se debe indicar de forma secuencial las páginas que forman parte de esta declaración. Cada página se indicará con 3
+digitos. Después de la última página se pondrá el identificador "FIN". Por ejemplo, en un fichero que contenga una página 1, una 2, una 3, cuatro páginas 4, una 10,
+una 11, una 12, una 13 y una página 19, debería rellenarse el vector con el siguiente contenido: 001002003004004004004010011012013019FIN (y el resto a blancos
+12 337 300 An hasta completar las 300 posiciones
+13 637 9 An Constante "</VECTOR>"
+Contenido del fichero. Aquí se debe incluir el contenido de las páginas correspondientes a la declaración según el formato descrito para cada página en este mismo
+14 646Variable An documento
+15*** 18 An Constante. </T + modelo + discriminante + Ejercicio devengo + periodo + tipo + > "</T100020120A0000>"
+16*** 2An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total Variable
+(**) A cumplimentar por las entidades desarrolladoras (EEDD)
+Idioma de la declaración: (E) Castellano, (C) Catalán, (G) Gallego, (V) Valenciano
+Versión del programa: Debe consignarse el identificador de la versión del SW desarrollado por la ED
+NIF Empresa Desarrollo: Debe consignarse el NIF de la ED del SW
+
+# Pag. 2
+
+100-01
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "01"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante. Blanco
+6 10 9 An Primer Declarante - NIF (01) OBLIGATORIO
+7 19 15 A Primer Declarante - Primer apellido (02) OBLIGATORIO
+8 34 15 A Primer Declarante - Segundo apellido (03)
+9 49 15 A Primer Declarante - Nombre (4) OBLIGATORIO
+10 64 1 A Primer Declarante - Sexo "H" Hombre, "M" Mujer (05) OBLIGATORIO
+11 65 1 Num Primer Declarante -Estado Civil. "1" Soltero/a, "2" Casado/a, "3" Viudo/a, "4" Divorciado/a o Separado/a OBLIGATORIO
+12 66 8 Num Primer Declarante - Fecha de nacimiento. (DDMMAAAA) Año < 2013 (10) OBLIGATORIO
+13 74 1 Num Primer Declarante - Grado de discapacidad "0", "1", "2" o "3" (11)
+14 75 1 Num Primer Declarante - Cambio de domicilio "1" o cero (13)
+15 76 5 A Primer Declarante - Domicilio habitual - Tipo de Vía (15)
+16 81 5 Num Primer Declarante - Domicilio habitual - RESERVADO AEAT - Código Vía INE
+17 86 50 An Primer Declarante - Domicilio habitual - Nombre de la Vía Pública (16)
+18 136 3 An Primer Declarante - Domicilio habitual - Tipo de numeración. Valores: NUM;KM;S/N;OTR (17)
+1199 113399 55 NNuumm PPrriimmeerr DDeeccllaarraannttee - DDoommiicciilliioo hhaabbiittuuaall - NNúúmmeerroo ddee CCaassaa ((1188))
+20 144 3 An Primer Declarante - Domicilio habitual - Calificador del número. Valores: BIS;DUP;MOD;ANT;etc/metros si Tipo Num=KM. (19)
+21 147 3 An Primer Declarante - Domicilio habitual - Bloque (20)
+22 150 3 An Primer Declarante - Domicilio habitual - Portal (21)
+23 153 3 An Primer Declarante - Domicilio habitual - Escalera (22)
+24 156 3 An Primer Declarante - Domicilio habitual - Planta (23)
+25 159 3 An Primer Declarante - Domicilio habitual - Puerta (24)
+26 162 40 An Primer Declarante - Domicilio habitual - Datos complementarios del Domicilio habitual (25)
+27 202 30 An Primer Declarante - Domicilio habitual - Localidad / Población (26)
+28 232 5 Num Primer Declarante - Domicilio habitual - Código postal (27)
+29 237 5 Num Primer Declarante - Domicilio habitual - RESERVADO AEAT - Código Municipio INE
+30 242 30 An Primer Declarante - Domicilio habitual - Nombre del Municipio (28)
+31 272 2 Num Primer Declarante - Domicilio habitual - Código provincia. De "01" a "52".
+32 274 20 An Primer Declarante - Domicilio habitual - Provincia (29)
+33 294 9 Num Primer Declarante - Domicilio habitual - Teléfono fijo (30)
+34 303 9 Num Primer Declarante - Domicilio habitual - Teléfono móvil (31)
+35 312 9 Num Primer Declarante - Domicilio habitual - Núm. De Fax (32)
+36 321 50 An Primer Declarante - Domicilio extranjero - Domicilio/Address (35)
+37 371 40 An Primer Declarante - Domicilio extranjero - Datos complementarios del domicilio (36)
+38 411 30 An Primer Declarante - Domicilio extranjero - Población / Ciudad (37)
+39 441 100 An Primer Declarante - Domicilio extranjero - e-mail (38)
+Página 2
+
+# Pag. 3
+
+100-01
+Nº Posic. Long. Tipo Descripción Validación Contenido
+40 541 10 An Primer Declarante - Domicilio extranjero - Código Postal (39)
+41 551 30 An Primer Declarante - Domicilio extranjero - Provincia / Región / Estado (40)
+42 581 30 An Primer Declarante - Domicilio extranjero - País. (41)
+43 611 2 An Primer Declarante - Domicilio extranjero - Código País. Código país ISO-3166 (alfabético 2 letras). (42)
+44 613 15 An Primer Declarante - Domicilio extranjero - Teléfono fijo (43)
+45 628 15 An Primer Declarante - Domicilio extranjero - Teléfono móvil (44)
+46 643 15 An Primer Declarante - Domicilio extranjero - Núm. De Fax (45)
+47 658 1 Num Datos adicionales vivienda - Titularidad "1", "2", "3" o "4" (50) OBLIGATORIO
+48 659 5 Num Datos adicionales vivienda - Porcentaje participación Primer declarante (tres enteros, dos decimales) (51)
+49 664 5 Num Datos adicionales vivienda - Porcentaje participación Cónyuge (tres enteros, dos decimales) (52)
+50 669 1 Num Datos adicionales vivienda - Situación (clave) "1", "2", "3" o "4" (53)
+51 670 20 An Datos adicionales vivienda - Referencia catastral (54)
+52 690 1 Num Datos adicionales vivienda - Titularidad "0", "1", "2", "3" o "4" (50)
+53 691 5 Num Datos adicionales vivienda - Porcentaje participación Primer declarante (tres enteros, dos decimales) (51)
+54 696 5 Num Datos adicionales vivienda - Porcentaje participación Cónyuge (tres enteros, dos decimales) (52)
+55 701 1 Num Datos adicionales vivienda - Situación (clave) "0", "1", "2", "3" o "4" (53)
+56 702 20 An Datos adicionales vivienda - Referencia catastral (54)
+57 722 1 Num Datos adicionales vivienda - Titularidad "0", "1", "2", "3" o "4" (50)
+58 723 5 Num Datos adicionales vivienda - Porcentaje participación Primer declarante (tres enteros, dos decimales) (51)
+59 728 5 Num Datos adicionales vivienda - Porcentaje participación Cónyuge (tres enteros, dos decimales) (52)
+60 733 1 Num Datos adicionales vivienda - Situación (clave) "0", "1", "2", "3" o "4" (53)
+61 734 20 An Datos adicionales vivienda - Referencia catastral (54)
+62 754 1 Num Datos adicionales vivienda - Titularidad "0", "1", "2", "3" o "4" (50)
+6633 775555 55 NNuumm DDaattooss aaddiicciioonnaalleess vviivviieennddaa -- PPoorrcceennttaajjee ppaarrttiicciippaacciióónn PPrriimmeerr ddeeccllaarraannttee ((ttrreess eenntteerrooss, ddooss ddeecciimmaalleess)) ((5511))
+64 760 5 Num Datos adicionales vivienda - Porcentaje participación Cónyuge (tres enteros, dos decimales) (52)
+65 765 1 Num Datos adicionales vivienda - Situación (clave) "0", "1", "2", "3" o "4" (53)
+66 766 20 An Datos adicionales vivienda - Referencia catastral (54)
+67 786 9 An Datos adicionales vivienda - Nif Arrendador (55)
+68 795 9 An Cónyuge - NIF (61)
+69 804 15 A Cónyuge - Primer apellido (62)
+70 819 15 A Cónyuge - Segundo apellido (63)
+71 834 15 A Cónyuge - Nombre (64)
+72 849 1 A Cónyuge - Sexo "H" Hombre, "M" Mujer (65)
+73 850 8 Num Cónyuge - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero. (66)
+74 858 1 Num Cónyuge - Grado de discapacidad "0", "1", "2" o "3" (67)
+75 859 1 Num Cónyuge - No residente que no es contribuyente del I.R.P.F. - "1" o cero (68)
+76 860 1 Num Cónyuge - Cambio de domicilio "1" o cero (70)
+77 861 5 A Cónyuge - Domicilio habitual - Tipo de Vía (15)
+78 866 5 Num Cónyuge - Domicilio habitual - RESERVADO AEAT - Código Vía INE
+79 871 50 An Cónyuge - Domicilio habitual - Nombre de la Vía Pública (16)
+80 921 3 An Cónyuge - Domicilio habitual - Tipo de numeración. Valores: NUM;KM;S/N;OTR (17)
+81 924 5 Num Cónyuge - Domicilio habitual - Número de Casa (18)
+82 929 3 An Cónyuge - Domicilio habitual - Calificador del número. Valores: BIS;DUP;MOD;ANT;etc/metros si Tipo Num=KM. (19)
+83 932 3 An Cónyuge - Domicilio habitual - Bloque (20)
+Página 3
+
+# Pag. 4
+
+100-01
+Nº Posic. Long. Tipo Descripción Validación Contenido
+84 935 3 An Cónyuge - Domicilio habitual - Portal (21)
+85 938 3 An Cónyuge - Domicilio habitual - Escalera (22)
+86 941 3 An Cónyuge - Domicilio habitual - Planta (23)
+87 944 3 An Cónyuge - Domicilio habitual - Puerta (24)
+88 947 40 An Cónyuge - Domicilio habitual - Datos complementarios del Domicilio habitual (25)
+89 987 30 An Cónyuge - Domicilio habitual - Localidad / Población (26)
+90 1017 5 Num Cónyuge - Domicilio habitual - Código postal (27)
+91 1022 5 Num Cónyuge - Domicilio habitual - RESERVADO AEAT - Código Municipio INE
+92 1027 30 An Cónyuge - Domicilio habitual - Nombre del Municipio (28)
+93 1057 2 Num Cónyuge - Domicilio habitual - Código provincia. De "01" a "52".
+94 1059 20 An Cónyuge - Domicilio habitual - Provincia (29)
+95 1079 9 Num Cónyuge - Domicilio habitual - Teléfono fijo (30)
+96 1088 9 Num Cónyuge - Domicilio habitual - Teléfono móvil (31)
+97 1097 9 Num Cónyuge - Domicilio habitual - Núm. De Fax (32)
+98 1106 50 An Cónyuge - Domicilio extranjero - Domicilio/Address (35)
+99 1156 40 An Cónyuge - Domicilio extranjero - Datos complementarios del domicilio (36)
+100 1196 30 An Cónyuge - Domicilio extranjero - Población / Ciudad (37)
+101 1226 100 An Cónyuge - Domicilio extranjero - e-mail (38)
+102 1326 10 An Cónyuge - Domicilio extranjero - Código Postal (39)
+103 1336 30 An Cónyuge - Domicilio extranjero - Provincia / Región / Estado (40)
+104 1366 30 An Cónyuge - Domicilio extranjero - País (41)
+105 1396 2 An Cónyuge - Domicilio extranjero - Código País (42)
+106 1398 15 An Cónyuge - Domicilio extranjero - Teléfono fijo (43)
+110077 11441133 1155 AAnn CCóónnyyuuggee -- DDoommiicciilliioo eexxttrraannjjeerroo -- TTeellééffoonnoo mmóóvviill ((4444))
+108 1428 15 An Cónyuge - Domicilio extranjero - Núm. De Fax (45)
+109 1443 1 An RESERVADO PARA LA A.E.A.T. (Dejar en blanco)
+110 1444 9 An Representante - N.I.F. (75)
+111 1453 32 An Representante - Apellidos y nombre o razón social (76)
+112 1485 20 An Fecha declaración - Lugar
+113 1505 2 Num Fecha declaración - Fecha -Día
+114 1507 10 A Fecha declaración - Fecha - Mes
+115 1517 4 Num Fecha declaración - Fecha - Año
+116 1521 4 Num Código cuenta cliente - Entidad
+117 1525 4 Num Código cuenta cliente - Sucursal
+118 1529 2 Num Código cuenta cliente - DC
+119 1531 10 Num Código cuenta cliente - Número de cuenta
+120 1541 13 Num Nº de Justificante. RESERVADO PARA LA A.E.A.T. (Rellenar a ceros)
+121 1554 21 An RESERVADO PARA LA A.E.A.T. (Dejar en blanco) Incluye Nº Referencia PADRE
+122 1575 13 N Resultado de la declaración
+123 1588 1 Num Fraccionamiento del pago. "1" o cero
+124 1589 1 Num Domiciliación 2º plazo."1" o cero
+125 1590 1 Num Renuncia a la devolución. "1" o cero
+126 1591 1 Num Compensación entre cónyuges. "1" o cero
+127 1592 20An Identificador cliente EEDD. RESERVADO PARA LAS EEDD.
+Página 4
+
+# Pag. 5
+
+100-01
+Nº Posic. Long. Tipo Descripción Validación Contenido
+128 1612 13An SELLO ELECTRONICO RESERVADO PARA LA A.E.A.T. (Dejar en blanco)
+129 1625 9An Identificador de Fin de registro. OBLIGATORIO Constante </T10001>
+130 1634 2An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total 1635
+Página 5
+
+# Pag. 6
+
+100-02
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "02"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante. Blanco
+6 10 9 An Hijos y descendientes - 1º - N.I.F. (80)
+7 19 33 A Hijos y descendientes - 1º - Apellidos y nombre (81)
+8 52 8 Num Hijos y descendientes - 1º - Fecha de nacimiento.(DDMMAAAA) Año < 2013 o cero (82)
+9 60 8 Num Hijos y descendientes - 1º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+10 68 1 Num Hijos y descendientes - 1º - Grado discapacidad "0", "1", "2" o "3" (84)
+11 69 1 An Hijos y descendientes - 1º - Vinculación. clave:"1", "2", "3", "4", o blanco (85)
+12 70 1 An Hijos y descendientes - 1º - Otras situaciones clave:"1","2","3","4" o blanco (86)
+13 71 9 An Hijos y descendientes - 2º - N.I.F. (80)
+14 80 33 A Hijos y descendientes - 2º - Apellidos y nombre (81)
+15 113 8 Num Hijos y descendientes - 2º - Fecha de nacimiento.(DDMMAAAA) Año < 2013 o cero (82)
+16 121 8 Num Hijos y descendientes - 2º - Fecha adopción o acogimiento.(DDMMAAAA) Año < 2013 o cero (83)
+17 129 1 Num Hijos y descendientes - 2º - Grado discapacidad "0", "1", "2" o "3" (84)
+18 130 1 An Hijos y descendientes - 2º - Vinculación. clave:"1", "2", "3", "4", o blanco (85)
+1199 113311 11 AAnn HHiijjooss yy ddeesscceennddiieenntteess - 22º - OOttrraass ssiittuuaacciioonneess "11",,"22",,"33",,"44" oo bbllaannccoo ((8866))
+20 132 9 An Hijos y descendientes - 3º - N.I.F. (80)
+21 141 33 A Hijos y descendientes - 3º - Apellidos y nombre (81)
+22 174 8 Num Hijos y descendientes - 3º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+23 182 8 Num Hijos y descendientes - 3º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+24 190 1 Num Hijos y descendientes - 3º - Grado discapacidad "0", "1", "2" o "3" (84)
+25 191 1 An Hijos y descendientes - 3º - Vinculación. clave: "1", "2", "3", "4", o blanco (85)
+26 192 1 An Hijos y descendientes - 3º - Otras situaciones "1","2","3","4" o blanco (86)
+27 193 9 An Hijos y descendientes - 4º - N.I.F. (80)
+28 202 33 A Hijos y descendientes - 4º - Apellidos y nombre (81)
+29 235 8 Num Hijos y descendientes - 4º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+30 243 8 Num Hijos y descendientes - 4º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+31 251 1 Num Hijos y descendientes - 4º - Grado discapacidad "0", "1", "2" o "3" (84)
+32 252 1 An Hijos y descendientes - 4º - Vinculación. clave: "1", "2", "3", "4", o blanco (85)
+33 253 1 An Hijos y descendientes - 4º - Otras situaciones "1","2","3","4" o blanco (86)
+34 254 9 An Hijos y descendientes - 5º - N.I.F. (80)
+35 263 33 A Hijos y descendientes - 5º - Apellidos y nombre (81)
+36 296 8 Num Hijos y descendientes - 5º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+37 304 8 Num Hijos y descendientes - 5º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+38 312 1 Num Hijos y descendientes - 5º - Grado discapacidad "0", "1", "2" o "3" (84)
+39 313 1 An Hijos y descendientes - 5º - Vinculación. clave: "1", "2", "3", "4", o blanco (85)
+Página 6
+
+# Pag. 7
+
+100-02
+Nº Posic. Long. Tipo Descripción Validación Contenido
+40 314 1 An Hijos y descendientes - 5º - Otras situaciones "1","2","3","4" o blanco (86)
+41 315 9 An Hijos y descendientes - 6º - N.I.F. (80)
+42 324 33 A Hijos y descendientes - 6º - Apellidos y nombre (81)
+43 357 8 Num Hijos y descendientes - 6º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+44 365 8 Num Hijos y descendientes - 6º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+45 373 1 Num Hijos y descendientes - 6º - Grado discapacidad "0", "1", "2" o "3" (84)
+46 374 1 An Hijos y descendientes - 6º - Vinculación. clave: "1", "2", "3", "4", o blanco (85)
+47 375 1 An Hijos y descendientes - 6º - Otras situaciones "1","2","3","4" o blanco (86)
+48 376 9 An Hijos y descendientes - 7º - N.I.F. (80)
+49 385 33 A Hijos y descendientes - 7º - Apellidos y nombre (81)
+50 418 8 Num Hijos y descendientes - 7º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+51 426 8 Num Hijos y descendientes - 7º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+52 434 1 Num Hijos y descendientes - 7º - Grado discapacidad "0", "1", "2" o "3" (84)
+53 435 1 An Hijos y descendientes - 7º - Vinculación. clave: "1", "2", "3", "4", o blanco (85)
+54 436 1 An Hijos y descendientes - 7º - Otras situaciones "1","2","3","4" o blanco (86)
+55 437 9 An Hijos y descendientes - 8º - N.I.F. (80)
+56 446 33 A Hijos y descendientes - 8º - Apellidos y nombre (81)
+57 479 8 Num Hijos y descendientes - 8º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+58 487 8 Num Hijos y descendientes - 8º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+59 495 1 Num Hijos y descendientes - 8º - Grado discapacidad "0", "1", "2" o "3" (84)
+60 496 1 An Hijos y descendientes - 8º - Vinculación. clave:"1", "2", "3", "4", o blanco (85)
+61 497 1 An Hijos y descendientes - 8º - Otras situaciones "1","2","3","4" o blanco (86)
+62 498 9 An Hijos y descendientes - 9º - N.I.F. (80)
+6633 550077 3333 AA HHiijjooss yy ddeesscceennddiieenntteess -- 99ºº -- AAppeelllliiddooss yy nnoommbbrree ((8811))
+64 540 8 Num Hijos y descendientes - 9º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+65 548 8 Num Hijos y descendientes - 9º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+66 556 1 Num Hijos y descendientes - 9º - Grado discapacidad "0", "1", "2" o "3" (84)
+67 557 1 An Hijos y descendientes - 9º - Vinculación. clave: "1", "2", "3", "4", o blanco (85)
+68 558 1 An Hijos y descendientes - 9º - Otras situaciones "1","2","3","4" o blanco (86)
+69 559 9 An Hijos y descendientes - 10º - N.I.F. (80)
+70 568 33 A Hijos y descendientes - 10º - Apellidos y nombre (81)
+71 601 8 Num Hijos y descendientes - 10º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+72 609 8 Num Hijos y descendientes - 10º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+73 617 1 Num Hijos y descendientes - 10º - Grado discapacidad "0", "1", "2" o "3" (84)
+74 618 1 An Hijos y descendientes - 10º - Vinculación. clave:"1", "2", "3", "4", o blanco (85)
+75 619 1 An Hijos y descendientes - 10º - Otras situaciones "1","2","3","4" o blanco (86)
+76 620 9 An Hijos y descendientes - 11º - N.I.F. (80)
+77 629 33 A Hijos y descendientes - 11º - Apellidos y nombre (81)
+78 662 8 Num Hijos y descendientes - 11º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+79 670 8 Num Hijos y descendientes - 11º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+80 678 1 Num Hijos y descendientes - 11º - Grado discapacidad "0", "1", "2" o "3" (84)
+81 679 1 An Hijos y descendientes - 11º - Vinculación. clave: "1", "2", "3", "4", o blanco (85)
+82 680 1 An Hijos y descendientes - 11º - Otras situaciones "1","2","3","4" o blanco (86)
+83 681 9 An Hijos y descendientes - 12º - N.I.F. (80)
+Página 7
+
+# Pag. 8
+
+100-02
+Nº Posic. Long. Tipo Descripción Validación Contenido
+84 690 33 A Hijos y descendientes - 12º - Apellidos y nombre (81)
+85 723 8 Num Hijos y descendientes - 12º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (82)
+86 731 8 Num Hijos y descendientes - 12º - Fecha adopción o acogimiento. (DDMMAAAA) Año < 2013 o cero (83)
+87 739 1 Num Hijos y descendientes - 12º - Grado discapacidad "0", "1", "2" o "3" (84)
+88 740 1 An Hijos y descendientes - 12º - Vinculación. clave:"1", "2", "3", "4", o blanco (85)
+89 741 1 An Hijos y descendientes - 12º - Otras situaciones "1","2","3","4" o blanco (86)
+90 742 2 Num Hijos y descendientes - Fallecido 2012 - Nº Orden (87)
+91 744 8 Num Hijos y descendientes - Fecha de fallecimiento (DDMMAAAA) (88)
+92 752 2 Num Hijos y descendientes - Fallecido 2012 - Nº Orden (87)
+93 754 8 Num Hijos y descendientes - Fecha de fallecimiento (DDMMAAAA) (88)
+94 762 9 An Hijos y descendientes - A efectos de la declaración conjunta los hijos 1 y 2 son relacionados con los NIF
+95 771 9 An Hijos y descendientes - A efectos de la declaración conjunta los hijos 1 y 2 son relacionados con los NIF
+96 780 9 An Hijos y descendientes - Otro progenitor - Nif (56)
+97 789 33 A Hijos y descendientes - Otro progenitor - Apellidos y nombre (57)
+98 822 1 Num Si el otro progenitor no tiene NIF o NIE marque con una "X" esta casilla. "1" o cero.
+99 823 24 An RESERVADO PARA LA A.E.A.T. (Dejar en blanco)
+100 847 9 An Ascendientes mayores 65 años o discapacitados - 1º - N.I.F. (90)
+101 856 33 A Ascendientes mayores 65 años o discapacitados - 1º - Apellidos y nombre (91)
+102 889 8 Num Ascendientes mayores 65 años o discapacitados - 1º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (92)
+103 897 1 Num Ascendientes mayores 65 años o discapacitados - 1º - Grado discapacidad "0", "1", "2" o "3" (93)
+104 898 1 An Ascendientes mayores 65 años o discapacitados - 1º - Vinculación clave:"1", "2" o blanco (94)
+105 899 1 An Ascendientes mayores 65 años o discapacitados - 1º - Convivencia "2" a "9" o blanco (95)
+106 900 9 An Ascendientes mayores 65 años o discapacitados - 2º - N.I.F. (90)
+110077 990099 3333 AA AAsscceennddiieenntteess mmaayyoorreess 6655 aaññooss oo ddiissccaappaacciittaaddooss -- 22ºº -- AAppeelllliiddooss yy nnoommbbrree ((9911))
+108 942 8 Num Ascendientes mayores 65 años o discapacitados - 2º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (92)
+109 950 1 Num Ascendientes mayores 65 años o discapacitados - 2º - Grado discapacidad "0", "1", "2" o "3" (93)
+110 951 1 An Ascendientes mayores 65 años o discapacitados - 2º - Vinculación clave:"1", "2" o blanco (94)
+111 952 1 An Ascendientes mayores 65 años o discapacitados - 2º - Convivencia "2" a "9" o blanco (95)
+112 953 9 An Ascendientes mayores 65 años o discapacitados - 3º - N.I.F. (90)
+113 962 33 A Ascendientes mayores 65 años o discapacitados - 3º - Apellidos y nombre (91)
+114 995 8 Num Ascendientes mayores 65 años o discapacitados - 3º - Fecha de nacimiento.(DDMMAAAA) Año < 2013 o cero (92)
+115 1003 1 Num Ascendientes mayores 65 años o discapacitados - 3º - Grado discapacidad "0", "1", "2" o "3" (93)
+116 1004 1 An Ascendientes mayores 65 años o discapacitados - 3º - Vinculación clave:"1", "2" o blanco (94)
+117 1005 1 An Ascendientes mayores 65 años o discapacitados - 3º - Convivencia "2" a "9" o blanco (95)
+118 1006 9 An Ascendientes mayores 65 años o discapacitados - 4º - N.I.F. (90)
+119 1015 33 A Ascendientes mayores 65 años o discapacitados - 4º - Apellidos y nombre (91)
+120 1048 8 Num Ascendientes mayores 65 años o discapacitados - 4º - Fecha de nacimiento. (DDMMAAAA) Año < 2013 o cero (92)
+121 1056 1 Num Ascendientes mayores 65 años o discapacitados - 4º - Grado discapacidad "0", "1", "2" o "3" (93)
+122 1057 1 An Ascendientes mayores 65 años o discapacitados - 4º - Vinculación clave:"1", "2" o blanco (94)
+123 1058 1 An Ascendientes mayores 65 años o discapacitados - 4º - Convivencia "2" a "9" o blanco (95)
+124 1059 8 Num Devengo - Fecha de finalización del período impositivo (fallecimiento 2012) (DDMMAAAA) o cero (100)
+125 1067 1 Num Opción de tributación. "1" Individual, "2" Conjunta. Campo OBLIGATORIO (101) (102) OBLIGATORIO
+126 1068 2 Num Comunidad/Ciudad autónoma de residencia en 2012 - Clave (103) Incluido en el fichero COMAUTO.TXT OBLIGATORIO
+127 1070 1 A Asignación tributaria a la Iglesia Católica. "X" o blanco. (105)
+Página 8
+
+# Pag. 9
+
+100-02
+Nº Posic. Long. Tipo Descripción Validación Contenido
+128 1071 1 A Asignación de cantidades a fines sociales. "X" o blanco. (106)
+129 1072 1 Num Borrador Declaración o datos fiscales 2013. Recibir por correo ordinario y no visualizarlo por internet. "1" o cero (110)
+130 1073 1 Num Borrador Declaración o datos fiscales 2013. Obtener tributación individual. "1" o cero (111)
+131 1074 1 Num Declaración complementaria - Si es complementaria por atrasos de rendimientos del trabajo. "1" o cero (121)
+132 1075 1 Num Declaración complementaria - Si es complementaria por haberse producido alguno de los supuestos especiales. "1" o cero (122)
+133 1076 1 Num Declaración complementaria - Si es complementaria a devolver. "1" o cero (123)
+134 1077 1 Num Declaración complementaria - Si es complementaria por supuestos distintos "1" o cero (120)
+135 1078 1 Num Declaración complementaria - Si es complementaria por traslado de residencia a otro Estado miembro, "1" o cero (124)
+136 1079 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10002>
+137 1088 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total 1089
+Página 9
+
+# Pag. 10
+
+100-03
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "03"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 13 N (A) Rdto. Trabajo - Retribuciones dinerarias. Importe íntegro (001)
+7 23 13 N Rdto. Trabajo - Retribuciones en especie - Valoracion (002)
+8 36 13 N Rdto. Trabajo - Retribuciones en especie - Ingresos a cuenta (003)
+9 49 13 N Rdto. Trabajo - Retribuciones en especie - Ingresos a cuenta repercutidos (004)
+10 62 13 N Rdto. Trabajo - Retribuciones en especie - Importe íntegro (005)
+11 75 13 N Rdto. Trabajo - Contribuciones Planes Pensiones y Mutualidades Previsión Social - Importes (006)
+12 88 13 N Rdto. Trabajo - Aportaciones al patrimonio protegido de discapacitados - Importe (007)
+13 101 13 N Rdto. Trabajo - Reducciones - Importe (008)
+14 114 13 N Rdto. Trabajo - Total ingresos íntegros computables (009)
+15 127 13 N Rdto. Trabajo - Cotizaciones Seguridad Social/Mutual. grales. funcionarios/cotiz. colegios huerfanos (010)
+16 140 13 N Rdto. Trabajo - Cuotas satisfechas a sindicatos (011)
+17 153 13 N Rdto. Trabajo - Cuotas a colegios profesionales (012)
+18 166 13 N Rdto. Trabajo - Gastos defensa jurídica derivados litigios con empleador (013)
+19 179 13 N Rdto. Trabajo - Total gastos deducibles (014)
+20 192 13 N Rdto. Trabajo - Rendimiento neto (015)
+21 205 13 N Rdto. Trabajo - Reducción obtención rendimientos de trabajo. Cuantía aplicable con carácter general (017)
+2222 221188 1133 NN RRddttoo. TTrraabbaajjoo -- RReedduucccciióónn oobbtteenncciióónn rreennddiimmiieennttooss ddee ttrraabbaajjoo. IInnccrreemmeennttoo ttrraabbaajjaaddoorreess aaccttiivvooss >> 6655 aaññooss ((001188))
+23 231 13 N Rdto. Trabajo - Reducción obtención rendimientos de trabajo. Incremento contribuyentes desempleados con traslado de residencia (019)
+24 244 13 N Rdto. Trabajo - Reducción obtención rendimientos de trabajo. Reducción adicional para trabajadores activos discapacitados (020)
+25 257 13 N Rdto. Trabajo - Rendimiento neto reducido (021)
+26 270 13 N (B) Rdto.cap.mob.- Base imponible ahorro - Intereses de cuentas, depósitos y activos financieros (022)
+27 283 13 N Rdto.cap.mob.- Base imponible ahorro - Intereses de activos financieros con derecho a bonificación (023)
+28 296 13 N Rdto.cap.mob.- Base imponible ahorro - Dividendos y demás rendimientos por participación fondos propios entidades (024)
+29 309 13 N Rdto.cap.mob.- Base imponible ahorro - Rdtos. transmisión o amortización de Letras del Tesoro (025)
+30 322 13 N Rdto.cap.mob.- Base imponible ahorro - Rdtos. transmisión, amortización o reembolso otros activos financieros(026)
+31 335 13 N Rdto.cap.mob.- Base imponible ahorro - Rdtos. contratos seguro vida o invalidez y operaciones capitalización. (027)
+32 348 13 N Rdto.cap.mob.- Base imponible ahorro - Rdtos. Procedentes de rentas que tengan por causa la imposición de capitales (028)
+33 361 13 N Rdto.cap.mob.- Base imponible ahorro - Total ingresos íntegros (029)
+34 374 13 N Rdto.cap.mob.- Base imponible ahorro - Gastos fiscalmente deducibles (030)
+35 387 13 N Rdto.cap.mob.- Base imponible ahorro - Rendimiento neto (031)
+36 400 13 N Rdto.cap.mob.- Base imponible ahorro - Reducción rendimientos determinados contratos de seguro (032)
+37 413 13 N Rdto.cap.mob.- Base imponible ahorro - Rendimiento neto reducido (035)
+38 426 13 N (B) Rdto.cap.mob.- Base imponible general - Rendimientos arrendamiento bienes muebles, negocios, minas, subarrendamientos (040)
+39 439 13 N Rdto.cap.mob.- Base imponible general - Rendimientos prestación asistencia técnica, salvo actividad económica (041)
+40 452 13 N Rdto.cap.mob.- Base imponible general - Rendimientos propiedad intelectual contribuyente no autor (042)
+41 465 13 N Rdto.cap.mob.- Base imponible general - Rendimientos propiedad industrial no afecta a actividad económica (043)
+42 478 13 N Rdto.cap.mob.- Base imponible general - Otros rendimientos del capital mobiliario a integrar en base imponible general (044)
+43 491 13 N Rdto.cap.mob.- Base imponible general - Total ingresos íntegros (045)
+44 504 13 N Rdto.cap.mob.- Base imponible general - Gastos fiscalmente deducibles (046)
+45 517 13 N Rdto.cap.mob.- Base imponible general - Rendimiento neto (047)
+Página 10
+
+# Pag. 11
+
+100-03
+Nº Posic. Tipo Descripción Validación Contenido
+46 530 13 N Rdto.cap.mob.- Base imponible general - Reducciones de rendimientos generados en más de 2 años u obtenidos de forma irregular (048)
+47 543 13 N Rdto.cap.mob.- Base imponible general - Rendimiento neto reducido (050)
+48 556 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10003>
+49 565 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 566
+Página 11
+
+# Pag. 12
+
+100-04
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Com. Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "04"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A C Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 2 Num Nº de hojas adicionales que se adjuntan
+7 12 1 Tit C (C) Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Contribuyente "0" a "9" (060)
+8 13 5 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Porcentaje titularidad (3 enteros y 2 decimales) (061)
+9 18 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Naturaleza (062)
+10 19 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Uso o destino. Clave (063)
+11 20 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Situación "0", "1", "2", "3" o "4" (064)
+12 21 20 An C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Referencia catastral (065)
+13 41 5 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. A disposición. Porcentaje disposición (3 enteros y 2 decimales) (067)
+14 46 3 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. A disposición. Número de días (068)
+15 49 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. A disposición. Renta imputada (069)
+16 62 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Ingresos íntegros computables (070)
+17 75 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Gastos deducibles. Intereses. Importe pendiente (071)
+18 88 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Gastos deducibles. Intereses. Importe (072)
+1199 110011 1133 NN CC BBiieenneess iinnmmuueebblleess nnoo aaffeeccttooss. RReellaacciióónn iinnmmuueebblleess yy rreennttaass. IInnmmuueebbllee 11. AArrrreennddaaddoo oo cceeddiiddoo. GGaassttooss ddeedduucciibblleess. IInntteerreesseess. PPeennddiieennttee ddeedduucciirr ((007733))
+20 114 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Gastos deducibles. Otros gastos deducibles (074)
+21 127 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Rendimiento neto (075)
+22 140 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Reducción por arrendamiento destinado a vivienda (076)
+23 153 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Reducción rendimientos más de 2 años (077)
+24 166 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Rendimiento mínimo computable caso parentesto (078)
+25 179 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 1. Arrendado o cedido. Rendimiento neto reducido (079)
+26 192 1 Tit C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Contribuyente "0" a "9" (060)
+27 193 5 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Porcentaje titularidad (3 enteros y 2 decimales) (061)
+28 198 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Naturaleza (062)
+29 199 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Uso o destino. Clave (063)
+30 200 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Situación "0", "1", "2", "3" o "4" (064)
+31 201 20 An C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Referencia catastral (065)
+32 221 5 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. A disposición. Porcentaje disposición (3 enteros y 2 decimales) (067)
+33 226 3 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. A disposición. Número de días (068)
+34 229 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. A disposición. Renta imputada (069)
+35 242 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Ingresos íntegros computables (070)
+36 255 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Gastos deducibles. Intereses. Importe pendiente (071)
+37 268 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Gastos deducibles. Intereses. Importe (072)
+38 281 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Gastos deducibles. Intereses. Pendiente deducir (073)
+Página 12
+
+# Pag. 13
+
+100-04
+Nº Posic. Long. Tipo Com. Descripción Validación Contenido
+39 294 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Gastos deducibles. Otros gastos deducibles (074)
+40 307 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Rendimiento neto (075)
+41 320 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Reducción por arrendamiento destinado a vivienda (076)
+42 333 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Reducción rendimientos más de 2 años (077)
+43 346 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Rendimiento mínimo computable caso parentesto (078)
+44 359 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 2. Arrendado o cedido. Rendimiento neto reducido (079)
+45 372 1 Tit C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Contribuyente "0" a "9" (060)
+46 373 5 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Porcentaje titularidad (3 enteros y 2 decimales) (061)
+47 378 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Naturaleza (062)
+48 379 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Uso o destino. Clave (063)
+49 380 1 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Situación "0", "1", "2", "3" o "4" (064)
+50 381 20 An C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Referencia catastral (065)
+51 401 5 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. A disposición. Porcentaje disposición (3 enteros y 2 decimales) (067)
+52 406 3 Num C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. A disposición. Número de días (068)
+53 409 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. A disposición. Renta imputada (069)
+54 422 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Ingresos íntegros computables (070)
+55 435 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Gastos deducibles. Intereses. Importe pendiente (071)
+56 448 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Gastos deducibles. Intereses. Importe (072)
+57 461 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Gastos deducibles. Intereses. Pendiente deducir (073)
+58 474 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Gastos deducibles. Otros gastos deducibles (074)
+59 487 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Rendimiento neto (075)
+60 500 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Reducción por arrendamiento destinado a vivienda (076)
+61 513 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Reducción rendimientos más de 2 años (077)
+6622 552266 1133 NN CC BBiieenneess iinnmmuueebblleess nnoo aaffeeccttooss. RReellaacciióónn iinnmmuueebblleess yy rreennttaass. IInnmmuueebbllee 33. AArrrreennddaaddoo oo cceeddiiddoo. RReennddiimmiieennttoo mmíínniimmoo ccoommppuuttaabbllee ccaassoo ppaarreenntteessttoo ((007788))
+63 539 13 N C Bienes inmuebles no afectos. Relación inmuebles y rentas. Inmueble 3. Arrendado o cedido. Rendimiento neto reducido (079)
+64 552 13 N Bienes inmuebles no afectos. Rentas totales . Suma de rentas inmobiliarias imputadas (080)
+65 565 13 N Bienes inmuebles no afectos. Rentas totales . Suma rendimientos netos reducidos del capital inmobiliario (085)
+66 578 3 Num Número de inmuebles en declaración conjunta (Reservado para la Administración)
+67 581 1 Tit C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 1. Contribuyente "0" a "9" (094)
+68 582 9 An C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 1. NIF entidad (095)
+69 591 5 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 1. Porcentaje participación (3 enteros y 2 decimales) (096)
+70 596 1 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 1. Naturaleza (097)
+71 597 1 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 1. Situación "0", "1", "2", "3" o "4" (098)
+72 598 20 An C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 1. Referencia catastral (099)
+73 618 1 Tit C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 2. Contribuyente "0" a "9" (094)
+74 619 9 An C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 2. NIF entidad (095)
+75 628 5 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 2. Porcentaje participación (3 enteros y 2 decimales) (096)
+76 633 1 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 2. Naturaleza (097)
+77 634 1 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 2. Situación "0", "1", "2", "3" o "4" (098)
+78 635 20 An C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 2. Referencia catastral (099)
+79 655 1 Tit C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 3. Contribuyente "0" a "9" (094)
+80 656 9 An C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 3. NIF entidad (095)
+81 665 5 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 3. Porcentaje participación (3 enteros y 2 decimales) (096)
+Página 13
+
+# Pag. 14
+
+100-04
+Nº Posic. Long. Tipo Com. Descripción Validación Contenido
+82 670 1 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 3. Naturaleza (097)
+83 671 1 Num C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 3. Situación "0", "1", "2", "3" o "4" (098)
+84 672 20 An C Bienes inmuebles no afectos. Bienes inmuebles arrendados o cedidos. Inmueble 3. Referencia catastral (099)
+85 692 1 Tit C (D) Bienes inmuebles urbanos afectos. Inmueble 1. Contribuyente "0" a "9" (090)
+86 693 5 Num C Bienes inmuebles urbanos afectos. Inmueble 1. Porcentaje titularidad (3 enteros y 2 decimales) (091)
+87 698 1 Num C Bienes inmuebles urbanos afectos. Inmueble 1. Naturaleza (clave) (089)
+88 699 1 Num C Bienes inmuebles urbanos afectos. Inmueble 1. Situación "0", "1", "2", "3" o "4" (092)
+89 700 20 An C Bienes inmuebles urbanos afectos. Inmueble 1. Referencia catastral (093)
+90 720 1 Tit C Bienes inmuebles urbanos afectos. Inmueble 2. Contribuyente "0" a "9" (090)
+91 721 5 Num C Bienes inmuebles urbanos afectos. Inmueble 2. Porcentaje titularidad (3 enteros y 2 decimales) (091)
+92 726 1 Num C Bienes inmuebles urbanos afectos. Inmueble 2. Naturaleza (clave) (089)
+93 727 1 Num C Bienes inmuebles urbanos afectos. Inmueble 2. Situación "0", "1", "2", "3" o "4" (092)
+94 728 20 An C Bienes inmuebles urbanos afectos. Inmueble 2. Referencia catastral (093)
+95 748 1 Tit C Bienes inmuebles urbanos afectos. Inmueble 3. Contribuyente "0" a "9" (090)
+96 749 5 Num C Bienes inmuebles urbanos afectos. Inmueble 3. Porcentaje titularidad (3 enteros y 2 decimales) (091)
+97 754 1 Num C Bienes inmuebles urbanos afectos. Inmueble 3. Naturaleza (clave) (089)
+98 755 1 Num C Bienes inmuebles urbanos afectos. Inmueble 3. Situación "0", "1", "2", "3" o "4" (092)
+99 756 20 An C Bienes inmuebles urbanos afectos. Inmueble 3. Referencia catastral (093)
+100 776 9 An C Identificador de Fin de registro. OBLIGATORIO Constante </T10004>
+101 785 2 An C Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 786
+Página 14
+
+# Pag. 15
+
+100-05
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Com. Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "05"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A C Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 1 Num Nº de hojas adicionales si se declaran más de 3 Actividades a las que resulte aplicable un mismo régimen
+7 11 1 Num C (E1) Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Si ha presentado la autoliquidación del Gravamen único. "1" o cero. (134)
+8 12 1 Tit C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 1- Contribuyente "0" a "9" (100)
+9 13 1 An C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 1- Tipo actividad. Clave (Blanco o de "1" a "5") (101)
+10 14 1 Num C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 1- Modalidad Normal (103) o Simplificada (104) "0", "1" o "2"
+11 15 5 An C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 1- Epígrafe IAE (102) (**)
+12 20 1 Num C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 1- Criterio cobros/pagos. "1" o cero. (105)
+13 21 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 1- Explotación (106)
+14 34 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 1- Otros ingresos (107)
+15 47 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 1- Autoconsumo bienes/servicios (108)
+16 60 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 1- Transmisión elementos patrimoniales: exceso amortización deducida (135)
+17 73 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 1- Total ingresos computables (109)
+18 86 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Consumos de explotación (110)
+1199 9999 1133 NN CC RRddttoo.aaccttvv.eeccoonn.eesstt.ddiirreeccttaa - AAccttiivviiddaadd yy rrddttoo. oobbtteenniiddoo - GGaassttooss - AAccttiivviiddaadd 11- SSuueellddooss yy ssaallaarriiooss ((111111))
+20 112 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Seguridad Social (112)
+21 125 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Otros gastos de personal (113)
+22 138 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Arrendamientos y cánones (114)
+23 151 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Reparación y conservación (115)
+24 164 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Servicios profesionales independientes (116)
+25 177 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Otros servicios exteriores (117)
+26 190 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Tributos fiscalmente deducibles (118)
+27 203 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Gastos financieros (119)
+28 216 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Amortizaciones (120)
+29 229 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Pérdidas por deterioro (121)
+30 242 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Mecenazgo (convenios) (122)
+31 255 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Mecenazgo (gastos) (123)
+32 268 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Otros gastos fiscalmente deducibles (124)
+33 281 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Suma (125)
+34 294 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Modalidad Normal - Provisiones (126)
+35 307 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Modalidad Normal - Total gastos deducibles (127)
+36 320 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Modalidad Simplificada - Diferencia (128)
+37 333 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Modalidad Simplificada - Provisiones deduc./gastos difícil justif. (129)
+38 346 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 1- Modalidad Simplificada - Total gastos deducibles (130)
+Página 15
+
+# Pag. 16
+
+100-05
+Nº Posic. Long. Tipo Com. Descripción Validación Contenido
+39 359 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc. - Actividad 1- Rdto. neto (131)
+40 372 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc. - Actividad 1- Reducciones (132)
+41 385 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc.- Actividad -1- Rto. Neto reduc.(133)
+42 398 1 Tit C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 2- Contribuyente "0" a "9" (100)
+43 399 1 An C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 2- Tipo actividad.Clave (Blanco o de "1" a "5") (101)
+44 400 1 Num C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 2- Modalidad Normal (103) o Simplificada (104) "0", "1" o "2"
+45 401 5 An C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 2- Epígrafe IAE (102) (**)
+46 406 1 Num C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 2- Criterio cobros/pagos. "1" o cero. (105)
+47 407 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 2- Explotación (106)
+48 420 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 2- Otros ingresos (107)
+49 433 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 2- Autoconsumo bienes/servicios (108)
+50 446 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 2- Transmisión elementos patrimoniales: exceso amortización deducida (135)
+51 459 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 2- Total ingresos computables (109)
+52 472 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Consumos de explotación (110)
+53 485 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Sueldos y salarios 111)
+54 498 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Seguridad Social (112)
+55 511 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Otros gastos de personal (113)
+56 524 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Arrendamientos y cánones (114)
+57 537 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Reparación y conservación (115)
+58 550 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Servicios profesionales independientes (116)
+59 563 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Otros servicios exteriores (117)
+60 576 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Tributos fiscalmente deducibles (118)
+61 589 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Gastos financieros (119)
+6622 660022 1133 NN CC RRddttoo.aaccttvv.eeccoonn.eesstt.ddiirreeccttaa - AAccttiivviiddaadd yy rrddttoo. oobbtteenniiddoo - GGaassttooss - AAccttiivviiddaadd 22- AAmmoorrttiizzaacciioonneess ((112200))
+63 615 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Pérdidas por deterioro (121)
+64 628 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Mecenazgo (convenios) (122)
+65 641 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Mecenazgo (gastos) (123)
+66 654 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Otros gastos fiscalmente deducibles (124)
+67 667 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Suma de gastos (125)
+68 680 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Modalidad Normal - Provisiones (126)
+69 693 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Modalidad Normal - Total gastos deducibles (127)
+70 706 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Modalidad Simplificada - Diferencia (128)
+71 719 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Modalidad Simplificada - Provisiones deduc./gastos difícil justif. (129)
+72 732 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 2- Modalidad Simplificada - Total gastos deducibles (130)
+73 745 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc. - Actividad 2- Rdto. neto (131)
+74 758 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc. - Actividad 2- Reducciones (132)
+75 771 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc. - Actividad 2- Rto.neto reduc. (133)
+76 784 1 Tit C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 3- Contribuyente "0" a "9" (100)
+77 785 1 An C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 3- Tipo actividad.Clave (Blanco o de "1" a "5") (101)
+78 786 1 Num C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 3- Modalidad Normal (103) o Simplificada (104) "0", "1" o "2"
+79 787 5 An C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 3- Epígrafe IAE (102) (**)
+80 792 1 Num C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Actv.realizada - Actividad 3- Criterio cobros/pagos. "1" o cero. (105)
+81 793 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 3- Explotación (106)
+Página 16
+
+# Pag. 17
+
+100-05
+Nº Posic. Long. Tipo Com. Descripción Validación Contenido
+82 806 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 3- Otros ingresos (107)
+83 819 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 3- Autoconsumo bienes/servicios (108)
+84 832 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 3- Transmisión elementos patrimoniales: exceso amortización deducida (135)
+85 845 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Ingresos íntegros - Actividad 3- Total ingresos computables (109)
+86 858 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Consumos de explotación (110)
+87 871 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Sueldos y salarios (111)
+88 884 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Seguridad Social (112)
+89 897 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Otros gastos de personal (113)
+90 910 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Arrendamientos y cánones (114)
+91 923 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Reparación y conservación (115)
+92 936 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Servicios profesionales independientes (116)
+93 949 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Otros servicios exteriores (117)
+94 962 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Tributos fiscalmente deducibles (118)
+95 975 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Gastos financieros (119)
+96 988 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Amortizaciones (120)
+97 1001 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Pérdidas por deterioro (121)
+98 1014 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Mecenazgo (convenios) (122)
+99 1027 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Mecenazgo (gastos) (123)
+100 1040 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Otros gastos fiscalmente deducibles (124)
+101 1053 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Suma de gastos (125)
+102 1066 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Modalidad Normal - Provisiones (126)
+103 1079 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Modalidad Normal - Total gastos deducibles (127)
+104 1092 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Modalidad Simplificada - Diferencia (128)
+110055 11110055 1133 NN CC RRddttoo.aaccttvv.eeccoonn.eesstt.ddiirreeccttaa - AAccttiivviiddaadd yy rrddttoo. oobbtteenniiddoo - GGaassttooss - AAccttiivviiddaadd 33- MMooddaalliiddaadd SSiimmpplliiffiiccaaddaa - PPrroovviissiioonneess ddeedduucc.//ggaassttooss ddiiffíícciill jjuussttiiff. ((112299))
+106 1118 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Gastos - Actividad 3- Modalidad Simplificada - Total gastos deducibles (130)
+107 1131 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc. - Actividad 3- Rdto. neto (131)
+108 1144 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc. - Actividad 3- Reducciones (132)
+109 1157 13 N C Rdto.actv.econ.est.directa - Actividad y rdto. obtenido - Rdto. neto y rdto. neto reduc. - Actividad 3- Rto.neto reduc. (133)
+110 1170 13 N Rdto.actv.econ.est.directa - Rdto.neto reducido total en estimación directa - Suma de rendimientos netos reducidos (136)
+111 1183 13 N Rdto.actv.econ.est.directa - Rdto.neto reducido total en estimación directa - Reducción ejercicio determinadas actividades (137)
+112 1196 13 N Rdto.actv.econ.est.directa - Rdto.neto reducido total en estimación directa - Reducción por mantenimiento o creación de empleo (138)
+113 1209 13 N Rdto.actv.econ.est.directa - Rdto.neto reducido total en estimación directa - Rendimiento neto reducido total (140)
+114 1222 9 An C Identificador de Fin de registro. OBLIGATORIO Constante </T10005>
+115 1231 2 An C Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 1232
+(**) Cuando el código IAE tenga cuatro cifras significativas se insertará un punto entre la tercera y cuarta cifra. En otro caso se consignarán las tres cifras seguidas de dos
+blancos.
+Página 17
+
+# Pag. 18
+
+100-06
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "06"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A C Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 1 Num Nº de hojas adicionales si se declaran más de 2 actividades
+7 11 1 Num C (E2) Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Si ha presentado la autoliquidación del Gravamen único "1" o cero (148)
+8 12 5 An C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Clasificación IAE (151) (**)
+9 17 1 Tit C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Contribuyente titular actividad (150) "0" a "9"
+10 18 1 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Criterio cobros/pagos: "1" ó "0" (280)
+11 19 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 1 - Definición
+12 43 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 1 - Unidades (nº) (7 enteros y 2 decimales)
+13 52 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 1 - Rdto. por módulo (9 enteros y 2 decimales)
+14 63 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 2 - Definición
+15 87 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 2 - Unidades (nº) (7 enteros y 2 decimales)
+16 96 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 2 - Rdto. por módulo (9 enteros y 2 decimales)
+17 107 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 3 - Definición
+18 131 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 3 - Unidades (nº) (7 enteros y 2 decimales)
+1199 114400 1111 NN CC RRddttooss..aaccttiivv..eeccoonnóómm..eesstt..oobbjjeettiivvaa - AAcctt.. rreeaalliizz..//rrddttooss.. oobbtteenniiddooss - AAccttiivv.. 11ª - MMóódduulloo 33 - RRddttoo.. ppoorr mmóódduulloo ((99 eenntteerrooss yy 22 ddeecciimmaalleess))
+20 151 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 4 - Definición
+21 175 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 4 - Unidades (nº) (7 enteros y 2 decimales)
+22 184 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 4 - Rdto. por módulo (9 enteros y 2 decimales)
+23 195 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 5 - Definición
+24 219 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 5 - Unidades (nº) (7 enteros y 2 decimales)
+25 228 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 5 - Rdto. por módulo (9 enteros y 2 decimales)
+26 239 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 6 - Definición
+27 263 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 6 - Unidades (nº) (7 enteros y 2 decimales)
+28 272 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 6 - Rdto. por módulo (9 enteros y 2 decimales)
+29 283 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 7 - Definición
+30 307 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 7 - Unidades (nº) (7 enteros y 2 decimales)
+31 316 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Módulo 7 - Rdto. por módulo (9 enteros y 2 decimales)
+32 327 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Rdto. neto previo (suma) (152)
+33 340 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Minorizaciones por incentivos al empleo (153)
+34 353 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Minorizaciones por incentivos a la inversion (154)
+35 366 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Rdto. neto minorado (155)
+36 379 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Indice corrector especial (2 enteros y 2 decimales) (156)
+37 383 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Indice corr.empresas pequeña dimensión (2 enteros y 2 decimales) (157)
+38 387 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Indice corrector de temporada (2 enteros y 2 decimales) (158)
+39 391 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Indice corrector de exceso (2 enteros y 2 decimales) (159)
+Página 18
+
+# Pag. 19
+
+100-06
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+40 395 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Indice corr. por inicio nueva activ. (2 enteros y 2 decimales) (160)
+41 399 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Rdto. neto de módulos (161)
+42 412 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Reducción de carácter general (166)
+43 425 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Reducción para actividades económicas desarrolladas en el término municipal de Lorca (149)
+44 438 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Gastos extraordinarios circunstancias excepcionales (162)
+45 451 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Otras percepciones empresariales (163)
+46 464 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª -Rendimiento neto actividad (164)
+47 477 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Reducción art. 32.1 Ley del Impuesto (165)
+48 490 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Rendimiento neto reducido (167)
+49 503 5 An C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Clasificación IAE (151) (**)
+50 508 1 Tit C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Contribuyente titular actividad (150) "0" a "9"
+51 509 1 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 1ª - Criterio cobros/pagos: "1" ó "0" (280)
+52 510 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 1 - Definición
+53 534 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 1 - Unidades (nº) (7 enteros y 2 decimales)
+54 543 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 1 - Rdto. por módulo (9 enteros y 2 decimales)
+55 554 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 2 - Definición
+56 578 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 2 - Unidades (nº) (7 enteros y 2 decimales)
+57 587 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 2 - Rdto. por módulo (9 enteros y 2 decimales)
+58 598 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 3 - Definición
+59 622 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 3 - Unidades (nº) (7 enteros y 2 decimales)
+60 631 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 3 - Rdto. por módulo (9 enteros y 2 decimales)
+61 642 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 4 - Definición
+62 666 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 4 - Unidades (nº) (7 enteros y 2 decimales)
+6633 667755 1111 NN CC RRddttooss..aaccttiivv..eeccoonnóómm..eesstt..oobbjjeettiivvaa -- AAcctt.. rreeaalliizz..//rrddttooss.. oobbtteenniiddooss -- AAccttiivv.. 22ª -- MMóódduulloo 44 -- RRddttoo.. ppoorr mmóódduulloo ((99 eenntteerrooss yy 22 ddeecciimmaalleess))
+64 686 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 5 - Definición
+65 710 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 5 - Unidades (nº) (7 enteros y 2 decimales)
+66 719 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 5 - Rdto. por módulo (9 enteros y 2 decimales)
+67 730 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 6 - Definición
+68 754 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 6 - Unidades (nº) (7 enteros y 2 decimales)
+69 763 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 6 - Rdto. por módulo (9 enteros y 2 decimales)
+70 774 24 A C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 7 - Definición
+71 798 9 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 7 - Unidades (nº) (7 enteros y 2 decimales)
+72 807 11 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Módulo 7 - Rdto. por módulo (9 enteros y 2 decimales)
+73 818 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Rdto. neto previo (suma) (152)
+74 831 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Minorizaciones por incentivos al empleo (153)
+75 844 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Minorizaciones por incentivos a la inversion (154)
+76 857 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Rdto. neto minorado (155)
+77 870 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Indice corrector especial (2 enteros y 2 decimales) (156)
+78 874 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Indice corr.empresas pequeña dimensión (2 enteros y 2 decimales) (157)
+79 878 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Indice corrector de temporada (2 enteros y 2 decimales) (158)
+80 882 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Indice corrector de exceso (2 enteros y 2 decimales) (159)
+81 886 4 Num C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Indice corr. por inicio nueva activ. (2 enteros y 2 decimales) (160)
+82 890 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Rdto. neto de módulos (161)
+83 903 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Reducción de carácter general (166)
+Página 19
+
+# Pag. 20
+
+100-06
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+84 916 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Reducción para actividades económicas desarrolladas en el término municipal de Lorca (149)
+85 929 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Gastos extraordinarios circunstancias excepcionales (162)
+86 942 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Otras percepciones empresariales (163)
+87 955 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª -Rendimiento neto actividad (164)
+88 968 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Reducción art. 32.1 Ley del Impuesto (165)
+89 981 13 N C Rdtos.activ.económ.est.objetiva - Act. realiz./rdtos. obtenidos - Activ. 2ª - Rendimiento neto reducido (167)
+90 994 13 N Rdtos.activ.económ.est.objetiva - Rendimiento neto reducido total de las actividades económicas - Suma rendimientos netos reducidos (168)
+91 1007 13 N Rdtos.activ.económ.est.objetiva - Rendimiento neto reducido total de las actividades económicas - Reducción por mantenimiento o creación de empleo (169)
+92 1020 13 N Rdtos.activ.económ.est.objetiva - Rendimiento neto reducido total de las actividades económicas (170)
+93 1033 9 An C Identificador de Fin de registro. OBLIGATORIO Constante </T10006>
+94 1042 2 An C Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+1043
+(**) Cuando el código IAE tenga cuatro cifras significativas se insertará un punto entre la tercera y cuarta cifra. En otro caso se consignaran las tres cifras seguidas de dos
+blancos.
+Página 20
+
+# Pag. 21
+
+100-07
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "07"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A C Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 1 Num Nº de hojas adicionales si se declaran más de 2 Actividades
+7 11 1 Num C (E3) Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Si ha presentado la autoliquidación del Gravamen único "1" o cero (177)
+8 12 1 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Clave actividad: de "0" a "9" (172)
+9 13 1 Tit C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Contribuyente titular de actividad: de "0" a "9" (171)
+10 14 1 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Criterio cobros/pagos: "1" ó "0" (173)
+11 15 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 1º - Ingresos íntegros
+12 26 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 1º - Índice
+13 32 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 1º - Rdto. base producto
+14 43 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 2º - Ingresos íntegros
+15 54 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 2º - Índice
+16 60 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 2º - Rdto. base producto
+17 71 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 3º - Ingresos íntegros
+18 82 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 3º - Índice
+1199 8888 1111 NN CC RRddttooss. aaggrríícc.ggaannaadd.yy ffoorreesstt. eesstt. oobbjjeettiivvaa --AAcctt. rreeaalliizz.//rrddttooss-- AAccttiivv 11ªª -- PPrroodduuccttoo 33ºº -- RRddttoo. bbaassee pprroodduuccttoo
+20 99 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 4º - Ingresos íntegros
+21 110 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 4º - Índice
+22 116 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 4º - Rdto. base producto
+23 127 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 5º - Ingresos íntegros
+24 138 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 5º - Índice
+25 144 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 5º - Rdto. base producto
+26 155 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 6º - Ingresos íntegros
+27 166 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 6º - Índice
+28 172 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 6º - Rdto. base producto
+29 183 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 7º - Ingresos íntegros
+30 194 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 7º - Índice
+31 200 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 7º - Rdto. base producto
+32 211 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 8º - Ingresos íntegros
+33 222 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 8º - Índice
+34 228 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 8º - Rdto. base producto
+35 239 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 9º - Ingresos íntegros
+36 250 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 9º - Índice
+37 256 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 9º - Rdto. base producto
+38 267 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 10º - Ingresos íntegros
+Página 21
+
+# Pag. 22
+
+100-07
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+39 278 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 10º - Índice
+40 284 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 10º - Rdto. base producto
+41 295 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 11º - Ingresos íntegros
+42 306 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 11º - Índice
+43 312 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 11º - Rdto. base producto
+44 323 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 12º - Ingresos íntegros
+45 334 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 12º - Índice
+46 340 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 12º - Rdto. base producto
+47 351 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 13º - Ingresos íntegros
+48 362 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 13º - Índice
+49 368 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Producto 13º - Rdto. base producto
+50 379 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Total ingresos íntegros (174)
+51 390 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Rendimiento neto previo (suma) (175)
+52 401 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Reducciones (176)
+53 412 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Amortización inmovilizado (178)
+54 423 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Rdto. neto minorado (179)
+55 434 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Ind. correct.-Medios ajenos (2 enteros y 2 decimales) (180)
+56 438 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Ind. correct.-Utiliz. personal asalariado (2 enteros y 2 decimales) (181)
+57 442 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Ind. correct.-Cultivos tierras arrendadas (2 enteros y 2 decimales) (182)
+58 446 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Ind. correct.- Piensos adquir. 3º,más del 50 % (2 enteros y 2 decimales) Índice 1 (183)
+59 450 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Ind. correct.- Piensos adquir. 3º, >50 % (2 enteros y 2 decimales) Índice 2 (183) Ver NOTA
+60 454 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Ind. correct.-Activ.agricultura ecológica (2 enteros y 2 decimales) (184)
+61 458 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Ind. correct.-Empresa no supera 9447,91 € (2 enteros y 2 decimales) (185)
+6622 446622 44 NNuumm CC RRddttooss. aaggrríícc.ggaannaadd.yy ffoorreesstt. eesstt. oobbjjeettiivvaa --AAcctt. rreeaalliizz.//rrddttooss-- AAccttiivv 11ªª -- IInndd. ccoorrrreecctt.--DDeetteerrmmiinn. aaccttiivv. ffoorreessttaalleess ((22 eenntteerrooss yy 22 ddeecciimmaalleess)) ((118866))
+63 466 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Rdto. neto de módulos (187)
+64 479 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Reducción carácter general (188)
+65 492 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Diferencia (189)
+66 505 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Reducción agricultores jóvenes (190)
+67 518 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Gastos extraordinarios por circunstancias excepcionales (191)
+68 531 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Rendimiento neto (192)
+69 544 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Reducciones rendimientos generados más 2 años o forma irregular (193)
+70 557 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 1ª - Rendimiento neto reducido (194)
+71 570 1 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Clave actividad: de "0" a "9" (172)
+72 571 1 Tit C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Contribuyente titular de actividad: de "0" a "9" (171)
+73 572 1 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Criterio cobros/pagos: "1" ó "0" (173)
+74 573 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 1º - Ingresos íntegros
+75 584 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 1º - Índice
+76 590 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 1º - Rdto. base producto
+77 601 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 2º - Ingresos íntegros
+78 612 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 2º - Índice
+79 618 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 2º - Rdto. base producto
+80 629 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 3º - Ingresos íntegros
+81 640 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 3º - Índice
+Página 22
+
+# Pag. 23
+
+100-07
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+82 646 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 3º - Rdto. base producto
+83 657 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 4º - Ingresos íntegros
+84 668 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 4º - Índice
+85 674 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 4º - Rdto. base producto
+86 685 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 5º - Ingresos íntegros
+87 696 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 5º - Índice
+88 702 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 5º - Rdto. base producto
+89 713 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 6º - Ingresos íntegros
+90 724 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 6º - Índice
+91 730 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 6º - Rdto. base producto
+92 741 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 7º - Ingresos íntegros
+93 752 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 7º - Índice
+94 758 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 7º - Rdto. base producto
+95 769 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 8º - Ingresos íntegros
+96 780 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 8º - Índice
+97 786 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 8º - Rdto. base producto
+98 797 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 9º - Ingresos íntegros
+99 808 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 9º - Índice
+100 814 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 9º - Rdto. base producto
+101 825 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 10º - Ingresos íntegros
+102 836 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 10º - Índice
+103 842 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 10º - Rdto. base producto
+104 853 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 11º - Ingresos íntegros
+110055 886644 66 AAnn CC RRddttooss. aaggrríícc.ggaannaadd.yy ffoorreesstt. eesstt. oobbjjeettiivvaa --AAcctt. rreeaalliizz.//rrddttooss-- AAccttiivv 22ªª -- PPrroodduuccttoo 1111ºº -- ÍÍnnddiiccee
+106 870 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 11º - Rdto. base producto
+107 881 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 12º - Ingresos íntegros
+108 892 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 12º - Índice
+109 898 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 12º - Rdto. base producto
+110 909 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 13º - Ingresos íntegros
+111 920 6 An C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 13º - Índice
+112 926 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Producto 13º - Rdto. base producto
+113 937 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Total ingresos íntegros (174)
+114 948 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Rendimiento neto previo (suma) (175)
+115 959 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Reducciones (176)
+116 970 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Amortizacion inmovilizado (178)
+117 981 11 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Rdto. neto minorado (179)
+118 992 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Ind. correct.-Medios ajenos (2 enteros y 2 decimales) (180)
+119 996 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Ind. correct.-Utiliz. personal asalariado (2 enteros y 2 decimales) (181)
+120 1000 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Ind. correct.-Cultivos tierras arrendadas (2 enteros y 2 decimales) (182)
+121 1004 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Ind. correct.- Piensos adquir. 3º,más del 50 % (2 enteros y 2 decimales) Índice 1 (183)
+122 1008 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Ind. correct.- Piensos adquir. 3º, >50 % (2 enteros y 2 decimales) Índice 2 (183) Ver NOTA
+123 1012 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Ind. correct.-Activ.agricultura ecológica (2 enteros y 2 decimales) (184)
+124 1016 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Ind. correct.-Empresa no supera 9447,91 € (2 enteros y 2 decimales) (185)
+Página 23
+
+# Pag. 24
+
+100-07
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+125 1020 4 Num C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Ind. correct.-Determin. activ. forestales (2 enteros y 2 decimales) (186)
+126 1024 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Rdto. neto de módulos (187)
+127 1037 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Reducción carácter general (188)
+128 1050 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Diferencia (189)
+129 1063 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Reducción agricultores jóvenes (190)
+130 1076 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Gastos extraordinarios por circunstancias excepcionales (191)
+131 1089 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Rendimiento neto (192)
+132 1102 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Reducciones rendimientos generados más 2 años o forma irregular (193)
+133 1115 13 N C Rdtos. agríc.ganad.y forest. est. objetiva -Act. realiz./rdtos- Activ 2ª - Rendimiento neto reducido (194)
+134 1128 13 N Rdtos. agríc.ganad.y forest. est. objetiva - Rendimiento neto reducido total actividades agrícolas - Suma rendimientos netos reducidos (195)
+135 1141 13 N Rdtos. agríc.ganad.y forest. est. objetiva - Rendimiento neto reducido total actividades agrícolas - Reducción por mantenimiento o creación de empleo (196)
+136 1154 13 N Rdtos. agríc.ganad.y forest. est. objetiva - Rendimiento neto reducido total actividades agrícolas - Rendimiento neto reducido total (197)
+137 1167 9 An C Identificador de Fin de registro. OBLIGATORIO Constante </T10007>
+138 1176 2 An C Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 1177
+NOTA: Cumplimentar sólo cuando el índice 2 sea distinto al índice 1.
+Página 24
+
+# Pag. 25
+
+100-08
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "08"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A C Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 1 Num Nº de hojas adicionales si se declaran más de 3 imputaciones
+7 11 1 Num C Regs. especiales - Régimen atribución rentas - Entidad 1 - Entidades y contribuyentes partícipes - Si ha presentando la autoliquidación del Gravamen único "1" o cero. (286)
+8 12 1 Tit C (F) Regs. especiales - Régimen atribución rentas - Entidad 1 - Entidades y contribuyentes partícipes - Contribuyente "0" a "9" (200)
+9 13 9 An C Regs. especiales - Régimen atribución rentas - Entidad 1 - Entidades y contribuyentes partícipes - NIF Entidad (201)
+10 22 4 Num C Regs. especiales - Régimen atribución rentas - Entidad 1 - Entidades y contribuyentes partícipes - Porcentaje participación (202)
+11 26 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Rdto. neto atribuido (203)
+12 39 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Reducciones y minoraciones (204)
+13 52 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Rdto. neto computable (205)
+14 65 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. capital mobiliario. - Rdtos. integrar base imponible ahorro . Rdto. neto (206)
+15 78 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. capital inmobiliario - Rdto. neto atribuido (209)
+16 91 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. capital inmobiliario - Reducciones y minoraciones (210)
+17 104 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. capital inmobiliario - Rdto. neto computable (211)
+18 117 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. actividades económicas - Rdto. neto atribuido (212)
+1199 113300 1133 NN CC RReeggss. eessppeecciiaalleess -- RRééggiimmeenn aattrriibbuucciióónn rreennttaass -- EEnnttiiddaadd 11 -- RRddttooss. aaccttiivviiddaaddeess eeccoonnóómmiiccaass -- RReedduucccciioonneess yy mmiinnoorraacciioonneess ((221133))
+20 143 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Rdtos. actividades económicas - Rdto. neto computable (214)
+21 156 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Atribución ganancias y pérdidas - No derivadas transmisión - Ganancias (215)
+22 169 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Atribución ganancias y pérdidas - No derivadas transmisión - Pérdidas (216)
+23 182 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Atribución ganancias y pérdidas - Derivadas transmisión - Ganancias (217)
+24 195 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Atribución ganancias y pérdidas - Derivadas transmisión - Pérdidas (218)
+25 208 13 N C Regs. especiales - Régimen atribución rentas - Entidad 1 - Retenciones e ingresos a cuenta. - Retenciones e ingresos atribuidos (219)
+26 221 1 Tit C Regs. especiales - Régimen atribución rentas - Entidad 2 - Entidades y contribuyentes partícipes - Contribuyente "0" a "9" (200)
+27 222 9 An C Regs. especiales - Régimen atribución rentas - Entidad 2 - Entidades y contribuyentes partícipes - NIF Entidad (201)
+28 231 4 Num C Regs. especiales - Régimen atribución rentas - Entidad 2 - Entidades y contribuyentes partícipes - Porcentaje participación (202)
+29 235 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Rdto. neto atribuido (203)
+30 248 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Reducciones y minoraciones (204)
+31 261 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Rdto. neto computable (205)
+32 274 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. capital mobiliario. - Rdtos. integrar base imponible ahorro . Rdto. neto (206)
+33 287 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. capital inmobiliario - Rdto. neto atribuido (209)
+34 300 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. capital inmobiliario - Reducciones y minoraciones (210)
+35 313 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. capital inmobiliario - Rdto. neto computable (211)
+36 326 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. actividades económicas - Rdto. neto atribuido (212)
+37 339 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. actividades económicas - Reducciones y minoraciones (213)
+38 352 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Rdtos. actividades económicas - Rdto. neto computable (214)
+Página 25
+
+# Pag. 26
+
+100-08
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+39 365 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Atribución ganancias y pérdidas - No derivadas transmisión - Ganancias (215)
+40 378 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Atribución ganancias y pérdidas - No derivadas transmisión - Pérdidas (216)
+41 391 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Atribución ganancias y pérdidas - Derivadas transmisión - Ganancias (217)
+42 404 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Atribución ganancias y pérdidas - Derivadas transmisión - Pérdidas (218)
+43 417 13 N C Regs. especiales - Régimen atribución rentas - Entidad 2 - Retenciones e ingresos a cuenta. - Retenciones e ingresos atribuidos (219)
+44 430 1 Tit C Regs. especiales - Régimen atribución rentas - Entidad 3 - Entidades y contribuyentes partícipes - Contribuyente "0" a "9" (200)
+45 431 9 An C Regs. especiales - Régimen atribución rentas - Entidad 3 - Entidades y contribuyentes partícipes - NIF Entidad (201)
+46 440 4 Num C Regs. especiales - Régimen atribución rentas - Entidad 3 - Entidades y contribuyentes partícipes - Porcentaje participación (202)
+47 444 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Rdto. neto atribuido (203)
+48 457 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Reducciones y minoraciones (204)
+49 470 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. capital mobiliario. - Rdto. integrar base imponible general - Rdto. neto computable (205)
+50 483 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. capital mobiliario. - Rdtos. integrar base imponible ahorro . Rdto. neto (206)
+51 496 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. capital inmobiliario - Rdto. neto atribuido (209)
+52 509 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. capital inmobiliario - Reducciones y minoraciones (210)
+53 522 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. capital inmobiliario - Rdto. neto computable (211)
+54 535 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. actividades económicas - Rdto. neto atribuido (212)
+55 548 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. actividades económicas - Reducciones y minoraciones (213)
+56 561 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Rdtos. actividades económicas - Rdto. neto computable (214)
+57 574 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Atribución ganancias y pérdidas - No derivadas transmisión - Ganancias (215)
+58 587 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Atribución ganancias y pérdidas - No derivadas transmisión - Pérdidas (216)
+59 600 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Atribución ganancias y pérdidas - Derivadas transmisión - Ganancias (217)
+60 613 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Atribución ganancias y pérdidas - Derivadas transmisión - Pérdidas (218)
+61 626 13 N C Regs. especiales - Régimen atribución rentas - Entidad 3 - Retenciones e ingresos a cuenta. - Retenciones e ingresos atribuidos (219)
+6622 663399 1133 NN RReeggss. eessppeecciiaalleess -- RRééggiimmeenn aattrriibbuucciióónn rreennttaass -- TToottaall -- RRddttooss. ccaappiittaall mmoobbiilliiaarriioo -- RRddttoo. iinntteeggrraarr bbaassee iimmppoonniibbllee ggeenneerraall -- TToottaall rrddttoo. nneettoo ccoommppuuttaabbllee ((222200))
+63 652 13 N Regs. especiales - Régimen atribución rentas - Total - Rdtos. capital mobiliario - Rdto. integrar base imponible ahorro - Total rdto. neto atribuido (221)
+64 665 13 N Regs. especiales - Régimen atribución rentas - Total - Rdtos. capital inmobiliario - Total rdto. neto computable (222)
+65 678 13 N Regs. especiales - Régimen atribución rentas - Total - Rdtos. actividades económicas - Total rdto. neto computable (223)
+66 691 13 N Regs. especiales - Régimen atribución rentas - Total - Atribución ganancias y pérdidas - No derivadas transmisión - Total ganancias (224)
+67 704 13 N Regs. especiales - Régimen atribución rentas - Total - Atribución ganancias y pérdidas - No derivadas transmisión - Total pérdidas (225)
+68 717 13 N Regs. especiales - Régimen atribución rentas - Total - Atribución ganancias y pérdidas - Derivadas transmisión - Total ganancias (226)
+69 730 13 N Regs. especiales - Régimen atribución rentas - Total - Atribución ganancias y pérdidas - Derivadas transmisión - Total pérdidas (227)
+70 743 13 N Regs. especiales - Régimen atribución rentas - Total - Retenciones e ingresos a cuenta - Total retenciones e ingresos atribuidos (746)
+71 756 1 Tit C Regs. especiales - Agrupac., ute - Entidad 1- Entidades y contribuyentes socios. Contribuyente "0" a "9" (230)
+72 757 9 An C Regs. especiales - Agrupac., ute - Entidad 1- Entidades y contribuyentes socios. N.I.F. Entidad (231)
+73 766 1 An C Regs. especiales - Agrupac., ute - Entidad 1- Entidades y contribuyentes socios. Criterio imputación temporal. Clave (blanco, "1" ó "2") (232)
+74 767 13 N C Regs. especiales - Agrupac., ute - Entidad 1- Imput. base impon. y deduc. - Base imponible imputada (233)
+75 780 13 N C Regs. especiales - Agrupac., ute - Entidad 1- Imput. base impon. y deduc. - Deduc. invers. empres. (234)
+76 793 13 N C Regs. especiales - Agrupac., ute - Entidad 1- Imput. base impon. y deduc. - Deduc. creación empleo (235)
+77 806 13 N C Regs. especiales - Agrupac., ute - Entidad 1- Imput. base impon. y deduc. - Deduc. rentas Ceuta/Melilla (236)
+78 819 13 N C Regs. especiales - Agrupac., ute - Entidad 1- Imput. base impon. y deduc. - Deduc. doble impos. internac. (237)
+79 832 13 N C Regs. especiales - Agrupac., ute - Entidad 1- Imput. Ret.e.ingresos cta. - Retenc. e ingresos a cta. imputados (239)
+80 845 1 Tit C Regs. especiales - Agrupac., ute - Entidad 2- Entidades y contribuyentes socios. Contribuyente "0" a "9" (230)
+81 846 9 An C Regs. especiales - Agrupac., ute - Entidad 2- Entidades y contribuyentes socios. N.I.F. Entidad (231)
+Página 26
+
+# Pag. 27
+
+100-08
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+82 855 1 An C Regs. especiales - Agrupac., ute - Entidad 2- Entidades y contribuyentes socios. Criterio imputación temporal. Clave (blanco, "1" ó "2") (232)
+83 856 13 N C Regs. especiales - Agrupac., ute - Entidad 2- Imput. base impon. y deduc. - Base imponible imputada (233)
+84 869 13 N C Regs. especiales - Agrupac., ute - Entidad 2- Imput. base impon. y deduc. - Deduc. invers. empres. (234)
+85 882 13 N C Regs. especiales - Agrupac., ute - Entidad 2- Imput. base impon. y deduc. - Deduc. creación empleo (235)
+86 895 13 N C Regs. especiales - Agrupac., ute - Entidad 2- Imput. base impon. y deduc. - Deduc. rentas Ceuta/Melilla (236)
+87 908 13 N C Regs. especiales - Agrupac., ute - Entidad 2- Imput. base impon. y deduc. - Deduc. doble impos. internac. (237)
+88 921 13 N C Regs. especiales - Agrupac., ute - Entidad 2- Imput. Ret.e.ingresos cta. - Retenc. e ingresos a cta. imputados (239)
+89 934 1 Tit C Regs. especiales - Agrupac., ute - Entidad 3- Entidades y contribuyentes socios. Contribuyente "0" a "9" (230)
+90 935 9 An C Regs. especiales - Agrupac., ute - Entidad 3- Entidades y contribuyentes socios. N.I.F. Entidad (231)
+91 944 1 An C Regs. especiales - Agrupac., ute - Entidad 3- Entidades y contribuyentes socios. Criterio imputación temporal. Clave (blanco, "1" ó "2") (232)
+92 945 13 N C Regs. especiales - Agrupac., ute - Entidad 3- Imput. base impon. y deduc. - Base imponible imputada (233)
+93 958 13 N C Regs. especiales - Agrupac., ute - Entidad 3- Imput. base impon. y deduc. - Deduc. invers. empres. (234)
+94 971 13 N C Regs. especiales - Agrupac., ute - Entidad 3- Imput. base impon. y deduc. - Deduc. creación empleo (235)
+95 984 13 N C Regs. especiales - Agrupac., ute - Entidad 3- Imput. base impon. y deduc. - Deduc. rentas Ceuta/Melilla (236)
+96 997 13 N C Regs. especiales - Agrupac., ute - Entidad 3- Imput. base impon. y deduc. - Deduc. doble impos. internac. (237)
+97 1010 13 N C Regs. especiales - Agrupac., ute - Entidad 3- Imput. Ret.e.ingresos cta. - Retenc. e ingresos a cta. imputados (239)
+98 1023 13 N Regs. especiales - Agrupac., ute - Total base imponible imputada (245)
+99 1036 13 N Regs. especiales - Agrupac., ute - Total Retenciones e ingresos a cta. imputados (747)
+100 1049 1 Tit C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 1 - Contribuyente "0" a "9" (250)
+101 1050 24 An C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 1 - Denominación entidad no residente (251)
+102 1074 1 An C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 1 - Criterio imput. temporal. Clave (blanco, "1" ó "2") (252)
+103 1075 13 N C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 1 - Importe imputación (253)
+104 1088 1 Tit C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 2 - Contribuyente "0" a "9" (250)
+110055 11008899 2244 AAnn CC RReeggss. eessppeecciiaalleess -- IImmppuuttaacc. rreennttaass rreegg. ttrraannsspp. ffiissccaall iinntteerrnnaacciioonnaall -- EEnnttiiddaadd 22 -- DDeennoommiinnaacciióónn eennttiiddaadd nnoo rreessiiddeennttee ((225511))
+106 1113 1 An C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 2 - Criterio imput. temporal. Clave (blanco, "1" ó "2") (252)
+107 1114 13 N C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 2 - Importe imputación (253)
+108 1127 1 Tit C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 3 - Contribuyente "0" a "9" (250)
+109 1128 24 An C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 3 - Denominación entidad no residente (251)
+110 1152 1 An C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 3 - Criterio imput. temporal. Clave (blanco, "1" ó "2") (252)
+111 1153 13 N C Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Entidad 3 - Importe imputación (253)
+112 1166 13 N Regs. especiales - Imputac. rentas reg. transp. fiscal internacional - Total importe de la imputación (255)
+113 1179 1 Tit Regs. especiales - Imputac. rentas derechos imagen - Contribuyente que debe efectuar la imputacion. "0" a "9" (260)
+114 1180 25 An Regs. especiales - Imputac. rentas derechos imagen - NIF o denominación persona/entidad cesionaria derechos imagen (261)
+115 1205 25 An Regs. especiales - Imputac. rentas derechos imagen - NIF o denominación persona/entidad relación laboral (262)
+116 1230 13 N Regs. especiales - Imputac. rentas derechos imagen - Cantidad a imputar (265)
+117 1243 1 Tit C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 1 - Contribuyente "0" a "9" (270)
+118 1244 24 An C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 1 - Denominación Institución (271)
+119 1268 13 N C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 1 - Importe imputación (272)
+120 1281 1 Tit C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 2 - Contribuyente "0" a "9" (270)
+121 1282 24 An C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 2 - Denominación Institución (271)
+122 1306 13 N C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 2 - Importe imputación (272)
+123 1319 1 Tit C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 3 - Contribuyente "0" a "9" (270)
+124 1320 24 An C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 3 - Denominación Institución (271)
+Página 27
+
+# Pag. 28
+
+100-08
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+125 1344 13 N C Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - I. I. C. 3 - Importe imputación (272)
+126 1357 13 N Regs. especiales - Imputac.rentas I. I.Colectiva paraísos fiscales - Total importe de la imputación (275)
+127 1370 9 An C Identificador de Fin de registro. OBLIGATORIO Constante </T10008>
+128 1379 2 An C Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 1380
+Página 28
+
+# Pag. 29
+
+100-09
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. Constante "<T" OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "09"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A C Indicador de página complementaria. Blanco ( No complementaria) o "C" (Complementaria)
+6 10 1 Num Nº hojas adicionales que se adjuntan
+7 11 13 N (G1) Ganancias/pérdidas patrimoniales no derivan transmisión - Premios juegos, concursos, rifas - Premio en metálico - Importe total (300)
+8 24 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Premios juegos, concursos, rifas - Premio en especie - Valoración (301)
+9 37 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Premios juegos, concursos, rifas - Premio en especie - Ingresos a cuenta (302)
+10 50 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Premios juegos, concursos, rifas - Premio en especie - Ingresos a cuenta repercutidos (303)
+11 63 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Premios juegos, concursos, rifas - Premios en especie - Importe computable (304)
+12 76 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Premios juegos, concursos, rifas - Premios exentos (305)
+13 89 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Otras Ganancias/pérdidas - Subvenciones/ayudas adquisión/rehabilitación vivienda habitual (310)
+14 102 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Otras Ganancias/pérdidas - Ganancias patrimoniales vecinos, aprovechamientos forestales (311)
+15 115 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Otras Ganancias/pérdidas - Importe ganancias (312)
+16 128 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Otras Ganancias/pérdidas - Importe pérdidas (313)
+17 141 13 N Ganancias/pérdidas patrimoniales no derivan transmisión - Otras Ganancias/pérdidas - Renta básica emancipación (314)
+18 154 1 Tit C (G2) Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 1 - Contribuyente "0" a "9" (320)
+1199 115555 99 AAnn CC GGaannaanncciiaass//ppéérrddiiddaass ppaattrriimm. ddeerriivv. ttrraannssmmiissiióónn -- IInnsstt. iinnvv. ccoolleeccttiivvaa -- SSoocciieeddaadd//FFoonnddoo 11 -- NN.II.FF. ((332211))
+20 164 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 1 - Resultados netos positivos - Ganancias netas (322)
+21 177 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 1 - Resultados netos negativos - Pérdidas netas (323)
+22 190 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 2 - Contribuyente "0" a "9" (320)
+23 191 9 An C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 2 - N.I.F. (321)
+24 200 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 2 - Resultados netos positivos - Ganancias netas (322)
+25 213 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 2 - Resultados netos negativos - Pérdidas netas (323)
+26 226 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 3 - Contribuyente "0" a "9" (320)
+27 227 9 An C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 3 - N.I.F. (321)
+28 236 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 3 - Resultados netos positivos - Ganancias netas (322)
+29 249 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Sociedad/Fondo 3 - Resultados netos negativos - Pérdidas netas (323)
+30 262 13 N Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Totales - Total ganancias netas (329)
+31 275 13 N Ganancias/pérdidas patrim. deriv. transmisión - Inst. inv. colectiva - Totales - Total pérdidas netas (330)
+32 288 3 Num Número de Ganancias/Pérdidas en declaración conjunta (Reservado para la Administración)
+33 291 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 1 - Contribuyente "0" a "9" (340)
+34 292 20 An C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 1 - Denominación valores (341)
+35 312 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 1 - Importe global (342)
+36 325 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 1 - Valor adquisición global (343)
+37 338 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 1 - Resultados - Ganancias. Importe obtenido (344)
+38 351 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 1 - Resultados - Ganancias. Importe computable (345)
+Página 29
+
+# Pag. 30
+
+100-09
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+39 364 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 1 - Resultados - Pérdidas. Importe obtenido (346)
+40 377 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 1 - Resultados - Pérdidas. Importe computable (347)
+41 390 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 2 - Contribuyente "0" a "9" (340)
+42 391 20 An C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 2 - Denominación valores (341)
+43 411 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 2 - Importe global (342)
+44 424 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 2 - Valor adquisición global (343)
+45 437 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 2 - Resultados - Ganancias. Importe obtenido (344)
+46 450 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 2 - Resultados - Ganancias. Importe reducido (345)
+47 463 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 2 - Resultados - Pérdidas. Importe obtenido (346)
+48 476 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 2 - Resultados - Pérdidas. Importe imputable (347)
+49 489 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 3 - Contribuyente "0" a "9" (340)
+50 490 20 An C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 3 - Denominación valores (341)
+51 510 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 3 - Importe global (342)
+52 523 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 3 - Valor adquisición global (343)
+53 536 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 3 - Resultados - Ganancias. Importe obtenido (344)
+54 549 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 3 - Resultados - Ganancias. Importe reducido (345)
+55 562 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 3 - Resultados - Pérdidas. Importe obtenido (346)
+56 575 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Entidad 3 - Resultados - Pérdidas. Importe imputable (347)
+57 588 13 N Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Totales - Ganancias. Importe reducido (349)
+58 601 13 N Ganancias/pérdidas patrim. deriv. transmisión - Mercados oficiales - Totales - Pérdidas. Importe imputable (350)
+59 614 3 Num Número de Ganancias/Pérdidas en declaración conjunta (Reservado para la Administración)
+60 617 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Contribuyente "0" a "9" (360)
+61 618 1 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Tipo elemento. Clave "0" a "7" (361)
+6622 661199 11 NNuumm CC GGaannaanncciiaass//ppéérrddiiddaass ppaattrriimm. ddeerriivv. ttrraannssmmiissiióónn -- OOttrrooss eelleemmeennttooss -- EElleemmeennttoo 11 -- IInnmmuueebblleess. SSiittuuaacciióónn. CCllaavvee ""00"" aa ""44"" ((336622))
+63 620 20 An C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Inmuebles. Situación. Ref. catastral (363)
+64 640 8 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Fecha transmisión (364)
+65 648 8 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Fecha adquisición (365)
+66 656 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Valor transmisión (366)
+67 669 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Valor adquisición (367)
+68 682 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Diferencia negativa - Pérdida obtenida (368)
+69 695 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Diferencia negativa - Pérdida imputable (369)
+70 708 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Diferencia positiva - Ganancia obtenida (370)
+71 721 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Parte ganancia susceptible reducción (371)
+72 734 4 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Años permanencia hasta 31-12-94 (372)
+73 738 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Reducción aplicable (373)
+74 751 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Ganancia reducida (374)
+75 764 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Ganancia exenta 50 por 100 (382)
+76 777 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Ganancia exenta reinversión viv. habitual (375)
+77 790 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Ganancia reducida no exenta (376)
+78 803 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Ganancia reducida no exenta imputable (377)
+79 816 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Afectos - Reducción (licencia autotaxis) (378)
+80 829 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Afectos - Ganancia reducida (379)
+81 842 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Afectos - Ganancia exenta (383)
+Página 30
+
+# Pag. 31
+
+100-09
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+82 855 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Afectos - Ganancia patrimonial reducida no exenta (384)
+83 868 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Afectos - Ganancia patrimonial reducida no exenta imputable (380)
+84 881 1 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - Imput. temporal: Operaciones a plazos o aplazado. "1" ó "0" (381)
+85 882 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Contribuyente "0" a "9" (360)
+86 883 1 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Tipo elemento. Clave "0" a "7" (361)
+87 884 1 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Inmuebles. Situación. Clave "0" a "4" (362)
+88 885 20 An C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Inmuebles. Situación. Ref. catastral (363)
+89 905 8 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Fecha transmisión (364)
+90 913 8 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Fecha adquisición (365)
+91 921 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Valor transmisión (366)
+92 934 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Valor adquisición (367)
+93 947 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Diferencia negativa - Pérdida obtenida (368)
+94 960 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Diferencia negativa - Pérdida imputable (369)
+95 973 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Diferencia positiva - Ganancia obtenida (370)
+96 986 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - No afectos - Parte ganancia susceptible reducción (371)
+97 999 4 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - No afectos - Años permanencia hasta 31-12-94 (372)
+98 1003 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - No afectos - Reducción aplicable (373)
+99 1016 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - No afectos - Ganancia reducida (374)
+100 1029 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 1 - No afectos - Ganancia exenta 50 por 100 (382)
+101 1042 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - No afectos - Ganancia exenta reinversión viv. habitual (375)
+102 1055 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - No afectos - Ganancia reducida no exenta (376)
+103 1068 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - No afectos - Ganancia reducida no exenta imputable (377)
+104 1081 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Afectos - Reducción (licencia autotaxis) (378)
+110055 11009944 1133 NN CC GGaannaanncciiaass//ppéérrddiiddaass ppaattrriimm. ddeerriivv. ttrraannssmmiissiióónn -- OOttrrooss eelleemmeennttooss -- EElleemmeennttoo 22 -- AAffeeccttooss -- GGaannaanncciiaa rreedduucciiddaa ((337799))
+106 1107 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Afectos - Ganancia exenta (383)
+107 1120 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Afectos - Ganancia patrimonial reducida no exenta (384)
+108 1133 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Afectos - Ganancia patrimonial reducida no exenta imputable (380)
+109 1146 1 Num C Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Elemento 2 - Imput. temporal: Operaciones a plazos o aplazado. "1" ó "0" (381)
+110 1147 13 N Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Totales - Total pérdida imputable (387)
+111 1160 13 N Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Totales - No afectos - Total ganancia reducida no exenta imputable (388)
+112 1173 13 N Ganancias/pérdidas patrim. deriv. transmisión - Otros elementos - Totales - Afectos - Total ganancia reducida imputable (389)
+113 1186 3 Num Número de Ganancias/Pérdidas en declaración conjunta (Reservado para la Administración)
+114 1189 9 An C Identificador de Fin de registro. OBLIGATORIO Constante </T10009>
+115 1198 2 An C Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 1199
+Página 31
+
+# Pag. 32
+
+100-10
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "10"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A C Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 1 Num Nº hojas adicionales que se adjuntan
+7 11 1 Tit C (G2) Ganancias/pérdidas patrim. deriv. transmisión (continuación) - Imputación 2012 ejercicios anteriores - Ganancia 1 - Contribuyente "0" a "9" (390)
+8 12 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Ganancia 1 - Importe ganancia (391)
+9 25 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Ganancia 2 - Contribuyente "0" a "9" (390)
+10 26 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Ganancia 2 - Importe ganancia (391)
+11 39 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Ganancia 3 - Contribuyente "0" a "9" (390)
+12 40 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Ganancia 3 - Importe ganancia (391)
+13 53 13 N Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Total ganancias (395)
+14 66 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Pérdida 1 - Contribuyente "0" a "9" (400)
+15 67 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Pérdida 1 - Importe pérdida (401)
+16 80 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Pérdida 2 - Contribuyente "0" a "9" (400)
+17 81 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Pérdida 2 - Importe pérdida (401)
+18 94 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Pérdida 3 - Contribuyente "0" a "9" (400)
+19 95 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 ejercicios anteriores - Pérdida 3 - Importe pérdida (401)
+2200 110088 1133 NN GGaannaanncciiaass//ppéérrddiiddaass ppaattrriimm. ddeerriivv. ttrraannssmmiissiióónn - IImmppuuttaacciióónn 22001122 eejjeerrcciicciiooss aanntteerriioorreess - TToottaall ppéérrddiiddaass ((440055))
+21 121 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 1 - Contribuyente "0" a "9" (410)
+22 122 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 1 - Importe ganancia (411)
+23 135 1 An C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 1 - Método integración. Clave (Blanco,"1","2" o "3") (412)
+24 136 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 2 - Contribuyente "0" a "9" (410)
+25 137 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 2 - Importe ganancia (411)
+26 150 1 An C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 2 - Método integración. Clave (Blanco,"1","2" o "3") (412)
+27 151 1 Tit C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 3 - Contribuyente "0" a "9" (410)
+28 152 13 N C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 3 - Importe ganancia (411)
+29 165 1 An C Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Ganancia 3 - Método integración. Clave (Blanco,"1","2" o "3") (412)
+30 166 13 N Ganancias/pérdidas patrim. deriv. transmisión - Imputación 2012 diferimiento por reinversión - Total ganancia (415)
+31 179 13 N (G3) Exención por reinversión ganancia patrimonial 2012 transmisión vivienda habitual - Importe transmisión susceptible reinversión (420)
+32 192 13 N Exención por reinversión ganancia patrimonial 2012 transmisión vivienda habitual - Ganancia patrimonial consecuencia transmisión (421)
+33 205 13 N Exención por reinversión ganancia patrimonial 2012 transmisión vivienda habitual - Importe reinvertido hasta 31-12-2012 adquisición nueva vivienda (422)
+34 218 13 N Exención por reinversión ganancia patrimonial 2012 transmisión vivienda habitual - Importe se compromete reinvertir 2 años siguientes (423)
+35 231 13 N Exención por reinversión ganancia patrimonial 2012 transmisión vivienda habitual - Ganancia patrimonial exenta por reinversión (424)
+36 244 1 Tit (G4) Opción régimen especial fusiones, escisiones y canje valores entidades no residentes en España - Contribuyente1 "0" a "9" (430)
+37 245 2 Num Opción régimen especial fusiones, escisiones y canje valores entidades no residentes en España - Número de operaciones1 (431)
+38 247 1 Tit Opción régimen especial fusiones, escisiones y canje valores entidades no residentes en España - Contribuyente2 "0" a "9" (432)
+39 248 2 Num Opción régimen especial fusiones, escisiones y canje valores entidades no residentes en España - Número de operaciones2 (433)
+40 250 13 N (G5) Integración/compensación ganancias/pérdidas patrimoniales imputables 2012 - A integrar en base imponible general - Suma ganancias (440)
+41 263 13 N Integración/compensación ganancias/pérdidas patrimoniales imputables 2012 - A integrar en base imponible general - Suma pérdidas (441)
+Página 32
+
+# Pag. 33
+
+100-10
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+42 276 13 N Integración/compensación ganancias/pérdidas patrimoniales imputables 2012 - A integrar en base imponible general - Saldo neto - Diferencia positiva (450)
+43 289 13 N Integración/compensación ganancias/pérdidas patrimoniales imputables 2012 - A integrar en base imponible general - Saldo neto - Diferencia negativa (442)
+44 302 13 N Integración/compensación ganancias/pérdidas patrimoniales imputables 2012 - A integrar en base imponible ahorro - Suma ganancias (443)
+45 315 13 N Integración/compensación ganancias/pérdidas patrimoniales imputables 2012 - A integrar en base imponible ahorro - Suma pérdidas (444)
+46 328 13 N Integración/compensación ganancias/pérdidas patrimoniales imputables 2012 - A integrar en base imponible ahorro - Saldo neto positivo (457)
+47 341 13 N Integración/compensación ganancias/pérdidas patrimoniales imputables 2012 - A integrar en base imponible ahorro - Saldo neto negativo (445)
+48 354 13 N (H) Base imponible general y base imponible ahorro - Base imponible general - Saldo neto positivo ganancias/pérdidas 2012 a integrar (450)
+49 367 13 N Base imponible general y base imponible ahorro - Base imponible general - Saldos netos negativos ganancias/pérdidas 2008 a 2011 a integrar (451)
+50 380 13 N Base imponible general y base imponible ahorro - Base imponible general - Saldo neto rendimientos a integrar en base imponible general/imputaciones renta (452)
+51 393 13 N Base imponible general y base imponible ahorro - Base imponible general - Compensaciones - Resto saldos netos negativos 2008 a 2011 a integrar (453)
+52 406 13 N Base imponible general y base imponible ahorro - Base imponible general - Compensaciones - Saldo neto negativo ganancias/pérdidas imputables 2012 a integrar (454)
+53 419 13 N Base imponible general y base imponible ahorro - Base imponible general - Base imponible general (455)
+54 432 13 N Base imponible general y base imponible ahorro - Base imponible general - Saldo neto negativo ganancias/pérdidas 2012: importe pendiente de compensar (456)
+55 445 13 N Base imponible general y base imponible ahorro - Base imponible ahorro - Saldo neto positivo ganancias/pérdidas 2012 (457)
+56 458 13 N Base imponible general y base imponible ahorro - Base imponible ahorro - Compensación - Saldos netos negativos ganancias/pérdidas 2008-2011 a integrar (458)
+57 471 13 N Base imponible general y base imponible ahorro - Base imponible ahorro - Saldo rendimientos capital mobiliario. Saldo neto negativo (459)
+58 484 13 N Base imponible general y base imponible ahorro - Base imponible ahorro - Saldo rendimientos capital mobiliario. Saldo neto positivo (460)
+59 497 13 N Base imponible general y base imponible ahorro - Base imponible ahorro - Compensación. Saldo neto negativo capital mobiliario (461)
+60 510 13 N Base imponible general y base imponible ahorro - Base imponible ahorro - Base imponible ahorro (465)
+61 523 9 An C Identificador de Fin de registro. OBLIGATORIO Constante </T10010>
+62 532 2 An C Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 533
+Página 33
+
+# Pag. 34
+
+100-11
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "11"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A C Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 13 N (I) Reducciones base imponible - Reducción por tributación conjunta - Reducción unidad familiar tributación conjunta (470)
+7 23 1 Tit Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Contribuyente 1 "0" a "9" (480)
+8 24 13 N Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Excesos pendientes reducir (481)
+9 37 13 N Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Aportaciones 2012 (482)
+10 50 13 N Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Importes con derecho a reducción 1 (483)
+11 63 1 Tit Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Contribuyente 2 "0" a "9" (480)
+12 64 13 N Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Excesos pendientes reducir (481)
+13 77 13 N Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Aportaciones 2012 (482)
+14 90 13 N Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Importes con derecho a reducción 2 (483)
+15 103 13 N Reducciones base imponible - Aportaciones sistemas previsión social - Régimen general - Total derecho reducción (500)
+16 116 13 N Reducciones base imponible - Aportaciones sistemas previsión social - Aportaciones cónyuge del contribuyente - Total derecho reducción (505)
+17 129 1 Num Nº hojas adicionales que se adjuntan
+18 130 1 Tit C Reducciones base imponible - Aportaciones a favor personas con discapacidad - Contribuyente 1 "0" a "9" (510)
+19 131 9 An C Reducciones base imponible - Aportaciones a favor personas con discapacidad - NIF persona con discapacidad 1 (511)
+20 140 13 N C Reducciones base imponible - Aportaciones a favor personas con discapacidad - Excesos pendientes reducir (512)
+21 153 13 N C Reducciones base imponible - Aportaciones a favor personas con discapacidad - Aportaciones 2012 propia persona discapacidad 1 (513)
+2222 116666 1133 NN CC RReedduucccciioonneess bbaassee iimmppoonniibbllee -- AAppoorrttaacciioonneess aa ffaavvoorr ppeerrssoonnaass ccoonn ddiissccaappaacciiddaadd -- AAppoorrttaacciioonneess 22001122 ppaarriieenntteess oo ttuuttoorreess 11 ((551144))
+23 179 1 Tit C Reducciones base imponible - Aportaciones a favor personas con discapacidad - Contribuyente 2 "0" a "9" (510)
+24 180 9 An C Reducciones base imponible - Aportaciones a favor personas con discapacidad - NIF persona con discapacidad 2 (511)
+25 189 13 N C Reducciones base imponible - Aportaciones a favor personas con discapacidad - Excesos pendientes reducir (512)
+26 202 13 N C Reducciones base imponible - Aportaciones a favor personas con discapacidad - Aportaciones 2012 propia persona discapacidad 2 (513)
+27 215 13 N C Reducciones base imponible - Aportaciones a favor personas con discapacidad - Aportaciones 2012 parientes o tutores 2 (514)
+28 228 13 N Reducciones base imponible - Aportaciones a favor personas con discapacidad - Total con derecho a reducción (530)
+29 241 1 Tit Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - Contribuyente 1 "0" a "9" (540)
+30 242 9 An Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - NIF persona discapacidad 1 (541)
+31 251 13 N Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - Excesos pendientes reducir 1 (542)
+32 264 13 N Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - Aportaciones 2012 1 (543)
+33 277 1 Tit Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - Contribuyente 2 "0" a "9" (540)
+34 278 9 An Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - NIF persona discapacidad 2 (541)
+35 287 13 N Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - Excesos pendientes reducir 2 (542)
+36 300 13 N Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - Aportaciones 2012 2 (543)
+37 313 13 N Reducciones base imponible - Aportaciones patrimonios protegidos personas discapacidad - Total con derecho a reducción (560)
+38 326 1 Tit Reducciones base imponible - Pensiones compensatorias a cónyuge y anualidades alimentos, excepto hijos - Contribuyente 1 "0" a "9" (570)
+39 327 9 An Reducciones base imponible - Pensiones compensatorias a cónyuge y anualidades alimentos, excepto hijos - NIF persona recibe pensión/anualidad 1 (571)
+40 336 13 N Reducciones base imponible - Pensiones compensatorias a cónyuge y anualidades alimentos, excepto hijos - Importe pensión/anualidad decisión judicial 1 (572)
+41 349 1 Tit Reducciones base imponible - Pensiones compensatorias a cónyuge y anualidades alimentos, excepto hijos - Contribuyente 2 "0" a "9" (570)
+42 350 9 An Reducciones base imponible - Pensiones compensatorias a cónyuge y anualidades alimentos, excepto hijos - NIF persona recibe pensión/anualidad 2 (571)
+43 359 13 N Reducciones base imponible - Pensiones compensatorias a cónyuge y anualidades alimentos, excepto hijos - Importe pensión/anualidad decisión judicial 2 (572)
+44 372 13 N Reducciones base imponible - Pensiones compensatorias a cónyuge y anualidades alimentos, excepto hijos - Total derecho reducción (585)
+45 385 1 Tit Reducciones base imponible - Aportaciones mutualidad previsión social deportistas profesionales - Contribuyente 1 "0" a "9" (590)
+Página 34
+
+# Pag. 35
+
+100-11
+Nº Posic. Long. Tipo Com Descripción Validación Contenido
+46 386 13 N Reducciones base imponible - Aportaciones mutualidad previsión social deportistas profesionales - Excesos pendientes reducir 1 (591)
+47 399 13 N Reducciones base imponible - Aportaciones mutualidad previsión social deportistas profesionales - Aportaciones 2012 (592)
+48 412 1 Tit Reducciones base imponible - Aportaciones mutualidad previsión social deportistas profesionales - Contribuyente 2 "0" a "9" (590)
+49 413 13 N Reducciones base imponible - Aportaciones mutualidad previsión social deportistas profesionales - Excesos pendientes reducir 2 (591)
+50 426 13 N Reducciones base imponible - Aportaciones mutualidad previsión social deportistas profesionales - Aportaciones 2012 2 (592)
+51 439 13 N Reducciones base imponible - Aportaciones mutualidad previsión social deportistas profesionales - Total con derecho a reducción (600)
+52 452 13 N (J) Base liquidable general/base liquidable ahorro - Determinación base general - Base imponible general (455)
+53 465 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Reducciones base imponible general - Tributación conjunta (610)
+54 478 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Reducciones base imponible general - Aportaciones previsión social (régimen general) (611)
+55 491 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Reducciones base imponible general - Aportaciones previsión social cónyuge (612)
+56 504 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Reducciones base imponible general - Aportaciones previsión social personas discapacidad (613)
+57 517 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Reducciones base imponible general - Aportaciones patrimonios protegidos personas discapacidad (614)
+58 530 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Reducciones base imponible general - Pensiones compensatorias/anualidades alimentos (615)
+59 543 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Reducciones base imponible general - Cuotas afiliación y demás aportaciones (616)
+60 556 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Reducciones base imponible general - Aportaciones mutualidades prev. soc. deportistas profesionales(617)
+61 569 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Base liquidable general (618)
+62 582 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Compensación (bases liquidables generales negativas) (619)
+63 595 13 N Base liquidable general/base liquidable ahorro - Determinación base general - Base liquidable general sometida a gravamen (620)
+64 608 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10011>
+65 617 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 618
+Página 35
+
+# Pag. 36
+
+100-12
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "12"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Blanco (No complementaria) o "C" (Complementaria)
+6 10 13 N Base liquidable general/base liquidable ahorro - Determinación base ahorro - Base imponible ahorro (465)
+7 23 13 N Base liquidable general/base liquidable ahorro - Determinación base ahorro - Remanente reducciones no aplicadas - Reducción tributación conjunta (621)
+8 36 13 N Base liquidable general/base liquidable ahorro - Determinación base ahorro - Remanente reducciones no aplicadas - Reducción pensiones comp./anualidades alimentos (622)
+9 49 13 N Base liquidable general/base liquidable ahorro - Determinación base ahorro - Cuotas de afiliación y demás aportaciones (623)
+10 62 13 N Base liquidable general/base liquidable ahorro - Determinación base ahorro - Base liquidable del ahorro (630)
+11 75 1 Tit (K) Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión social (régimen general) - Contribuyente 1 "0" a "9" (640)
+12 76 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión social (régimen general) - Aportaciones/contribuciones 2012 no aplicadas 1 (641)
+13 89 1 Tit Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión social (régimen general) - Contribuyente 2 "0" a "9" (640)
+14 90 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión social (régimen general) - Aportaciones/contribuciones 2012 no aplicadas 2 (641)
+15 103 1 Tit Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión a favor personas discapacidad - Contribuyente 1 "0" a "9" (650)
+16 104 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión a favor personas discapacidad - Aportaciones 2012 no aplicadas 1 (651)
+17 117 1 Tit Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión a favor personas discapacidad - Contribuyente 2 "0" a "9" (650)
+18 118 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión a favor personas discapacidad - Aportaciones 2012 no aplicadas 2 (651)
+19 131 1 Tit Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión a favor personas discapacidad - Contribuyente 1 "0" a "9" (650)
+20 132 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión a favor personas discapacidad - Aportaciones 2012 no aplicadas 3 (651)
+21 145 1 Tit Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión a favor personas discapacidad - Contribuyente 2 "0" a "9" (650)
+22 146 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones sistemas previsión a favor personas discapacidad - Aportaciones 2012 no aplicadas 4 (651)
+2233 115599 11 TTiitt RRedducciiones bbase iimponiibblle no aplliicaddas 22001122 - EExceso aporttaciiones pattriimoniios prottegiiddos personas ddiiscapaciiddadd - CConttriibbuyentte 11 ""00"" a ""99"" ((666600))
+24 160 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones patrimonios protegidos personas discapacidad - Aportaciones 2012 no aplicadas 1 (661)
+25 173 1 Tit Reducciones base imponible no aplicadas 2012 - Exceso aportaciones patrimonios protegidos personas discapacidad - Contribuyente 2 "0" a "9" (660)
+26 174 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones patrimonios protegidos personas discapacidad - Aportaciones 2012 no aplicadas 2 (661)
+27 187 1 Tit Reducciones base imponible no aplicadas 2012 - Exceso aportaciones mutualidad previsión deportistas profesionales - Contribuyente 1 "0" a "9" (670)
+28 188 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones mutualidad previsión deportistas profesionales - Aportaciones 2012 no aplicadas 1 (671)
+29 201 1 Tit Reducciones base imponible no aplicadas 2012 - Exceso aportaciones mutualidad previsión deportistas profesionales - Contribuyente 2 "0" a "9" (670)
+30 202 13 N Reducciones base imponible no aplicadas 2012 - Exceso aportaciones mutualidad previsión deportistas profesionales - Aportaciones 2012 no aplicadas 2 (671)
+31 215 13 N (L) Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo contribuyente - Importe (675)
+32 228 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo contribuyente - Importe cálculo gravamen autonómico (635)
+33 241 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo descendientes - Importe (676)
+34 254 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo descendientes - Importe cálculo gravamen autonómico (636)
+35 267 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo ascendientes - Importe (677)
+36 280 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo ascendientes - Importe cálculo gravamen autonómico (637)
+37 293 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo discapacidad - Importe (678)
+38 306 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo discapacidad - Importe cálculo gravamen autonómico (638)
+39 319 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Mínimo personal y familiar (679)
+40 332 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Importe total cálculo gravamen autonómico (685)
+41 345 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Importe mínimo personal/familiar base liquidable general - gravamen estatal (680)
+42 358 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Importe mínimo personal/familiar base liquidable ahorro - gravamen estatal (681)
+43 371 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Importe mínimo personal/familiar base liquidable general - gravamen autonómico (683)
+44 384 13 N Adecuación impuesto circunstancias personales y familiares: mínimo personal y familiar - Importe mínimo personal/familiar base liquidable ahorro - gravamen autonómico (684)
+45 397 13 N (M) Datos adicionales - Rentas exentas salvo para determinar gravamen base liquidable ahorro (686)
+46 410 13 N Datos adicionales - Rentas exentas salvo para determinar gravamen base liquidable general (687)
+Página 36
+
+# Pag. 37
+
+100-12
+Nº Posic. Long. Tipo Descripción Validación Contenido
+47 423 13 N Datos adicionales - Anualidades para alimentos a favor de los hijos. Importe (688)
+48 436 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10012>
+49 445 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 446
+Página 37
+
+# Pag. 38
+
+100-13
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "13"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante Blanco
+6 10 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Aplicación escala general y autonómica del Impuesto importe casilla 620 - Parte estatal (689)
+7 23 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Aplicación escala general y autonómica del Impuesto importe casilla 620 - Parte autonómica (690)
+8 36 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Aplicación escala gravamen complementaria - Parte estatal (624)
+9 49 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Aplicación escala general Impuesto importe casilla 680 - Parte estatal (691)
+10 62 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Aplicación escala gravamen complementaria - Parte estatal (625)
+11 75 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Cuota derivada escala gravamen general estatal (626)
+12 88 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Cuota derivada escala gravamen complementaria (627)
+13 101 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Aplicación escala autonómica Impuesto importe casilla 683 - Parte autonómica (692)
+14 114 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Cuota base liquidable general - Parte estatal (693)
+15 127 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Cuota base liquidable general - Parte autonómica (694)
+16 140 4 Num Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Tipos medio gravamen - Parte estatal (TME)
+17 144 4 Num Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable general - Tipos medio gravamen - Parte autonómica (TMA)
+18 148 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable ahorro - Base liquidable ahorro sometida gravamen - Parte estatal (695)
+19 161 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable ahorro - Base liquidable ahorro sometida gravamen - Parte autonómica (771)
+20 174 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable ahorro - Aplicación de la escala general y autonómica al importe de la casilla 695, Parte estatal (628)
+21 187 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable ahorro - Aplicación de la escala general y autonómica al importe de la casilla 695, Parte Parte autonómica (697)
+22 200 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable ahorro - Aplicación de la escala de gravamen complementaria al importe de la casilla 695 (629)
+23 213 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable ahorro - Cuota base liquidable ahorro - Parte estatal (696)
+24 226 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Gravamen base liquidable ahorro - Cuota base liquidable ahorro - Parte autonómica [738]
+25 239 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Cuota íntegra estatal - Parte estatal (698)
+26 252 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Cuota íntegra autonómica - Parte autonómica (699)
+27 265 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Inversión vivienda habitual - Parte estatal (700)
+28 278 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Inversión vivienda habitual - Parte autonómica (701)
+29 291 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Inversiones/gastos interés cultural - Parte estatal (702)
+30 304 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Inversiones/gastos interés cultural - Parte autonómica (703)
+31 317 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Donativos - Parte estatal (704)
+32 330 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Donativos - Parte autonómica (705)
+33 343 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Incentivos inversión empresarial - Parte estatal (706)
+34 356 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Incentivos inversión empresarial - Parte autonómica (707)
+35 369 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Dotaciones Reserva Canarias - Parte estatal (708)
+36 382 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Dotaciones Reserva Canarias - Parte autonómica (709)
+37 395 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Rendimientos venta bienes Canarias - Parte estatal (710)
+38 408 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Rendimientos venta bienes Canarias - Parte autonómica (711)
+39 421 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Rentas obtenidas Ceuta o Melilla - Parte estatal (712)
+40 434 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Rentas obtenidas Ceuta o Melilla - Parte autonómica (713)
+41 447 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Cantidades depositadas cuentas ahorro-empresa - Parte estatal (714)
+42 460 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Cantidades depositadas cuentas ahorro-empresa - Parte autonómica (715)
+43 473 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Alquiler vivienda habitual - Parte estatal (716)
+44 486 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Alquiler vivienda habitual - Parte autonómica (772)
+45 499 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Obras de mejora en la vivienda habitual - Parte estatal (773)
+46 512 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones cuotas íntegras - Obras de mejora en la vivienda (733)
+Página 38
+
+# Pag. 39
+
+100-13
+Nº Posic. Long. Tipo Descripción Validación Contenido
+47 525 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Deducciones autonómicas - (717)
+48 538 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Cuota líquida estatal - Parte estatal (720)
+49 551 13 N Cálculo impuesto y resultado declaración - Determinación gravámenes estatal y autonómico - Cuota líquida autonómica - Parte autonómica (721)
+50 564 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Deducciones 1996 y anteriores - Importe - PE (722)
+51 577 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Deducciones 1996 y anteriores - Intereses demora - PE (723)
+52 590 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Deducciones generales 1997-2011 - Importe - PE (724)
+53 603 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Deducciones generales 1997-2011 - Intereses demora - PE (725)
+54 616 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Deducciones generales 1997-2011 - Importe - PA (726)
+55 629 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Deducciones generales 1997-2011 - Intereses demora - PA (727)
+56 642 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Deducciones autonómicas 1998-2011 - Importe - PA (728)
+57 655 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Deducciones autonómicas 1998-2011 - Intereses demora - PA (729)
+58 668 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Cuotas líquidas incrementadas - Parte estatal (730)
+59 681 13 N Cálculo impuesto y resultado declaración - Incremento cuotas líquidas pérdida derecho deducciones - Cuotas líquidas incrementadas - Parte autonómica (731)
+60 694 13 N Cálculo impuesto y resultado declaración - Cuota resultante autoliquidación - Cuota líquida incrementada total (732)
+61 707 13 N Cálculo impuesto y resultado declaración - Cuota resultante autoliquidación - Deducciones doble imposición - Rentas obtenidas y gravadas en el extranjero (734)
+62 720 13 N Cálculo impuesto y resultado declaración - Cuota resultante autoliquidación - Deducción obtención rendimientos trabajo o act. económicas (735)
+63 733 13 N Cálculo impuesto y resultado declaración - Cuota resultante autoliquidación - Deducciones doble imposición - Aplicación régimen transparencia fiscal internacional (736)
+64 746 13 N Cálculo impuesto y resultado declaración - Cuota resultante autoliquidación - Deducciones doble imposición - Aplicación régimen imputación rentas cesión derechos imagen (737)
+65 759 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10013>
+66 768 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 769
+Página 39
+
+# Pag. 40
+
+100-14
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "14"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante Blanco
+6 10 13 N Cálculo impuesto y resultado declaración - Cuota resultante autoliquidación - Compensación fiscal - Percepción rdtos.capital mobiliario > 2 años (739)
+7 23 13 N Cálculo impuesto y resultado declaración - Cuota resultante autoliquidación - Retenciones deducibles rendimientos bonificados - Importe retenciones no practicadas (740)
+8 36 13 N Cálculo impuesto y resultado declaración - Cuota resultante autoliquidación - Cuota resultante autoliquidación (741)
+9 49 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Rendimientos del trabajo (742)
+10 62 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Rendimientos del capital mobiliario (743)
+11 75 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Arrendamientos de inmuebles urbanos (744)
+12 88 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Rendimientos de actividades económicas (745)
+13 101 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Atribuidos por entidades en régimen de atribución de rentas (746)
+14 114 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Imputados por agrupaciones de interés económico y UTE's (747)
+15 127 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Ingresos a cuenta art. 92.8 Ley del Impuesto (748)
+16 140 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Ganancias patrimoniales, incluidos premios (749)
+17 153 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Pagos fraccionados (actividades económicas) (750)
+18 166 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Cuotas del Impuesto sobre la Renta de no Residentes (751)
+19 179 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Retenciones art. 11 Directiva 2003/48/CE (752)
+20 192 13 N Cálculo impuesto y resultado declaración - Retenciones y demás pagos a cuenta - Total pagos a cuenta (754)
+21 205 13 N Cálculo impuesto y resultado declaración - Cuota diferencial y resultado declaración - Cuota diferencial (755)
+22 218 13 N Cálculo impuesto y resultado declaración - Cuota diferencial y resultado declaración - Deducción por maternidad - Importe de la deducción (756)
+23 231 13 N Cálculo impuesto y resultado declaración - Cuota diferencial y resultado declaración - Importe del abono anticipado correspondiente a 2012 (757)
+24 244 13 N Cálculo impuesto y resultado declaración - Cuota diferencial y resultado declaración - Resultado de la declaración (760)
+25 257 13 N Importe del IRPF que corresponde a la Comunidad Autónoma de residencia - Cuota líquida autonómica incrementada (775)
+26 270 13 N Importe del IRPF que corresponde a la Comunidad Autónoma de residencia - 50% deducciones doble imposición (776)
+27 283 13 N Importe del IRPF que corresponde a la Comunidad Autónoma de residencia - 50% compensación fiscal percepción rendimientos capital mobiliario (778)
+28 296 13 N Importe del IRPF que corresponde a la Comunidad Autónoma de residencia - Importe IRPF que corresponde a la Comunidad Autónoma de residencia [779]
+29 309 13 N (P) Regularización mediante declaración complementaria (ejercicio 2012) - Resultados a ingresar anteriores autoliquidaciones o liquidaciones administrativas ejercicio 2012 (761)
+30 322 13 N Regularización mediante declaración complementaria (ejercicio 2012) - Devoluciones acordadas por la Administración, consecuencia anteriores autoliquidaciones ejercicio 2012 (762)
+31 335 13 N Regularización mediante declaración complementaria (ejercicio 2012) - Resultado de la declaración complementaria (765)
+32 348 13 N (Q) Solicitud suspensión ingreso un cónyuge/Renuncia otro cónyuge cobro devolución - Si resultado positivo - Importe resultado ingresar de su declaración cuya suspensión se solicita (768)
+33 361 13 N Solicitud suspensión ingreso un cónyuge/Renuncia otro cónyuge cobro devolución - Si resultado positivo - Resto a ingresar del resultado de su declaración (770)
+34 374 13 N Solicitud suspensión ingreso un cónyuge/Renuncia otro cónyuge cobro devolución - Si resultado negativo - Importe resultado devolver de su declaración a cuyo cobro efectivo se renuncia (769)
+35 387 13 N Solicitud suspensión ingreso un cónyuge/Renuncia otro cónyuge cobro devolución - Si resultado negativo - Resto del resultado de su declaración cuya devolución se solicita (770)
+36 400 4 Num Solicitud suspensión ingreso un cónyuge/Renuncia otro cónyuge cobro devolución - Código Cuenta Cliente - Entidad
+37 404 4 Num Solicitud suspensión ingreso un cónyuge/Renuncia otro cónyuge cobro devolución - Código Cuenta Cliente - Oficina
+38 408 2 Num Solicitud suspensión ingreso un cónyuge/Renuncia otro cónyuge cobro devolución - Código Cuenta Cliente - DC
+39 410 10 Num Solicitud suspensión ingreso un cónyuge/Renuncia otro cónyuge cobro devolución - Código Cuenta Cliente - Número de Cuenta
+40 420 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10014>
+41 429 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 430
+Página 40
+
+# Pag. 41
+
+Anexo A.1
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "15"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante Blanco
+6 10 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Adquisición - Inversión con derecho a deducción (A)
+7 23 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Adquisición - Importe deducción - Parte estatal (780)
+8 36 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Adquisición - Importe deducción - Parte autonómica (781)
+9 49 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Construcción - Inversión con derecho a deducción (B)
+10 62 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Construcción - Importe deducción - Parte estatal (782)
+11 75 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Construcción - Importe deducción - Parte autonómica (783)
+12 88 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Rehabilitación - Inversión con derecho a deducción (C)
+13 101 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Rehabilitación - Importe deducción - Parte estatal (608)
+14 114 13 N Importe total de la deducción por inversión vivienda habitual - Adquisición, construcción, rehabilitación o ampliación vivienda - Rehabilitación - Importe deducción - Parte autonómica (609)
+15 127 13 N Importe total de la deducción por inversión vivienda habitual - Cantidades depositadas en cuenta vivienda primera adquisición/rehabilitación - Importe con derecho a deducción (D)
+16 140 13 N Importe total de la deducción por inversión vivienda habitual - Cantidades depositadas en cuenta vivienda primera adquisición/rehabilitación - Importe deducción - Parte estatal (784)
+17 153 13 N Importe total de la deducción por inversión vivienda habitual - Cantidades depositadas en cuenta vivienda primera adquisición/rehabilitación - Importe deducción - Parte autonómica (785)
+18 166 1 Tit Importe total de la deducción por inversión vivienda habitual - Identificación cuentas vivienda - Cuenta 1 - Titular de la cuenta "0" a "9"
+19 167 8 Num Importe total de la deducción por inversión vivienda habitual - Identificación cuentas vivienda - Cuenta 1 - Fecha apertura "DDMMAAAA"
+Importe total de la deducción por inversión vivienda habitual - Identificación cuentas vivienda - Cuenta 1 - Entidad (4), Oficina (4), DC (2) y Número (10) alineada a la izquierda en caso de cuenta nacional,
+20 175 62 An rellenando con blancos por la derecha
+21 237 1 Tit Importe total de la deducción por inversión vivienda habitual - Identificación cuentas vivienda - Cuenta 2 - Titular de la cuenta "0" a "9"
+22 238 8 Num Importe total de la deducción por inversión vivienda habitual - Identificación cuentas vivienda - Cuenta 2 - Fecha apertura "DDMMAAAA"
+Importe total de la deducción por inversión vivienda habitual - Identificación cuentas vivienda - Cuenta 2 - Entidad (4), Oficina (4), DC (2) y Número (10) alineada a la izquierda en caso de cuenta nacional,
+23 246 62 An rellenando con blancos por la derecha
+24 308 1 Num Importe total de la deducción por inversión vivienda habitual - Cuenta vivienda no se encuentra abierta en cualquier oficina sita en territorio español "1" o "0"
+25 309 13 N Importe total de la deducción por inversión vivienda habitual - Obras e instalaciones de adecuación personas con discapacidad - Cantidades satisfechas con derecho a deducción (E)
+26 322 13 N Importe total de la deducción por inversión vivienda habitual - Obras e instalaciones de adecuación personas con discapacidad - Importe deducción - Parte estatal (786)
+27 335 13 N Importe total de la deducción por inversión vivienda habitual - Obras e instalaciones de adecuación personas con discapacidad - Importe deducción - Parte autonómica (787)
+28 348 13 N Importe total de la deducción por inversión vivienda habitual - Importe total de la deducción por inversión en vivienda habitual - Parte estatal (700)
+29 361 13 N Importe total de la deducción por inversión vivienda habitual - Importe total de la deducción por inversión en vivienda habitual - Parte autonómica (701)
+30 374 13 N Importe total de la deducción por inversión vivienda habitual - Datos adicionales - Importe de los pagos realizados en el ejercicio al promotor o constructor (788)
+31 387 9 An Importe total de la deducción por inversión vivienda habitual - Datos adicionales - NIF del promotor o constructor (789)
+32 396 8 An Importe total de la deducción por inversión vivienda habitual - Datos adicionales - En caso de deducción - Fecha adquisición vivienda (DDMMAAAA) (790)
+33 404 20 An Importe total de la deducción por inversión vivienda habitual - Datos adicionales - En caso de deducción - Número de identificación del préstamo hipotecario (791)
+34 424 5 Num Importe total de la deducción por inversión vivienda habitual - Datos adicionales - En caso de deducción - Porcentaje del préstamo destinado a adquisición (792)
+35 429 9 An Deducción por alquiler de la vivienda habitual - NIF del arrendador 1 (793)
+36 438 13 N Deducción por alquiler de la vivienda habitual - Cantidades totales satisfechas al arrendador 1 (582)
+37 451 9 An Deducción por alquiler de la vivienda habitual - NIF del arrendador 2 (583)
+38 460 13 N Deducción por alquiler de la vivienda habitual - Cantidades totales satisfechas al arrendador 2 (584)
+39 473 13 N Deducción por alquiler de la vivienda habitual - Cantidades satisfechas con derecho a deducción (F)
+Página 41
+
+# Pag. 42
+
+Anexo A.1
+Nº Posic. Long. Tipo Descripción Validación Contenido
+40 486 13 N Deducción por alquiler de la vivienda habitual - Importe deducción (774)
+41 499 13 N Deducción por alquiler de la vivienda habitual - Deducción por alquiler - Parte estatal (716)
+42 512 13 N Deducción por alquiler de la vivienda habitual - Deducción por alquiler - Parte autonómica (772)
+43 525 13 N Deducciones por donativos - Donativos límite 15% base liquidable - Importe con derecho a deducción (G)
+44 538 13 N Deducciones por donativos - Donativos límite 15% base liquidable - Importe de la deducción (795)
+45 551 13 N Deducciones por donativos - Donativos límite 10% base liquidable - Importe con derecho a deducción (H)
+46 564 13 N Deducciones por donativos - Donativos límite 10% base liquidable - Importe de la deducción (796)
+47 577 13 N Deducciones por donativos - Deducciones por donativos - Parte estatal (704)
+48 590 13 N Deducciones por donativos - Deducciones por donativos - Parte autonómica (705)
+49 603 13 N Otras deducciones generales de la cuota íntegra - Deducción por inversiones o gastos de interés cultural - Patrimonio Histórico Español y UNESCO en España - Importe con derecho a deducción (I)
+50 616 13 N Otras deducciones generales de la cuota íntegra - Deducción por inversiones o gastos de interés cultural - Patrimonio Histórico Español y UNESCO en España - Importe de la deducción (797)
+51 629 13 N Otras deducciones generales de la cuota íntegra - Deducción por inversiones o gastos de interés cultural - Deducciones por inversiones - Parte estatal (702)
+52 642 13 N Otras deducciones generales de la cuota íntegra - Deducción por inversiones o gastos de interés cultural - Deducciones por inversiones - Parte autonómica (703)
+53 655 13 N Deducción por rentas obtenidas en Ceuta o Melilla - Importe total de la deducción (798)
+54 668 13 N Deducción por rentas obtenidas en Ceuta o Melilla - Deducción - Parte estatal (712)
+55 681 13 N Deducción por rentas obtenidas en Ceuta o Melilla - Deducción - Parte autonómica (713)
+56 694 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10015>
+57 703 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 704
+Página 42
+
+# Pag. 43
+
+Anexo A.2
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "16"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante Blanco
+6 10 13 N Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Cantidades depositadas (J)
+7 23 13 N Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Importe total de la deducción (799)
+8 36 13 N Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Deducción - Parte estatal (714)
+9 49 13 N Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Deducción - Parte autonómica (715)
+10 62 1 Tit Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 1 - Titular
+11 63 8 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 1 - Fecha de apertura "DDMMAAAA"
+12 71 4 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 1 - Entidad
+13 75 4 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 1 - Oficina
+14 79 2 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 1 - DC
+15 81 10 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 1 - Número de cuenta
+16 91 1 Tit Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 2 - Titular
+17 92 8 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 2 - Fecha de apertura
+18 100 4 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 2 - Entidad
+19 104 4 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 2 - Oficina
+20 108 2 Num Otras deducciones generales de la cuota íntegra - Deducción por cantidades depositadas en cuenta ahorro-empresa - Identificación cuentas - Cuenta 2 - DC
+21 110 10 Num Otras deducciones ggenerales de la cuota ínteggra - Deducción ppor cantidades deppositadas en cuenta ahorro-emppresa - Identificación cuentas - Cuenta 2 - Número de cuenta
+22 120 2 Num Indique el número total de viviendas por las que se aplica la deducción (473)
+23 122 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Cantidades satisfechas pendientes de deducción (474)
+24 135 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Base de la deducción (K)
+25 148 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Importe de la deducción (475)
+26 161 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Cantidades satisfechas en 2012 (436)
+27 174 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Base de la deducción (L)
+28 187 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Importe de la deducción (437)
+29 200 5 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Porcentaje que tiene el titular de la deducción en la titularidad de la vivienda (438)
+30 205 5 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Porcentaje total en la propiedad de la vivienda de todos los titulares con derecho a aplicar la deducción (439)
+31 210 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Exceso de las cantidades satisfechas en el ejercicio 2012 (446)
+32 223 9 An Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - NIF de la persona/entidad que ha efectuado las obras (447)
+33 232 20 An Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 1 - Referencia catastral (448)
+34 252 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Cantidades satisfechas pendientes de deducción (476)
+35 265 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Base de la deducción (M)
+36 278 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Importe de la deducción (477)
+37 291 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Cantidades satisfechas en 2012 (449)
+38 304 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Base de la deducción (N)
+39 317 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Importe de la deducción (462)
+40 330 5 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Porcentaje que tiene el titular de la deducción en la titularidad de la vivienda (463)
+41 335 5 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Porcentaje total en la propiedad de la vivienda de todos los titulares con derecho a aplicar la deducción (464)
+42 340 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Exceso de las cantidades satisfechas en el ejercicio 2012 (466)
+
+# Pag. 44
+
+Anexo A.2
+Nº Posic. Long. Tipo Descripción Validación Contenido
+43 353 9 An Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - NIF de la persona/entidad que ha efectuado las obras (467)
+44 362 20 An Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 2 - Referencia catastral (468)
+45 382 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 3 y siguientes - Cantidades satisfechas pendientes de deducción (478)
+46 395 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 3 y siguientes - Base de la deducción (O)
+47 408 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 3 y siguientes- Importe de la deducción (479)
+48 421 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 3 y siguientes - Cantidades satisfechas en 2012 (469)
+49 434 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 3 y siguientes - Base de la deducción (P)
+50 447 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 3 y siguientes - Importe de la deducción (471)
+51 460 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Vivienda 3 y siguientes - Exceso cantidades satisfechas ejercicio 2012 (472)
+52 473 13 Num Deducción por obras de mejora en vivienda (desde el 7 de mayo al 31 de diciembre 2011) - Importe total de la deducción (733)
+53 486 13 Num Deducción por obras de mejora en la vivienda habitual - Cantidades satisfechas ejercicio 2010 pendientes de deducción por exceso base máxima (425)
+54 499 13 Num Deducción por obras de mejora en la vivienda habitual - En 2010 - Base de la deducción (Q)
+55 512 13 Num Deducción por obras de mejora en la vivienda habitual - En 2010 - Importe de la deducción (426)
+56 525 13 Num Deducción por obras de mejora en la vivienda habitual - Cantidades satisfechas en 2011 antes del 7 de mayo pendientes de deducción por exceso base máxima (427)
+57 538 13 Num Deducción por obras de mejora en la vivienda habitual - En 2011 antes del 7 de mayo - - Base de la deducción (R)
+58 551 13 Num Deducción por obras de mejora en la vivienda habitual - En 2011 antes del 7 de mayo - - Importe de la deducción (428)
+59 564 20 An Deducción por obras de mejora en la vivienda habitual - En 2011 antes del 7 de mayo - - Referencia catastral [532]
+60 584 13 Num Deducción por obras de mejora en la vivienda habitual - Importe total de la deducción (773)
+61 597 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10016>
+62 606 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 607
+
+# Pag. 45
+
+Anexo A.3
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "17"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante Blanco
+6 10 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - Ejercicios anteriores - Deducciones rég. Gral. LIS - Saldo anterior
+7 23 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - Ejercicios anteriores - Deducciones rég. Gral. LIS - Aplicado declaración (945)
+8 36 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - Ejercicios anteriores - Deducciones rég. Gral. LIS - Pendiente aplicación
+9 49 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - Ejercicios anteriores - R. e. acontecimientos interes público - Saldo anterior
+10 62 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - Ejercicios anteriores - R. e. acontecimientos interes público - Aplicado declaración (946)
+11 75 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - Ejercicios anteriores - R. e. acontecimientos interes público - Pendiente aplicación
+12 88 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Actv. i. d. i. tecnológica - Saldo anterior
+13 101 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Actv. i. d. i. tecnológica - Aplicado declaración (947)
+14 114 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Actv. i. d. i. tecnológica - Pendiente aplicación
+15 127 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Inversiones/gastos art.º 38.1, 2 y 3 - Deducción 2012
+16 140 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Inversiones/gastos art.º 38.1, 2 y 3 - Aplicado declaración (950)
+17 153 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Inversiones/gastos art.º 38.1, 2 y 3 - Pendiente aplicación
+18 166 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Inversiones medioambientales - Deducción 2012
+1199 117799 1133 NN DDeedduucccciioonneess iinncceennttiivvooss//eessttíímmuullooss iinnvv. eemmpprreess. -- RRéégg. ggrraall. LLIISS//eessppeecciiaalleess aaccoonntteecciimmiieennttooss iinntteerrééss ppúúbblliiccoo -- 22001122. RR. gg. LLIISS -- IInnvveerrssiioonneess mmeeddiiooaammbbiieennttaalleess -- AApplliiccaaddoo ddeeccllaarraacciióónn ((995511))
+20 192 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Inversiones medioambientales - Pendiente aplicación
+21 205 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Util. nuevas tecnologías empleados - Deducción 2012
+22 218 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Util. nuevas tecnologías empleados - Aplicado declaración (952)
+23 231 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Util. nuevas tecnologías empleados - Pendiente aplicación
+24 244 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Creación empleo trabajadores con discapacidad - Deducción 2012
+25 257 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Creación empleo trabajadores con discapacidad - Aplicado declaración (953)
+26 270 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. g. LIS - Creación empleo trabajadores con discapacidad - Pendiente aplicación
+27 283 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Alicante 2011" - Deducción 2012
+28 296 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Alicante 2011" - Aplicado declaración (955)
+29 309 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Alicante 2011" - Pendiente aplicación
+30 322 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "3ª edición Barcelona World Race" - Deducción 2012
+31 335 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "3ª edición Barcelona World Race" - Aplicado declaración (956)
+32 348 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "3ª edición Barcelona World Race" - Pendiente aplicación
+33 361 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Guadalquivir Rio Historia" - Deducciones 2012
+34 374 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Guadalquivir Rio Historia" - Aplicado declaración (958)
+35 387 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Guadalquivir Rio Historia" - Pendiente aplicación
+36 400 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Constitución 1812" - Deducciones 2012
+37 413 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Constitución 1812" - Aplicado declaración (959)
+38 426 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Constitución 1812" - Pendiente aplicación
+
+# Pag. 46
+
+Anexo A.3
+Nº Posic. Long. Tipo Descripción Validación Contenido
+39 439 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Londres 2012" - Deducción 2012
+40 452 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Londres 2012" - Aplicado declaración (960)
+41 465 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Londres 2012" - Pendiente aplicación
+42 478 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Vitoria Gasteiz Capital Verde Europea" - Deducción 2012
+43 491 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Vitoria Gasteiz Capital Verde Europea" - Aplicado declaración (964)
+44 504 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Vitoria Gasteiz Capital Verde Europea" - Pendiente aplicación
+45 517 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato del Mundo de Vela (ISAF) Santander" - Deducción 2012
+46 530 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato del Mundo de Vela (ISAF) Santander" - Aplicado declaración (535)
+47 543 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato del Mundo de Vela (ISAF) Santander" - Pendiente aplicación
+48 556 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Milenio Reino Granada" - Deducción 2012
+49 569 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Milenio Reino Granada" - Aplicado declaración (536)
+50 582 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Milenio Reino Granada" - Pendiente aplicación
+51 595 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Solar Decathlon Europe 2010/2012" - Deducciones 2012
+52 608 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Solar Decathlon Europe 2010/2012" - Aplicado declaración (537)
+53 621 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Solar Decathlon Europe 2010/2012" - Pendiente aplicación
+54 634 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Google Lunar X Prize" - Deducción 2012
+55 647 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Google Lunar X Prize" - Aplicado declaración (538)
+56 660 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Google Lunar X Prize" - Pendiente aplicación
+57 673 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "El Árbol es Vida" - Deducción 2012
+58 686 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "El Árbol es Vida" - Aplicado declaración (948)
+59 699 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "El Árbol es Vida" - Pendiente aplicación
+60 712 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Mundo Basket 2014" - Deducciones 2012
+61 725 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Mundo Basket 2014" - Aplicado declaración (954)
+6622 773388 1133 NN DDeedduucccciioonneess iinncceennttiivvooss//eessttíímmuullooss iinnvv. eemmpprreess. -- RRéégg. ggrraall. LLIISS//eessppeecciiaalleess aaccoonntteecciimmiieennttooss iinntteerrééss ppúúbblliiccoo -- 22001122. RR. aaccoonntteecciimmiieennttooss ee. ii. pp. -- ""MMuunnddoo BBaasskkeett 22001144"" -- PPeennddiieennttee aapplliiccaacciióónn
+63 751 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "C. M. Balonmano 2013" - Deducciones 2012
+64 764 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "C. M. Balonmano 2013" - Aplicado declaración (961)
+65 777 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "C. M. Balonmano 2013" - Pendiente aplicación
+66 790 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de España en Japón" - Deducción 2012
+67 803 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de España en Japón" - Aplicado declaracion (962)
+68 816 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de España en Japón" - Pendiente aplicación
+69 829 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "IV Centenario El Greco" - Deducción 2012
+70 842 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "IV Centenario El Greco" - Aplicado declaración (963)
+71 855 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "IV Centenario El Greco" - Pendiente aplicación
+72 868 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "VIII C. Catedral Santiago" - Deducción 2012
+73 881 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "VIII C. Catedral Santiago" - Aplicado declaración (965)
+74 894 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "VIII C. Catedral Santiago" - Pendiente aplicación
+75 907 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Patrimonio Cultural de Lorca" - Deducción 2012
+76 920 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Patrimonio Cultural de Lorca" - Aplicado declaración (207)
+77 933 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Patrimonio Cultural de Lorca" - Pendiente aplicación
+78 946 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Patrimonio Joven" - Deducción 2012
+79 959 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Patrimonio Joven" - Aplicado declaración (208)
+80 972 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Patrimonio Joven" - Pendiente aplicación
+81 985 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Universiada invierno de Granada" - Deducción 2012
+
+# Pag. 47
+
+Anexo A.3
+Nº Posic. Long. Tipo Descripción Validación Contenido
+82 998 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Universiada invierno de Granada" - Aplicado declaración (228)
+83 1011 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Universiada invierno de Granada" - Pendiente aplicación
+84 1024 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato ciclismo en Carretera Ponferrada" - Deducción 2012
+85 1037 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato ciclismo en Carretera Ponferrada" - Aplicado declaración (229)
+86 1050 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato ciclismo en Carretera Ponferrada" - Pendiente aplicación
+87 1063 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Creación Centro UNESCO" - Deducción 2012
+88 1076 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Creación Centro UNESCO" - Aplicado declaración (238)
+89 1089 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Creación Centro UNESCO" - Pendiente aplicación
+90 1102 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Barcelona World Jumping Challenge" - Deducción 2012
+91 1115 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Barcelona World Jumping Challenge" - Aplicado declaración (240)
+92 1128 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Barcelona World Jumping Challenge" - Pendiente aplicación
+93 1141 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato Natación Barcelona 2013" - Deducción 2012
+94 1154 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato Natación Barcelona 2013" - Aplicado declaración (241)
+95 1167 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato Natación Barcelona 2013" - Pendiente aplicación
+96 1180 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Barcelona Mobile World Capital" - Deducción 2012
+97 1193 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Barcelona Mobile World Capital" - Aplicado declaración (242)
+98 1206 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Barcelona Mobile World Capital" - Pendiente aplicación
+99 1219 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "40 Aniversario Convención Patrimonio Mundial" - Deducción 2012
+100 1232 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "40 Aniversario Convención Patrimonio Mundial" - Aplicado declaración (243)
+101 1245 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "40 Aniversario Convención Patrimonio Mundial" - Pendiente aplicación
+102 1258 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato Tiro Olímpico Las Gabias 2014" - Deducción 2012
+103 1271 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato Tiro Olímpico Las Gabias 2014" - Aplicado declaración (244)
+104 1284 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Campeonato Tiro Olímpico Las Gabias 2014" - Pendiente aplicación
+110055 11229977 1133 NN DDeedduucccciioonneess iinncceennttiivvooss//eessttíímmuullooss iinnvv. eemmpprreess. -- RRéégg. ggrraall. LLIISS//eessppeecciiaalleess aaccoonntteecciimmiieennttooss iinntteerrééss ppúúbblliiccoo -- 22001122. RR. aaccoonntteecciimmiieennttooss ee. ii. pp. -- ""CCoonnmmeemmoorraacciióónn 550000 aaññooss BBuullaa PPaappaall"" -- DDeedduucccciióónn 22001122
+106 1310 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Conmemoración 500 años Bula Papal" - Aplicado declaración (246)
+107 1323 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Conmemoración 500 años Bula Papal" - Pendiente aplicación
+108 1336 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de las Culturas, la Paz y la Libertad" - Deducción 2012
+109 1349 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de las Culturas, la Paz y la Libertad" - Aplicado declaración (247)
+110 1362 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de las Culturas, la Paz y la Libertad" - Pendiente aplicación
+111 1375 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de la Neurociencia" - Deducción 2012
+112 1388 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de la Neurociencia" - Aplicado declaración (248)
+113 1401 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año de la Neurociencia" - Pendiente aplicación
+114 1414 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "VIII Batalla Navas de Tolosa y V Conquista Navarra" - Deducción 2012
+115 1427 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "VIII Batalla Navas de Tolosa y V Conquista Navarra" - Aplicado declaración (249)
+116 1440 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "VIII Batalla Navas de Tolosa y V Conquista Navarra" - Pendiente aplicación
+117 1453 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año Santo Jubilar Mariano en Almonte" - Deducción 2012
+118 1466 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año Santo Jubilar Mariano en Almonte" - Aplicado declaración (254)
+119 1479 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Año Santo Jubilar Mariano en Almonte" - Pendiente aplicación
+120 1492 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "2014 Año Internacional Dieta Mediterránea" - Deducción 2012
+121 1505 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "2014 Año Internacional Dieta Mediterránea" - Aplicado declaración (256)
+122 1518 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "2014 Año Internacional Dieta Mediterránea" - Pendiente aplicación
+123 1531 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Candidatura Madrid 2020" - Deducción 2012
+124 1544 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Candidatura Madrid 2020" - Aplicado declaración (257)
+
+# Pag. 48
+
+Anexo A.3
+Nº Posic. Long. Tipo Descripción Validación Contenido
+125 1557 13 N Deducciones incentivos/estímulos inv. empres. - Rég. gral. LIS/especiales acontecimientos interés público - 2012. R. acontecimientos e. i. p. - "Candidatura Madrid 2020" - Pendiente aplicación
+126 1570 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Deducción ejercicios anteriores - Inversiones adquisición activos fijos - Saldo anterior
+127 1583 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Deducción ejercicios anteriores - Inversiones adquisición activos fijos - Aplicado declaración (968)
+128 1596 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Deducción ejercicios anteriores - Inversiones adquisición activos fijos - Pendiente aplicación
+129 1609 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Deducción ejercicios anteriores - Restantes modalidades - Saldo anterior
+130 1622 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Deducción ejercicios anteriores - Restantes modalidades - Aplicado declaración (969)
+131 1635 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Deducción ejercicios anteriores - Restantes modalidades - Pendiente aplicación
+132 1648 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - L.I.S.: Activ. investigación, desarrollo e innovación tecnológica - Deducción 2012
+133 1661 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - L.I.S.: Activ. investigación, desarrollo e innovación tecnológica - Aplicado declaración (970)
+134 1674 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - L.I.S.: Activ. investigación, desarrollo e innovación tecnológica - Pendiente aplicación
+135 1687 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Inversiones y gastos artº. 38.1, 2 y 3 - Deducción 2012
+136 1700 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Inversiones y gastos artº. 38.1, 2 y 3 - Aplicado declaración (973)
+137 1713 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Inversiones y gastos artº. 38.1, 2 y 3 - Pendiente de aplicación
+138 1726 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Inversiones medioambientales - Deducción 2012
+139 1739 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Inversiones medioambientales - Aplicado declaración (974)
+140 1752 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Inversiones medioambientales - Pendiente aplicación
+141 1765 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Util. nuevas tecnologías empleados - Deducción 2012
+142 1778 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Util. nuevas tecnologías empleados - Aplicado declaración (975)
+143 1791 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Util. nuevas tecnologías empleados - Pendiente aplicación
+144 1804 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Creación empleo trabajadores minusválidos - Deducción 2012
+145 1817 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Creación empleo trabajadores minusválidos - Aplicado declaración (976)
+146 1830 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Creación empleo trabajadores minusválidos - Pendiente aplicación
+147 1843 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Inversiones en la adquisición de activos fijos - Deducción 2012
+114488 11885566 1133 NN DDeedduucccciioonneess iinncceennttiivvooss//eessttíímmuullooss iinnvv. eemmpprreess. -- RRéégg. eesspp. iinnvv. CCaannaarriiaass -- EEjjeerrcciicciioo 22001122. MMooddaalliiddaaddeess LLIISS -- IInnvveerrssiioonneess eenn llaa aaddqquuiissiicciióónn ddee aaccttiivvooss ffiijjooss -- AApplliiccaaddoo ddeeccllaarraacciióónn ((997788))
+149 1869 13 N Deducciones incentivos/estímulos inv. empres. - Rég. esp. inv. Canarias - Ejercicio 2012. Modalidades LIS - Inversiones en la adquisición de activos fijos - Pendiente aplicación
+150 1882 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10017>
+151 1891 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 1892
+
+# Pag. 49
+
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "18"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante Blanco
+6 10 13 N Deducciones por incentivos y estímulos a la inversión empresarial - Deducciones: importe aplicado - Importe total de las deducciones (979)
+7 23 13 N Deducciones por incentivos y estímulos a la inversión empresarial - Deducciones: importe aplicado - Deducciones - Parte estatal (706)
+8 36 13 N Deducciones por incentivos y estímulos a la inversión empresarial - Deducciones: importe aplicado - Deducciones - Parte autonómica (707)
+9 49 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2008 - Importe dotaciones (984)
+10 62 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2008 - Inversiones previstas letras A, B y D (1º.) artº. 27.4 (985)
+11 75 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2008 - Inversiones previstas letras C y D 2º. a 6º.) artº. 27.4 (986)
+12 88 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2009 - Importe dotaciones (988)
+13 101 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2009 - Inversiones previstas letras A, B y D (1º.) artº. 27.4 (989)
+14 114 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2009 - Inversiones previstas letras C y D 2º. a 6º.) artº. 27.4 (990)
+15 127 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2009 - Pendiente de materializar (991)
+16 140 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2010 - Importe dotaciones (992)
+17 153 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2010 - Inversiones previstas letras A, B y D (1º.) artº. 27.4 (993)
+18 166 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2010 - Inversiones previstas letras C y D 2º. a 6º.) artº. 27.4 (994)
+1199 117799 1133 NN RReesseerrvvaa ppaarraa IInnvveerrssiioonneess eenn CCaannaarriiaass ((LLeeyy 1199//11999944)) -- DDoottaaccioionneess, mmaatteerriaialilzizaaccioionneesse ei ninvveersrsioionneessa anntitcicipipaaddaass- -2 2001100- -P Peendnideinetneted edem mataetreiarilaizliazra(r9 (9959)5
+20 192 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2011 - Importe dotaciones (539)
+21 205 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2011 - Inversiones previstas letras A, B y D (1º.) artº. 27.4 (561)
+22 218 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2011 - Inversiones previstas letras C y D 2º. a 6º.) artº. 27.4 (562)
+23 231 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2011 - Pendiente de materializar (563)
+24 244 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2012 - Importe dotaciones (966)
+25 257 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2012 - Inversiones previstas letras A, B y D (1º.) artº. 27.4 (967)
+26 270 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2012 - Inversiones previstas letras C y D 2º. a 6º.) artº. 27.4 (971)
+27 283 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - 2012 - Pendiente de materializar (972)
+28 296 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - Importe de la deducción 2012
+29 309 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - Futuras dotaciones RIC 2012 - Inversiones prev. letras A, B y D (1º.) artº. 27.4 (996)
+30 322 13 N Reserva para Inversiones en Canarias (Ley 19/1994) - Dotaciones, materializaciones e inversiones anticipadas - Futuras dotaciones RIC 2012 - Inversiones prev. letras C y D 2º. a 6º.) artº. 27.4 (997)
+31 335 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10018>
+32 344 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 345
+
+# Pag. 50
+
+Anexo B.1
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "19"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante. Blanco
+6 10 13 N Deducciones Autonómicas - Andalucía - Para beneficiarios de ayudas familiares (800)
+7 23 13 N Deducciones Autonómicas - Andalucía - Para beneficiarios ayudas viviendas protegidas (801)
+8 36 13 N Deducciones Autonómicas - Andalucía - Por inversión vivienda habitual protegida/personas jóvenes (802)
+9 49 9 An Deducciones Autonómicas - Andalucía - Por cantidades invertidas en alquiler vivienda habitual - NIF arrendador (943)
+10 58 13 N Deducciones Autonómicas - Andalucía - Por cantidades invertidas en alquiler vivienda habitual - Importe (803)
+11 71 13 N Deducciones Autonómicas - Andalucía - Para fomento del autoempleo (804)
+12 84 13 N Deducciones Autonómicas - Andalucía - Por inversión en la adquisición de acciones y participaciones (805)
+13 97 13 N Deducciones Autonómicas - Andalucía - Por adopción de hijos ámbito internacional (806)
+14 110 13 N Deducciones Autonómicas - Andalucía - Para contribuyentes con discapacidad (807)
+15 123 13 N Deducciones Autonómicas - Andalucía - Para padre/madre de familia monoparental con ascendientes mayores 75 años (808)
+16 136 13 N Deducciones Autonómicas - Andalucía - Por asistencia a personas con discapacidad - Deducción con carácter general (809)
+17 149 11 An Deducciones Autonómicas - Andalucía - Por asistencia a personas con discapacidad - Si precisan ayuda de terceras personas. Cuenta cotización (940)
+18 160 13 N Deducciones Autonómicas - Andalucía - Por asistencia a personas con discapacidad - Si precisan ayuda de terceras personas. Importe (810)
+1199 117733 1111 AAnn DDeedduucccciioonneess AAuuttoonnóómmiiccaass -- AAnnddaalluuccííaa -- PPoorr aayyuuddaa ddoommééssttiiccaa. CCuueennttaa ccoottiizzaacciióónn ((994411))
+20 184 13 N Deducciones Autonómicas - Andalucía - Por ayuda doméstica. Importe (811)
+21 197 13 N Deducciones Autonómicas - Andalucía - Para trabajadores por gastos de defensa jurídica de la relación laboral (258)
+22 210 13 N Deducciones Autonómicas - Andalucía - Por obras en vivienda (259)
+23 223 13 N Deducciones Autonómicas - Andalucía - Por obras en vivienda. Cantidades 2012 a deducir en los 4 años siguientes (263)
+24 236 13 N Deducciones Autonómicas - Andalucía - Para contribuyentes con cónyuges o parejas de hecho con discapacidad (264)
+25 249 13 N Deducciones Autonómicas - Andalucía - Total deducciones autonómicas (717)
+26 262 13 N Deducciones Autonómicas - Aragón - Por nacimiento o adopción tercer hijo o sucesivos o segundo hijo discapacitado (812)
+27 275 13 N Deducciones Autonómicas - Aragón - Por adopción internacional de niños (813)
+28 288 13 N Deducciones Autonómicas - Aragón - Por el cuidado de personas dependientes (814)
+29 301 13 N Deducciones Autonómicas - Aragón - Por donaciones con finalidad ecológica y en investigación y desarrollo científico y técnico (815)
+30 314 13 N Deducciones Autonómicas - Aragón - Por adquisición vivienda habitual por víctimas del terrorismo (816)
+31 327 13 N Deducciones Autonómicas - Aragón - Por inversión en acciones de entidades que cotizan en Mercado bursátil (306)
+32 340 13 N Deducciones Autonómicas - Aragón - Por inversión en la adquisición de acciones o participaciones (266)
+33 353 13 N Deducciones Autonómicas - Aragón - Por adquisición de vivienda en núcleos rurales (267)
+34 366 13 N Deducciones Autonómicas - Aragón - Total deducciones autonómicas (717)
+35 379 13 N Deducciones Autonómicas - Asturias - Por acogimiento no remunerado mayores 65 años (817)
+36 392 13 N Deducciones Autonómicas - Asturias - Por adquisición/adecuación vivienda habitual contribuyentes discapacitados (818)
+37 405 13 N Deducciones Autonómicas - Asturias - Por adquisición/adecuación vvda. habitual con cónyuge, ascendientes o descendientes discapacitados (819)
+38 418 13 N Deducciones Autonómicas - Asturias - Por inversión vivienda habitual protegida (820)
+39 431 9 An Deducciones Autonómicas - Asturias - Por arrendamiento de vivienda habitual - NIF arrendador (943)
+Página 50
+
+# Pag. 51
+
+Anexo B.1
+Nº Posic. Long. Tipo Descripción Validación Contenido
+40 440 13 N Deducciones Autonómicas - Asturias - Por arrendamiento de vivienda habitual - Importe (821)
+41 453 13 N Deducciones Autonómicas - Asturias - Para fomento de autoempleo mujeres y jóvenes emprendedores (822)
+42 466 13 N Deducciones Autonómicas - Asturias - Para fomento de autoempleo (823)
+43 479 13 N Deducciones Autonómicas - Asturias - Por donación de fincas rústicas a favor del Principado de Asturias (824)
+44 492 13 N Deducciones Autonómicas - Asturias - Por adopción internacional de menores (825)
+45 505 13 N Deducciones Autonómicas - Asturias - Por partos múltiples o por dos o más adopciones (826)
+46 518 13 N Deducciones Autonómicas - Asturias - Para familias numerosas (827)
+47 531 13 N Deducciones Autonómicas - Asturias - Para familias monoparentales (828)
+48 544 13 N Deducciones Autonómicas - Asturias - Por acogimiento familiar de menores (564)
+49 557 13 N Deducciones Autonómicas - Asturias - Por gestión forestal sostenible (307)
+50 570 13 N Deducciones Autonómicas - Asturias - Total deducciones autonómicas (717)
+51 583 13 N Deducciones Autonómicas - Illes Balears - Por gastos adquisición libros de texto (829)
+52 596 13 N Deducciones Autonómicas - Illes Balears - Para contribuyentes edad igual o superior a 65 años (830)
+53 609 13 N Deducciones Autonómicas - Illes Balears - Por adquisición/rehabilitación vivienda habitual jóvenes (831)
+54 622 9 An Deducciones Autonómicas - Illes Balears - Por arrendamiento de vivienda habitual por jóvenes - NIF arrendador (943)
+55 631 13 N Deducciones Autonómicas - Illes Balears - Por arrendamiento de vivienda habitual por jóvenes - Importe (832)
+56 644 13 N Deducciones Autonómicas - Illes Balears - Para los declarantes con minusvalía física/psíquica o descendientes con esa condición (833)
+57 657 13 N Deducciones Autonómicas - Illes Balears - Para los declarantes titulares de fincas o terrrenos suelo rústico protegido (834)
+58 670 13 N Deducciones Autonómicas - Illes Balears - Por adopción de hijos (835)
+59 683 13 N Deducciones Autonómicas - Illes Balears - Por el impuesto transmisiones y AJD por adquisición vivienda habitual (836)
+60 696 13 N Deducciones Autonómicas - Illes Balears - Por el impuesto transmisiones y AJD por adquisición vivienda habitual protegida (837)
+61 709 13 N Deducciones Autonómicas - Illes Balears - Para el fomento del autoempleo (838)
+62 722 13 N Deducciones Autonómicas - Illes Balears - Por inversión en la adquisición de acciones o participaciones (268)
+6633 773355 1133 NN DDeedduucccciioonneess AAuuttoonnóómmiiccaass -- IIlllleess BBaalleeaarrss -- PPoorr ggaassttooss eenn pprriimmaass ddee sseegguurroo iinnddiivviidduuaalleess ddee ssaalluudd ((226699))
+64 748 13 N Deducciones Autonómicas - Illes Balears - Total deducciones autonómicas (717)
+65 761 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10019>
+66 770 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 771
+Página 51
+
+# Pag. 52
+
+Anexo B.2
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "20"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante. Blanco
+6 10 13 N Deducciones Autonómicas - Canarias - Por donaciones con finalidad ecológica (839)
+7 23 13 N Deducciones Autonómicas - Canarias - Por donaciones rehabilitación/conservación patrimonio histórico de Canarias (840)
+8 36 13 N Deducciones Autonómicas - Canarias - Por cantidades destinadas restauración/rehabilitación/reparación bienes inmuebles declarados de Interés Cultural (841)
+9 49 13 N Deducciones Autonómicas - Canarias - Por gastos de estudios (842)
+10 62 13 N Deducciones Autonómicas - Canarias - Por traslado residencia a otra isla para realizar actividad laboral cuenta ajena/actividad económica (843)
+11 75 13 N Deducciones Autonómicas - Canarias - Por donaciones en metálico a descendientes menores 35 años para adquisición/rehabilitación primera vivienda habitual (844)
+12 88 13 N Deducciones Autonómicas - Canarias - Por nacimiento o adopción de hijos (845)
+13 101 13 N Deducciones Autonómicas - Canarias - Por contribuyentes minusválidos y mayores de 65 años (846)
+14 114 13 N Deducciones Autonómicas - Canarias - Por gastos de guardería (847)
+15 127 13 N Deducciones Autonómicas - Canarias - Por familia numerosa (848)
+16 140 13 N Deducciones Autonómicas - Canarias - Por inversión vivienda habitual: con carácter general (849)
+17 153 13 N Deducciones Autonómicas - Canarias - Por inversión vivienda habitual:obras adecuación personas con discapacidad (850)
+18 166 9 An Deducciones Autonómicas - Canarias - Por alquiler de vivienda habitual - NIF arrendador (943)
+1199 117755 1133 NN DDeedduucccciioonneess AAuuttoonnóómmiiccaass -- CCaannaarriiaass -- PPoorr aallqquuiilleerr ddee vviivviieennddaa hhaabbiittuuaall -- IImmppoorrttee ((885511))
+20 188 20 An Deducciones Autonómicas - Canarias - Por alquiler de vivienda habitual - Referencia catastral (273)
+21 208 1 Num Deducciones Autonómicas - Canarias - Por alquiler de vivienda habitual - Si no tiene referencia catastral. 1 o cero (274)
+22 209 13 N Deducciones Autonómicas - Canarias - Por alquiler de vivienda habitual - Cantidades totales satisfechas al arrendador (276)
+23 222 13 N Deducciones Autonómicas - Canarias - Por contribuyentes desempleados (853)
+24 235 13 N Deducciones Autonómicas - Canarias - Por obras de rehabilitación o reforma en vivienda (308)
+25 248 13 N Deducciones Autonómicas - Canarias - Total deducciones autonómicas (717)
+26 261 9 An Deducciones Autonómicas - Cantabria - Por arrendamiento de vivienda habitual jóvenes, mayores, discapacitados - NIF arrendador (943)
+27 270 13 N Deducciones Autonómicas - Cantabria - Por arrendamiento de vivienda habitual jóvenes, mayores, discapacitados - Importe (854)
+28 283 13 N Deducciones Autonómicas - Cantabria - Por cuidado de familiares (855)
+29 296 5 Num Deducciones Autonómicas - Cantabria - Por adquisición o rehabilitación de vivienda - Código municipio (939)
+30 301 13 N Deducciones Autonómicas - Cantabria - Por adquisición o rehabilitación de vivienda - Importe (856)
+31 314 13 N Deducciones Autonómicas - Cantabria - Por donativos a fundaciones (857)
+32 327 13 N Deducciones Autonómicas - Cantabria - Por acogimiento familiar de menores (858)
+33 340 13 N Deducciones Autonómicas - Cantabria - Total deducciones autonómicas (717)
+34 353 13 N Deducciones Autonómicas - Castilla-La Mancha - Para el fomento del autoempleo. Generado 2012 (278)
+35 366 13 N Deducciones Autonómicas - Castilla-La Mancha - Para el fomento del autoempleo (279)
+36 379 13 N Deducciones Autonómicas - Castilla-La Mancha - Para el fomento del autoempleo. Deducción generada en el ejercicio a deducir en los 3 años siguientes (328)
+37 392 13 N Deducciones Autonómicas - Castilla-La Mancha - Por nacimiento o adopción de hijos (859)
+38 405 13 N Deducciones Autonómicas - Castilla-La Mancha - Por discapacidad del contribuyente (860)
+39 418 13 N Deducciones Autonómicas - Castilla-La Mancha - Por discapacidad de ascendientes o descendientes (861)
+Página 52
+
+# Pag. 53
+
+Anexo B.2
+Nº Posic. Long. Tipo Descripción Validación Contenido
+40 431 13 N Deducciones Autonómicas - Castilla-La Mancha - Para contribuyentes mayores de 75 años (862)
+41 444 13 N Deducciones Autonómicas - Castilla-La Mancha - Por el cuidado de ascendientes mayores de 75 años (863)
+42 457 13 N Deducciones Autonómicas - Castilla-La Mancha - Por cantidades donadas Por cantidades donadas al Fondo Castellano-Manchego de Cooperación (864)
+43 470 13 N Deducciones Autonómicas - Castilla-La Mancha - Por familia numerosa (277)
+44 483 13 N Deducciones Autonómicas - Castilla-La Mancha - Por donaciones con finalidad en investigación y desarrollo (332)
+45 496 13 N Deducciones Autonómicas - Castilla-La Mancha - Total deducciones autonómicas (717)
+46 509 13 N Deducciones Autonómicas - Castilla y León - Para contribuyentes afectados por discapacidad (870)
+47 522 13 N Deducciones Autonómicas - Castilla y León - Por adquisición de viviendas por jóvenes en núcleos rurales (871)
+48 535 13 N Deducciones Autonómicas - Castilla y León - Por donación a Fundaciones de Castilla y León para recuperación patrimonio histórico, cultural y natural (872)
+49 548 13 N Deducciones Autonómicas - Castilla y León - Por inversión en patrimonio histórico, cultural y natural (873)
+50 561 9 An Deducciones Autonómicas - Castilla y León - Por alquiler vivienda habitual contribuyentes menores de 36 años - Nif arrendador (943)
+51 570 13 N Deducciones Autonómicas - Castilla y León - Por alquiler vivienda habitual contribuyentes menores de 36 años - Importe (874)
+52 583 13 N Deducciones Autonómicas - Castilla y León - Por inversión instalaciones medioambientales/adaptación vvda.habitual discapacitados (565)
+53 596 9 An Deducciones Autonómicas - Castilla y León - Por cuota Seg.Social empleados del hogar - Nif persona empleada (324)
+54 605 13 N Deducciones Autonómicas - Castilla y León - Por cuota Seg.Social empleados del hogar - Importe (309)
+55 618 9 An Deducciones Autonómicas - Castilla y León - Por inversión obras adecuación inspección técnica - Nif persona o entidad (325)
+56 627 13 N Deducciones Autonómicas - Castilla y León - Por inversión obras adecuación inspección técnica - Importe (315)
+57 640 9 An Deducciones Autonómicas - Castilla y León - Por inversión en obras de mejora en vvda. habitual - Nif persona o entidad (326)
+58 649 13 N Deducciones Autonómicas - Castilla y León - Por inversión en obras de mejora en vvda. habitual - Importe (316)
+59 662 8 Num Deducciones Autonómicas - Castilla y León - Por adquisición de vivienda de nueva construcción para residencia habitual - Fecha (406)
+60 670 13 N Deducciones Autonómicas - Castilla y León - Por adquisición de vivienda de nueva construcción para residencia habitual (333)
+61 683 13 N Deducciones Autonómicas - Castilla y León - Deducción para el fomento del autoempleo mujeres y jóvenes. Pendiente de aplicación (407)
+62 696 13 N Deducciones Autonómicas - Castilla y León - Deducciones no aplicadas en 2011 - Deducción para el fomento del autoempleo de las mujeres y los jóvenes (335)
+6633 770099 88 NNuumm DDeedduucccciioonneess AAuuttoonnóómmiiccaass -- CCaassttiillllaa yy LLeeóónn -- PPaarraa eell ffoommeennttoo ddeell aauuttooeemmpplleeoo mmuujjeerreess yy jjóóvveenneess. FFeecchhaa ddee aallttaa eenn eell cceennssoo ((440088))
+64 717 13 N Deducciones Autonómicas - Castilla y León - Para fomento del autoempleo de mujeres y jovenes - Generado 2012 (331)
+65 730 13 N Deducciones Autonómicas - Castilla y León - Para fomento del autoempleo de mujeres y jovenes (875)
+66 743 8 Num Deducciones Autonómicas - Castilla y León - Para el fomento del autoempleo de autónomos. Fecha de alta en el censo (409)
+67 751 13 N Deducciones Autonómicas - Castilla y León - Para el fomento del autoempleo de autónomos. Generado 2012 (338)
+68 764 13 N Deducciones Autonómicas - Castilla y León - Para el fomento del autoempleo de autónomos (413)
+69 777 13 N Deducciones Autonómicas - Castilla y León - Por familia numerosa, nacimiento o adopción, etc. Pendiente de aplicación (417)
+70 790 13 N Deducciones Autonómicas - Castilla y León - Por familia numerosa, nacimiento o adopción, etc. Pendiente de aplicación (336)
+71 803 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10020>
+72 812 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 813
+Página 53
+
+# Pag. 54
+
+Anexo B.3
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "21"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante. Blanco
+6 10 13 N Deducciones Autonómicas - Castilla y León - Por familia numerosa (866)
+7 23 13 N Deducciones Autonómicas - Castilla y León - Por nacimiento o adopción de hijos (867)
+8 36 13 N Deducciones Autonómicas - Castilla y León - Por adopción internacional (868)
+9 49 13 N Deducciones Autonómicas - Castilla y León - Por partos múltiples o adopciones simultáneas en 2011 (418)
+10 62 9 An Deducciones Autonómicas - Castilla y León - Por cuidado de hijos menores - Nif empleada (327)
+11 71 13 N Deducciones Autonómicas - Castilla y León - Por cuidado de hijos menores (869)
+12 84 13 N Deducciones Autonómicas - Castilla y León - Por paternidad (334)
+13 97 13 N Deducciones Autonómicas - Castilla y León - Por gastos de adopción (337)
+14 110 13 N Deducciones Autonómicas - Castilla y León - Importe total aplicado (317)
+15 123 13 N Deducciones Autonómicas - Castilla y León - Total deducciones autonómicas (717)
+16 136 13 N Deducciones Autonómicas - Castilla y León - Deducciones fomento autoempleo mujeres y jóvenes y autónomos - 2011 Pendiente de aplicación (419)
+17 149 13 N Deducciones Autonómicas - Castilla y León - Deducciones fomento autoempleo mujeres y jóvenes y autónomos - 2012 Pendiente de aplicación (318)
+18 162 13 N Deducciones Autonómicas - Castilla y León - Deducciones familia numerosa, nacimiento o adopción, etc - 2011 Pendiente de aplicación (429)
+19 175 13 N Deducciones Autonómicas - Castilla y León - Deducciones familia numerosa, nacimiento o adopción, etc - 2012 Pendiente de aplicación (319)
+20 188 13 N Deducciones Autonómicas - Cataluña - Por nacimiento o adopción hijos (876)
+21 201 13 N Deducciones Autonómicas - Cataluña - Por donativos a entidades que fomentan el uso lengua catalana (877)
+22 214 13 N Deducciones Autonómicas - Cataluña - Por donativos a entidades que fomentan la investigación científica (878)
+23 227 9 An Deducciones Autonómicas - Cataluña - Por alquiler de vivienda habitual - NIF arrendador (943)
+24 236 13 N Deducciones Autonómicas - Cataluña - Por alquiler de vivienda habitual - Importe (879)
+25 249 13 N Deducciones Autonómicas - Cataluña - Por pago intereses préstamos estudios universitarios de master y doctorado (880)
+26 262 13 N Deducciones Autonómicas - Cataluña - Para los contribuyentes que queden viudos (881)
+27 275 13 N Deducciones Autonómicas - Cataluña - Por rehabilitación vivienda habitual (882)
+28 288 13 N Deducciones Autonómicas - Cataluña - Por donaciones en beneficio del medio ambiente (883)
+29 301 13 N Deducciones Autonómicas - Cataluña - Por inversión adquisición de acciones o participaciones sociales (566)
+30 314 13 N Deducciones Autonómicas - Cataluña - Por inversión en acciones de entidades que cotizan en empresas en expansión (567)
+31 327 13 N Deducciones Autonómicas - Cataluña - Total deducciones autonómicas (717)
+32 340 13 N Deducciones Autonómicas - Extremadura - Por adquisición vivienda habitual para jóvenes y víctimas del terrorismo (884)
+33 353 13 N Deducciones Autonómicas - Extremadura - Por trabajo dependiente (885)
+34 366 13 N Deducciones Autonómicas - Extremadura - Por donaciones de bienes integrantes del Patrimonio Histórico y Cultural Extremeño (886)
+35 379 13 N Deducciones Autonómicas - Extremadura - Por cantidades destinadas a la conservación, reparación etc. bienes Patrimonio Histórico y Cultural Extremeño (887)
+36 392 9 An Deducciones Autonómicas - Extremadura - Por alquiler de vivienda habitual para jóvenes, familias numerosas y discapacitados - NIF arrendador (943)
+37 401 13 N Deducciones Autonómicas - Extremadura - Por alquiler de vivienda habitual para jóvenes, familias numerosas y discapacitados - Importe (888)
+38 414 13 N Deducciones Autonómicas - Extremadura - Por cuidado de familiares discapacitados (889)
+39 427 13 N Deducciones Autonómicas - Extremadura - Por acogimiento de menores (890)
+40 440 13 N Deducciones Autonómicas - Extremadura - Por ayuda doméstica (339)
+Página 54
+
+# Pag. 55
+
+Anexo B.3
+Nº Posic. Long. Tipo Descripción Validación Contenido
+41 453 13 N Deducciones Autonómicas - Extremadura - Para fomento autoempleo de las mujeres emprendedoras (348)
+42 466 13 N Deducciones Autonómicas - Extremadura - Para fomento autoempleo de los jovenes emprendedores menores de 36 años (351)
+43 479 13 N Deducciones Autonómicas - Extremadura - Por adopción de hijos en el ambito internacional (352)
+44 492 13 N Deducciones Autonómicas - Extremadura - Para la madre o el padre de familia monoparental (353)
+45 505 13 N Deducciones Autonómicas - Extremadura - Por partos múltiples (354)
+46 518 13 N Deducciones Autonómicas - Extremadura - Por obras de mejora en la vivienda habitual (355)
+47 531 13 N Deducciones Autonómicas - Extremadura - Por inversión no empresarial en adquisición de ordenadores personales para uso doméstico (356)
+48 544 13 N Deducciones Autonómicas - Extremadura - Por donaciones con finalidad ecológica (357)
+49 557 13 N Deducciones Autonómicas - Extremadura - Por compra de material escolar (414)
+50 570 13 N Deducciones Autonómicas - Extremadura - Total deducciones autonómicas (717)
+51 583 13 N Deducciones Autonómicas - Galicia - Por nacimiento o adopción hijos (891)
+52 596 13 N Deducciones Autonómicas - Galicia - Por familia numerosa (892)
+53 609 13 N Deducciones Autonómicas - Galicia - Por cuidado hijos menores (893)
+54 622 13 N Deducciones Autonómicas - Galicia - Por contribuyentes discapacitados = > 65 años que precisan ayuda de terceras personas (894)
+55 635 13 N Deducciones Autonómicas - Galicia - Por gastos de nuevas tecnologías en hogares gallegos (895)
+56 648 9 An Deducciones Autonómicas - Galicia - Por alquiler de vivienda habitual - NIF arrendador (943)
+57 657 13 N Deducciones Autonómicas - Galicia - Por alquiler de vivienda habitual - Importe (896)
+58 670 13 N Deducciones Autonómicas - Galicia - Por fomento autoempleo hombres menores 35 años y mujeres cualquier edad (897)
+59 683 13 N Deducciones Autonómicas - Galicia - Por acogimiento familiar de menores (358)
+60 696 13 N Deducciones Autonómicas - Galicia - Por inversión en acciones o participaciones sociales en entidades nuevas o de reciente creación (359)
+61 709 13 N Deducciones Autonómicas - Galicia - Por inversión en acciones de entidades empresas en expansión Mercado Alternativo Bursátil (416)
+62 722 13 N Deducciones Autonómicas - Galicia - Total deducciones autonómicas (717)
+63 735 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10021>
+64 744 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 745
+Página 55
+
+# Pag. 56
+
+Anexo B.4
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "22"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante. Blanco
+6 10 13 N Deducciones Autonómicas - Madrid - Por nacimiento o adopción de hijos (898)
+7 23 13 N Deducciones Autonómicas - Madrid - Por adopción internacional de niños (899)
+8 36 13 N Deducciones Autonómicas - Madrid - Por acogimiento familiar de menores (900)
+9 49 13 N Deducciones Autonómicas - Madrid - Por acogimiento no remunerado de mayores 65 años y/o discapacitados (901)
+10 62 9 An Deducciones Autonómicas - Madrid - Por arrendamiento de vivienda habitual por menores de 35 años - NIF arrendador (943)
+11 71 13 N Deducciones Autonómicas - Madrid - Por arrendamiento de vivienda habitual por menores de 35 años - Importe (902)
+12 84 13 N Deducciones Autonómicas - Madrid - Por donativos a fundaciones (903)
+13 97 13 N Deducciones Autonómicas - Madrid - Por gastos educativos (905)
+14 110 13 N Deducciones Autonómicas - Madrid - Por inversión en vivienda habitual de nueva construcción (906)
+15 123 13 N Deducciones Autonómicas - Madrid - Para familias con dos o más descendientes e ingresos reducidos (568)
+16 136 13 N Deducciones Autonómicas - Madrid - Por inversión en adquisición de acciones y participaciones sociales de nuevas entidades (569)
+1177 114499 1133 NN DDeedduucccciioonneess AAuuttoonnóómmiiccaass - MMaaddrriidd - PPaarraa eell ffoommeennttoo ddeell aauuttooeemmpplleeoo ddee jjóóvveenneess mmeennoorreess ddee 3355 aaññooss ((558866))
+18 162 13 N Deducciones Autonómicas - Madrid - Por inversiones en entidades cotizadas en el Mercado Alternativo Bursátil (587)
+19 175 13 N Deducciones Autonómicas - Madrid - Total deducciones autonómicas (717)
+20 188 13 N Deducciones Autonómicas - Murcia - Por inversión vivienda habitual jóvenes edad igual/inferior 35 años (incluido rég. transitorio D.T. segunda Ley 7/2011) (907)
+21 201 13 N Deducciones Autonómicas - Murcia - Por donativos para la protección del patrimonio histórico Región Murcia (908)
+22 214 13 N Deducciones Autonómicas - Murcia - Por gastos de guardería para hijos menores de 3 años (909)
+23 227 13 N Deducciones Autonómicas - Murcia - Por inversión en instalaciones de recursos energéticos renovables (910)
+24 240 13 N Deducciones Autonómicas - Murcia - Por inversiones en dispositivos domésticos de ahorro de agua (911)
+25 253 13 N Deducciones Autonómicas - Murcia - Para el fomento del autoempleo de jóvenes menores de 35 años en situación legal de desempleo (915)
+26 266 13 N Deducciones Autonómicas - Murcia - Total deducciones autonómicas (717)
+27 279 13 N Deducciones Autonómicas - La Rioja - Por nacimiento y adopción de segundo o ulterior hijo (912)
+28 292 13 N Deducciones Autonómicas - La Rioja - Por inversión adquisición/rehabilitación vivienda habitual para jóvenes (913)
+29 305 4 Num Deducciones Autonómicas - La Rioja - Por adquisición/rehabilitación 2ª vivienda en el medio rural. Código municipio (939)
+30 309 13 N Deducciones Autonómicas - La Rioja - Por adquisición/rehabilitación 2ª vivienda en el medio rural (914)
+31 322 13 N Deducciones Autonómicas - La Rioja - Por inversión rehabilitación vivienda habitual (916)
+32 335 13 N Deducciones Autonómicas - La Rioja - Total deducciones autonómicas (717)
+33 348 13 N Deducciones Autonómicas - Comunitat Valenciana - Por nacimiento/adopción de hijos (917)
+34 361 13 N Deducciones Autonómicas - Comunitat Valenciana - Por nacimiento/adopción múltiples (918)
+35 374 13 N Deducciones Autonómicas - Comunitat Valenciana - Por nacimiento/adopción hijos discapacitados (919)
+Página 56
+
+# Pag. 57
+
+Anexo B.4
+Nº Posic. Long. Tipo Descripción Validación Contenido
+36 387 13 N Deducciones Autonómicas - Comunitat Valenciana - Por familia numerosa (920)
+37 400 13 N Deducciones Autonómicas - Comunitat Valenciana - Por custodia en guarderías y primer ciclo educación infantil hijos menores de 3 años (921)
+38 413 13 N Deducciones Autonómicas - Comunitat Valenciana - Por conciliación del trabajo con la vida familiar (922)
+39 426 13 N Deducciones Autonómicas - Comunitat Valenciana - Para contribuyentes con un grado de discapacidad igual o superior al 33 por 100, de edad igual o superior a 65 años (923)
+40 439 13 N Deducciones Autonómicas - Comunitat Valenciana - Por ascendientes > 75 años ó > 65 años discapacitados (924)
+41 452 13 N Deducciones Autonómicas - Comunitat Valenciana - Por realización de labores no remuneradas en el hogar (925)
+42 465 13 N Deducciones Autonómicas - Comunitat Valenciana - Por adquisición/rehabilitación vivienda con financiación ajena (926)
+43 478 13 N Deducciones Autonómicas - Comunitat Valenciana - Por primera adquisición vivienda habitual para contribuyentes edad igual o inferior 35 años (927)
+44 491 13 N Deducciones Autonómicas - Comunitat Valenciana - Por adquisición vivienda habitual por discapacitados (928)
+45 504 13 N Deducciones Autonómicas - Comunitat Valenciana - Por cantidades adquisición/rehabilitación vivienda habitual, procedentes ayudas públicas (929)
+46 517 9 An Deducciones Autonómicas - Comunitat Valenciana - Por arrendamiento de vivienda habitual - NIF arrendador (943)
+47 526 13 N Deducciones Autonómicas - Comunitat Valenciana - Por arrendamiento de vivienda habitual - Importe (930)
+48 539 9 An Deducciones Autonómicas - Comunitat Valenciana - Por arrendamiento vivienda actividades distinto municipio - NIF arrendador (944)
+49 548 13 N Deducciones Autonómicas - Comunitat Valenciana - Por arrendamiento vivienda actividades distinto municipio - Importe (931)
+50 561 13 N Deducciones Autonómicas - Comunitat Valenciana - Por cantidades inversiones fuentes energía renovables en vivienda habitual (932)
+51 574 13 N Deducciones Autonómicas - Comunitat Valenciana - Por donaciones con finalidad ecológica (933)
+52 587 13 N Deducciones Autonómicas - Comunitat Valenciana - Por donación de bienes integrantes Patrimonio Cultural Valenciano (934)
+53 600 13 N Deducciones Autonómicas - Comunitat Valenciana - Por cantidades donadas conservación, reparación y restauración Patrimonio Cultural Valenciano (935)
+54 613 13 N Deducciones Autonómicas - Comunitat Valenciana - Por cantidades destinadas titulares conservación, etc. bienes Patrimonio Cultural Valenciano (936)
+55 626 13 N Deducciones Autonómicas - Comunitat Valenciana - Por donaciones destinadas al fomento de la lengua valenciana (937)
+56 639 13 N Deducciones Autonómicas - Comunitat Valenciana - Por contribuyentes con dos o más descendientes (588)
+5577 665522 1133 NN DDeedduucccciioonneess AAuuttoonnóómmiiccaass - CCoommuunniittaatt VVaalleenncciiaannaa - PPoorr ccaannttiiddaaddeess pprroocceeddeenntteess ddee aayyuuddaass ppúúbblliiccaass ccoonncceeddiiddaass ppoorr llaa GGeenneerraalliittaatt ((558899))
+58 665 13 N Deducciones Autonómicas - Comunitat Valenciana - Total deduciones autonómicas (717)
+59 678 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10022>
+60 687 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 688
+Página 57
+
+# Pag. 58
+
+I-D
+Agencia Tributaria
+Modelo 100 Diseño de registro
+vers. 1.0 Impuesto sobre la Renta de las Personas Físicas 2012
+Nº Posic. Long. Tipo Descripción Validación Contenido
+1 1 2 An Inicio del identificador de modelo y página. OBLIGATORIO Constante "<T"
+2 3 3 Num Modelo. OBLIGATORIO Constante "100"
+3 6 2 Num Página. OBLIGATORIO Constante "23"
+4 8 1 An Fin de identificador de modelo. OBLIGATORIO Constante ">"
+5 9 1 A Indicador de página complementaria. Constante. Blanco
+6 10 13 N Liquidación (2) - Resultado a ingresar o a devolver [770]
+7 23 1 Num Liquidación (2) - Solicitud de suspensión ingreso cónyuge/Renuncia cobro devolución otro cónyuge. "1" o "0" [7]
+8 24 13 N Declaración Complementaria (3) - Resultado de Declaración Complementaria [765]
+9 37 1 Num Ingreso (4) - Casilla 770 positiva - NO FRACCIONA el pago [1] "1" o "0"
+10 38 1 Num Ingreso (4) - Casilla 770 positiva - SÍ FRACCIONA el pago [6] "1" o "0"
+11 39 13 N Ingreso (4) - Casilla 770 positiva - Importe del ingreso [I1]
+12 52 1 Num Ingreso (4) - Casilla 770 positiva - Forma de pago -"0" No consta; "1" Efectivo; "2" Adeudo en Cuenta; "3" Domiciliación
+13 53 1 Num Opciones de pago 2º plazo (5) - NO DOMICILIA el pago [2] "1" o "0"
+14 54 1 Num Opciones de pago 2º plazo (5) - SÍ DOMICILIA el pago [3] "1" o "0"
+15 55 13 N Opciones de pago 2º plazo (5) - Importe del 2º plazo [I2]
+1166 6688 11 NNuumm DDeevvoolluucciióónn ((66)) -- CCaassiillllaa 777700 nneeggaattiivvaa -- "00" NNoo ccoonnssttaa,, "11" DDeevvoolluucciióónn yy "22" rreennuunncciiaa ddeevvoolluucciióónn
+17 69 13 N Devolución (6) - Casilla 770 negativa - Importe [D]
+18 82 4 Num Cuenta bancaria (7) - Código cuenta cliente - Entidad
+19 86 4 Num Cuenta bancaria (7) - Código cuenta cliente - Sucursal
+20 90 2 Num Cuenta bancaria (7) - Código cuenta cliente - DC
+21 92 10 Num Cuenta bancaria (7) - Código cuenta cliente - Número de cuenta
+22 102 9 An Identificador de Fin de registro. OBLIGATORIO Constante </T10023>
+23 111 2 An Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)
+Total: 112
+Página 58

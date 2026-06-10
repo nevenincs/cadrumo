@@ -1,0 +1,335 @@
+# Pag. 1
+
+MODELO 232
+INSTRUCCIONES DE CUMPLIMENTACIÓN
+CUESTIONES GENERALES
+− OEBstLaIrGánA DoOblSi gAa dPoRsE SaE pNreTsAeRn t ar el Modelo 232 y cumplimentar la “Información de operaciones
+con personas o entidades vinculadas (art.13.4 RIS)” los contribuyentes del Impuesto sobre
+Sociedades y del Impuesto sobre la renta de no residentes que actúen mediante establecimiento
+permanente, así como las entidades en régimen de atribución de rentas constituidas en el
+extranjero con presencia en territorio español, que realicen las siguientes operaciones con
+personas o entidades vinculadas en los términos previstos en el artículo 18.2 de la Ley 27/2014,
+del Impuesto sobre Sociedades (en adelante LIS):
+OBLIGADOS A PRESENTAR EL MODELO 232
+Conjunto de operaciones realizadas en el período impositivo
+(con independencia del importe de operaciones por entidad vinculada)
+• si el conjunto de operaciones del mismo tipo y método de valoración > 50 % de la cifra de
+SI
+negocio de la entidad
+• ≤ 100.000 € en operaciones específicas del mismo tipo NO
+• > 100.000 € en operaciones específicas del mismo tipo SI
+Operaciones realizadas en el periodo impositivo con la misma persona o entidad
+• ≤ 250.000 € de operaciones por entidad vinculada (no operaciones específicas) NO
+• > 250.000 € de operaciones por entidad vinculada (no operaciones específicas) SI
+Operaciones 1) Operaciones con personas físicas que tributen en estimación objetiva que la participación
+específicas individual o conjuntamente con sus familiares sea ≥ 25% del capital o fondos propios
+2) Transmisión de negocios, valores o participaciones en los fondos propios de entidades no
+admitidos a negociación o admitidos en paraísos fiscales
+3) Transmisión de inmuebles y operaciones sobre intangibles
+OPERACIONES EXCLUIDAS DE OBLIGACIÓN DE PRESENTAR MODELO 232
+• Grupo fiscal (independientemente del volumen operaciones)
+
+# Pag. 2
+
+• AIES, UTES (independientemente del volumen operaciones), salvo UTEs u otras formas análogas de
+colaboración que se acojan a la Exención de las rentas obtenidas en el extranjero a través de EP (Art. 22
+LIS)
+• Operaciones realizadas en el ámbito de ofertas públicas de venta o de ofertas públicas de adquisición de
+valores (independiente del volumen de operaciones)
+− Estarán obligados a presentar el Modelo 232 y cumplimentar el cuadro “Operaciones con
+personas o entidades vinculadas en caso de aplicación de la reducción de las rentas
+precedentes de determinados activos intangibles (art. 23 y DT 20ª LIS)” los contribuyentes
+que apliquen la citada reducción prevista en el artículo 23 LIS porque obtienen rentas como
+consecuencia de la cesión de determinados intangibles a personas o entidades vinculadas.
+− Estarán obligados a presentar el Modelo 232 y cumplimentar el cuadro “Operaciones y
+situaciones relacionadas con países o territorios calificados como paraísos fiscales” los
+contribuyentes que realicen operaciones o tengan valores en países o territorios calificados
+como paraísos fiscales independientemente de su importe.
+FLOa RpMreAsSe nDtEac PióRnE SdEeN lTa ADCeIÓclNa ración Informativa de operaciones vinculadas y de operaciones y
+situaciones relacionadas con países o territorios considerados paraísos fiscales (Modelo 232),
+debe realizarse obligatoriamente por vía electrónica, en los términos establecidos en la Orden
+HAP/2194/2013, de 22 de noviembre, por la que se regulan los procedimientos y las
+condiciones generales para la presentación de determinadas autoliquidaciones y declaraciones
+informativas de naturaleza tributaria.
+Dicha presentación electrónica puede realizarse bien a través de la Sede electrónica de la
+Agencia Estatal de Administración Tributaria a la que se puede acceder directamente a través
+de la siguiente dirección electrónica: «https:/www.agenciatributaria.gob.es», o bien desde la
+página de la Agencia Tributaria en Internet: «www.agenciatributaria.es».
+¿LQaU pIrÉeNseEnSt PacUiEóDn EeNle EctFrEóCnTicUaA pRo Lr AIn PteRrEnSeEt NdTelA MCIÓodNe EloL E2C3T2R aÓ tNraICvAés? de la Sede electrónica de la
+Agencia Tributaria puede ser efectuada:
+a) Por los contribuyentes del Impuesto o, en su caso, sus representantes legales.
+b) Por los representantes voluntarios de los obligados tributarios con poderes o facultades
+para presentar electrónicamente en nombre de los mismos declaraciones y
+autoliquidaciones ante la Agencia Tributaria o representarles ante ésta, en los términos
+establecidos en cada momento por la Dirección General de la Agencia Tributaria.
+c) Por las personas o entidades que, según lo previsto en el artículo 92 de la Ley 58/2003,
+de 17 de diciembre, General Tributaria, ostenten la condición de colaboradores sociales
+en la aplicación de los tributos y cumplan los requisitos y condiciones que, a tal efecto,
+establezca la normativa vigente en cada momento.
+2
+
+# Pag. 3
+
+CPOarNaD pICoIdOeNr EpSr eGsEeNntEaRr AdLeE Sfo PrAmRaA e LleAc PtrRóEnSicEaN TpoArC IIÓnNte rEnLeEt CeTlR MÓNoIdCeAlo 232 a través de la Sede
+electrónica de la Agencia Tributaria, será necesario que:
+a) El contribuyente disponga de Número de Identificación Fiscal (NIF).
+b) La presentación electrónica se realice utilizando un certificado electrónico reconocido
+emitido conforme a lo establecido en la Ley 59/2003, de 19 de diciembre, de Firma
+electrónica, y que sea admitido por la Agencia Tributaria conforme a lo dispuesto en la
+Orden HAP/800/2014, de 9 de mayo, por la que se establecen normas específicas sobre
+sistemas de identificación y autenticación por medios electrónicos con la Agencia
+Estatal de Administración Tributaria.
+Los procedimientos de solicitud, revocación y renovación de dichos certificados
+electrónicos dependerán de las condiciones establecidas por cada Autoridad de
+certificación admitida por la Agencia Estatal de Administración Tributaria.
+En los casos en que la presentación electrónica se realice por apoderados o
+colaboradores sociales, serán éstos quienes deberán disponer de su certificado
+electrónico reconocido.
+PLLaA ZDOe cDlEar PaRciEóSnE NInTfAoCrImÓaNt iva de operaciones vinculadas y de operaciones y situaciones
+relacionadas con países o territorios considerados paraísos fiscales se presentará en el mes
+siguiente a los diez meses posteriores a la conclusión del período impositivo al que se refiera
+la información a suministrar. Por tanto, como regla general, cuando se trate de contribuyentes
+cuyo ejercicio económico coincida con el año natural, el plazo de presentación de la declaración
+queda fijado desde el 1 al 30 de noviembre.
+DECLARACIÓN RELATIVA AL PERÍODO IMPOSITIVO
+COMPRENDIDO DESDE EL …. AL …..
+Se consignarán las fechas de inicio y de cierre del período impositivo al que se refiere este
+Modelo 232.
+IDENTIFICACIÓN (1)
+El contribuyente deberá consignar en los campos destinados al efecto, los datos
+correspondientes a su identificación. Este apartado, podrá ser cumplimentado por una persona
+física para el caso de contribuyentes del Impuesto sobre la Renta de no Residentes que obtengan
+rentas en territorio español mediante establecimiento permanente.
+3
+
+# Pag. 4
+
+DEVENGO (2)
+La casilla Ejercicio no será necesario cumplimentarla porque se rellenará automáticamente en
+EJERCICIO Y TIPO EJERCICIO
+función de la fecha de inicio del período impositivo que se haya indicado en el campo
+“Declaración relativa al período impositivo comprendido desde el … al ….” ubicado en el
+encabezado del Modelo.
+La casilla Tipo ejercicio, se rellenará automáticamente en función de la fecha de inicio y fin del
+período impositivo indicadas anteriormente, con los números 1, 2 ó 3, atendiendo al siguiente
+detalle:
+1.- Ejercicio económico de 12 meses de duración, que coincida con el año natural.
+2.- Ejercicio económico de 12 meses de duración, que no coincida con el año natural.
+3.- Ejercicio económico de duración inferior a 12 meses.
+La entidad declarante deberá consignar en este apartado el código de cuatro cifras relativo a la
+CÓDIGO CNAE (2009) ACTIVIDAD PRINCIPAL
+Clasificación Nacional de Actividades Económicas (CNAE) que corresponda a su actividad
+con mayor volumen de operaciones, y de conformidad a la lista de actividades que se facilita
+mediante un desplegable, de acuerdo con lo establecido por el Real Decreto 475/2007, de 13 de
+abril (BOE del 28), por el que se aprueba la Clasificación Nacional de Actividades Económicas
+2009 (CNAE-2009)
+DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
+Para poder modificar datos de anteriores declaraciones presentadas, ya sea dar de baja y
+modificar los registros existentes o dar de alta nuevos registros, se deberá acceder a la
+presentación electrónica del modelo 232 donde se mostrará una ventana en la que se le advertirá
+que ya existe una declaración presentada en su nombre para ese mismo modelo y ejercicio.
+Para incluir los referidos cambios, deberá seleccionar la opción de “Modificar declaración”.
+En la siguiente pantalla deberá elegir que opción desea; complementaria si lo que desea es
+únicamente añadir nuevos registros, o sustitutiva si lo que pretende es dar de alta y modificar
+y/o dar de baja cualquier registro de la declaración.
+En ambos casos, en la declaración resultante sustituirá a la anterior y en su contenido se marcará
+automáticamente “Declaración complementaria” o “Declaración sustitutiva”, según la opción
+elegida por el obligado tributario, y el número de justificante de la declaración anterior.
+4
+
+# Pag. 5
+
+A. INFORMACIÓN OPERACIONES CON PERSONAS O ENTIDADES
+VINCULADAS (ART. 13.4 RIS) (3)
+Este apartado deberá cumplimentarse separando las operaciones de ingreso o de pago, sin que
+puedan efectuarse compensaciones entre ellas, aunque correspondan al mismo concepto. Se
+deben declarar las operaciones por persona o entidad vinculada que agrupen un determinado
+tipo de operación, siempre que se haya utilizado el mismo método de valoración, y se tienen
+que incluir en registros distintos las operaciones del mismo tipo pero que utilicen métodos de
+valoración diferentes
+La cumplimentación de los datos que se solicitan en el cuadro se efectuará tal y como se indica
+a continuación:
+Se debe consignar el NIF (número de identificación fiscal) de la persona o entidad vinculada.
+PERSONA O ENTIDAD VINCULADA: NIF
+En caso de que la persona o entidad vinculada sea no residente en territorio español y no tenga
+asignado NIF en España, se deberá consignar el Número de Identificación Fiscal del país de
+residencia, si lo hubiera, precedido por las dos letras del código IS0 de dicho país. (La tabla de
+códigos ISO figura en el desplegable de la casilla Código provincia/país).
+Se deberá consignar:
+F/J/OTRA
+• F si la vinculada es una persona física
+• J si es una persona jurídica
+• OTRA si la vinculada no está incluida en las claves F o J, como puede ser el caso de una
+UTE o un establecimiento permanente de entidad no residente en España.
+Se deben consignar los apellidos y nombre o la razón social de la persona o entidad vinculada.
+APELLIDOS Y NOMBRE / RAZÓN SOCIAL
+Se indicará el tipo de vinculación al que se refiere la operación relacionada consignando la letra
+TIPO VINCULACIÓN
+del artículo 18.2 de la LIS que corresponda con arreglo a lo que en dicho artículo se indica. Se
+mostrará un desplegable.
+Cuando la persona o entidad vinculada sea residente en territorio español, se consignarán los
+CÓDIGO PROVINCIA/PAÍS
+dos dígitos correspondientes a su provincia de residencia. Para no residentes en territorio
+5
+
+# Pag. 6
+
+español se consignará el código país de residencia de la persona o entidad vinculada, según el
+desplegable que se facilita.
+Se debe consignar el dígito identificativo del tipo de operación que corresponda de acuerdo con
+TIPO DE OPERACIÓN
+el desplegable que se facilita. Todos los conceptos se refieren a operaciones de ingreso o pago
+indistintamente.
+Este apartado deberá cumplimentarse separando las operaciones de ingreso o de pago,
+INGRESO («I») / PAGO («P»)
+consignando I o P, según se trate de ingreso o de pago, respectivamente, tal y como se señala
+en el primer párrafo de este apartado.
+Se indicará el método de valoración utilizado en la operación relacionada consignando el
+MÉTODO VALORACIÓN (ART. 18.4 LIS)
+número y la letra que corresponda de acuerdo con el artículo 18.4 de la LIS, según el
+desplegable que se facilita. Se deben declarar en registros distintos las operaciones del mismo
+tipo pero que utilicen métodos de valoración diferentes.
+Se debe consignar el importe de la operación en euros, sin incluir el IVA.
+IMPORTE OPERACIÓN
+B. OPERACIONES CON PERSONAS O ENTIDADES VINCULADAS EN
+CASO DE APLICACIÓN DE LA REDUCCIÓN DE LAS RENTAS
+PROCEDENTES DE DETERMINADOS ACTIVOS INTANGIBLES
+(ART.23 Y DT 20ª LIS) (4)
+Este cuadro tiene por objeto cumplir con la obligación de información de las operaciones con
+personas o entidades vinculadas que apliquen la reducción de las rentas procedentes de
+determinados activos intangibles, en los términos establecidos en el artículo 23 de la LIS.
+De este modo, las personas o entidades vinculadas deberán cumplimentar dicho cuadro
+aportando la siguiente información:
+Se consignará, en su caso, el número de identificación de la entidad matriz de la declarante. Si
+Nº IDENTIFICACIÓN DE LA MATRIZ
+la matriz es no residente en territorio español y no tiene asignado NIF en España, se deberá
+6
+
+# Pag. 7
+
+consignar el Número de Identificación Fiscal del país de residencia, si lo hubiera, precedido por
+las dos letras del código ISO de dicho país. (La tabla de códigos ISO figura en el desplegable
+de la casilla Código provincia/país).
+Se consignará, en su caso, la razón social de la entidad matriz de la declarante.
+RAZÓN SOCIAL (MATRIZ)
+Se debe consignar el NIF (número de identificación fiscal) de la persona o entidad vinculada
+PERSONA O ENTIDAD VINCULADA. NIF
+que satisface las rentas. En caso de que la persona o entidad vinculada sea no residente en
+territorio español y no tenga asignado NIF en España, se deberá consignar el Número de
+Identificación Fiscal del país de residencia, si lo hubiera, precedido por las dos letras del código
+ISO de dicho país. (La tabla de códigos ISO figura en el desplegable de la casilla Código
+provincia/país).
+Se deberá consignar:
+F/J/OTRA
+• F si la vinculada es una persona física
+• J si es una persona jurídica
+• OTRA si la vinculada no está incluida en las claves F o J, como puede ser el caso de una
+UTE o un establecimiento permanente de entidad no residente en España.
+Se deben consignar los apellidos y nombre o la razón social de la persona o entidad vinculada.
+APELLIDOS Y NOMBRE/RAZÓN SOCIAL (PERSONA O ENTIDAD VINCULADA)
+Cuando la persona o entidad vinculada sea residente en territorio español, se consignarán los
+CÓDIGO PROVINCIA/PAÍS
+dos dígitos correspondientes a su provincia de residencia. Para no residentes en territorio
+español se consignará el código país de residencia de la persona o entidad vinculada, según el
+desplegable que se facilita.
+Se indicará el tipo de vinculación al que se refiere la operación relacionada consignando la letra
+TIPO VINCULACIÓN (ART. 18.2 LIS)
+del artículo 18.2 de la LIS que corresponda con arreglo a lo que en dicho artículo se indica.
+7
+
+# Pag. 8
+
+Se debe consignar el importe correspondiente a la renta antes de que se aplique la reducción
+IMPORTE OPERACIÓN
+establecida en el artículo 23 de la LIS. Dicho importe se debe consignar en euros, sin incluir el
+IVA.
+C. OPERACIONES Y SITUACIONES RELACIONADAS CON PAÍSES O
+TERRITORIOS CALIFICADOS COMO PARAÍSOS FISCALES (5)
+Este apartado será cumplimentado exclusivamente por aquellas entidades que durante el
+periodo impositivo hayan efectuado operaciones relacionadas con países o territorios
+considerados como paraísos fiscales, o a la fecha de cierre del periodo impositivo posean
+valores relacionados con los citados países o territorios.
+En este cuadro se deberán incluir la totalidad de operaciones que la declarante realice con
+países o territorios calificados como paraísos fiscales, no sólo las operaciones con personas
+o entidades vinculadas.
+OPERACIONES RELACIONADAS CON PAÍSES O TERRITORIOS CALIFICADOS
+COMO PARAÍSOS FISCALES
+Se detallarán todas y cada una de las operaciones efectuadas con o por personas o entidades
+DESCRIPCIÓN DE LA OPERACIÓN
+residentes en países o territorios calificados reglamentariamente como paraísos fiscales, no sólo
+las realizadas con personas o entidades vinculadas, así como de los gastos de servicios
+correspondientes a operaciones realizadas, directa o indirectamente, con personas o entidades
+residentes en los citados países o territorios y de aquellas inversiones o gastos realizados en los
+mismos.
+PERSONA O ENTIDAD RESIDENTE EN PAÍS O TERRITORIO CALIFICADO COMO
+Se reflejará el nombre, la denominación o la razón social de la persona o entidad con o por la
+PARAÍSO FISCAL
+que se realizan las operaciones.
+Se deberá consignar:
+F/J/OTRA
+• F si la relacionada es una persona física
+• J si es una persona jurídica
+• OTRA si la relacionada no está incluida en las claves F o J, como puede ser el caso de
+una UTE o un establecimiento permanente de entidad no residente en España.
+8
+
+# Pag. 9
+
+Se consignarán, como clave país/territorio, las dos siglas correspondientes al país o territorio
+CLAVE PAÍS/TERRITORIO
+calificado reglamentariamente como paraíso fiscal, según el desplegable que se facilita.
+No será necesario cumplimentar esta casilla porque al seleccionar la clave país/territorio
+PAÍS O TERRITORIO CALIFICADO COMO PARAÍSO FISCAL
+anterior se trasladará a esta casilla la denominación del país o territorio calificado
+reglamentariamente como paraíso fiscal en el que se realice la inversión o el gasto, o en el cual
+tenga fijada su residencia la persona o entidad con o por la que se realizan, directa o
+indirectamente, las operaciones.
+Se consignará en euros, la cuantía correspondiente a las operaciones o gastos efectuados
+IMPORTE
+computándose por el valor por el que efectivamente se han realizado.
+TENENCIA DE VALORES RELACIONADOS CON PAÍSES O TERRITORIOS
+CONSIDERADOS COMO PARAÍSOS FISCALES
+Se indicarán los datos solicitados en este apartado sobre los valores poseídos a la fecha de cierre
+del período declarado.
+Se harán constar las situaciones relacionadas con países o territorios calificados
+TIPO
+reglamentariamente como paraísos fiscales, indicando la letra A, B o C, según el desplegable
+que se facilita y que tiene el siguiente detalle:
+A. Tenencia de valores representativos de fondos propios de entidades residentes en países
+o territorios calificados reglamentariamente como paraísos fiscales.
+B. Tenencia de valores de instituciones de inversión colectiva constituidas en los citados
+países o territorios.
+C. Tenencia de valores de renta fija que estén admitidos a cotización en mercados
+secundarios en dichos países o territorios.
+Se reflejará la denominación o la razón social de la entidad participada cuando corresponda a
+ENTIDAD PARTICIPADA O EMISORA DE LOS VALORES
+los tipos A o B de la columna anterior o de la entidad emisora de los valores cuando corresponda
+al tipo C de la columna anterior.
+9
+
+# Pag. 10
+
+No será necesario cumplimentar esta casilla porque al seleccionar la clave país/territorio en la
+PAÍS O TERRITORIO CALIFICADO COMO PARAÍSO FISCAL
+casilla siguiente se rellenará automáticamente la denominación del país o territorio calificado
+reglamentariamente como paraíso fiscal que corresponda, según se detalla a continuación:
+− En el que tenga su residencia la entidad participada en el supuesto que se haya hecho
+constar el tipo A en la columna Tipo .
+− En el que esté constituida la entidad participada cuando se haya hecho constar el tipo B
+≪ ≫
+en la columna Tipo .
+− En el que estén admitidos a cotización en mercados secundarios los valores cuando se
+≪ ≫
+haya hecho constar el tipo C en la columna Tipo .
+≪ ≫
+Se consignarán, como clave país/territorio, las dos siglas correspondientes al país o territorio
+CLAVE PAÍS/TERRITORIO
+calificado reglamentariamente como paraíso fiscal, según el desplegable que se facilita.
+Se consignará en euros, la cuantía por la que se adquirieron los valores, computándose por el
+VALOR DE ADQUISICIÓN
+precio de adquisición, con independencia del período en el que hayan sido adquiridos.
+Se reflejará el que corresponda a los valores poseídos siempre que se haya hecho constar el tipo
+% DE PARTICIPACIÓN
+A o B en la columna Tipo .
+≪ ≫
+10

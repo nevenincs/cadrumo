@@ -1,6 +1,8 @@
 """Calculation revision actions for modelo filings.
 
-Use of :class:`BucketEventHistoryRepository`, :class:`ModeloRevision` for compliance.
+Resolves the law-determined :class:`RegistrySnapshot` for each work unit and
+asserts its revision at calc time before computing. Uses
+:class:`BucketEventHistoryRepository` and :class:`ModeloRevision` for compliance.
 """
 
 from __future__ import annotations

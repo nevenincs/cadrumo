@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "corpus_pdf",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/aeat_official/instructions/modelo_036/files/Folleto_Censos.pdf",
+  "source_sha256": "ccf8118a62dc9327245064458fbd12010acab6b71eee300d0fb83b1c17e00be0",
+  "preprocessor_id": "corpus-pdf",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution.",
+  "units": [
+    {
+      "text": "Censos WEB\nEs un servicio de ayuda para la confección y presentación de la\ndeclaración censal (modelo 036) para el alta inicial de actividad\neconómica de personas físicas en el Censo de Empresarios,\nProfesionales y Retenedores, su baja y cambio de domicilio.\nSe puede acceder desde cualquier ordenador o dispositivo móvil.\n¿Dónde está? ¿Cómo funciona?\nSe accede a Censos WEB porInternet.\n1 2 3\n>En el portal de la Sede electrónica de la Agencia Tributaria\nVerifica Identifica Obligaciones\nhttps://sede.agenciatributaria.gob.es\ntus datos la actividad y registros\nEscanea esteQR ytellevarádirectamente.\nConfirma o, en su caso, Un buscador te ayuda- -Cumplimenta automáti-\nmodifica tus datos rá a identificar la camente los regímenes de\npersonales. actividad que se inicia tributaciónenIRPF eIVA\n¿Qué necesistas para acceder? y a seleccionar su aplicables en cada caso.\nepígrafe de IAE. -Da de alta obligaciones\nPara presentar tu declaración censal necesitas alguno de estosmedios yotrosregistros.\nde identificación:\n*Si tienesdudaspuedescontactarconnosotrosatravésdelicono“¿Necesitasayuda?”\n> Cl@ve: Puedesdarte de altaescanendoeste códigoQR.\n> Certificado eletrónico e DNI-e.\nInformacióntributariabásica:91554 87 70 / 901 33 55 33\nhttps://sede.agenciatributaria.gob.es",
+      "title": "Pag. 1",
+      "section": "Pag. 1",
+      "anchor": null
+    }
+  ]
+}
