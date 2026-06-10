@@ -29,7 +29,7 @@ def test_modelo_registry_backed_members_match_registry() -> None:
     parallel execution, re-run sequentially (``-p no:xdist``) before concluding
     it is a real regression.
     """
-    from aeat.application.modelo import registry_modelo_codes
+    from ...application.modelo import registry_modelo_codes
 
     registry_set = set(registry_modelo_codes())
     enum_set = {m.value for m in Modelo}
@@ -53,8 +53,8 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
     enum must still raise from ``validate_modelo`` — adding a registry TOML for
     it (reviving active support) would break this test.
     """
-    from aeat.core.resources import resources
-    from aeat.domain.calculations.registry import RegistrySnapshotError
+    from ..resources import resources
+    from ...domain.calculations.registry import RegistrySnapshotError
 
     authority = resources().modelos.authority
     assert NON_REGISTRY_MODELOS, "expected at least the retired M037 carve-out"
@@ -65,7 +65,7 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
 
 def test_modelo_members_are_valid_modelo_codes() -> None:
     """Every :class:`Modelo` value passes the :class:`~aeat.domain.modelos.ModeloCode` shape validator."""
-    from aeat.domain.modelos import ModeloCode
+    from ...domain.modelos import ModeloCode
 
     for member in Modelo:
         result = ModeloCode(member.value)

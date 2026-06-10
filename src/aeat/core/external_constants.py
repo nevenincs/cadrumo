@@ -425,7 +425,8 @@ ART_7P_EXEMPTION_CAP_EUR: Final[Decimal] = Decimal("60100")
 MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR: Final[Decimal] = Decimal("1500")
 
 #: Default IVA general-rate percentage for input/pre-fill purposes.
-#: This is the LIVA art. 90 Uno general rate currently in force for Spain (ES).
+#: This is the LIVA art. 90 Uno general rate (Ley 37/1992, BOE-A-1992-28740)
+#: currently in force for Spain (ES).
 #: The DATED authoritative percentage lives in ``registry/aeat/iva/rates.toml``
 #: and is resolved via :func:`aeat.domain.iva.lookup_rate`; this constant is
 #: bound to that registry authority by a gate test so it cannot silently drift.
