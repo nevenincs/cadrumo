@@ -20,6 +20,13 @@ from ._workbook_parity_types import (
     WorkbookScanStatus,
 )
 
+# Static literal type for the workbook-extension fields. ``Literal[...]`` only
+# accepts literal forms, not the ``Final[Literal[...]]`` constants, so the
+# alias is declared here and pinned to the central constants below.
+_WorkbookExtension = Literal[".xlsx", ".xls"]
+_ConvertedExtension = Literal[".xlsx"]
+assert _XLSX_EXTENSION == ".xlsx" and _XLS_EXTENSION == ".xls"
+
 __all__ = [
     "SyntheticInputSet",
     "SyntheticInputValue",
@@ -58,7 +65,7 @@ class WorkbookArtefactReport(WorkbookParityModel):
 
     path: str
     modelo: str | None
-    extension: Literal[_XLSX_EXTENSION, _XLS_EXTENSION]
+    extension: _WorkbookExtension
     bytes: int = Field(ge=0)
     sha256: str = Field(min_length=64, max_length=64)
     sheets: tuple[str, ...] = ()
@@ -89,7 +96,7 @@ class WorkbookConversionReport(WorkbookParityModel):
     modelo: str | None
     bytes: int = Field(ge=0)
     sha256: str = Field(min_length=64, max_length=64)
-    converted_extension: Literal[_XLSX_EXTENSION] | None = None
+    converted_extension: _ConvertedExtension | None = None
     sheets: tuple[str, ...] = ()
     formula_cells: int = Field(ge=0)
     input_candidates: tuple[WorkbookCellRef, ...] = ()
