@@ -769,6 +769,11 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
+      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Net income from datos-base activities (C01) is positive but the fractional payment for datos-base (C02) is zero; check casilla 02 using the applicable Orden de módulos rate (minimum 2 per cent).'
+      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Net income from datos-base activities (C01) is positive but the fractional payment for datos-base (C02) is zero; check casilla 02 using the applicable Orden de módulos rate (minimum 2 per cent).'
+      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Net income from datos-base activities (C01) is positive but the fractional payment for datos-base (C02) is zero; check casilla 02 using the applicable Orden de módulos rate (minimum 2 per cent).'
+      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Net income from datos-base activities (C01) is positive but the fractional payment for datos-base (C02) is zero; check casilla 02 using the applicable Orden de módulos rate (minimum 2 per cent).'
+      modelo_200_base_imponible_determinada_cuando_resultado_positivo: 'The accounting result is positive but the taxable base (C552) is zero; review the taxable base determination.'
     iva_wallet:
       seed_negative_amount: The seed amount cannot be negative.
       seed_no_nif: No NIF defined for the seed operation; associate one with the active

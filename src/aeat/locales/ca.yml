@@ -838,6 +838,11 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Els rendiments nets d''activitats en dades-base (C01) són positius però el pagament fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el percentatge de l''Ordre de mòduls (mínim 2 per cent).'
+      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Els rendiments nets d''activitats en dades-base (C01) són positius però el pagament fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el percentatge de l''Ordre de mòduls (mínim 2 per cent).'
+      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Els rendiments nets d''activitats en dades-base (C01) són positius però el pagament fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el percentatge de l''Ordre de mòduls (mínim 2 per cent).'
+      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Els rendiments nets d''activitats en dades-base (C01) són positius però el pagament fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el percentatge de l''Ordre de mòduls (mínim 2 per cent).'
+      modelo_200_base_imponible_determinada_cuando_resultado_positivo: 'El resultat comptable és positiu però la base imposable (C552) és zero; reviseu la determinació de la base imposable.'
     iva_wallet:
       seed_negative_amount: L'import inicial no pot ser negatiu.
       seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
