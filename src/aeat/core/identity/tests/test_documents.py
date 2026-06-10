@@ -275,6 +275,7 @@ class TestErrorCodeBinding:
         from ....core.errors._registry import bind_error_code
 
         bound = bind_error_code(IdentityError)
+        assert bound is not None
         assert bound.code == "INTEGRITY_IDENTITY_DOCUMENT"
         assert bound.category.value == "INTEGRITY"
 

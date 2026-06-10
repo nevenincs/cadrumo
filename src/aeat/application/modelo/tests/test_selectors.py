@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -18,6 +19,7 @@ from ....domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
@@ -249,7 +251,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
     second = WorkUnit(
         work_unit_id=second_id,
         bucket_id=bucket_id,
-        modelo="130",
+        modelo=cast(ModeloCode, "130"),
         filing_year=2026,
         period="1T",
         revision_id="legacy-manual-revision",

@@ -133,6 +133,7 @@ class TestErrorCodeBinding:
         from .....core.errors._registry import bind_error_code
 
         bound = bind_error_code(PathContainmentError)
+        assert bound is not None
         assert bound.code == "INTEGRITY_STORAGE_PATH_CONTAINMENT"
         assert bound.category.value == "INTEGRITY"
 

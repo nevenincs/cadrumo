@@ -49,8 +49,9 @@ _MENOR_TRES = Decimal("3000")
 
 class TestDescendantInfoValidation:
     def test_requires_birth_date(self) -> None:
+        # NEGATIVE TEST: deliberately call without required birth_date (ty: missing-argument, py: reportCallIssue)
         with pytest.raises(ValidationError):
-            DescendantInfo()  # type: ignore[call-arg]
+            DescendantInfo()  # type: ignore
 
     def test_birth_date_from_iso_string(self) -> None:
         d = DescendantInfo.model_validate({"birth_date": "2020-03-15"})
@@ -74,8 +75,9 @@ class TestDescendantInfoValidation:
             assert d.discapacidad_grado == grade
 
     def test_discapacidad_grado_rejects_invalid_value(self) -> None:
+        # NEGATIVE TEST: deliberately invalid grado (ty: invalid-argument-type, py: reportArgumentType)
         with pytest.raises(ValidationError):
-            DescendantInfo(birth_date=date(2010, 1, 1), discapacidad_grado=50)  # type: ignore[arg-type]
+            DescendantInfo(birth_date=date(2010, 1, 1), discapacidad_grado=50)  # type: ignore
 
     def test_nif_must_be_9_characters(self) -> None:
         with pytest.raises((ValidationError, ValueError), match="9 characters"):

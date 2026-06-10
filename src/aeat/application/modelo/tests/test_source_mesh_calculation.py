@@ -137,6 +137,9 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
             clock=_T1,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
-    assert exc_info.value.context is not None and casilla_id in exc_info.value.context["casillas"]
+    assert exc_info.value.context is not None
+    casillas = exc_info.value.context["casillas"]
+    assert isinstance(casillas, (list, tuple, set, frozenset))
+    assert casilla_id in casillas
 
     assert cr_repo.load().revisions == {}
