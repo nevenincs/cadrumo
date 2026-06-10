@@ -126,7 +126,7 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
 
 
 def _parse_profile(raw_profile: object) -> CategoryProfile:
-    if not isinstance(raw_profile, dict):
+    if not isinstance(raw_profile, Mapping):
         raise CategoryValidationError("profile entry must be a table")
     data = to_str_keyed_dict(raw_profile, error_factory=CategoryValidationError)
     category = SpendingCategory(str(data.get("category")))
@@ -145,7 +145,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
 
 
 def _parse_rule(raw_rule: object) -> ProportionalityRule:
-    if not isinstance(raw_rule, dict):
+    if not isinstance(raw_rule, Mapping):
         raise CategoryValidationError("proportionality rule must be a table")
     data = to_str_keyed_dict(raw_rule, error_factory=CategoryValidationError)
     raw_variants = data.get("statutory_cap_variants", ())
@@ -171,7 +171,7 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
 
 
 def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
-    if not isinstance(raw_variant, dict):
+    if not isinstance(raw_variant, Mapping):
         raise CategoryValidationError("statutory_cap_variants entries must be tables")
     data = to_str_keyed_dict(raw_variant, error_factory=CategoryValidationError)
     return StatutoryCapVariant.model_validate(
@@ -184,7 +184,7 @@ def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
 
 
 def _parse_citation(raw_citation: object) -> CategoryCitation:
-    if not isinstance(raw_citation, dict):
+    if not isinstance(raw_citation, Mapping):
         raise CategoryValidationError("citations entries must be tables")
     data = to_str_keyed_dict(raw_citation, error_factory=CategoryValidationError)
     url = data.get("url")
