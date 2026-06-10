@@ -24,9 +24,9 @@ Typed justificante-capture snapshot model, secure-object namespace, repository a
 
 Period-aware expediente resolution and the require_live_read-gated async orchestrator that pulls the justificante via capture_justificante and persists the snapshot.
 
-- [ ] `P02.S04` - Add the require_live_read-gated async capture_justificante_snapshot orchestrator (period-aware expediente resolution, capture_justificante, service.capture) and promote it plus the service to the package top-level re-exports.; `src/aeat/application/live/__init__.py`.
-- [ ] `P02.S05` - Prove period disambiguation (1T vs 2T resolve to distinct expedientes, never the wrong quarter) and orchestrator wiring offline with a real service and a seam-injected session.; `src/aeat/application/live/tests/test_justificante_capture_resolution.py`.
-- [ ] `P02.S06` - Add a live end-to-end capture test gated by AEAT_LIVE_TESTS_ENABLED that pulls and persists a real justificante, env-driven and never xfail or skip-marker; `src/aeat/application/live/tests/test_justificante_capture_live.py`.
+- [x] `P02.S04` - Add the require_live_read-gated async capture_justificante_snapshot orchestrator (period-aware expediente resolution, capture_justificante, service.capture) and promote it plus the service to the package top-level re-exports.; `src/aeat/application/live/__init__.py`.
+- [x] `P02.S05` - Prove period disambiguation (1T vs 2T resolve to distinct expedientes, never the wrong quarter) and orchestrator wiring offline with a real service and a seam-injected session.; `src/aeat/application/live/tests/test_justificante_capture_resolution.py`.
+- [x] `P02.S06` - Add a live end-to-end capture test gated by AEAT_LIVE_TESTS_ENABLED that pulls and persists a real justificante, env-driven and never xfail or skip-marker; `src/aeat/application/live/tests/test_justificante_capture_live.py`.
 
 ### Phase `P03` - Official evidence and cross-period gate
 
