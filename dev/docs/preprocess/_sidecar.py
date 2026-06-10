@@ -95,11 +95,16 @@ def write_sidecar(source: Path, output: PreprocessOutput) -> tuple[Path, Path]:
     """
     text_path, json_path = sidecar_paths_for(source)
     payload = output.model_dump(mode="json")
+    # Write LF newlines explicitly (newline="") so the on-disk bytes are
+    # deterministic across platforms: Python text mode would otherwise
+    # translate "\n" to the OS line ending, churning the committed sidecars
+    # against the repo's eol=lf normalisation on Windows.
     try:
-        text_path.write_text(output.render_text(), encoding="utf-8")
+        text_path.write_text(output.render_text(), encoding="utf-8", newline="")
         json_path.write_text(
             json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
+            newline="",
         )
     except OSError as exc:
         raise PreprocessSidecarError(f"cannot write sidecar for {source}: {exc}") from exc
