@@ -12,7 +12,6 @@ from ....core.aggregation import COUNTERPART_SOURCE_KINDS, AggregationSourceKind
 from ._errors import RegistryValidationError
 from ._invoice_bindings import (
     _INVOICE_FACTS,
-    _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS,
     InvoiceObservation,
     _aggregate_invoice_binding,
     _build_invoice_rows,
@@ -21,6 +20,8 @@ from ._invoice_bindings import (
     _InvoiceGrouping,
     _InvoiceSelector,
     _RectificationScope,
+    _validate_row_field_invoice_fact,
+    _validate_scalar_invoice_fact_op,
 )
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -135,40 +136,9 @@ def _validated_counterpart_selector(binding: DataBindingDefinition) -> _InvoiceS
             f"binding {binding.id!r} declares unsupported counterpart aggregation fact {selector.fact!r}"
         )
     op = str((binding.aggregation or {}).get("op", "sum"))
-    if selector.fact == "operator_count" and op != "count_distinct":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'"
-        )
-    if selector.fact in {"base_sum", "rectified_base_delta_sum"} and op != "sum":
-        raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
-    if selector.fact == "rectified_base_delta_sum" and selector.rectification_scope != "only_rectifications":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires rectification_scope 'only_rectifications'"
-        )
+    _validate_scalar_invoice_fact_op(binding, selector, op)
     if selector.fact == "row_field":
-        if op != "rows":
-            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
-        if selector.row_field is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
-            )
-        if selector.grouping is None:
-            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
-        if selector.row_field in _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS:
-            if selector.grouping != "operator_clave_period":
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} requires grouping 'operator_clave_period'"
-                )
-            if selector.rectification_scope != "only_rectifications":
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} "
-                    f"requires rectification_scope 'only_rectifications'"
-                )
-        if selector.grouping == "operator_clave_period" and selector.rectification_scope != "only_rectifications":
-            raise RegistryValidationError(
-                f"binding {binding.id!r} grouping 'operator_clave_period' requires "
-                f"rectification_scope 'only_rectifications'"
-            )
+        _validate_row_field_invoice_fact(binding, selector, op)
     return selector
 
 
