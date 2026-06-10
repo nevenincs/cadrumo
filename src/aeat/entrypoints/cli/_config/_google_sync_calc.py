@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
@@ -60,6 +60,13 @@ calc_app = typer.Typer(
     no_args_is_help=True,
 )
 
+_ModeloArg = Annotated[str, typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help"))]
+_PeriodArg = Annotated[str, typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help"))]
+_YearArg = Annotated[
+    int,
+    typer.Option(..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099),
+]
+
 
 def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     """Hydrate refreshable Google credentials + the configured Drive root."""
@@ -93,11 +100,9 @@ def _load_snapshot(modelo: str, period: str, year: int):
 @calc_app.command("export", help=tr("cli.config.google.sync.calc.export_help"))
 def google_sync_calc_export(
     ctx: typer.Context,
-    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help")),
-    period: str = typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help")),
-    year: int = typer.Option(
-        ..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099
-    ),
+    modelo: _ModeloArg,
+    period: _PeriodArg,
+    year: _YearArg,
     prefill_relations: bool = typer.Option(
         False,
         "--prefill-relations/--no-prefill-relations",
@@ -184,11 +189,9 @@ def google_sync_calc_export(
 @calc_app.command("verify", help=tr("cli.config.google.sync.calc.verify_help"))
 def google_sync_calc_verify(
     ctx: typer.Context,
-    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help")),
-    period: str = typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help")),
-    year: int = typer.Option(
-        ..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099
-    ),
+    modelo: _ModeloArg,
+    period: _PeriodArg,
+    year: _YearArg,
     scenario_path: Path | None = typer.Option(
         None,
         "--scenario",
@@ -284,11 +287,9 @@ def google_sync_calc_verify(
 @calc_app.command("pull", help=tr("cli.config.google.sync.calc.pull_help"))
 def google_sync_calc_pull(
     ctx: typer.Context,
-    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help")),
-    period: str = typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help")),
-    year: int = typer.Option(
-        ..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099
-    ),
+    modelo: _ModeloArg,
+    period: _PeriodArg,
+    year: _YearArg,
     spreadsheet_id: str = typer.Option(
         ...,
         "--spreadsheet-id",
