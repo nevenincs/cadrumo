@@ -23,8 +23,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.external_constants import ISO_8859_1_ENCODING
-
+from .......core.external_constants import ISO_8859_1_ENCODING
 from .._record_spec import encode_currency
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

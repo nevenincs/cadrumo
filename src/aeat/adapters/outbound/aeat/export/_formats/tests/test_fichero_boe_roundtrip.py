@@ -38,8 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.external_constants import ISO_8859_1_ENCODING
-
+from .......core.external_constants import ISO_8859_1_ENCODING
 from ..._errors import AeatExportFormatError
 from .._deserialise import deserialise
 from .._record_spec import (

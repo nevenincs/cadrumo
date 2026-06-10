@@ -11,8 +11,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.external_constants import ISO_8859_1_ENCODING
-
+from .......core.external_constants import ISO_8859_1_ENCODING
 from .._deserialise import deserialise_envelope
 from .._record_spec import (
     FieldKind,
