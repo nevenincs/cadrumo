@@ -16,7 +16,18 @@ related:
 ---
 
 
-# `cli-workflow-redesign` adr: `Invoice domain decoupling` | (**status:** `accepted`)
+# `cli-workflow-redesign` adr: `Invoice domain decoupling` | (**status:** `superseded`)
+
+> **Superseded (2026-06-10)** on the single point of the operator-facing invoice
+> CLI surface by the `ledger-invoice-unification` ADR
+> (`2026-06-10-ledger-invoice-unification-adr`). The prohibition on a bare
+> `invoice` operator surface stated below (the "Refactor Mandate" and
+> "Consequences") is overturned per operator directive: the two `payable-invoice`
+> and `collectible-invoice` noun-groups collapse into one `invoice` command gated
+> by `--kind issued|received`. Everything else in this ADR remains in force — the
+> four-source-kind taxonomy (`ledger_transaction`, `purchase_invoice_evidence`,
+> `payable_invoice`, `collectible_invoice`), the distinct-domain decision, and the
+> CLI Backend Boundary discipline are all carried forward unchanged.
 
 ## CLI Backend Boundary
 
