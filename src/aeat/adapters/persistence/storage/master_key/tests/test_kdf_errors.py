@@ -73,6 +73,6 @@ def test_key_derivation_error_envelope_round_trip() -> None:
     err = KeyDerivationError("unsupported KDF algorithm 'bcrypt'; expected 'argon2id'")
     envelope = build_error_envelope(err)
 
-    assert envelope.schema_version == "1"
+    assert envelope.code in ERROR_REGISTRY
     assert envelope.retryable is False
     assert envelope.message

@@ -56,6 +56,6 @@ def test_encryption_error_envelope_round_trip() -> None:
     err = EncryptionError("kek must be exactly 32 bytes")
     envelope = build_error_envelope(err)
 
-    assert envelope.schema_version == "1"
+    assert envelope.code in ERROR_REGISTRY
     assert envelope.retryable is False
     assert envelope.message

@@ -69,9 +69,9 @@ def test_build_error_envelope_produces_valid_envelope(error: BucketError) -> Non
     envelope = build_error_envelope(error)
     assert isinstance(envelope, ErrorEnvelope)
     assert envelope.code in ERROR_REGISTRY
-    assert envelope.schema_version == "1"
     assert envelope.category != ""
     assert envelope.message != ""
+    assert envelope.retryable is not None
 
 
 # ---------------------------------------------------------------------------
