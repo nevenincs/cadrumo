@@ -73,7 +73,7 @@ def collect_enrolment_candidates(
     iva_categories: bool = True,
     periods: bool = True,
     topics: bool = True,
-    cli_verbs: bool = True,
+    cli_verbs: bool = False,
 ) -> dict[str, EnrolmentCandidate]:
     """Walk every enrolment source and return candidates keyed by ``concept_id``.
 
@@ -82,6 +82,12 @@ def collect_enrolment_candidates(
     repository, the CLI via Typer introspection). The boolean toggles let
     tests drive a controlled subset deterministically without standing up
     every authority.
+
+    ``cli_verbs`` defaults to False: CLI verbs are a searchable namespace
+    PROJECTED at compile time (W03.P07), not scaffolded as curated
+    concepts (ADR D4). The walker is retained behind the toggle so a
+    future decision can revisit, but the default concept-grade set is the
+    bounded modelo / IVA / period / topic axes.
 
     Raises:
         ValueError: Two sources mint the same ``concept_id`` -- a
