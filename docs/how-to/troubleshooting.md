@@ -91,7 +91,13 @@ This refusal applies to `aeat app modelo work file` only - exporting works at an
 
 ## Output appears in the wrong language
 
-Set the environment variable `AEAT_OUTPUT_LANGUAGE` before running the command. Accepted values are `en`, `es`, `ca`, and `hu`.
+Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output and help text:
+
+```bash
+aeat --language en config profile create --help
+```
+
+To set the language for a whole shell session, set the environment variable `AEAT_OUTPUT_LANGUAGE` before running commands.
 
 In PowerShell:
 
@@ -105,7 +111,7 @@ In bash:
 export AEAT_OUTPUT_LANGUAGE=en
 ```
 
-Known limitation: the `--language` flag does not change help text for every command; the environment variable does. A profile also carries a default output language - set it with `--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md).
+The `--language` flag wins over the environment variable for that command. A profile also carries a default output language - set it with `--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md).
 
 ## A live read from AEAT refuses
 

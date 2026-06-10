@@ -45,6 +45,7 @@ from ._command_suggestions import (
 from ._common import _FORMAT_TEXT, _emit_envelope
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._errors import write_stderr as _write_stderr
+from ._language_argv import apply_language_argv_to_environment
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
 from ._root_payloads import AppRootResult, RootStatusResult
@@ -608,7 +609,15 @@ def main() -> None:
 
     Pins ``prog_name`` so Typer's usage lines say ``aeat`` even when the
     launcher is ``aeat.EXE`` on Windows.
+
+    An explicit ``--language`` / ``--lang`` flag is promoted to
+    ``AEAT_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
+    render their ``tr(...)``-bound help, so the flag genuinely localises help
+    text per operator-surface ADR decision D6 (see :mod:`._language_argv`).
     """
+    import sys
+
+    apply_language_argv_to_environment(sys.argv[1:])
     app(prog_name="aeat")
 
 
