@@ -22,7 +22,7 @@ from .. import ModeloDefinition, RegistryCatalogues, build_snapshot, load_regist
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
-from .._live_parity import LiveParityCatalogue
+from .._live_parity import LiveParityCatalogue, OracleEnvironment
 from .._remote_state_guard import (
     _FORBIDDEN_TOKENS,
     AEAT_WRITE_FORBIDDEN_VERB_TOKENS,
@@ -567,7 +567,7 @@ def test_committed_oracle_planned_operations_conform_to_bound_guard_policies() -
             oracle_id = cross_reference.oracle_id
             if oracle_id is None:
                 continue
-            oracle = oracle_catalogue.lookup(oracle_id, environment="production")
+            oracle = oracle_catalogue.lookup(oracle_id, environment=OracleEnvironment.PRODUCTION)
             expected = _PLANNED_OPERATION_EXPECTED_FIXTURES.get(oracle.oracle_id)
             if expected is None:
                 raise AssertionError(f"oracle {oracle.oracle_id!r} needs a planned-operation fixture")
@@ -590,9 +590,9 @@ def test_committed_oracle_planned_operations_conform_to_bound_guard_policies() -
 
 def _production_oracle_catalogue() -> LiveParityCatalogue:
     catalogue = LiveParityCatalogue()
-    catalogue.register(GroiOracle(), environment="production")
-    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
-    catalogue.register(RentaWebOpenOracle(), environment="production")
+    catalogue.register(GroiOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
+    catalogue.register(RentaWebOpenOracle(), environment=OracleEnvironment.PRODUCTION)
     return catalogue
 
 

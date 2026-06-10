@@ -10,6 +10,7 @@ Covers two surfaces:
 from __future__ import annotations
 
 import tomllib
+from typing import Any, TypedDict
 
 import pytest
 
@@ -19,10 +20,25 @@ from ....user_profile import ProfileFieldType, load_user_profile_schema
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _load_trabajador_del_mar_bindings() -> list[dict[str, object]]:
+class LegalRefEntry(TypedDict, total=False):
+    reference: str
+    document_id: str
+    notes: str
+
+
+class BindingEntry(TypedDict, total=False):
+    id: str
+    status: str
+    annual_cap_eur: str
+    exempt_fraction: str
+    formula: str
+    legal_refs: list[LegalRefEntry]
+
+
+def _load_trabajador_del_mar_bindings() -> list[BindingEntry]:
     path = bundled_path("registry", "aeat", "categories", "trabajador_del_mar.toml")
     with path.open("rb") as fh:
-        data: dict[str, object] = tomllib.load(fh)
+        data: dict[str, Any] = tomllib.load(fh)
     bindings = data.get("exemption_bindings")
     assert isinstance(bindings, list), "trabajador_del_mar.toml must declare [[exemption_bindings]]"
     return bindings  # type: ignore[return-value]
@@ -131,7 +147,7 @@ def test_no_da24_reference_in_maritime_worker_section() -> None:
 def test_trabajador_del_mar_toml_declares_three_binding_entries() -> None:
     bindings = _load_trabajador_del_mar_bindings()
 
-    ids = [b["id"] for b in bindings]
+    ids = [b.get("id") for b in bindings]
     assert "art-7p-foreign-work" in ids
     assert "rebeca-50pct" in ids
     assert "da41-tuna-fleet-inactive" in ids
@@ -140,10 +156,10 @@ def test_trabajador_del_mar_toml_declares_three_binding_entries() -> None:
 
 def test_art7p_binding_has_required_fields_and_legal_refs() -> None:
     bindings = _load_trabajador_del_mar_bindings()
-    binding = next(b for b in bindings if b["id"] == "art-7p-foreign-work")
+    binding = next(b for b in bindings if b.get("id") == "art-7p-foreign-work")
 
-    assert binding["status"] == "active"
-    assert binding["annual_cap_eur"] == "60100"
+    assert binding.get("status") == "active"
+    assert binding.get("annual_cap_eur") == "60100"
     assert "formula" in binding
 
     legal_refs = binding.get("legal_refs", [])
@@ -155,10 +171,10 @@ def test_art7p_binding_has_required_fields_and_legal_refs() -> None:
 
 def test_rebeca_binding_has_required_fields_and_legal_refs() -> None:
     bindings = _load_trabajador_del_mar_bindings()
-    binding = next(b for b in bindings if b["id"] == "rebeca-50pct")
+    binding = next(b for b in bindings if b.get("id") == "rebeca-50pct")
 
-    assert binding["status"] == "active"
-    assert binding["exempt_fraction"] == "0.50"
+    assert binding.get("status") == "active"
+    assert binding.get("exempt_fraction") == "0.50"
 
     legal_refs = binding.get("legal_refs", [])
     assert isinstance(legal_refs, list) and len(legal_refs) >= 2, "REBECA binding must carry at least 2 legal_refs"
@@ -170,13 +186,13 @@ def test_rebeca_binding_has_required_fields_and_legal_refs() -> None:
 
 def test_da41_binding_is_inactive_and_has_legal_refs() -> None:
     bindings = _load_trabajador_del_mar_bindings()
-    binding = next(b for b in bindings if b["id"] == "da41-tuna-fleet-inactive")
+    binding = next(b for b in bindings if b.get("id") == "da41-tuna-fleet-inactive")
 
-    assert binding["status"] == "inactive_pending_eu_clearance", (
+    assert binding.get("status") == "inactive_pending_eu_clearance", (
         "DA 41 binding must be marked inactive_pending_eu_clearance; "
         "it must not be treated as active (AEAT 2024 confirms non-applicability)"
     )
-    assert binding["exempt_fraction"] == "0.50"
+    assert binding.get("exempt_fraction") == "0.50"
 
     legal_refs = binding.get("legal_refs", [])
     assert isinstance(legal_refs, list) and len(legal_refs) >= 2, "DA 41 binding must carry at least 2 legal_refs"
