@@ -16,10 +16,12 @@ overflow.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import Modelo
 from ...core.external_constants import AMORTIZACION_INMUEBLE_RATE
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
@@ -37,6 +39,35 @@ DAYS_PER_YEAR: Decimal = Decimal("365")
 """Pro-rate denominator. The BOE wording uses "anual" — we adopt 365
 days for every year (including leap years), matching AEAT's manual
 práctico Renta worked-example convention."""
+
+
+def _resolve_amortizacion_inmueble_rate(period_year: int) -> Decimal:
+    """Read the RIRPF art. 14 amortisation rate from the registry parameter.
+
+    Reads ``renta-<period_year>-rental-amortizacion-rate`` from Modelo 100.
+    Falls back to :data:`ART_23_1_F_RATE` (the grounded
+    :data:`~aeat.core.external_constants.AMORTIZACION_INMUEBLE_RATE`) when the
+    registry lookup raises (for example an unregistered ``period_year``),
+    mirroring the rental tier-resolver pattern in
+    :mod:`aeat.domain.fincas._tier_resolver`. The registry parameter is grounded
+    on RD 439/2007 art. 14 (``rd-439-2007:art-14``), which fixes the 3 por ciento
+    rate, and on Ley 35/2006 art. 23 as the substantive base.
+    """
+    from ..calculations.registry import RegistryValidationError, read_parameter
+
+    try:
+        return read_parameter(
+            Modelo.M100.value,
+            str(period_year),
+            f"renta-{period_year}-rental-amortizacion-rate",
+            date_context={"filing_period": date(period_year, 12, 31)},
+        )
+    except RegistryValidationError:
+        _logger.debug(
+            "rental amortizacion rate: registry lookup failed for period_year=%d; fallback to AMORTIZACION_INMUEBLE_RATE",
+            period_year,
+        )
+        return ART_23_1_F_RATE
 
 
 class AmortizationComputation(BaseModel):
@@ -101,7 +132,7 @@ def compute_amortization_for_year(
     """
     basis = max(finca.coste_adquisicion_construccion, finca.valor_catastral_construccion)
     gross = _round_to_cents(
-        basis * ART_23_1_F_RATE * Decimal(income.dias_alquilados) / DAYS_PER_YEAR,
+        basis * _resolve_amortizacion_inmueble_rate(income.period_year) * Decimal(income.dias_alquilados) / DAYS_PER_YEAR,
     )
     cap = finca.coste_adquisicion_construccion
     remaining_cap = max(cap - cumulative_through_prior_year, Decimal("0"))
