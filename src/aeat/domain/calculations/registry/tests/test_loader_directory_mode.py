@@ -71,6 +71,7 @@ def _split_single_file_modelo_text(text: str) -> tuple[str, str, dict[str, str]]
             if match is None:
                 raise AssertionError(f"cannot determine revision id from TOML header {stripped!r}")
             current_revision_id = match.group(1) or match.group(2)
+            assert current_revision_id is not None
             revision_lines_by_id.setdefault(current_revision_id, [])
         if in_revision:
             revision_lines.append(line)

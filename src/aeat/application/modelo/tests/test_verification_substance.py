@@ -783,7 +783,9 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     # Build a tampered revision bypassing the model validator (simulates raw storage drift)
     tampered_revision = CalculationRevisionCatalogue.__fields__["revisions"] if False else revision
     tampered_revision = revision.model_construct(
-        **{
+        # pydantic's model_construct(_fields_set, **values) first-positional confuses
+        # **mapping unpacking under ty (it binds a field value to _fields_set).
+        **{  # ty: ignore[invalid-argument-type]
             **revision.model_dump(),
             "observations": tampered_observations,
         },

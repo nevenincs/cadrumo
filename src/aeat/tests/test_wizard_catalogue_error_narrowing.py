@@ -56,7 +56,7 @@ class TestNewErrorClassesRegistered:
             (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),
         ],
     )
-    def test_error_code_registered(self, error_cls: type, expected_code: str) -> None:
+    def test_error_code_registered(self, error_cls: type[BaseException], expected_code: str) -> None:
         code = get_registered_error_code(error_cls)
         assert code.code == expected_code
 

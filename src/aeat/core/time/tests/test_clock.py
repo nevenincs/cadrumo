@@ -30,5 +30,6 @@ class TestNow:
 
     def test_offset_is_zero(self) -> None:
         result = now()
-        assert result.utcoffset() is not None
-        assert result.utcoffset().total_seconds() == 0  # type: ignore[union-attr]
+        offset = result.utcoffset()
+        assert offset is not None
+        assert offset.total_seconds() == 0
