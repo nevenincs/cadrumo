@@ -1,0 +1,42 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "sede-electronica"
+domain = "concepto"
+lifecycle = "approved"
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El portal electronico de la AEAT donde se presentan las declaraciones."
+definition = "Sede electronica de la AEAT: el portal oficial a traves del cual el contribuyente presenta sus declaraciones y consulta sus expedientes. El usuario sube alli el fichero exportado para presentarlo el mismo."
+
+[language.es.source]
+citation = "Sede Electronica de la AEAT (sede.agenciatributaria.gob.es)."
+authority = "aeat"
+
+[[language.es.term]]
+label = "sede electronica"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "sede"
+term_status = "admitted"
+
+[language.en]
+short_description = "The AEAT's electronic filing portal."
+
+[[language.en.term]]
+label = "electronic office"
+term_status = "preferred"
+
+[language.ca]
+short_description = "La seu electronica de l'AEAT, on es presenten les declaracions."
+
+[language.hu]
+short_description = "Az AEAT elektronikus ugyfelkapuja."

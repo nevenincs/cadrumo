@@ -1,0 +1,39 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "recargo-equivalencia"
+domain = "concepto"
+lifecycle = "approved"
+related = ["iva-recargo-equivalencia"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Recargo de IVA que paga el comerciante minorista a su proveedor."
+definition = "Recargo que, en el regimen especial del recargo de equivalencia, el proveedor repercute al comerciante minorista ademas del IVA, a cambio de que este quede exonerado de presentar autoliquidaciones de IVA por esas ventas."
+
+[language.es.source]
+citation = "Articulos 154 y 156 de la Ley 37/1992 del IVA."
+authority = "boe"
+
+[[language.es.term]]
+label = "recargo de equivalencia"
+term_status = "preferred"
+
+[language.en]
+short_description = "The VAT surcharge a retailer pays its supplier under the equivalence regime."
+
+[[language.en.term]]
+label = "equivalence surcharge"
+term_status = "preferred"
+
+[language.ca]
+short_description = "Recarrec d'IVA que el comerciant minorista paga al seu proveidor."
+
+[language.hu]
+short_description = "Az afa-potlek, amelyet a kiskereskedo fizet a beszallitojanak."

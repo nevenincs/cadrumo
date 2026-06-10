@@ -1,0 +1,39 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "autoliquidacion"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-120"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Declaracion en la que el obligado calcula e ingresa el impuesto."
+definition = "Declaracion tributaria en la que el propio obligado tributario, ademas de comunicar los datos, califica, cuantifica y, en su caso, ingresa la deuda resultante del tributo."
+
+[language.es.source]
+citation = "Articulo 120 de la Ley 58/2003, General Tributaria."
+authority = "boe"
+
+[[language.es.term]]
+label = "autoliquidacion"
+term_status = "preferred"
+
+[language.en]
+short_description = "A self-assessment: the filer computes and pays the tax."
+
+[[language.en.term]]
+label = "self-assessment"
+term_status = "preferred"
+
+[language.ca]
+short_description = "Autoliquidacio: el mateix obligat calcula i ingressa l'impost."
+
+[language.hu]
+short_description = "Onbevallas: az adozo maga szamitja ki es fizeti meg az adot."

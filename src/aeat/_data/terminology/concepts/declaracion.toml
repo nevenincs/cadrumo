@@ -1,0 +1,47 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "declaracion"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-119"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "La presentacion de datos tributarios ante la AEAT."
+definition = "Todo documento presentado ante la Administracion tributaria donde se reconozca o manifieste la realizacion de un hecho relevante para la aplicacion de los tributos. El modelo es el formulario; la declaracion es lo que se presenta en el."
+
+[language.es.source]
+citation = "Articulo 119 de la Ley 58/2003, General Tributaria."
+authority = "boe"
+
+[[language.es.term]]
+label = "declaracion"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "declaracion tributaria"
+term_status = "admitted"
+
+[language.en]
+short_description = "A tax return or declaration filed with the AEAT."
+
+[[language.en.term]]
+label = "tax return"
+term_status = "preferred"
+
+[[language.en.term]]
+label = "declaration"
+term_status = "admitted"
+
+[language.ca]
+short_description = "La presentacio de dades tributaries davant l'AEAT."
+
+[language.hu]
+short_description = "Adatszolgaltatas (bevallas) az AEAT fele."

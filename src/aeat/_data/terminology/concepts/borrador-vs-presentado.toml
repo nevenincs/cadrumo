@@ -1,0 +1,38 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "borrador-vs-presentado"
+domain = "concepto"
+lifecycle = "approved"
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Estado del ciclo de vida que marca una revision como definitiva localmente."
+definition = "Estado presentado del ciclo de vida: la aplicacion marca una revision verificada como presentada para dejar constancia de que el usuario la considera definitiva. Nunca presenta ante la AEAT."
+
+[language.es.source]
+citation = "Glosario del proyecto aeat (estado del ciclo de vida de la aplicacion)."
+authority = "aeat"
+
+[[language.es.term]]
+label = "presentado"
+term_status = "preferred"
+
+[language.en]
+short_description = "The filed lifecycle state recorded locally (never submitted to the AEAT)."
+
+[[language.en.term]]
+label = "presentado"
+term_status = "preferred"
+
+[language.ca]
+short_description = "Estat del cicle de vida que marca una revisio com a definitiva localment."
+
+[language.hu]
+short_description = "A helyileg veglegesnek jelolt allapot (sosem kerul benyujtasra az AEAT-hoz)."

@@ -1,0 +1,42 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "aeat"
+domain = "concepto"
+lifecycle = "approved"
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Agencia Estatal de Administracion Tributaria, la autoridad fiscal espanola."
+definition = "Agencia Estatal de Administracion Tributaria: el organismo publico que gestiona y recauda los principales tributos del Estado espanol. El contribuyente presenta sus declaraciones ante la AEAT; esta aplicacion nunca presenta nada en su nombre."
+
+[language.es.source]
+citation = "Sede Electronica de la AEAT (agenciatributaria.gob.es) y Ley 58/2003, General Tributaria."
+authority = "aeat"
+
+[[language.es.term]]
+label = "AEAT"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "Agencia Tributaria"
+term_status = "admitted"
+
+[language.en]
+short_description = "The Spanish Tax Agency (Agencia Estatal de Administracion Tributaria)."
+
+[[language.en.term]]
+label = "AEAT"
+term_status = "preferred"
+
+[language.ca]
+short_description = "Agencia Estatal d'Administracio Tributaria, l'autoritat fiscal espanyola."
+
+[language.hu]
+short_description = "A spanyol Adohivatal (Agencia Estatal de Administracion Tributaria)."
