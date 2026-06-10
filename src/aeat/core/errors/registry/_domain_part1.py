@@ -191,6 +191,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.live._justificante.JustificanteCaptureSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_justificante_capture_snapshot_not_found",
+            default_suggestion="aeat app live justificante list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.live._verify.VerifyObservationNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_VERIFY_OBSERVATION_NOT_FOUND",
