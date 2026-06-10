@@ -285,7 +285,37 @@ stumble, not an acceptable limitation).
 
 ### D4 -- One operator period grammar, AEAT tokens canonical (F4)
 
-**Context.** The same operator learns two period vocabularies. Modelo surfaces
+**Amendment (2026-06-10, operator directive -- SUPERSEDES the original
+Decision and Caveat 2 below).** On reviewing the shipped result
+(`aeat app ledger preflight --period 2026Q1`), the operator ruled the calendar
+grammar itself the inconsistency: "the period syntax is inconsistent... this
+cannot be correct when we have very strict control over how periods, quarters
+etc are to be referenced in other commands." The corrected decision is a
+**single strict period grammar everywhere -- the AEAT tokens only**:
+
+- Ledger `--period` sites accept **only** the canonical AEAT tokens
+  (`0A / 1T-4T / 01-12`), identical to the modelo surface.
+- Ledger commands (`preflight`, `status`, `export`, `import`, `overview
+  status`) **gain `--year`** to carry the year context the calendar shape used
+  to embed, so `--period 1T --year 2024` works identically across ledger and
+  modelo -- one grammar **and** one argument shape.
+- The calendar shapes (`2026Q1 / 2026-03 / 2026`) **and** the `2026-1T`
+  year-qualified hybrid introduced by the first D4 implementation
+  (`ef43fab88`) are **removed**. No dual notation, no conversion layer, no
+  backward-compatibility shadow.
+
+The original "input override" framing in Caveat 2 is **withdrawn**: the
+operator clarified that two spellings of a period is NOT the user-choice
+override they welcomed (that was the `year <-> uuid` revision-id default of
+D8). A second period notation is exactly the lookback inconsistency strict
+caveat 1 (no aliases/shadows/deprecation; `aeat-architecture-boundaries`)
+forbids. The rework is a hard relocation: every `2026Q1`-style usage in code,
+tests, and docs moves to the `--year YYYY --period <AEAT-token>` form in one
+sweep. `2026-06-01-registry-period-code-union-cli-boundary-adr` remains the
+canonical grammar authority; the ledger calendar grammar is retired, not
+reconciled.
+
+**Context (original, superseded above).** The same operator learns two period vocabularies. Modelo surfaces
 accept `0A / 1T-4T / 01-12`; ledger surfaces accept `2026Q1 / 2026-03 / 2026` via
 `_PERIOD_RE` / `_canonical_period` in `src/aeat/entrypoints/cli/_common.py`. A
 quarter is `1T` in one place and `2026Q1` in another, with no conversion and no
