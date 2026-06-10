@@ -178,3 +178,107 @@ of duplicate campaign commits; a commit-by-commit reconciliation confirmed every
 has a functional equivalent already on the branch, so no work was lost. The campaign is
 structurally complete (13/13) with H1 closed; the two deferrals above are formally carried to
 the successor campaign.
+
+---
+
+## M1 follow-up investigation: M130 general implies_nonzero guard (2026-06-10)
+
+This section answers the investigation deferred as finding M1 above. It was conducted
+against the registry at HEAD (`src/aeat/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/`).
+
+### Casilla-chain classification
+
+Every casilla in the M130 estimación directa chain was audited against `0001-casillas.toml`
+and `0001-formulas.toml` / `0002-formulas.toml`:
+
+| Casilla | input_kind | Notes |
+|---------|-----------|-------|
+| C01 | bound | Cumulative ingresos from ledger binding |
+| C02 | manual | Gastos — sole manual antecedent in the cuota chain |
+| C03 | computed | C01 - C02 |
+| C04 | computed | max(0, C03 × 20%) — clamped non-negative |
+| C05 | manual | Pagos fraccionados anteriores (prior instalments, outside cuota chain) |
+| C06 | manual | Retenciones e ingresos a cuenta |
+| C07 | computed | C04 - C05 - C06 |
+| C08 | manual | Volumen de ingresos agrarios (agricultural section only) |
+| C09 | computed | C08 × 2% |
+| C10 | manual | Retenciones e ingresos a cuenta (agricultural) |
+| C11 | computed | C09 - C10 |
+| C12 | computed | max(0, C07 + C11) — floor at zero |
+| C13 | computed | Minoración table keyed on prior-year net income parameter |
+| C14 | computed | C12 - C13 |
+| C15 | bound | Prior-quarter negative carry-forward |
+| C16 | manual | Deducción por inversión en vivienda habitual |
+| C17 | computed | Art.110.3b branch: if(C01 > 0 AND C06/C01 ≥ 0.70, 0, C14 - C15 - C16) |
+| C18 | manual | Resultado a ingresar de autoliquidaciones anteriores |
+| C19 | computed | C17 - C18 |
+
+**Verdict: no general implies_nonzero guard is warranted for M130.**
+
+The complete evidence for this negative finding follows.
+
+### Why the silent-zero path does not exist in M130
+
+The M130 cuota chain is anchored at C01 (income), which is `input_kind = "bound"` — it
+is populated by the ledger binding `modelo-130-actividad-economica-ingresos-cumulative`,
+not by manual operator entry. An operator cannot silently leave C01 at zero while the
+underlying economic activity ledger carries positive ingresos: the bound casilla is
+populated from the aggregation source, so C01 reflects what the ledger contains. The
+only way C01 is zero is if the ledger genuinely contains zero income.
+
+The formula chain from C01 forward is fully computed:
+
+- C03 = C01 - C02. If C01 = 0 the result is ≤ 0 (C02 is non-negative by convention).
+- C04 = max(0, C03 × 20%). The `max(0, ...)` clamp means negative rendimiento yields
+  C04 = 0 correctly; it does not silently suppress a positive cuota.
+- C07 = C04 - C05 - C06. If C04 = 0 then C07 ≤ 0.
+- C12 = max(0, C07 + C11). Another floor-at-zero applied before the liquidation stage.
+
+If C01 is genuinely positive (ledger income exists), the formula chain propagates
+that positivity through C03 → C04 → C07 → C12 → C14 → C17 → C19. The only
+formula-internal zero-C17 paths are:
+
+1. **Art. 110.3b**: C06/C01 ≥ 0.70 forces C17 = 0. Guarded by the existing
+   `0003-art110-3b-high-retention-advisory.toml` predicate.
+2. **C15 carry offsetting C14**: a prior-quarter negative carried forward as C15
+   reduces C17 to `C14 - C15 - C16`. If C15 ≥ C14, C17 ≤ 0 and `saldo-negativo-fin-periodo`
+   = max(0, -C17) correctly captures the overshoot for the next quarter. This is
+   legitimate economic behaviour: prior losses eliminate the current quarter's instalment.
+   The C15-cap predicate (`0002-verification_predicates.toml`) prevents C15 > C14 from
+   being silently accepted as a valid positive-cuota filing.
+3. **C16 vivienda deduction**: manual entry that can reduce C17. A very large C16 entry
+   could push C17 negative, but this is by design (the operator is claiming a capital
+   repayment deduction); `saldo-negativo-fin-periodo` absorbs the negative carry.
+
+In none of these paths does positive income produce an artificially-zero pago that
+bypasses the engine's computation. The M200 gap (manual base imponible entry can be
+left zero while resultado contable antecedent is positive) does not exist in M130 because
+the income antecedent C01 is bound, not manual.
+
+A naive `implies_nonzero(["01", "19"])` guard would fire as a false positive on every
+legitimate carry-forward filing (case 2 above), every high-retention period (case 1,
+already guarded), and every quarter where retenciones or prior payments fully cover
+the instalment (entirely normal for a high-withholding autónomo). The guard cannot
+distinguish these from an artificially-zero result; it would surface an advisory on
+correct filings. This is exactly the false-positive risk the audit noted.
+
+**Conclusion**: M130 satisfies `no-silent-under-declaration` via the Art.110.3b
+advisory. No additional implies_nonzero predicate should be added. The MINOR finding
+M1 is formally closed as a negative investigation result.
+
+### M131 inventory note (estimación objetiva — scope: inventory only)
+
+M131 has a structurally different shape. In the 2026 revision, C01 ("Suma de
+rendimientos netos") is `input_kind = "manual"`. An operator running módulos activities
+must enter the rendimientos netos figure by hand. There is no ledger binding on C01 for
+M131: the módulos calculation is performed externally (AEAT publishes signed tables per
+actividad/año) and the operator enters the result. This means a filer with genuine
+módulos income could enter C01 = 0 while the actividad has positive rendimientos, and
+the formula chain (C04 = C03 × 2%, C06 = C05 × 2%, C07 = C02 + C04 + C06, C10 = C07 - C08 - C09,
+C13 = C10 - C11 - C12, C15 = C13 - C14) would propagate zero without firing any advisory.
+
+M131 is not covered by the Art.110.3b guard (that guard is M130-specific). Whether a
+`implies_nonzero` advisory on M131's C01 → C15 path is warranted requires a separate
+investigation with LIRPF / RD 439/2007 art. 100–110 grounding for the módulos
+determination obligation. That investigation is out of scope for this pass and is
+formally deferred to a successor campaign.
