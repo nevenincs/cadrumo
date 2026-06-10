@@ -24,6 +24,7 @@ constrain.
 
 from __future__ import annotations
 
+from ._enrolment import EnrolmentCandidate, SeedLabel, collect_enrolment_candidates
 from ._enums import ConceptDomain, ConceptLifecycle, TermStatus
 from ._errors import TerminologyError, TerminologyLoadError, TerminologyValidationError
 from ._loader import (
@@ -32,6 +33,14 @@ from ._loader import (
     load_bundled_terminology_handbook,
     load_terminology_handbook,
     terminology_concepts_dir,
+)
+from ._scaffold import (
+    ScaffoldAction,
+    ScaffoldEntry,
+    ScaffoldPlan,
+    apply_scaffold_plan,
+    build_scaffold_plan,
+    scaffold_handbook,
 )
 from ._schema import (
     ConceptRecord,
@@ -42,6 +51,7 @@ from ._schema import (
     SeedProvenance,
     TermSection,
 )
+from ._serialize import serialise_concept
 from ._validators import (
     approved_completeness_validator,
     default_handbook_validators,
@@ -55,11 +65,16 @@ __all__ = [
     "ConceptDomain",
     "ConceptLifecycle",
     "ConceptRecord",
+    "EnrolmentCandidate",
     "GrammaticalGender",
     "HandbookValidator",
     "LanguageSection",
     "LanguageSource",
     "PartOfSpeech",
+    "ScaffoldAction",
+    "ScaffoldEntry",
+    "ScaffoldPlan",
+    "SeedLabel",
     "SeedProvenance",
     "TermSection",
     "TermStatus",
@@ -67,7 +82,10 @@ __all__ = [
     "TerminologyHandbook",
     "TerminologyLoadError",
     "TerminologyValidationError",
+    "apply_scaffold_plan",
     "approved_completeness_validator",
+    "build_scaffold_plan",
+    "collect_enrolment_candidates",
     "default_handbook_validators",
     "id_uniqueness_validator",
     "legal_refs_resolve_validator",
@@ -75,5 +93,7 @@ __all__ = [
     "load_bundled_terminology_handbook",
     "load_terminology_handbook",
     "relation_integrity_validator",
+    "scaffold_handbook",
+    "serialise_concept",
     "terminology_concepts_dir",
 ]
