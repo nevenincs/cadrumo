@@ -9,6 +9,7 @@ from ._actions_lifecycle import (
     archive_manual_transaction,
     remove_manual_transaction,
     reset_ledger_catalogue,
+    restore_manual_transaction,
     stash_manual_transaction,
 )
 from ._actions_manual import (
@@ -50,6 +51,7 @@ __all__ = [
     "query_ledger_review_rows",
     "remove_manual_transaction",
     "reset_ledger_catalogue",
+    "restore_manual_transaction",
     "split_transaction",
     "stash_manual_transaction",
     "summarize_manual_transactions",

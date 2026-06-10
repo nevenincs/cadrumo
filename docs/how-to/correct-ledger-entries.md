@@ -20,8 +20,9 @@ The [transactions guide](import-bank-statements.md) covers listing and filtering
 - If the same purchase was imported twice, remove the duplicate - or [archive it](#archive-a-transaction) to keep a deliberate trace of it.
 - If one payment covers two different things, [split it](#split-one-transaction-into-parts).
 - If you split something and want it back together, [merge the parts](#merge-split-parts-back).
-- If you're unsure about a transaction and want it out of the way, read the [stash section](#stash-a-transaction-you-are-unsure-about) first - no un-stash command exists.
+- If you're unsure about a transaction and want it out of the way, [stash it](#stash-a-transaction-you-are-unsure-about).
 - If you want to keep a transaction in history but out of everyday lists, [archive it](#archive-a-transaction).
+- If you stashed or archived a transaction by mistake, [restore it to active](#restore-a-stashed-or-archived-transaction).
 
 ## Update fields on a transaction
 
@@ -70,7 +71,7 @@ The parts and the original parent move to history, and the merge creates a fresh
 
 Stash sets a transaction aside. A stashed transaction leaves the everyday lists and totals.
 
-No command currently restores a stashed transaction to active, and the same is true of archived transactions. Both are permanent: choose archive for a row you have deliberately set aside, such as a confirmed duplicate, and stash for a row you never resolved.
+Use stash for a row you have not resolved yet and archive for a row you have deliberately set aside, such as a confirmed duplicate. Both are reversible: [restore](#restore-a-stashed-or-archived-transaction) returns the row to active.
 
 ```bash
 aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
@@ -78,11 +79,28 @@ aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
 
 ## Archive a transaction
 
-Archive keeps a transaction in history but out of ordinary work. Like stash, it cannot be undone from the command line - it's the right choice for duplicates you want to keep a deliberate trace of:
+Archive keeps a transaction in history but out of ordinary work - it's the right choice for duplicates you want to keep a deliberate trace of:
 
 ```bash
 aeat app ledger archive --id <transaction-id> --reason "duplicate imported row" --yes
 ```
+
+## Restore a stashed or archived transaction
+
+If you stashed or archived a transaction by mistake, restore it to active. Restore is the inverse of stash and archive: the row returns to your everyday lists and totals.
+
+```bash
+aeat app ledger restore --id <transaction-id> --reason "stashed by mistake" --yes
+```
+
+Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, list the stashed rows first, then restore each one - you do not need to reset the whole ledger:
+
+```bash
+aeat app ledger list --filter classification=NOT_YET_PROCESSED
+aeat app ledger restore --id <transaction-id> --reason "bulk stash undo" --yes
+```
+
+Restore refuses a row that is already active, and it refuses a row whose period you have already filed - restoring it would change the inputs behind a return you have presented. Restore one of these only after you have corrected the filing through an amendment.
 
 ## Review what changed
 

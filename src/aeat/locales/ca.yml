@@ -831,6 +831,25 @@ application:
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt de
         presentar M130 aquest trimestre perquè les retencions i ingressos a compte
         acumulats a l''any representen el 70% o més dels rendiments íntegres.'
+      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
+        rendiments nets d'activitats en dades-base (C01) són positius però el pagament
+        fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
+        percentatge de l'Ordre de mòduls (mínim 2 per cent).
+      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
+        rendiments nets d'activitats en dades-base (C01) són positius però el pagament
+        fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
+        percentatge de l'Ordre de mòduls (mínim 2 per cent).
+      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
+        rendiments nets d'activitats en dades-base (C01) són positius però el pagament
+        fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
+        percentatge de l'Ordre de mòduls (mínim 2 per cent).
+      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
+        rendiments nets d'activitats en dades-base (C01) són positius però el pagament
+        fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
+        percentatge de l'Ordre de mòduls (mínim 2 per cent).
+      modelo_200_base_imponible_determinada_cuando_resultado_positivo: El resultat
+        comptable és positiu però la base imposable (C552) és zero; reviseu la determinació
+        de la base imposable.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
@@ -838,11 +857,6 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
-      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Els rendiments nets d''activitats en dades-base (C01) són positius però el pagament fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el percentatge de l''Ordre de mòduls (mínim 2 per cent).'
-      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Els rendiments nets d''activitats en dades-base (C01) són positius però el pagament fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el percentatge de l''Ordre de mòduls (mínim 2 per cent).'
-      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Els rendiments nets d''activitats en dades-base (C01) són positius però el pagament fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el percentatge de l''Ordre de mòduls (mínim 2 per cent).'
-      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Els rendiments nets d''activitats en dades-base (C01) són positius però el pagament fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el percentatge de l''Ordre de mòduls (mínim 2 per cent).'
-      modelo_200_base_imponible_determinada_cuando_resultado_positivo: 'El resultat comptable és positiu però la base imposable (C552) és zero; reviseu la determinació de la base imposable.'
     iva_wallet:
       seed_negative_amount: L'import inicial no pot ser negatiu.
       seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
@@ -1135,7 +1149,7 @@ cli:
         yes_required: Has de passar --yes per eliminar una factura cobrable
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
-        evidence_id_help: 'Identificador del justificant (coincidencia exacta)'
+        evidence_id_help: Identificador del justificant (coincidencia exacta)
         group_help: Justificants de factures de compra en PDF o imatge
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_number_help: Número de factura del proveïdor
@@ -1347,7 +1361,8 @@ cli:
           vàlid: {details}.'
         modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
           720)
-        period_help: 'Token de periode d''agregacio: 0A anual, 1T-4T trimestres, 01-12 mesos.'
+        period_help: 'Token de periode d''agregacio: 0A anual, 1T-4T trimestres, 01-12
+          mesos.'
         retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
           per a diverses observacions
       aggregate_help: Executa l'agregació per model amb observacions canòniques explícites
@@ -1386,13 +1401,15 @@ cli:
         year_help: Exercici fiscal del model (p. ex. 2026)
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
-        explain_help: 'Incloure el text d''ajuda localitzat a la sortida de text.'
+        explain_help: Incloure el text d'ajuda localitzat a la sortida de text.
         form_number_help: Filtrar caselles pel número imprès al BOE (p. ex. 46)
         help: Llistar totes les caselles definides per a la revisio d'un model especific.
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
           computed, informational)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: 'Token de periode per resoldre la revisio del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
+        period_help: 'Token de periode per resoldre la revisio del model: 0A anual,
+          1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion
+          o baja.'
         required_help: Mostrar només les caselles marcades com a obligatòries
       compare:
         modelo_help: Número de model a comparar (p. ex. 100, 130).
@@ -1468,10 +1485,14 @@ cli:
         help: Llistar totes les caselles calculades i les seves formules per a la
           revisio d'un model especific.
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: 'Token de periode per resoldre la revisio del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
+        period_help: 'Token de periode per resoldre la revisio del model: 0A anual,
+          1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion
+          o baja.'
       history:
         modelo_help: Codi de model (p. ex. 100, 303)
-        period_help: 'Filtre opcional de periode amb el token de revisio del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
+        period_help: 'Filtre opcional de periode amb el token de revisio del model:
+          0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa
+          alta, modificacion o baja.'
         year_help: Filtre opcional d'exercici de presentació
       history_help: Mostra l'auditoria cronològica del cicle de vida d'un model
       iva_wallet:
@@ -1490,7 +1511,8 @@ cli:
         seed_help: Creació d'un registre d'import inicial del moneder de compensació
           d'IVA per inicialitzar el saldo anterior del moneder.
         seed_invalid_amount: L'import inicial ha de ser un decimal vàlid i no negatiu.
-        seed_period_help: 'Periode de la presentacio del Model 303: trimestres 1T-4T (p. ex. 4T).'
+        seed_period_help: 'Periode de la presentacio del Model 303: trimestres 1T-4T
+          (p. ex. 4T).'
       list:
         help: Llistar tots els models tributaris oficials registrats en el sistema.
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
@@ -1527,7 +1549,9 @@ cli:
         del Modelo 130).
       readiness:
         modelo_help: Codi de model (p. ex. 303).
-        period_help: 'Token de periode per resoldre la revisio del model: 0A anual, 1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
+        period_help: 'Token de periode per resoldre la revisio del model: 0A anual,
+          1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion
+          o baja.'
         revision_help: Identificador de revisió del registre.
         year_help: Exercici de presentació.
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
@@ -1592,6 +1616,9 @@ cli:
           revisions amb `aeat app modelo work revisions --modelo %{modelo} --year
           %{year} --period %{period}` i torna a consultar aquesta amb `aeat app modelo
           work revision %{revision_id}`.'
+        calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però
+          aquest import declarable no s''assigna a cap casella i no es declara en
+          aquesta presentació; revisa''l abans de presentar.'
         calculate_unauthorized_advisory: 'AVÍS: el backend de càlcul del model %{modelo}
           NO està autoritzat — encara no s''ha provat amb un test integral al llarg
           d''almenys dos exercicis de renda (porta d''autorització multi-exercici).
@@ -1847,13 +1874,13 @@ cli:
           almenys un requerit)
         status_help: Mostrar les metadades d'una unitat de treball
         verify_help: Verificar una revisió draft contra el contracte verified-complete
+        verify_selector_help: Selector de revisio esborrany (current, latest-draft
+          o explicit).
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però aquest import declarable no s''assigna a cap casella i no es declara en aquesta presentació; revisa''l abans de presentar.'
-        verify_selector_help: 'Selector de revisio esborrany (current, latest-draft o explicit).'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2157,8 +2184,19 @@ cli:
         (model, revisió, exercici, període).
       preflight_modelo_help: Identificador numèric del model (p. ex. 303).
       preflight_period_help: Codi de període (p. ex. 1T, 1P, 0A, 01).
+      preflight_revision_ambiguous: 'Mes d''una revisio del registre coincideix amb
+        el model %{modelo} periode %{period}: %{candidates}. Torneu a executar amb
+        --revision-id indicant-ne una.'
       preflight_revision_help: Registry revision id.
-      preflight_revision_id_help: 'Anul-lacio opcional de l''id de revisio del registre per a reproduccio exacta (p. ex. 2024-0A); per defecte fa servir la revisio activa per al model, exercici i periode.'
+      preflight_revision_id_help: Anul-lacio opcional de l'id de revisio del registre
+        per a reproduccio exacta (p. ex. 2024-0A); per defecte fa servir la revisio
+        activa per al model, exercici i periode.
+      preflight_revision_override_invalid: 'L''anul-lacio de la revisio del registre
+        no es valida per al model %{modelo} exercici %{filing_year}: %{detail}. Executeu
+        `aeat app modelo describe %{modelo}` per llistar les revisions registrades.'
+      preflight_revision_unresolved: Cap revisio del registre cobreix el model %{modelo}
+        exercici %{filing_year} periode %{period}. Executeu `aeat app modelo describe
+        %{modelo}` per veure els periodes i revisions valids.
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
       remove_name_help: Id del perfil a retirar
@@ -2180,9 +2218,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
-      preflight_revision_ambiguous: 'Mes d''una revisio del registre coincideix amb el model %{modelo} periode %{period}: %{candidates}. Torneu a executar amb --revision-id indicant-ne una.'
-      preflight_revision_unresolved: 'Cap revisio del registre cobreix el model %{modelo} exercici %{filing_year} periode %{period}. Executeu `aeat app modelo describe %{modelo}` per veure els periodes i revisions valids.'
-      preflight_revision_override_invalid: 'L''anul-lacio de la revisio del registre no es valida per al model %{modelo} exercici %{filing_year}: %{detail}. Executeu `aeat app modelo describe %{modelo}` per llistar les revisions registrades.'
     recover:
       help: Recuperar el magatzem secret de fitxer amb una clau de recuperacio i vincular-lo
         a una nova contrasenya.
@@ -2198,7 +2233,7 @@ cli:
         objects_help: Comprova la integritat dels objectes segurs.
         objects_namespace_help: Limita les comprovacions d'integritat d'objectes segurs
           a un espai de noms.
-        registry_help: 'Comprova la integritat del registre de càlcul.'
+        registry_help: Comprova la integritat del registre de càlcul.
       integrity_attribution_details_help: Inclou detalls de metadades segures per
         fila
       integrity_attribution_help: Agrupa les files d'objectes segurs no desxifrables
@@ -2455,7 +2490,8 @@ cli:
         3166-1 alfa-2 minúscules, p. ex. de); obligatori amb --iva-category intra_community_supply,
         prohibit amb export_third_country_zero_rated
       from_csv_exclusive: --from-csv no pot combinar-se amb --id ni --classification.
-      from_csv_help: 'Ruta a un fitxer CSV amb columnes transaction_id, classification[, category_id, business_pct, taxable_base, iva_rate, iva_amount].'
+      from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
+        category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
       help: Classificar un moviment del llibre al bucket del perfil actiu
       id_help: Id del moviment del llibre a classificar
@@ -2496,6 +2532,9 @@ cli:
       reference_help: Referència de l'enllaç al document.
       source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
     errors:
+      business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
+        està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al
+        50 per cent.
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
       command_input_invalid_fallback: un o més camps no han superat la validació
       confirm_required: Passa --yes per confirmar aquesta operació destructiva del
@@ -2521,7 +2560,6 @@ cli:
         Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
-      business_pct_out_of_range: 'La proporció d''ús professional %{value} (= %{percent}) està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al 50 per cent.'
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       format_help: Format de serialització d'exportació
@@ -2666,8 +2704,15 @@ cli:
       help: Reiniciar el catàleg del llibre del bucket del perfil actiu
       reason_help: Motiu registrat a l'historial de reinici
       yes_help: Confirmar el buidatge del catàleg actiu del llibre
+    restore:
+      actor_help: 'Nom de l''operador registrat a l''esdeveniment del bucket'
+      help: 'Restaurar a actiu un moviment del llibre apartat o arxivat'
+      id_help: 'Id del moviment del llibre a restaurar a actiu'
+      reason_help: 'Motiu registrat a l''historial de cicle de vida'
+      yes_help: 'Confirma la restauració del moviment del llibre a actiu'
     review:
-      filter_help: 'Filtrar files per status, period, issue, import, classification, text o direction'
+      filter_help: Filtrar files per status, period, issue, import, classification,
+        text o direction
       header: SESSIÓ DE REVISIÓ DEL LLIBRE COMPTABLE
       help: Revisió interactiva i validació d'entrades del llibre
       id_help: Identificador de l'entrada específica a revisar
@@ -3147,7 +3192,7 @@ cli:
       welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
-    language_help: 'Idioma de la sortida i del text d''ajuda (en, es, ca, hu).'
+    language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
     startup_import_error: 'Error intern: el mòdul de l''aplicació no s''ha pogut carregar
@@ -4221,9 +4266,11 @@ errors:
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
   snapshot:
+    ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
+      el model %{modelo_id}: %{candidate_ids}.'
     modelo_not_registered: El model no esta registrat al registre.
-    no_revision_for_period: 'Cap revisió del registre cobreix el model %{modelo_id} exercici %{filing_year} període %{period}.'
-    ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb el model %{modelo_id}: %{candidate_ids}.'
+    no_revision_for_period: Cap revisió del registre cobreix el model %{modelo_id}
+      exercici %{filing_year} període %{period}.
   storage:
     engine:
       create_failed: No s'ha pogut crear el motor de base de dades d'emmagatzematge.

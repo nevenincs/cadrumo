@@ -135,6 +135,7 @@ class BucketEventType(StrEnum):
     LEDGER_TRANSACTION_REMOVED = "ledger.transaction.removed"
     LEDGER_TRANSACTION_ARCHIVED = "ledger.transaction.archived"
     LEDGER_TRANSACTION_STASHED = "ledger.transaction.stashed"
+    LEDGER_TRANSACTION_RESTORED = "ledger.transaction.restored"
     LEDGER_TRANSACTION_EXPORTED = "ledger.transaction.exported"
     LEDGER_TRANSACTION_SPLIT = "ledger.transaction.split"
     LEDGER_TRANSACTION_MERGED = "ledger.transaction.merged"

@@ -218,6 +218,11 @@ class LedgerStashResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger stash``."""
 
 
+@register_schema("ledger.restore")
+class LedgerRestoreResult(_LedgerMutationResult):
+    """JSON envelope for ``aeat app ledger restore``."""
+
+
 @register_schema("ledger.remove")
 class LedgerRemoveResult(OutputSchema):
     """JSON envelope for ``aeat app ledger remove``.
