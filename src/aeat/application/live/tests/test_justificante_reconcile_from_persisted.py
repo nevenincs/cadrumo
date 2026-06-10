@@ -216,8 +216,10 @@ def test_stamp_registers_justificante_and_marks_filing_live_captured() -> None:
     assert JustificanteRepository().load("ABCD1234EFGH5678") is not None
     # The stamp leaves an audit-trail event.
     bucket_id = _active_bucket_id()
-    events = BucketEventHistoryRepository().load().for_bucket(
-        bucket_id, event_types=(BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,)
+    events = (
+        BucketEventHistoryRepository()
+        .load()
+        .for_bucket(bucket_id, event_types=(BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,))
     )
     assert len(events) == 1
     assert events[0].payload["evidence_kind"] == "aeat_live_capture"
@@ -311,14 +313,18 @@ def test_capture_orchestrator_stamps_evidence_when_period_is_filed() -> None:
     )
 
     assert persisted.period == "1T"
-    filing = ModeloRecordCatalogueRepository().load().current_for(
-        bucket_id=bucket_id, modelo="130", filing_year=2026, period="1T"
+    filing = (
+        ModeloRecordCatalogueRepository()
+        .load()
+        .current_for(bucket_id=bucket_id, modelo="130", filing_year=2026, period="1T")
     )
     assert filing is not None
     assert filing.external_evidence is not None
     assert filing.external_evidence.kind is ExternalEvidenceKind.AEAT_LIVE_CAPTURE
-    events = BucketEventHistoryRepository().load().for_bucket(
-        bucket_id, event_types=(BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,)
+    events = (
+        BucketEventHistoryRepository()
+        .load()
+        .for_bucket(bucket_id, event_types=(BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,))
     )
     assert len(events) == 1
 
@@ -343,7 +349,9 @@ def test_capture_orchestrator_skips_stamp_when_period_not_filed() -> None:
     )
 
     assert persisted.snapshot_id  # the snapshot is still persisted
-    events = BucketEventHistoryRepository().load().for_bucket(
-        bucket_id, event_types=(BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,)
+    events = (
+        BucketEventHistoryRepository()
+        .load()
+        .for_bucket(bucket_id, event_types=(BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,))
     )
     assert events == ()

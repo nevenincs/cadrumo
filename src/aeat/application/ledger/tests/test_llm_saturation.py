@@ -77,9 +77,7 @@ class _FixedSaturatingClassifier:
     def decided_by(self) -> str:
         return f"llm:claude:{self._model}"
 
-    def classify(
-        self, transaction: Transaction, *, evidence_text: str | None = None
-    ) -> LLMClassificationResponse:
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
         self.last_evidence_text = evidence_text
         return LLMClassificationResponse(
             classification=self._classification,

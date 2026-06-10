@@ -316,8 +316,7 @@ def _validate_split_child_amounts(
     for index, child in enumerate(children):
         if child.amount < Decimal("0"):
             raise TransactionValidationError(
-                "ledger split child amount must be a non-negative magnitude; "
-                "children inherit the parent's direction",
+                "ledger split child amount must be a non-negative magnitude; children inherit the parent's direction",
                 context={"child_index": index, "child_amount": str(child.amount)},
             )
         if child.amount == Decimal("0"):

@@ -121,9 +121,7 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[s
                 modelo="115",
                 filing_year=_YEAR,
                 period=period,
-                observations=tuple(
-                    CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()
-                ),
+                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
             ),
             source_kind="app_filing",
             captured_at=_T0,
@@ -163,9 +161,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
 
     # Non-vacuous gate: the summed base must be strictly positive so a silent
     # blank masquerading as "equal" fails here.
-    assert expected_totals["02"] > Decimal("0"), (
-        "seeded M115 bases sum to zero — test fixture is broken"
-    )
+    assert expected_totals["02"] > Decimal("0"), "seeded M115 bases sum to zero — test fixture is broken"
 
     auth = resources().modelos.authority
     snap_180 = auth.snapshot("180", filing_year=_YEAR, period="0A")

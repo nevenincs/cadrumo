@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.external_constants import OutputLanguage
-from aeat.terminology import (
+from ...core.external_constants import OutputLanguage
+from .. import (
     ConceptDomain,
     ConceptLifecycle,
     GrammaticalGender,

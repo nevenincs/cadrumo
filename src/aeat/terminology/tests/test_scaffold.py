@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.external_constants import OutputLanguage
-from aeat.terminology import (
+from ...core.external_constants import OutputLanguage
+from .. import (
     ConceptDomain,
     EnrolmentCandidate,
     ScaffoldAction,
@@ -321,7 +321,7 @@ def test_real_enrolment_candidates_are_concept_grade_and_bounded() -> None:
     # Bounded concept-grade set, not per-casilla (18,885) nor per-legal (262).
     assert 0 < len(candidates) < 1000
     # Every modelo enrols exactly one concept.
-    from aeat.core import Modelo
+    from ...core import Modelo
 
     for modelo in Modelo:
         assert f"modelo-{modelo.value}" in candidates

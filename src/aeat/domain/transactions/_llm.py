@@ -103,6 +103,61 @@ class LLMClassificationResponse(BaseModel):
         return trimmed
 
 
+class LLMSplitChild(BaseModel):
+    """One proposed child of an evidence-driven transaction split.
+
+    The model proposes a *proportion* of the parent (a fraction, like
+    ``business_pct``) plus the selections for that child; the application derives
+    each child's euro amount from the parent gross and the regulated tax substrate
+    from the registry. The model never emits a euro amount or a regulated number
+    (``llm-selects-system-derives-tax-numbers``).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    proportion: Decimal
+    category: SpendingCategory | None = None
+    iva_category: IvaCategory | None = None
+    evidence_citation: str = Field(default="", max_length=_REASON_MAX_LENGTH)
+
+    @field_validator("proportion")
+    @classmethod
+    def _check_proportion(cls, value: Decimal) -> Decimal:
+        """Restrict each child proportion to the half-open (0, 1] range."""
+        if not (_CONFIDENCE_MIN < value <= _CONFIDENCE_MAX):
+            raise TransactionValidationError("each split child proportion must be within (0, 1]")
+        return value
+
+
+class LLMSplitResponse(BaseModel):
+    """An evidence-driven N-way split proposal: children whose proportions sum to one."""
+
+    model_config = _STRICT_FROZEN
+
+    children: tuple[LLMSplitChild, ...]
+    reason: str = Field(min_length=1, max_length=_REASON_MAX_LENGTH)
+
+    @field_validator("children")
+    @classmethod
+    def _check_children(cls, value: tuple[LLMSplitChild, ...]) -> tuple[LLMSplitChild, ...]:
+        """Require at least two children whose proportions sum to ~1.0."""
+        if len(value) < 2:
+            raise TransactionValidationError("a split must propose at least two children")
+        total = sum((child.proportion for child in value), Decimal("0"))
+        if abs(total - _CONFIDENCE_MAX) > Decimal("0.01"):
+            raise TransactionValidationError("split child proportions must sum to approximately 1.0")
+        return value
+
+    @field_validator("reason")
+    @classmethod
+    def _strip_reason(cls, value: str) -> str:
+        """Trim whitespace and reject empty reasons."""
+        trimmed = value.strip()
+        if not trimmed:
+            raise TransactionValidationError("reason must not be empty")
+        return trimmed
+
+
 # ── protocol ──────────────────────────────────────────────────────
 
 
@@ -114,9 +169,7 @@ class LLMClassifier(Protocol):
         """Return the ``classified_by`` identifier this classifier emits."""
         ...
 
-    def classify(
-        self, transaction: Transaction, *, evidence_text: str | None = None
-    ) -> LLMClassificationResponse:
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
         """Return one classification decision for ``transaction``.
 
         Args:
@@ -574,9 +627,7 @@ class SubprocessLLMClassifier:
             return f"llm:{self.name}:{self.model}"
         return f"llm:{self.name}"
 
-    def classify(
-        self, transaction: Transaction, *, evidence_text: str | None = None
-    ) -> LLMClassificationResponse:
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
         """Shell out to the LLM CLI, parse, validate, return.
 
         Args:
