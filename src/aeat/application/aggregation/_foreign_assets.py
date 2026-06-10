@@ -18,6 +18,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core import Modelo
 from ...core.aggregation import AggregationSourceKind, ForeignAssetClass
 from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
@@ -190,7 +191,7 @@ def aggregate_foreign_assets_720(
             ),
         )
     return ForeignAssetsAggregation(
-        modelo="720",
+        modelo=Modelo.M720.value,
         period=period,
         rollups=tuple(rollups),
         total_assets=sum(row.assets_count for row in rollups),

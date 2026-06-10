@@ -22,6 +22,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core import Modelo
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
@@ -179,7 +180,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
-    modelo: str = "100",
+    modelo: str = Modelo.M100.value,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
 
@@ -220,7 +221,7 @@ def aggregate_renta_ledger_expenses(
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
-    modelo: str = "100",
+    modelo: str = Modelo.M100.value,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
