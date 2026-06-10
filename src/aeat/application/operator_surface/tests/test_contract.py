@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import importlib
 import inspect
 from collections.abc import Iterator
 from pathlib import Path
-from types import ModuleType
 
 import pytest
 from pydantic import ValidationError
@@ -29,7 +27,6 @@ from .. import (
     render_help_text,
     require_accepted_root,
     resolve_source_kind_alias,
-    retired_surface_suggestion,
 )
 from .._models import LifecycleContract, RootSurface
 
@@ -40,47 +37,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _pin_english_locale() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction] - autouse fixture
     """Pin the operator-surface contract tests to the English locale.
 
-    The contract surface (help paragraphs, error messages, retired-surface
-    reasons) is rendered through the project locale layer. These tests
-    assert against the canonical English strings, so we pin the locale
-    here rather than coupling the assertions to whatever the default
-    locale happens to be in any given environment.
-
-    The retired-surface ``reason`` strings are resolved by ``tr()`` at
-    module-import time and frozen into module-level constants, so we
-    additionally reload the ``_contract`` module while the override
-    is active to rebuild those constants in English. The cached
-    ``get_operator_surface_contract()`` result is cleared so the next
-    call rebuilds against the reloaded constants.
+    The contract surface (help paragraphs, error messages) is rendered
+    through the project locale layer. These tests assert against the
+    canonical English strings, so we pin the locale here rather than
+    coupling the assertions to whatever the default locale happens to be
+    in any given environment.
     """
     with override_settings(aeat_output_language="en"):
-        contract_module: ModuleType = importlib.import_module("aeat.application.operator_surface._contract")
-        package_module: ModuleType = importlib.import_module("aeat.application.operator_surface")
-        original_retired = contract_module.RETIRED_OPERATOR_SURFACES
-        # Rebuild the retired-surface tuple under the active (English)
-        # locale by re-running the module-level tr() calls. The
-        # constant is captured at module-import time, so simply
-        # toggling Settings is not sufficient — we have to rebuild.
-        rebuilt = importlib.reload(contract_module).RETIRED_OPERATOR_SURFACES
-        contract_module.get_operator_surface_contract.cache_clear()
-        # Re-bind the package-level re-export and any symbols the test
-        # module imported eagerly so they point at the freshly-reloaded
-        # contract module.
-        package_module.RETIRED_OPERATOR_SURFACES = rebuilt  # pyright: ignore[reportAttributeAccessIssue]
-        package_module.get_operator_surface_contract = (  # pyright: ignore[reportAttributeAccessIssue]
-            contract_module.get_operator_surface_contract
-        )
-        package_module.require_accepted_root = (  # pyright: ignore[reportAttributeAccessIssue]
-            contract_module.require_accepted_root
-        )
-        package_module.retired_surface_suggestion = (  # pyright: ignore[reportAttributeAccessIssue]
-            contract_module.retired_surface_suggestion
-        )
-        try:
-            yield
-        finally:
-            contract_module.RETIRED_OPERATOR_SURFACES = original_retired  # pyright: ignore[reportAttributeAccessIssue]
-            contract_module.get_operator_surface_contract.cache_clear()
+        yield
 
 
 def test_contract_roots_are_exactly_config_and_app() -> None:
@@ -131,27 +95,6 @@ def test_contract_source_kind_aliases_are_parser_only() -> None:
     assert resolve_source_kind_alias("ci") is SourceKind.COLLECTIBLE_INVOICE
 
 
-def test_retired_surface_suggestions_capture_rejected_roots() -> None:
-    setup = retired_surface_suggestion("setup")
-    invoice = retired_surface_suggestion("invoice")
-    declaration = retired_surface_suggestion("declaration")
-    submit = retired_surface_suggestion("submit")
-
-    assert setup is not None
-    assert setup.replacement == "config"
-    assert setup.suggestion == "aeat config profile create NAME"
-    assert retired_surface_suggestion("auth") is None
-    assert invoice is not None
-    assert invoice.replacement == "app ledger"
-    assert invoice.suggestion == "aeat app ledger"
-    assert declaration is not None
-    assert declaration.replacement == "app modelo"
-    assert declaration.suggestion == "aeat app modelo"
-    assert submit is not None
-    assert submit.replacement is None
-    assert submit.reason == "live submission is permanently disabled."
-
-
 def test_require_accepted_root_uses_registered_application_error() -> None:
     assert require_accepted_root("config").name is RootSurfaceName.CONFIG
 
@@ -159,8 +102,8 @@ def test_require_accepted_root_uses_registered_application_error() -> None:
         require_accepted_root("setup")
 
     error = exc_info.value
-    assert error.suggestion == "aeat config profile create NAME"
-    assert error.reason == "setup and config are consolidated under the config root."
+    assert error.reason == "The CLI accepts only the config and app roots."
+    assert error.suggestion == "aeat --help"
     assert get_registered_error_code(error).code == "REFUSED_OPERATOR_SURFACE_CONTRACT"
 
 
@@ -209,7 +152,6 @@ def test_log_fields_and_error_codes_are_backend_owned() -> None:
     assert contract.log_fields.as_extra() == {
         "contract_name": "operator_surface",
         "root_count": 2,
-        "retired_surface_count": len(contract.retired_surfaces),
         "lifecycle": "calculate -> verify -> file",
         "source_kind_count": 4,
     }
