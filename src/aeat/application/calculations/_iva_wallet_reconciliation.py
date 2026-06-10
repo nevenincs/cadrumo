@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core import Modelo
 from ...domain.calculations.registry import RegistrySnapshot
 from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
 from ...domain.iva_compensation._reconciliation import (
@@ -68,7 +69,7 @@ class IvaWalletDecisionSourceResolver:
         self._decision = decision
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if context.modelo != "303" or self._decision is None:
+        if context.modelo != Modelo.M303.value or self._decision is None:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -139,7 +140,7 @@ def reconcile_modelo_303_iva_compensation(
 
     Returns an :class:`IvaCompensationReconciliationReport`.
     """
-    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
         raise IvaCompensationReconciliationInputError(
             "IVA compensation wallet reconciliation only applies to Modelo 303"
         )
