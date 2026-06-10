@@ -30,6 +30,7 @@ from ...application.ledger import (
     ledger_transaction_result_payload,
     ledger_transaction_review_status,
     list_manual_transactions,
+    resolve_lineage_transaction_id,
     resolve_transaction_id,
     suggest_llm_classification,
     update_manual_transaction_fields,
@@ -253,39 +254,76 @@ def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[s
     return tuple(result.transaction.transaction_id for result in results)
 
 
-def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
-    """Resolve a CLI-supplied id or unambiguous prefix to a full transaction id.
+def _prefix_error_bad(exc: TransactionIdPrefixError, prefix: str) -> typer.BadParameter:
+    """Translate a :exc:`TransactionIdPrefixError` into a localized ``_bad``.
 
-    Wraps the domain-layer :exc:`TransactionIdPrefixError` into ``tr()``-
-    rendered messages routed through ``_bad`` so the operator sees a
-    locale-translated explanation rather than a raw Python exception
-    string. Four distinct refusal keys are emitted depending on which
-    invariant was violated.
+    Wraps the domain-layer exception into ``tr()``-rendered messages so the
+    operator sees a locale-translated explanation rather than a raw Python
+    exception string. Five distinct refusal keys are emitted depending on
+    which invariant was violated.
+    """
+    raw_message = str(exc)
+    if "is empty" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_empty"))
+    if "non-hex" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix))
+    if "longer than" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix))
+    if "no transaction" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix))
+    if "matches" in raw_message:
+        # collision — surface the candidate ids inline so the
+        # operator can lengthen the prefix.
+        _, _, candidates = raw_message.partition(":")
+        return _bad(
+            tr(
+                "cli.ledger.errors.id_prefix_collision",
+                prefix=prefix,
+                candidates=candidates.strip() or "?",
+            )
+        )
+    return _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message))
+
+
+def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
+    """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
+
+    Used by the *mutation* verbs (update, classify, allocate, link,
+    archive, stash, restore, ...). It matches only ids of rows still in the
+    catalogue, because a mutation always targets a live row; an ``update``
+    additionally requires the target to be ACTIVE. Read verbs use
+    :func:`_resolve_read_id` instead, which also follows edit lineage.
     """
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
     except TransactionIdPrefixError as exc:
-        raw_message = str(exc)
-        if "is empty" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_empty")) from exc
-        if "non-hex" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix)) from exc
-        if "longer than" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix)) from exc
-        if "no transaction" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix)) from exc
-        if "matches" in raw_message:
-            # collision — surface the candidate ids inline so the
-            # operator can lengthen the prefix.
-            _, _, candidates = raw_message.partition(":")
-            raise _bad(
-                tr(
-                    "cli.ledger.errors.id_prefix_collision",
-                    prefix=prefix,
-                    candidates=candidates.strip() or "?",
-                )
-            ) from exc
-        raise _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message)) from exc
+        raise _prefix_error_bad(exc, prefix) from exc
+
+
+def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
+    """Resolve a CLI-supplied id for the *read* verbs, following edit lineage.
+
+    This is the D3 stable-lineage-handle resolution path for
+    ``ledger history`` / ``view`` / ``track``. It first resolves ``prefix``
+    against live catalogue ids exactly as :func:`_resolve_id` does; when no
+    live row matches, it walks the edit-lineage chain so a superseded
+    (pre-``update``) id written down by the operator still resolves to the
+    current row — see
+    :func:`aeat.application.ledger.resolve_lineage_transaction_id`. The
+    content-addressed id stays authoritative; this is a read-side lookup
+    convenience, never a change to how ids are minted.
+    """
+    if not isinstance(transaction_repository, TransactionCatalogueRepository):
+        # Read verbs always receive a real catalogue repository through
+        # _tx_repo; the structural Protocol is only used by mutation
+        # helpers. Fall back to the live-id resolver if a non-catalogue
+        # repository is ever supplied so the read path never crashes.
+        return _resolve_id(transaction_repository, prefix)
+    catalogue = transaction_repository.load()
+    try:
+        return resolve_lineage_transaction_id(prefix, catalogue)
+    except TransactionIdPrefixError as exc:
+        raise _prefix_error_bad(exc, prefix) from exc
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
@@ -828,9 +866,7 @@ def ledger_allocate(
     transaction_repository = _tx_repo(state)
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    parsed_business_pct = _validate_business_pct_range(
-        _parse_required_decimal(business_pct, label="business-pct")
-    )
+    parsed_business_pct = _validate_business_pct_range(_parse_required_decimal(business_pct, label="business-pct"))
     assert parsed_business_pct is not None
     # The classification follows the proportion: a 100% allocation is
     # BUSINESS, a 0% allocation is PERSONAL, and anything strictly
@@ -1012,7 +1048,7 @@ def ledger_link(
     )
 
 
-register_read_commands(app, resolve_transaction_id=_resolve_id)
+register_read_commands(app, resolve_transaction_id=_resolve_read_id)
 
 
 def _resolve_source_jurisdiction(

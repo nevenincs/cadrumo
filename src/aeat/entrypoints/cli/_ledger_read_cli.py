@@ -616,11 +616,29 @@ def _history_object_ids(
     resolved_id: str,
     include_split_siblings: bool,
 ) -> list[str]:
-    """Return ``[resolved_id, ...siblings]`` when the operator opts in."""
-    object_ids = [resolved_id]
+    """Return every event-anchor id whose events belong to ``resolved_id``.
+
+    Always includes ``resolved_id`` plus every prior id in its edit-lineage
+    chain. An ``update`` that edits an id-affecting fact anchors the pre-edit
+    events (create, import) on the *old* id and the post-edit events on the
+    *new* id; walking the lineage means an operator who wrote down an old id
+    before the correction still sees the full chronological chain, and the
+    superseded id resolves to (and surfaces) the lineage rather than failing
+    with id-not-found. Split siblings are added only when the operator opts in.
+
+    The content-addressed id stays authoritative; this is a read-side
+    lineage lookup over the same edit-lineage chain the finalized-modelo
+    guard walks.
+    """
+    catalogue = transaction_repository.load()
+    transaction = catalogue.get(resolved_id)
+    object_ids: list[str] = [resolved_id]
+    if transaction is not None:
+        for entry in transaction.edit_lineage:
+            if entry.previous_transaction_id not in object_ids:
+                object_ids.append(entry.previous_transaction_id)
     if not include_split_siblings:
         return object_ids
-    transaction = transaction_repository.load().get(resolved_id)
     if transaction is None or transaction.split_lineage is None:
         return object_ids
     for sibling in transaction.split_lineage.sibling_transaction_ids:

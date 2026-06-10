@@ -34,7 +34,7 @@ aeat app ledger update --id <transaction-id> --amount=-121.00 --description "Off
 
 Each flag fully replaces that field - write the complete new value, not an addition to the old one. The updatable fields are: date, value-date, amount, direction, currency, counterparty, description, taxable-base, iva-rate, iva-amount, irpf-category, notes, and group.
 
-An update gives the transaction a new ID - the update output prints it. Use the new ID for later commands such as `history`, or re-run `list` to find it.
+An update gives the transaction a new ID - the update output prints it. You don't have to track the change for read commands: an ID you wrote down before the update still answers in `history`, `view`, and `track`, resolving to the corrected transaction. For a further mutation - another `update`, `classify`, or `archive` - use the current ID from the update output or from `list`, because those commands act on the live transaction.
 
 Update works on active transactions only. Archived and stashed transactions refuse it, as does a split parent - the active parts of a split can be updated normally.
 
