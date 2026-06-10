@@ -347,8 +347,33 @@ def _read_parameter_matches(node: ast.Call, *, modelo_id: str) -> bool:
         return False
     if func_name != "read_parameter" or len(node.args) < 3:
         return False
-    modelo_arg = node.args[0]
-    return isinstance(modelo_arg, ast.Constant) and modelo_arg.value == modelo_id
+    return _modelo_arg_code(node.args[0]) == modelo_id
+
+
+def _modelo_arg_code(node: ast.expr) -> str | None:
+    """Return the three-digit modelo code a ``read_parameter`` first arg denotes.
+
+    Recognises the bare literal (``"100"``) and the canonical
+    :class:`aeat.core.Modelo` enum references that replaced it during the
+    modelo-enum-hardening sweep: the member ``Modelo.M100`` and its
+    ``Modelo.M100.value`` form. Any other expression yields ``None`` (the
+    call is treated as not statically analysable for this modelo).
+    """
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    # Unwrap a trailing ``.value`` (``Modelo.M100.value`` -> ``Modelo.M100``).
+    if isinstance(node, ast.Attribute) and node.attr == "value":
+        node = node.value
+    # ``Modelo.M100`` -> Attribute(value=Name("Modelo"), attr="M100").
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "Modelo"
+        and node.attr.startswith("M")
+        and node.attr[1:].isdigit()
+    ):
+        return node.attr[1:]
+    return None
 
 
 def _expand_parameter_id_node(node: ast.expr) -> tuple[str, ...]:
