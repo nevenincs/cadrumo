@@ -94,7 +94,11 @@ from ._justificante import (
     JustificanteCaptureSnapshotService,
     derive_justificante_capture_snapshot_id,
     justificante_capture_snapshot_object_key,
+    parse_capture_to_justificante,
+    reconcile_capture,
+    register_capture_as_filing_evidence,
     resolve_period_expediente,
+    stamp_capture_evidence_if_filed,
 )
 from ._remote_state_models import (
     BulkFiledDataCaptureReport,
@@ -333,7 +337,7 @@ async def capture_justificante_snapshot(
         period=period,
     )
     capture = await justificante_provider(session, settings, expediente=expediente)
-    return JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
+    persisted = JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
         modelo=modelo,
         filing_year=year,
         period=period,
@@ -343,6 +347,11 @@ async def capture_justificante_snapshot(
         pdf_sha256=capture.pdf_sha256,
         captured_at=now(),
     )
+    # Per the ADR, the capture flow stamps the official evidence onto the work
+    # unit's filing record in the same flow. Best-effort: a no-op when the period
+    # is not yet filed in-app (the snapshot is still persisted).
+    stamp_capture_evidence_if_filed(persisted)
+    return persisted
 
 
 def __getattr__(name: str):
@@ -452,9 +461,13 @@ __all__ = [
     "list_iva_remote_state_acquisition_manifests",
     "load_iva_remote_state",
     "load_iva_remote_state_acquisition_manifest",
+    "parse_capture_to_justificante",
     "persist_and_reconcile_iva_compensation_wallet",
     "persist_filed_calculation_observation",
     "persist_iva_remote_state_acquisition_report",
+    "reconcile_capture",
+    "register_capture_as_filing_evidence",
     "resolve_period_expediente",
     "select_declarations_for_capture",
+    "stamp_capture_evidence_if_filed",
 ]
