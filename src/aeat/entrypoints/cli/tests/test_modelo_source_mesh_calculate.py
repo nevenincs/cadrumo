@@ -325,12 +325,9 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     assert result.exit_code == 0, result.output
 
     notices = unwrap_envelope_notices(result.output)
-    source_advisories = [
-        notice for notice in notices if notice["code"] == "modelo.work.calculate.source_advisory"
-    ]
+    source_advisories = [notice for notice in notices if notice["code"] == "modelo.work.calculate.source_advisory"]
     assert source_advisories == [], (
-        "INTRA_COMMUNITY_SUPPLY is cuota-less and must not raise a source advisory; "
-        f"got {source_advisories}"
+        f"INTRA_COMMUNITY_SUPPLY is cuota-less and must not raise a source advisory; got {source_advisories}"
     )
 
     # Text mode likewise emits no source ADVISORY line for the cuota-less supply.
