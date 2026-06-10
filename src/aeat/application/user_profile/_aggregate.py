@@ -22,13 +22,12 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage.bucket import ManifestKdfParams
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId as _ProfileId
 from ...core.time._utc import validate_utc_aware
 from ...domain.user_profile import UserProfileRecord, UserProfileStatus
 from ...domain.user_profile._errors import UserProfileValidationError
 
-_PROFILE_AGGREGATE_CONFIG = ConfigDict(**_STRICT_FROZEN, hide_input_in_errors=True)
+_PROFILE_AGGREGATE_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
 
 _AGGREGATE_MISMATCH_MESSAGE = "profile aggregate projections are inconsistent"
 

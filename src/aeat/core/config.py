@@ -957,9 +957,9 @@ class Settings(BaseSettings):
             # uses strict pydantic validation; this preserves the
             # one-resolver invariant the disaster ADR Ruling 2
             # mandates.
-            try:
-                from ._bucket_pointer_io import pointer_path, read_pointer
+            from ._bucket_pointer_io import pointer_path, read_pointer
 
+            try:
                 pointer = read_pointer(self.aeat_local_storage_root)
             except (OSError, ValueError) as exc:
                 pointer_file = pointer_path(self.aeat_local_storage_root)

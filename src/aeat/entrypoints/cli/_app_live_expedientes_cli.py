@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import Annotated, TypedDict
+from datetime import datetime as _datetime
+from typing import Annotated, Protocol, TypedDict
 
 import typer
 
@@ -59,7 +60,14 @@ class _ExpedientesRowDict(TypedDict):
     declaration_count: int
 
 
-def _expedientes_row(snapshot: object) -> _ExpedientesRowDict:
+class _SnapshotWithCapturedAt(Protocol):
+    """Minimal surface required by :func:`_expedientes_row`."""
+
+    @property
+    def captured_at(self) -> _datetime: ...
+
+
+def _expedientes_row(snapshot: _SnapshotWithCapturedAt) -> _ExpedientesRowDict:
     captured_at = snapshot.captured_at
     return {
         "snapshot_id": str(getattr(snapshot, "snapshot_id", "")),

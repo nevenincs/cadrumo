@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-import click
 import typer
+from typer._types import TyperChoice as _TyperChoice
 
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
@@ -82,7 +82,7 @@ def _root(
         None,
         "--language",
         "--lang",
-        click_type=click.Choice(_SUPPORTED_OUTPUT_LANGUAGES),
+        click_type=_TyperChoice(_SUPPORTED_OUTPUT_LANGUAGES),
         help=tr("cli.root.language_help"),
         is_eager=True,
     ),

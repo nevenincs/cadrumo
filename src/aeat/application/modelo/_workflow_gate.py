@@ -10,7 +10,6 @@ Use of :class:`CalculationRevision`, :class:`TaxpayerProfile`, :class:`Transacti
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -160,7 +159,7 @@ class _RevisionDraftBuilder:
         modelo: str,
         period: str,
         profile: TaxpayerProfile,
-        inputs: Mapping[str, object],
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         """Build a :class:`RegistryModeloDraftProtocol` and approve it when it is filing-ready.

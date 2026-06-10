@@ -108,7 +108,7 @@ def resolve_catalogue(*, on: date) -> IvaCatalogue:
 def _parse_regulation(raw_regulation: object) -> IvaRegulation:
     if not isinstance(raw_regulation, dict):
         raise IvaCatalogueError("regulation entry must be a table")
-    data = to_str_keyed_dict(raw_regulation, error_factory=IvaCatalogueError)
+    data = to_str_keyed_dict(dict(raw_regulation.items()), error_factory=IvaCatalogueError)
     category = IvaCategory(str(data.get("category")))
     raw_citations = data.get("citations", ())
     if not isinstance(raw_citations, list | tuple):
@@ -137,7 +137,7 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
 def _parse_citation(raw_citation: object) -> IvaCitation:
     if not isinstance(raw_citation, dict):
         raise IvaCatalogueError("citation entry must be a table")
-    data = to_str_keyed_dict(raw_citation, error_factory=IvaCatalogueError)
+    data = to_str_keyed_dict(dict(raw_citation.items()), error_factory=IvaCatalogueError)
     source = IvaCitationSource(str(data.get("source")))
     return IvaCitation.model_validate(
         {

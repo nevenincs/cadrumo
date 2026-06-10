@@ -69,21 +69,29 @@ def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> 
     del byte_count, modified_ns
     target = Path(path)
     raw = read_toml(target, error_factory=DeadlineValidationError)
-    rows = raw.get("band", [])
-    if not rows:
+    raw_band = raw.get("band")
+    if not raw_band:
         raise DeadlineValidationError(f"recargo bracket TOML at {target} declares no bands")
+    assert isinstance(raw_band, list)
     try:
-        bands = tuple(
-            RecargoBand(
-                id=str(row["id"]),
-                min_days_late=int(row["min_days_late"]),
-                max_days_late=int(row["max_days_late"]) if row.get("max_days_late") not in (None, "") else None,
-                surcharge_pct=_required_decimal(row["surcharge_pct"]),
-                interest_applies=bool(row.get("interest_applies", False)),
-                legal_ref=str(row["legal_ref"]),
+        built: list[RecargoBand] = []
+        for raw_row in raw_band:
+            assert isinstance(raw_row, dict)
+            row: dict[str, object] = {str(k): v for k, v in raw_row.items()}
+            row_min = row.get("min_days_late")
+            row_max = row.get("max_days_late")
+            assert isinstance(row_min, int)
+            built.append(
+                RecargoBand(
+                    id=str(row.get("id")),
+                    min_days_late=row_min,
+                    max_days_late=int(row_max) if isinstance(row_max, int) else None,
+                    surcharge_pct=_required_decimal(row.get("surcharge_pct")),
+                    interest_applies=bool(row.get("interest_applies", False)),
+                    legal_ref=str(row.get("legal_ref")),
+                )
             )
-            for row in rows
-        )
+        bands = tuple(built)
     except (ArithmeticError, KeyError, TypeError, ValueError, ValidationError) as exc:
         raise DeadlineValidationError(f"{target}: invalid recargo bracket row: {exc}") from exc
     return tuple(sorted(bands, key=lambda band: band.min_days_late))
