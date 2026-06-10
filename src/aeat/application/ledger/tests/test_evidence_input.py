@@ -9,11 +9,14 @@ mocks, no temp files, no bytes written outside secure storage.
 from __future__ import annotations
 
 import hashlib
+import pickle
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel
+from pydantic_core import PydanticSerializationError
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -135,7 +138,31 @@ def test_evidence_input_refuses_persistence(
     record = _added_record(isolated_settings, secure_objects, pdf_file)
     resolved = resolve_purchase_invoice_evidence_input(record, store=AttachmentStore(objects=secure_objects))
     # The rule made executable: decrypted FINANCIAL bytes must never be serialized out.
+    # Direct dump/json refuse loudly.
     with pytest.raises(NotImplementedError):
         resolved.model_dump()
     with pytest.raises(NotImplementedError):
         resolved.model_dump_json()
+    # dict()/iteration and pickle refuse (they would otherwise expose `data`).
+    with pytest.raises(NotImplementedError):
+        dict(resolved)
+    with pytest.raises(NotImplementedError):
+        pickle.dumps(resolved)
+
+
+def test_nested_serialization_cannot_leak_evidence_bytes(
+    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+) -> None:
+    # The realistic leak path: EvidenceInput embedded in another model that is dumped.
+    # The model serializer must refuse so the bytes never serialize through the parent.
+    record = _added_record(isolated_settings, secure_objects, pdf_file)
+    resolved = resolve_purchase_invoice_evidence_input(record, store=AttachmentStore(objects=secure_objects))
+
+    class _Wrapper(BaseModel):
+        ev: EvidenceInput
+
+    wrapper = _Wrapper(ev=resolved)
+    with pytest.raises(PydanticSerializationError):
+        wrapper.model_dump()
+    with pytest.raises(PydanticSerializationError):
+        wrapper.model_dump_json()
