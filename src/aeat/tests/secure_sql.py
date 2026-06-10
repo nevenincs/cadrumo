@@ -11,28 +11,92 @@ from typing import ClassVar
 
 from ..adapters.persistence.storage import EphemeralMasterKeyProvider
 from ..adapters.persistence.storage.bucket import (
+    BucketKeySchedule,
     BucketLifecycleStatus,
     BucketManifest,
     write_manifest,
 )
 from ..adapters.persistence.storage.bucket._layout import BucketPaths, provision_bucket_directory
-from ..adapters.persistence.storage.master_key import KdfParams, activate_session
+from ..adapters.persistence.storage.master_key import (
+    KdfParams,
+    activate_session,
+    get_master_key_provider,
+)
 from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ..adapters.persistence.storage.master_key._master_key_bucket_dek import load_or_mint_bucket_dek
 from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..core.config import Settings, load_settings, override_settings
 
-_TEST_KEK = b"t" * 32
-_TEST_DEK = b"r" * 32
-# Distinct test KEK/DEK for the secondary bucket in the
-# multi-bucket fixture. Authored per
-# ``2026-06-03-multi-bucket-test-fixture-adr`` so an accidental
-# cross-bucket key reuse in production code surfaces as a test
-# failure rather than a same-key collision.
-_TEST_KEK_SECONDARY = b"u" * 32
-_TEST_DEK_SECONDARY = b"s" * 32
+
+def _provision_bucket_dek_v1_session(
+    *,
+    bucket_id: str,
+    label: str,
+    storage_root: Path,
+    opened_at: datetime,
+) -> tuple[BucketSession, BucketPaths]:
+    """Provision a genuine ``bucket-dek-v1`` bucket and open its session.
+
+    Mirrors the production mint sequence (``ProfileRepository.create``
+    inside ``profile_create_storage_span``): resolve the configured
+    master-key provider, mint the per-bucket wrapped DEK under that
+    provider's resolved key-encryption key (KEK), write the manifest in
+    the ``BUCKET_DEK_V1`` schedule, then open a session keyed by the same
+    KEK and the minted DEK.
+
+    The caller MUST have already entered an ``override_settings`` block
+    that configures the file backend, secret-store directory, and
+    dev-test passphrase (as :func:`isolated_profile_storage_root` does),
+    so the provider this helper resolves is the same one a nested
+    :func:`profile_storage_session` re-resolves on the read path. That
+    consistency is what lets the wrapped DEK unwrap under the
+    provider-resolved KEK rather than a divergent raw test key.
+    """
+    from ..adapters.persistence.storage.errors import MasterKeyMaterialMissingError, SecretAlreadyExistsError
+
+    paths = provision_bucket_directory(storage_root, bucket_id)
+    provider = get_master_key_provider()
+    try:
+        master_key = provider.get_master_key()
+    except MasterKeyMaterialMissingError:
+        try:
+            master_key = provider.provision_master_key()
+        except SecretAlreadyExistsError:
+            master_key = provider.get_master_key()
+    # Mint the wrapped DEK before the manifest exists so the bootstrap
+    # branch of ``load_or_mint_bucket_dek`` writes the keystore file and
+    # returns a fresh DEK, exactly as the production create span does.
+    dek = load_or_mint_bucket_dek(
+        kek=master_key,
+        storage_root=storage_root,
+        bucket_id=bucket_id,
+        allow_bootstrap_mint=True,
+    )
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=label,
+            created_at=opened_at,
+            last_unlocked_at=opened_at,
+            kdf_params=KdfParams.default().to_manifest_params(),
+            recovery_enrolled=False,
+            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
+            schema_version=2,
+            status=BucketLifecycleStatus.ACTIVE,
+        ),
+    )
+    session = BucketSession.open(
+        bucket_id=bucket_id,
+        kek=master_key,
+        dek=dek,
+        idle_minutes=15,
+        opened_at=opened_at,
+    )
+    return session, paths
 
 
 @dataclass(frozen=True)
@@ -140,36 +204,36 @@ def isolated_runtime_profile(
     """Create a real active-profile bucket runtime for tests.
 
     The helper provisions the same durable surfaces used by production:
-    a bucket directory, plaintext manifest, active-profile settings route,
-    active bucket session, and runtime-owned secure-object repository.
+    a bucket directory, plaintext manifest, separated per-bucket wrapped
+    DEK, active-profile settings route, active bucket session, and
+    runtime-owned secure-object repository.
+
+    The bucket is a genuine ``BUCKET_DEK_V1`` bucket: the file backend is
+    configured with the dev-test passphrase (as
+    :func:`isolated_profile_storage_root` does) so the wrapped DEK is
+    minted under, and unwraps under, the same master-key provider a
+    nested :func:`profile_storage_session` re-resolves on the read path.
     """
 
     storage_root = tmp_path / "aeat-storage"
+    secret_store_dir = tmp_path / "secrets"
+    passphrase = load_settings().aeat_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
-    paths = provision_bucket_directory(storage_root, bucket_id)
-    write_manifest(
-        paths,
-        BucketManifest(
+
+    with override_settings(
+        aeat_local_storage_root=storage_root,
+        aeat_active_profile=bucket_id,
+        aeat_secret_store_backend="file",
+        aeat_secret_store_dir=secret_store_dir,
+        aeat_secret_passphrase=passphrase,
+    ) as settings:
+        dispose_engine(settings)
+        session, paths = _provision_bucket_dek_v1_session(
             bucket_id=bucket_id,
             label=label,
-            created_at=opened_at,
-            last_unlocked_at=opened_at,
-            kdf_params=KdfParams.default().to_manifest_params(),
-            recovery_enrolled=False,
-            schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
-        ),
-    )
-    session = BucketSession.open(
-        bucket_id=bucket_id,
-        kek=_TEST_KEK,
-        dek=_TEST_DEK,
-        idle_minutes=15,
-        opened_at=opened_at,
-    )
-
-    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=bucket_id) as settings:
-        dispose_engine(settings)
+            storage_root=storage_root,
+            opened_at=opened_at,
+        )
         with activate_session(session):
             runtime = inspect_storage_runtime(settings)
             repository = secure_object_repository_for_active_bucket()
@@ -242,63 +306,40 @@ def isolated_two_bucket_runtime(
     ``2026-06-03-multi-bucket-test-fixture-adr`` for the design
     rationale.
 
-    Both buckets carry distinct test KEK/DEK material
-    (``_TEST_KEK`` / ``_TEST_KEK_SECONDARY``) so an accidental
-    cross-bucket key reuse in production code surfaces as a test
-    failure rather than a same-key collision.
+    Both buckets are genuine ``BUCKET_DEK_V1`` buckets that share the
+    storage root's single file-backend master key (the key-encryption
+    key, KEK) but mint their own separated per-bucket data-encryption
+    key (DEK) — the production custody shape, where many buckets under
+    one storage root share one ``master.key`` and each keeps its own
+    wrapped DEK. The per-bucket DEK distinctness means an accidental
+    cross-bucket DEK reuse in production code still surfaces as a test
+    failure. See ``2026-06-03-multi-bucket-test-fixture-adr``.
     """
     storage_root = tmp_path / "aeat-storage"
+    secret_store_dir = tmp_path / "secrets"
+    passphrase = load_settings().aeat_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
-
-    primary_paths = provision_bucket_directory(storage_root, primary_bucket_id)
-    write_manifest(
-        primary_paths,
-        BucketManifest(
-            bucket_id=primary_bucket_id,
-            label=primary_label,
-            created_at=opened_at,
-            last_unlocked_at=opened_at,
-            kdf_params=KdfParams.default().to_manifest_params(),
-            recovery_enrolled=False,
-            schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
-        ),
-    )
-    primary_session = BucketSession.open(
-        bucket_id=primary_bucket_id,
-        kek=_TEST_KEK,
-        dek=_TEST_DEK,
-        idle_minutes=15,
-        opened_at=opened_at,
-    )
-
-    secondary_paths = provision_bucket_directory(storage_root, secondary_bucket_id)
-    write_manifest(
-        secondary_paths,
-        BucketManifest(
-            bucket_id=secondary_bucket_id,
-            label=secondary_label,
-            created_at=opened_at,
-            last_unlocked_at=opened_at,
-            kdf_params=KdfParams.default().to_manifest_params(),
-            recovery_enrolled=False,
-            schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
-        ),
-    )
-    secondary_session = BucketSession.open(
-        bucket_id=secondary_bucket_id,
-        kek=_TEST_KEK_SECONDARY,
-        dek=_TEST_DEK_SECONDARY,
-        idle_minutes=15,
-        opened_at=opened_at,
-    )
 
     with override_settings(
         aeat_local_storage_root=storage_root,
         aeat_active_profile=primary_bucket_id,
+        aeat_secret_store_backend="file",
+        aeat_secret_store_dir=secret_store_dir,
+        aeat_secret_passphrase=passphrase,
     ) as settings:
         dispose_engine(settings)
+        primary_session, primary_paths = _provision_bucket_dek_v1_session(
+            bucket_id=primary_bucket_id,
+            label=primary_label,
+            storage_root=storage_root,
+            opened_at=opened_at,
+        )
+        secondary_session, secondary_paths = _provision_bucket_dek_v1_session(
+            bucket_id=secondary_bucket_id,
+            label=secondary_label,
+            storage_root=storage_root,
+            opened_at=opened_at,
+        )
         with activate_session(primary_session):
             runtime = inspect_storage_runtime(settings)
             primary_repository = secure_object_repository_for_active_bucket()

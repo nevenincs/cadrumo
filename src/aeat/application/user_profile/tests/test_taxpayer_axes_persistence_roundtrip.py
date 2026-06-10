@@ -27,8 +27,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.config import override_settings
 from ....core.resources import resources
 from ....domain.deadlines import (
     EntityType,
@@ -36,35 +34,39 @@ from ....domain.deadlines import (
     IrpfIncomeCategory,
     IVARegime,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
-from ....tests.secure_sql import isolated_runtime_profile
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
+from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow._models import WorkflowState
-from .._orchestration import read_active_profile, register_active_profile
+from .._orchestration import (
+    profile_create_storage_span,
+    read_active_profile,
+    register_active_profile,
+)
 from .._projections import projection_for_taxpayer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """A real SecureObjectRepository over a real active-profile runtime."""
+@pytest.fixture(autouse=True)
+def _storage_root(tmp_path: Path) -> Iterator[None]:
+    """Real file-backed storage root for the production create-span mint path.
 
-    with (
-        isolated_runtime_profile(
-            tmp_path=tmp_path,
-            bucket_id="taxpayer-axes-persistence-test",
-        ) as profile,
-        override_settings(aeat_active_profile=None),
-    ):
-        yield profile.repository
+    Each test registers its profile inside
+    :func:`profile_create_storage_span`, which mints the per-bucket
+    wrapped DEK under the resolved file-backend master key before
+    :func:`register_active_profile` writes the manifest — the genuine
+    ``BUCKET_DEK_V1`` create path, not a legacy no-DEK shortcut.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 @pytest.fixture(scope="module")
-def schema():
+def schema() -> ProfileSchemaDefinition:
     return resources().user_profile_schema.singleton
 
 
-def _required_facts(schema) -> list[UserProfileFact]:
+def _required_facts(schema: ProfileSchemaDefinition) -> list[UserProfileFact]:
     """Every required non-repeatable schema field with a placeholder value.
 
     The required-field set must be satisfied for ``register_active_profile``
@@ -112,8 +114,7 @@ def _fact_value(record: UserProfileRecord, path: str) -> object:
 
 
 def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
-    secure_objects: SecureObjectRepository,
-    schema,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """Every taxpayer-axis fact survives the real encrypted-SQL cycle.
 
@@ -132,16 +133,17 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     # REAGP token so the regime axis is exercised non-default.
     facts = tuple(UserProfileFact(path="iva.regime", value="REAGP") if f.path == "iva.regime" else f for f in facts)
 
-    state = register_active_profile(
-        WorkflowState(),
-        profile_id="taxpayer-axes-roundtrip",
-        display_name="Taxpayer axes operator",
-        facts=facts,
-        secure_objects=secure_objects,
-        schema=schema,
-    )
+    with profile_create_storage_span("taxpayer-axes-roundtrip") as routing_profile_id:
+        state = register_active_profile(
+            WorkflowState(),
+            profile_id="taxpayer-axes-roundtrip",
+            display_name="Taxpayer axes operator",
+            facts=facts,
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
 
-    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
+        record = read_active_profile(state, schema=schema)
     assert record is not None
     assert record.profile_id == "taxpayer-axes-roundtrip"
 
@@ -173,8 +175,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
 
 
 def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
-    secure_objects: SecureObjectRepository,
-    schema,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """A record carrying no taxpayer-axis facts loads cleanly under v2.
 
@@ -197,16 +198,17 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
         for f in _required_facts(schema)
     )
 
-    state = register_active_profile(
-        WorkflowState(),
-        profile_id="v1-shaped-record",
-        display_name="Pre-existing operator",
-        facts=v1_shaped_facts,
-        secure_objects=secure_objects,
-        schema=schema,
-    )
+    with profile_create_storage_span("v1-shaped-record") as routing_profile_id:
+        state = register_active_profile(
+            WorkflowState(),
+            profile_id="v1-shaped-record",
+            display_name="Pre-existing operator",
+            facts=v1_shaped_facts,
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
 
-    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
+        record = read_active_profile(state, schema=schema)
     assert record is not None
     assert record.profile_id == "v1-shaped-record"
     # No taxpayer-axis facts crossed the boundary.
@@ -234,8 +236,7 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
 
 
 def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
-    secure_objects: SecureObjectRepository,
-    schema,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """The optional censo alta date survives the real encrypted-SQL cycle.
 
@@ -257,16 +258,17 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
         UserProfileFact(path="censo.activity_start_date", value=alta.isoformat()),
     )
 
-    state = register_active_profile(
-        WorkflowState(),
-        profile_id="activity-start-date-roundtrip",
-        display_name="2026 registrant",
-        facts=facts,
-        secure_objects=secure_objects,
-        schema=schema,
-    )
+    with profile_create_storage_span("activity-start-date-roundtrip") as routing_profile_id:
+        state = register_active_profile(
+            WorkflowState(),
+            profile_id="activity-start-date-roundtrip",
+            display_name="2026 registrant",
+            facts=facts,
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
 
-    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
+        record = read_active_profile(state, schema=schema)
     assert record is not None
     assert record.profile_id == "activity-start-date-roundtrip"
     # The fact survives the encrypted boundary with its exact value;

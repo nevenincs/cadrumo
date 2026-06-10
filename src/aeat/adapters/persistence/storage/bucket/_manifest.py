@@ -85,7 +85,6 @@ class BucketLifecycleStatus(StrEnum):
 class BucketKeySchedule(StrEnum):
     """Data-key schedule used by encrypted records in this bucket."""
 
-    LEGACY_MASTER_KEY = "legacy-master-key"
     BUCKET_DEK_V1 = "bucket-dek-v1"
 
 
@@ -105,7 +104,7 @@ class BucketManifest(BaseModel):
     kdf_params: ManifestKdfParams
     recovery_enrolled: bool
     idle_lock_minutes: int | None = Field(default=None, gt=0)
-    key_schedule: BucketKeySchedule = BucketKeySchedule.LEGACY_MASTER_KEY
+    key_schedule: BucketKeySchedule = BucketKeySchedule.BUCKET_DEK_V1
     schema_version: int = Field(ge=1)
     status: BucketLifecycleStatus
     """Plaintext mirror of the encrypted record's lifecycle status.
