@@ -28,6 +28,7 @@ Submodules
    aeat.adapters.outbound.aeat.sede._errors
    aeat.adapters.outbound.aeat.sede._groi_check
    aeat.adapters.outbound.aeat.sede._iva_compensation_wallet
+   aeat.adapters.outbound.aeat.sede._iva_compensation_wallet_parsing
    aeat.adapters.outbound.aeat.sede._nif_iva_check
    aeat.adapters.outbound.aeat.sede._notifications
    aeat.adapters.outbound.aeat.sede._observation_store

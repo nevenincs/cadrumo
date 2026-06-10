@@ -17,12 +17,14 @@ from .._errors import SedeNavigationError, SedeParseError
 from .._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
-    _assert_own_name_representation_form_html,
     _assert_read_browser_action,
     _assert_read_http,
     _dump_wallet_diagnostic,
-    _parse_spanish_decimal,
     _wait_for_wallet_execute_initial_shape,
+)
+from .._iva_compensation_wallet_parsing import (
+    _assert_own_name_representation_form_html,
+    _parse_spanish_decimal,
     _wallet_execute_gate_status,
     _wallet_page_shape_context,
     _wallet_row_from_cells,
