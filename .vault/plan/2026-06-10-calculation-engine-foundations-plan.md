@@ -9,6 +9,15 @@ related:
   - '[[2026-06-10-period-revision-resolution-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `calculation-engine-foundations` `Calculation-engine foundations: aggregation taxonomy + period-revision resolution` plan
 
@@ -101,7 +110,7 @@ Migrate M390 to relations under a value-parity gate (M353 exempt), drive every d
 
 Migrate the M390 to-M303 cross-modelo previous_filing fold-in bindings to relations under a value-parity gate (identical resolved values before/after, oracle = the existing live-firing path). M353 per_grupo_member stays binding-shaped (exempt, documented revisit trigger).
 
-- [ ] `W04.P10.S16` - Migrate the M390 to-M303 previous_filing fold-in bindings to relations under a value-parity gate and document the M353 per_grupo_member exemption + revisit trigger; `registry modelos/390 + 353; application/calculations/tests`.
+- [x] `W04.P10.S16` - Migrate the M390 to-M303 previous_filing fold-in bindings to relations under a value-parity gate and document the M353 per_grupo_member exemption + revisit trigger; `registry modelos/390 + 353; application/calculations/tests`.
 
 ### Phase `W04.P11` - Renta fold-ins live + E2E
 
@@ -119,7 +128,7 @@ Drive iva (M390<-M303), sociedades (M200, M202 period-variant cumulative), and a
 - [ ] `W04.P12.S20` - Re-baseline the affected enrollment and continuity suites against the live calculate path rather than the direct-call path; `application/calculations/tests + application/modelo/tests`.
 - [ ] `W04.P12.S28` - Prove each newly-enrolled DORMANT modelo fires aggregation live on the operator calculate path with an E2E real-adapter anti-tautology proof (M130 income via ledger_renta_income, M369 OSS/IOSS via ledger_oss, M349 invoices via collectible_invoice) and confirm the still-deferred detalle kinds (withholding M190/M193, atribucion_member M184, related_party_operation M232, foreign_asset M720, refund_operation M360) each emit the standing source_diagnostics advisory rather than a silent blank (F6; `withholding is DEFER-with-advisory per S27 — NOT a built resolver); `application/modelo/tests + entrypoints/cli/tests`.
 - [ ] `W04.P12.S29` - Close the Sheets-pull vs live-calculate drift (F5): unify the six assemble_* row-set functions, resolve_relations_from_local_store, and resolve_modelo_ledger_binding_values_from_repositories onto the one enrolled resolver set so both surfaces share one aggregation logic, and add a regression proving pull-path == calculate-path casilla values for a shared revision; `application/calculations/_row_set_assembly.py + _modelo_bindings.py + application/calculations/tests`.
-- [ ] `W04.P12.S31` - Engine robustness (coordinator ruling c, finding #26 surfaced by S17/S18): a cross-modelo fold-in relation with NO or PARTIAL prior filing MUST resolve its target casilla to blank/unresolved plus a non-blocking source_diagnostics advisory naming the missing modelo+periods, NOT raise RegistryValidationError 'relation has no supplied value' (current _formula_runtime.py behaviour) and NOT silently zero-contribute (would under-declare); preserve found-0 vs genuine-wiring-bug distinction; land AFTER the happy-path matrix (S17/S18/S19/S28) so those proofs guard the raise-to-blank semantics change; `domain/calculations/registry/_formula_runtime.py + application/calculations/_relation_prefill.py + application/aggregation/_source_mesh.py; tests`.
+- [ ] `W04.P12.S31` - Engine robustness (coordinator ruling c, finding #26 surfaced by S17/S18): a cross-modelo fold-in relation with NO or PARTIAL prior filing MUST resolve its target casilla to blank/unresolved plus a non-blocking source_diagnostics advisory naming the missing modelo+periods, NOT raise RegistryValidationError 'relation has no supplied value' (current _formula_runtime.py behaviour) and NOT silently zero-contribute (would under-declare); `preserve found-0 vs genuine-wiring-bug distinction; land AFTER the happy-path matrix (S17/S18/S19/S28) so those proofs guard the raise-to-blank semantics change; `domain/calculations/registry/_formula_runtime.py + application/calculations/_relation_prefill.py + application/aggregation/_source_mesh.py; tests`.
 
 ## Wave `W05` - Codification and epic verification
 
