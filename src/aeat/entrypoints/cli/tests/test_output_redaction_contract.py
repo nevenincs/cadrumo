@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import json
 
-import click
 import pytest
+import typer
+from typer.core import TyperGroup
 
 from ....core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_OBJECT_KEY_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
 )
+from ....tests.cli_runner import aeat_click_command
 from .._common import _emit
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -22,8 +24,13 @@ _URL = "https://example.test/private/path?token=secret"
 _OBJECT_KEY = "wallet:2026-secret"
 
 
-def _context(format_name: str) -> click.Context:
-    return click.Context(click.Command("root"), obj={"format": format_name})
+def _context(format_name: str) -> typer.Context:
+    # Get the aeat CLI command and narrow it to TyperGroup for compatibility with typer.Context.
+    root_cmd = aeat_click_command()
+    assert isinstance(root_cmd, TyperGroup)
+    ctx = typer.Context(root_cmd)
+    ctx.ensure_object(dict)["format"] = format_name
+    return ctx
 
 
 def _payload() -> dict[str, object]:

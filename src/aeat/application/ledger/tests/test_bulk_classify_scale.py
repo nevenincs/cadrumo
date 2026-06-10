@@ -21,6 +21,7 @@ from typing import override
 
 import pytest
 
+from ....adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import (
     BusinessClassification,
@@ -43,14 +44,18 @@ _ROW_COUNT = 270
 class _CountingTxRepo(TransactionCatalogueRepository):
     """Real repository that counts the single atomic catalogue persist."""
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
+        super().__init__(bucket_id=bucket_id, objects=objects)
         self.save_calls = 0
 
     @override
-    def save_with_secure_object_writes(self, catalogue, writes):  # type: ignore[no-untyped-def]
+    def save_with_secure_object_writes(
+        self,
+        catalogue: TransactionCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
         self.save_calls += 1
-        return super().save_with_secure_object_writes(catalogue, writes)
+        return super().save_with_secure_object_writes(catalogue, extra_writes)
 
 
 def _raw(idx: int) -> RawTransaction:
@@ -91,8 +96,14 @@ def _profile(tmp_path: Path) -> Iterator[object]:
 
 
 def test_bulk_classify_270_rows_persists_catalogue_once(_profile: object) -> None:
-    objects = _profile.repository  # type: ignore[attr-defined]
-    bucket_id = _profile.bucket_id  # type: ignore[attr-defined]
+    assert hasattr(_profile, "repository") and hasattr(_profile, "bucket_id")
+    objects_raw = _profile.repository  # type: ignore[union-attr]
+    bucket_id_raw = _profile.bucket_id  # type: ignore[union-attr]
+
+    assert isinstance(bucket_id_raw, str)
+    assert isinstance(objects_raw, (SecureObjectRepository, type(None)))
+    objects = objects_raw
+    bucket_id = bucket_id_raw
 
     seed_repo = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
     transactions = tuple(_unclassified(i) for i in range(_ROW_COUNT))
