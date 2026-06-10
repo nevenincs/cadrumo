@@ -230,6 +230,89 @@ class LocalIvaCompensationRecurrence(BaseModel):
     resolved_at: datetime
 
 
+def _gather_grouped_member_observations(
+    req_key: tuple[str, int, str],
+    *,
+    repository: CalculationObservationRepository,
+    needed: dict[tuple[str, int, str, int], _GatheredObservation],
+    seen_member: dict[tuple[str, int, str], int],
+) -> None:
+    """Fold every member's filing for ``req_key`` into ``needed``, member-distinct.
+
+    Cross-member fan-in for the 353<-322 aggregation: enumerate every stored row
+    for the modelo (including member-NIF-widened keys) via ``iter_modelo`` rather
+    than loading one observation by key, so the resolver can sum across members.
+    Mutates the shared ``needed`` and ``seen_member`` accumulators in place to
+    preserve the caller's member-index sequencing.
+    """
+    requirement_modelo = req_key[0]
+    for payload in repository.iter_modelo(requirement_modelo):
+        obs = payload.observation
+        if (obs.modelo, obs.filing_year, obs.period) != req_key:
+            continue
+        # R2 carry gate: divergent stamp → skip; missing/indeterminate stamp → advisory.
+        diverges, advisory = _revision_carry_outcome(payload)
+        if diverges:
+            continue
+        member_idx = seen_member.get(req_key, 0)
+        seen_member[req_key] = member_idx + 1
+        needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
+            obs,
+            source_kind=payload.source_kind,
+            unstamped_revision_advisory=advisory,
+        )
+
+
+def _gathered_from_payload(payload: _ObservationEnvelopePayload | None) -> _GatheredObservation | None:
+    """Apply the R2 carry gate to a single-key payload.
+
+    Divergent stamp → refuse the carry (return ``None``); missing/indeterminate
+    stamp → carry with the non-blocking advisory set.
+    """
+    if payload is None:
+        return None
+    diverges, advisory = _revision_carry_outcome(payload)
+    if diverges:
+        return None
+    return _gathered_observation(
+        payload.observation,
+        source_kind=payload.source_kind,
+        unstamped_revision_advisory=advisory,
+    )
+
+
+def _gather_single_key_observation(
+    requirement_modelo: str,
+    requirement_filing_year: int,
+    requirement_period: str,
+    *,
+    repository: CalculationObservationRepository,
+    iva_history_repository: IvaCompensationHistoryRepository | None,
+) -> _GatheredObservation | None:
+    """Load one observation by key, folding in any secure Modelo 303 IVA history.
+
+    The single-filer path: one observation per ``(modelo, filing_year, period)``.
+    For Modelo 303 a secure IVA-compensation-history projection is merged into the
+    app-filing observation (when both exist) so neither source shadows the other.
+    """
+    gathered = _gathered_from_payload(
+        repository.load_observation(requirement_modelo, requirement_filing_year, requirement_period)
+    )
+    if requirement_modelo == Modelo.M303.value and iva_history_repository is not None:
+        state = iva_history_repository.load_period(requirement_filing_year, requirement_period)
+        if state is not None:
+            history_gathered = _gathered_observation(
+                _observation_from_iva_compensation_history(state),
+                source_kind=_IVA_COMPENSATION_HISTORY_SOURCE_KIND,
+            )
+            gathered = (
+                _merge_gathered_observations(gathered, history_gathered)
+                if gathered is not None
+                else history_gathered
+            )
+    return gathered
+
+
 def _gather_observations(
     snapshot: RegistrySnapshot,
     *,
@@ -239,12 +322,12 @@ def _gather_observations(
     """Walk every previous_filing binding in the revision and pull matching observations from the local store.
 
     For ordinary single-filer requirements one observation per
-    ``(modelo, filing_year, period)`` is loaded by key. For a requirement whose
-    binding declares ``grouping = "per_grupo_member"`` (the 353<-322 cross-member
+    ``(modelo, filing_year, period)`` is loaded by key
+    (:func:`_gather_single_key_observation`). For a requirement whose binding
+    declares ``grouping = "per_grupo_member"`` (the 353<-322 cross-member
     aggregation), EVERY member's filing for that ``(modelo, filing_year, period)``
-    must be gathered, so the resolver can sum across members; those are
-    enumerated via ``iter_modelo`` (which yields every stored row for the modelo,
-    including the member-NIF-widened keys) and kept member-distinct.
+    must be gathered (:func:`_gather_grouped_member_observations`), so the resolver
+    can sum across members.
     """
     grouped_keys = _per_grupo_member_requirement_keys(snapshot.revision, snapshot)
     needed: dict[tuple[str, int, str, int], _GatheredObservation] = {}
@@ -256,49 +339,20 @@ def _gather_observations(
     ):
         req_key = (requirement.modelo, requirement.filing_year, requirement.period)
         if req_key in grouped_keys:
-            # Cross-member fan-in: enumerate every member's filing for this
-            # (modelo, filing_year, period) rather than loading one by key.
-            for payload in repository.iter_modelo(requirement.modelo):
-                obs = payload.observation
-                if (obs.modelo, obs.filing_year, obs.period) != req_key:
-                    continue
-                # R2 carry gate: divergent stamp → skip; missing/indeterminate stamp → advisory.
-                diverges, advisory = _revision_carry_outcome(payload)
-                if diverges:
-                    continue
-                member_idx = seen_member.get(req_key, 0)
-                seen_member[req_key] = member_idx + 1
-                needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
-                    obs,
-                    source_kind=payload.source_kind,
-                    unstamped_revision_advisory=advisory,
-                )
+            _gather_grouped_member_observations(
+                req_key,
+                repository=repository,
+                needed=needed,
+                seen_member=seen_member,
+            )
             continue
-        payload = repository.load_observation(requirement.modelo, requirement.filing_year, requirement.period)
-        gathered: _GatheredObservation | None = None
-        if payload is not None:
-            # R2 carry gate: divergent stamp → refuse the carry (skip); missing/indeterminate → advisory.
-            diverges, advisory = _revision_carry_outcome(payload)
-            if diverges:
-                payload = None
-            else:
-                gathered = _gathered_observation(
-                    payload.observation,
-                    source_kind=payload.source_kind,
-                    unstamped_revision_advisory=advisory,
-                )
-        if requirement.modelo == Modelo.M303.value and iva_history_repository is not None:
-            state = iva_history_repository.load_period(requirement.filing_year, requirement.period)
-            if state is not None:
-                history_gathered = _gathered_observation(
-                    _observation_from_iva_compensation_history(state),
-                    source_kind=_IVA_COMPENSATION_HISTORY_SOURCE_KIND,
-                )
-                gathered = (
-                    _merge_gathered_observations(gathered, history_gathered)
-                    if gathered is not None
-                    else history_gathered
-                )
+        gathered = _gather_single_key_observation(
+            requirement.modelo,
+            requirement.filing_year,
+            requirement.period,
+            repository=repository,
+            iva_history_repository=iva_history_repository,
+        )
         if gathered is None:
             continue
         obs = gathered.observation
