@@ -9,6 +9,15 @@ related:
   - '[[2026-06-10-period-revision-resolution-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `calculation-engine-foundations` `Calculation-engine foundations: aggregation taxonomy + period-revision resolution` plan
 
@@ -115,11 +124,12 @@ Drive every renta cross-modelo fold-in live on the operator calculate path: the 
 
 Drive iva (M390<-M303), sociedades (M200, M202 period-variant cumulative), and any other audit-discovered domain fold-ins live + E2E; re-baseline affected enrollment/continuity suites against the live calculate path (not the direct-call path).
 
-- [ ] `W04.P12.S19` - Drive iva (M390-from-M303) and sociedades (M200, M202 period-variant cumulative) and audit-discovered domain fold-ins live + E2E; `registry iva/sociedades modelos; tests`.
+- [x] `W04.P12.S19` - Drive iva (M390-from-M303) and sociedades (M200, M202 period-variant cumulative) and audit-discovered domain fold-ins live + E2E; `registry iva/sociedades modelos; tests`.
 - [ ] `W04.P12.S20` - Re-baseline the affected enrollment and continuity suites against the live calculate path rather than the direct-call path; `application/calculations/tests + application/modelo/tests`.
 - [ ] `W04.P12.S28` - Prove each newly-enrolled DORMANT modelo fires aggregation live on the operator calculate path with an E2E real-adapter anti-tautology proof (M130 income via ledger_renta_income, M369 OSS/IOSS via ledger_oss, M349 invoices via collectible_invoice) and confirm the still-deferred detalle kinds (withholding M190/M193, atribucion_member M184, related_party_operation M232, foreign_asset M720, refund_operation M360) each emit the standing source_diagnostics advisory rather than a silent blank (F6; `withholding is DEFER-with-advisory per S27 — NOT a built resolver); `application/modelo/tests + entrypoints/cli/tests`.
 - [ ] `W04.P12.S29` - Close the Sheets-pull vs live-calculate drift (F5): unify the six assemble_* row-set functions, resolve_relations_from_local_store, and resolve_modelo_ledger_binding_values_from_repositories onto the one enrolled resolver set so both surfaces share one aggregation logic, and add a regression proving pull-path == calculate-path casilla values for a shared revision; `application/calculations/_row_set_assembly.py + _modelo_bindings.py + application/calculations/tests`.
 - [ ] `W04.P12.S31` - Engine robustness (coordinator ruling c, finding #26 surfaced by S17/S18): a cross-modelo fold-in relation with NO or PARTIAL prior filing MUST resolve its target casilla to blank/unresolved plus a non-blocking source_diagnostics advisory naming the missing modelo+periods, NOT raise RegistryValidationError 'relation has no supplied value' (current _formula_runtime.py behaviour) and NOT silently zero-contribute (would under-declare); `preserve found-0 vs genuine-wiring-bug distinction; land AFTER the happy-path matrix (S17/S18/S19/S28) so those proofs guard the raise-to-blank semantics change; `domain/calculations/registry/_formula_runtime.py + application/calculations/_relation_prefill.py + application/aggregation/_source_mesh.py; tests`.
+- [ ] `W04.P12.S32` - Activate the M200<-M202 pagos-fraccionados-anuales fold (DEAD WIRING found by S19): the relation modelo-200-2024-rel-202-pagos-fraccionados + target binding modelo-200-2024-pagos-fraccionados-anuales exist but NO M200/2024 casilla consumes the binding (casilla 00601 is_pagos_fraccionados is still manual), so the cross-modelo fold never reaches a casilla value (F1-class silent gap the census missed at the casilla level). Wire casilla 00601 to the binding (manual->bound/computed) WITH legal grounding (M200 instruction: pagos fraccionados deducibles = sum of the year's M202 instalments; cite the binding source) and complete the carved-out S19 live E2E proof that the M200 pagos casilla == sum of M202 1P/2P/3P output 34; `registry modelos/200 + legal catalogue; application/modelo/tests/test_modelo_202_sociedades_fold_in_live.py`.
 
 ## Wave `W05` - Codification and epic verification
 
