@@ -30,8 +30,9 @@ Common period tokens are:
 - `0A`: annual period, January 1 through December 31
 - `01` through `12`: monthly periods
 
-Some commands also accept compact period forms such as `2026Q1`, `2026-1T`,
-`2026A`, or bare `2026` where a single period string is expected.
+Every command takes the year separately with `--year` and the period as one
+of these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026` are not
+accepted; pass `--year 2026 --period 1T` instead.
 
 ## Year-end
 

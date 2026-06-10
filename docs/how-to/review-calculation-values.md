@@ -10,19 +10,19 @@ period.
 Describe the modelo and available revisions:
 
 ```bash
-aeat app modelo describe 130 --period 2026Q1
+aeat app modelo describe 130 --period 1T
 ```
 
 List casillas:
 
 ```bash
-aeat app modelo casillas 130 --period 2026Q1
+aeat app modelo casillas 130 --period 1T
 ```
 
 Show only required manual casillas:
 
 ```bash
-aeat app modelo casillas 130 --period 2026Q1 --input-kind manual --required
+aeat app modelo casillas 130 --period 1T --input-kind manual --required
 ```
 
 The `casillas` command shows the registry casilla id, printed form number,
@@ -32,7 +32,7 @@ input kind, required flag, and label. Use this before providing any
 Inspect formulas and their legal/source references:
 
 ```bash
-aeat app modelo formulas 130 --period 2026Q1 --explain
+aeat app modelo formulas 130 --period 1T --explain
 ```
 
 ## Review a saved calculation
@@ -65,7 +65,7 @@ export.
 Use `--casilla` only when aeat asks you to supply a specific box value by
 hand. Use the box number printed on the official AEAT form — the same number
 you see on the paper or PDF version of the modelo. Run
-`aeat app modelo casillas 130 --period 2026Q1` to see the list.
+`aeat app modelo casillas 130 --period 1T` to see the list.
 
 Example:
 

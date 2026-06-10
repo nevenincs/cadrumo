@@ -121,7 +121,7 @@ Manual classification is the correction path. Re-run `ledger preflight` for the
 period after important corrections:
 
 ```bash
-aeat app ledger preflight --period 2026Q1
+aeat app ledger preflight --year 2026 --period 1T
 ```
 
 ## Saturate the tax fields

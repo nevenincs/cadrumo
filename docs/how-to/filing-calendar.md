@@ -136,8 +136,8 @@ aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 Quarterly filing periods use `1T`, `2T`, `3T`, and `4T`. Annual filings use
 `0A`. Monthly periods use two-digit month tokens such as `01` and `12`.
 
-For a compact explanation of period codes, quarter boundaries, annual
-year-end, and examples such as `2026Q1` versus `--year 2026 --period 1T`, see
+For a compact explanation of period codes, quarter boundaries, and annual
+year-end - all addressed with `--year 2026 --period 1T` - see
 [Understand filing periods](filing-periods.md).
 
 ## What should I do with one modelo?

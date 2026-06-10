@@ -154,8 +154,8 @@ aeat app modelo work status --modelo 390 --year 2025 --period 0A
 aeat app modelo work history --modelo 390 --year 2025 --period 0A
 aeat app modelo bindings list --modelo 390 --year 2025 --period 0A
 aeat app modelo bindings list --modelo 390 --year 2025 --period 0A --missing
-aeat app modelo casillas 390 --period 2025
-aeat app modelo formulas 390 --period 2025 --explain
+aeat app modelo casillas 390 --period 0A
+aeat app modelo formulas 390 --period 0A --explain
 ```
 
 The binding list should show ledger IVA aggregation bindings and `previous_filing`
@@ -169,8 +169,8 @@ record automatically.
 Check the annual ledger window before calculation:
 
 ```bash
-aeat app ledger preflight --period 2025
-aeat app ledger status --period 2025
+aeat app ledger preflight --year 2025 --period 0A
+aeat app ledger status --year 2025 --period 0A
 ```
 
 Run the annual calculation:

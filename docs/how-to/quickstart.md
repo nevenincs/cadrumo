@@ -53,7 +53,7 @@ spending, or a mix of both.
 ```bash
 aeat app ledger categories
 aeat app ledger classify --id <transaction-id> --classification BUSINESS --category-id <category-id>
-aeat app ledger preflight --period 2024Q1
+aeat app ledger preflight --year 2024 --period 1T
 ```
 
 Use [Classify transactions](classify-transactions.md) for the detailed review

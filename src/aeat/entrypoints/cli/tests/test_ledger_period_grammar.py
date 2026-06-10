@@ -1,16 +1,19 @@
-"""One-operator-period-grammar tests for the ledger ``--period`` surface (D4).
+"""One-strict-period-grammar tests for the ledger ``--period`` surface (D4 rework).
 
-The operator-surface ADR decision D4 makes the AEAT modelo tokens the
-canonical operator period grammar everywhere, while the ledger ``--period``
-sites accept their legacy calendar shapes as an alternate input override and
-convert both to the one internal calendar representation the ledger stores.
+The operator-surface ADR decision D4, as amended 2026-06-10 by operator
+directive, makes the AEAT modelo tokens the *only* operator period grammar
+everywhere. The ledger ``--period`` sites accept exactly the AEAT tokens
+(``0A`` / ``1T``-``4T`` / ``01``-``12``) and take a separate ``--year`` to
+supply the year the calendar shape used to embed, so ``--period 1T --year
+2024`` reads identically across ledger and modelo. The calendar shapes
+(``2024Q1`` / ``2024-03`` / ``2024``) and the ``2024-1T`` year-qualified hybrid
+the first D4 implementation accepted are **removed** — they now refuse.
 
-These are real-behaviour tests: the equivalence and refusal cases exercise the
+These are real-behaviour tests: the conversion and refusal cases exercise the
 production ``_canonical_period`` normaliser (which consumes the registry
 period-union validator at :mod:`aeat.core._period`), and the end-to-end cases
 drive ``aeat app ledger preflight`` / ``status`` against a real isolated
-encrypted bucket and the real ledger backend, asserting the AEAT token and the
-equivalent calendar shape produce the same output.
+encrypted bucket and the real ledger backend.
 """
 
 from __future__ import annotations
@@ -28,53 +31,49 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
-from .._common import _canonical_period
+from .._common import _canonical_period, _filter_canonical_period
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-# --- Equivalence: AEAT token == calendar shape -> one internal period --------
+# --- Strict conversion: (AEAT token, --year) -> internal calendar shape -------
 #
-# Each pair is (year-qualified AEAT token, equivalent calendar shape). The
-# canonical AEAT grammar is the left column; the calendar shape on the right is
-# the accepted-and-converted alternate input. Both must normalise to the same
-# internal representation and that representation must validate downstream as a
-# ledger :class:`Period`.
-_EQUIVALENT_PERIODS = (
-    ("2026-1T", "2026Q1"),
-    ("2026-2T", "2026Q2"),
-    ("2026-3T", "2026Q3"),
-    ("2026-4T", "2026Q4"),
-    ("2026-0A", "2026"),
-    ("2026-01", "2026-01"),
-    ("2026-03", "2026-03"),
-    ("2026-12", "2026-12"),
+# Each row is (bare AEAT token, year, expected internal representation). The
+# bare token is the only accepted operator grammar; the year arrives through
+# ``--year``. The conversion must land on the internal calendar shape the
+# ledger filters by, and that shape must validate downstream as a
+# :class:`Period`.
+_TOKEN_YEAR_INTERNAL = (
+    ("1T", 2024, "2024Q1"),
+    ("2T", 2024, "2024Q2"),
+    ("3T", 2024, "2024Q3"),
+    ("4T", 2024, "2024Q4"),
+    ("0A", 2024, "2024"),
+    ("01", 2024, "2024-01"),
+    ("03", 2024, "2024-03"),
+    ("12", 2024, "2024-12"),
 )
 
 
-@pytest.mark.parametrize(("aeat_token", "calendar_shape"), _EQUIVALENT_PERIODS)
-def test_aeat_token_and_calendar_shape_normalise_to_same_internal_period(aeat_token: str, calendar_shape: str) -> None:
-    """The canonical AEAT token and its calendar shape yield one internal value."""
+@pytest.mark.parametrize(("token", "year", "internal"), _TOKEN_YEAR_INTERNAL)
+def test_aeat_token_plus_year_converts_to_internal_period(token: str, year: int, internal: str) -> None:
+    """A bare AEAT token plus ``--year`` converts to the one internal calendar shape."""
 
-    from_aeat = _canonical_period(aeat_token)
-    from_calendar = _canonical_period(calendar_shape)
-    assert from_aeat == from_calendar, (aeat_token, calendar_shape, from_aeat, from_calendar)
+    assert _canonical_period(token, year=year) == internal
 
 
-@pytest.mark.parametrize(("aeat_token", "calendar_shape"), _EQUIVALENT_PERIODS)
-def test_normalised_period_validates_as_ledger_period(aeat_token: str, calendar_shape: str) -> None:
-    """The single internal representation parses as a ledger ``Period`` for both notations.
+@pytest.mark.parametrize(("token", "year", "internal"), _TOKEN_YEAR_INTERNAL)
+def test_converted_period_validates_as_ledger_period(token: str, year: int, internal: str) -> None:
+    """The internal representation parses as a ledger ``Period``.
 
-    This is the anti-leak proof: a conversion that emitted a shape the ledger
-    cannot consume (e.g. an instalment clave) would raise here instead of
-    silently producing an unusable token.
+    Anti-leak proof: a conversion that emitted a shape the ledger cannot
+    consume would raise here instead of silently producing an unusable token.
     """
 
-    canonical = _canonical_period(aeat_token)
-    # Both inputs already proven equal above; validating one proves both.
-    assert _canonical_period(calendar_shape) == canonical
-    parsed = Period.model_validate(canonical)
-    assert parsed.year == 2026
+    converted = _canonical_period(token, year=year)
+    assert converted == internal
+    parsed = Period.model_validate(converted)
+    assert parsed.year == year
 
 
 def test_registry_union_validator_is_the_token_authority() -> None:
@@ -88,58 +87,85 @@ def test_registry_union_validator_is_the_token_authority() -> None:
     """
 
     # Span-shaped tokens convert.
-    assert _canonical_period("2026-1T") == "2026Q1"
-    assert _canonical_period("2026-0A") == "2026"
-    assert _canonical_period("2026-06") == "2026-06"
+    assert _canonical_period("1T", year=2024) == "2024Q1"
+    assert _canonical_period("0A", year=2024) == "2024"
+    assert _canonical_period("06", year=2024) == "2024-06"
 
     # Non-span registry-union members and instalment claves do not convert to a
     # ledger calendar shape; they raise rather than emit an unusable token.
-    for non_ledger in ("2026-1P", "2026-EXT-1T", "EVENT-3", "AD-HOC"):
+    for non_ledger in ("1P", "EXT-1T", "EVENT-3", "AD-HOC"):
         with pytest.raises(typer.BadParameter):
-            _canonical_period(non_ledger)
+            _canonical_period(non_ledger, year=2024)
 
 
-# --- Instructive refusals -----------------------------------------------------
+# --- Calendar shapes now REFUSE (the D4 rework) -------------------------------
 
 
-@pytest.mark.parametrize("bare_token", ["1T", "2T", "3T", "4T", "0A", "01", "03", "12"])
-def test_bare_aeat_token_refuses_with_year_instruction(bare_token: str) -> None:
-    """A bare AEAT token (no year) refuses, naming both notations and the year fix.
+@pytest.mark.parametrize("calendar_shape", ["2024Q1", "2024-03", "2024", "2026Q4", "2025-12"])
+def test_calendar_shape_refuses_naming_aeat_tokens_and_year(calendar_shape: str) -> None:
+    """A calendar shape is no longer accepted; it refuses, naming the AEAT tokens and --year."""
 
-    The ledger commands carry no ``--year``; rather than guess a year the
-    refusal must instruct the operator to qualify the token (``2026-1T``) or
-    use the calendar shape (``2026Q1``).
+    with pytest.raises(typer.BadParameter) as excinfo:
+        _canonical_period(calendar_shape, year=2024)
+    message = str(excinfo.value)
+    # The refusal names the AEAT token grammar and the --year argument.
+    assert "1T" in message
+    assert "0A" in message
+    assert "--year" in message
+
+
+@pytest.mark.parametrize("hybrid", ["2024-1T", "2024-0A", "2026-1T"])
+def test_year_qualified_hybrid_refuses(hybrid: str) -> None:
+    """The ``2024-1T`` year-qualified hybrid the first D4 impl accepted now refuses.
+
+    Bare ``--period`` carries no year; the year comes from ``--year``. A
+    year-qualified hybrid is a calendar-style notation that the strict grammar
+    rejects. (``2024-01`` collides with the month-token-with-year shape but is
+    not a bare month token, so it refuses too.)
     """
 
-    with pytest.raises(typer.BadParameter) as excinfo:
-        _canonical_period(bare_token)
-    message = str(excinfo.value)
-    assert bare_token in message
-    # Names the year-qualified canonical notation and the calendar alternate.
-    assert "2026-" in message
-    assert any(shape in message for shape in ("2026Q1", "2026-03", "2026"))
+    with pytest.raises(typer.BadParameter):
+        _canonical_period(hybrid, year=2024)
 
 
-@pytest.mark.parametrize("invalid_token", ["not-a-period", "ZZ", "2026-99", "13T", "Q5"])
-def test_invalid_token_refuses_naming_both_notations(invalid_token: str) -> None:
-    """A genuinely-invalid token refuses, naming both accepted notations."""
+@pytest.mark.parametrize("invalid_token", ["not-a-period", "ZZ", "99", "13T", "Q5"])
+def test_invalid_token_refuses_naming_aeat_tokens(invalid_token: str) -> None:
+    """A genuinely-invalid token refuses, naming the AEAT token grammar and --year."""
 
     with pytest.raises(typer.BadParameter) as excinfo:
-        _canonical_period(invalid_token)
+        _canonical_period(invalid_token, year=2024)
     message = str(excinfo.value)
-    # Names the canonical AEAT tokens and the calendar shapes.
-    assert "2026-1T" in message
-    assert "2026Q1" in message
+    assert "1T" in message
+    assert "--year" in message
 
 
 def test_empty_period_refuses() -> None:
     """An empty period refuses with the dedicated empty-period message."""
 
     with pytest.raises(typer.BadParameter):
-        _canonical_period("   ")
+        _canonical_period("   ", year=2024)
 
 
-# --- End-to-end: real ledger command accepts both notations identically -------
+# --- Filter clause: year-qualified AEAT token (no --year on a --filter) --------
+
+
+def test_filter_clause_accepts_year_qualified_aeat_token() -> None:
+    """``--filter period=2024-1T`` converts to the internal shape (year inline)."""
+
+    assert _filter_canonical_period("2024-1T") == "2024Q1"
+    assert _filter_canonical_period("2024-0A") == "2024"
+    assert _filter_canonical_period("2024-03") == "2024-03"
+
+
+@pytest.mark.parametrize("calendar_shape", ["2024Q1", "2024", "not-a-period", "1T"])
+def test_filter_clause_refuses_calendar_and_bare_token(calendar_shape: str) -> None:
+    """The filter clause refuses a calendar shape or a bare (year-less) token."""
+
+    with pytest.raises(typer.BadParameter):
+        _filter_canonical_period(calendar_shape)
+
+
+# --- End-to-end: real ledger command takes --period AEAT token + --year -------
 
 
 @pytest.fixture()
@@ -178,73 +204,66 @@ def _add_business_row_missing_facts(cli_runner: CliRunner) -> None:
     assert add.exit_code == 0, add.output
 
 
-def test_preflight_accepts_aeat_token_and_calendar_shape_identically(
-    cli_runner: CliRunner, _isolated_backend: None
-) -> None:
-    """``ledger preflight`` produces the same report for ``2026-1T`` and ``2026Q1``.
+def test_preflight_accepts_aeat_token_with_year(cli_runner: CliRunner, _isolated_backend: None) -> None:
+    """``ledger preflight --period 1T --year 2026`` selects the Q1 2026 row and reports the gap.
 
     Real backend, real encrypted bucket: a February 2026 business row falls in
-    Q1; both notations must select it and surface the same readiness gap.
+    Q1; the AEAT token plus ``--year`` must select it and surface the gap.
     """
 
     _add_business_row_missing_facts(cli_runner)
 
-    aeat = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "2026-1T"])
-    calendar = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "2026Q1"])
+    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
 
-    assert aeat.exit_code == 0, aeat.output
-    assert calendar.exit_code == 0, calendar.output
-    # The canonical internal period prints identically for both inputs.
-    assert "period\t2026Q1" in aeat.output
-    assert "period\t2026Q1" in calendar.output
-    # Same row checked, same readiness verdict.
-    assert "checked\t1" in aeat.output
-    assert "checked\t1" in calendar.output
-    assert "ready\tfalse" in aeat.output
-    assert "ready\tfalse" in calendar.output
+    assert result.exit_code == 0, result.output
+    # The internal canonical period for Q1 2026 prints as 2026Q1.
+    assert "period\t2026Q1" in result.output
+    assert "checked\t1" in result.output
+    assert "ready\tfalse" in result.output
 
 
-def test_status_accepts_aeat_token_and_calendar_shape_identically(
-    cli_runner: CliRunner, _isolated_backend: None
-) -> None:
-    """``ledger status`` reports the same totals for ``2026-1T`` and ``2026Q1``."""
+def test_status_accepts_aeat_token_with_year(cli_runner: CliRunner, _isolated_backend: None) -> None:
+    """``ledger status --period 1T --year 2026`` reports the Q1 totals."""
 
     _add_business_row_missing_facts(cli_runner)
 
-    aeat = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "2026-1T"])
-    calendar = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "2026Q1"])
+    result = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "1T", "--year", "2026"])
 
-    assert aeat.exit_code == 0, aeat.output
-    assert calendar.exit_code == 0, calendar.output
-    # Identical economic summary and selected-period marker for both notations.
+    assert result.exit_code == 0, result.output
     for marker in ("expense_total\t242", "net_total\t-242", "Period\t2026Q1"):
-        assert marker in aeat.output, aeat.output
-        assert marker in calendar.output, calendar.output
+        assert marker in result.output, result.output
 
 
-def test_preflight_bare_aeat_token_refuses_with_year_instruction(
-    cli_runner: CliRunner, _isolated_backend: None
-) -> None:
-    """``ledger preflight --period 1T`` refuses, instructing how to supply the year."""
+def test_preflight_calendar_shape_refuses(cli_runner: CliRunner, _isolated_backend: None) -> None:
+    """``ledger preflight --period 2026Q1 --year 2026`` refuses, naming the AEAT tokens."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "1T"])
+    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "2026Q1", "--year", "2026"])
     assert result.exit_code != 0, result.output
-    assert "2026-1T" in result.output or "2026Q1" in result.output
+    assert "1T" in result.output
 
 
-def test_preflight_help_leads_with_aeat_tokens(cli_runner: CliRunner) -> None:
-    """The preflight ``--period`` help leads with the canonical AEAT tokens.
+def test_status_period_without_year_refuses(cli_runner: CliRunner, _isolated_backend: None) -> None:
+    """``ledger status --period 1T`` (no --year) refuses, instructing to add --year."""
 
-    The year-qualified AEAT token form must appear before the calendar shapes,
-    teaching one grammar while keeping the calendar shapes documented as also
-    accepted.
+    _add_business_row_missing_facts(cli_runner)
+
+    result = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "1T"])
+    assert result.exit_code != 0, result.output
+    assert "--year" in result.output
+
+
+def test_preflight_help_documents_aeat_tokens_and_year(cli_runner: CliRunner) -> None:
+    """The preflight ``--period`` help documents the AEAT tokens; ``--year`` is present.
+
+    No calendar shape is mentioned. Locale-default output is Spanish, so assert
+    on the language-invariant notation tokens and the ``--year`` flag.
     """
 
     result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--help"])
     assert result.exit_code == 0, result.output
     output = result.output
-    # The AEAT token form is advertised, and the calendar shapes are noted as
-    # also accepted. Locale-default output is Spanish, so assert on the
-    # notation tokens themselves which are language-invariant.
-    assert "2026-1T" in output or "1T" in output
-    assert "2026Q1" in output
+    assert "1T" in output
+    assert "0A" in output
+    assert "--year" in output
+    # No calendar shape is advertised on the operator surface.
+    assert "2026Q1" not in output

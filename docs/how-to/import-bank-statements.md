@@ -131,7 +131,7 @@ aeat app ledger track <transaction-id>
 For a broader review queue, use:
 
 ```bash
-aeat app ledger review --filter period=2026Q1
+aeat app ledger review --filter period=2026-1T
 aeat app ledger check
 ```
 
@@ -143,15 +143,16 @@ anomalies across periods and is local-only.
 Export the active ledger to a file:
 
 ```bash
-aeat app ledger export --output ./ledger-2026-q1.csv --period 2026Q1
+aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
 ```
 
-The `--period` filter keeps the export aligned with the tutorial transaction
-dates. A transaction dated `2026-03-15` belongs in `2026Q1`, so it appears in
-the command above. Use a whole year when that is the review scope:
+The `--year` and `--period` filter keeps the export aligned with the tutorial
+transaction dates. A transaction dated `2026-03-15` belongs in `--year 2026
+--period 1T`, so it appears in the command above. Use the annual token `0A`
+when a whole year is the review scope:
 
 ```bash
-aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --period 2026
+aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
 ```
 
 Exports are review snapshots. They are not a general edit-and-reimport
@@ -299,8 +300,8 @@ classification update. The implemented batch path is `ledger classify
 1. Filter and export the rows you want to review:
 
    ```bash
-   aeat app ledger list --filter period=2026Q1 --filter classification=NOT_YET_PROCESSED
-   aeat app ledger export --output ./ledger-2026-q1-review.csv --period 2026Q1
+   aeat app ledger list --filter period=2026-1T --filter classification=NOT_YET_PROCESSED
+   aeat app ledger export --output ./ledger-2026-q1-review.csv --year 2026 --period 1T
    ```
 
 2. Build a small classification CSV from the reviewed transaction ids:
@@ -320,8 +321,8 @@ classification update. The implemented batch path is `ledger classify
 4. Review afterwards:
 
    ```bash
-   aeat app ledger list --filter period=2026Q1
-   aeat app ledger preflight --period 2026Q1
+   aeat app ledger list --filter period=2026-1T
+   aeat app ledger preflight --year 2026 --period 1T
    ```
 
 This batch path does not bulk edit descriptions, amounts, IVA fields, notes, or
@@ -333,7 +334,7 @@ or `ledger doclink`.
 Run preflight before calculating a modelo:
 
 ```bash
-aeat app ledger preflight --period 2026Q1
+aeat app ledger preflight --year 2026 --period 1T
 ```
 
 Preflight reports missing facts such as category, taxable base, IVA amount, IVA
@@ -343,7 +344,7 @@ preflight again.
 Check the overall ledger state:
 
 ```bash
-aeat app ledger status --period 2026Q1
+aeat app ledger status --year 2026 --period 1T
 ```
 
 Continue to calculation only when the active profile and target period are
