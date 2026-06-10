@@ -23,7 +23,6 @@ from decimal import Decimal
 
 import pytest
 
-from .......core.external_constants import LATIN_1_ENCODING
 from .._record_spec import encode_currency
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -68,8 +67,8 @@ class TestUnsignedCurrency17Byte:
         ids=["zero", "one_cent", "typical", "large", "max"],
     )
     def test_round_trip_text(self, value: Decimal, expected_text: str) -> None:
-        encoded = encode_currency(value, length=17, encoding=LATIN_1_ENCODING)
-        assert encoded == expected_text.encode(LATIN_1_ENCODING)
+        encoded = encode_currency(value, length=17, encoding="iso-8859-1")
+        assert encoded == expected_text.encode("iso-8859-1")
 
 
 class TestInlineSignedCurrency17Byte:
@@ -88,8 +87,8 @@ class TestInlineSignedCurrency17Byte:
         ids=["zero", "one_cent", "positive_typical", "neg_cent", "neg_typical", "neg_large"],
     )
     def test_round_trip_text(self, value: Decimal, expected_text: str) -> None:
-        encoded = encode_currency(value, length=17, signed=True, inline_sign=True, encoding=LATIN_1_ENCODING)
-        assert encoded == expected_text.encode(LATIN_1_ENCODING)
+        encoded = encode_currency(value, length=17, signed=True, inline_sign=True, encoding="iso-8859-1")
+        assert encoded == expected_text.encode("iso-8859-1")
 
     def test_signed_negative_zero_canonicalises_to_positive(self) -> None:
         """Decimal('-0.00') should encode as if it were +0.00 — the sign byte
@@ -99,7 +98,7 @@ class TestInlineSignedCurrency17Byte:
             length=17,
             signed=True,
             inline_sign=True,
-            encoding=LATIN_1_ENCODING,
+            encoding="iso-8859-1",
         )
         assert encoded == b" 0000000000000000"
 
