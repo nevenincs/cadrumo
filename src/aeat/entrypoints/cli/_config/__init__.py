@@ -720,7 +720,7 @@ def config_profile_delete(
     # unknown name surfaces a clear "unknown profile" refusal distinct
     # from any session-state diagnostic — the operator can always tell
     # whether the name exists. ``delete`` does not require a pre-existing
-    # session: like ``unlock``, it opens its own scoped to the target.
+    # session: like ``switch``, it opens its own scoped to the target.
     pointer = _resolve_profile_by_label(name)
     deleting_active_profile = pointer.bucket_id == _resolve_active_bucket_id()
     try:

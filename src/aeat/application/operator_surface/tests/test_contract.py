@@ -174,7 +174,7 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
         if family.domain is MountedCommandDomain.CUSTODY
         for command in family.commands
     }
-    assert {"lock", "unlock", "rekey", "recover", "show-recovery", "verify-recovery"} == custody_commands
+    assert {"lock", "switch", "rekey", "recover", "show-recovery", "verify-recovery"} == custody_commands
     assert by_domain[MountedCommandDomain.BUCKET].root is RootSurfaceName.CONFIG
     assert by_domain[MountedCommandDomain.BUCKET].child == "bucket"
     assert by_domain[MountedCommandDomain.BUCKET].commands == ("history",)

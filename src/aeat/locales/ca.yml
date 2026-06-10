@@ -450,10 +450,7 @@ application:
         certificate_file_unresolved: La ruta del certificat '%{certificate_path}'
           no resol a un fitxer existent. Executa `aeat config auth configure --provider
           certificate --file RUTA` amb una ruta al teu paquet PKCS#12 (.p12/.pfx).
-        dangling_active_profile: El punter de perfil actiu '%{active_profile}' no
-          resol a un bucket de perfil registrat. Executa aeat config profile list
-          per inspeccionar els perfils registrats i despres aeat config unlock NAME
-          o aeat config profile create NAME.
+        dangling_active_profile: 'El punter de perfil actiu ''%{active_profile}'' no resol a un bucket de perfil registrat. Executa aeat config profile list per inspeccionar els perfils registrats i despres aeat config switch NAME o aeat config profile create NAME.'
         no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
           create NAME` abans de configurar l'autenticació.
         unreadable_active_profile: El perfil actiu '%{active_profile}' té un manifest
@@ -775,6 +772,10 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
+        a la revisió %{revision_id}: el registre declara un origen de vinculació que
+        cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com
+        a ajornat abans de calcular.'
       reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
         encara no està disponible; fes servir --from-justificante PATH fins que el
         parser de declaració estigui implementat.
@@ -797,10 +798,12 @@ application:
       work_unit_mutation_refused: La unitat de treball està descartada; creeu una
         nova unitat de treball per continuar.
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
+      work_unit_revision_divergence: La unitat de treball %{work_unit_id} es va crear
+        amb la revisio de registre %{work_unit_revision}, pero la revisio determinada
+        per llei per al model %{modelo} %{filing_year} %{period} ara es %{law_revision}.
+        Torneu a crear la unitat de treball per vincular-la a la revisio actual.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
-      work_unit_revision_divergence: 'La unitat de treball %{work_unit_id} es va crear amb la revisio de registre %{work_unit_revision}, pero la revisio determinada per llei per al model %{modelo} %{filing_year} %{period} ara es %{law_revision}. Torneu a crear la unitat de treball per vincular-la a la revisio actual.'
-      novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds} a la revisió %{revision_id}: el registre declara un origen de vinculació que cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com a ajornat abans de calcular.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -996,8 +999,7 @@ application:
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
-      profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
-        unlock NAME per activar-lo o aeat config profile delete NAME primer.
+      profile_already_exists: 'El perfil ''%{profile}'' ja existeix; executa aeat config switch NAME per activar-lo o aeat config profile delete NAME primer.'
       profile_bucket_directory_removal_failed: No s'ha pogut eliminar el directori
         del perfil.
       profile_create_route_mismatch: La ruta de creació de perfil '%{route}' no coincideix
@@ -1521,23 +1523,25 @@ cli:
           presentada a seu.
         baja_help: Registra una declaració M036 de baixa (cancel·lació censal) presentada
           a seu.
+        declaration_id_help: L'id de la declaració (o un prefix inequívoc) que es
+          vol mostrar.
         declared_on_help: Data ISO (AAAA-MM-DD) en què l'operador va presentar el
           M036 a seu.
         errors:
           bad_declared_on: --declared-on ha de ser una data ISO (AAAA-MM-DD); rebut
             {value}.
-          declaration_not_found: 'Cap declaració M036 coincideix amb {value!r}. Executa ''aeat app modelo m036 list'' per veure les declaracions registrades.'
+          declaration_not_found: Cap declaració M036 coincideix amb {value!r}. Executa
+            'aeat app modelo m036 list' per veure les declaracions registrades.
         group_help: Registra una declaració M036 presentada a seu (alta / modificacion
           / baja). L'aplicació local mai presenta; AEAT és l'autoritat.
         justificante_help: Identificador opcional de l'acús de recepció emès per seu
           per a la presentació.
+        list_empty: Encara no hi ha declaracions M036 registrades.
+        list_help: Llista les declaracions M036 registrades al perfil actiu.
         modificacion_help: Registra una declaració M036 de modificació (actualització
           censal) presentada a seu.
         note_help: Nota opcional de l'operador (fins a 512 caràcters).
-        list_help: 'Llista les declaracions M036 registrades al perfil actiu.'
-        view_help: 'Mostra una declaració M036 registrada pel seu id (o un prefix inequívoc).'
-        declaration_id_help: 'L''id de la declaració (o un prefix inequívoc) que es vol mostrar.'
-        list_empty: 'Encara no hi ha declaracions M036 registrades.'
+        view_help: Mostra una declaració M036 registrada pel seu id (o un prefix inequívoc).
       project:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casilla amb la sintaxi CASILLA=DECIMAL (repetible).
@@ -1892,9 +1896,14 @@ cli:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
       no_active_profile_error_value: sense-perfil-actiu
       period_empty: El periode fiscal no pot estar buit
-      period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indiqueu l''any amb --year (p. ex. --period 1T --year 2024).'
-      period_missing_year: 'El testimoni de període ''{token}'' necessita un any en aquesta ordre. Afegiu --year (p. ex. --period {token} --year 2024).'
-      period_filter_unrecognised: 'Període de filtre ''{raw}'' no reconegut. Useu un testimoni AEAT amb any a la clàusula de filtre: period=2024-1T (trimestres), period=2024-0A (anual), period=2024-03 (mesos).'
+      period_filter_unrecognised: 'Període de filtre ''{raw}'' no reconegut. Useu
+        un testimoni AEAT amb any a la clàusula de filtre: period=2024-1T (trimestres),
+        period=2024-0A (anual), period=2024-03 (mesos).'
+      period_missing_year: El testimoni de període '{token}' necessita un any en aquesta
+        ordre. Afegiu --year (p. ex. --period {token} --year 2024).
+      period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT:
+        1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indiqueu l''any amb --year
+        (p. ex. --period 1T --year 2024).'
     next:
       create_profile_command: aeat config profile create NOM
   config:
@@ -2034,8 +2043,7 @@ cli:
         loopback_bind: 'No s''ha pogut obrir un port local per completar l''inici
           de sessió a Google: {detail}'
         network: 'No s''ha pogut contactar amb Google: {detail}'
-        profile_unbound: No hi ha cap perfil actiu. Executa aeat config unlock NAME
-          o indica --profile.
+        profile_unbound: 'No hi ha cap perfil actiu. Executa aeat config switch NAME o indica --profile.'
         scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
           Executa `aeat config google login` i accepta tots els permisos.
         storage: 'No s''ha pogut accedir a l''emmagatzematge de Google Drive: {detail}'
@@ -2148,9 +2156,7 @@ cli:
       create_epilog: 'Perfil mínim per a autònom: --entity-type natural_person --tax-id
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou i el seu bucket de configuració.
-      delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
-        s'ha esborrat. Executa aeat config unlock NAME o aeat config profile create
-        NAME per tornar a treballar.
+      delete_active_cleared: 'El perfil eliminat era l''actiu; el punter de perfil actiu s''ha esborrat. Executa aeat config switch NAME o aeat config profile create NAME per tornar a treballar.'
       delete_help: Elimina un perfil i el seu estat local; --yes confirma
       delete_name_help: Nom del perfil que vols eliminar
       delete_requires_yes: L'eliminació és destructiva. Torna a executar 'aeat config
@@ -2180,10 +2186,7 @@ cli:
       import_path_help: Ruta al paquet JSON del perfil
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
-      logout_session_warning: El tancament de sessio ha esborrat el punter del perfil
-        actiu. Els verbs posteriors en aquest terminal seran rebutjats amb NoActiveBucketSessionError
-        fins que executis aeat config unlock NAME o obris un terminal nou i tornis
-        a seleccionar.
+      logout_session_warning: 'El tancament de sessio ha esborrat el punter del perfil actiu. Els verbs posteriors en aquest terminal seran rebutjats amb NoActiveBucketSessionError fins que executis aeat config switch NAME o obris un terminal nou i tornis a seleccionar.'
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_filing_year_help: Exercici de presentació (quatre dígits).
@@ -2326,10 +2329,10 @@ cli:
         per començar.
       help: Mostrar l'estat del perfil de configuració actiu
       next_step: 'Següent pas: `aeat app overview status`'
+    switch:
+      help: 'Canviar el perfil actiu seleccionant-lo i obrint-ne la sessio d''emmagatzematge.'
+      name_help: 'Nom del perfil al qual canviar. Si s''omet, s''utilitza el punter del perfil actiu.'
     unlock:
-      help: Desbloquejar un perfil seleccionant-lo i obrint-ne la sessio d'emmagatzematge.
-      name_help: Nom del perfil que s'ha de desbloquejar. Si s'omet, s'utilitza el
-        punter del perfil actiu.
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -2513,7 +2516,8 @@ cli:
       llm_exclusive: --llm no es pot combinar amb --classification ni --from-csv;
         la ruta manual es l'anul-lacio explicita de l'operador.
       llm_failed: 'La classificacio per LLM ha fallat: {reason}'
-      llm_help: 'Demana a un proveidor LLM local (claude/antigravity/codex) que classifiqui la transaccio; vista previa per defecte, persisteix amb --apply.'
+      llm_help: Demana a un proveidor LLM local (claude/antigravity/codex) que classifiqui
+        la transaccio; vista previa per defecte, persisteix amb --apply.
       llm_provider_unavailable: 'El proveidor LLM ''{provider}'' no esta disponible:
         el seu CLI no es al PATH. Instal-la el CLI de ''{provider}'' i assegura''t
         que sigui al PATH, o executa ''aeat app ledger providers'' per llistar els
@@ -2528,10 +2532,12 @@ cli:
         fila com a BUSINESS o PERSONAL.
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.
       reaffirmed: Classificació reafirmada.
+      saturate_help: 'Satura amb IA: selecciona tambe la categoria d''IVA i deriva
+        el tipus, la base i la quota.'
+      saturate_non_derivable: Tipus no derivable
+      saturate_requires_llm: L'opcio --saturate nomes s'aplica amb --llm; indiqueu
+        --llm amb un proveidor.
       taxable_base_help: Import de base imposable
-      saturate_help: 'Satura amb IA: selecciona tambe la categoria d''IVA i deriva el tipus, la base i la quota.'
-      saturate_non_derivable: 'Tipus no derivable'
-      saturate_requires_llm: 'L''opcio --saturate nomes s''aplica amb --llm; indiqueu --llm amb un proveidor.'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Registra un enllaç a un document de Gmail/Drive/URL en una fila del llibre
@@ -2575,8 +2581,9 @@ cli:
       help: Exportar moviments canònics del llibre des del bucket del perfil actiu
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Ruta on escriure el fitxer exportat del llibre
-      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
-      year_help: 'Any de declaració per a --period (p. ex. 2024).'
+      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
+        0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      year_help: Any de declaració per a --period (p. ex. 2024).
     history:
       help: Mostra la cadena cronològica d'esdeveniments d'una transacció
       id_help: Id de la transacció (o prefix no ambigu)
@@ -2600,12 +2607,13 @@ cli:
         amb una columna de data, import i descripció seguida d''almenys una fila de
         dades.'
       path_help: Ruta a l'arxiu de l'extracte bancari o directori
-      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
+        0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       provider_help: 'Proveïdor del format de l''extracte. Valors reconeguts: {providers}'
       source_help: Fitxer original per verificar les files importades
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
-      year_help: 'Any de declaració per a --period (p. ex. 2024).'
+      year_help: Any de declaració per a --period (p. ex. 2024).
     labels:
       active: Actives
       amount: Import
@@ -2631,6 +2639,7 @@ cli:
       imported: Entrades importades
       irpf_category: Categoria IRPF
       iva_amount: Import d'IVA
+      iva_category: Categoria d'IVA
       iva_rate: Tipus d'IVA
       lifecycle_state: Estat del cicle de vida
       merged_id: id_fusionat
@@ -2659,7 +2668,6 @@ cli:
       warning: Avís
       warnings: Avisos
       'yes': Sí
-      iva_category: 'Categoria d''IVA'
     link:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:
@@ -2676,7 +2684,10 @@ cli:
       invoice_id_help: Id de la factura a vincular bidireccionalment amb el moviment.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
-      filter_help: 'Filtreu les files per estat, període (un testimoni AEAT amb any, p. ex. period=2024-1T), classificació, incidència, importació, direcció (ingrés/despesa) o text. Per filtrar per etiqueta de grup organitzatiu useu l''opció --group per separat.'
+      filter_help: Filtreu les files per estat, període (un testimoni AEAT amb any,
+        p. ex. period=2024-1T), classificació, incidència, importació, direcció (ingrés/despesa)
+        o text. Per filtrar per etiqueta de grup organitzatiu useu l'opció --group
+        per separat.
       footer_truncated: Mostrant files {start}-{end} de {total} (desplacament {offset}).
         Feu servir --offset/--limit per paginar.
       group_filter_help: Mostra nomes les files d'aquesta etiqueta de grup.
@@ -2697,8 +2708,9 @@ cli:
       help: Informa de les dades comptables que falten (categoria, base imposable,
         import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
         bucket actiu en un període donat. Local; mai contacta amb AEAT.
-      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
-      year_help: 'Any de declaració (p. ex. 2024).'
+      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
+        0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      year_help: Any de declaració (p. ex. 2024).
     providers:
       help: Llista els proveïdors LLM en subprocés amb CLI disponible al PATH.
     remove:
@@ -2715,11 +2727,11 @@ cli:
       reason_help: Motiu registrat a l'historial de reinici
       yes_help: Confirmar el buidatge del catàleg actiu del llibre
     restore:
-      actor_help: 'Nom de l''operador registrat a l''esdeveniment del bucket'
-      help: 'Restaurar a actiu un moviment del llibre apartat o arxivat'
-      id_help: 'Id del moviment del llibre a restaurar a actiu'
-      reason_help: 'Motiu registrat a l''historial de cicle de vida'
-      yes_help: 'Confirma la restauració del moviment del llibre a actiu'
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      help: Restaurar a actiu un moviment del llibre apartat o arxivat
+      id_help: Id del moviment del llibre a restaurar a actiu
+      reason_help: Motiu registrat a l'historial de cicle de vida
+      yes_help: Confirma la restauració del moviment del llibre a actiu
     review:
       filter_help: Filtrar files per status, period, issue, import, classification,
         text o direction
@@ -2748,8 +2760,9 @@ cli:
     status:
       help: Resumir l'estat del llibre i la preparació de càlcul del bucket del perfil
         actiu
-      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
-      year_help: 'Any de declaració per a --period (p. ex. 2024).'
+      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
+        0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      year_help: Any de declaració per a --period (p. ex. 2024).
     track:
       help: Mostrar el llinatge d'esdeveniments d'un moviment del llibre
       transaction_id_help: Id del moviment del llibre a inspeccionar
@@ -2955,7 +2968,8 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
     period: Període
-    period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+    period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
+      0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions antics desats;
@@ -3005,7 +3019,7 @@ cli:
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
-    year_help: 'Any de declaració per a --period (p. ex. 2024).'
+    year_help: Any de declaració per a --period (p. ex. 2024).
   registry:
     app_help: Gestió del registre de models fiscals
     audit_oracles_environment_help: Entorn del catàleg de paritat en viu a auditar
@@ -3958,8 +3972,7 @@ errors:
       torna-ho a provar.
     locked_storage_bucket_busy: El bucket d'emmagatzematge l'està utilitzant un altre
       procés. Espera que aquest procés acabi i torna-ho a provar.
-    locked_storage_bucket_session: Aquesta operació requereix un bucket d'emmagatzematge
-      desbloquejat. Executa `aeat config unlock` i torna-ho a provar.
+    locked_storage_bucket_session: 'Aquesta operació requereix un bucket d''emmagatzematge desbloquejat. Executa `aeat config switch` i torna-ho a provar.'
     locked_storage_lock_acquisition: No s'ha pogut obtenir el bloqueig exclusiu de
       fitxer dins del temps d'espera. Un altre procés el reté; espera i torna-ho a
       provar.
@@ -3972,9 +3985,7 @@ errors:
       a provar.
     auth_profile_identity_mismatch: La identitat del perfil actiu no pot ser titular
       de la sessió d'autenticació sol·licitada.
-    bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja esta completa.
-      Fes servir aeat config unlock NAME per activar un perfil existent o aeat config
-      profile create NAME per afegir-ne un altre.
+    bootstrap_already_complete: 'L''arrencada de l''emmagatzematge segur ja esta completa. Fes servir aeat config switch NAME per activar un perfil existent o aeat config profile create NAME per afegir-ne un altre.'
     censo_apply_conflict: No es pot aplicar el cens perquè hi ha feina en curs sobre
       una unitat dependent. Resol primer l'estat pendent.
     censo_field_validation: El cens de l'AEAT ha retornat un valor que l'esquema no
@@ -4017,12 +4028,10 @@ errors:
       una unitat de treball de modelo.
     modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
       pertany a una altra revisio.
-    profile_already_registered: Ja existeix un perfil amb aquest nom. Fes servir aeat
-      config unlock NAME per canviar-hi.
+    profile_already_registered: 'Ja existeix un perfil amb aquest nom. Fes servir aeat config switch NAME per canviar-hi.'
     profile_import_collision: L'identificador del perfil importat coincideix amb un
       que ja existeix.
-    profile_locked: Aquesta operació requereix un perfil desbloquejat. Executa `aeat
-      config unlock` i torna-ho a provar.
+    profile_locked: 'Aquesta operació requereix un perfil desbloquejat. Executa `aeat config switch` i torna-ho a provar.'
     profile_name_collision: El nom de perfil indicat ja s'està utilitzant. Tria un
       nom diferent.
     reconciliation_cross_bucket: La unitat de treball apuntada pertany a un bucket
@@ -4213,14 +4222,12 @@ errors:
       d'emmagatzematge que ja existeix.
     refused_storage_bucket_no_active: No s'ha pogut determinar cap bucket actiu. Selecciona
       un perfil i torna-ho a provar.
-    refused_storage_master_key_no_active_session: El xifratge requereix una sessió
-      activa. Executa `aeat config unlock` i torna-ho a provar.
+    refused_storage_master_key_no_active_session: 'El xifratge requereix una sessió activa. Executa `aeat config switch` i torna-ho a provar.'
     refused_storage_passphrase_too_short: La frase de contrasenya és massa curta.
       Ha de tenir com a mínim 8 caràcters.
     refused_storage_secret_already_exists: Ja existeix un secret amb aquesta clau.
       Fes servir l'opció de sobreescriptura si el vols reemplaçar.
-    refused_storage_session_expired: La sessio activa ha caducat per inactivitat.
-      Torna a activar-la amb aeat config unlock NAME.
+    refused_storage_session_expired: 'La sessio activa ha caducat per inactivitat. Torna a activar-la amb aeat config switch NAME.'
     refused_storage_unsecured_mode: L'emmagatzematge sense xifrar s'ha sol·licitat
       sense l'habilitació necessària. No és segur per a dades reals.
     refused_taxation_comparison: La comparació tributària conjunta/individual no es
@@ -4281,8 +4288,7 @@ errors:
         només està disponible abans de seleccionar un bucket de perfil actiu.
       cold_bootstrap_explicit_database_refused: L'emmagatzematge d'arrencada en fred
         no pot ometre una ruta de base de dades explícita.
-      no_active_session: No hi ha cap sessio de bucket activa. Executa aeat config
-        unlock NAME per desbloquejar un perfil.
+      no_active_session: 'No hi ha cap sessio de bucket activa. Executa aeat config switch NAME per desbloquejar un perfil.'
       no_detail: No s'ha informat cap detall de preparació.
       not_ready: 'El runtime d''emmagatzematge no està preparat per a emmagatzematge
         vinculat al perfil: %{details}'
@@ -4292,10 +4298,8 @@ errors:
         de perfil actiu.
       session_changed: La sessió de bucket activa ha canviat. Torna a desbloquejar
         el perfil de destinació.
-      session_expired: La sessio de bucket activa ha caducat. Executa aeat config
-        unlock NAME per reactivar el perfil.
-      session_sealed: La sessio de bucket activa esta segellada. Executa aeat config
-        unlock NAME per reactivar el perfil.
+      session_expired: 'La sessio de bucket activa ha caducat. Executa aeat config switch NAME per reactivar el perfil.'
+      session_sealed: 'La sessio de bucket activa esta segellada. Executa aeat config switch NAME per reactivar el perfil.'
       unsecured_backend: La sessió de bucket activa fa servir el backend no segur.
         L'emmagatzematge de producció vinculat al perfil requereix custòdia de fitxer
         o anell de claus.

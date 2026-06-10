@@ -81,7 +81,7 @@ def test_bootstrap_exemption_short_circuits_route_policy(tmp_path: Path) -> None
 
 def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
-        "config unlock does-not-exist",
+        "config switch does-not-exist",
         bootstrap_exempt=False,
         settings=Settings(aeat_local_storage_root=tmp_path),
     )
@@ -100,7 +100,7 @@ def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path
         ("app ledger rule apply --dry-run", True),
         ("app modelo work file abc", True),
         ("config profile censo refresh", True),
-        ("config unlock operator", False),
+        ("config switch operator", False),
         ("app ledger list", False),
         ("app registry legal view ley-37-1992:art-99", False),
     ),

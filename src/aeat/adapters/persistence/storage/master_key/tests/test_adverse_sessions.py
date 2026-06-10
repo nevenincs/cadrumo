@@ -47,7 +47,7 @@ def test_missing_bucket_session_raises_translated_storage_error() -> None:
         get_active_master_key()
 
     assert exc_info.value.translated_message == "errors.refused.refused_storage_master_key_no_active_session"
-    assert "aeat config unlock" in str(exc_info.value)
+    assert "aeat config switch" in str(exc_info.value)
 
 
 def test_locked_bucket_session_refuses_active_master_key_reads() -> None:
