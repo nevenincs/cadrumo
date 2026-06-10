@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import zipfile
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -36,7 +37,7 @@ FILING_1_ID = _hex64("filing-1")
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path) -> TestRuntimeProfile:
+def runtime_profile(tmp_path: Path) -> Generator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
         yield profile
 
