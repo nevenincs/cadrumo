@@ -47,11 +47,11 @@ from .._justificante import (
     register_capture_as_filing_evidence,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from ....adapters.outbound.aeat.auth import AeatSession
     from ....core.config import Settings
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 
@@ -291,7 +291,7 @@ def _seam_providers(*, pdf_bytes: bytes):
 
 
 def test_capture_orchestrator_stamps_evidence_when_period_is_filed() -> None:
-    """Per the ADR, the capture flow stamps official evidence in the same flow."""
+    """Per the design, the capture flow stamps official evidence in the same flow."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
     bucket_id = _active_bucket_id()

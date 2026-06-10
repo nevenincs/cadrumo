@@ -45,7 +45,7 @@ Chains:
   ``INTRA_COMMUNITY_SUPPLY`` is the B2B clave-E M349 path, a different regime).
   Rather than let every OSS cuota resolve to a SILENT claimed-zero, the resolver
   now surfaces a non-blocking ``oss_no_live_source`` advisory per declared OSS
-  binding (W04.P12.S33) so an operator with OSS sales is told the cuotas are not
+  binding so an operator with OSS sales is told the cuotas are not
   auto-computed and must be supplied manually. The advisory proof and the proven
   resolver fold are both pinned below.
 

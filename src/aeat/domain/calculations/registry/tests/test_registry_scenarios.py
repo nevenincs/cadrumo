@@ -156,7 +156,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "0592": Decimal("1.00"),
             "0593": Decimal("2.00"),
             "0594": Decimal("3.00"),
-            # 0596/0597 are bound casillas since W04.P11.S35 (the M111/M123
+            # 0596/0597 are bound casillas (the M111/M123
             # retención cross-period folds), so they are supplied through the
             # binding channel below, not as raw casilla inputs.
             "0153": Decimal("6.00"),
@@ -177,7 +177,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
-            # 0596/0597 retención credits fold from M111/M123 (W04.P11.S35);
+            # 0596/0597 retención credits fold from M111/M123;
             # supply their values via the bound source, not raw casilla inputs.
             "renta-2025-modelo-111-retenciones-periodicas": Decimal("4.00"),
             "renta-2025-modelo-123-retenciones-periodicas": Decimal("5.00"),
@@ -497,7 +497,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "0592": Decimal("10.00"),
             "0593": Decimal("20.00"),
             "0594": Decimal("30.00"),
-            # 0596/0597 are bound casillas since W04.P11.S35 (M111/M123 folds);
+            # 0596/0597 are bound casillas (M111/M123 folds);
             # supplied via the binding channel below, not as raw casilla inputs.
             "0153": Decimal("60.00"),
             "0599": Decimal("70.00"),
@@ -533,7 +533,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
             "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
-            # 0596/0597 retención credits fold from M111/M123 (W04.P11.S35).
+            # 0596/0597 retención credits fold from M111/M123.
             "renta-2025-modelo-111-retenciones-periodicas": Decimal("40.00"),
             "renta-2025-modelo-123-retenciones-periodicas": Decimal("50.00"),
         },
