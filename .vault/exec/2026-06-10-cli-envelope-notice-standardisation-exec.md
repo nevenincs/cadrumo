@@ -87,3 +87,34 @@ change is a single cohesive landing verified by one shared gate.
 - **Breaking JSON contract.** `schema_version` bumped `"1"` -> `"2"`; the
   free-form `warnings` list is removed in favour of typed `notices`. Acceptable
   under the project's zero-legacy / pre-beta posture.
+
+## Honesty review
+
+A fresh-context honesty pass against this landing surfaced three items, each
+checked:
+
+- **Combined heterogeneous CLI test runs leak global state.** Running
+  `test_json_schema_conformance`, `test_cold_start_no_profile`, and
+  `test_registry_enforcement` together produced 9 failures
+  (`test_every_cli_leaf_has_a_registered_schema`, cold-start guidance,
+  registry-enforcement); every one of them PASSES in isolation (conformance 1,
+  cold-start 10, registry-enforcement 4). This is the SCHEMA_REGISTRY /
+  lazy-subcommand-tree cross-module state leak the local-execution rule warns
+  about (re-run sequentially before triaging), not a regression from this
+  change.
+- **Calculate-advisory integration verification is peer-WIP-blocked.** The
+  `source_advisories` / `authorization_advisory` -> notices projection is proven
+  structurally (gate confirms the fields are gone, `ty`/`ruff` clean, the
+  projection logic is straight-line) and the notices CHANNEL is proven
+  end-to-end by the config-create and overview integration tests; the
+  calculate-specific integration test is blocked by the peer negative-amount
+  `RawTransaction` refactor and must be re-run once that settles.
+- **Error-document `command` is intentionally null.** The CLI error boundary
+  terminates before the dotted command path is resolvable, so the spine's
+  `command` is present-but-null on error documents. Threading the real path is a
+  clean future improvement; the spine uniformity holds today.
+
+Result: standardisation is complete and gate-enforced for the success and error
+paths. The one open plan Step (S17 full-suite-green) is deferred to a
+post-peer-WIP rerun; it is not satisfiable while a concurrent peer transaction
+refactor holds a large swath of unrelated integration tests red.
