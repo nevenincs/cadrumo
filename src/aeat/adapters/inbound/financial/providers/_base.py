@@ -590,7 +590,7 @@ class ParsedLedgerRow(BaseModel):
 
 
 def direction_from_signed_amount(signed_amount: Decimal) -> TransactionDirection:
-    """Map a source-signed amount to the authoritative flow direction.
+    """Map a source-signed amount to the authoritative :class:`TransactionDirection`.
 
     A negative source amount is an OUTGOING flow (money out); a positive
     source amount is INCOMING (money in). The sign is consumed exactly once
