@@ -103,8 +103,7 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
 
 def test_secure_object_registry_names_live_justificante_capture_namespace() -> None:
     """The live justificante-capture verb persists the pulled receipt
-    through this bucket-scoped FINANCIAL namespace. Authority:
-    2026-06-10-live-justificante-reconcile-adr.
+    through this bucket-scoped FINANCIAL namespace (live-justificante-reconcile decision).
     """
     capture = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_justificante_capture_snapshot")
 
