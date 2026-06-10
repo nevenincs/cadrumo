@@ -749,6 +749,7 @@ application:
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
       work_unit_revision_divergence: 'A(z) %{work_unit_id} munkaegyseg a(z) %{work_unit_revision} nyilvantartasi revizioval jott letre, de a(z) %{modelo} %{filing_year} %{period} modellhez torveny altal meghatarozott revizio most %{law_revision}. Hozza letre ujra a munkaegyseget.'
+      novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds} a(z) %{revision_id} revízióban: a regiszter olyan kötési forrást deklarál, amelyet egyetlen számítási feloldó sem kezel. Regisztráljon egy feloldót, vagy jelölje halasztottként a számítás előtt.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
