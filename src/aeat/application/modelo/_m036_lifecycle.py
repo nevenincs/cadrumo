@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -34,6 +35,9 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.calculations.registry import CensoModeloEventKind
+
+if TYPE_CHECKING:
+    from ..live import SecureSnapshotRepository
 
 
 def derive_m036_declaration_id(
@@ -151,7 +155,7 @@ def _m036_declaration_ambiguous_prefix(declaration_id: str, full_ids: tuple[str,
     return KeyError(f"M036 declaration prefix {declaration_id!r} is ambiguous; matches {list(full_ids)!r}")
 
 
-def _m036_declaration_repository(bucket_id: BucketId):
+def _m036_declaration_repository(bucket_id: BucketId) -> SecureSnapshotRepository[M036DeclarationResult]:
     """Build the single secure-object repository the write and read paths share.
 
     Both :func:`record_m036_declaration` (write) and the read-back surface
