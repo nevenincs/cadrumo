@@ -12,7 +12,11 @@ depending on broad exception swallowing.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 import pytest
+from pydantic import BaseModel
 
 from ...core.errors import (
     ERROR_REGISTRY,
@@ -56,11 +60,11 @@ def test_profile_registration_error_raised_on_double_register() -> None:
 
     original = list(_PROJECT_ANSWERS_SLOT)
 
-    def _dummy_fn_a(answers: object) -> object:  # pragma: no cover
-        return {}
+    def _dummy_fn_a(flow: Any, values: Mapping[str, str]) -> BaseModel:  # pragma: no cover
+        return BaseModel()
 
-    def _dummy_fn_b(answers: object) -> object:  # pragma: no cover
-        return {}
+    def _dummy_fn_b(flow: Any, values: Mapping[str, str]) -> BaseModel:  # pragma: no cover
+        return BaseModel()
 
     try:
         _PROJECT_ANSWERS_SLOT.clear()
@@ -184,7 +188,7 @@ def test_source_mesh_error_raised_on_blank_owned_source() -> None:
     from ..aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
-        CalculationSourceResolution(owned_sources=("  ",))
+        CalculationSourceResolution(resolver_id="ledger", owned_sources=("  ",))
 
 
 def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
@@ -193,7 +197,7 @@ def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
     from ..aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
-        CalculationSourceResolution(owned_sources=("bank", "bank"))
+        CalculationSourceResolution(resolver_id="ledger", owned_sources=("bank", "bank"))
 
 
 # ---------------------------------------------------------------------------
