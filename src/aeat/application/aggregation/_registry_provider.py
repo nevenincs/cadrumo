@@ -108,7 +108,7 @@ def resolve_per_modelo_registry_binding_values(
             provider=result.provider,
             source_observation_count=0,
         )
-    if result.provider is not PerModeloAggregationProvider.COUNTERPART or result.modelo != Modelo.M349.value:
+    if result.provider is not PerModeloAggregationProvider.COUNTERPART or result.modelo != Modelo.M349:
         raise AggregationUnsupportedModeloError(
             t("aggregation.per_modelo.registry.errors.unsupported_provider"),
             context={"modelo": result.modelo, "provider": result.provider.value},
