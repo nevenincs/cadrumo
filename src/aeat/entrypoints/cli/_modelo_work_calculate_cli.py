@@ -222,6 +222,9 @@ _AutoconsumoPromotorOpt = Annotated[
 ]
 
 
+# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_work_unit_for_cli and
+# calculate_input_bundle_from_cli are injected resolver callables whose concrete
+# return type varies by call site; Callable[..., Any] is the DI composition seam.
 def register_work_calculate_commands(
     work_app: typer.Typer,
     *,
