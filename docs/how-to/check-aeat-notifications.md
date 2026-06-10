@@ -31,7 +31,7 @@ View a specific saved download by its reference number:
 aeat app live notifications view <snapshot-id>
 ```
 
-Show the most recent snapshot in the active bucket:
+Show the most recent snapshot in the active profile:
 ```bash
 aeat app live notifications latest
 ```

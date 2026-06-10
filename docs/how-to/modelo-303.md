@@ -17,7 +17,7 @@ be calculated:
 - [Set up your taxpayer profile](profile-setup.md) and check the active
   profile. Modelo 303 depends on IVA facts such as `--iva-regime`,
   `--iva-sii-enrolled`, `--iva-redeme-enrolled`, ROI/OSS enrollment, activity
-  and residence facts, and the active profile bucket.
+  and residence facts, and the active profile.
 - If you use AEAT census data, [link Modelo 036 census information](censo-update.md)
   before calculating. Censo facts can affect profile readiness and local
   classifications.
@@ -128,7 +128,7 @@ aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
 ```
 
 Calculation resolves the registry revision for that work unit, reads the active
-profile's bucket-local ledger for the target period, resolves profile and
+profile's ledger for the target period, resolves profile and
 prior-filing bindings, runs the registry formulas, and saves a draft calculation
 revision. At this point the ledger slice is not frozen. The draft stores the
 calculated casilla values, typed observations/provenance, binding and input
@@ -230,7 +230,7 @@ non-exempt profiles are quarterly, while SII-enrolled profiles are monthly.
 
 The source-backed behavior is:
 
-- A visible target is always profile bucket + modelo + year + period, with the
+- A visible target is always profile + modelo + year + period, with the
   registry revision resolved from that target unless you pass an exact revision.
 - Ledger aggregation is bounded by the work unit period, not by a rolling
   automatic slice.
