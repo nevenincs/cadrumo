@@ -1063,6 +1063,19 @@ class VerificationPredicateDefinition(RegistryModel):
 
 
 class ModeloRevision(RegistryModel):
+    """A single versioned form layout and calculation ruleset for one modelo.
+
+    The ``orden_aplicabilidad`` field names the legal-catalogue
+    :class:`LegalReference` id(s) of the ordenes ministeriales that approve or
+    amend this revision's form for its declared applicability window
+    (e.g. ``["orden-hac-277-2026:art-3"]`` for M100 ejercicio 2025).
+
+    The field is **optional-but-monotonic** (ratchet gate): new revisions
+    SHOULD declare it; existing unstamped revisions are accepted but flagged
+    by :func:`validate_orden_aplicabilidad` so the backfill corpus shrinks
+    monotonically.  See the ``period-revision-resolution`` ADR, Ruling 4 / D3.
+    """
+
     id: RevisionId
     label: str | None = None
     valid_from: date
@@ -1070,6 +1083,10 @@ class ModeloRevision(RegistryModel):
     period_selector: PeriodSelector
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    # Optional-but-monotonic: declare for new revisions; existing unstamped
+    # revisions are accepted under the ratchet but surface a validation advisory
+    # (see validate_orden_aplicabilidad in _validate_revision_rules.py).
+    orden_aplicabilidad: tuple[LegalRefId, ...] = ()
     parameters: tuple[ParameterDefinition, ...] = ()
     casillas: tuple[CasillaDefinition, ...] = ()
     formulas: tuple[FormulaDefinition, ...] = ()

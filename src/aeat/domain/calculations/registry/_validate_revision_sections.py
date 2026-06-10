@@ -45,6 +45,7 @@ from ._validate_revision_identity import (
 )
 from ._validate_revision_rules import (
     validate_bracket_table_temporal_coverage,
+    validate_orden_aplicabilidad,
     validate_reconciliation_total_closure,
 )
 from ._validate_surfaces import (
@@ -241,6 +242,17 @@ def _validate_revision_closure_sections(
     failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo_id))
     failures.extend(validate_reconciliation_total_closure(prefix, revision))
     failures.extend(validate_bracket_table_temporal_coverage(prefix, revision))
+    # D3 / S05: orden_aplicabilidad ratchet gate.
+    # Hard failures (new unstamped revisions, dangling/corpus-less entries,
+    # entries absent from legal_refs) block registry load.
+    # Follow-up items (pre-ratchet unstamped existing revisions) do NOT block
+    # load — they are intentionally discarded here so the corpus continues to
+    # load while the backfill burns down monotonically.  The test suite asserts
+    # the split via validate_orden_aplicabilidad() directly.
+    orden_hard, _orden_follow_up = validate_orden_aplicabilidad(
+        prefix, modelo_id, revision, legal_refs
+    )
+    failures.extend(orden_hard)
     failures.extend(
         validate_construct_closure(
             prefix,

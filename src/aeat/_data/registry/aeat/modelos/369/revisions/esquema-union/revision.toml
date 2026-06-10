@@ -2,6 +2,7 @@
 label = "Modelo 369 - Esquema Union - regimen especial ventas intracomunitarias a distancia, interfaces electronicas y servicios establecidos en la Comunidad (LIVA art 163 unvicies a quatervicies). Trimestral por HAC/610/2021 art 2(b)."
 valid_from = 2021-07-01
 period_selector = { year_from = 2021, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-hac-610-2021:art-1"]
 legal_refs = [
     "orden-hac-610-2021:art-1",
     "orden-hac-610-2021:art-2",
