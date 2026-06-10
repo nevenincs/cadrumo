@@ -32,6 +32,7 @@ You MUST respect these rules at all times:
 @.codex/rules/ledger-iva-advisory-only-on-cuota-bearing-categories.md
 @.codex/rules/local-filed-observations-are-non-official-evidence.md
 @.codex/rules/modelo-export-mirrors-official-structure.md
+@.codex/rules/modelo-identifiers-use-core-enum.md
 @.codex/rules/no-legacy-compatibility.md
 @.codex/rules/no-silent-under-declaration.md
 @.codex/rules/no-tautological-calculation-tests.md
