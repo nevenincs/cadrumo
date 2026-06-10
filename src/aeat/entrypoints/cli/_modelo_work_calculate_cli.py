@@ -1,4 +1,8 @@
-"""Typer registration for modelo work calculation commands."""
+"""Typer registration for modelo work calculation commands.
+
+Renders the operator-facing confirmation for a persisted
+:class:`CalculationRevision` once a work unit's calculation is saved.
+"""
 
 from __future__ import annotations
 

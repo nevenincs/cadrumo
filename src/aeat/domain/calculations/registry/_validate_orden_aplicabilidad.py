@@ -162,6 +162,8 @@ def orden_aplicabilidad_hard_failures(
     (pre-ratchet unstamped existing revisions) are intentionally not blocking so
     the corpus keeps loading while the backfill burns down monotonically.  The
     test suite asserts the full split via :func:`validate_orden_aplicabilidad`.
+    The ``revision`` is the :class:`ModeloRevision` whose ``orden_aplicabilidad``
+    entries are checked for load-blocking grounding failures.
     """
     hard, _follow_up = validate_orden_aplicabilidad(scope, modelo_id, revision, legal_catalogue)
     return hard
