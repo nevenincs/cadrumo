@@ -122,8 +122,9 @@ def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: P
     """Fresh SQL bootstrap creates nullable lineage and integrity columns.
 
     The check goes through SQLite's real table metadata after
-    ``Base.metadata.create_all``. Nullability matters for this step
-    because existing rows are backfilled by the later migration slice.
+    ``Base.metadata.create_all``. Nullable is the canonical CREATE shape for
+    these columns: a record without a prior revision legitimately carries no
+    ``previous_*`` lineage, so the schema admits NULL by design.
     """
 
     db_path = tmp_path / "revision-schema.db"
@@ -146,7 +147,7 @@ def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: P
             "conflict_policy",
         ):
             assert column_name in columns
-            assert int(columns[column_name][3]) == 0, f"{column_name} must remain nullable until row backfill"
+            assert int(columns[column_name][3]) == 0, f"{column_name} must be nullable (canonical CREATE shape)"
     finally:
         engine.dispose()
 
