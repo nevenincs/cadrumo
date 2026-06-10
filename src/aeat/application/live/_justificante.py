@@ -13,7 +13,8 @@ Modelo 100 borrador service: it keys supersession on the
 ``(modelo, filing_year, period)`` axis so a re-filed period's fresh
 capture supersedes the prior ACTIVE one, and it persists each snapshot
 through a :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
-at FINANCIAL sensitivity under the justificante-capture namespace.
+at FINANCIAL sensitivity under the justificante-capture namespace, and records
+each capture as a lifecycle event via :class:`BucketEventHistoryRepository`.
 
 The captured PDF bytes ride inside the encrypted snapshot :class:`Envelope`
 as a base64 ``str`` (binary cannot survive the JSON envelope verbatim); the
