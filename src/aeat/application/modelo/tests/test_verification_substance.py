@@ -905,3 +905,110 @@ def test_missing_casilla_finding_legal_refs_empty_when_casilla_def_absent() -> N
     finding = _missing_required_casilla_finding("99", "wu-test-id", casilla_def=None)
     assert finding.legal_refs == (), "finding with no casilla_def must carry empty legal_refs"
     assert finding.source_refs == (), "finding with no casilla_def must carry empty source_refs"
+
+
+# ---------------------------------------------------------------------------
+# M131 no-silent-under-declaration advisory (RD 439/2007 art. 110.1.b)
+#
+# C01 ("Suma de rendimientos netos" — manual módulos sum) and C02 ("Pago
+# fraccionado del trimestre por datos-base" — manual) are operator inputs
+# because the módulos rendimiento is determined externally (the annual Orden
+# de módulos, not modelled in the registry). The official M131 instructions
+# and art. 110.1.b establish C02 = C01 × a per-actividad percentage whose
+# estimación-objetiva floor is 2 por 100 ("no se permiten porcentajes
+# inferiores"), so a strictly positive C01 ALWAYS yields a strictly positive
+# C02. A positive C01 with C02 = 0 is a silent under-declaration: the
+# datos-base section contributes nothing to C07 = C02 + C04 + C06 and the
+# resultado collapses to zero on positive módulos activity.
+#
+# These tests load the REAL shipped predicate from the registry authority
+# (not a hand-built one) so they assert the declaration actually rides in
+# every M131 revision, and exercise the real _evaluate_verification_predicates
+# path. Non-tautological: the expected firing/non-firing is derived from the
+# art. 110.1.b minimum-rate rule, not from re-running the (unmodelled) módulos
+# formula.
+# ---------------------------------------------------------------------------
+
+_M131_ADVISORY_PREDICATE_IDS = {
+    "2019-2023": "modelo-131-2019-2023-pago-fraccionado-determinado-cuando-rendimientos-positivos",
+    "2024": "modelo-131-2024-pago-fraccionado-determinado-cuando-rendimientos-positivos",
+    "2025": "modelo-131-2025-pago-fraccionado-determinado-cuando-rendimientos-positivos",
+    "2026": "modelo-131-2026-pago-fraccionado-determinado-cuando-rendimientos-positivos",
+}
+
+
+def _m131_advisory_predicate(revision_id: str) -> VerificationPredicateDefinition:
+    """Load the shipped M131 silent-under-declaration advisory from the authority."""
+    revision = resources().modelos.authority.validate_modelo("131").revisions[revision_id]
+    predicate_id = _M131_ADVISORY_PREDICATE_IDS[revision_id]
+    predicate = next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
+    assert predicate.finding_kind == "ADVISORY"
+    assert predicate.expression == 'implies_nonzero(["01", "02"])'
+    return predicate
+
+
+@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
+def test_m131_advisory_ships_in_every_revision(revision_id: str) -> None:
+    """Every M131 revision carries the C01→C02 silent-under-declaration advisory.
+
+    The advisory is grounded in RD 439/2007 art. 110 (the binding provision that
+    sets the objective-estimation pago-fraccionado percentage), which is present
+    in the legal catalogue with a corpus_ref to the real BOE text.
+    """
+    predicate = _m131_advisory_predicate(revision_id)
+    assert "rd-439-2007:art-110" in tuple(str(r) for r in predicate.legal_refs)
+
+
+@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
+def test_m131_advisory_fires_when_rendimientos_positive_but_pago_zero(revision_id: str) -> None:
+    """Positive C01 (rendimientos netos) but C02 (pago fraccionado) = 0 surfaces a WARNING advisory.
+
+    The silent under-declaration: módulos activity declares €18.000 rendimientos
+    netos but the operator leaves the datos-base pago fraccionado at zero. Because
+    the floor rate is 2 por 100 (> 0), this is never a legitimate zero; the gate
+    must alert. Non-blocking so a filer with genuinely no datos-base activity
+    (C01 = 0) is never flagged.
+    """
+    from ....domain.modelos._verification_report import ModeloVerificationFindingSeverity
+
+    predicate = _m131_advisory_predicate(revision_id)
+    casilla_values: dict[str, Decimal] = {"01": Decimal("18000.00"), "02": Decimal("0")}
+
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
+    assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
+    assert "rd-439-2007:art-110" in findings[0].legal_refs
+
+
+@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
+def test_m131_advisory_silent_when_pago_fraccionado_present(revision_id: str) -> None:
+    """Positive C01 AND positive C02 satisfies the implication; no advisory.
+
+    The expected happy path: €18.000 rendimientos with the 2 por 100 pago
+    fraccionado (€360) entered. A determined pago fraccionado clears the advisory.
+    """
+    predicate = _m131_advisory_predicate(revision_id)
+    casilla_values: dict[str, Decimal] = {"01": Decimal("18000.00"), "02": Decimal("360.00")}
+
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    assert findings == []
+
+
+@pytest.mark.parametrize("revision_id", sorted(_M131_ADVISORY_PREDICATE_IDS))
+def test_m131_advisory_silent_when_no_datos_base_activity(revision_id: str) -> None:
+    """No datos-base rendimientos (C01 = 0 or absent) holds trivially; no false positive.
+
+    A filer with only sin-datos-base or agrarian activity (the C03/C04 and
+    C05/C06 sections) legitimately leaves C01 = 0, so the C01→C02 implication
+    must NOT fire. Both the explicit-zero and absent-casilla cases are checked
+    (the evaluator reads an absent casilla as Decimal(0)).
+    """
+    predicate = _m131_advisory_predicate(revision_id)
+
+    explicit_zero: dict[str, Decimal] = {"01": Decimal("0"), "02": Decimal("0")}
+    absent: dict[str, Decimal] = {}
+
+    assert _evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == []
+    assert _evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == []

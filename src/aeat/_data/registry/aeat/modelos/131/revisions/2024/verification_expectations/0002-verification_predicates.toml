@@ -9,3 +9,28 @@ predicate_id = "modelo-131-2024-c11-cap-by-c10"
 expression = 'cap_le_when_positive(["11", "10"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["rd-439-2007:art-110"]
+
+# No-silent-under-declaration advisory (RD 439/2007 art. 110.1.b). C01 ("Suma
+# de rendimientos netos" — manual módulos sum for the datos-base activities) and
+# C02 ("Pago fraccionado del trimestre por datos-base" — manual) are both
+# operator inputs because the módulos rendimiento is determined externally (the
+# annual Orden de módulos tables, not modelled in the registry). The official
+# M131 instructions and art. 110.1.b establish C02 = C01 × a per-actividad
+# percentage that is, for estimación objetiva, the 4 / 3 / 2 por 100 scale keyed
+# on personal asalariado — the minimum is 2 por 100 and "no se permiten
+# porcentajes inferiores". A strictly positive C01 therefore ALWAYS yields a
+# strictly positive C02; C02 = 0 on a positive C01 is a silent under-declaration
+# (the datos-base section contributes nothing to C07 = C02 + C04 + C06, so the
+# resultado collapses to zero on positive módulos activity). ADVISORY
+# (non-blocking): the implication holds trivially when C01 is absent or zero, so
+# a filer with no datos-base activity raises nothing. There is no legitimate
+# positive-C01/zero-C02 case (the floor rate is 2 por 100), so the advisory is
+# false-positive-free. The durable fix is modelling the módulos determination
+# itself (Orden de módulos signos × índices correctores) so C01 and C02 become
+# computed — a campaign-sized follow-up; until it lands this advisory makes the
+# under-declaration non-silent, mirroring the M200 base-imponible advisory.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-131-2024-pago-fraccionado-determinado-cuando-rendimientos-positivos"
+expression = 'implies_nonzero(["01", "02"])'
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-110"]
