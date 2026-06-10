@@ -27,6 +27,7 @@ from ...application.review import FilterParseError
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...domain.buckets import (
+    BucketEvent,
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
@@ -627,10 +628,10 @@ def _history_object_ids(
     return object_ids
 
 
-def _collect_ledger_history_events(object_ids: list[str]) -> list:
+def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
     """Return the chronological union of LEDGER-history events across ``object_ids``."""
     event_catalogue = BucketEventHistoryRepository().load()
-    matches: list = []
+    matches: list[BucketEvent] = []
     for object_id in object_ids:
         matches.extend(
             event

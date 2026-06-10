@@ -269,7 +269,7 @@ _EXPECTED_CUOTA_ESTATAL_2DESCENDANTS_1UNDER3 = Decimal("3073.00")
 _EXPECTED_CUOTA_ESTATAL_ASCENDANT_OVER75 = Decimal("3630.25")
 
 
-def _base_binding_values() -> dict:
+def _base_binding_values() -> dict[str, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
