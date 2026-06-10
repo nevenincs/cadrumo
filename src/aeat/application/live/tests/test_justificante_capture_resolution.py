@@ -17,8 +17,10 @@ import asyncio
 import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
 import pytest
+from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede import (
     Declaracion,
@@ -30,6 +32,10 @@ from ....core import Modelo
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import LiveApplicationInputError
 from .._justificante import resolve_period_expediente
+
+if TYPE_CHECKING:
+    from ....adapters.outbound.aeat.auth import AeatSession
+    from ....core.config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,7 +62,7 @@ def _expediente(*, expediente_id: str) -> Expediente:
         modelo=_MODELO,
         ejercicio=_YEAR,
         category_path=("AEAT", "Modelo 130. IRPF. Pago fraccionado."),
-        detail_url=f"https://sede.agenciatributaria.gob.es/wlpl/DASR-CORE/Acceso?exp={expediente_id}",
+        detail_url=AnyHttpUrl(f"https://sede.agenciatributaria.gob.es/wlpl/DASR-CORE/Acceso?exp={expediente_id}"),
     )
 
 
@@ -138,8 +144,8 @@ def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) ->
     pdf_bytes = b"%PDF-1.4\n2T justificante\n%%EOF\n"
     pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
 
-    async def _session():
-        return object(), object()
+    async def _session() -> tuple[AeatSession, Settings]:
+        return cast("tuple[AeatSession, Settings]", (object(), object()))
 
     async def _declarations(session: object, settings: object, *, modelo: str, year: int):
         return _DECLARATIONS
@@ -151,8 +157,8 @@ def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) ->
         ref = JustificanteRef(
             csv="CSV2T0001ABCD2345",
             expediente_id=expediente.expediente_id,
-            cotejo_url="https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=CSV2T0001ABCD2345",
-            pdf_url="https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=CSV2T0001ABCD2345",
+            cotejo_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=CSV2T0001ABCD2345"),
+            pdf_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=CSV2T0001ABCD2345"),
         )
         return SedeCapture(
             expediente=expediente,
