@@ -117,7 +117,7 @@ Migrate the M390 to-M303 cross-modelo previous_filing fold-in bindings to relati
 Drive every renta cross-modelo fold-in live on the operator calculate path: the M100 pagos-fraccionados fold-in (M100 0604 <- sum M130 casilla 19), M184/M111/M115/M123 credits, and the M180<-M115 / M190<-M111 / M193<-M123 reconciliations; E2E autonoma proof, real adapters, anti-tautology.
 
 - [x] `W04.P11.S17` - Drive the M100 pagos-fraccionados fold-in live (0604 sum of M130 casilla 19 over 1T-4T) with an E2E autonoma proof on the operator calculate path; `registry modelos/100; application/modelo + entrypoints/cli tests`.
-- [ ] `W04.P11.S18` - Drive the M180-from-M115, M190-from-M111, M193-from-M123 reconciliations and the M184/M111/M115/M123 renta credits live + E2E; `registry renta modelos; application/calculations/tests`.
+- [x] `W04.P11.S18` - Drive the M180-from-M115, M190-from-M111, M193-from-M123 reconciliations and the M184/M111/M115/M123 renta credits live + E2E; `registry renta modelos; application/calculations/tests`.
 
 ### Phase `W04.P12` - Iva/sociedades/other fold-ins live + E2E
 
