@@ -38,6 +38,13 @@ _DOCS_CLI_DIR = Path(__file__).parent.parent.parent.parent.parent / "docs" / "cl
 #: commands — they appear as group callbacks, not reachable leaves.
 _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app"})
 
+#: Generated pages that carry navigation or root-level behaviour rather than
+#: per-command sections.  Only the family pages emit ``**Registry key:**``
+#: lines, so these are excluded from the per-command parsing helpers.
+_NON_FAMILY_PAGES: frozenset[str] = frozenset(
+    {"cli/index.rst", "cli/automation.rst", "cli/schemas.rst", "cli/retired.rst"}
+)
+
 
 def _project_root() -> Path:
     """Return the project root, inferred from the location of this test file."""
@@ -72,7 +79,7 @@ def _rendered_doc_registry_keys() -> set[str]:
     """
     keys: set[str] = set()
     for rel_path, content in _rendered_reference().items():
-        if rel_path.endswith("index.rst"):
+        if rel_path in _NON_FAMILY_PAGES:
             continue
         for line in content.splitlines():
             stripped = line.strip()
@@ -246,7 +253,7 @@ def test_documented_schema_classes_match_registry() -> None:
     # Parse the freshly-rendered pages for (registry_key -> documented_class_name) pairs.
     documented: dict[str, str] = {}
     for rel_path, content in sorted(_rendered_reference().items()):
-        if rel_path.endswith("index.rst"):
+        if rel_path in _NON_FAMILY_PAGES:
             continue
         current_key: str | None = None
         for line in content.splitlines():
@@ -318,8 +325,8 @@ def test_retired_surfaces_are_not_live_commands() -> None:
     )
 
 
-def test_retired_surfaces_appear_in_index_as_redirect_notes() -> None:
-    """Every retired surface must be mentioned in the rendered ``cli/index`` page.
+def test_retired_surfaces_appear_in_retired_page_as_redirect_notes() -> None:
+    """Every retired surface must be mentioned in the rendered ``cli/retired`` page.
 
     The reference must not silently omit retired surfaces — operators using an
     older ``aeat`` version need redirect guidance even when those roots no
@@ -327,14 +334,14 @@ def test_retired_surfaces_appear_in_index_as_redirect_notes() -> None:
     """
     from aeat.application.operator_surface import RETIRED_OPERATOR_SURFACES
 
-    index_text = _rendered_reference()["cli/index.rst"]
+    retired_text = _rendered_reference()["cli/retired.rst"]
     missing: list[str] = []
     for surface in RETIRED_OPERATOR_SURFACES:
-        if surface.name not in index_text:
+        if surface.name not in retired_text:
             missing.append(surface.name)
 
     assert not missing, (
-        f"Retired surfaces missing from docs/cli/index.rst ({len(missing)}):\n"
+        f"Retired surfaces missing from docs/cli/retired.rst ({len(missing)}):\n"
         + "\n".join(f"  - {name}" for name in missing)
         + "\nThe reference is generated at build time from the live command tree."
     )
