@@ -183,6 +183,9 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
                 docs_root / "cli" / "index.rst",
                 docs_root / "cli" / "app.rst",
                 docs_root / "cli" / "config.rst",
+                docs_root / "cli" / "automation.rst",
+                docs_root / "cli" / "schemas.rst",
+                docs_root / "cli" / "retired.rst",
             )
             if target.is_file()
         )

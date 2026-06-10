@@ -2,8 +2,11 @@
 
 Materialises the full Click command tree from ``typer.main.get_command(app)``,
 walks every group and leaf command (forcing lazy-module imports), and renders
-per-family RST pages under ``docs/cli/``.  An ``index.rst`` page links the
-family pages and includes the retired-surface redirect table.
+per-family RST pages under ``docs/cli/``.  An ``index.rst`` page carries
+navigation (the family grid, a where-to-go-next block) plus root-level
+behaviour (global flags); companion pages carry the automation contract
+(``automation.rst``: exit codes, TTY/JSON output), the output-schema registry
+(``schemas.rst``), and the retired-surface redirect table (``retired.rst``).
 
 The generator is documentation tooling.  It lives under ``dev/docs`` and
 introspects the production package from outside rather than being part of the
@@ -33,8 +36,8 @@ Only surfaces declared in
 :data:`~aeat.application.operator_surface.ACCEPTED_ROOTS` are documented as
 live commands.  Surfaces declared in
 :data:`~aeat.application.operator_surface.RETIRED_OPERATOR_SURFACES` appear on
-the index page as redirect notes — with their replacement suggestion where one
-exists, or as permanently removed where none exists.
+the ``retired.rst`` page as redirect notes — with their replacement suggestion
+where one exists, or as permanently removed where none exists.
 """
 
 from __future__ import annotations
@@ -43,6 +46,7 @@ import os
 import subprocess
 import sys
 import textwrap
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -60,7 +64,7 @@ _FALLBACK_MARKER: str = "unavailable"
 #: Group-callback emit sites — keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
 #: pages (they are group landing surfaces, not operator-invokable leaves) but
-#: are listed in the schema-registry section of the index.
+#: are listed on the output-schema registry page (``schemas.rst``).
 _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app"})
 
 #: Command-path normalisation rules that mirror the conformance-test normaliser
@@ -427,16 +431,17 @@ def _render_retired_table(retired_surfaces: list[object]) -> str:
 
 def _render_index_page(
     family_names: list[str],
-    schema_registry: dict[str, object],
-    retired_surfaces: list[object],
     total_leaf_count: int,
 ) -> str:
     """Render the ``docs/cli/index.rst`` page.
 
+    The index carries navigation (the family grid, a where-to-go-next block)
+    and root-level behaviour (global flags).  Exit codes, the TTY/JSON output
+    contract, the output-schema registry, and the retired-surface catalogue
+    live on the companion ``automation``, ``schemas``, and ``retired`` pages.
+
     Args:
         family_names: Ordered list of top-level family names (e.g. ``["config", "app"]``).
-        schema_registry: The process-global schema registry.
-        retired_surfaces: The retired-surface sequence.
         total_leaf_count: The total number of documented leaf commands.
 
     Returns:
@@ -485,31 +490,6 @@ def _render_index_page(
         parts.append("      +++\n")
         parts.append("      Open ``aeat config`` reference\n\n")
 
-    parts.append(_rst_heading("Use this page when you need", "-"))
-    parts.append("\n")
-    parts.append("* :ref:`Global flags <cli-reference-global-flags>` accepted by every ``aeat`` invocation.\n")
-    parts.append("* :ref:`Exit codes <cli-reference-exit-codes>` for automation and shell scripts.\n")
-    parts.append(
-        "* :ref:`TTY and JSON behavior <cli-reference-output-contract>` when switching"
-        " between human-readable output and ``--format json``.\n"
-    )
-    parts.append(
-        "* :ref:`Output schema registry <cli-reference-output-schemas>` for"
-        " integration code that consumes JSON payloads.\n"
-    )
-    parts.append(
-        "* :ref:`Retired command redirects <cli-reference-retired-surfaces>` when an"
-        " older command name no longer exists.\n\n"
-    )
-
-    # toctree
-    parts.append(".. toctree::\n")
-    parts.append("   :maxdepth: 1\n")
-    parts.append("   :hidden:\n\n")
-    for name in family_names:
-        parts.append(f"   {name}\n")
-    parts.append("\n")
-
     # Global flags
     parts.append(".. _cli-reference-global-flags:\n\n")
     parts.append(_rst_heading("Global flags", "-"))
@@ -528,6 +508,50 @@ def _render_index_page(
     ]
     for flag, desc in global_flags:
         parts.append(f"{flag}\n   {desc}\n\n")
+
+    # Where to go next
+    parts.append(_rst_heading("Where to go next", "-"))
+    parts.append("\n")
+    parts.append("* Open :doc:`app` for the operational workflow commands.\n")
+    parts.append("* Open :doc:`config` for the local setup and maintenance commands.\n")
+    parts.append("* Open :doc:`automation` for exit codes and the TTY/JSON output contract.\n")
+    parts.append("* Open :doc:`schemas` for the JSON output-schema registry.\n")
+    parts.append("* Open :doc:`retired` for redirect guidance on retired command names.\n")
+    parts.append("* Open :doc:`/how-to/index` for task-focused guides.\n")
+    parts.append("* Open :doc:`/tutorials/index` for step-by-step walkthroughs.\n\n")
+
+    # toctree
+    parts.append(".. toctree::\n")
+    parts.append("   :maxdepth: 1\n")
+    parts.append("   :hidden:\n\n")
+    for name in family_names:
+        parts.append(f"   {name}\n")
+    parts.append("   automation\n")
+    parts.append("   schemas\n")
+    parts.append("   retired\n")
+    parts.append("\n")
+
+    return "".join(parts)
+
+
+def _render_automation_page() -> str:
+    """Render the ``docs/cli/automation.rst`` page.
+
+    Carries the exit-code table and the TTY/JSON output contract under the
+    ``cli-reference-exit-codes`` and ``cli-reference-output-contract``
+    anchors so existing cross-references keep resolving.
+
+    Returns:
+        The complete RST page content.
+    """
+    parts: list[str] = []
+    parts.append(_rst_heading("Exit codes and output contract", "="))
+    parts.append("\n")
+    parts.append(
+        "Use this page when scripting ``aeat`` invocations: it documents the"
+        " process exit codes and the TTY/JSON output behavior shared by every"
+        " command.\n\n"
+    )
 
     # Exit codes
     parts.append(".. _cli-reference-exit-codes:\n\n")
@@ -569,15 +593,32 @@ def _render_index_page(
         " Commands not yet migrated emit their payload directly.\n\n"
     )
 
-    # Schema registry summary
+    return "".join(parts)
+
+
+def _render_schemas_page(schema_registry: Mapping[str, object]) -> str:
+    """Render the ``docs/cli/schemas.rst`` page.
+
+    Carries the output-schema registry listing under the
+    ``cli-reference-output-schemas`` anchor so existing cross-references
+    keep resolving.
+
+    Args:
+        schema_registry: The process-global schema registry.
+
+    Returns:
+        The complete RST page content.
+    """
+    parts: list[str] = []
     parts.append(".. _cli-reference-output-schemas:\n\n")
-    parts.append(_rst_heading("Output schema registry", "-"))
+    parts.append(_rst_heading("Output schema registry", "="))
     parts.append("\n")
     envelope_keys = sorted(k for k in schema_registry if k not in _GROUP_CALLBACK_EMIT_KEYS)
     group_keys = sorted(_GROUP_CALLBACK_EMIT_KEYS & set(schema_registry))
     parts.append(
-        "This section is mainly for tooling authors. If you are running commands"
-        " manually, the family pages above are usually the better entry point.\n\n"
+        "This page is mainly for tooling authors. If you are running commands"
+        " manually, the :doc:`family pages <index>` are usually the better entry"
+        " point.\n\n"
     )
     parts.append(
         f"The following {len(envelope_keys)} command paths have a registered"
@@ -593,9 +634,25 @@ def _render_index_page(
         parts.append(f"* ``{key}`` → ``{schema_name}``\n")
     parts.append("\n")
 
-    # Retired surfaces
+    return "".join(parts)
+
+
+def _render_retired_page(retired_surfaces: list[object]) -> str:
+    """Render the ``docs/cli/retired.rst`` page.
+
+    Carries the retired-surface redirect subsections under the
+    ``cli-reference-retired-surfaces`` anchor so existing cross-references
+    keep resolving.
+
+    Args:
+        retired_surfaces: The retired-surface sequence.
+
+    Returns:
+        The complete RST page content.
+    """
+    parts: list[str] = []
     parts.append(".. _cli-reference-retired-surfaces:\n\n")
-    parts.append(_rst_heading("Retired surfaces", "-"))
+    parts.append(_rst_heading("Retired surfaces", "="))
     parts.append("\n")
     parts.append(
         "The following command roots or families have been retired. They are listed"
@@ -628,7 +685,8 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
 
     Imports :mod:`aeat.entrypoints.cli` in the calling process, forces every
     lazy subcommand to load, asserts no fallback surface is present, then
-    renders one RST page per top-level family plus an ``index.rst``.
+    renders one RST page per top-level family plus an ``index.rst`` and the
+    companion ``automation.rst``, ``schemas.rst``, and ``retired.rst`` pages.
 
     This function pins the output-language setting to English before importing the
     CLI tree so that ``tr()`` keys resolve to English strings for deterministic
@@ -749,12 +807,22 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
 
     index_content = _render_index_page(
         family_names=family_order,
-        schema_registry=SCHEMA_REGISTRY,
-        retired_surfaces=list(RETIRED_OPERATOR_SURFACES),
         total_leaf_count=total_leaves,
     )
     rendered["cli/index.rst"] = index_content
     _write_text_if_changed(output_dir / "index.rst", index_content)
+
+    automation_content = _render_automation_page()
+    rendered["cli/automation.rst"] = automation_content
+    _write_text_if_changed(output_dir / "automation.rst", automation_content)
+
+    schemas_content = _render_schemas_page(SCHEMA_REGISTRY)
+    rendered["cli/schemas.rst"] = schemas_content
+    _write_text_if_changed(output_dir / "schemas.rst", schemas_content)
+
+    retired_content = _render_retired_page(list(RETIRED_OPERATOR_SURFACES))
+    rendered["cli/retired.rst"] = retired_content
+    _write_text_if_changed(output_dir / "retired.rst", retired_content)
 
     return rendered
 
