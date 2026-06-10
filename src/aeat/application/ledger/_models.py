@@ -47,6 +47,27 @@ _TRANSFER_ALLOWED_STATES = frozenset(
 )
 
 
+def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
+    """Validate and normalise a ``source_jurisdiction`` field value.
+
+    Accepts ``None`` (no jurisdiction declared) or a two-letter
+    ISO 3166-1 alpha-2 uppercase country code such as ``"ES"`` or ``"DE"``.
+    Strips surrounding whitespace before the check; raises :class:`ValueError`
+    if the result is not exactly two ASCII alphabetic uppercase characters.
+
+    Used by :class:`ManualLedgerTransactionCommand`,
+    :class:`ManualLedgerTransactionPatch`, :class:`LedgerTransactionPayload`,
+    and :class:`LedgerTransactionReviewPayload` as a shared ``@field_validator``
+    body, replacing four identical inline copies.
+    """
+    if value is None:
+        return None
+    normalised = value.strip()
+    if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
+        raise ValueError("source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code")
+    return normalised
+
+
 class ManualLedgerTransactionCommand(BaseModel):
     """Backend command for creating or updating one manual ledger transaction."""
 
@@ -84,12 +105,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     @field_validator("source_jurisdiction")
     @classmethod
     def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        normalised = value.strip()
-        if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
-            raise ValueError("source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code")
-        return normalised
+        return _validate_iso_3166_jurisdiction(value)
 
     @field_validator(
         "bucket_id",
@@ -222,9 +238,7 @@ class ManualLedgerTransactionPatch(BaseModel):
     @field_validator("source_jurisdiction")
     @classmethod
     def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        return ManualLedgerTransactionCommand._validate_source_jurisdiction(value)
+        return _validate_iso_3166_jurisdiction(value)
 
     @field_validator(
         "counterparty",
@@ -313,12 +327,7 @@ class LedgerTransactionPayload(BaseModel):
     @field_validator("source_jurisdiction")
     @classmethod
     def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        normalised = value.strip()
-        if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
-            raise ValueError("source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code")
-        return normalised
+        return _validate_iso_3166_jurisdiction(value)
 
 
 class LedgerTransactionReviewPayload(BaseModel):
@@ -359,12 +368,7 @@ class LedgerTransactionReviewPayload(BaseModel):
     @field_validator("source_jurisdiction")
     @classmethod
     def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        normalised = value.strip()
-        if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
-            raise ValueError("source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code")
-        return normalised
+        return _validate_iso_3166_jurisdiction(value)
 
 
 class LedgerTransactionResultPayload(BaseModel):
