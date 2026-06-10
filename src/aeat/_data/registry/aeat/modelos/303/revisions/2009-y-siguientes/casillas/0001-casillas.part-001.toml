@@ -64,6 +64,32 @@ legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2009-y-siguientes.casillas]]
+id = "iva.autorepercutido.interior.devengado"
+number = "iva.autorepercutido.interior.devengado"
+label = "Cuota IVA autorepercutida en operaciones interiores con inversion del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_cuota_autorepercutida_interior_devengado"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-interior-devengado-cuota"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "iva.autorepercutido.interior.deducible"
+number = "iva.autorepercutido.interior.deducible"
+label = "Cuota IVA deducible autorepercutida en operaciones interiores con inversion del sujeto pasivo (LIVA art 84.Uno.2 + art 92; oficial casilla 37)"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_autorepercutida_interior_deducible"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.casillas]]
 id = "iva.cuota-devengada-total"
 number = "iva.cuota-devengada-total"
 label = "Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido en adquisiciones intracomunitarias)"

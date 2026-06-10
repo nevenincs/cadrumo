@@ -125,6 +125,10 @@ fact = "iva_amount_sum"
 [revisions.2023-y-siguientes.bindings.aggregation]
 op = "sum"
 
+# Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2)
+# bindings live in bindings/0001-reverse-charge.part-001.toml — the loader
+# merges revision bindings across fragments, keeping this file under the
+# reviewability cap. They book official boxes 13 (devengado) + 37 (deducible).
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-compensacion-pendiente-anteriores"
 source = "previous_filing"
@@ -202,6 +206,9 @@ casilla = "iva.repercutido.super-reducido"
 casilla = "iva.autorepercutido.intracomunitaria"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla = "iva.autoconsumo.promotor.cuota"
 
 [[revisions.2023-y-siguientes.formulas]]
@@ -243,6 +250,9 @@ casilla = "iva.soportado.interiores"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla = "iva.autorepercutido.interior.deducible"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-resultado-regimen-general"
@@ -901,6 +911,8 @@ casillas = [
     "iva.repercutido.super-reducido",
     "iva.soportado.interiores",
     "iva.autorepercutido.intracomunitaria",
+    "iva.autorepercutido.interior.devengado",
+    "iva.autorepercutido.interior.deducible",
     "iva.autoconsumo.promotor.base",
     "iva.autoconsumo.promotor.cuota",
     "iva.cuota-devengada-total",
@@ -944,7 +956,7 @@ formulas = [
     "modelo-303-compensacion-disponible-fin-periodo",
     "modelo-303-iva-prorrata-porcentaje",
 ]
-bindings = ["modelo-303-iva-repercutido-general-cuota", "modelo-303-iva-repercutido-reducido-cuota", "modelo-303-iva-repercutido-super-reducido-cuota", "modelo-303-iva-soportado-interiores-cuota", "modelo-303-iva-autorepercutido-intracomunitaria-cuota", "modelo-303-compensacion-pendiente-anteriores", "modelo-303-autoconsumo-promotor-base"]
+bindings = ["modelo-303-iva-repercutido-general-cuota", "modelo-303-iva-repercutido-reducido-cuota", "modelo-303-iva-repercutido-super-reducido-cuota", "modelo-303-iva-soportado-interiores-cuota", "modelo-303-iva-autorepercutido-intracomunitaria-cuota", "modelo-303-iva-autorepercutido-interior-devengado-cuota", "modelo-303-iva-autorepercutido-interior-deducible-cuota", "modelo-303-compensacion-pendiente-anteriores", "modelo-303-autoconsumo-promotor-base"]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
 workbook_parity_refs = ["modelo-303-dr-2025"]
@@ -1015,6 +1027,12 @@ number = "iva.autoconsumo.promotor.cuota"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.interior.deducible"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "iva.cuota-deducible-total"
