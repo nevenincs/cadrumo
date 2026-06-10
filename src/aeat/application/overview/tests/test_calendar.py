@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Literal
 
 import pytest
 from pydantic import AnyHttpUrl
@@ -24,6 +25,7 @@ from ....domain.deadlines import (
 from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
+    ModeloCode,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -77,7 +79,7 @@ def _modelo_record(
         work_unit_id=_WORK_UNIT_ID,
         calculation_revision_id=_CALCULATION_REVISION_ID,
         bucket_id=_BUCKET_ID,
-        modelo=modelo,
+        modelo=ModeloCode(modelo),
         filing_year=filing_year,
         period=period,
         filed_at=filed_at,
@@ -107,7 +109,7 @@ def _filed_declaration_observation(
 
 def _filed_declaration_artefact(
     *,
-    kind: str = "justificante_pdf",
+    kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"] = "justificante_pdf",
     storage_ref: str | None = "secure-object:financial:" + "d" * 64,
     byte_count: int = 128,
 ) -> FiledDeclaracionArtefact:
@@ -169,8 +171,8 @@ def test_invalid_pagadores_count_is_debug_logged_without_raw_value(
         if record.getMessage() == "overview filing obligation advisory ignored invalid integer profile value"
     ]
     assert len(relevant) == 1
-    assert relevant[0].profile_field == "irpf.pagadores_count"
-    assert relevant[0].error_type == "ValueError"
+    assert relevant[0].__dict__["profile_field"] == "irpf.pagadores_count"
+    assert relevant[0].__dict__["error_type"] == "ValueError"
     assert raw_value not in relevant[0].getMessage()
 
 
@@ -194,8 +196,8 @@ def test_invalid_pagadores_secondary_income_is_debug_logged_without_raw_value(
         if record.getMessage() == "overview filing obligation advisory ignored invalid decimal profile value"
     ]
     assert len(relevant) == 1
-    assert relevant[0].profile_field == "irpf.pagadores_secondary_income"
-    assert relevant[0].error_type == "InvalidOperation"
+    assert relevant[0].__dict__["profile_field"] == "irpf.pagadores_secondary_income"
+    assert relevant[0].__dict__["error_type"] == "InvalidOperation"
     assert all(raw_value not in record.getMessage() for record in caplog.records)
 
 
