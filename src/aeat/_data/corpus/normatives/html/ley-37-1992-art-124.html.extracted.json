@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-124.html",
+  "source_sha256": "b64d9ac255c3dd65f5dbb3e69d07a9e39cc3af0f0a6a3b12f6ef4a094fafcd20",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. Los sujetos pasivos acogidos al régimen simplificado estarán obligados a:\n1.º Llevar un libro registro de facturas recibidas en el que se anotarán todas las adquisiciones e importaciones de bienes y servicios, así como los demás gastos de la actividad que resulten deducibles a efectos del Impuesto.\n2.º Llevar un libro registro especifico del régimen simplificado en el que se consignarán los datos necesarios para determinar el importe de las cuotas tributarias que correspondan a cada período.\n3.º Conservar los justificantes de los índices y módulos aplicados de conformidad con sus actividades.\nDos. El incumplimiento de las obligaciones formales previstas en el apartado anterior podrá dar lugar a la exclusión del régimen simplificado y a la aplicación del régimen general.",
+      "title": "Artículo 124. Obligaciones formales del régimen simplificado.",
+      "section": "Artículo 124. Obligaciones formales del régimen simplificado.",
+      "anchor": null
+    }
+  ]
+}

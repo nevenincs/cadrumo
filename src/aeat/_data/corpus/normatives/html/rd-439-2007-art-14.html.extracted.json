@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-14.html",
+  "source_sha256": "ab0b48b7183a61eed54bcfed30169ebe8ff00f5dae0c96d93d0d84c584647c5f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Para la determinación del rendimiento neto del capital inmobiliario, tendrán la consideración de gasto deducible las cantidades destinadas a la amortización del inmueble y de los demás bienes cedidos con el mismo, siempre que respondan a su depreciación efectiva.\n2. Se considerará que las amortizaciones cumplen el requisito de efectividad:\na) Tratándose de inmuebles: cuando, en cada año, no excedan del resultado de aplicar el 3 por ciento sobre el mayor de los siguientes valores: el coste de adquisición satisfecho o el valor catastral, sin incluir en el cómputo el del suelo.\nCuando no se conozca el valor del suelo, éste se calculará prorrateando el coste de adquisición satisfecho entre los valores catastrales del suelo y de la construcción de cada año.\nb) Tratándose de bienes de naturaleza mobiliaria, susceptibles de ser utilizados por un período superior al año y cedidos conjuntamente con el inmueble: cuando, en cada año, no excedan del resultado de aplicar a los costes de adquisición satisfechos los coeficientes de amortización determinados de acuerdo con la tabla de amortizaciones simplificada a que se refiere el artículo 30.1.ª de este Reglamento.\n3. En el caso de que los rendimientos procedan de la titularidad de un derecho o facultad de uso o disfrute, podrá amortizarse, con el límite de los rendimientos íntegros de cada derecho, su coste de adquisición satisfecho.\nLa amortización, en este supuesto, será el resultado de las reglas siguientes:\na) Cuando el derecho o facultad tuviese plazo de duración determinado, el que resulte de dividir el coste de adquisición satisfecho entre el número de años de duración del mismo.\nb) Cuando el derecho o facultad fuese vitalicio, el resultado de aplicar al coste de adquisición satisfecho el porcentaje del 3 por ciento.",
+      "title": "Artículo 14. Gastos de amortización de los rendimientos del capital inmobiliario.",
+      "section": "Artículo 14. Gastos de amortización de los rendimientos del capital inmobiliario.",
+      "anchor": null
+    }
+  ]
+}

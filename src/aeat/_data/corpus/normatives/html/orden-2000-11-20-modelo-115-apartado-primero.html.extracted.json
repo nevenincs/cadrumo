@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-2000-11-20-modelo-115-apartado-primero.html",
+  "source_sha256": "266ca0ec3650886b627dcd52337cb54feb78f9467df11ac415503f86c1677e5a",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueban los modelos 115 en pesetas y en euros «Impuesto sobre la Renta de las Personas Físicas, Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes). Retenciones e ingresos a cuenta sobre determinadas rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos. Declaración-documento de ingreso».",
+      "title": "Primero. Aprobación de los modelos 115.",
+      "section": "Primero. Aprobación de los modelos 115.",
+      "anchor": null
+    },
+    {
+      "text": "El modelo 115, en pesetas o en euros, en este último caso según las condiciones y supuestos establecidos en el número tres del apartado primero de esta Orden, deberá ser presentado, con el ingreso del importe correspondiente, por los retenedores y obligados a ingresar a cuenta que satisfagan las rentas o rendimientos sometidos a retención o ingreso a cuenta procedentes del arrendamiento o subarrendamiento de inmuebles urbanos.",
+      "title": "Segundo. Obligados a presentar el modelo 115.",
+      "section": "Segundo. Obligados a presentar el modelo 115.",
+      "anchor": null
+    }
+  ]
+}

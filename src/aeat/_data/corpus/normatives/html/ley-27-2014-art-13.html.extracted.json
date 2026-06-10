@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-13.html",
+  "source_sha256": "3ebdcdccc861150fba9e18b2c9eb5396bccf22cbe4eabec3ba750a4faafc4daa",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Serán deducibles las pérdidas por deterioro de los créditos derivadas de las posibles insolvencias de los deudores, cuando en el momento del devengo del Impuesto concurra alguna de las siguientes circunstancias:\na) Que haya transcurrido el plazo de 6 meses desde el vencimiento de la obligación.\nb) Que el deudor esté declarado en situación de concurso.\nc) Que el deudor esté procesado por el delito de alzamiento de bienes.\nd) Que las obligaciones hayan sido reclamadas judicialmente o sean objeto de un litigio judicial o procedimiento arbitral de cuya solución dependa su cobro.\nNo serán deducibles las siguientes pérdidas por deterioro de créditos: 1.º Las correspondientes a créditos adeudados por entidades de derecho público, excepto que sean objeto de un procedimiento arbitral o judicial que verse sobre su existencia o cuantía. 2.º Las correspondientes a créditos adeudados por personas o entidades vinculadas, salvo que estén en situación de concurso y se haya producido la apertura de la fase de liquidación. 3.º Las correspondientes a estimaciones globales del riesgo de insolvencias de clientes y deudores.\n2. No serán deducibles:\na) Las pérdidas por deterioro del inmovilizado material, inversiones inmobiliarias e inmovilizado intangible, incluido el fondo de comercio.\nb) Las pérdidas por deterioro de los valores representativos de la participación en el capital o en los fondos propios de entidades respecto de la que se den determinadas circunstancias.",
+      "title": "Artículo 13. Correcciones de valor: pérdida por deterioro del valor de los elementos patrimoniales.",
+      "section": "Artículo 13. Correcciones de valor: pérdida por deterioro del valor de los elementos patrimoniales.",
+      "anchor": null
+    }
+  ]
+}

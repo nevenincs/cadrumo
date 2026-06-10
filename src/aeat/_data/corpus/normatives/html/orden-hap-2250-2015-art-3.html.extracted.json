@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hap-2250-2015-art-3.html",
+  "source_sha256": "863add81e5c1f901adcc7777cd47c6adb1103b0f6ba5a77dfd8550274a0070c3",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Deberá ser objeto de declaración en el modelo 184, de conformidad con los diseños contenidos en el Anexo de la presente Orden, la información definida en el apartado 1 del artículo 70 del Reglamento del Impuesto sobre la Renta de las Personas Físicas, aprobado por Real Decreto 439/2007, de 30 de marzo.\nLas entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español únicamente deberán consignar la parte de renta atribuible a los miembros residentes de la entidad.",
+      "title": "Artículo 3. Objeto de la información.",
+      "section": "Artículo 3. Objeto de la información.",
+      "anchor": null
+    }
+  ]
+}

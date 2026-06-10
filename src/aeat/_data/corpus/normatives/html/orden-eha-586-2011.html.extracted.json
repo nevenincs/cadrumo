@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-586-2011.html",
+  "source_sha256": "c167d10ad70523442054235853ccae0a2b435075daed0a95e40acc591e3f9bbb",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se aprueba el modelo 111 «Retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas Físicas. Rendimientos del trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales e imputaciones de renta. Autoliquidación».\nDicho modelo, que figura como anexo I de la presente orden, consta de los tres ejemplares siguientes: Ejemplar para el declarante; Ejemplar para la Entidad colaboradora-AEAT; Ejemplar para la Administración.\nEl número de justificante que habrá de figurar en dicho modelo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 111. No obstante, en el supuesto a que se refiere el artículo 4.3 de la presente orden, el número de justificante comenzará con el código 112.\n2. Se aprueba el sobre de envío del Modelo 111 «Retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas Físicas. Rendimientos del trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales e imputaciones de renta. Autoliquidación», que figura en el Anexo II de la presente orden.",
+      "title": "Artículo 1. Aprobación del modelo 111.",
+      "section": "Artículo 1. Aprobación del modelo 111.",
+      "anchor": null
+    }
+  ]
+}

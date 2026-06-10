@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-11.html",
+  "source_sha256": "e187463ec1bbbbe0f3b99c1c509453334571b5ef780ecaa9f1d3853182444e13",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los ingresos y gastos derivados de las transacciones o hechos económicos se imputarán al período impositivo en que se produzca su devengo, con arreglo a la normativa contable, con independencia de la fecha de su pago o de su cobro, respetando la debida correlación entre unos y otros.\n2. La eficacia fiscal de los criterios de imputación temporal de ingresos y gastos, distintos de los previstos en el apartado anterior, utilizados excepcionalmente por el contribuyente para conseguir la imagen fiel del patrimonio, de la situación financiera y de los resultados, de acuerdo con lo previsto en los artículos 34.4 y 38.i) del Código de Comercio, estará supeditada a la aprobación por la Administración tributaria, en la forma que reglamentariamente se determine.\n3. No serán fiscalmente deducibles los gastos que no se hayan imputado contablemente en la cuenta de pérdidas y ganancias o en una cuenta de reservas si así lo establece una norma legal o reglamentaria, a excepción de lo previsto en esta Ley respecto de los elementos patrimoniales que puedan amortizarse libremente o de forma acelerada.",
+      "title": "Artículo 11. Imputación temporal. Inscripción contable de ingresos y gastos.",
+      "section": "Artículo 11. Imputación temporal. Inscripción contable de ingresos y gastos.",
+      "anchor": null
+    }
+  ]
+}

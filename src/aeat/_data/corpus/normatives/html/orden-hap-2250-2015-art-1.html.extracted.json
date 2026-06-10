@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hap-2250-2015-art-1.html",
+  "source_sha256": "414976c483dd930340bbbd8716503239b7df94803d6f2c7d9dab7a5e90b1dc4b",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueba el modelo 184 «Declaración informativa anual de Entidades en régimen de atribución de rentas», así como los diseños de registro a los que deberán ajustarse los ficheros que contengan la información a suministrar. Dichos diseños figuran en el Anexo de esta Orden.\nEl número identificativo que habrá de figurar en el modelo 184 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 184.\nEl número identificativo que habrá de figurar en el modelo 184 en el caso de tratarse de una declaración sustitutiva o complementaria que incorpore registros no declarados previamente será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 184.\nLa presentación de declaraciones complementarias que modifiquen el contenido de los datos incluidos en otra declaración presentada anteriormente y que se refieran al mismo ejercicio se realizará desde el servicio de consulta y modificación de declaraciones informativas, dentro de los trámites asociados al modelo 184, que se encuentra disponible en la Sede Electrónica de la Agencia Estatal de Administración Tributaria, en la dirección electrónica https://www.agenciatributaria.gob.es. En este caso, la declaración complementaria quedará identificada por el código electrónico de su presentación, no siendo necesario indicar ningún número identificativo.",
+      "title": "Artículo 1. Aprobación del modelo 184.",
+      "section": "Artículo 1. Aprobación del modelo 184.",
+      "anchor": null
+    }
+  ]
+}

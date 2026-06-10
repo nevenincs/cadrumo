@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-12-2002.html",
+  "source_sha256": "b8877874d5ce0ea60d05afbc6af1ccb8f0c1a8c30ea15c89f80dc8463cca399e",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Ley 12/2002 - Concierto Económico - Artículo 29\nLey 12/2002, de 23 de mayo, por la que se aprueba el Concierto Económico con la Comunidad Autónoma del País Vasco\nArtículo 29. Distribución territorial de la recaudación del Impuesto sobre el Valor Añadido\n1. La distribución territorial de la recaudación del Impuesto sobre el Valor Añadido entre el Estado y la Administración de la Comunidad Autónoma del País Vasco se realizará de conformidad con los siguientes criterios:\na) Se considerará como recaudación territorial del Impuesto sobre el Valor Añadido la que corresponda al territorio donde se haya realizado la operación o servicio gravado.\nb) Para la determinación de la recaudación territorial se atenderá al volumen de operaciones o servicios realizados en cada territorio.\nc) La distribución de la recaudación entre los territorios de la Comunidad Autónoma y del territorio común se efectuará teniendo en cuenta las proporciones que resulten de las operaciones y servicios realizados en cada uno de ellos durante el período de liquidación, conforme a los criterios de territorialidad establecidos en la legislación de ordenación del Impuesto sobre el Valor Añadido.\n2. Para la determinación de la distribución territorial de la recaudación se utilizarán, en cada período de liquidación, las proporciones que resultaron en el período de liquidación anterior, siendo efectuada la regularización correspondiente en la declaración anual de IVA del período que se liquide.\n3. La Hacienda del Estado y la Administración de la Comunidad Autónoma del País Vasco determinarán de común acuerdo:\na) Los procedimientos y métodos de control, seguimiento y verificación de la correcta territorialidad de las operaciones y servicios gravados.\nb) El sistema de cálculo de las proporciones de distribución territorial de la recaudación.\nc) Los criterios de liquidación y pago de las diferencias que resulten entre las proporciones aplicadas y las que correspondan en definitiva.\nd) Las normas sobre inspección y actuación administrativa en materia de IVA, asignando a la Administración de la Comunidad Autónoma del País Vasco facultades de inspección sobre las operaciones realizadas en su territorio.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

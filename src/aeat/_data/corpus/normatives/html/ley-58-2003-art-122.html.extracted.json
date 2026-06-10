@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-122.html",
+  "source_sha256": "ff0ebc25a5c17c940783778184c88bd976dcc02fae5cec93efd3ade14ade9f0f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los obligados tributarios podrán presentar autoliquidaciones complementarias, o declaraciones o comunicaciones complementarias o sustitutivas, dentro del plazo establecido para su presentación o con posterioridad a la finalización de dicho plazo, siempre que no haya prescrito el derecho de la Administración para determinar la deuda tributaria. En este último caso tendrán el carácter de extemporáneas.\n2. Las autoliquidaciones complementarias tendrán como finalidad completar o modificar las presentadas con anterioridad y se podrán presentar cuando de ellas resulte un importe a ingresar superior al de la autoliquidación anterior o una cantidad a devolver o a compensar inferior a la anteriormente autoliquidada. En los demás casos, se estará a lo dispuesto en los apartados 3 y 4 del artículo 120 de esta Ley.\nNo obstante lo dispuesto en el párrafo anterior y salvo que específicamente se establezca otra cosa, cuando con posterioridad a la aplicación de una exención, deducción o incentivo fiscal se produzca la pérdida del derecho a su aplicación por incumplimiento de los requisitos a que estuviese condicionado, el obligado tributario deberá incluir en la autoliquidación correspondiente al período impositivo en que se hubiera producido el incumplimiento la cuota o cantidad derivada de la exención, deducción o incentivo fiscal aplicado de forma indebida en los períodos impositivos anteriores junto con los intereses de demora.\n3. Los obligados tributarios podrán presentar declaraciones o comunicaciones de datos complementarias o sustitutivas, haciendo constar si se trata de una u otra modalidad, con la finalidad de completar o reemplazar las presentadas con anterioridad.",
+      "title": "Artículo 122. Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas.",
+      "section": "Artículo 122. Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas.",
+      "anchor": null
+    }
+  ]
+}

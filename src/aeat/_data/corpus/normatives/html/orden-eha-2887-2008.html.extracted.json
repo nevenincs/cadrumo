@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-2887-2008.html",
+  "source_sha256": "6b97fd0c646467eac203fa64d18b811d1aa71acd35f61946956e378a0dd3caf3",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden EHA/2887/2008 — Modelo 151 IRPF impatriados\nOrden EHA/2887/2008, de 8 de octubre, por la que se aprueba el modelo 151 de declaración\ndel Impuesto sobre la Renta de las Personas Físicas para contribuyentes en el régimen\nespecial aplicable a los trabajadores desplazados a territorio español.\nBOE: BOE-A-2008-16237\nPublicada el 8 de octubre de 2008. Vigente desde el 1 de enero de 2008.\nEsta orden aprueba el Modelo 151 para la declaración anual del IRPF de los contribuyentes\nque hayan optado por el régimen especial previsto en el artículo 93 de la Ley 35/2006,\nde 28 de noviembre, del Impuesto sobre la Renta de las Personas Físicas (LIRPF),\ndesarrollado en los artículos 113 a 120 del Reglamento del IRPF aprobado por el\nReal Decreto 439/2007, de 30 de marzo.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-44-2015-art-1.html",
+  "source_sha256": "54c5497dc4c0f54d506aca2c1c306dbe11f86fb45349c5847bf9c5906d4a4691",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Las sociedades anónimas y las sociedades de responsabilidad limitada en las que la mayoría del capital social sea propiedad de trabajadores que presten en ellas servicios retribuidos en forma personal y directa, cuya relación laboral lo sea por tiempo indefinido, podrán obtener la calificación de «sociedad laboral».\nLas sociedades que cumplan los requisitos establecidos en esta Ley obtendrán la denominación de sociedad anónima laboral o sociedad limitada laboral.\n2. Ninguno de los socios podrá poseer acciones o participaciones sociales que representen más de la tercera parte del capital social, salvo que se trate de entidades públicas, o de entidades no lucrativas, en cuyo caso la participación podrá ser superior a dicho límite, sin alcanzar el cincuenta por ciento del capital social.",
+      "title": "Artículo 1. Concepto de sociedad laboral.",
+      "section": "Artículo 1. Concepto de sociedad laboral.",
+      "anchor": null
+    }
+  ]
+}

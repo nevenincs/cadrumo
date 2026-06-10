@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rdl-2-2004-art-78.html",
+  "source_sha256": "c6f820f256360b445d1012a692b5c56c08da7d96c23275a5f1d7080f704144bd",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. El Impuesto sobre Actividades Económicas es un tributo directo de carácter real, cuyo hecho imponible está constituido por el mero ejercicio, en territorio nacional, de actividades empresariales, profesionales o artísticas, se ejerzan o no en local determinado y se hallen o no especificadas en las tarifas del impuesto.\n2. Se consideran, a los efectos de este impuesto, actividades empresariales las ganaderas, cuando tengan carácter independiente, las mineras, industriales, comerciales y de servicios. No tienen, por consiguiente, tal consideración las actividades agrícolas, las ganaderas dependientes, las forestales y las pesqueras, no constituyendo hecho imponible por el impuesto ninguna de ellas.\nA efectos de lo previsto en el párrafo anterior, tendrá la consideración de ganadería independiente el conjunto de cabezas de ganado que se encuentre comprendido en alguno de los casos siguientes:\na) Que paste o se alimente fundamentalmente en tierras que no sean explotadas agrícola o forestalmente por el dueño del ganado.\nb) El estabulado fuera de las fincas rústicas.\nc) El trashumante o trasterminante.\nd) Aquel que se alimente fundamentalmente con piensos no producidos en la finca en que se críe.",
+      "title": "Artículo 78. Naturaleza y hecho imponible.",
+      "section": "Artículo 78. Naturaleza y hecho imponible.",
+      "anchor": null
+    }
+  ]
+}
