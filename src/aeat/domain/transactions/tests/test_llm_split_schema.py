@@ -13,9 +13,23 @@ import pytest
 from pydantic import ValidationError
 
 from ...iva import IvaCategory
-from .. import LLMSplitChild, LLMSplitResponse
+from .. import (
+    LLMClassifierError,
+    LLMSplitChild,
+    LLMSplitResponse,
+    parse_split_response,
+    prompt_spec_with_saturation_fields,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_VALID_SPLIT_JSON = (
+    '{"reason": "two lines on the invoice",'
+    ' "children": ['
+    '{"proportion": 0.6, "iva_category": "domestic_general_21", "evidence_citation": "line 1"},'
+    '{"proportion": 0.4, "iva_category": "domestic_general_21", "evidence_citation": "line 2"}'
+    "]}"
+)
 
 
 def _child(proportion: str) -> LLMSplitChild:
@@ -52,3 +66,21 @@ def test_child_proportion_out_of_range_rejected() -> None:
 def test_split_child_structurally_refuses_numeric_fields(numeric_field: str) -> None:
     with pytest.raises(ValidationError):
         LLMSplitChild.model_validate({"proportion": "0.5", numeric_field: "100.00"})
+
+
+def test_parse_split_extracts_nested_json_amid_prose() -> None:
+    noisy = "Here is the split:\n" + _VALID_SPLIT_JSON + "\nHope that helps!"
+    response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields())
+    assert len(response.children) == 2
+    assert response.children[0].iva_category is IvaCategory.DOMESTIC_GENERAL_21
+
+
+def test_parse_split_rejects_disallowed_iva_category() -> None:
+    # default_prompt_spec has no iva allow-list, so any iva_category is rejected.
+    with pytest.raises(LLMClassifierError):
+        parse_split_response(_VALID_SPLIT_JSON)
+
+
+def test_parse_split_no_json_raises() -> None:
+    with pytest.raises(LLMClassifierError):
+        parse_split_response("no json here", spec=prompt_spec_with_saturation_fields())
