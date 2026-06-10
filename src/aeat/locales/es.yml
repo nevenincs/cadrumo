@@ -4266,6 +4266,8 @@ errors:
     unsupported_currency: El código de moneda indicado no es compatible.
   snapshot:
     modelo_not_registered: El modelo no esta registrado en el registro.
+    no_revision_for_period: 'Ninguna revisión del registro cubre el modelo %{modelo_id} ejercicio %{filing_year} periodo %{period}.'
+    ambiguous_revision_selection: 'Más de una revisión del registro coincide con el modelo %{modelo_id}: %{candidate_ids}.'
   storage:
     engine:
       create_failed: No se pudo crear el motor de base de datos de almacenamiento.

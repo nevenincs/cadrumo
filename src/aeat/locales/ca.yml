@@ -4222,6 +4222,8 @@ errors:
     unsupported_currency: El codi de moneda indicat no és compatible.
   snapshot:
     modelo_not_registered: El model no esta registrat al registre.
+    no_revision_for_period: 'Cap revisió del registre cobreix el model %{modelo_id} exercici %{filing_year} període %{period}.'
+    ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb el model %{modelo_id}: %{candidate_ids}.'
   storage:
     engine:
       create_failed: No s'ha pogut crear el motor de base de dades d'emmagatzematge.

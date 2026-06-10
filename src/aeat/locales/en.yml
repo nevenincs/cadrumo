@@ -3985,6 +3985,8 @@ errors:
     unsupported_currency: The currency code provided is not supported.
   snapshot:
     modelo_not_registered: Model is not registered in the registry.
+    no_revision_for_period: 'No registry revision covers modelo %{modelo_id} filing year %{filing_year} period %{period}.'
+    ambiguous_revision_selection: 'More than one registry revision matches modelo %{modelo_id}: %{candidate_ids}.'
   storage:
     engine:
       create_failed: The storage database engine could not be created. Check the configured
