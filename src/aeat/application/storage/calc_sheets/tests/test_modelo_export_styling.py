@@ -104,3 +104,20 @@ def test_offline_workbook_renders_the_palette_and_font() -> None:
     # Concepto column wraps so long labels do not clip.
     concepto = entradas.cell(row=2, column=3)
     assert concepto.alignment.wrap_text is True
+
+
+def test_offline_workbook_applies_print_setup_to_every_tab() -> None:
+    # The print-setup phase of _apply_styling: landscape, fit-to-one-page-width,
+    # repeat the header row on every printed page, on every tab.
+    plan = _m130_plan()
+    workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)), data_only=False)
+
+    for tab in TabName:
+        worksheet = workbook[tab.value]
+        assert worksheet.page_setup.orientation == "landscape"
+        assert worksheet.page_setup.fitToWidth == 1
+        assert worksheet.page_setup.fitToHeight == 0
+        assert worksheet.sheet_properties.pageSetUpPr is not None
+        assert worksheet.sheet_properties.pageSetUpPr.fitToPage is True
+        # openpyxl normalises the repeat-rows defined name to absolute on save.
+        assert worksheet.print_title_rows == "$1:$1"

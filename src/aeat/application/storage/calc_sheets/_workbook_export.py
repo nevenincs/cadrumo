@@ -20,13 +20,17 @@ from pydantic import BaseModel, Field
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import UTF_8_ENCODING
 from ._records import (
+    SheetAutoFilter,
+    SheetColumnWidth,
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
     SheetEvidenceManualEntry,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
+    SheetFrozenView,
     SheetRowSet,
+    SheetStyledRange,
     SheetValueCell,
     TabName,
 )
@@ -130,9 +134,21 @@ def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
     role (header band, section banner, pale-yellow inputs, grey computed, green
     result), wraps the body columns, sizes the columns, freezes the header rows,
     and installs the basic filters — mirroring exactly what the online apply
-    adapter emits from the same ``SheetExportPlan`` facets.
+    adapter emits from the same ``SheetExportPlan`` facets. The phases run in the
+    same order as before: base font first, then styled overrides, widths, freezes,
+    filters, and finally print setup.
     """
     family = plan.font_family or WORKBOOK_FONT_FAMILY
+    _apply_base_font(workbook, family)
+    _apply_styled_ranges(workbook, family, plan.styled_ranges)
+    _apply_column_widths(workbook, plan.column_widths)
+    _apply_frozen_views(workbook, plan.frozen_views)
+    _apply_auto_filters(workbook, plan.auto_filters)
+    _apply_print_setup(workbook)
+
+
+def _apply_base_font(workbook: Workbook, family: str) -> None:
+    """Set the monospace family on every populated cell across all tabs."""
     base_font = Font(name=family)
     for tab in TabName:
         worksheet = workbook[tab.value]
@@ -141,7 +157,12 @@ def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
                 if cell.value is not None:
                     cell.font = base_font
 
-    for styled in plan.styled_ranges:
+
+def _apply_styled_ranges(
+    workbook: Workbook, family: str, styled_ranges: Sequence[SheetStyledRange]
+) -> None:
+    """Tint each styled range by its role, in declaration order so later ranges win."""
+    for styled in styled_ranges:
         style = ROLE_STYLES[styled.role]
         font = Font(
             name=family,
@@ -163,23 +184,35 @@ def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
                 if fill is not None:
                     cell.fill = fill
 
-    for width in plan.column_widths:
+
+def _apply_column_widths(workbook: Workbook, column_widths: Sequence[SheetColumnWidth]) -> None:
+    """Size each declared column."""
+    for width in column_widths:
         worksheet = workbook[width.tab.value]
         worksheet.column_dimensions[get_column_letter(width.column)].width = width.width
 
-    for frozen in plan.frozen_views:
+
+def _apply_frozen_views(workbook: Workbook, frozen_views: Sequence[SheetFrozenView]) -> None:
+    """Freeze the header rows/columns on each declared tab."""
+    for frozen in frozen_views:
         worksheet = workbook[frozen.tab.value]
         worksheet.freeze_panes = f"{get_column_letter(frozen.frozen_columns + 1)}{frozen.frozen_rows + 1}"
 
-    for filter_range in plan.auto_filters:
+
+def _apply_auto_filters(workbook: Workbook, auto_filters: Sequence[SheetAutoFilter]) -> None:
+    """Install the basic filter over each declared range."""
+    for filter_range in auto_filters:
         worksheet = workbook[filter_range.tab.value]
         start = f"{get_column_letter(filter_range.start_column)}{filter_range.start_row}"
         end = f"{get_column_letter(filter_range.end_column)}{filter_range.end_row}"
         worksheet.auto_filter.ref = f"{start}:{end}"
 
-    # Print setup: landscape, fit all columns to one page width, and repeat the
-    # header row on every printed page so a printed filing artefact stays
-    # readable across page breaks.
+
+def _apply_print_setup(workbook: Workbook) -> None:
+    """Landscape, fit all columns to one page width, repeat the header row.
+
+    A printed filing artefact then stays readable across page breaks.
+    """
     for tab in TabName:
         worksheet = workbook[tab.value]
         worksheet.page_setup.orientation = "landscape"
