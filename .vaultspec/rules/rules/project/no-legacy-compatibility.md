@@ -48,6 +48,13 @@ backlog.
   AEAT portal variations, BOE corpus formats, third-party PDF producer quirks,
   and AEAT regulatory revisions (each modelo revision year is CURRENT law for
   its filing year) is forward function, not backwards compatibility.
+- **AEAT regulatory status is never evidence of CODE legacy — never conflate
+  the two.** "AEAT (the Spanish tax authority) retired or superseded a modelo,
+  revision, or rate as a matter of policy" is orthogonal to "our code carries a
+  backwards-compatibility shim." A real modelo the application supports (e.g.
+  `Modelo.M037`, no longer in general use but still supported) is a CURRENT
+  product feature, not legacy code — keep it. Only delete a surface when it
+  exists to read or migrate data that an OLDER VERSION OF THIS APP wrote.
 - **A forward version FIELD is not legacy — keep it.** A `schema_version`
   marker that lets a future version read today's records, or a
   `max_supported_version` ceiling that refuses a FUTURE shape, is
