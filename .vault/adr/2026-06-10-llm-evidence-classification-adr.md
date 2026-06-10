@@ -13,7 +13,33 @@ related:
 
 
 
-# `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): lean on the LLM multimodal read; splitting in scope` | (**status:** `accepted`)
+# `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)
+
+> **DECISION 2026-06-10 (operator ruling, binding).** The first draft treated taking
+> decrypted sensitive evidence out of secure storage (a decrypted temp file for the
+> CLI agents, and/or base64 transmission to a cloud provider) as a tunable "privacy
+> boundary." That was wrong. Two bindings now govern this ADR:
+>
+> 1. **Secure-storage-only persistence (absolute).** All sensitive financial data —
+>    every purchase invoice and every incoming or outgoing business invoice, and any
+>    decrypted evidence bytes — persists only inside the encrypted secure-storage
+>    backend via the runtime wrapper that maps to the active profile bucket. Nothing
+>    sensitive is ever persisted outside it: no temp files, no scratch dirs, no
+>    plaintext side stores, no logs. Decrypted bytes exist only transiently in
+>    process memory. This is the prior-ADR-enforced invariant, not a new choice.
+> 2. **On-host reading is the default and the only posture acceptable for serious
+>    use.** Evidence is read by on-host processing only: the in-tree `pdfplumber`
+>    text-layer plus an on-host/local vision model (Ollama at localhost, in-memory
+>    base64 images — never a temp file). Cloud providers (the `claude`/`codex`/`agy`
+>    subprocess agents and the HTTP providers) may read sensitive evidence **only**
+>    behind an explicit, per-invocation consent gate in which the operator
+>    acknowledges that their sensitive data will leave the machine and be uploaded.
+>    That gate is default-off and is **not acceptable for gestors or any real serious
+>    usage**; it exists only as a deliberate, recorded, individual-user exception.
+>
+> This reverses the first draft's "lean on cloud LLMs (Option A)" headline. The
+> headline is now: lean on on-host/local reading; cloud is a gated, acknowledged
+> exception, never the default.
 
 ## Problem Statement
 
@@ -63,10 +89,17 @@ evidence-driven splitting in Stage-3.
   registry rate and the transaction gross. An invoice printing "Base 100, IVA 21"
   is the most tempting place to break this; the printed figure is an advisory
   cross-check only.
-- **Evidence is encrypted at `FINANCIAL` sensitivity.** Feeding it to a provider
-  (base64 over HTTP) or writing it to a temp file for a CLI agent crosses a
-  confidentiality boundary to an external service. This is a new safety decision,
-  not present in Stage-1/2 which only ever sent scalar transaction fields.
+- **Sensitive evidence lives only in secure storage — and the feature's premise
+  collides with that.** Every purchase invoice and business invoice persists only
+  in the encrypted secure-storage backend (active profile bucket via the runtime
+  wrapper); nothing sensitive is ever persisted outside it. But "have a model read
+  the invoice" requires the bytes to reach a model. The cloud `claude`/`antigravity`/
+  `codex` subprocess agents and the HTTP providers (Anthropic/OpenAI/Gemini) all
+  transmit the bytes off-host, and the subprocess route additionally needs a file on
+  disk for the agent's `read` tool — a flat violation. This is not a tunable
+  boundary; it is the decisive feasibility question for the whole feature (see
+  Constraints and "Operator ruling required"). Stage-1/2 never hit this because they
+  sent only scalar transaction fields, which are not the sensitive document.
 - **Splitting today is manual and 2-way.** `split_transaction` exists but takes
   operator-supplied child amounts; the LLM can only express a single
   `business_pct`. Evidence-driven N-way splitting is genuinely new surface.
@@ -90,14 +123,30 @@ evidence-driven splitting in Stage-3.
   surface to the operator rather than degrade silently — this is how the documented
   vision limitations are made safe and is the re-targeted form of the OCR
   discipline's confidence-surfacing obligation.
-- **Privacy boundary (new, blocking for the multimodal transports).** Decrypted
-  `FINANCIAL` evidence may leave the process only along an explicitly permitted
-  path. The decrypted-temp-file lifecycle for the CLI-agent route MUST be bounded
-  (written to a private location, removed promptly, never logged). The set of
-  providers permitted to receive unredacted evidence is an operator-configurable
-  decision surfaced through `Settings`; the default posture and whether `LOCAL`
-  (text-only, on-host) is the only unredacted path are decided at implementation
-  under this constraint.
+- **Secure-storage-only persistence (hard, absolute, non-negotiable).** All
+  sensitive financial evidence persists exclusively in the encrypted secure-storage
+  backend via the runtime wrapper mapped to the active profile bucket. No code path
+  may write decrypted evidence — or any sensitive financial data — anywhere outside
+  secure storage: no temp files, no scratch directories, no plaintext side stores,
+  no logs. Decrypted bytes may exist only transiently in process memory and must
+  never be persisted. This eliminates the decrypted-temp-file design entirely. It
+  also means the existing `PurchaseInvoiceEvidence` `source_path` field (a pointer
+  to a cleartext file on operator disk) is NOT a valid byte source for this feature;
+  evidence bytes must be read from secure storage, and bringing invoice bytes fully
+  into secure storage is a precondition if any are not already there.
+- **On-host reading by default; cloud only behind an explicit consent gate.**
+  Holding bytes in memory to hand to a model is the compliant pattern only when the
+  model runs on-host and the bytes never leave the machine. The default and
+  serious-usage path is therefore on-host: the in-tree text-layer plus a local
+  vision model. Transmitting decrypted invoice bytes to any cloud model — the
+  subprocess CLI agents included — is permitted only through an explicit,
+  per-invocation consent gate where the operator acknowledges the upload; that gate
+  is default-off, must be re-affirmed each invocation (not a sticky setting), and is
+  disallowed for gestor/professional contexts. The CLI-agent file-path route is
+  doubly non-compliant (it both transmits off-host and writes a file to disk) and is
+  excluded even under consent; the only consented cloud transport is in-memory HTTP
+  base64. Whether a deployment is "gestor/serious" enough to forbid the gate
+  entirely is a policy the consent surface must encode, not bury.
 - **Parent stability.** Builds on stable Stage-1/2 plumbing (suggest/apply,
   the manual-command write path with its validators and the `gross == base + iva`
   invariant), the `SubprocessLLMClassifier` + `resolve_classifier` registry, the
@@ -119,34 +168,41 @@ Stage-3 layers onto the existing classify/saturate flow without disturbing the
 Stage-1/2 contract.
 
 **Evidence resolution.** When the operator runs classify/saturate with evidence
-reading enabled, the application resolves the transaction's linked evidence
-(`purchase_invoice_evidence_id` and/or `attachment_ids`) to its bytes and media
-kind through the evidence backend, decrypting through the existing secure-object
-path. The resolved evidence is the new classification input.
+reading enabled, the application reads the transaction's linked evidence bytes
+**from secure storage** (active profile bucket via the runtime wrapper) into process
+memory only. Bytes are never written to disk and never persisted outside secure
+storage. A precondition is that invoice bytes actually live in secure storage; the
+existing `PurchaseInvoiceEvidence.source_path` (a pointer to a cleartext file on
+operator disk) is not a valid byte source and must be replaced by an in-store byte
+read (the `Attachment` store's `read_bytes`, or an equivalent secure-object read)
+before reading is wired.
 
-**A unified multimodal abstraction over two transports.** A single internal
-evidence-input representation (media kind, bytes/handle, content hash) is rendered
-into whichever transport the resolved provider needs:
+**On-host reader (default, serious-usage path).** The single internal
+evidence-input representation (media kind, in-memory bytes, content hash) is fed to
+an on-host reader:
 
-- **CLI-agent transport (primary, built first).** For the subprocess providers
-  (`claude` / `antigravity` / `codex` — today's production surface), the evidence
-  is materialised to a bounded-lifetime decrypted temp file and its path is
-  injected into the prompt for the agent's `read` tool. This is the
-  lowest-friction route and exercises the whole flow end-to-end on the default
-  surface.
-- **HTTP-SDK transport (multimodal content blocks).** For the outbound-adapter
-  providers, the request gains a typed multimodal content path rendered as the
-  provider's document/image block — Anthropic `document` (base64 / Files-API
-  `file_id` / URL), Gemini inline or File-API, OpenAI `input_file`. Wiring the
-  HTTP-SDK adapter into the classify path is net-new (it is unused there today).
-- **Text-layer fast-path / `LOCAL` fallback.** The in-tree `pdfplumber` text
-  extraction is retained for clean text-native PDFs (cheap, no image tokens) and is
-  the only path for the text-only `LOCAL` provider; extracted text flows into the
-  existing text prompt and is hashed by the existing cache key unchanged.
+- **Text-layer (text-native PDFs).** The in-tree `pdfplumber` extraction runs fully
+  on-host over the in-memory bytes and yields text that flows into the existing text
+  prompt — no new transport, works for every provider including a local model, and
+  is the cheapest path.
+- **On-host vision (scanned/image evidence).** For scanned PDFs and photos, pages
+  are rendered to images on-host (e.g. via an in-process PDF rasteriser) and handed
+  as in-memory base64 images to a local vision model. The `LocalAdapter` (Ollama at
+  localhost) is extended to carry the Ollama `images` field on its chat message so a
+  local vision model (e.g. a `llama3.2-vision`/`qwen2.5-vl`/`minicpm-v` class model)
+  reads them. Nothing leaves the machine; no file is written.
 
-**Cache.** The LLM cache key incorporates the evidence content address
-(`Attachment.sha256`) for multimodal inputs so distinct documents never collide;
-the text-layer route needs no change.
+**Cloud reader (consent-gated exception, never default).** A cloud read is reachable
+only when the operator passes the explicit consent gate acknowledging the upload.
+The only consented cloud transport is in-memory HTTP base64 through the outbound
+adapter (Anthropic `document` / Gemini inline / OpenAI `input_file`); the CLI-agent
+file-path route is excluded because it writes a file. The gate is default-off,
+re-affirmed per invocation, recorded in provenance, and refused outright in
+gestor/professional deployments.
+
+**Cache.** Any evidence-derived input folds the evidence content address
+(`Attachment.sha256`) into the LLM cache key so distinct documents never collide;
+the plain text-layer route is hashed by the existing key unchanged.
 
 **Reading for selection (Stage-3a).** The classify/saturate prompts are extended
 to instruct the model to read the attached document and select the spending
@@ -171,33 +227,41 @@ evidence provenance is stamped on every child. Reject leaves the parent untouche
 **Operator surface.** The Stage-1/2 verbs are preserved: suggest previews the
 evidence-grounded classification (and the proposed split); `--apply` persists;
 manual flags override any field and re-stamp manual provenance; reject is
-do-not-apply. Evidence reading is opt-in per invocation, and the permitted-provider
-privacy posture is read from `Settings`.
+do-not-apply. Evidence reading is opt-in per invocation and defaults to the on-host
+reader. Selecting a cloud provider for evidence reading forces the consent gate: an
+explicit per-invocation acknowledgement that sensitive data will be uploaded
+off-host, default-off, refused in gestor/professional deployments, and recorded in
+provenance. No sticky setting silently keeps the cloud path on.
 
 ## Rationale
 
-Leaning on the LLM multimodal read (Option A) rather than building a separate
-deterministic OCR engine is justified by verified capability across every required
-format, and is *safe* because the precision safeguard the vendors demand —
-human review — is already the spine of the Stage-1/2 contract. Standing up a
-second extraction technology (Tesseract/cloud OCR with engine-version pinning,
-per-field confidence gates, and a corpus round-trip suite) would duplicate effort
-to produce structured fields the LLM already reads, while the truly dangerous part
-— the regulated euro figure — is *not* taken from either reader: it is
-registry-derived. That separation is what makes leaning on the LLM both rich and
-legally defensible.
+Reading evidence with an LLM rather than building a separate deterministic OCR
+engine is justified by verified capability across every required format, and is
+*safe* because the precision safeguard the vendors demand — human review — is
+already the spine of the Stage-1/2 contract. But "LLM reading" must obey the
+secure-storage invariant, so the reader is on-host by default: the in-tree
+text-layer plus a local vision model, fed bytes read from secure storage into memory
+and never written to disk. This keeps sensitive financial documents on the machine
+for serious use, which is the only acceptable posture for gestors and real usage. A
+cloud read remains *technically* available but only as an explicitly consented,
+recorded, individual-user exception — never the default — because uploading a
+client's invoices to a third party is exactly the exposure the invariant exists to
+prevent. The regulated euro figure is still not taken from any reader (on-host or
+cloud): it is registry-derived, which is what keeps the result legally defensible
+regardless of who read the document.
 
 The accepted OCR-extraction discipline is therefore not superseded but
 **re-targeted**: its confidence-surfacing obligation becomes "a low-confidence or
 refused LLM read surfaces to the operator, never silently persists"; its
 provenance obligation becomes the `llm:<model>` + cited-evidence stamping; and its
 corpus discipline (assert behaviour, never exact extractor strings) fits an LLM
-read even better than a deterministic engine. Building the CLI-agent file-path
-transport first matches the production reality that the classify surface is
-subprocess-CLI-only today, delivering the whole flow on the default surface before
-the net-new HTTP-SDK wiring. Including splitting in Stage-3 reflects the operator's
-direction and is coherent: an invoice with mixed lines is exactly where reading the
-document and proposing a split are the same act of understanding.
+read even better than a deterministic engine. Build order follows the
+secure-storage invariant: the on-host text-layer path lands first (cheapest,
+covers text-native invoices, no new transport), then the on-host local vision
+reader for scanned/image evidence; the consent-gated cloud path is last and
+optional. Including splitting in Stage-3 reflects the operator's direction and is
+coherent: an invoice with mixed lines is exactly where reading the document and
+proposing a split are the same act of understanding.
 
 ## Consequences
 
@@ -208,11 +272,14 @@ document and proposing a split are the same act of understanding.
 - **Gain:** the mature-but-unused evidence backend finally feeds the pipeline it
   was built for; evidence provenance now threads from attachment through
   classification to (on filing) the bundled revision evidence.
-- **New safety surface:** decrypted financial evidence now leaves the process to
-  an external model. The privacy boundary (permitted providers, temp-file
-  lifecycle, whether `LOCAL` is the only unredacted path) is the principal new risk
-  and must be settled before the multimodal transports ship. This is a genuine
-  widening of the trust boundary versus Stage-1/2's scalar-only prompts.
+- **The invariant forbids widening the trust boundary, and the design honours it.**
+  Decrypted sensitive evidence is never persisted outside secure storage and, by
+  default, never leaves the host: the serious-usage reader is on-host (text-layer +
+  local vision). The cost is real — on-host vision quality depends on the local
+  model and the machine, and a local vision model must be provisioned for
+  scanned/image evidence. The cloud `claude`/`codex`/`agy` CLI agents cannot read
+  sensitive evidence at all (they write a file and upload); only the consent-gated
+  in-memory HTTP path can, and it is off by default and barred for gestor use.
 - **Honest limitation:** LLM reads can be wrong on poor scans, rotated pages, or
   tiny fonts; the operator review gate is load-bearing, not decorative. The
   printed-vs-derived IVA advisory catches a class of misreads but not all.
@@ -233,10 +300,46 @@ document and proposing a split are the same act of understanding.
   an invoice-printed amount is an advisory cross-check only, never the persisted
   value (capability to read a number is not permission to emit it). Extends
   `llm-selects-system-derives-tax-numbers` to the evidence-reading case.
-- **Rule slug:** `decrypted-evidence-leaves-process-only-on-permitted-path`.
-  **Rule:** Decrypted `FINANCIAL`-sensitivity evidence may be sent to an LLM
-  provider (HTTP base64/file upload) or materialised to a temp file for a CLI agent
-  only along an explicitly operator-permitted path; the decrypted temp file MUST be
-  written to a private location, removed promptly after the read, and never logged,
-  and the permitted-provider set is read from central `Settings`, not hard-coded.
+- **Rule slug:** `sensitive-financial-data-persists-only-in-secure-storage`.
+  **Rule:** All sensitive financial data — every purchase invoice and every
+  incoming or outgoing business invoice, and any decrypted evidence bytes — persists
+  only inside the encrypted secure-storage backend via the runtime wrapper mapped to
+  the active profile bucket. No code path may write or persist sensitive data
+  anywhere outside secure storage (no temp files, no scratch dirs, no plaintext side
+  stores, no logs); decrypted bytes may exist only transiently in process memory and
+  must never be persisted. (This is the existing, prior-ADR-enforced invariant,
+  restated here because this feature is exactly where an agent is tempted to break
+  it.)
+- **Rule slug:** `off-host-evidence-upload-requires-explicit-consent-gate`.
+  **Rule:** Evidence reading runs on-host by default (in-tree text-layer plus a
+  local vision model). Transmitting sensitive evidence to a cloud model is permitted
+  only behind an explicit, per-invocation consent gate in which the operator
+  acknowledges the upload; the gate is default-off, re-affirmed each invocation (no
+  sticky enable), recorded in provenance, refused in gestor/professional
+  deployments, and never reachable via a file-writing transport (CLI-agent route
+  excluded; in-memory HTTP only).
+
+## Operator ruling (resolved 2026-06-10)
+
+The secure-storage invariant forced one question: may decrypted sensitive invoice
+bytes ever be transmitted off-host to a model, or must evidence reading run entirely
+on-host? The operator ruled **on-host only by default — never off-site for serious
+use** — with a narrow, explicitly-consented cloud exception:
+
+- **On-host is the default and the only posture acceptable for gestors / real
+  serious usage.** Evidence reading uses the in-tree on-host text-layer extraction
+  plus an on-host/local vision model (Ollama at localhost, in-memory base64 images).
+  An on-host vision model must be provisioned for scanned/image evidence. This is the
+  primary build target.
+- **Cloud is a consent-gated exception only.** A cloud read requires an explicit
+  per-invocation consent acknowledgement that sensitive data will leave the machine
+  and be uploaded. Default-off, recorded, and disallowed for gestor/professional use.
+  Only the in-memory HTTP transport is eligible; the file-writing CLI-agent route is
+  excluded entirely.
+- **Local-model support is a first-class investigation/build item** (Ollama vision +
+  on-host PDF rasterisation), not an afterthought.
+
+The downstream research finding and the implementation plan are corrected to match
+this ruling (on-host reader Waves replace the temp-file/cloud-first design; the
+consent gate is its own Phase).
 
