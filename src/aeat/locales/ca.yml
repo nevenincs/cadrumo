@@ -1888,7 +1888,8 @@ cli:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
       no_active_profile_error_value: sense-perfil-actiu
       period_empty: El periode fiscal no pot estar buit
-      period_unrecognised: Període no reconegut
+      period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
+      period_missing_year: 'El període ''{token}'' necessita un any en aquesta ordre. Useu el testimoni AEAT amb any {token} com 2026-{token}, o la forma de calendari (2026Q1, 2026-03, 2026).'
     next:
       create_profile_command: aeat config profile create NOM
   config:
@@ -2570,8 +2571,7 @@ cli:
       help: Exportar moviments canònics del llibre des del bucket del perfil actiu
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Ruta on escriure el fitxer exportat del llibre
-      period_help: Limita l'exportació a un únic període de presentació (p. ex. 2025T1,
-        2025).
+      period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
     history:
       help: Mostra la cadena cronològica d'esdeveniments d'una transacció
       id_help: Id de la transacció (o prefix no ambigu)
@@ -2595,7 +2595,7 @@ cli:
         amb una columna de data, import i descripció seguida d''almenys una fila de
         dades.'
       path_help: Ruta a l'arxiu de l'extracte bancari o directori
-      period_help: Periode fiscal per a la importació
+      period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
       provider_help: 'Proveïdor del format de l''extracte. Valors reconeguts: {providers}'
       source_help: Fitxer original per verificar les files importades
       verbose_help: Mostrar informació detallada durant la importació
@@ -2693,7 +2693,7 @@ cli:
       help: Informa de les dades comptables que falten (categoria, base imposable,
         import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
         bucket actiu en un període donat. Local; mai contacta amb AEAT.
-      period_help: Període canònic (p. ex. 2026Q1, 2026-03, 2026).
+      period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
     providers:
       help: Llista els proveïdors LLM en subprocés amb CLI disponible al PATH.
     remove:
@@ -2743,7 +2743,7 @@ cli:
     status:
       help: Resumir l'estat del llibre i la preparació de càlcul del bucket del perfil
         actiu
-      period_help: Període fiscal per al preflight (AAAA-MM o període de model)
+      period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
     track:
       help: Mostrar el llinatge d'esdeveniments d'un moviment del llibre
       transaction_id_help: Id del moviment del llibre a inspeccionar
@@ -2949,7 +2949,7 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
     period: Període
-    period_help: Període fiscal a revisar (per exemple, 2026-Q1)
+    period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions antics desats;

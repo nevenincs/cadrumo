@@ -73,13 +73,31 @@ Replace the modelo, year, and period with your own. The full workflow for supply
 
 ## The period token is rejected
 
-The refusal looks like this:
+Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. [Filing periods](filing-periods.md) explains which form uses which period.
+
+Modelo commands take the year separately with `--year`, so a bare token works there:
 
 ```text
 --period '<token>' is not a valid period token for modelo <modelo>. ... Valid tokens: ...
 ```
 
-The error itself lists the valid tokens for your modelo. As a general guide: `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. [Filing periods](filing-periods.md) explains which form uses which period.
+The error lists the valid tokens for your modelo.
+
+Ledger commands (`ledger preflight`, `ledger status`, `ledger export`, `ledger import`, `overview status`) take no `--year`, so qualify the token with its year:
+
+```bash
+aeat app ledger preflight --period 2026-1T
+aeat app ledger status --period 2026-0A
+aeat app ledger preflight --period 2026-03
+```
+
+A bare token on a ledger command is refused with the year fix:
+
+```text
+Period '1T' needs a year on this command. Use the year-qualified AEAT token 1T like 2026-1T, or the calendar shape (2026Q1, 2026-03, 2026).
+```
+
+The calendar shapes `2026Q1`, `2026-03`, and `2026` are also accepted on ledger commands and mean the same period - use whichever you prefer.
 
 ## An export refuses because no verified calculation exists
 

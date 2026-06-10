@@ -1781,7 +1781,8 @@ cli:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
       no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
-      period_unrecognised: Unrecognized period
+      period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token with its year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
+      period_missing_year: 'Period ''{token}'' needs a year on this command. Use the year-qualified AEAT token {token} like 2026-{token}, or the calendar shape (2026Q1, 2026-03, 2026).'
     next:
       create_profile_command: aeat config profile create NAME
   config:
@@ -2428,7 +2429,7 @@ cli:
       help: Export canonical ledger rows from the active profile bucket
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
-      period_help: Restrict the export to one filing period (e.g. 2025Q1, 2025).
+      period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
     history:
       help: Emit the chronological bucket-event chain for one ledger transaction id
       id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
@@ -2450,7 +2451,7 @@ cli:
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
       path_help: Path to the bank statement file or directory
-      period_help: Fiscal period for the import
+      period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
       provider_help: 'Statement format provider. Recognised values: {providers}'
       source_help: Original file used to verify imported rows
       verbose_help: Show detailed information during import
@@ -2549,7 +2550,7 @@ cli:
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active bucket's transactions
         in a given period. Local-only; never contacts AEAT.
-      period_help: Canonical period (e.g. 2026Q1, 2026-03, 2026).
+      period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
     providers:
       help: List which subprocess LLM providers have a usable CLI on PATH.
     remove:
@@ -2605,7 +2606,7 @@ cli:
     status:
       help: Summarize ledger state and calculation readiness for the active profile
         bucket
-      period_help: Fiscal period to preflight (YYYY-MM or modelo period)
+      period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
     track:
       help: Show the event lineage for one ledger transaction
       transaction_id_help: Ledger transaction id to inspect
@@ -2797,7 +2798,7 @@ cli:
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
     period: Period
-    period_help: Tax period to review (for example, 2026-Q1)
+    period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No legacy declaration drafts are saved - this

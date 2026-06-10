@@ -1837,7 +1837,8 @@ cli:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.
       no_active_profile_error_value: nincs-aktiv-profil
       period_empty: Az adóidőszak nem lehet üres.
-      period_unrecognised: Ismeretlen időszak.
+      period_unrecognised: 'Ismeretlen időszak: ''{raw}''. Használjon évvel megadott AEAT tokent: 2026-1T..2026-4T (negyedévek), 2026-0A (éves), 2026-01..2026-12 (hónapok). A naptári formák (2026Q1, 2026-03, 2026) szintén elfogadottak.'
+      period_missing_year: 'A(z) ''{token}'' időszakhoz év szükséges ennél a parancsnál. Használja az évvel megadott AEAT tokent ({token}), például 2026-{token}, vagy a naptári formát (2026Q1, 2026-03, 2026).'
     next:
       create_profile_command: aeat config profile create NEV
   config:
@@ -2532,8 +2533,7 @@ cli:
       help: Kanonikus főkönyvsorok exportálása az aktív profilmappából.
       include_inactive_help: Archivált és elrejtett főkönyvi tranzakciók bevonása.
       output_help: Az exportált főkönyvfájl mentési útvonala.
-      period_help: Korlátozza az exportot egyetlen bevallási időszakra (pl. 2025Q1,
-        2025).
+      period_help: 'Bevallási időszak. Használja a kanonikus AEAT tokeneket évvel: 2026-1T..2026-4T (negyedévek), 2026-0A (éves), 2026-01..2026-12 (hónapok). A naptári formák (2026Q1, 2026-03, 2026) szintén elfogadottak.'
     history:
       help: Egyetlen főkönyvi tranzakcióazonosító kronológiai bucket-eseménylánca.
       id_help: A megvizsgálandó főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
@@ -2556,7 +2556,7 @@ cli:
         de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie
         (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'
       path_help: A bankikivonati fájl vagy könyvtár elérési útja.
-      period_help: A fiscális időszak az importáláshoz.
+      period_help: 'Bevallási időszak. Használja a kanonikus AEAT tokeneket évvel: 2026-1T..2026-4T (negyedévek), 2026-0A (éves), 2026-01..2026-12 (hónapok). A naptári formák (2026Q1, 2026-03, 2026) szintén elfogadottak.'
       provider_help: 'Kivonatformátum-szolgáltató. Elismert értékek: {providers}'
       source_help: Az importált sorok ellenőrzéséhez használt eredeti fájl.
       verbose_help: Részletes információ megjelenítése importálás közben.
@@ -2658,7 +2658,7 @@ cli:
       help: Hiányzó főkönyvi adatok (kategória, adóköteles alap, IVA-összeg/kulcs,
         pénznem, arányossági hivatkozás) jelentése az aktív bucket tranzakcióira egy
         adott időszakra. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
-      period_help: Kanonikus időszak (pl. 2026N1, 2026-03, 2026).
+      period_help: 'Bevallási időszak. Használja a kanonikus AEAT tokeneket évvel: 2026-1T..2026-4T (negyedévek), 2026-0A (éves), 2026-01..2026-12 (hónapok). A naptári formák (2026Q1, 2026-03, 2026) szintén elfogadottak.'
     providers:
       help: Felsorolja az alfolyamatos LLM-szolgáltatókat, amelyek CLI-je elérhető
         a PATH-en.
@@ -2720,8 +2720,7 @@ cli:
     status:
       help: A főkönyv állapotának és számítási készültségének összefoglalása az aktív
         profilmappában.
-      period_help: A preflight-ellenőrzéshez vizsgálandó fiscális időszak (ÉÉÉÉ-HH
-        vagy nyomtatvány-időszak).
+      period_help: 'Bevallási időszak. Használja a kanonikus AEAT tokeneket évvel: 2026-1T..2026-4T (negyedévek), 2026-0A (éves), 2026-01..2026-12 (hónapok). A naptári formák (2026Q1, 2026-03, 2026) szintén elfogadottak.'
     track:
       help: Egyetlen főkönyvi tranzakció eseményleszármazásának megjelenítése.
       transaction_id_help: A vizsgálandó főkönyvi tranzakció azonosítója.
@@ -2919,7 +2918,7 @@ cli:
       year_help: 'Az alkalmazhatóság-értékelés adóéve; alapértelmezés: az aktuális
         év.'
     period: Időszak
-    period_help: Áttekintendő adóidőszak (pl. 2026-N1)
+    period_help: 'Bevallási időszak. Használja a kanonikus AEAT tokeneket évvel: 2026-1T..2026-4T (negyedévek), 2026-0A (éves), 2026-01..2026-12 (hónapok). A naptári formák (2026Q1, 2026-03, 2026) szintén elfogadottak.'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett régi bevallástervezet – ez normális,

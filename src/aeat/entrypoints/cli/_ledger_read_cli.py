@@ -263,7 +263,11 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
             "--period",
             help=tr(
                 "cli.ledger.preflight.period_help",
-                default="Canonical period (e.g. 2026Q1, 2026-03, 2026).",
+                default=(
+                    "Filing period. Use the canonical AEAT tokens with their year: "
+                    "2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 "
+                    "(months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted."
+                ),
             ),
         ),
     ) -> None:
@@ -362,7 +366,11 @@ def _register_ledger_export_command(app: typer.Typer) -> None:
             "--period",
             help=tr(
                 "cli.ledger.export.period_help",
-                default="Restrict the export to one filing period (e.g. 2025Q1, 2025).",
+                default=(
+                    "Restrict the export to one filing period. Use the canonical AEAT "
+                    "tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), "
+                    "2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026 are also accepted."
+                ),
             ),
         ),
         actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
