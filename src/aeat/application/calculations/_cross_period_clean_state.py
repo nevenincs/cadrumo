@@ -52,6 +52,11 @@ _OFFICIAL_SOURCE_KINDS: Final = frozenset(
 _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
     {
         "aeat_justificante_pdf",
+        # A live-captured justificante is the authentic AEAT-signed receipt
+        # pulled read-only from the sede (the same PDF an operator would
+        # download and import as aeat_justificante_pdf), so it satisfies the
+        # justificante-verification gate. See the live-justificante-reconcile ADR.
+        "aeat_live_capture",
     }
 )
 
