@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from time import sleep
+from typing import cast
 
 import pytest
 from typer.testing import CliRunner
@@ -237,9 +238,14 @@ class TestIvaRemoteStateCliSurface:
 
             assert raised.value.surface == "remote_state_command"
             assert raised.value.timeout_ms == 1
-            assert raised.value.context["surface"] == "remote_state_command"
-            assert raised.value.context["timeout_ms"] == 1
-            progress = raised.value.context["progress"]
+            context = raised.value.context
+            assert context is not None
+            assert context["surface"] == "remote_state_command"
+            assert context["timeout_ms"] == 1
+            progress_node = context["progress"]
+            assert isinstance(progress_node, dict)
+            # The watchdog progress payload is a JSON object (str keys, object values).
+            progress = cast(dict[str, object], progress_node)
             assert progress["stage"] == "cli_watchdog"
             assert progress["surface"] == LiveIvaReadSurface.FILED_HISTORY.value
             assert "watchdog_reaped_process_count" in progress
@@ -391,7 +397,9 @@ def _live_process_command_lines() -> str:
     if platform.system() == "Windows":
         powershell = shutil.which("powershell") or shutil.which("pwsh")
         if powershell is None:
-            raise RuntimeError("PowerShell (powershell or pwsh) is required for Windows process inventory but was not found on PATH")
+            raise RuntimeError(
+                "PowerShell (powershell or pwsh) is required for Windows process inventory but was not found on PATH"
+            )
         script = "Get-CimInstance Win32_Process | Select-Object -ExpandProperty CommandLine | ConvertTo-Json -Compress"
         completed = subprocess.run(
             [powershell, "-NoProfile", "-Command", script],
