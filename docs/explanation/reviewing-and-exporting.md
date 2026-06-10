@@ -16,11 +16,11 @@ These two files are not the same file, and you shouldn't expect one to do the ot
 
 Your calculation is laid out as a spreadsheet in Google Sheets: a row for each input, a row for each result, and the totals built from them. The totals carry live formulas (the spreadsheet recomputes as you change a number), so if you correct an input, every total that depends on it updates in front of you. You can see exactly how a casilla - a numbered box on the official modelo (an AEAT tax form) - arrives at its figure, rather than taking it on trust.
 
-That makes the spreadsheet a place to think, not just to look. Change a figure, watch the consequences, and when you're satisfied, pull your reviewed edits back in so the tool records them against your filing. The spreadsheet is bound to the exact calculation it was built from, so the edits land in the right place.
+That makes the spreadsheet a place to think, not just to look. You change a figure, the dependent totals recompute in front of you, and when you're satisfied you pull your reviewed edits back so the tool records them against your filing. The spreadsheet is tied to the exact calculation it was built from, so the edits land in the right place.
 
 To walk through this surface in practice, see [Review calculations with Google Sheets](../how-to/review-with-google-sheets.md).
 
-One honest note about formats. The tool can also produce an offline spreadsheet file (an `.xlsx`). That file exists as a fixed record of the calculation and its supporting evidence - a snapshot you can keep - not as an open-in-Excel review tool. It doesn't recompute, and there's no documented way to edit it and feed your changes back. Treat it as a keepsake of what the numbers were, and use Google Sheets when you actually want to review and adjust.
+One honest note about formats. The tool can also produce an offline spreadsheet file (an `.xlsx`). That file exists as a fixed record of the calculation and its supporting evidence - a copy you can keep - not as an open-in-Excel review tool. It doesn't recompute, and there's no documented way to edit it and feed your changes back. Treat it as a keepsake of what the numbers were, and use Google Sheets when you actually want to review and adjust.
 
 ## The official upload file
 

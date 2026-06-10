@@ -8,7 +8,7 @@ Read this to understand how the pieces fit together. To actually perform a task,
 
 ## The one promise
 
-The tool runs entirely on your own computer. It prepares your filing for you, but it never sends anything to the agency. When the file is ready, you upload it yourself through the agency's portal. The depth on this boundary lives in [Recording a filing, after you upload it yourself](recording-a-filing-and-the-boundary.md).
+The tool runs entirely on your own computer. It prepares your filing for you, but it never sends anything to the agency. When the file is ready, you upload it yourself through the agency's portal. [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md) covers this boundary in full.
 
 ---
 
@@ -48,19 +48,19 @@ Each stop on this journey is owned in depth by one member of this cluster. The f
 
 ## From your records to the figures on the form
 
-Your bank movements start as plain amounts and dates with no tax meaning. Before the tool can fill in a form, each movement is sorted into a tax category and, where a cost is partly personal, adjusted to the business share. A readiness check then confirms the records are complete for the period. From there the tool fills in each numbered box of the form, following the rules the agency publishes, and saves the result as a draft. See [From your records to the figures on the form](from-records-to-figures.md).
+Your bank movements start as plain amounts and dates with no tax meaning. Before the tool can fill in a form, each movement is sorted into a tax category and, where a cost is partly personal, adjusted to the business share. A readiness check then confirms the records are complete for the period. From there the tool fills in each numbered box of the form, following the rules the agency publishes, and saves the result as a draft. See [How your records become tax figures](from-records-to-figures.md).
 
 ---
 
 ## Editing and double-checking a calculation
 
-A first draft is rarely the last word. You can adjust figures, re-run the calculation, and keep a saved version of each pass without losing the earlier ones. When you're ready, a completeness check looks over the whole form for missing inputs and inconsistent figures. See [Editing and double-checking a calculation](editing-and-verifying.md).
+A first draft is rarely the last word. You can adjust figures, re-run the calculation, and keep a saved version of each pass without losing the earlier ones. When you're ready, a completeness check looks over the whole form for missing inputs and inconsistent figures. See [Editing and verifying a calculation](editing-and-verifying.md).
 
 ---
 
 ## When a form builds on earlier ones
 
-Some forms depend on figures you already filed - an annual summary that draws on the quarters, for example. The tool carries those earlier numbers forward so a later form stays consistent with what came before, and it tells you when an earlier filing isn't ready yet. See [When a form builds on earlier ones](building-on-earlier-filings.md).
+Some forms depend on figures you already filed - an annual summary that draws on the quarters, for example. The tool carries those earlier numbers forward so a later form stays consistent with what came before, and it tells you when an earlier filing isn't ready yet. See [How filings build on earlier ones](building-on-earlier-filings.md).
 
 ---
 
@@ -72,7 +72,7 @@ Before you commit to a form, you can review every figure and trace it back to th
 
 ## Recording a filing, after you upload it yourself
 
-The tool stops at the file. You upload it through the agency's portal, and the agency hands you a *justificante* - the receipt that proves you filed. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, after you upload it yourself](recording-a-filing-and-the-boundary.md).
+The tool stops at the file. You upload it through the agency's portal, and the agency hands you a *justificante* - the receipt that proves you filed. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 
@@ -83,7 +83,7 @@ Two everyday words have narrow, local meanings in this tool:
 - **Verify** is a completeness and consistency check that runs on your own computer. It confirms the form holds together and nothing required is missing. It does not test the form against the agency's portal, and it's not a promise the agency will accept it.
 - **File** is a local "final" note in your own records. It marks a form as done so you don't change it by accident. It is not a submission - the tool never sends anything to the agency.
 
-The depth on these two ideas lives in [Editing and double-checking a calculation](editing-and-verifying.md) and [Recording a filing, after you upload it yourself](recording-a-filing-and-the-boundary.md).
+These two ideas are covered in depth in [Editing and verifying a calculation](editing-and-verifying.md) and [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 

@@ -14,11 +14,11 @@ Tax meaning isn't in the bank data. You add it. Until you do, a movement can't c
 
 ## Making a record tax-ready
 
-To give a movement tax meaning, you turn it into a sorted, categorized record. That means three things:
+To give a movement tax meaning, you turn it into a sorted, categorized record. A tax-ready record carries three things:
 
-- Decide whether it's business, personal, or a mix of both.
-- Give it a category, such as customer sales or office supplies.
-- For mixed costs, set the business-versus-personal split, so only the business share counts.
+- a business, personal, or mixed decision;
+- a category, such as customer sales or office supplies;
+- and, for a mixed cost, the business-versus-personal split, so only the business share counts.
 
 A record that has all of this is ready to feed into a calculation. To do this for your own movements, see [Classify transactions](../how-to/classify-transactions.md).
 

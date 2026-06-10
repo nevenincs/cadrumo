@@ -1,6 +1,6 @@
 # Recording a filing, and why the tool never files for you
 
-This page explains the last stretch of the journey: the line between the work you do on your own computer and the real Agencia Tributaria (AEAT, the Spanish tax agency). It is for everyday autónomos who have built a modelo, checked it, and now want to know how filing actually happens. The short answer is that you file it yourself, and the tool keeps a careful record around that act. This page is about why the boundary sits where it does.
+This page explains the last stretch of the journey: the line between the work you do on your own computer and the real Agencia Estatal de Administración Tributaria (AEAT, the Spanish tax agency). It is for everyday autónomos who have built a modelo, checked it, and now want to know how filing actually happens. The short answer is that you file it yourself, and the tool keeps a careful record around that act. This page is about why the boundary sits where it does.
 
 ## The boundary is permanent
 
@@ -16,7 +16,7 @@ Nothing flows the other way. The connection has no path that writes, edits, or r
 
 ## You upload the file yourself
 
-The real submission happens in your own browser, on the agency's website, with your own login credentials - a digital certificate or Cl@ve. You sign in as yourself, you upload the file the tool prepared, and you press submit. The tool never holds your credentials for this and never stands between you and the agency at that moment.
+The real submission happens in your own browser, on the agency's website, with your own login credentials - a digital certificate or Cl@ve (the Spanish government's shared identity login). You sign in as yourself, you upload the file the tool prepared, and you press submit. The tool never holds your credentials for this and never stands between you and the agency at that moment.
 
 For the steps, see [Upload your exported modelo at the AEAT portal](../how-to/file-at-aeat.md).
 
@@ -42,7 +42,7 @@ The comparison confirms that your local record matches the receipt's headline fi
 
 It is **not** a live re-check of your maths against the agency. The tool does not ask AEAT to recompute your return and compare answers. It compares your record against a receipt you already hold, at the level of the figures that receipt shows.
 
-The tool can also save read-only copies of the agency's own record as evidence - keeping a snapshot of what AEAT holds, so you have it on file. That too is comparison and record-keeping, not a fresh calculation. None of these steps re-derives your tax; they confirm what was filed and keep proof of it.
+The tool can also save read-only copies of the agency's own record as evidence - keeping a copy of what AEAT holds, so you have it on file. That too is comparison and record-keeping, not a fresh calculation. None of these steps re-derives your tax; they confirm what was filed and keep proof of it.
 
 ## Where this sits in the journey
 

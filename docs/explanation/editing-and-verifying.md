@@ -22,7 +22,7 @@ the same version; change a single number and you get a new one, sitting
 alongside the old.
 
 The practical upshot: you can compare versions, and you can go back. A saved
-version is a snapshot of one attempt, not a verdict. The numbers are real, but
+version is a record of one attempt, not a verdict. The numbers are real, but
 they're not committed to anything until you decide they are.
 
 ## Editing and recalculating
@@ -36,7 +36,7 @@ A modelo is made of casillas (numbered boxes). Each box either holds a value or
 waits for one. Editing is the act of giving a box the value the form still
 needs, then recalculating so the totals reflect it. For the actual mechanics of
 reviewing and changing box values, see
-[review a calculation's values](../how-to/review-calculation-values.md).
+[Review and supply calculation inputs](../how-to/review-calculation-values.md).
 
 ## What verifying checks
 
@@ -61,7 +61,7 @@ A draft lands in one of three states after the check:
   is marked as verified. The tool keeps the version in this finalised, locked
   state.
 - **Incomplete.** The only thing standing in the way is required boxes with no
-  value yet. Fill them in, recalculate, and check again.
+  value yet. An incomplete draft needs those boxes filled and the check re-run.
 - **Blocked.** The check found an issue that stops the draft - a rule that
   failed, or a consistency problem - that you need to resolve before it can be
   marked complete.
@@ -114,7 +114,7 @@ file.
 This page is part of the
 [Understanding the AEAT pipeline](index.md) cluster. Earlier filings feed into
 later ones; for how a verified prior period carries forward, see
-[building on earlier filings](building-on-earlier-filings.md). Once a version
-has passed the check, the next outputs - reviewing the result and producing the
-upload file - are covered in
-[reviewing and exporting](reviewing-and-exporting.md).
+[How filings build on earlier ones](building-on-earlier-filings.md). Once a
+version has passed the check, the next outputs - reviewing the result and
+producing the upload file - are covered in
+[Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).
