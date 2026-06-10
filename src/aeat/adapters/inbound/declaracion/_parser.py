@@ -8,6 +8,7 @@ against a :class:`RegistrySnapshot`, which the parser loads on demand through
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -414,6 +415,92 @@ def _select_extraction_profile(
     return profiles[0]
 
 
+@dataclass(frozen=True, slots=True)
+class _TargetClassification:
+    """One target's extraction outcome: a value, or a single failure category.
+
+    Exactly one field is populated. ``value`` carries the extracted casilla on
+    success; otherwise one of ``missing`` / ``malformed`` / ``ambiguous`` names
+    the failed casilla id.
+    """
+
+    value: ExtractedCasilla | None = None
+    missing: str | None = None
+    malformed: str | None = None
+    ambiguous: str | None = None
+
+
+def _classify_target(
+    target: ExtractionTargetDefinition,
+    *,
+    pages: tuple[str, ...],
+    pages_words: tuple[list[_PdfWord], ...] | None,
+) -> _TargetClassification:
+    """Resolve one target's hits into a value or a failure category.
+
+    Mirrors the per-target arm of :func:`_extract_profile_values`: bbox targets
+    without word data are ``missing``; no hits is ``missing``; multiple hits is
+    ``ambiguous``; an unparseable amount is ``malformed``; otherwise the captured
+    value is returned as an :class:`ExtractedCasilla`.
+    """
+    casilla_id = target.casilla_id
+    if target.match_strategy == "bbox_anchored":
+        if pages_words is None:
+            # No word data available (bytes-mode or missing file); treat as missing.
+            return _TargetClassification(missing=casilla_id)
+        hits = _find_bbox_casilla_hits(pages_words, target)
+    else:
+        hits = _find_casilla_hits(pages, target)
+    if not hits:
+        return _TargetClassification(missing=casilla_id)
+    if len(hits) > 1:
+        return _TargetClassification(ambiguous=casilla_id)
+    page_number, raw_value = hits[0]
+    if target.value_kind == "amount":
+        parsed: Decimal | str | None = parse_spanish_decimal(raw_value)
+        if parsed is None:
+            return _TargetClassification(malformed=casilla_id)
+    else:
+        # "text" and "enum" value kinds: store the raw captured token as-is.
+        parsed = raw_value
+    return _TargetClassification(
+        value=ExtractedCasilla(
+            casilla_id=casilla_id,
+            printed_value=parsed,
+            source_page=page_number,
+            source_bbox=None,
+            extraction_confidence=1.0,
+        )
+    )
+
+
+def _raise_extraction_failed(
+    profile: ExtractionProfileDefinition,
+    *,
+    missing: list[str],
+    malformed: list[str],
+    ambiguous: list[str],
+    coverage: Decimal,
+) -> None:
+    """Raise the degraded-extraction error with a human-readable detail summary."""
+    details = []
+    if missing:
+        details.append(f"missing={','.join(missing)}")
+    if malformed:
+        details.append(f"malformed={','.join(malformed)}")
+    if ambiguous:
+        details.append(f"ambiguous={','.join(ambiguous)}")
+    details.append(f"coverage={coverage}")
+    raise DeclaracionParseError(
+        translated_message="adapters.inbound.declaracion.errors.extraction_failed",
+        context={"profile": profile.id, "details": "; ".join(details)},
+        missing=tuple(missing),
+        malformed=tuple(malformed),
+        ambiguous=tuple(ambiguous),
+        coverage=coverage,
+    )
+
+
 def _extract_profile_values(
     pages: tuple[str, ...],
     profile: ExtractionProfileDefinition,
@@ -432,39 +519,15 @@ def _extract_profile_values(
     ambiguous: list[str] = []
 
     for target in profile.target_casillas:
-        casilla_id = target.casilla_id
-        if target.match_strategy == "bbox_anchored":
-            if pages_words is None:
-                # No word data available (bytes-mode or missing file); treat as missing.
-                missing.append(casilla_id)
-                continue
-            hits = _find_bbox_casilla_hits(pages_words, target)
-        else:
-            hits = _find_casilla_hits(pages, target)
-        if not hits:
-            missing.append(casilla_id)
-            continue
-        if len(hits) > 1:
-            ambiguous.append(casilla_id)
-            continue
-        page_number, raw_value = hits[0]
-        if target.value_kind == "amount":
-            parsed: Decimal | str | None = parse_spanish_decimal(raw_value)
-            if parsed is None:
-                malformed.append(casilla_id)
-                continue
-        else:
-            # "text" and "enum" value kinds: store the raw captured token as-is.
-            parsed = raw_value
-        values.append(
-            ExtractedCasilla(
-                casilla_id=casilla_id,
-                printed_value=parsed,
-                source_page=page_number,
-                source_bbox=None,
-                extraction_confidence=1.0,
-            )
-        )
+        outcome = _classify_target(target, pages=pages, pages_words=pages_words)
+        if outcome.value is not None:
+            values.append(outcome.value)
+        elif outcome.malformed is not None:
+            malformed.append(outcome.malformed)
+        elif outcome.ambiguous is not None:
+            ambiguous.append(outcome.ambiguous)
+        elif outcome.missing is not None:
+            missing.append(outcome.missing)
 
     coverage = Decimal(len(values)) / Decimal(len(profile.target_casillas))
     # Raise when extraction quality is degraded (ambiguous or malformed hits) or when
@@ -472,20 +535,11 @@ def _extract_profile_values(
     # as long as coverage meets the threshold — partial filings legitimately omit
     # zero or not-applicable casillas (e.g. M130 real-corpus PDFs).
     if ambiguous or malformed or coverage < profile.min_coverage:
-        details = []
-        if missing:
-            details.append(f"missing={','.join(missing)}")
-        if malformed:
-            details.append(f"malformed={','.join(malformed)}")
-        if ambiguous:
-            details.append(f"ambiguous={','.join(ambiguous)}")
-        details.append(f"coverage={coverage}")
-        raise DeclaracionParseError(
-            translated_message="adapters.inbound.declaracion.errors.extraction_failed",
-            context={"profile": profile.id, "details": "; ".join(details)},
-            missing=tuple(missing),
-            malformed=tuple(malformed),
-            ambiguous=tuple(ambiguous),
+        _raise_extraction_failed(
+            profile,
+            missing=missing,
+            malformed=malformed,
+            ambiguous=ambiguous,
             coverage=coverage,
         )
     return tuple(values)
