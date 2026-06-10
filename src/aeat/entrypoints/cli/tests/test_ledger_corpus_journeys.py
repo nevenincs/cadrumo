@@ -783,7 +783,9 @@ def test_reclassify_retains_classification_event_chain() -> None:
     # The current category reflects the latest decision; the chain proves the
     # earlier one was not silently dropped.
     catalogue = _active_repo().load()
-    assert catalogue.get(tx).category_id == "asesoria_fiscal"
+    txn = catalogue.get(tx)
+    assert txn is not None
+    assert txn.category_id == "asesoria_fiscal"
 
 
 def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
@@ -887,6 +889,7 @@ def test_doclink_records_drive_link_as_local_evidence_never_fetched() -> None:
 
     catalogue = _active_repo().load()
     txn = catalogue.get(tx)
+    assert txn is not None
     assert txn.attachment_ids, "doclink must bind an attachment id to the row"
     attachment = load_attachment(AttachmentStore(), txn.attachment_ids[0])
     # The link reference is recorded verbatim; the payload is the link itself
@@ -1010,6 +1013,7 @@ def _xlsx_mirror_of_csv(csv_path: Path, out: Path) -> None:
 
     workbook = Workbook()
     sheet = workbook.active
+    assert sheet is not None
     for line in csv_path.read_text(encoding="utf-8").splitlines():
         sheet.append(line.split(";"))
     workbook.save(out)
