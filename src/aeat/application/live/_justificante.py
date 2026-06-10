@@ -25,10 +25,14 @@ from __future__ import annotations
 
 import base64
 import binascii
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.sede import Declaracion, Expediente
 
 from ...adapters.persistence.storage import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE as JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,
@@ -102,7 +106,9 @@ class JustificanteCaptureSnapshot(BaseModel):
         try:
             Modelo(value)
         except ValueError as exc:
-            raise LiveApplicationInputError(f"justificante capture modelo {value!r} is not a known AEAT modelo") from exc
+            raise LiveApplicationInputError(
+                f"justificante capture modelo {value!r} is not a known AEAT modelo",
+            ) from exc
         return value
 
     @model_validator(mode="after")
@@ -159,6 +165,52 @@ def derive_justificante_capture_snapshot_id(
             "period": period.strip(),
             "pdf_sha256": pdf_sha256,
         }
+    )
+
+
+def resolve_period_expediente(
+    *,
+    declarations: Sequence[Declaracion],
+    expedientes: Sequence[Expediente],
+    modelo: str,
+    period: str,
+) -> Expediente:
+    """Resolve the capturable expediente for one ``(modelo, period)`` filing.
+
+    The procedure-tree :class:`Expediente` carries no period, so for a
+    multi-period modelo (quarterly 1T-4T) it cannot disambiguate which
+    quarter's receipt to pull. The period-bearing surface is the filed
+    *declarations register* (:class:`Declaracion` carries ``period`` and
+    ``expediente_id``). This resolver picks the declaration matching the
+    target ``(modelo, period)`` (the latest filing for that period when a
+    period was re-filed), then cross-references its ``expediente_id`` against
+    the tree to return the capturable expediente. It NEVER returns a
+    different period's expediente: a missing or unmatched declaration raises
+    rather than falling back to a wrong-quarter receipt.
+
+    Raises:
+        LiveApplicationInputError: when no declaration matches the requested
+            period, or the matched declaration's expediente is absent from
+            the tree.
+    """
+    target_period = period.strip()
+    candidates = [
+        declaration
+        for declaration in declarations
+        if declaration.modelo == modelo and declaration.period == target_period
+    ]
+    if not candidates:
+        raise LiveApplicationInputError(
+            f"no filed declaration for modelo={modelo!r} period={target_period!r}; "
+            "cannot resolve a justificante expediente for this period",
+        )
+    chosen = max(candidates, key=lambda declaration: declaration.presented_at)
+    for expediente in expedientes:
+        if expediente.expediente_id == chosen.expediente_id:
+            return expediente
+    raise LiveApplicationInputError(
+        f"declaration for modelo={modelo!r} period={target_period!r} references expediente "
+        f"{chosen.expediente_id!r} which is not present in the expedientes tree",
     )
 
 
@@ -436,4 +488,5 @@ __all__ = [
     "JustificanteCaptureSnapshotService",
     "derive_justificante_capture_snapshot_id",
     "justificante_capture_snapshot_object_key",
+    "resolve_period_expediente",
 ]
