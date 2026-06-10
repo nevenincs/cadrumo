@@ -110,15 +110,11 @@ def _seed_multi_namespace_corpus(
         written_at=datetime(2026, 5, 22, 9, 30, 0, tzinfo=UTC),
         payload=b"beta-payload",
     )
-    _seed_legacy_encrypted_string_key_row(
-        engine,
-        namespace="aeat.mig.gamma",
-        natural_key=duplicate_natural_key,
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
-        written_at=datetime(2026, 5, 22, 9, 0, 0, tzinfo=UTC),
-        payload=b"gamma-loser-payload",
-    )
+    # The winner is seeded FIRST (lower autoincrement id) with the LATER
+    # written_at, so the duplicate-collapse outcome is decided by the sort
+    # key's written_at term alone — a regression that dropped written_at and
+    # fell through to the id tiebreak would pick the loser and fail the
+    # schema_version assertions.
     _seed_legacy_encrypted_string_key_row(
         engine,
         namespace="aeat.mig.gamma",
@@ -127,6 +123,15 @@ def _seed_multi_namespace_corpus(
         schema_version=2,
         written_at=datetime(2026, 5, 22, 10, 0, 0, tzinfo=UTC),
         payload=b"gamma-winner-payload",
+    )
+    _seed_legacy_encrypted_string_key_row(
+        engine,
+        namespace="aeat.mig.gamma",
+        natural_key=duplicate_natural_key,
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=datetime(2026, 5, 22, 9, 0, 0, tzinfo=UTC),
+        payload=b"gamma-loser-payload",
     )
 
     return {
