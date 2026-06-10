@@ -9,22 +9,32 @@ wrapper, and the registry plus emit helpers. The canonical definitions live in
 from __future__ import annotations
 
 from ...core.json_contract import (
+    ENVELOPE_SCHEMA_VERSION,
     SCHEMA_REGISTRY,
+    EnvelopeStatus,
+    Notice,
+    NoticeSeverity,
     OutputRootSchema,
     OutputSchema,
     OutputSchemaError,
     SchemaEnvelope,
+    derive_status,
     emit_json_document,
     emit_json_success,
     register_schema,
 )
 
 __all__ = [
+    "ENVELOPE_SCHEMA_VERSION",
     "SCHEMA_REGISTRY",
+    "EnvelopeStatus",
+    "Notice",
+    "NoticeSeverity",
     "OutputRootSchema",
     "OutputSchema",
     "OutputSchemaError",
     "SchemaEnvelope",
+    "derive_status",
     "emit_json_document",
     "emit_json_success",
     "register_schema",

@@ -43,7 +43,7 @@ from ._overview_payloads import (
     OverviewExplainResult,
     OverviewStatusResult,
 )
-from ._overview_rendering import render_cli_overview_status_lines
+from ._overview_rendering import overview_next_step_notices, render_cli_overview_status_lines
 
 logger = get_logger(__name__)
 
@@ -184,7 +184,13 @@ def overview_status(
     raw_values = record_to_values(profile_record) if profile_record is not None else None
     report = build_overview_status_report(state=current, raw_values=raw_values)
     typed_status = OverviewStatusResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="overview.status", result=typed_status, lines=render_cli_overview_status_lines(report))
+    _emit_envelope(
+        ctx,
+        command="overview.status",
+        result=typed_status,
+        lines=render_cli_overview_status_lines(report),
+        notices=overview_next_step_notices(report),
+    )
 
 
 @app.command(

@@ -307,6 +307,81 @@ _BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(
 _BARE_EMIT_EXEMPTION_PATHS: frozenset[str] = frozenset(path for path, _rationale in _BARE_EMIT_EXEMPTIONS)
 
 
+# ---------------------------------------------------------------------
+# Shared-spine + notices-channel conformance.
+# ---------------------------------------------------------------------
+
+#: The success envelope's outer spine. Shared (minus ``result`` vs
+#: ``error``) with the stderr error document so one shape describes
+#: success, warning, and error outcomes.
+_EXPECTED_SUCCESS_SPINE_KEYS = frozenset({"schema_version", "command", "status", "result", "notices"})
+
+#: Top-level result-schema field names that must never reappear: warnings,
+#: advisories, and next-step hints belong on the envelope ``notices``
+#: channel, not smuggled into a command's ``result`` payload. ``next_due`` /
+#: ``next_action`` / ``next_label`` are legitimate structured data (a due
+#: date, a per-finding action, a label) and are intentionally NOT forbidden;
+#: only the bare ``next`` hint and the ``*_advisory`` smuggling are.
+_FORBIDDEN_NOTICE_FIELD_NAMES = frozenset(
+    {"next", "suggestion", "suggestions", "hint", "hints", "advisory", "advisories", "source_advisories"}
+)
+
+
+def _is_forbidden_notice_field(name: str) -> bool:
+    """Return True when ``name`` is a bespoke notice/advisory result field."""
+    return name in _FORBIDDEN_NOTICE_FIELD_NAMES or name.endswith("_advisory") or name.endswith("_advisories")
+
+
+def test_success_envelope_carries_shared_spine() -> None:
+    """:class:`SchemaEnvelope` must expose exactly the shared outer spine.
+
+    Locks the spine so a future edit cannot silently drop ``status`` /
+    ``notices`` or reintroduce the removed free-form ``warnings`` list.
+    """
+    assert set(SchemaEnvelope.model_fields) == set(_EXPECTED_SUCCESS_SPINE_KEYS)
+
+
+@pytest.mark.parametrize("command_path", sorted(SCHEMA_REGISTRY.keys()))
+def test_registered_schema_has_no_bespoke_notice_field(command_path: str) -> None:
+    """No result schema may re-implement a notice / advisory / next-step field.
+
+    Warnings, advisories, and next-step hints are the envelope
+    ``notices`` channel's responsibility. A top-level result field named
+    ``next``, ``suggestion``, ``*_advisory`` (etc.) is exactly the
+    bespoke per-command smuggling the notice-standardisation removed; the
+    gate fails loudly if one regrows so the uniform channel stays the only
+    sanctioned diagnostic surface.
+    """
+    schema = SCHEMA_REGISTRY[command_path]
+    fields = getattr(schema, "model_fields", {})
+    offending = sorted(name for name in fields if _is_forbidden_notice_field(name))
+    assert offending == [], (
+        f"{command_path} ({schema.__module__}.{schema.__name__}) carries bespoke "
+        f"notice/advisory field(s) {offending}; emit these on the envelope `notices` "
+        f"channel via `_emit_envelope(..., notices=[...])` instead of a result field."
+    )
+
+
+def test_error_document_shares_the_success_spine() -> None:
+    """The stderr error document carries the same outer spine as success.
+
+    Renders a representative error and asserts the spine keys
+    (``schema_version`` / ``command`` / ``status`` / ``notices``) sit
+    alongside the nested ``error`` body, so a machine consumer reads one
+    shape across success, warning, and error outcomes.
+    """
+    import json as _json
+
+    from ....core.errors import render_error_json
+    from ....core.locks_errors import LockAcquisitionError
+
+    document = _json.loads(render_error_json(LockAcquisitionError()))
+    assert set(document) >= {"schema_version", "command", "status", "error", "notices"}
+    assert document["status"] == "error"
+    assert document["command"] is None
+    assert isinstance(document["notices"], list)
+
+
 def test_zero_bare_emit_sites_outside_exemption_set() -> None:
     """Production CLI modules must use ``_emit_envelope``, not bare ``_emit``.
 

@@ -102,7 +102,14 @@ class ErrorCode(BaseModel):
 
 
 class ErrorEnvelope(BaseModel):
-    """Machine-readable error payload emitted on stderr."""
+    """Machine-readable error body nested under the shared envelope spine.
+
+    Rendered as the ``error`` member of the stderr error document. The
+    document-level spine (``schema_version``, ``command``, ``status``,
+    ``notices``) is added by :func:`render_error_json` so the error
+    document and the success :class:`~aeat.core.json_contract.SchemaEnvelope`
+    share one outer shape.
+    """
 
     model_config = ConfigDict(
         frozen=True,
@@ -111,7 +118,6 @@ class ErrorEnvelope(BaseModel):
         extra="forbid",
     )
 
-    schema_version: str = "1"
     code: str
     category: str
     message: str
@@ -349,10 +355,29 @@ def render_error_json(
     context: Mapping[str, object] | None = None,
     trace_id: str | None = None,
 ) -> str:
-    """Serialize ``error`` to a deterministic single-line JSON document."""
+    """Serialize ``error`` to a deterministic single-line JSON document.
+
+    The document carries the shared envelope spine (``schema_version``,
+    ``command``, ``status``, ``notices``) so it is shape-compatible with
+    the success :class:`~aeat.core.json_contract.SchemaEnvelope`. The
+    error detail is nested under ``error``. ``command`` is ``None``: the
+    CLI error boundary terminates before the dotted command path is
+    resolvable, so the field is present-but-null for spine uniformity.
+    The :data:`~aeat.core.json_contract.ENVELOPE_SCHEMA_VERSION` import is
+    function-local to avoid the ``json_contract`` <-> ``errors`` import
+    cycle (``json_contract`` imports :class:`AeatError`).
+    """
+    from ..json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus
+
     envelope = build_error_envelope(error, context=context, trace_id=trace_id)
-    payload = {"error": envelope.model_dump(mode="json")}
-    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+    document = {
+        "schema_version": ENVELOPE_SCHEMA_VERSION,
+        "command": None,
+        "status": EnvelopeStatus.ERROR.value,
+        "error": envelope.model_dump(mode="json"),
+        "notices": [],
+    }
+    return json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
 
 
 def get_error_exit_code(category: ErrorCategory) -> int:

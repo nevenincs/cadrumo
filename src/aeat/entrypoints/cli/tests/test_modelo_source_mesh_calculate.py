@@ -23,6 +23,7 @@ from ....domain.transactions import (
 )
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .envelope_helpers import unwrap_envelope_notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -322,16 +323,18 @@ def test_work_calculate_surfaces_unconsumed_declarable_iva_advisory() -> None:
     )
     assert result.exit_code == 0, result.output
 
-    payload = _payload(result.output)
-    advisories = payload["source_advisories"]
+    notices = unwrap_envelope_notices(result.output)
     matching = [
-        advisory
-        for advisory in advisories
-        if advisory["source_kind"] == "ledger_iva_aggregation" and unrouted_supply.transaction_id in advisory["message"]
+        notice
+        for notice in notices
+        if notice["code"] == "modelo.work.calculate.source_advisory"
+        and (notice.get("context") or {}).get("source_kind") == "ledger_iva_aggregation"
+        and unrouted_supply.transaction_id in notice["message"]
     ]
-    assert len(matching) == 1, advisories
+    assert len(matching) == 1, notices
     advisory = matching[0]
-    assert advisory["reason"] == "source_issue"
+    assert advisory["severity"] == "warning"
+    assert advisory["context"]["reason"] == "source_issue"
     assert IvaCategory.INTRA_COMMUNITY_SUPPLY.value in advisory["message"]
 
     # The human-readable (default text) rendering carries the same advisory.
@@ -396,8 +399,8 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     )
     assert result.exit_code == 0, result.output
 
-    payload = _payload(result.output)
-    assert payload["source_advisories"] == []
+    notices = unwrap_envelope_notices(result.output)
+    assert [n for n in notices if n["code"] == "modelo.work.calculate.source_advisory"] == []
 
     # Text mode emits no ADVISORY line either: only an unrouted declarable
     # observation produces one, and every observation here was consumed.

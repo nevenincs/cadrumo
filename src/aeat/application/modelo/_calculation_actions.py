@@ -62,6 +62,7 @@ from ._registry_resources import registry_root as _registry_root
 from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry import RegistrySnapshot
     from ..aggregation import CalculationSourceDiagnostic, CalculationSourceResolution
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
@@ -506,6 +507,105 @@ def calculate_modelo_revision_from_bucket_aggregation(
     ).revision
 
 
+def _resolve_bucket_source_mesh(
+    snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    *,
+    transaction_repository: TransactionCatalogueRepository | None,
+    invoice_repository: InvoiceCatalogueRepository | None,
+) -> CalculationSourceResolution:
+    """Resolve the live source mesh for a bucket-aggregation calculation.
+
+    Builds the :class:`CalculationSourceContext`, runs every enrolled ledger /
+    invoice / carry resolver through :func:`merge_source_resolutions`, and
+    augments the result with the unhandled-binding-source advisories for any
+    declared source with no enrolled resolver. Returns the merged resolution.
+    """
+    from ..aggregation import (
+        CalculationSourceContext,
+        LedgerIvaAggregationSourceResolver,
+        LedgerRentaExpenseAggregationSourceResolver,
+        LedgerRentaIncomeAggregationSourceResolver,
+        OssIossLedgerSourceResolver,
+        collect_unhandled_source_diagnostics,
+        merge_source_resolutions,
+    )
+    from ..calculations import PreviousFilingSourceResolver, RelationPrefillSourceResolver
+    from ..invoices import InvoiceCatalogueSourceResolver
+
+    context = CalculationSourceContext(
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        revision=snapshot.revision,
+    )
+    source_resolution = merge_source_resolutions(
+        (
+            LedgerIvaAggregationSourceResolver(transaction_repository=transaction_repository).resolve(context),
+            LedgerRentaExpenseAggregationSourceResolver(
+                transaction_repository=transaction_repository,
+                invoice_repository=invoice_repository,
+            ).resolve(context),
+            # M130 actividad-económica income (ledger_renta_income_aggregation).
+            LedgerRentaIncomeAggregationSourceResolver(
+                transaction_repository=transaction_repository,
+            ).resolve(context),
+            # M369 OSS/IOSS (ledger_oss_aggregation).  Candidates are substrate-
+            # classified lines; on the pure-ledger calculate path they come in empty —
+            # the resolver returns an empty resolution without penalty so no casilla
+            # blanks silently.  Pre-classified callers (Sheets calc-sync) pass
+            # candidates via the OssIossLedgerSourceResolver constructor directly.
+            OssIossLedgerSourceResolver(candidates=()).resolve(context),
+            # M349 collectible / payable invoices (collectible_invoice,
+            # payable_invoice).  Loads the encrypted invoice catalogue and resolves
+            # binding values for intra-community transactions in scope.
+            InvoiceCatalogueSourceResolver(
+                invoice_repository=invoice_repository,
+            ).resolve(context),
+            # Cross-period carry: prior-filing observations flow through the
+            # backend-binding channel so an automatically-carried previous_filing
+            # value fills the binding gap, while a caller --binding still
+            # overrides it (it is deliberately NOT added to the owned-source
+            # rejection set below — ruling D2). The 303 IVA-compensation
+            # binding is excluded here because the iva-wallet compensación
+            # decision owns it (ruling D3).
+            _previous_filing_resolution_excluding_iva_compensation(
+                PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)
+            ),
+            # Relation canonical for cross-modelo fold-in. The relation resolver
+            # folds prior filed observations through each declared relation's
+            # aggregation op and MATERIALISES the result into the relation's
+            # target_binding slot (now declared source = "relation_prefill"). The
+            # materialised binding values ride in this resolution's binding_values
+            # so the mesh _claim_binding exclusive-ownership guard adjudicates any
+            # collision loudly (aggregation-taxonomy rulings 2+4). This brings the
+            # entire relation corpus (M100 pagos-fraccionados + retenciones
+            # credits, M180/M190/M193 reconciliations, M200/M202 carries) live on
+            # the operator calculate path.
+            RelationPrefillSourceResolver(registry_snapshot=snapshot).resolve(context),
+        )
+    )
+    # Safety net: collect non-blocking advisories for every binding whose declared
+    # source has no enrolled resolver and is not explicitly deferred.
+    # handled_sources covers all enrolled-resolver owned_sources plus the three
+    # pre-mesh-handled source kinds (profile, borrador, iva_wallet_decision).
+    # DEFERRED_SOURCE_KINDS are NOT on the manual_sources allowlist so they still
+    # emit an advisory.
+    _pre_mesh_handled: frozenset[str] = frozenset({"profile", "borrador", "iva_wallet_decision"})
+    _handled = frozenset(source_resolution.owned_sources) | _pre_mesh_handled
+    _unhandled_diagnostics = collect_unhandled_source_diagnostics(
+        snapshot.revision,
+        handled_sources=_handled,
+        manual_sources=frozenset({"manual_input"}),
+    )
+    if _unhandled_diagnostics:
+        source_resolution = source_resolution.model_copy(
+            update={"diagnostics": source_resolution.diagnostics + _unhandled_diagnostics}
+        )
+    return source_resolution
+
+
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     work_unit_id: str,
     *,
@@ -544,17 +644,6 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     contributing rows into the bucket aggregation that feeds the revision.
     """
     from ...domain.calculations.registry import RegistrySnapshotError
-    from ..aggregation import (
-        CalculationSourceContext,
-        LedgerIvaAggregationSourceResolver,
-        LedgerRentaExpenseAggregationSourceResolver,
-        LedgerRentaIncomeAggregationSourceResolver,
-        OssIossLedgerSourceResolver,
-        collect_unhandled_source_diagnostics,
-        merge_source_resolutions,
-    )
-    from ..calculations import PreviousFilingSourceResolver, RelationPrefillSourceResolver
-    from ..invoices import InvoiceCatalogueSourceResolver
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     work_units = wu_repo.load()
@@ -623,77 +712,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
-    context = CalculationSourceContext(
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        revision=snapshot.revision,
+    source_resolution = _resolve_bucket_source_mesh(
+        snapshot,
+        work_unit,
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
     )
-    source_resolution = merge_source_resolutions(
-        (
-            LedgerIvaAggregationSourceResolver(transaction_repository=transaction_repository).resolve(context),
-            LedgerRentaExpenseAggregationSourceResolver(
-                transaction_repository=transaction_repository,
-                invoice_repository=invoice_repository,
-            ).resolve(context),
-            # S09: M130 actividad-económica income (ledger_renta_income_aggregation).
-            LedgerRentaIncomeAggregationSourceResolver(
-                transaction_repository=transaction_repository,
-            ).resolve(context),
-            # S09: M369 OSS/IOSS (ledger_oss_aggregation).  Candidates are substrate-
-            # classified lines; on the pure-ledger calculate path they come in empty —
-            # the resolver returns an empty resolution without penalty so no casilla
-            # blanks silently.  Pre-classified callers (Sheets calc-sync) pass
-            # candidates via the OssIossLedgerSourceResolver constructor directly.
-            OssIossLedgerSourceResolver(candidates=()).resolve(context),
-            # S09: M349 collectible / payable invoices (collectible_invoice,
-            # payable_invoice).  Loads the encrypted invoice catalogue and resolves
-            # binding values for intra-community transactions in scope.
-            InvoiceCatalogueSourceResolver(
-                invoice_repository=invoice_repository,
-            ).resolve(context),
-            # Cross-period carry: prior-filing observations flow through the
-            # backend-binding channel so an automatically-carried previous_filing
-            # value fills the binding gap, while a caller --binding still
-            # overrides it (it is deliberately NOT added to the owned-source
-            # rejection set below — ADR ruling D2). The 303 IVA-compensation
-            # binding is excluded here because the iva-wallet compensación
-            # decision owns it (ADR ruling D3).
-            _previous_filing_resolution_excluding_iva_compensation(
-                PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)
-            ),
-            # W03.P08.S13 — relation canonical for cross-modelo fold-in. The
-            # relation resolver folds prior filed observations through each
-            # declared relation's aggregation op and MATERIALISES the result into
-            # the relation's target_binding slot (now declared
-            # source = "relation_prefill"). The materialised binding values ride
-            # in this resolution's binding_values so the mesh _claim_binding
-            # exclusive-ownership guard adjudicates any collision loudly
-            # (aggregation-taxonomy ADR rulings 2+4). This brings the entire
-            # relation corpus (M100 pagos-fraccionados + retenciones credits,
-            # M180/M190/M193 reconciliations, M200/M202 carries) live on the
-            # operator calculate path for the first time.
-            RelationPrefillSourceResolver(registry_snapshot=snapshot).resolve(context),
-        )
-    )
-    # S08 — safety net: collect non-blocking advisories for every binding whose
-    # declared source has no enrolled resolver and is not explicitly deferred.
-    # handled_sources covers all enrolled-resolver owned_sources plus the three
-    # pre-mesh-handled source kinds (profile, borrador, iva_wallet_decision).
-    # DEFERRED_SOURCE_KINDS are NOT on the manual_sources allowlist so they still
-    # emit an advisory (W02.P06.S10).
-    _pre_mesh_handled: frozenset[str] = frozenset({"profile", "borrador", "iva_wallet_decision"})
-    _handled = frozenset(source_resolution.owned_sources) | _pre_mesh_handled
-    _unhandled_diagnostics = collect_unhandled_source_diagnostics(
-        snapshot.revision,
-        handled_sources=_handled,
-        manual_sources=frozenset({"manual_input"}),
-    )
-    if _unhandled_diagnostics:
-        source_resolution = source_resolution.model_copy(
-            update={"diagnostics": source_resolution.diagnostics + _unhandled_diagnostics}
-        )
     # Precedence ladder step 4 (ADR ruling D2, extended): re-run the guard against
     # the merged owned-sources, but EXCLUDE the caller-overridable CARRY sources
     # (previous_filing + relation_prefill). A caller --binding override of an

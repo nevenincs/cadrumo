@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...application.modelo import calculation_result_summary, modelo_work_plazo_summary
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ._modelo_payloads import (
     CalculationRevisionPayload,
     ExternalEvidencePayload,
@@ -14,6 +15,33 @@ from ._modelo_payloads import (
     VerificationReportPayload,
     WorkUnitPayload,
 )
+
+
+def advisory_notice(
+    code: str,
+    message: str,
+    *,
+    suggestion: str | None = None,
+    context: dict[str, str] | None = None,
+) -> Notice:
+    """Project a non-blocking modelo advisory message onto the envelope notices channel.
+
+    The single projection point that turns an incidental, non-blocking
+    modelo diagnostic (source-resolution advisory, unauthorized-backend
+    advisory, filing-obligation advisory) into a warning-severity
+    :class:`Notice`. Command groups call this instead of re-modelling the
+    advisory as a bespoke ``*_advisory`` payload field, so every advisory
+    flows through the one uniform notices surface. ``context`` carries any
+    structured provenance the former bespoke payload exposed (e.g. the
+    source-resolution ``reason`` / ``source_kind``).
+    """
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=code,
+        message=message,
+        suggestion=suggestion,
+        context=context,
+    )
 
 
 def short_id(value: str | None) -> str | None:

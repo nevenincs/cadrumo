@@ -9,7 +9,7 @@ populated :class:`OutputSchema` instance, written through
 :func:`emit_json_success`, must re-parse into a SchemaEnvelope of the
 same inner type with strict pydantic equality.
 
-A regression that drops the ``warnings`` list, mis-serialises a typed
+A regression that drops the ``notices`` list, mis-serialises a typed
 tuple field on the inner payload, or breaks the envelope's pinned
 ``schema_version`` surfaces as a strict equality failure.
 """
@@ -21,7 +21,15 @@ import json
 
 import pytest
 
-from ..json_contract import OutputSchema, SchemaEnvelope, emit_json_success
+from ..json_contract import (
+    ENVELOPE_SCHEMA_VERSION,
+    EnvelopeStatus,
+    Notice,
+    NoticeSeverity,
+    OutputSchema,
+    SchemaEnvelope,
+    emit_json_success,
+)
 from ..redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_OBJECT_KEY_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -77,8 +85,15 @@ def test_schema_envelope_full_roundtrip_via_json_dump_and_load() -> None:
     )
     original = SchemaEnvelope[_ProvenancePayload](
         command="app modelo formulas",
+        status=EnvelopeStatus.WARNING,
         result=result,
-        warnings=["deprecated: --format text"],
+        notices=[
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.formulas.deprecated_format",
+                message="deprecated: --format text",
+            )
+        ],
     )
 
     roundtripped = SchemaEnvelope[_ProvenancePayload].model_validate_json(
@@ -86,11 +101,12 @@ def test_schema_envelope_full_roundtrip_via_json_dump_and_load() -> None:
     )
 
     assert roundtripped == original
-    assert roundtripped.schema_version == "1"
+    assert roundtripped.schema_version == ENVELOPE_SCHEMA_VERSION
     assert roundtripped.command == "app modelo formulas"
+    assert roundtripped.status is EnvelopeStatus.WARNING
     assert roundtripped.result.operand_refs == ("iva.devengado", "iva.deducible")
     assert roundtripped.result.legal_refs == ("LIVA.art-94",)
-    assert roundtripped.warnings == ["deprecated: --format text"]
+    assert roundtripped.notices[0].message == "deprecated: --format text"
 
 
 def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
@@ -115,7 +131,7 @@ def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
     emit_json_success(
         "app modelo work calculate",
         result,
-        warnings=[],
+        notices=[],
         stream=buffer,
     )
 
@@ -123,9 +139,10 @@ def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
     assert raw, "emit_json_success wrote nothing to the stream"
 
     decoded = json.loads(raw)
-    assert decoded["schema_version"] == "1"
+    assert decoded["schema_version"] == ENVELOPE_SCHEMA_VERSION
     assert decoded["command"] == "app modelo work calculate"
-    assert decoded["warnings"] == []
+    assert decoded["status"] == EnvelopeStatus.SUCCESS.value
+    assert decoded["notices"] == []
 
     # The emitted bytes re-parse cleanly through SchemaEnvelope's
     # typed JSON validator. Using ``model_validate_json`` rather than
@@ -154,15 +171,19 @@ def test_emit_json_success_redacts_sensitive_values_without_breaking_envelope_sh
     emit_json_success(
         "app secure audit",
         result,
-        warnings=[f"callback {_URL}", f"bearer {_JWT}"],
+        notices=[
+            Notice(severity=NoticeSeverity.WARNING, code="secure.audit.callback", message=f"callback {_URL}"),
+            Notice(severity=NoticeSeverity.WARNING, code="secure.audit.bearer", message=f"bearer {_JWT}"),
+        ],
         stream=buffer,
     )
 
     raw = buffer.getvalue()
     decoded = json.loads(raw)
 
-    assert set(decoded) == {"schema_version", "command", "result", "warnings"}
-    assert decoded["schema_version"] == "1"
+    assert set(decoded) == {"schema_version", "command", "status", "result", "notices"}
+    assert decoded["schema_version"] == ENVELOPE_SCHEMA_VERSION
+    assert decoded["status"] == EnvelopeStatus.WARNING.value
     assert decoded["command"] == "app secure audit"
     assert decoded["result"] == {
         "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
@@ -176,7 +197,8 @@ def test_emit_json_success_redacts_sensitive_values_without_breaking_envelope_sh
             f"{CLI_OBJECT_KEY_PLACEHOLDER}#2": "second object",
         },
     }
-    assert decoded["warnings"] == ["callback https://example.test", "token:sha256:0a2c77ea"]
+    assert decoded["notices"][0]["message"] == "callback https://example.test"
+    assert decoded["notices"][1]["message"] == "token:sha256:0a2c77ea"
     assert _PROFILE_ID not in raw
     assert _NIF not in raw
     assert _JWT not in raw
@@ -203,13 +225,14 @@ def test_schema_envelope_rejects_unknown_outer_keys() -> None:
     with pytest.raises(_PydValidationError):
         SchemaEnvelope[_ProvenancePayload].model_validate(
             {
-                "schema_version": "1",
+                "schema_version": ENVELOPE_SCHEMA_VERSION,
                 "command": "app modelo formulas",
+                "status": EnvelopeStatus.SUCCESS.value,
                 "result": {
                     "casilla_id": "01",
                     "value": "100.00",
                 },
-                "warnings": [],
+                "notices": [],
                 "metadata": {"hidden": "extra"},  # not in the envelope schema
             }
         )
