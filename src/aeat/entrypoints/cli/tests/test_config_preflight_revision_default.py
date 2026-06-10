@@ -21,6 +21,7 @@ import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import cast
 
 import click
 import pytest
@@ -95,7 +96,7 @@ def test_preflight_defaults_revision_from_natural_key(cli_runner: CliRunner) -> 
     cmd = get_command(root_app)
     assert isinstance(cmd, (click.Command, TyperGroup))
     result = cli_runner.invoke(
-        cmd,
+        cast(click.Command, cmd),
         [
             "--format",
             "json",
@@ -135,7 +136,7 @@ def test_preflight_explicit_revision_override_is_honoured(cli_runner: CliRunner)
     cmd = get_command(root_app)
     assert isinstance(cmd, (click.Command, TyperGroup))
     result = cli_runner.invoke(
-        cmd,
+        cast(click.Command, cmd),
         [
             "--format",
             "json",
@@ -171,7 +172,7 @@ def test_preflight_refuses_unresolvable_natural_key_with_discovery_pointer(cli_r
     cmd = get_command(root_app)
     assert isinstance(cmd, (click.Command, TyperGroup))
     result = cli_runner.invoke(
-        cmd,
+        cast(click.Command, cmd),
         ["config", "profile", "preflight", "--modelo", "303", "--filing-year", "2026", "--period", "ZZ"],
     )
 
@@ -190,7 +191,7 @@ def test_preflight_refuses_invalid_explicit_override_with_registered_revisions(c
     cmd = get_command(root_app)
     assert isinstance(cmd, (click.Command, TyperGroup))
     result = cli_runner.invoke(
-        cmd,
+        cast(click.Command, cmd),
         [
             "config",
             "profile",
@@ -236,7 +237,7 @@ def test_preflight_refuses_ambiguous_natural_key_with_candidates(cli_runner: Cli
         cmd = get_command(root_app)
         assert isinstance(cmd, (click.Command, TyperGroup))
         result = cli_runner.invoke(
-            cmd,
+            cast(click.Command, cmd),
             ["config", "profile", "preflight", "--modelo", "303", "--filing-year", "2026", "--period", "1T"],
         )
     finally:
