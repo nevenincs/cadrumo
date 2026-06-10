@@ -72,6 +72,26 @@ required_text = [
     "amortización",
 ]
 
+[legal."rd-439-2007:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-14.html#a14"
+document_id = "BOE-A-2007-6820"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a14"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-10
+reviewed_by = "wgergely"
+notes = "RIRPF art 14: gastos de amortizacion de los rendimientos del capital inmobiliario. Fija la efectividad de la amortizacion de inmuebles arrendados en el 3 por ciento sobre el mayor del coste de adquisicion satisfecho o el valor catastral, excluido el suelo. Provision reglamentaria que establece el tipo del 3 por ciento citado por la seccion rendimientos_capital_inmobiliario > gastos_deducibles > amortizacion del Modelo 100 y por AMORTIZACION_INMUEBLE_RATE. Base sustantiva: articulo 23 LIRPF."
+required_text = [
+    "Gastos de amortización de los rendimientos del capital inmobiliario",
+    "3 por ciento",
+    "el coste de adquisición satisfecho o el valor catastral",
+]
+
 [legal."rd-439-2007:art-86"]
 evidence_tier = "legal_authority"
 authority = "boe"
