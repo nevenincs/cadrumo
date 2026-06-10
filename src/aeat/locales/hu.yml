@@ -1079,7 +1079,7 @@ cli:
         yes_required: Adja meg a --yes kapcsolót a behajtatható számla törléséhez.
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
-        evidence_id_help: Bizonyíték azonosítója (vagy egyértelmű előtag).
+        evidence_id_help: 'Bizonyíték azonosítója (pontos egyezés).'
         group_help: Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.
         invoice_date_help: Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).
         invoice_number_help: Szállítói számlaszám.
@@ -1803,6 +1803,7 @@ cli:
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
         calculate_source_advisory: 'FIGYELMEZTETÉS: %{message} A számítás befejeződött, de ezt a bevallható összeget egyetlen rovat sem fogadja be, és nem szerepel a bevallásban; ellenőrizze benyújtás előtt.'
+        verify_selector_help: 'Piszkozat-revízió választó (current, latest-draft vagy explicit).'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -2448,8 +2449,6 @@ cli:
       taxable_base_help: Adóköteles alapösszeg.
     doclink:
       actor_help: Operátor címke.
-      bad_source: 'a dokumentumhivatkozás forrásának egynek kell lennie az alábbiak
-        közül: gmail, google_drive, url (kapott: ''{source}'').'
       help: Gmail/Drive/URL dokumentumhivatkozás rögzítése egy főkönyvi soron (sosem
         tölti le).
       id_help: Főkönyvi tranzakció azonosítója.
