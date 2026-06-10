@@ -255,7 +255,15 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("20"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("4"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("63"),
+        # No third-country import rows in this observation set, so the import
+        # deducible binding resolves to zero.
+        "modelo-303-iva-soportado-importaciones-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("84"),
+        # The AIC official-box parity bindings select the same AIC inversión row
+        # as the semantic intracomunitaria binding, so they resolve to the same
+        # self-assessed cuota (net-zero across the devengado/deducible pair).
+        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("84"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("84"),
         # No domestic inversión del sujeto pasivo rows in this observation
         # set, so both interior reverse-charge bindings resolve to zero.
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0"),
@@ -415,7 +423,10 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00"),
@@ -538,7 +549,10 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
@@ -584,7 +598,10 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),

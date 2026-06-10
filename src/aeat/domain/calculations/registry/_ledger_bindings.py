@@ -403,9 +403,12 @@ def unsupported_ledger_iva_observations(
     zero-rated, not-subject, exempt intra-community supplies/exports,
     triangulation, and régimen simplificado) are excluded: they
     correctly match no cuota binding, so flagging them would be a false
-    positive. Only categories that genuinely *should* produce a cuota
-    but currently have no binding (domestic / intra-community
-    reverse-charge, imports) remain in the unsupported set.
+    positive. After the M303 routing tail (domestic / intra-community
+    reverse-charge bindings, the import deducible binding) landed, every
+    cuota-bearing declarable category has a consuming binding, so the
+    residual unsupported set is empty for the known declarable categories;
+    the function still fail-closes on any *new* declarable triple that no
+    binding selects.
     """
     selectors = tuple(
         _iva_ledger_selector(binding) for binding in revision.bindings if binding.source == "ledger_iva_aggregation"

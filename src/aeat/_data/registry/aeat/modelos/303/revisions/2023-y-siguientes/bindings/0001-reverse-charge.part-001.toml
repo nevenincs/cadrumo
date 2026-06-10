@@ -27,6 +27,55 @@ fact = "iva_amount_sum"
 [revisions.2023-y-siguientes.bindings.aggregation]
 op = "sum"
 
+# Intra-community-acquisition official-box parity (adquisición intracomunitaria,
+# inversión del sujeto pasivo, LIVA art. 13 hecho imponible + art. 15 concepto +
+# art. 84.Uno.2 inversión). The recipient self-assesses the AIC cuota on BOTH the
+# devengado side (official box 11, "IVA devengado adquisiciones intracomunitarias
+# - Cuota") and the deducible side (official box 37, "IVA deducible adquisiciones
+# intracomunitarias corrientes - Cuota"). These two bindings expose the same
+# self-assessed cuota the existing modelo-303-iva-autorepercutido-intracomunitaria-cuota
+# semantic binding already feeds into the resultado, so the parity casillas are
+# NOT added to the resultado formula (they would double-count) — they are
+# official-box exposure for the export/workbook parity, netting to zero
+# (devengado box 11 - deducible box 37 = 0).
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
 source = "ledger_iva_aggregation"
