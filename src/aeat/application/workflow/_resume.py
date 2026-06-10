@@ -42,7 +42,7 @@ from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
 from ._persistence import list_runs, load_run
 
 if TYPE_CHECKING:
-    from ..modelo import ModeloWorkTarget
+    from ..modelo import ModeloResolvedRevisionProjection, ModeloWorkTarget, WorkUnit
 
 
 class WorkflowResumeRefusedError(WorkflowError):
@@ -327,7 +327,9 @@ def _resolve_resume_from_visible_target(
     )
 
 
-def _resolve_revision_for_resume_target(*, target: object, selector: object):
+def _resolve_revision_for_resume_target(
+    *, target: ModeloWorkTarget, selector: object
+) -> ModeloResolvedRevisionProjection:
     from ..modelo import ModeloCalculationRevisionSelector, ModeloRevisionPick, resolve_modelo_revision_pick
 
     try:
@@ -476,7 +478,7 @@ def resolve_modelo_exact_workflow_run_for_resume(
 
 
 def _resolve_resume_from_work_unit(
-    work_unit: object,
+    work_unit: WorkUnit,
     *,
     source: str,
     latest: bool = False,
