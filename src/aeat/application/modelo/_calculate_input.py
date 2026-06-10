@@ -247,6 +247,7 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
 
 
 def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
+    from ._action_errors import WorkUnitRevisionDivergenceError
     from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
@@ -255,6 +256,20 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
         filing_year=unit.filing_year,
         period=unit.period,
     )
+    # D1 calc-time assertion (defense-in-depth, ruling 2 "both ends"): the
+    # law-determined revision must equal the revision the work unit was created
+    # against.  The work unit's revision_id is an identity claim, not a
+    # resolution input — it is only compared against resolution's answer.
+    if snapshot.revision.id != unit.revision_id:
+        raise WorkUnitRevisionDivergenceError(
+            f"work unit {unit.work_unit_id!r} was created against registry revision "
+            f"{unit.revision_id!r}, but the law-determined revision for "
+            f"modelo {unit.modelo!r} {unit.filing_year} {unit.period!r} "
+            f"is now {snapshot.revision.id!r}. "
+            f"The registry's law-mapping was corrected after this work unit was created. "
+            f"Re-create the work unit (discard this one and run `aeat app modelo work ensure`) "
+            f"to bind it to the current law-determined revision.",
+        )
     return snapshot.revision
 
 

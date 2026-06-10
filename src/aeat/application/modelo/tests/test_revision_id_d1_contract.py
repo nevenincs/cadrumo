@@ -291,3 +291,98 @@ class TestS02CalcTimeAssertion:
         # Must not raise
         snapshot = resolve_registry_snapshot_for_work_unit(correct_unit)
         assert snapshot.revision.id == correct_revision_id
+
+
+# ===========================================================================
+# S02 (defense-in-depth) — calc-time assertion in _revision_for_work_unit
+# ===========================================================================
+
+
+class TestS02RevisionForWorkUnitAssertion:
+    """``_calculate_input._revision_for_work_unit`` must also assert revision identity.
+
+    ``_revision_for_work_unit`` is the operator-input-normalisation calc entry the
+    ADR (ruling 2) names alongside ``calculate_modelo_revision``.  It loads a
+    WorkUnit and resolves a snapshot from its year + period, so it must carry the
+    same equality assertion (closing ruling 2 "both ends").
+
+    This path uses the default ``get_work_unit`` repository, so the stale unit is
+    seeded through the default ``WorkUnitCatalogueRepository`` (which resolves to
+    the same isolated store under ``isolated_runtime_profile``).
+    """
+
+    def test_revision_for_work_unit_refuses_stale_revision(
+        self,
+        work_unit_repo: tuple[str, WorkUnitCatalogueRepository],
+    ) -> None:
+        """``_revision_for_work_unit`` refuses when the unit's revision_id is stale.
+
+        Uses M303 2026 1T: the law-determined revision is ``2023-y-siguientes``;
+        the seeded unit pins the stale ``2009-y-siguientes``.
+        """
+        from .._calculate_input import _revision_for_work_unit
+
+        bucket_id, _ = work_unit_repo
+        stale_revision_id = "2009-y-siguientes"
+        work_unit_id = derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+            revision_id=stale_revision_id,
+        )
+        stale_unit = WorkUnit(
+            work_unit_id=work_unit_id,  # type: WorkUnitId
+            bucket_id=bucket_id,
+            modelo=ModeloCode("303"),
+            filing_year=2026,
+            period="1T",
+            revision_id=stale_revision_id,
+            name="303-2026-1T",
+            created_at=_T0,
+            updated_at=_T0,
+        )
+        # Seed via the DEFAULT repository so the inner get_work_unit() finds it.
+        default_repo = WorkUnitCatalogueRepository()
+        default_repo.save(upsert_work_unit(default_repo.load(), stale_unit))
+
+        with pytest.raises(WorkUnitRevisionDivergenceError) as exc_info:
+            _revision_for_work_unit(work_unit_id)
+
+        msg = str(exc_info.value)
+        assert "2009-y-siguientes" in msg, "message must name the stale (pinned) revision"
+        assert "2023-y-siguientes" in msg, "message must name the law-determined revision"
+        assert "re-create" in msg.lower()
+
+    def test_revision_for_work_unit_passes_for_correctly_pinned_revision(
+        self,
+        work_unit_repo: tuple[str, WorkUnitCatalogueRepository],
+    ) -> None:
+        """``_revision_for_work_unit`` returns the revision when the unit is correctly pinned."""
+        from .._calculate_input import _revision_for_work_unit
+
+        bucket_id, _ = work_unit_repo
+        correct_revision_id = "2023-y-siguientes"
+        work_unit_id = derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+            revision_id=correct_revision_id,
+        )
+        correct_unit = WorkUnit(
+            work_unit_id=work_unit_id,  # type: WorkUnitId
+            bucket_id=bucket_id,
+            modelo=ModeloCode("303"),
+            filing_year=2026,
+            period="1T",
+            revision_id=correct_revision_id,
+            name="303-2026-1T",
+            created_at=_T0,
+            updated_at=_T0,
+        )
+        default_repo = WorkUnitCatalogueRepository()
+        default_repo.save(upsert_work_unit(default_repo.load(), correct_unit))
+
+        revision = _revision_for_work_unit(work_unit_id)
+        assert revision.id == correct_revision_id
