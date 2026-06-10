@@ -52,6 +52,7 @@ from ...domain.transactions import (
     TransactionNotFoundError,
     TransactionValidationError,
 )
+from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import (
     UsageRatioProfile,
     UsageRatioValidationError,
@@ -81,7 +82,7 @@ _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
 def _transaction_repository(
     *,
     bucket_id: str,
-    repository: TransactionCatalogueRepository | None,
+    repository: TransactionCatalogueRepository | TransactionCatalogueRepositoryProtocol | None,
 ) -> TransactionCatalogueRepository:
     if repository is None:
         return TransactionCatalogueRepository(bucket_id=bucket_id)
@@ -90,6 +91,7 @@ def _transaction_repository(
             "transaction repository bucket_id does not match the manual ledger command bucket",
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
+    assert isinstance(repository, TransactionCatalogueRepository)
     return repository
 
 
@@ -105,6 +107,7 @@ def _invoice_repository(
             "invoice repository bucket_id does not match the manual ledger command bucket",
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
+    assert isinstance(repository, InvoiceCatalogueRepository)
     return repository
 
 
@@ -112,8 +115,9 @@ def _bucket_event_repository(
     *,
     bucket_id: str,
     repository: BucketEventHistoryRepositoryProtocol | None,
-) -> BucketEventHistoryRepositoryProtocol:
+) -> BucketEventHistoryRepository:
     if repository is not None:
+        assert isinstance(repository, BucketEventHistoryRepository)
         return repository
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
