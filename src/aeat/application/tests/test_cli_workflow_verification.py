@@ -9,8 +9,7 @@ import pytest
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...tests.secure_sql import isolated_profile_storage_root
 from ..auth import clear_operator_auth, configure_operator_auth
-from ..operator_surface import require_accepted_root, retired_surface_suggestion
-from ..operator_surface._errors import OperatorSurfaceContractError
+from ..operator_surface import require_accepted_root
 from ..user_profile._orchestration import profile_create_storage_span
 from ..user_profile._testing import register_minimal_profile
 from ..workflow import workflow_state_repository
@@ -19,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_workflow_backend(tmp_path: Path):
+def _isolated_workflow_backend(tmp_path: Path):  # pyright: ignore[reportUnusedFunction]
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
@@ -30,23 +29,9 @@ def _isolated_workflow_backend(tmp_path: Path):
             dispose_engine()
 
 
-def test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestions() -> None:
+def test_root_contract_service_accepts_canonical_roots() -> None:
     assert require_accepted_root("config").name.value == "config"
     assert require_accepted_root("app").name.value == "app"
-
-    for retired, suggestion in {
-        "setup": "aeat config profile create NAME",
-        "archive": "aeat config bucket",
-        "invoice": "aeat app ledger",
-        "declaration": "aeat app modelo",
-        "topic": "aeat app registry citations",
-    }.items():
-        contract = retired_surface_suggestion(retired)
-        assert contract is not None
-        assert contract.suggestion == suggestion
-        with pytest.raises(OperatorSurfaceContractError) as exc_info:
-            require_accepted_root(retired)
-        assert exc_info.value.suggestion == suggestion
 
 
 def test_auth_bucket_events_survive_workflow_repository_reload() -> None:

@@ -22,7 +22,6 @@ from pathlib import Path
 import pytest
 
 from ....domain.modelos._codes import ModeloCode
-from ....domain.modelos._ids import WorkUnitId
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
@@ -132,6 +131,54 @@ class TestS01CreationGate:
         )
         assert result == "2023-y-siguientes"
 
+    def test_refuses_revision_that_covers_year_but_not_period(self) -> None:
+        """The PRECISE D1 hole: a revision that COVERS the filing year but NOT the period.
+
+        This is the exact divergence the period-revision-resolution ADR D1 describes
+        and the reason the old year-only ``_revision_covers_year`` check was a hole:
+        a revision covering the year but a *different period* passed the old guard and
+        created a unit whose identity claimed one revision while calculation silently
+        computed under another.
+
+        M369 (OSS/IOSS) has three revisions that all cover year 2021-onwards but with
+        DISJOINT period sets:
+        - ``esquema-union`` -> quarterly tokens (1T..4T)
+        - ``esquema-importacion`` -> monthly tokens (01..12)
+        - ``esquema-exterior`` -> EXT-1T..EXT-4T
+
+        For year 2026, period 1T the law-determined revision is ``esquema-union``.
+        ``esquema-importacion`` COVERS year 2026 (valid 2021-onwards) but its period
+        set is 01..12, NOT 1T.
+
+        The OLD year-only check would have WRONGLY ACCEPTED ``esquema-importacion``
+        (it covers 2026); the NEW resolver-equality check, which delegates to
+        ``select_revision(..., revision_id=...)``, REFUSES it because the year+period
+        narrowing finds no covering revision for that id.  This test therefore fails
+        under the old year-only implementation and passes only under the new
+        resolver-equality implementation — proving the fix closes the actual D1 hole.
+        """
+        # Sanity-anchor the law-determined revision for the period.
+        law_determined = resolve_registry_revision_for_work_target(
+            modelo="369",
+            filing_year=2026,
+            period="1T",
+            registry_revision_id=None,
+        )
+        assert law_determined == "esquema-union"
+
+        # The hole: a revision covering the YEAR but not the PERIOD must be refused.
+        with pytest.raises(ModeloWorkRegistryYearMismatchError) as exc_info:
+            resolve_registry_revision_for_work_target(
+                modelo="369",
+                filing_year=2026,
+                period="1T",
+                registry_revision_id="esquema-importacion",
+            )
+        msg = str(exc_info.value)
+        assert "esquema-importacion" in msg, "message must name the requested (year-covering) revision"
+        assert "esquema-union" in msg, "message must name the law-determined revision for the period"
+        assert "law" in msg.lower() or "fixed by" in msg.lower()
+
 
 # ===========================================================================
 # S02 — calc-time assertion on revision divergence
@@ -169,7 +216,7 @@ class TestS02CalcTimeAssertion:
             revision_id=stale_revision_id,
         )
         return WorkUnit(
-            work_unit_id=WorkUnitId(work_unit_id),
+            work_unit_id=work_unit_id,  # type: WorkUnitId
             bucket_id=bucket_id,
             modelo=ModeloCode("303"),
             filing_year=2026,
@@ -229,7 +276,7 @@ class TestS02CalcTimeAssertion:
             revision_id=correct_revision_id,
         )
         correct_unit = WorkUnit(
-            work_unit_id=WorkUnitId(work_unit_id),
+            work_unit_id=work_unit_id,  # type: WorkUnitId
             bucket_id=bucket_id,
             modelo=ModeloCode("303"),
             filing_year=2026,

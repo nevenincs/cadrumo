@@ -11,7 +11,7 @@ enum/Decimal channel mismatch is rejected at the binding boundary.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -52,12 +52,16 @@ _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[None]:
+def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         yield
 
 
-def _calculation_repositories() -> tuple:
+def _calculation_repositories() -> tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+]:
     return (
         WorkUnitCatalogueRepository(),
         CalculationRevisionCatalogueRepository(),
