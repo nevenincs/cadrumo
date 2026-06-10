@@ -594,6 +594,79 @@ def parse_response(
     )
 
 
+def _extract_json_object(text: str) -> str | None:
+    """Return the first balanced top-level JSON object substring, or ``None``.
+
+    Unlike the flat :data:`_JSON_OBJECT_RE`, this walks brace depth (ignoring
+    braces inside strings) so a nested object -- such as a split proposal whose
+    ``children`` is an array of objects -- is captured whole.
+    """
+    start = text.find("{")
+    if start < 0:
+        return None
+    depth = 0
+    in_string = False
+    escaped = False
+    for index in range(start, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : index + 1]
+    return None
+
+
+def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMSplitResponse:
+    """Extract and validate an N-way split proposal from LLM stdout.
+
+    Finds the first balanced JSON object, validates it as
+    :class:`LLMSplitResponse`, and rejects any child whose ``category`` or
+    ``iva_category`` falls outside the spec's allow-list -- the same hallucination
+    guard :func:`parse_response` applies to a flat classification.
+
+    Args:
+        stdout: Raw stdout captured from the LLM CLI.
+        spec: Prompt spec whose allow-lists each child must satisfy.
+
+    Returns:
+        A validated :class:`LLMSplitResponse`.
+
+    Raises:
+        LLMClassifierError: When no JSON object is present, the schema is
+            violated, or a child selection is outside the allow-list.
+    """
+    resolved_spec = spec or default_prompt_spec()
+    allowed_categories = resolved_spec.allowed_categories()
+    allowed_iva_categories = resolved_spec.allowed_iva_categories()
+    payload = _extract_json_object(stdout)
+    if payload is None:
+        raise LLMClassifierError(f"no JSON object in LLM split output: {stdout[:400]!r}")
+    try:
+        response = LLMSplitResponse.model_validate_json(payload)
+    except ValueError as exc:
+        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:200]}") from exc
+    for child in response.children:
+        if child.category is not None and (not allowed_categories or child.category not in allowed_categories):
+            raise LLMClassifierError(f"disallowed split child category {child.category.value!r}")
+        if child.iva_category is not None and (
+            not allowed_iva_categories or child.iva_category not in allowed_iva_categories
+        ):
+            raise LLMClassifierError(f"disallowed split child iva_category {child.iva_category.value!r}")
+    return response
+
+
 # ── subprocess-based classifier ───────────────────────────────────
 
 
