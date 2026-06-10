@@ -85,18 +85,22 @@ def _import_bbva() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _list_rows() -> list[dict]:
+def _list_rows() -> list[dict[str, object]]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
 
 
-def _find(rows: list[dict], needle: str) -> dict:
-    return next(r for r in rows if needle in r["description"])
+def _find(rows: list[dict[str, object]], needle: str) -> dict[str, object]:
+    for r in rows:
+        desc = r.get("description")
+        if isinstance(desc, str) and needle in desc:
+            return r
+    raise StopIteration
 
 
-def _json(result_output: str) -> dict:
+def _json(result_output: str) -> dict[str, object]:
     payload = json.loads(result_output)
     return payload.get("result", payload)
 
@@ -123,8 +127,15 @@ def test_asesor_triage_pending_backlog_via_review_filter() -> None:
     _import_corpus()
     pending = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--filter", "status=pending"])
     assert pending.exit_code == 0, pending.output
-    rows = _json(pending.output).get("rows", [])
-    descriptions = {r.get("description", "") for r in rows}
+    json_result = _json(pending.output)
+    rows_val = json_result.get("rows", [])
+    descriptions: set[str] = set()
+    if isinstance(rows_val, list):
+        for item in rows_val:
+            if isinstance(item, dict):
+                typed_item: dict[str, object] = {str(key): value for key, value in item.items()}
+                desc_val = typed_item.get("description")
+                descriptions.add(str(desc_val))
     assert any(_RECARGO_DESC in d for d in descriptions), sorted(descriptions)[:10]
     assert any(_PERSONAL_DESC in d for d in descriptions), sorted(descriptions)[:10]
 
@@ -141,11 +152,21 @@ def test_check_surfaces_all_period_anomalies_without_mutating() -> None:
     check = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"])
     assert check.exit_code == 0, check.output
     result = _json(check.output)
-    assert result["ready"] is False, result
-    assert result["checked_transaction_count"] >= 500, result
-    issues = result["issues"]
+    assert result.get("ready") is False, result
+    count_val = result.get("checked_transaction_count")
+    if isinstance(count_val, int):
+        assert count_val >= 500, result
+    issues = result.get("issues", [])
+    if not isinstance(issues, list):
+        issues = []
     assert issues, "an unclassified corpus must surface readiness issues"
-    reasons = {issue["reason"] for issue in issues}
+    reasons: set[str] = set()
+    if isinstance(issues, list):
+        for issue in issues:
+            if isinstance(issue, dict):
+                typed_issue: dict[str, object] = {str(key): value for key, value in issue.items()}
+                reason_val = typed_issue.get("reason")
+                reasons.add(str(reason_val))
     assert "missing_business_classification" in reasons, reasons
 
 
@@ -159,14 +180,23 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
     pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert pre.exit_code == 0, pre.output
     result = _json(pre.output)
-    assert result["ready"] is False, result
-    assert 0 < result["checked_transaction_count"] < 500, result
-    assert result["issues"], result
-    # Every issue must carry a transaction_id + machine reason the asesor can act on.
-    for issue in result["issues"]:
-        assert issue["transaction_id"], issue
-        assert issue["reason"], issue
-        assert issue["detail"], issue
+    assert result.get("ready") is False, result
+    count_val = result.get("checked_transaction_count")
+    if isinstance(count_val, int):
+        assert 0 < count_val < 500, result
+    issues_val = result.get("issues")
+    if isinstance(issues_val, list):
+        assert issues_val, result
+        # Every issue must carry a transaction_id + machine reason the asesor can act on.
+        for item in issues_val:
+            if isinstance(item, dict):
+                typed_item: dict[str, object] = {str(key): value for key, value in item.items()}
+                tx_id_field = typed_item.get("transaction_id")
+                reason_field = typed_item.get("reason")
+                detail_field = typed_item.get("detail")
+                assert tx_id_field, item
+                assert reason_field, item
+                assert detail_field, item
 
 
 def test_preflight_issue_detail_is_actionable_text() -> None:
@@ -174,7 +204,15 @@ def test_preflight_issue_detail_is_actionable_text() -> None:
     _import_corpus()
     pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert pre.exit_code == 0, pre.output
-    details = " ".join(issue["detail"] for issue in _json(pre.output)["issues"])
+    json_result = _json(pre.output)
+    issues_val = json_result.get("issues")
+    detail_parts: list[str] = []
+    if isinstance(issues_val, list):
+        for issue in issues_val:
+            if isinstance(issue, dict):
+                typed_issue: dict[str, object] = {str(key): value for key, value in issue.items()}
+                detail_parts.append(str(typed_issue.get("detail", "")))
+    details = " ".join(detail_parts)
     assert "classification" in details.lower(), details[:200]
 
 
@@ -187,19 +225,25 @@ def test_history_and_track_expose_lineage_for_one_transaction() -> None:
     """
     _import_bbva()
     row = _find(_list_rows(), _RECARGO_DESC)
-    tx = row["transaction_id"]
+    tx_val = row.get("transaction_id")
+    assert isinstance(tx_val, str)
 
-    history = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx])
+    history = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx_val])
     assert history.exit_code == 0, history.output
     hist = _json(history.output)
-    assert hist["transaction_id"], hist
-    assert hist["event_count"] >= 1, hist
-    assert hist["events"], "an imported row must carry at least its creation event"
+    assert hist.get("transaction_id"), hist
+    event_count_val = hist.get("event_count")
+    if isinstance(event_count_val, int):
+        assert event_count_val >= 1, hist
+    assert hist.get("events"), "an imported row must carry at least its creation event"
 
-    track = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "track", tx])
+    track = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "track", tx_val])
     assert track.exit_code == 0, track.output
     tracked = _json(track.output)
-    assert tracked["transaction"]["transaction_id"], tracked
+    tx_obj = tracked.get("transaction")
+    if isinstance(tx_obj, dict):
+        typed_tx_obj: dict[str, object] = {str(key): value for key, value in tx_obj.items()}
+        assert typed_tx_obj.get("transaction_id"), tracked
     assert "tracking" in tracked, tracked
 
 
@@ -211,11 +255,18 @@ def test_history_after_disposition_records_the_decision() -> None:
     """
     _import_corpus()
     row = _find(_list_rows(), _PERSONAL_DESC)
-    tx = row["transaction_id"]
-    before = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx]).output)["event_count"]
-    archived = _RUNNER.invoke(app, ["app", "ledger", "archive", "--id", tx, "--reason", "personal expense", "--yes"])
+    tx_val = row.get("transaction_id")
+    assert isinstance(tx_val, str)
+    before_hist = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx_val]).output)
+    before_val = before_hist.get("event_count")
+    before = before_val if isinstance(before_val, int) else 0
+    archived = _RUNNER.invoke(
+        app, ["app", "ledger", "archive", "--id", tx_val, "--reason", "personal expense", "--yes"]
+    )
     assert archived.exit_code == 0, archived.output
-    after = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx]).output)["event_count"]
+    after_hist = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx_val]).output)
+    after_val = after_hist.get("event_count")
+    after = after_val if isinstance(after_val, int) else 0
     assert after > before, (before, after)
 
 
@@ -230,18 +281,27 @@ def test_asesor_can_classify_then_preflight_surfaces_recargo_gaps() -> None:
     """
     _import_bbva()
     row = _find(_list_rows(), _RECARGO_DESC)
-    tx = row["transaction_id"]
+    tx_val = row.get("transaction_id")
+    assert isinstance(tx_val, str)
     classify = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS"],
+        ["app", "ledger", "classify", "--id", tx_val, "--classification", "BUSINESS"],
     )
     assert classify.exit_code == 0, classify.output
     refreshed = _find(_list_rows(), _RECARGO_DESC)
-    assert refreshed["business_classification"] == "BUSINESS", refreshed
+    assert refreshed.get("business_classification") == "BUSINESS", refreshed
 
     pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert pre.exit_code == 0, pre.output
-    recargo_issues = [i for i in _json(pre.output)["issues"] if i["transaction_id"] == tx]
+    issues_val = _json(pre.output).get("issues")
+    recargo_issues = []
+    if isinstance(issues_val, list):
+        for item in issues_val:
+            if isinstance(item, dict):
+                typed_item: dict[str, object] = {str(key): value for key, value in item.items()}
+                tx_id_val_field = typed_item.get("transaction_id")
+                if tx_id_val_field == tx_val:
+                    recargo_issues.append(item)
     # Classifying alone does not satisfy the modelo fact requirements (category,
     # taxable base, etc.); the asesor still gets a gap, never a false "ready".
     assert recargo_issues, "a classified-but-incomplete business row must still flag"
@@ -256,16 +316,25 @@ def test_personal_row_drops_out_of_readiness_when_classified() -> None:
     """
     _import_corpus()
     row = _find(_list_rows(), _PERSONAL_DESC)
-    tx = row["transaction_id"]
+    tx_val = row.get("transaction_id")
+    assert isinstance(tx_val, str)
     classify = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx, "--classification", "PERSONAL"],
+        ["app", "ledger", "classify", "--id", tx_val, "--classification", "PERSONAL"],
     )
     assert classify.exit_code == 0, classify.output
 
     pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
     assert pre.exit_code == 0, pre.output
-    personal_issues = [i for i in _json(pre.output)["issues"] if i["transaction_id"] == tx]
+    issues_val = _json(pre.output).get("issues")
+    personal_issues = []
+    if isinstance(issues_val, list):
+        for item in issues_val:
+            if isinstance(item, dict):
+                typed_item: dict[str, object] = {str(key): value for key, value in item.items()}
+                tx_id_val_field = typed_item.get("transaction_id")
+                if tx_id_val_field == tx_val:
+                    personal_issues.append(item)
     assert personal_issues == [], personal_issues
 
 
@@ -277,12 +346,20 @@ def test_check_clears_recargo_row_once_personal_and_business_dispositioned() -> 
     toward a clean filing rather than staying flat.
     """
     _import_corpus()
-    before = len(_json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"]).output)["issues"])
+    before_issues_val = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"]).output).get(
+        "issues", []
+    )
+    before = len(before_issues_val) if isinstance(before_issues_val, list) else 0
     row = _find(_list_rows(), _PERSONAL_DESC)
+    tx_val = row.get("transaction_id")
+    assert isinstance(tx_val, str)
     classify = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", row["transaction_id"], "--classification", "PERSONAL"],
+        ["app", "ledger", "classify", "--id", tx_val, "--classification", "PERSONAL"],
     )
     assert classify.exit_code == 0, classify.output
-    after = len(_json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"]).output)["issues"])
+    after_issues_val = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"]).output).get(
+        "issues", []
+    )
+    after = len(after_issues_val) if isinstance(after_issues_val, list) else 0
     assert after < before, (before, after)
