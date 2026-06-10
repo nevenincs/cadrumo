@@ -457,7 +457,10 @@ application:
         certificate_file_unresolved: La ruta del certificado '%{certificate_path}'
           no resuelve a un archivo existente. Ejecuta `aeat config auth configure
           --provider certificate --file RUTA` con una ruta a tu paquete PKCS#12 (.p12/.pfx).
-        dangling_active_profile: 'El puntero de perfil activo ''%{active_profile}'' no resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list para inspeccionar los perfiles registrados y despues aeat config switch NAME o aeat config profile create NAME.'
+        dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
+          resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list
+          para inspeccionar los perfiles registrados y despues aeat config switch
+          NAME o aeat config profile create NAME.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
@@ -550,6 +553,7 @@ application:
   calculations:
     iva_compensation:
       errors:
+        correction_missing: 'No existe ningún registro de compensación sembrado para %{filing_year}/%{period}; la corrección sobrescribe una siembra existente, no la crea.'
         modelo_303_only: El historial de compensación de IVA solo acepta observaciones
           del Modelo 303.
         modelo_390_only: El resumen anual de compensación de IVA solo acepta observaciones
@@ -872,6 +876,8 @@ application:
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
     iva_wallet:
+      correct_no_record: 'No existe ningún registro de compensación sembrado para %{filing_year}/%{period}. Ejecuta primero ''aeat app modelo iva-wallet seed''; la corrección sobrescribe una siembra existente.'
+      correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period}) ha consumido esta base de compensación sembrada. Cambiarla alteraría una declaración presentada.'
       seed_negative_amount: El importe inicial no puede ser negativo.
       seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
         al perfil activo.
@@ -1007,7 +1013,8 @@ application:
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       no_active_profile_selected: No hay un perfil activo seleccionado.
-      profile_already_exists: 'El perfil ''%{profile}'' ya existe; ejecuta aeat config switch NAME para activarlo o aeat config profile delete NAME primero.'
+      profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
+        switch NAME para activarlo o aeat config profile delete NAME primero.
       profile_bucket_directory_removal_failed: No se pudo eliminar el directorio del
         perfil.
       profile_create_route_mismatch: La ruta de creación de perfil '%{route}' no coincide
@@ -1521,6 +1528,14 @@ cli:
           del saldo arrastrado.
         balance_help: Muestra el saldo acumulado del crédito IVA por compensación
           calculado a partir del historial local del Modelo 303.
+        correct_amount_help: 'Importe corregido del saldo a compensar en EUR (decimal, p. ej. 1200.50).'
+        correct_confirm_help: 'Indicador de confirmación obligatorio. Reconoce que esto sobrescribe un saldo a compensar sembrado previamente y que la exactitud de la declaración depende del nuevo valor.'
+        correct_confirm_required: 'Pasa --confirm para confirmar: esto sobrescribe el saldo a compensar del M303 sembrado previamente para el periodo indicado.'
+        correct_filing_year_help: 'Ejercicio del periodo del Modelo 303 sembrado que se va a corregir.'
+        correct_help: 'Corrige un saldo de compensación inicial del Modelo 303 introducido erróneamente para un periodo anterior al historial local. Sobrescribe el importe sembrado existente; se rechaza si no existe ningún registro para el periodo (siembra primero) y si un Modelo 303 ya presentado ha consumido la base sembrada (corregirla cambiaría una declaración presentada). Registra --reason en un evento de auditoría. Requiere --confirm.'
+        correct_period_help: 'Periodo del registro del Modelo 303 sembrado que se va a corregir (p. ej. 4T, 3T).'
+        correct_reason_help: 'Motivo de la corrección, registrado en el evento de auditoría.'
+        correct_reason_required: 'Indica --reason: registra por qué se corrige el saldo inicial; no puede estar vacío.'
         group_help: Comandos de saldo local de la cartera de compensación IVA.
         seed_amount_help: Importe inicial de la compensación de IVA en decimal.
         seed_confirm_help: Confirme la operación de importe inicial.
@@ -1614,6 +1629,10 @@ cli:
         justificante_path_help: Ruta al PDF del justificante AEAT para reconciliar.
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
+      reconciliation_history:
+        empty: 'Aún no se han registrado conciliaciones.'
+        help: 'Lista las conciliaciones registradas para el perfil activo. Lee el historial de eventos MODELO_RECONCILED, que es de solo anexado; las conciliaciones se pueden repetir cuando se desee, por lo que esta es una lectura de conveniencia, no un registro almacenado.'
+        work_unit_id_help: 'Id de unidad de trabajo opcional para limitar el historial a una sola unidad de trabajo.'
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
@@ -2070,7 +2089,8 @@ cli:
         loopback_bind: 'No se pudo abrir un puerto local para completar el inicio
           de sesión en Google: {detail}'
         network: 'No se pudo contactar con Google: {detail}'
-        profile_unbound: 'No hay ningun perfil activo. Ejecuta aeat config switch NAME o indica --profile.'
+        profile_unbound: No hay ningun perfil activo. Ejecuta aeat config switch NAME
+          o indica --profile.
         scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
           Ejecuta `aeat config google login` y acepta todos los permisos.
         storage: 'No se pudo acceder al almacenamiento de Google Drive: {detail}'
@@ -2185,7 +2205,9 @@ cli:
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo y su bucket de configuración.
-      delete_active_cleared: 'El perfil eliminado era el activo; el puntero de perfil activo se ha borrado. Ejecuta aeat config switch NAME o aeat config profile create NAME para volver a trabajar.'
+      delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
+        activo se ha borrado. Ejecuta aeat config switch NAME o aeat config profile
+        create NAME para volver a trabajar.
       delete_help: Elimina un perfil y su estado local; --yes confirma
       delete_name_help: Nombre del perfil que quieres eliminar
       delete_requires_yes: La eliminación es destructiva. Vuelve a ejecutar 'aeat
@@ -2216,7 +2238,10 @@ cli:
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
-      logout_session_warning: 'El cierre de sesion limpio el puntero del perfil activo. Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError hasta que ejecutes aeat config switch NAME o abras un nuevo terminal y vuelvas a seleccionar.'
+      logout_session_warning: El cierre de sesion limpio el puntero del perfil activo.
+        Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError
+        hasta que ejecutes aeat config switch NAME o abras un nuevo terminal y vuelvas
+        a seleccionar.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
@@ -2362,9 +2387,10 @@ cli:
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
     switch:
-      help: 'Cambiar el perfil activo seleccionandolo y abriendo su sesion de almacenamiento.'
-      name_help: 'Nombre del perfil al que cambiar. Si se omite, se usa el puntero del perfil activo.'
-    unlock:
+      help: Cambiar el perfil activo seleccionandolo y abriendo su sesion de almacenamiento.
+      name_help: Nombre del perfil al que cambiar. Si se omite, se usa el puntero
+        del perfil activo.
+    unlock: null
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -4014,7 +4040,8 @@ errors:
       intentarlo.
     locked_storage_bucket_busy: El bucket de almacenamiento está en uso por otro proceso.
       Espera a que ese proceso termine y vuelve a intentarlo.
-    locked_storage_bucket_session: 'Esta operación requiere un bucket de almacenamiento desbloqueado. Ejecuta `aeat config switch` y vuelve a intentarlo.'
+    locked_storage_bucket_session: Esta operación requiere un bucket de almacenamiento
+      desbloqueado. Ejecuta `aeat config switch` y vuelve a intentarlo.
     locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
       dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
     locked_storage_master_key_keychain: El llavero del sistema operativo está bloqueado.
@@ -4026,7 +4053,9 @@ errors:
       a intentarlo.
     auth_profile_identity_mismatch: La identidad del perfil activo no puede ser titular
       de la sesión de autenticación solicitada.
-    bootstrap_already_complete: 'El arranque del almacenamiento seguro ya esta completo. Usa aeat config switch NAME para activar un perfil existente o aeat config profile create NAME para anadir otro perfil.'
+    bootstrap_already_complete: El arranque del almacenamiento seguro ya esta completo.
+      Usa aeat config switch NAME para activar un perfil existente o aeat config profile
+      create NAME para anadir otro perfil.
     censo_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
       sobre una unidad dependiente. Resuelve primero el estado pendiente.
     censo_field_validation: El censo de la AEAT devolvió un valor que el esquema no
@@ -4070,10 +4099,12 @@ errors:
       una unidad de trabajo de modelo.
     modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
       pertenece a otra revision.
-    profile_already_registered: 'Ya existe un perfil con ese nombre. Usa aeat config switch NAME para cambiar a el.'
+    profile_already_registered: Ya existe un perfil con ese nombre. Usa aeat config
+      switch NAME para cambiar a el.
     profile_import_collision: El identificador del perfil importado coincide con uno
       que ya existe.
-    profile_locked: 'Esta operación requiere un perfil desbloqueado. Ejecuta `aeat config switch` y vuelve a intentarlo.'
+    profile_locked: Esta operación requiere un perfil desbloqueado. Ejecuta `aeat
+      config switch` y vuelve a intentarlo.
     profile_name_collision: El nombre de perfil indicado ya está en uso. Elige un
       nombre distinto.
     reconciliation_cross_bucket: La unidad de trabajo apuntada pertenece a un bucket
@@ -4268,12 +4299,14 @@ errors:
       de almacenamiento que ya existe.
     refused_storage_bucket_no_active: No se pudo determinar ningún bucket activo.
       Selecciona un perfil y vuelve a intentarlo.
-    refused_storage_master_key_no_active_session: 'El cifrado requiere una sesión activa. Ejecuta `aeat config switch` y vuelve a intentarlo.'
+    refused_storage_master_key_no_active_session: El cifrado requiere una sesión activa.
+      Ejecuta `aeat config switch` y vuelve a intentarlo.
     refused_storage_passphrase_too_short: La frase de contraseña es demasiado corta.
       Debe tener al menos 8 caracteres.
     refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
       la opción de sobrescritura si quieres reemplazarlo.
-    refused_storage_session_expired: 'La sesion activa ha caducado por inactividad. Vuelve a activarla con aeat config switch NAME.'
+    refused_storage_session_expired: La sesion activa ha caducado por inactividad.
+      Vuelve a activarla con aeat config switch NAME.
     refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
       habilitación necesaria. No es seguro para datos reales.
     refused_taxation_comparison: La comparación tributaria conjunta/individual no
@@ -4335,7 +4368,8 @@ errors:
         solo está disponible antes de seleccionar un bucket de perfil activo.
       cold_bootstrap_explicit_database_refused: El almacenamiento de arranque en frío
         no puede omitir una ruta de base de datos explícita.
-      no_active_session: 'No hay una sesion de bucket activa. Ejecuta aeat config switch NAME para desbloquear un perfil.'
+      no_active_session: No hay una sesion de bucket activa. Ejecuta aeat config switch
+        NAME para desbloquear un perfil.
       no_detail: No se informó ningún detalle de preparación.
       not_ready: 'El runtime de almacenamiento no está listo para almacenamiento vinculado
         a perfil: %{details}'
@@ -4345,8 +4379,10 @@ errors:
         de perfil activo.
       session_changed: La sesión de bucket activa cambió. Desbloquea de nuevo el perfil
         de destino.
-      session_expired: 'La sesion de bucket activa ha caducado. Ejecuta aeat config switch NAME para reactivar el perfil.'
-      session_sealed: 'La sesion de bucket activa esta sellada. Ejecuta aeat config switch NAME para reactivar el perfil.'
+      session_expired: La sesion de bucket activa ha caducado. Ejecuta aeat config
+        switch NAME para reactivar el perfil.
+      session_sealed: La sesion de bucket activa esta sellada. Ejecuta aeat config
+        switch NAME para reactivar el perfil.
       unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
         de producción vinculado a perfil requiere custodia de archivo o llavero.
     stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado

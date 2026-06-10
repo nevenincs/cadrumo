@@ -189,3 +189,29 @@ def test_reconcile_by_flag_lands_in_modelo_reconciled_event(cli_runner: CliRunne
     ]
     assert matching, "MODELO_RECONCILED event must land on the catalogue"
     assert matching[-1].actor == "auditor@team"
+
+
+def test_reconciliation_history_empty_is_instructive(cli_runner: CliRunner) -> None:
+    """With no reconciliations recorded, the history verb lists a clean empty."""
+    result = cli_runner.invoke(app, ["app", "modelo", "reconciliation-history"])
+
+    assert result.exit_code == 0, result.output
+    assert "reconciliation_count\t0" in result.output
+    assert "No reconciliations recorded yet" in result.output
+
+
+def test_reconciliation_history_lists_recorded_reconciliation(cli_runner: CliRunner) -> None:
+    """After a reconcile, the history verb lists the recorded verdict row."""
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    reconcile = cli_runner.invoke(
+        app,
+        ["app", "modelo", "reconcile", work_unit_id, "--from-justificante", str(MODELO_130_FIXTURE)],
+    )
+    assert reconcile.exit_code == 0, reconcile.output
+
+    result = cli_runner.invoke(app, ["app", "modelo", "reconciliation-history"])
+
+    assert result.exit_code == 0, result.output
+    assert "reconciliation_count\t1" in result.output
+    assert work_unit_id in result.output
+    assert "matches" in result.output

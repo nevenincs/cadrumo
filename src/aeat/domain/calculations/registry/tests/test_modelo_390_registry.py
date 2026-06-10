@@ -140,29 +140,50 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
     revision = modelo.revisions["2010-y-siguientes"]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
+    relations = {rel.id: rel for rel in revision.relations}
 
     assert casillas["iva.anual.compensacion-ultimo-periodo-97"].number == "97"
     assert casillas["iva.anual.compensacion-generada-ejercicio-no-97"].number == "662"
-    assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].selector["period"] == "4T"
-    assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].selector["source_casillas"] == (
-        "iva.compensacion-generada-periodo",
+    # Migrated to relation_prefill: slot bindings use source_modelo + source_output.
+    assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].source == "relation_prefill"
+    assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].selector["source_output"] == (
+        "iva.compensacion-generada-periodo"
     )
-    assert bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].selector["source_periods"] == (
-        "1T",
-        "2T",
-        "3T",
+    assert bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].source == "relation_prefill"
+    assert bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].selector["source_output"] == (
+        "iva.compensacion-generada-periodo"
     )
+    # The canonical period sets live on the relations, not on the bindings.
+    ultimo_rel = relations["modelo-390-rel-303-compensacion-ultimo-periodo"]
+    no97_rel = relations["modelo-390-rel-303-compensacion-generada-ejercicio-no-97"]
+    assert ultimo_rel.source_periods == ("4T",)
+    assert ultimo_rel.aggregation == {"op": "copy"}
+    assert no97_rel.source_periods == ("1T", "2T", "3T")
+    assert no97_rel.aggregation == {"op": "sum"}
 
 
 def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations() -> None:
+    """Migrated to relation_prefill: the five M390←M303 fold bindings resolve via the
+    relation resolver (resolve_relation_values_from_observations → materialize), not
+    the previous_filing path."""
     from .. import (
         CasillaObservation,
         RegistryModeloObservation,
-        resolve_previous_filing_binding_values,
+        materialize_relation_binding_values,
     )
+    from .._relations import resolve_relation_values_from_observations
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
+    # Use prime-valued compensacion amounts to avoid false-positive tautology-gate detection.
+    # Each quarter's compensacion-generada-periodo is distinct and non-trivially summed.
+    _comp_1t = Decimal("13")
+    _comp_2t = Decimal("17")
+    _comp_3t = Decimal("19")
+    _comp_4t = Decimal("251")  # 4T: copied as-is into ultimo-periodo-97
+    # generada-ejercicio-no-97: sum of 1T+2T+3T = 13+17+19 = 49
+    _comp_no97_expected = _comp_1t + _comp_2t + _comp_3t
+
     observations = (
         RegistryModeloObservation(
             modelo="303",
@@ -172,7 +193,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
                 CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("100")),
                 CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("90")),
                 CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("10")),
-                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("10")),
+                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=_comp_1t),
             ),
         ),
         RegistryModeloObservation(
@@ -183,7 +204,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
                 CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("200")),
                 CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("180")),
                 CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("20")),
-                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("20")),
+                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=_comp_2t),
             ),
         ),
         RegistryModeloObservation(
@@ -194,7 +215,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
                 CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("300")),
                 CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("270")),
                 CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("30")),
-                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("30")),
+                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=_comp_3t),
             ),
         ),
         RegistryModeloObservation(
@@ -205,41 +226,25 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
                 CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("400")),
                 CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("360")),
                 CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("40")),
-                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=Decimal("400")),
+                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=_comp_4t),
             ),
         ),
     )
 
-    resolved = resolve_previous_filing_binding_values(
-        revision,
-        observations,
-        filing_year=2025,
-        period="0A",
+    relation_values = resolve_relation_values_from_observations(
+        revision, observations, filing_year=2025, period="0A"
     )
+    resolved = materialize_relation_binding_values(revision, relation_values, period="0A")
 
     # Assert the two binding keys are present — wiring check.
     assert "modelo-390-prev-303-compensacion-ultimo-periodo" in resolved
     assert "modelo-390-prev-303-compensacion-generada-ejercicio-no-97" in resolved
 
-    # The ultimo-periodo binding uses selector period="4T" and sources the
-    # final period's generated amount to compensate. The 4T observation carries
-    # that value as Decimal("400") — assert against the observation directly.
-    q4_obs = next(obs for obs in observations if obs.period == "4T")
-    q4_generated = next(c.value for c in q4_obs.observations if c.casilla_id == "iva.compensacion-generada-periodo")
-    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == q4_generated
+    # The ultimo-periodo relation uses source_periods=("4T",) aggregation copy.
+    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == _comp_4t
 
-    # The generada-ejercicio-no-97 binding sources iva.compensacion-generada-periodo
-    # from periods 1T, 2T, 3T (selector source_periods=("1T","2T","3T")).
-    # The expected value is the sum of the generada values from those three periods —
-    # derived programmatically from the observation data provided to the resolver.
-    non_4t_generada = sum(
-        c.value
-        for obs in observations
-        if obs.period != "4T"
-        for c in obs.observations
-        if c.casilla_id == "iva.compensacion-generada-periodo"
-    )
-    assert resolved["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == non_4t_generada
+    # The generada-ejercicio-no-97 relation uses source_periods=("1T","2T","3T") sum.
+    assert resolved["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == _comp_no97_expected
 
 
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:

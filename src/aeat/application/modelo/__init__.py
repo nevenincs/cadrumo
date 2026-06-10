@@ -142,9 +142,12 @@ from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlockedError,
 )
 from ._iva_wallet_seed import (
+    ModeloIvaWalletCorrectionNoRecordError,
+    ModeloIvaWalletCorrectionSealedError,
     ModeloIvaWalletSeedError,
     ModeloIvaWalletSeedNegativeAmountError,
     ModeloIvaWalletSeedNoTaxpayerError,
+    correct_iva_compensation_period_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
 from ._m036_lifecycle import (
@@ -186,12 +189,14 @@ from ._projection import (
 from ._reconcile import (
     ModeloReconciliationCommand,
     ModeloReconciliationDiff,
+    ModeloReconciliationHistoryEntry,
     ModeloReconciliationReport,
     ModeloReconciliationSourceKind,
     ModeloReconciliationVerdict,
     ReconciliationCrossBucketRefusedError,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
+    list_modelo_reconciliations,
     modelo_reconcile,
 )
 from ._registry_discovery import (
@@ -357,6 +362,8 @@ __all__ = [
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportNoActiveBucketError",
     "ModeloExportResult",
+    "ModeloIvaWalletCorrectionNoRecordError",
+    "ModeloIvaWalletCorrectionSealedError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
     "ModeloIvaWalletSeedError",
@@ -373,6 +380,7 @@ __all__ = [
     "ModeloProjectionError",
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
+    "ModeloReconciliationHistoryEntry",
     "ModeloReconciliationReport",
     "ModeloReconciliationSourceKind",
     "ModeloReconciliationVerdict",
@@ -437,6 +445,7 @@ __all__ = [
     "compare_taxation_for_work_address",
     "compare_taxation_for_work_unit",
     "compare_taxation_modes",
+    "correct_iva_compensation_period_for_bucket",
     "create_work_unit",
     "declared_modelo_period_tokens",
     "discard_work_unit",
@@ -452,6 +461,7 @@ __all__ = [
     "list_calculation_revisions",
     "list_filing_records",
     "list_m036_declarations",
+    "list_modelo_reconciliations",
     "list_verification_reports",
     "list_work_units",
     "maritime_facts_from_active_profile",

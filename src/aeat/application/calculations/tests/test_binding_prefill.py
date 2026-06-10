@@ -16,9 +16,9 @@ from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
+    materialize_relation_binding_values,
     resolve_bound_casilla_inputs,
     resolve_ledger_iva_aggregation_binding_values,
-    resolve_previous_filing_binding_values,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
@@ -34,6 +34,7 @@ from .._errors import BindingPrefillTypeError
 from .._iva_compensation_history import IvaCompensationHistoryRepository
 from .._multi_year import PreviousFilingSourceResolver
 from .._observations_repository import CalculationObservationRepository
+from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -99,6 +100,14 @@ def _registry_observation(
 def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observations(
     tmp_path: Path,
 ) -> None:
+    """M390←M303 bindings are now ``relation_prefill``; resolve via the relation path.
+
+    The five M390←M303 fold bindings migrated from ``previous_filing`` to
+    ``relation_prefill`` backed by ``cross_model_output`` relations
+    (W04.P10.S16). This test verifies that persisted 303 quarterly observations
+    resolve through :func:`resolve_relations_from_local_store` and that the
+    annual reconciliation casillas equal the ledger-derived annual totals.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path):
         quarterly_observations = {
             "1T": (
@@ -146,33 +155,33 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             )
 
         snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
-        prefill = resolve_bindings_from_local_store(snapshot, repository=repository)
-        source_resolution = PreviousFilingSourceResolver(
-            repository=repository,
-            registry_snapshot=snapshot,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="390",
-                filing_year=2025,
-                period="0A",
-                revision=snapshot.revision,
-            )
+
+        # The five M390←M303 bindings are now relation_prefill — resolve
+        # them through the relation resolver, not the previous_filing path.
+        relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
+        resolved_relation_ids = {rv.relation for rv in relation_vals.values if rv.value is not None}
+        assert resolved_relation_ids >= {
+            "modelo-390-rel-303-cuota-devengada-total",
+            "modelo-390-rel-303-cuota-deducible-total",
+            "modelo-390-rel-303-resultado-regimen-general",
+            "modelo-390-rel-303-compensacion-ultimo-periodo",
+            "modelo-390-rel-303-compensacion-generada-ejercicio-no-97",
+        }
+        # Provenance: resolved entries carry local_filing provenance.
+        assert all(
+            rv.provenance == "local_filing"
+            for rv in relation_vals.values
+            if rv.value is not None
         )
-        previous_filing_values = resolve_previous_filing_binding_values(
-            snapshot.revision,
-            (
-                _registry_observation(filing_year=2025, period=period, result=result)
-                for period, result in quarterly_results.items()
-            ),
-            filing_year=2025,
-            period="0A",
+        relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
+        relation_binding_values = materialize_relation_binding_values(
+            snapshot.revision, relation_values_map, period="0A"
         )
         annual_ledger_values = resolve_ledger_iva_aggregation_binding_values(
             snapshot.revision,
             tuple(row for rows in quarterly_observations.values() for row in rows),
         )
-        binding_values = {**annual_ledger_values, **prefill.binding_values}
+        binding_values = {**annual_ledger_values, **relation_binding_values}
         result = calculate_registry_snapshot(
             snapshot,
             inputs=resolve_bound_casilla_inputs(snapshot.revision, binding_values),
@@ -180,18 +189,6 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             date_context={"filing_period": date(2025, 12, 31)},
         )
 
-        assert prefill.binding_values == previous_filing_values
-        assert source_resolution.binding_values == prefill.binding_values
-        assert source_resolution.owned_sources == ("previous_filing",)
-        assert source_resolution.provenance
-        assert all(item.source_kind == "previous_filing" for item in source_resolution.provenance)
-        assert prefill.prefilled
-        assert {item.source_kind for item in prefill.prefilled} == {"app_filing"}
-        assert {item.source_periods for item in prefill.prefilled} >= {
-            ("1T", "2T", "3T", "4T"),
-            ("4T",),
-            ("1T", "2T", "3T"),
-        }
         assert (
             result.values["iva.anual.cuota-devengada-total"] == result.values["iva.anual.reconciliacion.devengada-303"]
         )

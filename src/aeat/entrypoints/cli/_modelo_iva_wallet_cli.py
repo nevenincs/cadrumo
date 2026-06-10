@@ -10,14 +10,17 @@ import typer
 
 from ...application.calculations import query_iva_wallet_balance
 from ...application.modelo import (
+    ModeloIvaWalletCorrectionNoRecordError,
+    ModeloIvaWalletCorrectionSealedError,
     ModeloIvaWalletSeedNegativeAmountError,
     ModeloIvaWalletSeedNoTaxpayerError,
+    correct_iva_compensation_period_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
 from ...core.i18n import tr
 from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 from ._common import _emit_envelope
-from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletSeedResult
+from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletCorrectResult, IvaWalletSeedResult
 
 
 def register_iva_wallet_commands(
@@ -38,6 +41,7 @@ def register_iva_wallet_commands(
     app.add_typer(iva_wallet_app, name="iva-wallet")
     _register_iva_wallet_balance_command(iva_wallet_app)
     _register_iva_wallet_seed_command(iva_wallet_app, active_bucket_id=active_bucket_id)
+    _register_iva_wallet_correct_command(iva_wallet_app, active_bucket_id=active_bucket_id)
 
 
 def _register_iva_wallet_balance_command(iva_wallet_app: typer.Typer) -> None:
@@ -227,6 +231,193 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
             f"status\t{state.status}",
         ]
         _emit_envelope(ctx, command="modelo.iva_wallet.seed", result=seed_result, lines=lines)
+
+
+def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_bucket_id: Callable[[], str]) -> None:
+    @iva_wallet_app.command(
+        "correct",
+        help=tr(
+            "cli.app.modelo.iva_wallet.correct_help",
+            default=(
+                "Correct a wrong opening Modelo 303 carry-forward balance previously seeded for a "
+                "pre-history period. Overwrites the existing seeded amount; refuses when no record "
+                "exists for the period (seed first) and when an already-filed Modelo 303 has "
+                "consumed the seeded basis (correcting it would change a filed return). Records "
+                "--reason into an audit event. Requires --confirm."
+            ),
+        ),
+    )
+    def iva_wallet_correct_cmd(
+        ctx: typer.Context,
+        filing_year: Annotated[
+            int,
+            typer.Option(
+                "--filing-year",
+                min=2000,
+                max=2099,
+                help=tr(
+                    "cli.app.modelo.iva_wallet.correct_filing_year_help",
+                    default="Filing year of the seeded Modelo 303 period to correct.",
+                ),
+            ),
+        ],
+        period: Annotated[
+            str,
+            typer.Option(
+                "--period",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.correct_period_help",
+                    default="Period of the seeded Modelo 303 record to correct (e.g. 4T, 3T).",
+                ),
+            ),
+        ],
+        amount: Annotated[
+            str,
+            typer.Option(
+                "--amount",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.correct_amount_help",
+                    default="Corrected carry-forward balance amount in EUR (decimal, e.g. 1200.50).",
+                ),
+            ),
+        ],
+        reason: Annotated[
+            str,
+            typer.Option(
+                "--reason",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.correct_reason_help",
+                    default="Reason for the correction, recorded into the audit event.",
+                ),
+            ),
+        ],
+        confirm: Annotated[
+            bool,
+            typer.Option(
+                "--confirm",
+                "--yes",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.correct_confirm_help",
+                    default=(
+                        "Required confirmation flag. Acknowledge that this overwrites a previously "
+                        "seeded carry-forward balance and filing accuracy depends on the new value."
+                    ),
+                ),
+            ),
+        ] = False,
+    ) -> None:
+        """Correct a wrong seeded Modelo 303 carry-forward balance, guarded and audited."""
+        if not confirm:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.iva_wallet.correct_confirm_required",
+                    default=(
+                        "Pass --confirm to acknowledge: this overwrites the previously seeded M303 "
+                        "carry-forward balance for the specified period."
+                    ),
+                )
+            )
+
+        clean_reason = reason.strip()
+        if not clean_reason:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.iva_wallet.correct_reason_required",
+                    default="--reason must not be blank; record why the opening balance is being corrected.",
+                )
+            )
+
+        try:
+            correct_amount = Decimal(amount)
+        except InvalidOperation as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.iva_wallet.seed_invalid_amount",
+                    amount=amount,
+                    default=f"Amount {amount!r} is not a valid decimal.",
+                )
+            ) from exc
+
+        previous_state = _load_existing_seeded_period(active_bucket_id(), filing_year, period)
+
+        try:
+            state = correct_iva_compensation_period_for_bucket(
+                bucket_id=active_bucket_id(),
+                filing_year=filing_year,
+                period=period,
+                amount=correct_amount,
+                reason=clean_reason,
+            )
+        except ModeloIvaWalletSeedNegativeAmountError as exc:
+            assert exc.translated_message is not None
+            raise typer.BadParameter(tr(exc.translated_message, default="Amount must be non-negative.")) from exc
+        except ModeloIvaWalletSeedNoTaxpayerError as exc:
+            assert exc.translated_message is not None
+            raise typer.BadParameter(
+                tr(
+                    exc.translated_message,
+                    default="Active profile has no identity.tax_id configured. Set it via config profile.",
+                )
+            ) from exc
+        except ModeloIvaWalletCorrectionNoRecordError as exc:
+            assert exc.translated_message is not None
+            raise typer.BadParameter(
+                tr(
+                    exc.translated_message,
+                    filing_year=filing_year,
+                    period=period,
+                    default=(
+                        f"No seeded compensation record exists for {filing_year}/{period}. "
+                        "Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing seed."
+                    ),
+                )
+            ) from exc
+        except ModeloIvaWalletCorrectionSealedError as exc:
+            assert exc.translated_message is not None
+            context = exc.context or {}
+            raise typer.BadParameter(
+                tr(
+                    exc.translated_message,
+                    filing_year=filing_year,
+                    period=period,
+                    blocking_period=context.get("blocking_period", ""),
+                    blocking_filing_year=context.get("blocking_filing_year", ""),
+                    default=(
+                        f"Correction refused: an already-filed Modelo 303 "
+                        f"({context.get('blocking_filing_year', '?')}/{context.get('blocking_period', '?')}) "
+                        "has consumed this seeded compensation basis. Changing it would alter a filed return."
+                    ),
+                )
+            ) from exc
+
+        correct_result = IvaWalletCorrectResult(
+            filing_year=state.filing_year,
+            period=state.period,
+            taxpayer_nif=state.taxpayer_nif,
+            previous_amount=str(previous_state.available_end_amount) if previous_state is not None else "",
+            amount=str(state.available_end_amount),
+            status=str(state.status),
+            reason=clean_reason,
+        )
+        lines = [
+            "operation\tmodelo.iva-wallet.correct",
+            f"filing_year\t{state.filing_year}",
+            f"period\t{state.period}",
+            f"taxpayer_nif\t{state.taxpayer_nif}",
+            f"previous_amount\t{previous_state.available_end_amount if previous_state is not None else ''}",
+            f"amount\t{state.available_end_amount}",
+            f"status\t{state.status}",
+            f"reason\t{clean_reason}",
+        ]
+        _emit_envelope(ctx, command="modelo.iva_wallet.correct", result=correct_result, lines=lines)
+
+
+def _load_existing_seeded_period(bucket_id: str, filing_year: int, period: str):
+    """Return the stored period state before correction, or ``None`` when absent."""
+    from ...application.calculations import IvaCompensationHistoryRepository
+
+    del bucket_id  # repository is profile-active scoped; bucket binding is implicit
+    return IvaCompensationHistoryRepository().load_period(filing_year, period)
 
 
 __all__ = ["register_iva_wallet_commands"]

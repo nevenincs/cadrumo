@@ -63,6 +63,21 @@ aeat app modelo reconcile-from-justificante ./justificante.pdf --modelo 303 --ye
 
 Both commands produce the same result.
 
+## Review past reconciliations
+
+Each reconciliation is recorded in the profile's event history. List the past
+reconciliations recorded for the active profile:
+
+```bash
+aeat app modelo reconciliation-history
+```
+
+Add `--work-unit-id <id>` to narrow the list to a single work unit. Each row
+shows when the reconciliation ran, the work unit, the evidence source, the
+verdict, and how many fields differed. Reconciliation is repeatable on demand
+from the justificante, so this is a convenience read-back rather than a separate
+stored record.
+
 ## Next steps
 
 - [Quickstart](quickstart.md) — the end-to-end filing workflow.

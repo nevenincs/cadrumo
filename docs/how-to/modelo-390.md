@@ -132,12 +132,14 @@ reconciliation gate:
 ```bash
 aeat app modelo iva-wallet balance --as-of-year 2025
 aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
 aeat app live iva-wallet history
 aeat app live iva-wallet capture-history
 ```
 
 Use `seed` only when you have a real opening compensation balance from before
-the local Modelo 303 history.
+the local Modelo 303 history. If you seeded a wrong amount, `correct` overwrites
+it (it refuses once an already-filed Modelo 303 has consumed that basis).
 
 ## Create the annual work unit
 

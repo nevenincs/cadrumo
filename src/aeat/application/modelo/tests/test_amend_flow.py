@@ -10,9 +10,11 @@ bucket event.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -64,6 +66,13 @@ from ._file_flow_support import _file_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+type _Repos = tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+    BucketEventHistoryRepository,
+]
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
@@ -73,7 +82,7 @@ _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture
-def repos(tmp_path):
+def repos(tmp_path: Path) -> Generator[_Repos]:
     """Yield the five catalogue repositories over an encrypted SQLite db."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
@@ -86,7 +95,7 @@ def repos(tmp_path):
         yield wu, cr, fr, vr, bv
 
 
-def _seed_work_unit(wu_repo):
+def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
     """Modelo 130 1T 2026 — registry-resolvable so the formula engine
     in ``calculate_modelo_revision`` has a snapshot to operate on."""
 
@@ -106,7 +115,11 @@ _DEFAULT_130_BINDING_VALUES = {
 }
 
 
-def _seed_external_baseline(repos_tuple, *, casilla_values):
+def _seed_external_baseline(
+    repos_tuple: _Repos,
+    *,
+    casilla_values: dict[str, Decimal],
+) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
     its underlying calculation revision and work unit."""
 
@@ -167,7 +180,7 @@ def _seed_external_baseline(repos_tuple, *, casilla_values):
     return work_unit, revision, baseline_filing
 
 
-def test_amend_refuses_without_external_evidence(repos) -> None:
+def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
     """A locally-filed return (no ``external_evidence``) cannot be amended."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
@@ -226,7 +239,7 @@ def test_amend_refuses_without_external_evidence(repos) -> None:
         )
 
 
-def test_amend_refuses_when_baseline_already_superseded(repos) -> None:
+def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
     """A SUPERSEDED filing record cannot be amended."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
@@ -275,7 +288,7 @@ class _AmendOutcome:
     new_filing: ModeloRecord
 
 
-def _drive_amend_creates_complementaria(repos) -> _AmendOutcome:  # type: ignore[no-untyped-def]
+def _drive_amend_creates_complementaria(repos: _Repos) -> _AmendOutcome:
     """Run the seed-baseline + amend scenario and bundle the observable state."""
     wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
     work_unit, baseline_revision, baseline = _seed_external_baseline(
@@ -302,20 +315,20 @@ def _drive_amend_creates_complementaria(repos) -> _AmendOutcome:  # type: ignore
     )
 
 
-def test_amend_new_filing_is_current_complementaria_record(repos) -> None:
+def test_amend_new_filing_is_current_complementaria_record(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     assert outcome.new_filing.status is ModeloRecordStatus.VIGENTE
     assert outcome.new_filing.amends_filing_record_id == outcome.baseline.filing_record_id
     assert outcome.new_filing.external_evidence is None
 
 
-def test_amend_new_filing_records_filing_metadata(repos) -> None:
+def test_amend_new_filing_records_filing_metadata(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     assert outcome.new_filing.filed_at == _T4
     assert outcome.new_filing.filed_by == "operator-A"
 
 
-def test_amend_baseline_is_superseded_by_new_filing(repos) -> None:
+def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, _, fr_repo, _, _ = repos
     refreshed_baseline = get_filing_record(outcome.baseline.filing_record_id, filing_repository=fr_repo)
@@ -323,7 +336,7 @@ def test_amend_baseline_is_superseded_by_new_filing(repos) -> None:
     assert refreshed_baseline.superseded_by_filing_record_id == outcome.new_filing.filing_record_id
 
 
-def test_amend_new_revision_is_filed_complementaria(repos) -> None:
+def test_amend_new_revision_is_filed_complementaria(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
     new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
@@ -333,21 +346,21 @@ def test_amend_new_revision_is_filed_complementaria(repos) -> None:
     assert new_revision.amendment_reason == "under-reported turnover discovered in audit"
 
 
-def test_amend_overridden_casilla_takes_new_value(repos) -> None:
+def test_amend_overridden_casilla_takes_new_value(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
     new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
     assert new_revision.casilla_values["01"] == Decimal("1100")
 
 
-def test_amend_unoverridden_casilla_inherits_baseline_value(repos) -> None:
+def test_amend_unoverridden_casilla_inherits_baseline_value(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
     new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
     assert new_revision.casilla_values["02"] == outcome.baseline_revision.casilla_values["02"]
 
 
-def test_amend_work_unit_pointers_advance_to_new_filing(repos) -> None:
+def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     wu_repo, _, _, _, _ = repos
     refreshed_wu = get_work_unit(outcome.work_unit.work_unit_id, repository=wu_repo)
@@ -355,7 +368,7 @@ def test_amend_work_unit_pointers_advance_to_new_filing(repos) -> None:
     assert refreshed_wu.current_filing_record_id == outcome.new_filing.filing_record_id
 
 
-def test_amend_emits_single_modelo_amended_event(repos) -> None:
+def test_amend_emits_single_modelo_amended_event(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, _, _, _, bv_repo = repos
     amended_events = bv_repo.load().for_bucket(
@@ -372,7 +385,7 @@ _AMENDED_EVENT_PAYLOAD_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("payload_key", "expected"), _AMENDED_EVENT_PAYLOAD_EXPECTATIONS)
-def test_amend_amended_event_payload_records_metadata(repos, payload_key: str, expected: str) -> None:  # type: ignore[no-untyped-def]
+def test_amend_amended_event_payload_records_metadata(repos: _Repos, payload_key: str, expected: str) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, _, _, _, bv_repo = repos
     amended_events = bv_repo.load().for_bucket(
@@ -382,7 +395,7 @@ def test_amend_amended_event_payload_records_metadata(repos, payload_key: str, e
     assert amended_events[0].payload[payload_key] == expected
 
 
-def test_amend_amended_event_targets_new_filing_record(repos) -> None:
+def test_amend_amended_event_targets_new_filing_record(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, _, _, _, bv_repo = repos
     amended_events = bv_repo.load().for_bucket(
@@ -394,7 +407,7 @@ def test_amend_amended_event_targets_new_filing_record(repos) -> None:
     assert event.payload["amends_filing_record_id"] == outcome.baseline.filing_record_id
 
 
-def test_amend_refuses_no_op_overrides(repos) -> None:
+def test_amend_refuses_no_op_overrides(repos: _Repos) -> None:
     """Overrides identical to the baseline produce the same content-
     addressed revision id; the action refuses rather than persisting
     a no-op amendment."""
@@ -417,7 +430,7 @@ def test_amend_refuses_no_op_overrides(repos) -> None:
         )
 
 
-def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos) -> None:
+def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos) -> None:
     """An override targeting a casilla id the registry does not declare
     for the baseline modelo / filing_year / period is refused. The
     corrected revision is the legal basis of the complementaria filing;
@@ -443,7 +456,7 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos) -> None
     assert exc_info.value.context is not None and "9999" in exc_info.value.context["casillas"]
 
 
-def test_amend_revision_carries_casilla_observations(repos) -> None:
+def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:
     """The amendment revision preserves regulatory grounding.
 
     The amend path used to build the corrected `CalculationRevision`

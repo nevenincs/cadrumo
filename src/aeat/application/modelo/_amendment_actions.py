@@ -16,6 +16,7 @@ from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
 )
+from ...domain.modelos._calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,

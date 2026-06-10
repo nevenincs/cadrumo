@@ -14,6 +14,7 @@ from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.user_profile import (
     ProfileAlreadyExistsError,
     ProfileNotFoundError,
+    ProfileSchemaDefinition,
     ProfileSchemaValidationError,
     UserProfileFact,
     UserProfileStatus,
@@ -43,11 +44,11 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 @pytest.fixture(scope="module")
-def schema():
+def schema() -> ProfileSchemaDefinition:
     return resources().user_profile_schema.singleton
 
 
-def _service(secure_objects, schema) -> ProfileLifecycleService:
+def _service(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> ProfileLifecycleService:
     return ProfileLifecycleService(
         repository=UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects),
         validator=ProfileValidationService(schema=schema),
@@ -55,7 +56,7 @@ def _service(secure_objects, schema) -> ProfileLifecycleService:
     )
 
 
-def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
+def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
     facts: list[UserProfileFact] = []
     for section in schema.sections:
         if section.repeatable:
@@ -66,7 +67,9 @@ def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
     return tuple(facts)
 
 
-def test_register_rejects_schema_violations(secure_objects, schema) -> None:
+def test_register_rejects_schema_violations(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     with pytest.raises(ProfileSchemaValidationError) as exc_info:
         svc.register(RegisterProfileCommand(profile_id="operator", display_name="Op", facts=()))
@@ -80,7 +83,9 @@ def test_register_rejects_schema_violations(secure_objects, schema) -> None:
     assert "required_field_missing" in error.context["issue_codes"]
 
 
-def test_register_persists_when_all_required_facts_present(secure_objects, schema) -> None:
+def test_register_persists_when_all_required_facts_present(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     result = svc.register(
         RegisterProfileCommand(
@@ -93,7 +98,9 @@ def test_register_persists_when_all_required_facts_present(secure_objects, schem
     assert result.profile.status is UserProfileStatus.ACTIVE
 
 
-def test_register_refuses_duplicate_profile_id(secure_objects, schema) -> None:
+def test_register_refuses_duplicate_profile_id(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -119,7 +126,9 @@ def test_register_refuses_duplicate_profile_id(secure_objects, schema) -> None:
     assert error.context == {"profile_id": "operator", "bucket_id": "bucket-a"}
 
 
-def test_edit_field_upserts_a_fact(secure_objects, schema) -> None:
+def test_edit_field_upserts_a_fact(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -138,7 +147,9 @@ def test_edit_field_upserts_a_fact(secure_objects, schema) -> None:
     assert any(fact.path == "identity.tax_id" and fact.value == "X1234567Z" for fact in result.profile.facts)
 
 
-def test_remove_tombstones_the_profile(secure_objects, schema) -> None:
+def test_remove_tombstones_the_profile(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -152,7 +163,9 @@ def test_remove_tombstones_the_profile(secure_objects, schema) -> None:
     assert result.profile.removed_at is not None
 
 
-def test_duplicate_copies_to_a_new_id(secure_objects, schema) -> None:
+def test_duplicate_copies_to_a_new_id(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -173,7 +186,9 @@ def test_duplicate_copies_to_a_new_id(secure_objects, schema) -> None:
     assert result.profile.status is UserProfileStatus.ACTIVE
 
 
-def test_rename_updates_label_only(secure_objects, schema) -> None:
+def test_rename_updates_label_only(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     """``rename`` changes ``display_name`` and nothing else.
 
     Profile identity is immutable: ``profile_id``, status, facts, and
@@ -204,7 +219,9 @@ def test_rename_updates_label_only(secure_objects, schema) -> None:
     assert reloaded.display_name == "Renamed Operator"
 
 
-def test_rename_refuses_a_tombstoned_profile(secure_objects, schema) -> None:
+def test_rename_refuses_a_tombstoned_profile(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     """``rename`` on a tombstoned profile is refused — only live profiles relabel."""
 
     svc = _service(secure_objects, schema)
@@ -227,7 +244,9 @@ def test_rename_refuses_a_tombstoned_profile(secure_objects, schema) -> None:
     assert error.context == {"profile_id": "operator", "action": "rename"}
 
 
-def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(secure_objects, schema) -> None:
+def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -254,7 +273,9 @@ def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(secu
     assert error.context == {"profile_id": "operator", "action": "duplicate"}
 
 
-def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:
+def test_lifecycle_emits_bucket_events(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     events_repo = BucketEventHistoryRepository(objects=secure_objects)
 
@@ -287,7 +308,7 @@ def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:
     assert by_type[BucketEventType.PROFILE_TOMBSTONED] == 1
 
 
-def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, schema) -> None:
+def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, schema: ProfileSchemaDefinition) -> None:
     with isolated_runtime_profile(
         tmp_path=tmp_path,
         bucket_id="user-profile-lifecycle-private-events",
@@ -343,7 +364,9 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
             assert plaintext.encode("utf-8") not in database_bytes
 
 
-def test_list_profiles_returns_sorted_listings(secure_objects, schema) -> None:
+def test_list_profiles_returns_sorted_listings(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(profile_id="b-second", display_name="Second", facts=_all_required_facts(schema))
@@ -358,7 +381,9 @@ def test_list_profiles_returns_sorted_listings(secure_objects, schema) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_read_returns_persisted_record(secure_objects, schema) -> None:
+def test_read_returns_persisted_record(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     """Service-contract gate: read() loads the same record back as the
     register() call persisted (round-trip via the secure repository)."""
 
@@ -372,7 +397,9 @@ def test_read_returns_persisted_record(secure_objects, schema) -> None:
     assert {f.path for f in loaded.facts} == {f.path for f in facts}
 
 
-def test_read_raises_on_unknown_profile(secure_objects, schema) -> None:
+def test_read_raises_on_unknown_profile(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
     """Service-contract gate: read() refuses an unknown profile id with
     :class:`ProfileNotFoundError`, not a silent empty record."""
 
@@ -381,7 +408,7 @@ def test_read_raises_on_unknown_profile(secure_objects, schema) -> None:
         svc.read("never-registered")
 
 
-def test_validator_surfaces_missing_required_field_as_issue(schema) -> None:
+def test_validator_surfaces_missing_required_field_as_issue(schema: ProfileSchemaDefinition) -> None:
     """Service-contract gate: the ProfileValidationService that the
     lifecycle service composes surfaces a missing required field as
     a structured issue (not a silent pass).

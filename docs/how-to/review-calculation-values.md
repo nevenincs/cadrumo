@@ -126,6 +126,19 @@ compensation balance. Use a positive amount only when you have the pending
 compensation amount from earlier Modelo 303 filings prepared outside this local
 history.
 
+Seeding refuses if a record already exists for the period. To fix a wrong
+opening amount you seeded earlier, correct it:
+
+```bash
+aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "typo in opening balance" --confirm
+```
+
+The correction overwrites the seeded amount and records your `--reason` in an
+audit event. It refuses when no record exists for the period (seed it first) and
+when an already-filed Modelo 303 has consumed the seeded basis — correcting it
+then would change a return you have already filed. In that case file a
+complementaria instead (see [Correct an already filed local record](#correct-an-already-filed-local-record)).
+
 For registry relation values, calculation accepts repeatable
 `--relation KEY=VALUE` inputs. Use them only when the relevant modelo's
 registry/help text identifies the relation you need:
