@@ -876,8 +876,6 @@ application:
       errors:
         date_value_type_invalid: El dato de perfil para el binding de fecha %{binding_id}
           debe ser una fecha; se recibio %{value_type}.
-        decimal_value_invalid: El dato de perfil para el binding numerico %{binding_id}
-          debe ser compatible con decimal.
         decimal_value_type_invalid: 'El dato de perfil para el binding de canal decimal
           %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
@@ -1921,8 +1919,9 @@ cli:
         ISO 8601 (AAAA-MM-DD).'
       no_active_profile_error_value: sin-perfil-activo
       period_empty: El periodo fiscal no puede estar vacío
-      period_unrecognised: 'Periodo ''{raw}'' no reconocido. Use un token AEAT con su año: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (meses). También se aceptan las formas de calendario 2026Q1, 2026-03, 2026.'
-      period_missing_year: 'El periodo ''{token}'' necesita un año en este comando. Use el token AEAT con año {token} como 2026-{token}, o la forma de calendario (2026Q1, 2026-03, 2026).'
+      period_unrecognised: 'Periodo ''{raw}'' no reconocido. Use un token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses), e indique el año con --year (p. ej. --period 1T --year 2024).'
+      period_missing_year: 'El token de periodo ''{token}'' necesita un año en este comando. Añada --year (p. ej. --period {token} --year 2024).'
+      period_filter_unrecognised: 'Periodo de filtro ''{raw}'' no reconocido. Use un token AEAT con año en la cláusula de filtro: period=2024-1T (trimestres), period=2024-0A (anual), period=2024-03 (meses).'
     next:
       create_profile_command: aeat config profile create NOMBRE
   config:
@@ -2610,7 +2609,8 @@ cli:
       help: Exportar movimientos canónicos del libro desde el bucket del perfil activo
       include_inactive_help: Incluir movimientos archivados y apartados
       output_help: Ruta donde escribir el archivo exportado del libro
-      period_help: 'Periodo de declaración. Use los tokens AEAT canónicos con su año: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (meses). También se aceptan las formas de calendario 2026Q1, 2026-03, 2026.'
+      period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
+      year_help: 'Año de declaración para --period (p. ej. 2024).'
     history:
       help: Muestra la cadena cronológica de eventos de una transacción
       id_help: Id de la transacción (o prefijo no ambiguo)
@@ -2634,11 +2634,12 @@ cli:
         con una columna de fecha, importe y descripción seguida de al menos una fila
         de datos.'
       path_help: Ruta al archivo del extracto bancario o directorio
-      period_help: 'Periodo de declaración. Use los tokens AEAT canónicos con su año: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (meses). También se aceptan las formas de calendario 2026Q1, 2026-03, 2026.'
+      period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       provider_help: 'Proveedor del formato del extracto. Valores reconocidos: {providers}'
       source_help: Archivo original para verificar las filas importadas
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
+      year_help: 'Año de declaración para --period (p. ej. 2024).'
     labels:
       active: Activas
       amount: Importe
@@ -2710,9 +2711,7 @@ cli:
       invoice_id_help: Id de la factura a vincular bidireccionalmente con el movimiento.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
-      filter_help: Filtra filas por estado, periodo (incl. AAAA para un año), clasificación,
-        incidencia, importación, dirección (ingreso/gasto) o texto. Para filtrar por
-        etiqueta de grupo organizativo usa la opción --group por separado.
+      filter_help: 'Filtre las filas por estado, periodo (un token AEAT con año, p. ej. period=2024-1T), clasificación, incidencia, importación, dirección (ingreso/gasto) o texto. Para filtrar por etiqueta de grupo organizativo use la opción --group por separado.'
       footer_truncated: Mostrando filas {start}-{end} de {total} (desplazamiento {offset}).
         Use --offset/--limit para paginar.
       group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
@@ -2733,7 +2732,8 @@ cli:
       help: Informa de los datos contables que faltan (categoría, base imponible,
         importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
         del bucket activo en un período dado. Local; nunca contacta con AEAT.
-      period_help: 'Periodo de declaración. Use los tokens AEAT canónicos con su año: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (meses). También se aceptan las formas de calendario 2026Q1, 2026-03, 2026.'
+      period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
+      year_help: 'Año de declaración (p. ej. 2024).'
     providers:
       help: Lista los proveedores LLM en subproceso con CLI disponible en PATH.
     remove:
@@ -2783,7 +2783,8 @@ cli:
     status:
       help: Resumir el estado del libro y la preparación de cálculo del bucket del
         perfil activo
-      period_help: 'Periodo de declaración. Use los tokens AEAT canónicos con su año: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (meses). También se aceptan las formas de calendario 2026Q1, 2026-03, 2026.'
+      period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
+      year_help: 'Año de declaración para --period (p. ej. 2024).'
     track:
       help: Mostrar el linaje de eventos de un movimiento del libro
       transaction_id_help: Id del movimiento del libro a inspeccionar
@@ -2991,7 +2992,7 @@ cli:
       year_help: Ejercicio fiscal para evaluar la aplicabilidad; por defecto, el año
         actual.
     period: Periodo
-    period_help: 'Periodo de declaración. Use los tokens AEAT canónicos con su año: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (meses). También se aceptan las formas de calendario 2026Q1, 2026-03, 2026.'
+    period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
       drafts_empty_with_work_units: No hay borradores de declaraciones antiguos guardados;
@@ -3043,6 +3044,7 @@ cli:
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
     verbose_help: Mostrar detalles y siguiente acción cuando existan
+    year_help: 'Año de declaración para --period (p. ej. 2024).'
   registry:
     app_help: Gestión del registro de modelos fiscales
     audit_oracles_environment_help: Entorno del catálogo de paridad en vivo a auditar
