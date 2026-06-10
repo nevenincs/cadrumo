@@ -799,8 +799,6 @@ application:
       errors:
         date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
           must be a date; got %{value_type}.
-        decimal_value_invalid: Profile fact for numeric binding %{binding_id} must
-          be decimal-compatible.
         decimal_value_type_invalid: Profile fact for Decimal-channel binding %{binding_id}
           has unsupported value type %{value_type}.
         enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
@@ -1787,8 +1785,9 @@ cli:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
       no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
-      period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token with its year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
-      period_missing_year: 'Period ''{token}'' needs a year on this command. Use the year-qualified AEAT token {token} like 2026-{token}, or the calendar shape (2026Q1, 2026-03, 2026).'
+      period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g. --period 1T --year 2024).'
+      period_missing_year: 'Period token ''{token}'' needs a year on this command. Add --year (e.g. --period {token} --year 2024).'
+      period_filter_unrecognised: 'Unrecognized filter period ''{raw}''. Use a year-qualified AEAT token in the filter clause: period=2024-1T (quarters), period=2024-0A (annual), period=2024-03 (months).'
     next:
       create_profile_command: aeat config profile create NAME
   config:
@@ -2434,7 +2433,8 @@ cli:
       help: Export canonical ledger rows from the active profile bucket
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
-      period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+      year_help: 'Filing year for --period (e.g. 2024).'
     history:
       help: Emit the chronological bucket-event chain for one ledger transaction id
       id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
@@ -2456,11 +2456,12 @@ cli:
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
       path_help: Path to the bank statement file or directory
-      period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
       provider_help: 'Statement format provider. Recognised values: {providers}'
       source_help: Original file used to verify imported rows
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
+      year_help: 'Filing year for --period (e.g. 2024).'
     labels:
       active: Active
       amount: Amount
@@ -2530,9 +2531,7 @@ cli:
       invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
-      filter_help: Filter rows by status, period (incl. bare YYYY for a year), classification,
-        issue, import, direction (ingreso/gasto), or text. To filter by organisational
-        group label use the separate --group option.
+      filter_help: 'Filter rows by status, period (a year-qualified AEAT token, e.g. period=2024-1T), classification, issue, import, direction (ingreso/gasto), or text. To filter by organisational group label use the separate --group option.'
       footer_truncated: Showing rows {start}-{end} of {total} (offset {offset}). Use
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.
@@ -2555,7 +2554,8 @@ cli:
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active bucket's transactions
         in a given period. Local-only; never contacts AEAT.
-      period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+      year_help: 'Filing year (e.g. 2024).'
     providers:
       help: List which subprocess LLM providers have a usable CLI on PATH.
     remove:
@@ -2611,7 +2611,8 @@ cli:
     status:
       help: Summarize ledger state and calculation readiness for the active profile
         bucket
-      period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+      year_help: 'Filing year for --period (e.g. 2024).'
     track:
       help: Show the event lineage for one ledger transaction
       transaction_id_help: Ledger transaction id to inspect
@@ -2803,7 +2804,7 @@ cli:
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
     period: Period
-    period_help: 'Filing period. Use the canonical AEAT tokens with their year: 2026-1T..2026-4T (quarters), 2026-0A (annual), 2026-01..2026-12 (months). The calendar shapes 2026Q1, 2026-03, 2026 are also accepted.'
+    period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No legacy declaration drafts are saved - this
@@ -2852,6 +2853,7 @@ cli:
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.
     verbose_help: Show details and next action when available
+    year_help: 'Filing year for --period (e.g. 2024).'
   registry:
     app_help: Tax models registry management
     audit_oracles_environment_help: Live parity catalogue environment to audit against

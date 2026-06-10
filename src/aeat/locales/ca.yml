@@ -867,8 +867,6 @@ application:
       errors:
         date_value_type_invalid: La dada de perfil per al binding de data %{binding_id}
           ha de ser una data; s'ha rebut %{value_type}.
-        decimal_value_invalid: La dada de perfil per al binding numeric %{binding_id}
-          ha de ser compatible amb decimal.
         decimal_value_type_invalid: 'La dada de perfil per al binding de canal decimal
           %{binding_id} te un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
@@ -1894,8 +1892,9 @@ cli:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
       no_active_profile_error_value: sense-perfil-actiu
       period_empty: El periode fiscal no pot estar buit
-      period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
-      period_missing_year: 'El període ''{token}'' necessita un any en aquesta ordre. Useu el testimoni AEAT amb any {token} com 2026-{token}, o la forma de calendari (2026Q1, 2026-03, 2026).'
+      period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indiqueu l''any amb --year (p. ex. --period 1T --year 2024).'
+      period_missing_year: 'El testimoni de període ''{token}'' necessita un any en aquesta ordre. Afegiu --year (p. ex. --period {token} --year 2024).'
+      period_filter_unrecognised: 'Període de filtre ''{raw}'' no reconegut. Useu un testimoni AEAT amb any a la clàusula de filtre: period=2024-1T (trimestres), period=2024-0A (anual), period=2024-03 (mesos).'
     next:
       create_profile_command: aeat config profile create NOM
   config:
@@ -2576,7 +2575,8 @@ cli:
       help: Exportar moviments canònics del llibre des del bucket del perfil actiu
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Ruta on escriure el fitxer exportat del llibre
-      period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
+      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      year_help: 'Any de declaració per a --period (p. ex. 2024).'
     history:
       help: Mostra la cadena cronològica d'esdeveniments d'una transacció
       id_help: Id de la transacció (o prefix no ambigu)
@@ -2600,11 +2600,12 @@ cli:
         amb una columna de data, import i descripció seguida d''almenys una fila de
         dades.'
       path_help: Ruta a l'arxiu de l'extracte bancari o directori
-      period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
+      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       provider_help: 'Proveïdor del format de l''extracte. Valors reconeguts: {providers}'
       source_help: Fitxer original per verificar les files importades
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
+      year_help: 'Any de declaració per a --period (p. ex. 2024).'
     labels:
       active: Actives
       amount: Import
@@ -2675,9 +2676,7 @@ cli:
       invoice_id_help: Id de la factura a vincular bidireccionalment amb el moviment.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
-      filter_help: Filtra files per estat, període (incl. AAAA per a un any), classificació,
-        incidència, importació, direcció (ingreso/gasto) o text. Per filtrar per etiqueta
-        de grup organitzatiu usa l'opció --group per separat.
+      filter_help: 'Filtreu les files per estat, període (un testimoni AEAT amb any, p. ex. period=2024-1T), classificació, incidència, importació, direcció (ingrés/despesa) o text. Per filtrar per etiqueta de grup organitzatiu useu l''opció --group per separat.'
       footer_truncated: Mostrant files {start}-{end} de {total} (desplacament {offset}).
         Feu servir --offset/--limit per paginar.
       group_filter_help: Mostra nomes les files d'aquesta etiqueta de grup.
@@ -2698,7 +2697,8 @@ cli:
       help: Informa de les dades comptables que falten (categoria, base imposable,
         import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
         bucket actiu en un període donat. Local; mai contacta amb AEAT.
-      period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
+      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      year_help: 'Any de declaració (p. ex. 2024).'
     providers:
       help: Llista els proveïdors LLM en subprocés amb CLI disponible al PATH.
     remove:
@@ -2748,7 +2748,8 @@ cli:
     status:
       help: Resumir l'estat del llibre i la preparació de càlcul del bucket del perfil
         actiu
-      period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
+      period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
+      year_help: 'Any de declaració per a --period (p. ex. 2024).'
     track:
       help: Mostrar el llinatge d'esdeveniments d'un moviment del llibre
       transaction_id_help: Id del moviment del llibre a inspeccionar
@@ -2954,7 +2955,7 @@ cli:
       modelo_help: Identificador del modelo AEAT (p. ex. 303, 130, 100).
       year_help: Exercici fiscal per avaluar l'aplicabilitat; per defecte, l'any actual.
     period: Període
-    period_help: 'Període de declaració. Useu els testimonis AEAT canònics amb el seu any: 2026-1T..2026-4T (trimestres), 2026-0A (anual), 2026-01..2026-12 (mesos). També s''accepten les formes de calendari 2026Q1, 2026-03, 2026.'
+    period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres), 0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions antics desats;
@@ -3004,6 +3005,7 @@ cli:
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
+    year_help: 'Any de declaració per a --period (p. ex. 2024).'
   registry:
     app_help: Gestió del registre de models fiscals
     audit_oracles_environment_help: Entorn del catàleg de paritat en viu a auditar
