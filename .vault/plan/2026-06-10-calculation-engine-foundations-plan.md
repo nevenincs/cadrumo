@@ -33,24 +33,24 @@ Ratify select_revision as the sole law-determined resolver and close D1 (identit
 
 Ratify select_revision as sole resolver (revision_id assertion-only); strengthen the work-unit creation gate to resolver-equality and add the calc-time snapshot.revision.id == work_unit.revision_id assertion with instructive refusal.
 
-- [ ] `W01.P01.S01` - Strengthen resolve_registry_revision_for_work_target to resolver-equality (delegate to select_revision with revision_id, refuse divergent with an instructive message naming requested + law-determined revision); `application/modelo/_work_addressing.py`.
-- [ ] `W01.P01.S02` - Add the calc-time equality assertion snapshot.revision.id == work_unit.revision_id at every calc entry and refuse on divergence directing operator to re-create the unit; `application/modelo/_calculation_actions.py + _calculate_input.py`.
-- [ ] `W01.P01.S23` - Ratify select_revision (reached via ValidatedRegistryAuthority.snapshot / resolve_registry_revision_for_work_target) as THE sole law-determined period-to-revision resolver and add a regression that no production calc/verify/filing/export/projection path injects a stored/literal/operator-supplied revision_id into resolution (revision_id is assertion-only), pinning the three benign swept exemptions; `domain/calculations/registry/_temporal.py + _snapshot.py; application/calculations/tests`.
+- [x] `W01.P01.S01` - Strengthen resolve_registry_revision_for_work_target to resolver-equality (delegate to select_revision with revision_id, refuse divergent with an instructive message naming requested + law-determined revision); `application/modelo/_work_addressing.py`.
+- [x] `W01.P01.S02` - Add the calc-time equality assertion snapshot.revision.id == work_unit.revision_id at every calc entry and refuse on divergence directing operator to re-create the unit; `application/modelo/_calculation_actions.py + _calculate_input.py`.
+- [x] `W01.P01.S23` - Ratify select_revision (reached via ValidatedRegistryAuthority.snapshot / resolve_registry_revision_for_work_target) as THE sole law-determined period-to-revision resolver and add a regression that no production calc/verify/filing/export/projection path injects a stored/literal/operator-supplied revision_id into resolution (revision_id is assertion-only), pinning the three benign swept exemptions; `domain/calculations/registry/_temporal.py + _snapshot.py; application/calculations/tests`.
 
 ### Phase `W01.P02` - R2 carry revision stamp + gate
 
 Add a revision-provenance field to the persisted observation envelope (producers stamp at write), and a carry-read re-confirmation gate: divergent stamp blocks, missing legacy stamp advises (no-silent), with backfill ratchet.
 
-- [ ] `W01.P02.S03` - Add a revision-provenance field to the persisted observation envelope and stamp it at write time from the resolved snapshot across all producers (app filing, sede capture, iva-compensation); `application/calculations/_observations_repository.py + producers; strict roundtrip tests`.
-- [ ] `W01.P02.S04` - Add the carry-read re-confirmation gate (block on divergent stamp, advise on missing legacy stamp) at every cross-period/cross-year carry read; `application/calculations/_binding_prefill.py + _cross_period_clean_state.py + _multi_year.py`.
+- [x] `W01.P02.S03` - Add a revision-provenance field to the persisted observation envelope and stamp it at write time from the resolved snapshot across all producers (app filing, sede capture, iva-compensation); `application/calculations/_observations_repository.py + producers; strict roundtrip tests`.
+- [x] `W01.P02.S04` - Add the carry-read re-confirmation gate (block on divergent stamp, advise on missing legacy stamp) at every cross-period/cross-year carry read; `application/calculations/_binding_prefill.py + _cross_period_clean_state.py + _multi_year.py`.
 
 ### Phase `W01.P03` - D3 first-class orden applicability
 
 Add a mandatory orden_aplicabilidad field per revision.toml, validated against the legal catalogue + BOE corpus per registry-calculation-legal-grounding, merged into legal_refs; hard-cut or ratchet backfill.
 
-- [ ] `W01.P03.S05` - Add the orden_aplicabilidad field to the revision schema with registry validation (resolves in legal catalogue, corpus_ref present, merged into legal_refs); `domain/calculations/registry/_schema.py + _validate_revision_rules.py`.
-- [ ] `W01.P03.S06` - Backfill orden_aplicabilidad across existing revisions (hard-cut if small else ratchet) and require open-ended revisions to cite their open-ended-applicability orden; `registry modelos/**/revisions/*/revision.toml + legal catalogue`.
-- [ ] `W01.P03.S24` - Document the Ruling-5 (R3) boundary: per-year norm values inside an open-ended *-y-siguientes revision are the parameter-bracket layer's responsibility (validate_bracket_table_temporal_coverage + per-value legal grounding), NOT a resolution defect, and add the connective gate that every open-ended revision's orden_aplicabilidad cites the orden establishing the open-ended applicability; `domain/calculations/registry/_validate_revision_rules.py + .vault/exec boundary note`.
+- [x] `W01.P03.S05` - Add the orden_aplicabilidad field to the revision schema with registry validation (resolves in legal catalogue, corpus_ref present, merged into legal_refs); `domain/calculations/registry/_schema.py + _validate_revision_rules.py`.
+- [x] `W01.P03.S06` - Backfill orden_aplicabilidad across existing revisions (hard-cut if small else ratchet) and require open-ended revisions to cite their open-ended-applicability orden; `registry modelos/**/revisions/*/revision.toml + legal catalogue`.
+- [x] `W01.P03.S24` - Document the Ruling-5 (R3) boundary: per-year norm values inside an open-ended *-y-siguientes revision are the parameter-bracket layer's responsibility (validate_bracket_table_temporal_coverage + per-value legal grounding), NOT a resolution defect, and add the connective gate that every open-ended revision's orden_aplicabilidad cites the orden establishing the open-ended applicability; `domain/calculations/registry/_validate_revision_rules.py + .vault/exec boundary note`.
 
 ## Wave `W02` - Dormant calculation-parts census and enrollment closure
 
