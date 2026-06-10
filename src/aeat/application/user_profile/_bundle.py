@@ -149,14 +149,14 @@ def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: s
 
 
 def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.transactions._models import TransactionCatalogue
+    from ...domain.transactions._models import Transaction, TransactionCatalogue
     from ...domain.transactions._repository import TransactionCatalogueRepository
 
     if not bundle.ledger_transactions:
         return
     repo = TransactionCatalogueRepository(bucket_id=target_bucket_id)
     existing = repo.load()
-    merged: dict[str, object] = dict(existing.transactions)
+    merged: dict[str, Transaction] = dict(existing.transactions)
     for txn in bundle.ledger_transactions:
         merged[txn.transaction_id] = txn
     repo.save(TransactionCatalogue(transactions=merged))
