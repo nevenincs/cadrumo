@@ -17,7 +17,7 @@ related:
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
 ---
 
-# `cli-operator-surface` adr: `operator surface verb, lifecycle, and honesty decisions` | (**status:** `proposed` -- operator approval pending)
+# `cli-operator-surface` adr: `operator surface verb, lifecycle, and honesty decisions` | (**status:** `accepted` -- operator approval with caveats recorded 2026-06-10)
 
 ## Problem Statement
 
@@ -40,6 +40,38 @@ hint strings, the eager language flag timing contract, the preflight signature),
 the decision here is net-new. Every claim of current behaviour below traces to
 the audits or to code verified during authoring; no CLI behaviour is invented.
 The never-live-submission gate is untouched by every decision here.
+
+## Approval
+
+Status moves `proposed` -> `accepted`. The operator approved this ADR on
+2026-06-10 with three binding caveats, applied into the decisions below:
+
+- **Caveat 1 -- strict rollout, no lookback.** "The simpler the better. Strict
+  rollout without aliases, shadows, or deprecation support -- a clear, confident
+  implementation without lookback." This is the standing
+  `aeat-architecture-boundaries` rule restated for this surface: "Do not
+  introduce shims, compatibility layers, deprecation paths, or duplicate legacy
+  APIs. Move callers to the canonical path instead." Every rename decided here is
+  a hard rename -- the canonical verb replaces the old one outright, callers move,
+  the retired-verb test updates, and no alias or deprecation window survives.
+- **Caveat 2 -- overrides serve real operator choice.** "Overrides are good when
+  they aid user choices (e.g. period year <-> uuid)." A dual-input surface that
+  lets the operator supply the same value in two genuine notations (an AEAT token
+  or a calendar shape; a natural key or an internal uuid) is welcome and is NOT a
+  duplicate. A second *verb* for an intent that already has one is the thing the
+  strict-rollout caveat forbids. Throughout the decisions, an input override is
+  kept; a duplicate verb is not.
+- **Caveat 3 -- guessability is the acceptance test.** "The user must be able to
+  guess how to operate the CLI; it should not fight intuition." A new operator
+  verb ships only if a newcomer could plausibly guess it from intent vocabulary.
+  This is the naming acceptance criterion folded into D1's policy paragraph.
+
+These caveats are reflected in the decision text: D1 is rewritten to a hard
+`switch`-replaces-`unlock` rename with no alias; D4 is re-justified as an
+input override (caveat 2), not a duplicate verb; D6's option ordering is
+re-prioritised toward the strictest honest outcome (caveat 1); and D2, D3, D5,
+D7, D8 are confirmed against the caveats with the input-override decisions (D3,
+D8) named as such.
 
 ## Considerations
 
@@ -102,19 +134,27 @@ of unsealing an encrypted bucket session, not the operator's intent. The userdoc
 campaign was forced to write "switch by unlocking" -- a gloss that exists only
 because the verb and the intent diverged.
 
-**Decision.** Restore `switch` as the operator-facing verb for changing the
-active taxpayer, layered over the existing session-unlock implementation:
-`aeat config switch NAME` (at the `config` surface the current `unlock` occupies)
-becomes the operator door, and the existing unlock code path runs underneath it
-unchanged. Keep `unlock` as a documented lower-level synonym for operators who
-think in session terms; do not remove it. Adopt the standing policy: an operator
-verb names the operator's intent, not the storage or session mechanism that
-implements it. Enumerate the rename / alias set this policy implies today without
-boiling the ocean -- restore `switch` (D1's subject), and queue intent-named
-spellings for the two other leaked terms the audit named: `config repair
-reset-state` (storage mechanic) and the operator-facing noun "bucket" where the
-operator means "profile". Treat those two as follow-on rename work tracked by the
-plan, not decided in detail here.
+**Decision.** `switch` REPLACES `unlock` outright as the one
+profile-switching verb. This is a hard rename, not an alias: `aeat config switch
+NAME` (at the `config` surface the current `unlock` occupies) becomes the single
+operator door for changing the active taxpayer; the existing session-unlock code
+path runs underneath the new verb name, invisible to the operator; `unlock` is
+removed, its callers move to `switch`, and the retired-verb test
+(`_RETIRED_VERBS`) is updated to record `unlock` as retired. No `unlock` alias,
+synonym, shadow, or deprecation window survives -- a newcomer is taught exactly
+one verb for this intent. Per caveat 1 the session-unlock *mechanics* live
+underneath the verb and are never an operator-facing spelling.
+
+Adopt the standing policy, with caveat 3's guessability test built in: an
+operator verb names the operator's intent, not the storage or session mechanism
+that implements it, AND a new operator verb ships only if a newcomer could
+plausibly guess it from intent vocabulary. ("change to another taxpayer" plausibly
+guesses `switch`; it does not plausibly guess `unlock`.) The other two leaked
+terms the audit named -- `config repair reset-state` (storage mechanic) and the
+operator-facing noun "bucket" where the operator means "profile" -- are queued for
+the same hard-rename discipline when actioned: each gets one intent-named
+spelling that replaces the leaked term outright, with no coexisting alias. They
+are follow-on rename work tracked by the plan, not decided in detail here.
 
 **Amends.** `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr`
 decided the switch verb was `use` as an alias of `set active` and forbade a
@@ -129,15 +169,19 @@ active`; it did not decide that storage-unlock vocabulary would become the
 operator's only door."
 
 **Consequences.** The "switch by unlocking" gloss disappears. Operators get a
-verb whose name survives the encrypted-session model underneath it. `unlock`
-survives for continuity and for the genuine session-only case (unsealing without
-intending a context switch). The policy seeds a codification candidate.
+single verb whose name survives the encrypted-session model underneath it, and
+nothing to disambiguate against -- there is no `unlock` synonym to also learn.
+Guides that taught `unlock` move to `switch` in the same change. The policy seeds
+a codification candidate.
 
-**Rejected.** Renaming `unlock` outright to `switch` (drops the legitimate
-session-only meaning and breaks every guide that already teaches `unlock`).
-Leaving `unlock` as the only door (keeps the gloss the documentation could not
-remove). A root-level `aeat switch` shortcut (violates the standing two-root
-constraint `config` plus `app`).
+**Rejected.** Keeping `unlock` and `switch` as coexisting alias/synonym doors
+(REJECTED BY OPERATOR DIRECTIVE per caveat 1 -- "strict rollout without aliases,
+shadows, or deprecation support"; two doors for one intent fights the
+single-verb guessability the operator requires and is the duplicate-verb shape
+caveat 2 excludes from the welcome-override category). Leaving `unlock` as the
+only door (keeps the gloss the documentation could not remove and fails the
+guessability test of caveat 3). A root-level `aeat switch` shortcut (violates the
+standing two-root constraint `config` plus `app`).
 
 ### D2 -- Build a ledger `restore` verb to ACTIVE (F2 / CRUD F-01)
 
@@ -173,6 +217,12 @@ prior ADR's internal-primitive name), so the operator surface reads as a clean
 inverse of `archive` / `stash`. It coordinates with
 `2026-06-02-ledger-operator-hardening-adr` by carrying the same `--yes` /
 `--reason` / audit guarantees that ADR added to the forward verbs.
+
+**Caveat check.** Confirmed against all three caveats. `restore` is one new verb
+that is the clean inverse of `archive` / `stash`, not a duplicate of any existing
+verb (caveat 2). A newcomer who stashed a row by mistake plausibly guesses
+`restore` to bring it back (caveat 3). It carries no alias or deprecation surface
+(caveat 1).
 
 **Consequences.** The single highest-leverage usability gap closes: a routine
 operator slip stops being a whole-ledger reset. The `correct-ledger-entries.md`
@@ -215,6 +265,13 @@ left ledger row identity content-addressed and operator-facing." This decision
 extends the decided principle to the ledger transaction surface by
 omission-repair; it does not invent a new principle.
 
+**Caveat check.** Confirmed. Lineage resolution is a user-choice input override
+in the sense of caveat 2: an old (pre-edit) id and the current id are two handles
+the operator may legitimately hold for the same row, and both resolve to it -- a
+two-notation input for one value, not a duplicate verb. It adds no verb and no
+alias surface (caveats 1 and 3 are untouched; the resolution is invisible at the
+verb boundary).
+
 **Consequences.** The quarter-end journey's sharp edge (journey (a): a late
 `ledger update` invalidates a written-down id) is smoothed: the old id keeps
 resolving. The edit-lineage chain the lifecycle ADR already persists becomes the
@@ -246,6 +303,20 @@ input but normalise to the canonical representation each store needs, and ledger
 surface converts the second for backward compatibility rather than forcing a
 flag-day break. The canonical grammar's authority remains
 `2026-06-01-registry-period-code-union-cli-boundary-adr`.
+
+**Caveat 2 -- this is an input override, not a duplicate verb.** Upheld as
+decided, and re-justified explicitly under the operator's caveat 2 distinction.
+The ledger `--period` site accepting both the canonical AEAT tokens (`1T-4T / 0A
+/ 01-12`) and the calendar shapes (`2026Q1 / 2026-03 / 2026`) is a user-choice
+*input override*: two notations the operator may type for the same period value,
+both normalising to one internal representation -- exactly the "period year <->
+uuid" category the operator named as good. It is NOT a duplicate verb: there is
+one period argument on one verb, accepting two spellings of one value, not two
+verbs for one intent. The strict-rollout caveat 1 (no aliases/shadows) targets
+*verbs and APIs* that duplicate an intent; it does not forbid a single argument
+from accepting two notations when that serves a real operator choice. The two
+categories are kept distinct: the input override stays; a second period *verb*
+would not.
 
 **Upholds and reconciles.**
 `2026-06-01-registry-period-code-union-cli-boundary-adr` decided the AEAT-shaped
@@ -302,6 +373,12 @@ the enum-choice-vs-handler contract -- the surface was decided implicitly, hint
 string by hint string, with no conformance gate." This decision is net-new; the
 documented-command gate is the precedent it generalises.
 
+**Caveat check.** Confirmed. The gate adds no operator verb or alias (caveats 1
+and 3 untouched); it makes the advertised surface match the handler so a newcomer
+who guesses from the displayed choice set is not betrayed -- which reinforces
+caveat 3's guessability test rather than competing with it. No input override is
+involved.
+
 **Consequences.** Hand-edited drift reds a fast test instead of misleading an
 operator. The gate seeds a codification candidate. The `doclink --source` and
 `work verify --select` enums must be narrowed (or their handlers widened) to pass
@@ -321,15 +398,31 @@ flag is declared `is_eager=True` in `src/aeat/entrypoints/cli/__init__.py`, so i
 resolves after the import-time `tr(...)` calls have already rendered every help
 string. The environment variable wins because it is read before import.
 
-**Decision.** Make the flag honest. The acceptable outcomes, in preference order:
-(1) defer help-text rendering until after eager-option resolution so `--language`
-works for help -- preferred if feasible without destabilising the import-time i18n
-model; otherwise (2) emit a one-line warning when `--language` is supplied on a
-surface it cannot affect, naming `AEAT_OUTPUT_LANGUAGE` as the working
-alternative; and as a floor (3) the flag MUST NOT silently fail to do what it
-advertises. The plan picks (1) or (2) after a feasibility spike on deferred help
-rendering; this ADR forbids the current silent-failure state and binds the
-honesty contract, not the implementation mechanism.
+**Decision.** Make the flag honest. Under caveat 1 ("the simpler the better"),
+the acceptable outcomes are ordered toward the strictest honest result, not
+toward the easiest patch:
+
+1. **Make it work.** Defer help-text rendering until after eager-option
+   resolution so `--language` actually changes help-text language -- the
+   preferred outcome if achievable without destabilising the import-time i18n
+   model.
+2. **Remove the flag where it cannot work.** If (1) is not cheaply feasible, the
+   flag MUST be removed from the surfaces it cannot affect (help-text rendering),
+   so it is absent rather than present-and-lying. A flag that does not appear
+   cannot betray the operator; this is the simpler, honest outcome that caveat 1
+   prefers over a warning.
+3. **Warn-only -- least preferred residual.** Emitting a one-line warning when
+   `--language` is supplied on a surface it cannot affect (naming
+   `AEAT_OUTPUT_LANGUAGE` as the working alternative) is the LEAST preferred
+   residual: it keeps a non-working flag visible and asks the operator to read a
+   warning, which fights intuition (caveat 3). Adopt it only if both (1) and (2)
+   are infeasible.
+
+The floor under all three: the flag MUST NOT silently fail to do what it
+advertises. The plan picks the highest feasible outcome after a feasibility spike
+on deferred help rendering; this ADR forbids the current silent-failure state and
+binds the honesty contract and the preference ordering, not the implementation
+mechanism.
 
 **Reconciles (no prior timing decision).**
 `2026-05-13-cli-workflow-redesign-profile-output-language-adr` established the
@@ -343,13 +436,20 @@ that ADR's precedence model: the precedence chain is unchanged; only the eager
 flag's silent-failure-on-help behaviour is corrected.
 
 **Consequences.** An operator who discovers `--language` is no longer quietly
-betrayed. If outcome (2) ships, the warning teaches the working path
-(`AEAT_OUTPUT_LANGUAGE`). The profile-owned precedence and the env override stay
-exactly as the output-language ADR decided.
+betrayed. If outcome (2) ships, the flag is absent from the help surface it could
+not affect, so there is nothing to mis-trust; if outcome (3) ships, the warning
+teaches the working path (`AEAT_OUTPUT_LANGUAGE`). The profile-owned precedence
+and the env override stay exactly as the output-language ADR decided. The flag is
+retained only on the non-help output paths where it is genuinely honest.
 
-**Rejected.** Removing `--language` from every surface (heavier than necessary;
-the flag is honest for non-help output paths). Leaving it silent (violates the
-flag-must-not-lie rule the audit names).
+**Rejected.** Removing `--language` from *every* surface including the non-help
+output paths where it works honestly (over-broad -- caveat 1's "simpler" means
+removing the flag where it cannot work, not amputating a flag that is honest
+elsewhere). Leaving it silent (violates the flag-must-not-lie rule the audit
+names). Defaulting to warn-only as the first choice (REJECTED per caveat 1 -- a
+visible non-working flag plus a warning is less simple and less honest than
+either making it work or removing it from the surface it cannot affect; the
+warning is the residual floor, not the target).
 
 ### D7 -- Read-back baseline for every record-creating verb (F7 / CRUD)
 
@@ -385,6 +485,12 @@ specified without its read counterpart. No ADR establishes 'every record-creatin
 verb has a read-back'." This decision establishes that guarantee and closes the
 M036 instance under it.
 
+**Caveat check.** Confirmed. The `list` / `view` read-back verbs are intent-named
+(a newcomer who recorded a declaration plausibly guesses `list` / `view` to see
+it -- caveat 3) and each is a distinct read intent reading through the owning
+repository, not a duplicate of an existing verb or a parallel write path (caveat
+2). No alias or deprecation surface is introduced (caveat 1).
+
 **Consequences.** The M036 documented dead end closes. The taxpayer's most natural
 question ("what did I file, what is still due") gains a single plain surface. The
 append-only-and-immutable model for calculation revisions and verification reports
@@ -418,6 +524,14 @@ address by natural key. Per F8 "No ADR decided that readiness must accept a
 registry-internal revision id; it is an implicit consequence of the preflight
 command signature." This decision applies the addressing-ux resolver to the
 readiness surface it never reached.
+
+**Caveat check.** This is the canonical user-choice input override caveat 2
+names: the operator addresses by natural key (modelo / year / period) and the
+resolver finds the active revision, while the internal revision uuid stays
+available as an explicit `--revision-id` override for exact replay -- precisely
+the "period year <-> uuid" two-notation input the operator endorsed. One verb,
+two ways to name the target; no duplicate verb and no alias (caveats 1 and 2).
+The natural-key default is also what a newcomer would guess (caveat 3).
 
 **Consequences.** The choose-modelo guide's explicit "run `modelo describe` first,
 read out the revision id, paste it back" detour disappears. Where the natural key
@@ -477,10 +591,14 @@ rather than re-litigates.
 
 - **Rule slug:** `operator-verbs-name-operator-intent`.
   **Rule:** An operator-facing CLI verb must name the operator's intent, not the
-  storage or session mechanism that implements it; if a user-facing doc must gloss
-  a verb to explain what it does (for example "switch by unlocking"), the verb is
-  misnamed and the gloss is the smell. Author after this ADR is accepted so the
-  rule body cites the accepted D1 decision.
+  storage or session mechanism that implements it; a new operator verb ships only
+  if a newcomer could plausibly guess it from intent vocabulary; and if a
+  user-facing doc must gloss a verb to explain what it does (for example "switch
+  by unlocking"), the verb is misnamed and the gloss is the smell. The intent
+  verb REPLACES the mechanism verb outright -- no alias, synonym, shadow, or
+  deprecation window survives the rename (per `aeat-architecture-boundaries`).
+  Author after this ADR is accepted so the rule body cites the accepted D1
+  decision.
 
 - **Rule slug:** `cli-hint-and-enum-choices-conformance-gated`.
   **Rule:** Every CLI next-action / failure hint that names a command path, and
