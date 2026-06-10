@@ -2157,7 +2157,7 @@ cli:
       preflight_modelo_help: Identificador numèric del model (p. ex. 303).
       preflight_period_help: Codi de període (p. ex. 1T, 1P, 0A, 01).
       preflight_revision_help: Registry revision id.
-      preflight_revision_id_help: Identificador de revisió del registre (p. ex. 2024-0A).
+      preflight_revision_id_help: 'Anul-lacio opcional de l''id de revisio del registre per a reproduccio exacta (p. ex. 2024-0A); per defecte fa servir la revisio activa per al model, exercici i periode.'
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
       remove_name_help: Id del perfil a retirar
@@ -2179,6 +2179,9 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      preflight_revision_ambiguous: 'Mes d''una revisio del registre coincideix amb el model %{modelo} periode %{period}: %{candidates}. Torneu a executar amb --revision-id indicant-ne una.'
+      preflight_revision_unresolved: 'Cap revisio del registre cobreix el model %{modelo} exercici %{filing_year} periode %{period}. Executeu `aeat app modelo describe %{modelo}` per veure els periodes i revisions valids.'
+      preflight_revision_override_invalid: 'L''anul-lacio de la revisio del registre no es valida per al model %{modelo} exercici %{filing_year}: %{detail}. Executeu `aeat app modelo describe %{modelo}` per llistar les revisions registrades.'
     recover:
       help: Recuperar el magatzem secret de fitxer amb una clau de recuperacio i vincular-lo
         a una nova contrasenya.

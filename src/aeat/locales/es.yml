@@ -2183,7 +2183,7 @@ cli:
       preflight_modelo_help: Identificador numérico del modelo (p. ej. 303).
       preflight_period_help: Código de periodo (p. ej. 1T, 1P, 0A, 01).
       preflight_revision_help: Registry revision id.
-      preflight_revision_id_help: Identificador de revisión del registro (p. ej. 2024-0A).
+      preflight_revision_id_help: 'Anulacion opcional del id de revision del registro para reproduccion exacta (p. ej. 2024-0A); por defecto usa la revision activa para el modelo, ejercicio y periodo.'
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
@@ -2206,6 +2206,9 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      preflight_revision_ambiguous: 'Mas de una revision del registro coincide con el modelo %{modelo} periodo %{period}: %{candidates}. Vuelva a ejecutar con --revision-id indicando una de ellas.'
+      preflight_revision_unresolved: 'Ninguna revision del registro cubre el modelo %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo describe %{modelo}` para ver los periodos y revisiones validos.'
+      preflight_revision_override_invalid: 'La anulacion de la revision del registro no es valida para el modelo %{modelo} ejercicio %{filing_year}: %{detail}. Ejecute `aeat app modelo describe %{modelo}` para listar las revisiones registradas.'
     recover:
       help: Recuperar el almacen secreto de archivo con una clave de recuperacion
         y vincularlo a una nueva contrasena.

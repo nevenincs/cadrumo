@@ -461,7 +461,8 @@ IVA_REGIME_MODELOS: Final[tuple[Modelo, ...]] = (Modelo.M303, Modelo.M390)
 
 #: REBECA 50% exemption of qualifying maritime navigation income.
 #: Applies to crew of REBECA-registered vessels and scheduled Canary Islands routes.
-#: Binding provisions: Ley 19/1994 arts. 73.2, 73.3, 75.1, 75.3 (BOE-A-1994-16100).
+#: Binding provision: Ley 19/1994 art. 75.1 (BOE-A-1994-15794) fixes the 50 por 100
+#: renta exenta; art. 73 establishes REBECA eligibility. Catalogue: ley-19-1994:art-75.
 REBECA_MARITIME_EXEMPTION_FRACTION: Final[Decimal] = Decimal("0.50")
 
 #: 3% amortización de inmuebles arrendados; rate fixed by RD 439/2007 (RIRPF) art. 14.2.a
