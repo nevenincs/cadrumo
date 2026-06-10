@@ -43,6 +43,15 @@ E2E autónoma M130 Q1-Q4 filed -> M100 annual with pagos fraccionados credited c
 
 ## Description
 
+> **STATUS — PAUSED at P01.S02 (2026-06-10).** This plan is BLOCKED behind two foundational
+> calculation-engine ADRs decided per operator directive: (1) a binding ADR codifying the
+> calculation **aggregation-mechanism taxonomy** (which mechanism is canonical per calculation
+> type — the relation-vs-previous_filing overlap this plan surfaced is a symptom), and (2) an
+> overview ADR for a deterministic **period→revision resolution engine** (revision is fixed by
+> law per (modelo, year, period), never a hardcoded choice). The P01.S02 mechanism/target-revision
+> decision is subsumed by those ADRs and must not be taken here until they land. P01.S01
+> grounding is complete and stands. Resume P01.S02+ only after both foundations are accepted.
+
 The annual Modelo 100 (Renta / IRPF) is the operator's actual tax filing; the four
 quarterly Modelo 130 pagos fraccionados are advance payments that the annual declaration
 must credit so the year reconciles. The autónomo E2E pipeline has never driven this
