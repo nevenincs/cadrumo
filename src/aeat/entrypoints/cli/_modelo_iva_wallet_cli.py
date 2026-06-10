@@ -20,7 +20,8 @@ from ...application.modelo import (
 from ...core.i18n import tr
 from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 from ._common import _emit_envelope
-from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletCorrectResult, IvaWalletSeedResult
+from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletSeedResult
+from ._modelo_payloads_m036 import IvaWalletCorrectResult
 
 
 def register_iva_wallet_commands(
