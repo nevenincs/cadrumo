@@ -28,7 +28,7 @@ from .._groi_oracle import (
     GroiReplayDriver,
     register_default,
 )
-from .._live_parity import LiveParityCatalogue, LiveParityOracle
+from .._live_parity import LiveParityCatalogue, LiveParityOracle, OracleEnvironment
 from .._remote_state_guard import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
     RemoteOperation,
@@ -275,16 +275,16 @@ def test_register_default_under_production_environment() -> None:
 
     assert catalogue.is_registered(GROI_ORACLE_ID)
     assert catalogue.environment_of(GROI_ORACLE_ID) == "production"
-    assert catalogue.lookup(GROI_ORACLE_ID, environment="production").oracle_id == GROI_ORACLE_ID
+    assert catalogue.lookup(GROI_ORACLE_ID, environment=OracleEnvironment.PRODUCTION).oracle_id == GROI_ORACLE_ID
 
 
 def test_register_default_test_environment_classification_supported() -> None:
     catalogue = LiveParityCatalogue()
-    register_default(catalogue, environment="test_environment")
+    register_default(catalogue, environment=OracleEnvironment.TEST_ENVIRONMENT)
 
     assert catalogue.environment_of(GROI_ORACLE_ID) == "test_environment"
     with pytest.raises(RegistryValidationError, match=r"environment|production|test_environment|oracle"):
-        catalogue.lookup(GROI_ORACLE_ID, environment="production")
+        catalogue.lookup(GROI_ORACLE_ID, environment=OracleEnvironment.PRODUCTION)
 
 
 # ---------------------------------------------------------------------------
