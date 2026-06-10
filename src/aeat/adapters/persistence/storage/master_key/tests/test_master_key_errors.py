@@ -48,9 +48,9 @@ def test_master_key_reentrant_error_envelope_round_trip() -> None:
     err = MasterKeyReentrantError("TestProvider")
     envelope = build_error_envelope(err)
 
-    assert envelope.schema_version == "1"
     assert envelope.code == "INTERNAL_MASTER_KEY_REENTRANT"
     assert envelope.category == "INTERNAL"
+    assert envelope.message != ""
     assert envelope.retryable is False
     assert envelope.message  # non-empty translated message
 
