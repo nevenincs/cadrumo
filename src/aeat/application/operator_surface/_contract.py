@@ -168,7 +168,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="repair",
         operator_question="diagnose local configuration, logs, connectivity, and secure-object integrity",
         service_owner="aeat.application.diagnostics",
-        commands=("connectivity", "integrity", "quarantine", "reset-state", "logs"),
+        commands=("connectivity", "integrity", "quarantine", "reset-progress", "logs"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(

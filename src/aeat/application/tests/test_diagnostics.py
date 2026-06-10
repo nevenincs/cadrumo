@@ -139,12 +139,12 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
         name="x",
         status="fail",
         summary="y",
-        next_action="aeat config repair reset-state --yes",
+        next_action="aeat config repair reset-progress --yes",
     )
     dumped = populated.model_dump(mode="json")
     assert "next_action" in dumped
     assert "dead_end" in dumped
-    assert dumped["next_action"] == "aeat config repair reset-state --yes"
+    assert dumped["next_action"] == "aeat config repair reset-progress --yes"
     assert dumped["dead_end"] is None
 
 

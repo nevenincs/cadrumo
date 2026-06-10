@@ -177,10 +177,10 @@ aeat config repair integrity registry
 
 `integrity objects` checks the security seals on your encrypted records; `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
 
-When nothing else recovers the problem, and only then, reset workflow state. This command is destructive:
+When nothing else recovers the problem, and only then, reset the saved progress of interrupted commands. This command is destructive:
 
 ```bash
-aeat config repair reset-state --yes
+aeat config repair reset-progress --yes
 ```
 
 It removes the saved progress state for interrupted commands and requires `--yes`.

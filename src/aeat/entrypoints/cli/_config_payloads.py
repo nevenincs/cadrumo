@@ -39,7 +39,7 @@ class QuarantineNamespacePayload(OutputSchema):
 
 
 class WorkflowFingerprintPayload(OutputSchema):
-    """Serialised workflow-state fingerprint nested in repair.reset_state."""
+    """Serialised workflow-state fingerprint nested in repair.reset_progress."""
 
     schema_version: int | None = None
     written_at: str | None = None
@@ -107,9 +107,9 @@ class RepairQuarantineResult(OutputSchema):
     # unreadable_total / readable_total from the report directly.
 
 
-@register_schema("config.repair.reset_state")
-class RepairResetStateResult(OutputSchema):
-    """JSON envelope for ``aeat config repair reset-state``.
+@register_schema("config.repair.reset_progress")
+class RepairResetProgressResult(OutputSchema):
+    """JSON envelope for ``aeat config repair reset-progress``.
 
     Covers the no-active-profile guard, the dry-run preview path, and
     the live reset path.

@@ -77,7 +77,7 @@ def test_repair_secure_object_surfaces_use_registry_metadata_instead_of_role_mar
         policy.namespace_classification.role for policy in quarantine_policies
     )
 
-    reset_policies = surfaces["config repair reset-state"].namespace_policies
+    reset_policies = surfaces["config repair reset-progress"].namespace_policies
     assert tuple(policy.registered_namespace for policy in reset_policies) == (WORKFLOW_STATE_NAMESPACE.namespace,)
     assert reset_policies[0].owner_domain == WORKFLOW_STATE_NAMESPACE.owner
 

@@ -348,7 +348,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     next_action=(
                         profile_health.next_action or "aeat config switch NAME"
                         if missing_active_bucket_session
-                        else "aeat config repair reset-state --yes"
+                        else "aeat config repair reset-progress --yes"
                     ),
                 )
             )
@@ -1008,7 +1008,7 @@ def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityRepor
     ``unreadable`` count (= rows the non-dry-run verb would quarantine)
     and the ``readable`` count (= rows it would retain), so the
     operator can confirm the blast radius before committing — the same
-    preview shape ``reset-state --dry-run`` already offers.
+    preview shape ``reset-progress --dry-run`` already offers.
     """
     from .repair_integrity import active_bucket_repair_session
 
