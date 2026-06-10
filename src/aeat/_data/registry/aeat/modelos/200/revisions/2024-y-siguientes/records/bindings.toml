@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-pagos-fraccionados-anuales"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "202" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
@@ -146,7 +146,7 @@ required_text = ["base imponible"]
 # only from 2024.
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-bin-pendiente-ejercicios-anteriores"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "200", source_output = "00671" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
@@ -174,7 +174,7 @@ required_text = ["bases imponibles negativas"]
 # from 2024).
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "200", source_output = "01498" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
@@ -186,7 +186,7 @@ required_text = ["deterioro"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "200", source_output = "01499" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]

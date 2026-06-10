@@ -9,9 +9,11 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
+from ._bindings_previous_filing import _is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
 from ._relations import _derive_offset_source_period
 from ._schema import (
+    DataBindingDefinition,
     ModeloDefinition,
     ModeloRevision,
     RelationDefinition,
@@ -29,6 +31,17 @@ from ._validate_relation_periods import (
     validate_source_year_coverage,
 )
 from ._validate_source_outputs import revision_output_ids as _revision_output_ids
+
+# The single iva-wallet-owned slot binding (aggregation-taxonomy ADR ruling D3):
+# the M303 compensación-pendiente binding is owned by the iva-wallet compensación
+# decision (resolved pre-mesh through ``_iva_wallet_gate``), NOT by the relation
+# mesh. It legitimately remains ``source = "previous_filing"`` while also being a
+# relation's ``target_binding`` — the iva-wallet gate strips it from the
+# previous-filing resolution before the mesh runs. It is therefore the documented
+# carve-out for the relation-vs-previous_filing collision gate below.
+_IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS: frozenset[str] = frozenset(
+    {"modelo-303-compensacion-pendiente-anteriores"}
+)
 
 
 def validate_relation_closure(
@@ -135,10 +148,16 @@ def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision:
       ejercicio's filings, and MUST stay under the strict modeled-coverage
       check so a widened target revision still demands matching source years).
     """
-    targets_previous_filing = any(
-        binding.id == relation.target_binding and binding.source == "previous_filing" for binding in revision.bindings
+    # The carry's target slot is the operator's historical filing (an
+    # observation), whether the slot is declared as a direct previous_filing
+    # carry or as a relation_prefill fold-in slot. Both source kinds name a
+    # prior-filed observation rather than a modeled/derived computation; the
+    # year-coverage relaxation applies equally to both.
+    targets_observation_slot = any(
+        binding.id == relation.target_binding and str(binding.source) in {"previous_filing", "relation_prefill"}
+        for binding in revision.bindings
     )
-    if not targets_previous_filing:
+    if not targets_observation_slot:
         return False
     delta = relation.source_revision_selector.get("filing_year_delta")
     return isinstance(delta, int) and delta < 0
@@ -160,6 +179,78 @@ def _validate_relation_source_revision(
     unknown_source_periods = sorted(set(source_periods).difference(source_revision.period_selector.periods))
     if unknown_source_periods:
         failures.append(f"{source_scope} does not support source periods {unknown_source_periods!r}")
+    return failures
+
+
+def validate_slot_source_hygiene(
+    modelos: Iterable[ModeloDefinition],
+    modelos_by_id: Mapping[str, ModeloDefinition],
+) -> list[str]:
+    """Validate the relation/previous_filing slot-source hygiene gates (taxonomy ADR ruling 3).
+
+    Two gates, applied per revision (defence-in-depth against the dual-modelling
+    overlap the aggregation-taxonomy ADR closes at the root):
+
+    (a) A binding with ``source = "previous_filing"`` MUST satisfy the
+        direct-selector predicate (``_is_direct_previous_filing_binding``). A
+        NON-direct previous_filing binding (e.g. ``{source_modelo, source_output}``
+        with no period anchor) is a mis-stamped relation-materialisation slot and
+        becomes a registry validation ERROR — it MUST declare
+        ``source = "relation_prefill"`` instead.
+
+    (b) No binding may be BOTH a relation's ``target_binding`` AND a
+        ``previous_filing`` source. The two mechanisms (relation fold-in vs direct
+        cross-period carry) must have disjoint declared ownership. The single
+        documented carve-out is the iva-wallet-owned M303 compensación slot
+        (D3): it is owned pre-mesh by the iva-wallet compensación decision, not
+        by the relation mesh, and is exempt from this gate.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` entries to validate.
+        modelos_by_id: Mapping of modelo id to :class:`ModeloDefinition` (unused
+            here; accepted for signature parity with the sibling closure gates).
+    """
+    del modelos_by_id  # signature parity with sibling closure validators
+    failures: list[str] = []
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            prefix = f"modelo {modelo.id} revision {revision.id}"
+            relation_targets = {str(relation.target_binding) for relation in revision.relations}
+            for binding in revision.bindings:
+                failures.extend(
+                    _validate_slot_binding_source(
+                        binding,
+                        binding_scope=f"{prefix}: binding {binding.id!r}",
+                        relation_targets=relation_targets,
+                    )
+                )
+    return failures
+
+
+def _validate_slot_binding_source(
+    binding: DataBindingDefinition,
+    *,
+    binding_scope: str,
+    relation_targets: frozenset[str] | set[str],
+) -> list[str]:
+    failures: list[str] = []
+    is_previous_filing = str(binding.source) == "previous_filing"
+    is_relation_targeted = binding.id in relation_targets
+    iva_wallet_owned = binding.id in _IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
+    # Gate (a): a previous_filing binding must carry a DIRECT selector.
+    if is_previous_filing and not iva_wallet_owned and not _is_direct_previous_filing_binding(binding):
+        failures.append(
+            f"{binding_scope} declares source 'previous_filing' with a non-direct selector "
+            f"(no period/source_periods/offset anchor); a relation-materialisation slot must "
+            f"declare source 'relation_prefill' instead"
+        )
+    # Gate (b): no binding both relation-targeted and previous_filing-sourced.
+    if is_relation_targeted and is_previous_filing and not iva_wallet_owned:
+        failures.append(
+            f"{binding_scope} is both a relation target_binding and a 'previous_filing' source; "
+            f"a relation-targeted slot must declare source 'relation_prefill' (the relation owns "
+            f"the cross-period fold-in)"
+        )
     return failures
 
 
