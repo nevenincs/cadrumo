@@ -32,7 +32,7 @@ from .._schema import (
     PeriodSelector,
     RegistryCatalogues,
 )
-from .._validate_revision_rules import (
+from .._validate_orden_aplicabilidad import (
     _ORDEN_APLICABILIDAD_RATCHET_DATE,
     validate_orden_aplicabilidad,
 )
