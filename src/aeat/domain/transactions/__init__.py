@@ -50,6 +50,7 @@ from ._llm import (
     build_antigravity_classifier,
     build_claude_classifier,
     build_codex_classifier,
+    build_split_prompt,
     default_classification_choices,
     default_iva_category_choices,
     default_prompt_spec,
@@ -103,7 +104,7 @@ _LAZY_REPOSITORY_NAMES = frozenset(
         "TX_BUCKET_NAMESPACE",
         "TransactionCatalogueRepository",
         "transaction_catalogue_object_key",
-    }
+    },
 )
 
 
@@ -133,10 +134,10 @@ __all__ = [
     "ImportSummary",
     "IvaCategoryChoice",
     "LLMClassificationResponse",
-    "LLMSplitChild",
-    "LLMSplitResponse",
     "LLMClassifier",
     "LLMClassifierError",
+    "LLMSplitChild",
+    "LLMSplitResponse",
     "LedgerClassificationRule",
     "LedgerNoActiveBucketError",
     "LedgerStorageError",
@@ -169,6 +170,7 @@ __all__ = [
     "build_antigravity_classifier",
     "build_claude_classifier",
     "build_codex_classifier",
+    "build_split_prompt",
     "catalogue",
     "default_classification_choices",
     "default_iva_category_choices",

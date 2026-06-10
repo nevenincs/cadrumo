@@ -84,3 +84,34 @@ def test_parse_split_rejects_disallowed_iva_category() -> None:
 def test_parse_split_no_json_raises() -> None:
     with pytest.raises(LLMClassifierError):
         parse_split_response("no json here", spec=prompt_spec_with_saturation_fields())
+
+
+def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
+    from datetime import date
+
+    from .. import RawProvenance, RawTransaction, SourceFormat, Transaction, TransactionDirection, build_split_prompt
+
+    raw = RawTransaction(
+        transaction_id="row-split",
+        booked_date=date(2025, 3, 1),
+        value_date=date(2025, 3, 1),
+        amount=Decimal("121.00"),
+        currency="EUR",
+        counterparty="Acme SL",
+        description="mixed invoice",
+        provenance=RawProvenance(
+            source_path=__import__("pathlib").Path(__file__),
+            source_sha256="f" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=__import__("datetime").datetime(2026, 4, 6, 12, 0, tzinfo=__import__("datetime").UTC),
+            provider_name="manual",
+        ),
+        raw_fields={"Concepto": "mixed invoice"},
+    )
+    txn = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    prompt = build_split_prompt(txn, spec=prompt_spec_with_saturation_fields(), evidence_text="line 1 ... line 2 ...")
+    assert "begin evidence" in prompt
+    assert "TWO OR MORE children" in prompt
+    assert "Do NOT output any euro amount" in prompt
+    assert '"proportion"' in prompt
