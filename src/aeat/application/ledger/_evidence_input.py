@@ -22,13 +22,41 @@ from typing import Never, Self, override
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...core.config import Settings
 from ._evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
 
 __all__ = [
     "EvidenceInput",
+    "cloud_evidence_read_permitted",
     "resolve_attachment_evidence_input",
     "resolve_purchase_invoice_evidence_input",
 ]
+
+
+def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> bool:
+    """Whether an off-host cloud evidence read is permitted for THIS invocation.
+
+    On-host reading is always allowed and is the default; this gate governs only
+    the cloud exception. A cloud read is permitted only when the deployment has
+    opted in (``aeat_evidence_cloud_upload_permitted``), the deployment is not a
+    gestor/professional deployment (``aeat_evidence_gestor_mode`` is the absolute
+    bar), AND the operator acknowledged the upload for this specific invocation.
+    The acknowledgement is never sticky -- it must be re-affirmed each time
+    (sensitive-financial-data-secure-storage-only).
+
+    Args:
+        settings: Resolved deployment settings carrying the consent posture.
+        acknowledged: Whether the operator acknowledged the off-host upload for
+            this invocation.
+
+    Returns:
+        ``True`` only when all three conditions hold; ``False`` otherwise.
+    """
+    if settings.aeat_evidence_gestor_mode:
+        return False
+    if not settings.aeat_evidence_cloud_upload_permitted:
+        return False
+    return acknowledged
 
 
 class EvidenceInput(BaseModel):
