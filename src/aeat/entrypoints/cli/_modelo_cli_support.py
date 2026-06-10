@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
+from typing import Annotated
 
 import typer
 from pydantic import TypeAdapter, ValidationError
@@ -35,12 +36,21 @@ from ...application.modelo import (
     validate_m349_nif_format,
 )
 from ...core.errors import resolve_error_message
+from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import BindingId, CasillaId
 from ._modelo_rendering import short_id
 
 _log = get_logger(__name__)
+
+# Shared ``--output-language`` / ``--language`` option for all modelo work
+# commands. Centralised here so the five-line block does not repeat across
+# every command function in the _modelo_work_*_cli modules.
+OutputLanguageOpt = Annotated[
+    OutputLanguage | None,
+    typer.Option("--output-language", "--language", help=tr("cli.config.auth.output_language_help")),
+]
 
 _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 """SHA-256 hex digest expected as the canonical work-unit identifier."""
@@ -538,6 +548,7 @@ def resolve_default_actor() -> str:
 
 
 __all__ = [
+    "OutputLanguageOpt",
     "bad_parameter_from_error",
     "bad_parameter_from_localized_context",
     "calculation_revision_not_found_bad_parameter",
