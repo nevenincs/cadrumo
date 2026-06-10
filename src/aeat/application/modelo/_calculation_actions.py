@@ -40,6 +40,7 @@ from ._action_errors import (
     ModeloAggregationBindingError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    WorkUnitRevisionDivergenceError,
 )
 from ._binding_resolution import (
     resolve_bound_casilla_inputs_for_available_bindings,
@@ -493,6 +494,20 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
             context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
         ) from exc
+    # D1 calc-time assertion: the law-determined revision must equal the
+    # revision the work unit was created against.  The work unit's revision_id
+    # is an identity claim, not a resolution input (per the period-revision-
+    # resolution ADR ruling 2).
+    if snapshot.revision.id != work_unit.revision_id:
+        raise WorkUnitRevisionDivergenceError(
+            f"work unit {work_unit.work_unit_id!r} was created against registry revision "
+            f"{work_unit.revision_id!r}, but the law-determined revision for "
+            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period!r} "
+            f"is now {snapshot.revision.id!r}. "
+            f"The registry's law-mapping was corrected after this work unit was created. "
+            f"Re-create the work unit (discard this one and run `aeat app modelo work ensure`) "
+            f"to bind it to the current law-determined revision.",
+        )
 
     # Normalise operator-supplied casilla aliases (registry number / BOE
     # form number) to canonical ids before the source-collision and
