@@ -6,6 +6,7 @@ tags:
 date: '2026-06-10'
 related:
   - '[[2026-06-10-docs-terminology-search-adr]]'
+  - '[[2026-06-10-docs-terminology-search-plan]]'
   - '[[2026-06-10-docs-terminology-search-research]]'
 ---
 
@@ -18,6 +19,10 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 ### adr
 
 - `2026-06-10-docs-terminology-search-adr` - `docs-terminology-search` adr: `terminology handbook and precompiled docs search` | (**status:** `accepted`)
+
+### plan
+
+- `2026-06-10-docs-terminology-search-plan` - `docs-terminology-search` `terminology handbook and precompiled docs search epic` plan
 
 ### research
 
