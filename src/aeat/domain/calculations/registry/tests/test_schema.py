@@ -7,6 +7,8 @@ actual production model, not by a standalone enum construction.
 
 from __future__ import annotations
 
+from typing import Literal, TypedDict
+
 import pytest
 from pydantic import ValidationError
 
@@ -65,7 +67,7 @@ def test_casilla_roundtrip_valid_input_kind(member: InputKind, raw_string: str) 
             number="01",
             label="Test casilla",
             section=("test",),
-            input_kind=raw_string,  # type: ignore[arg-type]  # tests TOML-string coercion path
+            input_kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
             formula="test.formula",
             legal_refs=(_DUMMY_LEGAL_ID,),
             source_refs=(_DUMMY_SOURCE_ID,),
@@ -76,7 +78,7 @@ def test_casilla_roundtrip_valid_input_kind(member: InputKind, raw_string: str) 
             number="01",
             label="Test casilla",
             section=("test",),
-            input_kind=raw_string,  # type: ignore[arg-type]  # tests TOML-string coercion path
+            input_kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
             binding="test.binding",
             legal_refs=(_DUMMY_LEGAL_ID,),
             source_refs=(_DUMMY_SOURCE_ID,),
@@ -87,7 +89,7 @@ def test_casilla_roundtrip_valid_input_kind(member: InputKind, raw_string: str) 
             number="01",
             label="Test casilla",
             section=("test",),
-            input_kind=raw_string,  # type: ignore[arg-type]  # tests TOML-string coercion path
+            input_kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
             legal_refs=(_DUMMY_LEGAL_ID,),
             source_refs=(_DUMMY_SOURCE_ID,),
         )
@@ -112,7 +114,7 @@ def test_casilla_rejects_unknown_input_kind() -> None:
             number="01",
             label="Test casilla",
             section=("test",),
-            input_kind="garbage",  # type: ignore[arg-type]
+            input_kind="garbage",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             legal_refs=(_DUMMY_LEGAL_ID,),
             source_refs=(_DUMMY_SOURCE_ID,),
         )
@@ -126,7 +128,7 @@ def test_casilla_rejects_empty_string_input_kind() -> None:
             number="01",
             label="Test casilla",
             section=("test",),
-            input_kind="",  # type: ignore[arg-type]
+            input_kind="",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             legal_refs=(_DUMMY_LEGAL_ID,),
             source_refs=(_DUMMY_SOURCE_ID,),
         )
@@ -140,7 +142,7 @@ def test_casilla_rejects_numeric_input_kind() -> None:
             number="01",
             label="Test casilla",
             section=("test",),
-            input_kind=42,  # type: ignore[arg-type]
+            input_kind=42,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             legal_refs=(_DUMMY_LEGAL_ID,),
             source_refs=(_DUMMY_SOURCE_ID,),
         )
@@ -169,7 +171,21 @@ def test_casilla_default_input_kind_is_manual() -> None:
 # CasillaFieldKind enum surface — contract
 # ---------------------------------------------------------------------------
 
-_FIELD_BASE = dict(
+
+class _FieldBase(TypedDict):
+    """Typed kwargs shared by every ExportFieldDefinition test construction."""
+
+    id: str
+    data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
+    required: bool
+    padding: Literal["left_zero", "left_space", "right_space", "none"]
+    justification: Literal["left", "right", "none"]
+    signed: bool
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+
+
+_FIELD_BASE: _FieldBase = _FieldBase(
     id="f001",
     data_type="text",
     required=True,
@@ -199,22 +215,64 @@ def test_casilla_field_kind_is_str() -> None:
         assert isinstance(member, str), f"{member!r} is not a str instance"
 
 
+def _make_export_field_literal(raw_string: str, literal: str) -> ExportFieldDefinition:
+    """Construct an ExportFieldDefinition for a LITERAL kind field."""
+    return ExportFieldDefinition(
+        **_FIELD_BASE,
+        kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
+        literal=literal,
+    )
+
+
+def _make_export_field_casilla(raw_string: str, casilla: str) -> ExportFieldDefinition:
+    """Construct an ExportFieldDefinition for a CASILLA kind field."""
+    return ExportFieldDefinition(
+        **_FIELD_BASE,
+        kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
+        casilla=casilla,
+    )
+
+
+def _make_export_field_binding(raw_string: str, binding: str) -> ExportFieldDefinition:
+    """Construct an ExportFieldDefinition for a BINDING kind field."""
+    return ExportFieldDefinition(
+        **_FIELD_BASE,
+        kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
+        binding=binding,
+    )
+
+
+def _make_export_field_filler(raw_string: str, length: int) -> ExportFieldDefinition:
+    """Construct an ExportFieldDefinition for a FILLER kind field."""
+    return ExportFieldDefinition(
+        **_FIELD_BASE,
+        kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
+        length=length,
+    )
+
+
 @pytest.mark.parametrize(
-    "member, raw_string, extra",
+    "member, raw_string",
     [
-        (CasillaFieldKind.LITERAL, "literal", {"literal": "TEST"}),
-        (CasillaFieldKind.CASILLA, "casilla", {"casilla": "01"}),
-        (CasillaFieldKind.BINDING, "binding", {"binding": "some.binding"}),
-        (CasillaFieldKind.FILLER, "filler", {"length": 10}),
+        (CasillaFieldKind.LITERAL, "literal"),
+        (CasillaFieldKind.CASILLA, "casilla"),
+        (CasillaFieldKind.BINDING, "binding"),
+        (CasillaFieldKind.FILLER, "filler"),
     ],
 )
 def test_export_field_roundtrip_valid_casilla_field_kind(
     member: CasillaFieldKind,
     raw_string: str,
-    extra: dict,
 ) -> None:
     """ExportFieldDefinition accepts each member string and round-trips via model_dump."""
-    field = ExportFieldDefinition(**_FIELD_BASE, kind=raw_string, **extra)  # type: ignore[arg-type]
+    if member == CasillaFieldKind.LITERAL:
+        field = _make_export_field_literal(raw_string, "TEST")
+    elif member == CasillaFieldKind.CASILLA:
+        field = _make_export_field_casilla(raw_string, "01")
+    elif member == CasillaFieldKind.BINDING:
+        field = _make_export_field_binding(raw_string, "some.binding")
+    else:
+        field = _make_export_field_filler(raw_string, 10)
     assert field.kind == member
     assert isinstance(field.kind, CasillaFieldKind)
     dumped = field.model_dump()
@@ -224,16 +282,16 @@ def test_export_field_roundtrip_valid_casilla_field_kind(
 def test_export_field_rejects_unknown_kind() -> None:
     """ExportFieldDefinition raises ValidationError for an unrecognised kind token."""
     with pytest.raises(ValidationError):
-        ExportFieldDefinition(**_FIELD_BASE, kind="bogus_kind")  # type: ignore[arg-type]
+        ExportFieldDefinition(**_FIELD_BASE, kind="bogus_kind")  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
 
 def test_export_field_rejects_empty_string_kind() -> None:
     """An empty string is not a valid CasillaFieldKind member."""
     with pytest.raises(ValidationError):
-        ExportFieldDefinition(**_FIELD_BASE, kind="")  # type: ignore[arg-type]
+        ExportFieldDefinition(**_FIELD_BASE, kind="")  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
 
 def test_export_field_rejects_numeric_kind() -> None:
     """A numeric value is not a valid CasillaFieldKind member."""
     with pytest.raises(ValidationError):
-        ExportFieldDefinition(**_FIELD_BASE, kind=99)  # type: ignore[arg-type]
+        ExportFieldDefinition(**_FIELD_BASE, kind=99)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
