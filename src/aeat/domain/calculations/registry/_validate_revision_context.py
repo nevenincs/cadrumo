@@ -7,6 +7,7 @@ across every per-section validator.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from ._schema import (
@@ -75,9 +76,9 @@ class RevisionValidationContext:
     @property
     def construct_member_objects(
         self,
-    ) -> dict[
+    ) -> Mapping[
         str,
-        dict[
+        Mapping[
             str,
             CasillaDefinition
             | FormulaDefinition

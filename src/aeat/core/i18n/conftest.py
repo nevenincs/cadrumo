@@ -8,13 +8,15 @@ partially-rendered string.
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import pytest
 
 from ._render import _I18N_STRICT_PLACEHOLDERS
 
 
 @pytest.fixture(autouse=True)
-def _strict_i18n_placeholders() -> None:
+def _strict_i18n_placeholders() -> Generator[None]:
     """Activate strict-placeholder mode for the duration of each test."""
     token = _I18N_STRICT_PLACEHOLDERS.set(True)
     yield
