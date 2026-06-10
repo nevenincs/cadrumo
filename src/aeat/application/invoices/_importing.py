@@ -41,6 +41,7 @@ class InvoiceRowPayload(TypedDict, total=False):
     fills in required gaps before :class:`Invoice` validation runs.
     """
 
+    invoice_id: NotRequired[str]
     kind: NotRequired[str]
     currency: NotRequired[str]
     counterparty_name: NotRequired[str]
