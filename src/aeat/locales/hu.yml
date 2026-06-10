@@ -2871,22 +2871,6 @@ cli:
       active_profile_message: 'Az aktív profil: %{profile}.'
       no_active_profile_message: Nincs aktív profil beállítva.
       text_template: '%{message} Következő: %{command}'
-    retired:
-      archive_reason: Az archiválás a config bucket alá van összevonva.
-      data_reason: Az adatmunka az app ledger alá van összevonva.
-      declaration_reason: A bevallási munka az app modelo alá van összevonva.
-      filing_reason: A benyújtási munka az app modelo alá van összevonva.
-      financial_reason: A pénzügyi munka az app ledger alá van összevonva.
-      invoice_reason: A számlakezelés az app ledger alá van összevonva.
-      llm_reason: A besorolás az app ledger classify parancs alatt érhető el.
-      preflight_reason: A preflight-ellenőrzés a nyomtatvány-ellenőrzéshez tartozik.
-      presentation_reason: Az exportok az app modelo export alá tartoznak.
-      sanitize_reason: A főkönyv-ellenőrzések az app ledger check parancs alatt érhetők
-        el.
-      setup_reason: A beállítás és a konfiguráció a config gyökér alá van összevonva.
-      submit_reason: Az élő benyújtás véglegesen le van tiltva.
-      topic_reason: A témakeresés az app registry citations alá van összevonva.
-      workflow_reason: A munkafolyamat-műveletek az app modelo alá vannak összevonva.
   overview:
     agenda:
       allow_incomplete_help: A napirend megjelenítése akkor is, ha a profiladatok
