@@ -179,6 +179,28 @@ aeat app ledger rule apply
 Run the dry run first. Rules apply to active unclassified transactions unless
 you explicitly use `--reaffirm`.
 
+## Read attached evidence
+
+Attach a purchase invoice or receipt to a transaction, then let the model read it
+while classifying. The text is extracted from the document on your machine; only
+that text reaches the classifier. The document bytes stay in secure storage.
+
+Reading evidence with a cloud provider (claude, codex, antigravity) sends the
+extracted text off your machine. This is off by default. Enable it for the
+deployment, then acknowledge the upload each time:
+
+```bash
+aeat app ledger classify --id <transaction-id> --llm claude --saturate --read-evidence --evidence-acknowledged
+```
+
+Acknowledge the upload every time. Evidence reading is not available in gestor or
+professional deployments.
+
+The model reads the document only to choose the spending category and the IVA
+situation. It never copies a euro amount from the invoice. The tax numbers are
+always computed from the official rates. When the printed IVA does not match the
+computed IVA, the review shows an advisory so you can check before filing.
+
 ## Next steps
 
 - [Set up LLM classification providers](setup-llm-classification.md)
