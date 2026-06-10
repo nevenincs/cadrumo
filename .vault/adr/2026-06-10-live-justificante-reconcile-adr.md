@@ -114,25 +114,36 @@ CSV reference, the captured `pdf_bytes`, the lifecycle state, and the official
 `Envelope` in the active bucket — no new persistence machinery.
 
 The capture flow: `require_live_read()` gates entry; the work unit resolves to an
-`(modelo, filing_year, period)` triple; `find_expediente` (narrowed for period)
-locates the expediente; `capture_justificante` downloads the `SedeCapture`; the
-service builds and persists the snapshot, deduplicating on `pdf_sha256` so a
-repeat capture of the same receipt is idempotent. In the same flow the
-service stamps the official evidence onto the filing record by mirroring the
-`import_external_filing_evidence` pattern (an `ExternalEvidence` reference keyed
-by `pdf_sha256`), so the captured receipt satisfies the cross-period
+`(modelo, filing_year, period)` triple; the period-bearing declarations register
+is cross-referenced against the procedure tree by `expediente_id`
+(`resolve_period_expediente`) to locate the period-correct expediente;
+`capture_justificante` downloads the `SedeCapture`; the service builds and
+persists the snapshot, deduplicating on `pdf_sha256` so a repeat capture of the
+same receipt is idempotent. In the same flow the service then stamps the official
+evidence onto the filing record (best-effort: a no-op when the period has no
+current in-app filing record, so a capture of a not-yet-recorded period still
+succeeds and persists the snapshot). The stamp parses the captured PDF into a
+domain `Justificante`, registers it keyed by the capture's CSV (the gate's
+evidence `reference_id`), updates the filing record to carry `AEAT_LIVE_CAPTURE`
+external evidence plus `aeat_accepted`, and emits a `MODELO_LIVE_EVIDENCE_STAMPED`
+bucket event. Because `aeat_live_capture` is a justificante-verified evidence
+kind, the stamped receipt satisfies the cross-period
 `MISSING_JUSTIFICANTE_VERIFICATION` gate.
 
-A new CLI verb in the live family — `aeat app live justificante capture` —
-mirrors `_app_live_expedientes_cli.py`: it takes the work-unit selectors, calls
-the service, and renders a typed envelope. Reconciliation is then a second step:
-the existing local `reconcile` runs against the persisted artefact, which the
-live service exposes by materialising the stored `pdf_bytes` to a transient
-readable path for the path-only `parse_justificante`. A convenience may later
-chain capture→reconcile, but the two services stay separate so the local-only
-boundary holds. CSV authenticity via the existing `verify_csv` /
-`application/live/_verify.py` surface is recorded as a deferred increment that can
-stamp an authenticity result onto the captured snapshot.
+A new CLI verb in the live family — `aeat app live justificante
+{capture,list,view}` — mirrors `_app_live_expedientes_cli.py`: `capture` takes
+the work-unit selectors, calls the service, and renders a typed envelope.
+Reconciliation is the second step on the existing local surface: the local
+`aeat app modelo reconcile` verb gains a `--from-capture <snapshot-id>` source
+that resolves the persisted capture and runs the unchanged local
+`modelo_reconcile` against it (the live service materialises the stored
+`pdf_bytes` to a transient readable path for the path-only `parse_justificante`).
+`--from-capture` is local-only — it reads the already-persisted artefact and never
+contacts AEAT — so it is distinct from the rejected `--from-sede` flag (which
+would trigger a live pull from `reconcile`); the capture and reconcile services
+stay separate so the local-only boundary holds. CSV authenticity via the existing
+`verify_csv` / `application/live/_verify.py` surface is recorded as a deferred
+increment that can stamp an authenticity result onto the captured snapshot.
 
 ## Rationale
 

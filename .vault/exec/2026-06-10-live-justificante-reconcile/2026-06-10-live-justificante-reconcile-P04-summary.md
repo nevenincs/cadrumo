@@ -33,14 +33,17 @@ The code review confirmed the materialisation is safe (temp file always deleted,
 no caller-path privacy leak, parser path-redaction preserved) and the delegation
 keeps the local reconciler unchanged.
 
-## Deferred follow-up (formally deferred per campaign-close honesty)
+## Review follow-up — actioned
 
-- **MEDIUM-2 — reconcile-from-capture has no operator CLI surface yet.**
-  `reconcile_capture` is a tested library seam, but the only operator verb today
-  is `aeat app live justificante capture` (which pulls and persists). The local
-  `aeat app modelo reconcile` still takes `--from-justificante PATH`, not a
-  capture snapshot id. This matches the ADR's "reconciliation is a second step /
-  a convenience may later chain" framing, and the headline operator value (the
-  app pulling the receipt itself) is delivered by the capture verb. Wiring a
-  `--from-capture <snapshot-id>` option (or a `justificante reconcile` verb) is a
-  tracked follow-up increment.
+- **MEDIUM-2 — reconcile-from-capture operator surface. RESOLVED.**
+  `aeat app modelo reconcile` now accepts `--from-capture <snapshot-id>`, which
+  resolves the persisted live capture and runs the unchanged local
+  `modelo_reconcile` against it. This realises the ADR's "the existing local
+  reconcile runs against the persisted artefact" on the local verb, and is
+  reconciled with the ADR wording: `--from-capture` is local-only (reads the
+  already-persisted artefact, no AEAT contact), explicitly distinct from the
+  ADR-rejected live `--from-sede` flag. Landed in the follow-up commit
+  `58f177d83`; CLI tests prove MATCHES against a persisted capture and the
+  mutual-exclusivity refusal. The ADR Implementation section was updated to name
+  `--from-capture` and the best-effort in-flow stamp so the decision record and
+  the code agree.
