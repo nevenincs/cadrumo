@@ -164,59 +164,49 @@ class DescendantInfo(BaseModel):
         return (entry.month, entry.day) < (_FULL_YEAR_CUTOFF_MONTH, _FULL_YEAR_CUTOFF_DAY)
 
 
-class RentaDescendantProfile(BaseModel):
+class _RentaPersonProfileBase(BaseModel):
+    """Private base for person-profile rows in the official Modelo 100 family section.
+
+    Carries the shared :class:`~datetime.date` fields and their validators for
+    :class:`RentaDescendantProfile` and :class:`RentaAscendantProfile`.
+    Both subclasses declare the same ``tax_id``/``display_name``/
+    ``disability_grade`` optional-text guard and the ``birth_date``/
+    ``death_date`` ISO-8601 parser; extracting them here removes the
+    duplicate without altering any field constraint.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    tax_id: str | None = None
+    display_name: str | None = None
+    birth_date: date
+    disability_grade: str | None = None
+    death_date: date | None = None
+
+    @field_validator("tax_id", "display_name", "disability_grade")
+    @classmethod
+    def _optional_text_not_blank(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            raise ProfileValidationError("optional text fields must not be blank")
+        return stripped
+
+    @field_validator("birth_date", "death_date", mode="before")
+    @classmethod
+    def _parse_date(cls, value: object) -> object:
+        return _coerce_iso_date_field(value)
+
+
+class RentaDescendantProfile(_RentaPersonProfileBase):
     """One descendant row from the official Modelo 100 family section."""
 
-    model_config = _STRICT_FROZEN
 
-    tax_id: str | None = None
-    display_name: str | None = None
-    birth_date: date
-    disability_grade: str | None = None
-    death_date: date | None = None
-
-    @field_validator("tax_id", "display_name", "disability_grade")
-    @classmethod
-    def _optional_text_not_blank(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        stripped = value.strip()
-        if not stripped:
-            raise ProfileValidationError("optional text fields must not be blank")
-        return stripped
-
-    @field_validator("birth_date", "death_date", mode="before")
-    @classmethod
-    def _parse_date(cls, value: object) -> object:
-        return _coerce_iso_date_field(value)
-
-
-class RentaAscendantProfile(BaseModel):
+class RentaAscendantProfile(_RentaPersonProfileBase):
     """One ascendant row from the official Modelo 100 family section."""
 
-    model_config = _STRICT_FROZEN
-
-    tax_id: str | None = None
-    display_name: str | None = None
-    birth_date: date
-    disability_grade: str | None = None
     cohabiting_descendant_count: int | None = Field(default=None, ge=0, le=10)
-    death_date: date | None = None
-
-    @field_validator("tax_id", "display_name", "disability_grade")
-    @classmethod
-    def _optional_text_not_blank(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        stripped = value.strip()
-        if not stripped:
-            raise ProfileValidationError("optional text fields must not be blank")
-        return stripped
-
-    @field_validator("birth_date", "death_date", mode="before")
-    @classmethod
-    def _parse_date(cls, value: object) -> object:
-        return _coerce_iso_date_field(value)
 
 
 class RentaFamilyProfile(BaseModel):
