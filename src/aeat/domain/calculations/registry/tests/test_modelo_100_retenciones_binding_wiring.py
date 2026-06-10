@@ -28,7 +28,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import calculate_registry_snapshot
+from .. import RegistrySnapshot, calculate_registry_snapshot
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -73,7 +73,7 @@ def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
     return registry_authority.snapshot("100", filing_year=2024, period="0A")
 
 
-def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot) -> None:
+def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Binding renta-2024-modelo-123-retenciones-periodicas must land in casilla 0597.
 
     Regression guard for Sergio round-13 C3: with the 2024 casilla missing
@@ -102,7 +102,7 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot) -> 
     )
 
 
-def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot) -> None:
+def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Binding renta-2024-modelo-111-retenciones-periodicas must land in casilla 0596.
 
     M111 (trabajo retenciones) shares the same structural gap as M123:
@@ -128,7 +128,7 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot) -> 
     )
 
 
-def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapshot) -> None:
+def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapshot: RegistrySnapshot) -> None:
     """M123 retenciones in 0597 must propagate through 0609 to reduce cuota diferencial.
 
     The formula renta-2024-total-pagos-a-cuenta sums casillas 0592-0606 into
@@ -156,7 +156,7 @@ def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapsho
     )
 
 
-def test_zero_m123_retenciones_gives_zero_0597(m100_2024_snapshot) -> None:
+def test_zero_m123_retenciones_gives_zero_0597(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Anti-tautology: with binding = 0, casilla 0597 must be 0 (not a stale value).
 
     This test would pass trivially if 0597 were always 0 (the pre-fix state).
@@ -178,7 +178,7 @@ def test_zero_m123_retenciones_gives_zero_0597(m100_2024_snapshot) -> None:
     )
 
 
-def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snapshot) -> None:
+def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Changing M123 retenciones amount changes cuota diferencial by the same amount.
 
     Increases in M123 retenciones must reduce cuota diferencial (0610) by exactly

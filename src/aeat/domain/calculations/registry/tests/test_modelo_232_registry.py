@@ -12,6 +12,7 @@ from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
     InputKind,
+    ModeloRevision,
     RegistryValidator,
     build_snapshot,
     load_registry_tree,
@@ -395,7 +396,7 @@ _SECTION_3_4_RANGE = (144, 1171)
 _SECTION_5_6_RANGE = (13, 3072)
 
 
-def _layout_bindings_for(revision, record_name: str) -> tuple:
+def _layout_bindings_for(revision: ModeloRevision, record_name: str) -> tuple:
     return tuple(
         binding
         for binding in revision.bindings

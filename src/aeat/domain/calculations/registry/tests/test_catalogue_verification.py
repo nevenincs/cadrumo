@@ -11,7 +11,7 @@ import pytest
 from .....core.config import Settings
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
-from .._citation_blocklist import _KNOWN_BAD_CITATIONS, find_known_bad
+from .._citation_blocklist import _KNOWN_BAD_CITATIONS, KnownBadCitation, find_known_bad
 from .._coverage import audit_registry_model_law_coverage
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
@@ -241,7 +241,7 @@ def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
 
 
 @pytest.mark.parametrize("blocked", _KNOWN_BAD_CITATIONS)
-def test_verify_legal_catalogue_rejects_every_blocklisted_role(blocked) -> None:
+def test_verify_legal_catalogue_rejects_every_blocklisted_role(blocked: KnownBadCitation) -> None:
     reference = _legal_reference(
         ref_id=f"{blocked.source}:{blocked.article}",
         kind=blocked.source,
