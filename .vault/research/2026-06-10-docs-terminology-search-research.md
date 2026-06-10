@@ -299,8 +299,209 @@ the dev RAG index needs the F4 gaps closed:
   documented local pre-processing layer (sidecars), which works with the
   package as-is.
 
+## Prior art (web research fan-out, 2026-06-10)
+
+Operator-directed second discovery round: five parallel web-research agents
+(two opus deep-dives, three sonnet breadth sweeps) surveying existing
+codebases and standards. Operator decisions locked before this round: the
+compiled search database is NOT committed (mirrors the uncommitted HTML
+build); the enrolled terminology — the **Terminology Handbook** — IS
+committed, programmatically generated, and continuously curated; the
+Handbook is the middle layer between registry compilation and shipped
+documentation. Additional grounding directive: search must serve both
+CLI/codebase navigation AND text-terminology lookup — a query like
+"pro rata" must return the concept's meaning, the legal grounding resources
+the code is grounded against, and the modelo casilla schema descriptions
+(every casilla has a localised description conforming to the official
+casilla descriptions).
+
+### P1. Static-site search engines (opus sweep)
+
+- **Pagefind** (CloudCannon, MIT, v1.5.2 2026-04, Rust→WASM): the only
+  candidate satisfying every hard constraint. Native Spanish AND Catalan
+  (and Hungarian) stemming with automatic per-language index splitting;
+  chunked lazy-loaded index (~100-300 KB read-time payload for 10k+ pages);
+  configurable ranking weights + `metaWeights`; and decisively a **NodeJS
+  AND Python indexing API with `addCustomRecord`** that injects arbitrary
+  synthetic records (our term/casilla/CLI records with metadata, filters,
+  weighting) alongside `addDirectory` over built HTML. Sphinx+Furo prior
+  art exists (Gandi blog walkthrough: `pagefind.yml` root selector, Furo
+  `search.html` template override, post-build index pass); Astro Starlight
+  ships Pagefind as default search via its build-done hook. Hermetic-build
+  caveat: the binary/wheel must be vendored so the build does no network
+  fetch. Repo: `github.com/CloudCannon/pagefind`.
+- **Orama** (Apache-2.0, v3.1.18, pure JS ~2 kB engine): strongest
+  library alternative; prebuilt-index persistence plugin
+  (`@orama/plugin-data-persistence`), custom tokenizer (BYO Snowball-es;
+  Catalan stemmer not bundled), field boosting/filters/typo tolerance.
+  Whole-index load (no lazy chunking) is the scaling trade-off at 25k
+  chunks; persistence round-trip has open issues (#876, #695). Best fit if
+  reusing the existing vanilla palette without a separate binary.
+- **Rejected**: Stork (unmaintained, wound down Jan 2023), tinysearch (no
+  prefix search/synonyms, small-site only), Fuse.js (no precompiled
+  inverted index — fuzzy matcher only), Elasticlunr (deprecated),
+  FlexSearch (no es/ca stemmer, explicitly no synonym search), Sphinx
+  native search (single-stemmer-per-project — confirmed architectural:
+  `sphinx.search.SearchLanguage` is chosen once by `language=`; en+es+ca+hu
+  cannot co-exist in one `searchindex.js`), readthedocs-sphinx-search
+  (deprecated; a client to RTD's hosted Elasticsearch), and all hosted
+  services (Algolia DocSearch / Typesense / Meilisearch — network at read
+  time violates offline-hermetic).
+- Lunr (`lunr-languages` has es but NO Catalan) and MiniSearch
+  (`minisearch-synonyms` is the cleanest declarative synonym-ring
+  reference: query OR-expansion) remain useful references only.
+
+### P2. Shippable semantics ladder (opus sweep)
+
+- **Rung 1 — build-time-mined synonym rings shipped as plain data**: mine
+  near-synonyms with embeddings on the GPU box at build, ship
+  Elasticsearch-style `term → aliases` JSON (tens of KB). Mining is NOT
+  auto-safe: cosine-NN mining suffers antonym intrusion ("deducible" vs
+  "no deducible") and co-hyponym intrusion (sibling modelo codes) even at
+  cosine ≥ 0.85; validated method = relative-cosine ranking + a
+  human-reviewed allowlist (mirror of the locales
+  `_intentional_identical.json` ratchet discipline).
+- **Rung 2 — static term-embedding matrix + client-side cosine**: ship a
+  precomputed int8/float16 matrix for the closed term vocabulary only
+  (~5,000 terms × 256 dims ≈ 1.3-2.5 MB; gzip smaller) + a few-line JS
+  cosine. No model, no WASM ships. Model2Vec/potion
+  (`potion-multilingual-128M`, MIT, 256-d, 101 languages — es/ca/hu/en all
+  confirmed; 90.86% of LaBSE on MTEB) is the build-time embedder; Model2Vec
+  inference is tokenize→lookup→average (no neural net). Negative findings:
+  NO browser Model2Vec runtime exists (transformers.js #970 never
+  implemented; rust port has no published WASM build), and nobody ships a
+  curated-vocabulary static term-matrix docs search — the pattern is
+  assembled from proven primitives, not copied from a reference deployment.
+  Embedding all 25k doc chunks would be 6.4-12.8 MB — that rung approaches
+  rung-3 territory.
+- **Rung 3 — transformer in the browser** (transformers.js + ONNX
+  all-MiniLM-L6-v2 q8 ~23 MB + ~4 MB WASM; SemanticFinder, Ken Hawkins'
+  static-site deployment): ~30 MB cold download, live runtime dependency,
+  high maintenance. Its only unique capability is embedding uncatalogued
+  free text cross-lingually at query time.
+- **Cross-lingual verdict (load-bearing)**: our term records already carry
+  their four translations as declared aliases, so build-time alias
+  expansion delivers exact cross-lingual matching for free; expensive rungs
+  buy capability we already have declaratively. Recommendation: ship rung 1;
+  hold rung 2 (term-matrix-only scope) behind a measured rung-1 miss-rate
+  on a held-out query set; reject rung 3.
+
+### P3. Glossary generation and governance prior art (sonnet sweep)
+
+- **Kubernetes** (`kubernetes/website` `content/en/docs/reference/glossary/`):
+  one markdown file per term; frontmatter `id`, `title`,
+  `short_description` (tooltip), `aka` aliases, closed 12-value `tags`
+  enum, `full_link`; a Hugo `glossary_tooltip` shortcode resolves by exact
+  id (a substring-matching bug #14226 forced exact matching). No automated
+  redeclaration gate.
+- **Sphinx native machinery is the strongest free gate**: `:term:` role →
+  undefined term emits warning type `ref.term` → hard build break under
+  `-W`; Sphinx ≥ 3.0 also emits duplicate-glossary-entry warnings (same
+  `ref.term` type) → `-n -W` catches BOTH missing enrolment and duplicate
+  declaration at zero tooling cost. Known: case-sensitive matching;
+  `suppress_warnings` for ref.term is partially broken (#13161) — which we
+  don't need since we never suppress. `sphinx-hoverxref`
+  (`hoverxref_roles = ["term"]`) gives hover tooltip cards on every
+  `:term:` reference; multi-term shared definitions misrender (#97) — keep
+  one term per entry. `chrisjsewell/sphinx-glossary` generates glossary
+  directives from external YAML/JSON — proof the generated-glossary
+  directive approach works.
+- **glossarify-md**: term files + an auto-linking compile pass over consumer
+  markdown (excludes code blocks/headings/existing links) — concept
+  transferable to a MyST pass; no governance.
+- **GitLab word list + Vale**: CI prose linting where `severity: error`
+  fails the build on deprecated/wrong terminology — the only observed
+  mechanism approximating a redeclaration gate. **Universal gap across all
+  surveyed systems: none automatically detects prose re-declaring a
+  canonical definition** — our redeclaration conformance gate is novel and
+  must be built (Vale-style substitution rules or AST/regex scan over MyST
+  sources).
+- **Generated-then-curated merge semantics — the canonical pattern is GNU
+  gettext `msgmerge`** with three outcomes: (1) preserve — matching entry
+  carries curated prose forward verbatim; (2) scaffold-empty — new source
+  term creates an empty entry explicitly marked needing curation (fuzzy
+  carry-forward is the documented failure mode — wrong prose ships if the
+  fuzzy flag is not cleared; avoid fuzzy auto-fill); (3) retire-as-tombstone
+  — removed term becomes an obsolete-marked entry, never silently deleted.
+  Five transferable rules: required first-class `short_description` (never
+  inferred from first paragraph); msgmerge three-outcome contract for every
+  scaffold run; the `:term:`/`-W` gate as the enrolment+uniqueness gate;
+  closed tag enums; `--check` as a fast mandatory pre-commit/CI gate (the
+  sphinx-apidoc / `dev.docs.apidocs` / `aeat.locales` house pattern).
+
+### P4. Terminology data-model standards (sonnet sweep)
+
+- **Concept-oriented modelling (TBX / ISO 30042 three-tier)**: one concept
+  entry → language sections → term sections. Term-first rows break on
+  multi-alias languages and missing locales; concept-first matches the
+  registry's one-fragment-per-entity compile pattern. TBX-Basic field
+  subset worth borrowing: `subjectField` (→ our `domain` closed enum),
+  `definition`+`source` per language section, `context` examples,
+  `normativeAuthorization` term statuses (preferred | admitted | deprecated
+  | forbidden), `partOfSpeech`/`grammaticalGender` (es/ca need gender),
+  cross-references.
+- **SKOS borrowings**: `prefLabel`/`altLabel` → term status,
+  `hiddenLabel` → unaccented/misspelt search-only forms (`declaracion`),
+  `broader`/`related` for shallow relations (author `broader` only; derive
+  `narrower` at load — no double bookkeeping), `scopeNote`, `exactMatch`
+  reserved for IATE/EuroVoc alignment ids only. Skip the cross-scheme
+  match properties.
+- **Lifecycle**: four states suffice for a git-native handbook (draft |
+  approved | deprecated | retired) + `replaced_by` (mandatory when
+  retired) + `review_note`; never delete a record — retire it (SNOMED
+  immutable-id inactivation pattern). Concept lifecycle and per-term status
+  are orthogonal (the TBX insight).
+- Proposed full ConceptRecord/language/term field tables with standard
+  provenance are in the fan-out agent report; the ADR carries the decided
+  subset.
+
+### P5. External seed sources and licences (sonnet sweep)
+
+- **Tier A — machine-readable, licence-clean, ingest at scaffold time**:
+  IATE TBX bulk download (24 EU languages incl. es/hu/en; tax+law+finance
+  domains; commercial reuse + derivatives explicitly permitted WITH
+  attribution — but ONLY for the downloaded file, never website/API
+  scraping; filter reliability ≥ 3); UBTERM `Diccionari de fiscalitat`
+  (Universitat de Barcelona, ~270 trilingual ca/es/en fiscal entries,
+  CC BY 3.0 — the cleanest Catalan fiscal source; confirm bulk-download
+  availability); EuroVoc SKOS (es/hu labels for top-level fiscal concept
+  hierarchy; verify the licence on the Publications Office downloads page
+  before ingestion — labels only, no definitions).
+- **Tier B — authoritative, link-only grounding (no bulk ingestion)**:
+  AEAT Manuales Prácticos IVA/IRPF (primary authoritative Spanish
+  definitions; reuse permitted with attribution + update date under
+  Ley 37/2007), AEAT sede glossaries (shallow, 6-18 entries each), AEAT
+  INFORMA (no bulk API), DG TAXUD multilingual VAT glossary (web-only),
+  BOE API (legal text for `legal_refs` grounding — already in-corpus).
+- **Licence red flags — excluded**: TERMCAT Terminologia Oberta is
+  CC BY-ND 3.0 (no derivatives — reformatting into handbook records is a
+  derivative; contact required, exclude by default); the TERMCAT/UOC
+  Catalan-IATE export has no confirmed licence; RAE DPEJ is lookup-only
+  (no download permitted); BOE "Digital Legal Library" sub-collection is
+  CC BY-NC-ND (distinct from the freely-reusable main legislative texts);
+  Microsoft Terminology Collection is IT-domain, no redistribution
+  guarantee — verification-only.
+- **Hungarian frank assessment**: NAV publishes nothing machine-readable;
+  hu coverage realistically comes from IATE + EuroVoc + EUR-Lex
+  translations + our own locale catalogue; Spain-specific regimes
+  (recargo de equivalencia, módulos) have no hu authority equivalent — the
+  handbook's hu entries for those are the project's own contribution.
+
 ## Sources
 
+- Web prior-art fan-out 2026-06-10 (five agents: Pagefind/Orama landscape,
+  semantics ladder with Model2Vec/potion and transformers.js numbers,
+  Kubernetes/Sphinx/gettext glossary governance, TBX/SKOS schema standards,
+  IATE/UBTERM/EuroVoc/AEAT/BOE seed-source licences); primary URLs:
+  `pagefind.app`, `github.com/CloudCannon/pagefind`,
+  `github.com/oramasearch/orama`, `github.com/MinishLab/model2vec`,
+  `huggingface.co/minishlab/potion-multilingual-128M`,
+  `kubernetes.io/docs/reference/glossary/`,
+  `sphinx-hoverxref.readthedocs.io`, `github.com/chrisjsewell/sphinx-glossary`,
+  `terminorgs.net/downloads/TBX-Basic-V4.pdf`, `w3.org/TR/skos-reference`,
+  `iate.europa.eu/download-iate`, `ub.edu/ubterm/obra/fiscalitat`,
+  `op.europa.eu/en/web/eu-vocabularies/eurovoc`,
+  `blog.gandi.net/en/posts/sphinx-doc-and-pagefind`.
 - Agent discovery reports 2026-06-10 (four parallel read-only researchers:
   docs pipeline, RAG architecture, corpus inventory, RAG index coverage
   audit), grounded via the resident RAG service (`--port 8766 --timeout 30`)
