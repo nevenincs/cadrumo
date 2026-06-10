@@ -1135,7 +1135,7 @@ cli:
         yes_required: Has de passar --yes per eliminar una factura cobrable
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
-        evidence_id_help: Identificador del justificant (o prefix no ambigu)
+        evidence_id_help: 'Identificador del justificant (coincidencia exacta)'
         group_help: Justificants de factures de compra en PDF o imatge
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_number_help: Número de factura del proveïdor
@@ -1853,6 +1853,7 @@ cli:
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
         calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però aquest import declarable no s''assigna a cap casella i no es declara en aquesta presentació; revisa''l abans de presentar.'
+        verify_selector_help: 'Selector de revisio esborrany (current, latest-draft o explicit).'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2488,8 +2489,6 @@ cli:
       taxable_base_help: Import de base imposable
     doclink:
       actor_help: Etiqueta de l'operador.
-      bad_source: 'l''origen de l''enllaç ha de ser un de: gmail, google_drive, url
-        (rebut ''{source}'').'
       help: Registra un enllaç a un document de Gmail/Drive/URL en una fila del llibre
         major (mai descarregat).
       id_help: Identificador de transacció del llibre major.

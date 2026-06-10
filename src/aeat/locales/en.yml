@@ -1060,7 +1060,7 @@ cli:
         yes_required: Pass --yes to delete a collectible invoice
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
-        evidence_id_help: Evidence id (or unambiguous prefix)
+        evidence_id_help: 'Evidence id (exact match)'
         group_help: Purchase invoice evidence in PDF or image form
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_number_help: Supplier invoice number
@@ -1748,6 +1748,7 @@ cli:
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
         calculate_source_advisory: 'ADVISORY: %{message} The calculation completed, but this declarable amount is not routed to any casilla and is not declared on this filing; review it before filing.'
+        verify_selector_help: 'Draft revision selector (current, latest-draft, or explicit).'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -2351,8 +2352,6 @@ cli:
       taxable_base_help: Taxable base amount
     doclink:
       actor_help: Operator label.
-      bad_source: 'document-link source must be one of: gmail, google_drive, url (got
-        ''{source}'').'
       help: Record a Gmail/Drive/URL document link on a ledger row (never fetched).
       id_help: Ledger transaction id.
       note_help: Optional note.

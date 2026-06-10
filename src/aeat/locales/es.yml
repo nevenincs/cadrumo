@@ -1141,7 +1141,7 @@ cli:
         yes_required: Debes pasar --yes para eliminar una factura cobrable
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
-        evidence_id_help: Identificador del justificante (o prefijo no ambiguo)
+        evidence_id_help: 'Identificador del justificante (coincidencia exacta)'
         group_help: Justificantes de facturas de compra en PDF o imagen
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_number_help: Número de factura del proveedor
@@ -1878,6 +1878,7 @@ cli:
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
         calculate_source_advisory: 'AVISO: %{message} El cálculo se completó, pero este importe declarable no se asigna a ninguna casilla y no se declara en esta presentación; revísalo antes de presentar.'
+        verify_selector_help: 'Selector de revision borrador (current, latest-draft o explicit).'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -2519,8 +2520,6 @@ cli:
       taxable_base_help: Importe de base imponible
     doclink:
       actor_help: Etiqueta del operador.
-      bad_source: 'el origen del enlace debe ser uno de: gmail, google_drive, url
-        (recibido ''{source}'').'
       help: Registra un enlace a documento de Gmail/Drive/URL en una fila de libro
         mayor (nunca se descarga).
       id_help: Identificador de transacción del libro mayor.

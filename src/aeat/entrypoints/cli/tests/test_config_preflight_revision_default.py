@@ -86,13 +86,14 @@ def _active_revision_for(modelo: str, *, filing_year: int, period: str) -> str:
 
 def test_preflight_defaults_revision_from_natural_key(cli_runner: CliRunner) -> None:
     """Preflight answers from modelo, filing year, and period alone."""
+    from typer.core import TyperGroup
     from typer.main import get_command
 
     _seed_active_profile()
     expected_revision = _active_revision_for("303", filing_year=2026, period="1T")
 
     cmd = get_command(root_app)
-    assert isinstance(cmd, click.Command)
+    assert isinstance(cmd, (click.Command, TyperGroup))
     result = cli_runner.invoke(
         cmd,
         [
@@ -125,13 +126,14 @@ def test_preflight_defaults_revision_from_natural_key(cli_runner: CliRunner) -> 
 
 def test_preflight_explicit_revision_override_is_honoured(cli_runner: CliRunner) -> None:
     """An explicit --revision-id selects that exact revision for replay."""
+    from typer.core import TyperGroup
     from typer.main import get_command
 
     _seed_active_profile()
     expected_revision = _active_revision_for("303", filing_year=2026, period="1T")
 
     cmd = get_command(root_app)
-    assert isinstance(cmd, click.Command)
+    assert isinstance(cmd, (click.Command, TyperGroup))
     result = cli_runner.invoke(
         cmd,
         [
@@ -161,12 +163,13 @@ def test_preflight_explicit_revision_override_is_honoured(cli_runner: CliRunner)
 
 def test_preflight_refuses_unresolvable_natural_key_with_discovery_pointer(cli_runner: CliRunner) -> None:
     """A period the modelo never declares refuses with a discovery pointer."""
+    from typer.core import TyperGroup
     from typer.main import get_command
 
     _seed_active_profile()
 
     cmd = get_command(root_app)
-    assert isinstance(cmd, click.Command)
+    assert isinstance(cmd, (click.Command, TyperGroup))
     result = cli_runner.invoke(
         cmd,
         ["config", "profile", "preflight", "--modelo", "303", "--filing-year", "2026", "--period", "ZZ"],
@@ -179,12 +182,13 @@ def test_preflight_refuses_unresolvable_natural_key_with_discovery_pointer(cli_r
 
 def test_preflight_refuses_invalid_explicit_override_with_registered_revisions(cli_runner: CliRunner) -> None:
     """An explicit --revision-id unknown to the modelo refuses instructively."""
+    from typer.core import TyperGroup
     from typer.main import get_command
 
     _seed_active_profile()
 
     cmd = get_command(root_app)
-    assert isinstance(cmd, click.Command)
+    assert isinstance(cmd, (click.Command, TyperGroup))
     result = cli_runner.invoke(
         cmd,
         [
@@ -226,8 +230,11 @@ def test_preflight_refuses_ambiguous_natural_key_with_candidates(cli_runner: Cli
     original = authority._modelos_by_id["303"]
     authority._modelos_by_id["303"] = ambiguous
     try:
+        from typer.core import TyperGroup
+        from typer.main import get_command
+
         cmd = get_command(root_app)
-        assert isinstance(cmd, click.Command)
+        assert isinstance(cmd, (click.Command, TyperGroup))
         result = cli_runner.invoke(
             cmd,
             ["config", "profile", "preflight", "--modelo", "303", "--filing-year", "2026", "--period", "1T"],
