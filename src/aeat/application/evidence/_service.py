@@ -40,7 +40,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
     namespace: ClassVar[str] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.namespace
     sensitivity: ClassVar = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.schema_version
-    payload_type: ClassVar[type[EvidenceBundle]] = EvidenceBundle
+    payload_type: ClassVar[type[BaseModel]] = EvidenceBundle
 
     @override
     def extract_identifier(self, payload: EvidenceBundle) -> str:
