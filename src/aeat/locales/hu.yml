@@ -1560,33 +1560,14 @@ cli:
       readiness_help: Jelentés arról, hogy az aktív profil készen áll-e egy nyomtatvány/év/időszak
         benyújtására.
       reconcile:
-        errors:
-          exclusive_capture_source: 'A --from-capture kölcsönösen kizárja a --from-justificante / --from-declaration kapcsolókat.'
-          exclusive_source: A --from-justificante és a --from-declaration kölcsönösen
-            kizárják egymást.
-          missing_source: 'Adj meg --from-justificante UTVONAL, --from-declaration UTVONAL vagy --from-capture PILLANATKEP_AZONOSITO értéket.'
-        from_capture_help: 'Egy már mentett élő igazolás-rögzítés azonosítója (vagy előtagja), amellyel egyeztetni kell. Csak helyi: a már rögzített igazolást olvassa, soha nem lép kapcsolatba az AEAT-tal.'
-        from_declaration_help: A benyújtott bevallás PDF-jének elérési útja az egyeztetéshez
-          (fenntartott; elemző függőben).
-        from_justificante_help: Az AEAT justificante PDF-jének elérési útja az egyeztetéshez.
-        help: Nyomtatvány-munkaegység egyeztetése külső bizonyítékkal (justificante
-          PDF). Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
+        app_help: 'Egyeztet egy modelo munkaegyseget az AEAT igazolasaval: a pull letolti az igazolast az AEAT-tol es egyeztet; a file egy helyi PDF-et egyeztet; a history a korabbi futtatasokat listazza.'
+        file_help: 'Egyeztet egy munkaegyseget egy helyi igazolas PDF ellen. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.'
+        file_path_help: 'Az AEAT igazolas PDF utvonala, amellyel egyeztetni kell.'
+        history_empty: 'Meg nincsenek rogzitett egyeztesek.'
+        history_help: 'Listazza az aktiv profilhoz rogzitett egyeztteseket.'
+        history_work_unit_id_help: 'Opcionalis munkaegyseg-azonosito a tortenet egy egysegre szukitesehez.'
+        pull_help: 'Letolti egy munkaegyseg igazolasat az AEAT-tol, es egyeztet ellene. Kapcsolatba lep az AEAT-tal (csak olvasas).'
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
-      reconcile_from_justificante:
-        help: Nyomtatvány-munkaegység egyeztetése justificante PDF-fel. Gyorskezelő
-          azoknak, akik "egyeztess ezzel a justificante-val" alapon gondolkodnak.
-          Ugyanazt az alkalmazásszolgáltatási belépési pontot osztja meg a jelzőalapú
-          formával. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
-        justificante_path_help: Az AEAT justificante PDF-jének elérési útja az egyeztetéshez.
-        work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
-      reconciliation_history:
-        empty: Még nincs rögzített egyeztetés.
-        help: Az aktív profilhoz rögzített korábbi egyeztetések listázása. A csak
-          hozzáfűzhető MODELO_RECONCILED bucket-eseménynaplót olvassa; az egyeztetések
-          igény szerint megismételhetők, ezért ez kényelmi visszaolvasás, nem tárolt
-          rekord.
-        work_unit_id_help: Opcionális munkaegység-azonosító az előzmények egyetlen
-          munkaegységre szűkítéséhez.
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra

@@ -145,7 +145,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         "aeat app live filed capture-sources --modelo 130 --year 2025 --period 1T"
         in payload["findings"][0]["next_action"]
     )
-    assert "aeat app modelo reconcile-from-justificante PATH WORK_UNIT_ID" in payload["findings"][0]["next_action"]
+    assert "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in payload["findings"][0]["next_action"]
 
 
 def test_work_create_refuses_conflicting_registry_revision_for_visible_target() -> None:
@@ -255,8 +255,8 @@ def test_reconcile_commands_advertise_natural_target_options() -> None:
     """Reconcile commands keep exact ids but advertise natural-key targeting."""
 
     for args in (
-        ["app", "modelo", "reconcile", "--help"],
-        ["app", "modelo", "reconcile-from-justificante", "--help"],
+        ["app", "modelo", "reconcile", "pull", "--help"],
+        ["app", "modelo", "reconcile", "file", "--help"],
     ):
         result = _invoke(args)
         assert result.exit_code == 0, result.output

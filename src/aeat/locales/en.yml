@@ -1519,32 +1519,14 @@ cli:
       readiness_help: Report whether the active profile is ready to file one modelo
         / year / period.
       reconcile:
-        errors:
-          exclusive_capture_source: 'The --from-capture source cannot be combined with --from-justificante or --from-declaration.'
-          exclusive_source: --from-justificante and --from-declaration are mutually
-            exclusive.
-          missing_source: 'Supply --from-justificante PATH, --from-declaration PATH, or --from-capture SNAPSHOT_ID.'
-        from_capture_help: 'Snapshot id (or prefix) of a persisted live justificante capture to reconcile against. Local-only: reads the already-captured receipt, never contacts AEAT.'
-        from_declaration_help: Path to the filed declaration PDF to reconcile against
-          (reserved; parser pending).
-        from_justificante_help: Path to the AEAT justificante PDF to reconcile against.
-        help: Reconcile a modelo work unit against external evidence (justificante
-          PDF). Local-only; never contacts AEAT.
+        app_help: 'Reconcile a modelo work unit against its AEAT justificante: pull fetches the receipt from AEAT and reconciles; file reconciles a local PDF; history lists past runs.'
+        file_help: 'Reconcile a work unit against a local justificante PDF. Local-only; never contacts AEAT.'
+        file_path_help: 'Path to the AEAT justificante PDF to reconcile against.'
+        history_empty: 'No reconciliations recorded yet.'
+        history_help: 'List past reconciliations recorded for the active profile.'
+        history_work_unit_id_help: 'Optional work unit id to narrow the history to one work unit.'
+        pull_help: 'Pull the justificante for a work unit from AEAT and reconcile against it. Contacts AEAT (read-only).'
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
-      reconcile_from_justificante:
-        help: Reconcile a modelo work unit against a justificante PDF. Sugar for operators
-          who think "reconcile from this justificante" rather than "reconcile, source
-          = justificante". Shares the modelo_reconcile application service entry point
-          with the flag-based form. Local-only; never contacts AEAT.
-        justificante_path_help: Path to the AEAT justificante PDF to reconcile against.
-        work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
-      reconciliation_history:
-        empty: No reconciliations recorded yet.
-        help: List past reconciliations recorded for the active profile. Reads the
-          append-only MODELO_RECONCILED bucket-event history; reconciliations are
-          repeatable on demand, so this is a convenience read-back, not a stored record.
-        work_unit_id_help: Optional work unit id to narrow the history to one work
-          unit.
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
