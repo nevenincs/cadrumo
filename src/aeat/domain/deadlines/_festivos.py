@@ -145,6 +145,44 @@ class HolidayCalendar(BaseModel):
     ccaa: tuple[Holiday, ...] = Field(default_factory=tuple)
 
 
+class _NationalHolidayRow(BaseModel):
+    """One ``[[national]]`` row as authored in a festivos TOML file."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    date: date
+    name: _NonEmptyShortString
+
+
+class _CcaaHolidayRow(BaseModel):
+    """One ``[[ccaa]]`` row as authored in a festivos TOML file."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    date: date
+    ccaa_code: CalendarCCAA
+    name: _NonEmptyShortString
+
+
+class _HolidayCalendarToml(BaseModel):
+    """Typed shape of a parsed ``festivos-{year}.toml`` document.
+
+    Validating the loosely-typed :func:`read_toml` result through this
+    boundary model lifts the TOML rows into typed records (coercing the
+    native TOML scalars into the ``date`` and :class:`CalendarCCAA` field
+    types) before they are projected onto the immutable :class:`Holiday`
+    / :class:`HolidayCalendar` domain records, which stay strict.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    year: Annotated[int, Field(ge=2000, le=2100)]
+    boe_ref: _NonEmptyShortString
+    boe_url: str | None = None
+    national: list[_NationalHolidayRow] = Field(default_factory=list)
+    ccaa: list[_CcaaHolidayRow] = Field(default_factory=list)
+
+
 class DeadlineShift(BaseModel):
     """Outcome of applying the AEAT deadline-shift rule to one close date.
 
@@ -225,28 +263,29 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
         )
 
     try:
+        parsed = _HolidayCalendarToml.model_validate(raw)
         national_entries = tuple(
             Holiday(
-                holiday_date=entry["date"],
+                holiday_date=entry.date,
                 jurisdiction=HolidayJurisdiction.NATIONAL,
                 ccaa_code=None,
-                name=entry["name"],
+                name=entry.name,
             )
-            for entry in raw.get("national", ())
+            for entry in parsed.national
         )
         ccaa_entries = tuple(
             Holiday(
-                holiday_date=entry["date"],
+                holiday_date=entry.date,
                 jurisdiction=HolidayJurisdiction.CCAA,
-                ccaa_code=CalendarCCAA(entry["ccaa_code"]),
-                name=entry["name"],
+                ccaa_code=entry.ccaa_code,
+                name=entry.name,
             )
-            for entry in raw.get("ccaa", ())
+            for entry in parsed.ccaa
         )
         return HolidayCalendar(
             year=year,
-            boe_ref=raw["boe_ref"],
-            boe_url=raw.get("boe_url"),
+            boe_ref=parsed.boe_ref,
+            boe_url=parsed.boe_url,
             national=national_entries,
             ccaa=ccaa_entries,
         )
