@@ -25,6 +25,8 @@ You MUST respect these rules at all times:
 @.codex/rules/aeat-swarm-orchestration.md
 @.codex/rules/aeat-user-docs-hardening.md
 @.codex/rules/aeat-vaultspec-centralisation.md
+@.codex/rules/calculation-source-canonical-mechanism.md
+@.codex/rules/carried-observations-stamp-their-revision.md
 @.codex/rules/composition-service-no-parallel-write-path.md
 @.codex/rules/core-struct-docstring-links.md
 @.codex/rules/fixture-provenance-declared-in-sidecar.md
@@ -33,10 +35,15 @@ You MUST respect these rules at all times:
 @.codex/rules/local-filed-observations-are-non-official-evidence.md
 @.codex/rules/modelo-export-mirrors-official-structure.md
 @.codex/rules/modelo-identifiers-use-core-enum.md
+@.codex/rules/no-dormant-source-resolvers.md
 @.codex/rules/no-legacy-compatibility.md
 @.codex/rules/no-silent-under-declaration.md
 @.codex/rules/no-tautological-calculation-tests.md
+@.codex/rules/one-aggregation-path-pull-equals-calculate.md
 @.codex/rules/registry-calculation-legal-grounding.md
+@.codex/rules/relation-slot-bindings-declare-relation-source.md
+@.codex/rules/revision-resolution-is-law-determined.md
+@.codex/rules/sensitive-financial-data-secure-storage-only.md
 @.codex/rules/service-imports-via-top-level-reexports.md
 @.codex/rules/tests-live-under-domain-tests-folders.md
 @.codex/rules/vaultspec-archive-discipline.builtin.md
