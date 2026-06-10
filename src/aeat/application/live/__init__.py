@@ -12,6 +12,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Sequence
+
+    from ...adapters.outbound.aeat.auth import AeatSession
+    from ...adapters.outbound.aeat.sede import Declaracion, Expediente, SedeCapture
+    from ...core.config import Settings
     from ._expedientes import ExpedientesCapture, ExpedientesService
     from ._notifications import NotificationsService
     from ._verify import VerifyService, VerifySurface, VerifyVerdict
@@ -253,11 +258,17 @@ async def capture_notifications(*, bucket_id: str):
     return persisted
 
 
-async def _default_justificante_session():
+async def _default_justificante_session() -> tuple[AeatSession, Settings]:
     return await _active_verified_session(operation="live-justificante-read")
 
 
-async def _default_justificante_declarations(session: object, settings: object, *, modelo: str, year: int):
+async def _default_justificante_declarations(
+    session: AeatSession,
+    settings: Settings,
+    *,
+    modelo: str,
+    year: int,
+) -> tuple[Declaracion, ...]:
     async with (
         _shared_playwright(session) as playwright,
         _open_declarations_register(session, settings=settings, playwright=playwright) as register,
@@ -265,13 +276,23 @@ async def _default_justificante_declarations(session: object, settings: object, 
         return tuple(await register.walk(modelo=modelo, ejercicio=year))
 
 
-async def _default_justificante_expedientes(session: object, settings: object, *, modelo: str):
+async def _default_justificante_expedientes(
+    session: AeatSession,
+    settings: Settings,
+    *,
+    modelo: str,
+) -> tuple[Expediente, ...]:
     from ...adapters.outbound.aeat.sede import walk_expedientes_tree
 
     return await walk_expedientes_tree(session, modelo=modelo, settings=settings)
 
 
-async def _default_justificante_capture(session: object, settings: object, *, expediente: object):
+async def _default_justificante_capture(
+    session: AeatSession,
+    settings: Settings,
+    *,
+    expediente: Expediente,
+) -> SedeCapture:
     from ...adapters.outbound.aeat.sede import capture_justificante
 
     return await capture_justificante(session, expediente, settings=settings)
@@ -283,10 +304,10 @@ async def capture_justificante_snapshot(
     modelo: str,
     year: int,
     period: str,
-    session_provider=_default_justificante_session,
-    declarations_provider=_default_justificante_declarations,
-    expedientes_provider=_default_justificante_expedientes,
-    justificante_provider=_default_justificante_capture,
+    session_provider: Callable[[], Awaitable[tuple[AeatSession, Settings]]] = _default_justificante_session,
+    declarations_provider: Callable[..., Awaitable[Sequence[Declaracion]]] = _default_justificante_declarations,
+    expedientes_provider: Callable[..., Awaitable[Sequence[Expediente]]] = _default_justificante_expedientes,
+    justificante_provider: Callable[..., Awaitable[SedeCapture]] = _default_justificante_capture,
 ) -> JustificanteCaptureSnapshot:
     """Live-pull the AEAT justificante for one work unit and persist it.
 
