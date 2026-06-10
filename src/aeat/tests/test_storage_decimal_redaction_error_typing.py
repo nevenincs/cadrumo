@@ -70,7 +70,8 @@ def test_encrypted_string_raises_storage_validation_error() -> None:
 
     col = EncryptedString()
     with pytest.raises(StorageValidationError):
-        col.process_bind_param(12345, None)  # type: ignore[arg-type]
+        # negative test: int rejected where str is required
+        col.process_bind_param(12345, None)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
 
 
 def test_encrypted_bytes_raises_storage_validation_error() -> None:
@@ -85,7 +86,8 @@ def test_encrypted_bytes_raises_storage_validation_error() -> None:
 
     col = EncryptedBytes()
     with pytest.raises(StorageValidationError):
-        col.process_bind_param("not-bytes", None)  # type: ignore[arg-type]
+        # negative test: str rejected where bytes is required
+        col.process_bind_param("not-bytes", None)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
 
 
 def test_hashed_lookup_compute_raises_storage_validation_error() -> None:
@@ -99,7 +101,8 @@ def test_hashed_lookup_compute_raises_storage_validation_error() -> None:
     from ..adapters.persistence.storage.errors import StorageValidationError
 
     with pytest.raises(StorageValidationError):
-        HashedLookup.compute(12345)  # type: ignore[arg-type]
+        # negative test: int rejected where str is required
+        HashedLookup.compute(12345)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
 
 
 def test_hashed_lookup_process_bind_raises_storage_validation_error() -> None:
@@ -115,7 +118,8 @@ def test_hashed_lookup_process_bind_raises_storage_validation_error() -> None:
 
     col = HashedLookup()
     with pytest.raises(StorageValidationError):
-        col.process_bind_param(99.9, None)  # type: ignore[arg-type]
+        # negative test: float rejected where str | bytes is required
+        col.process_bind_param(99.9, None)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +170,8 @@ def test_redact_raises_redaction_error_for_non_str() -> None:
     from ..core.redaction import redact
 
     with pytest.raises(RedactionError):
-        redact(12345, rules=())  # type: ignore[arg-type]
+        # negative test: int rejected where str is required
+        redact(12345, rules=())  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
 
 
 def test_redact_for_cli_output_raises_redaction_error_for_non_str() -> None:
@@ -175,7 +180,8 @@ def test_redact_for_cli_output_raises_redaction_error_for_non_str() -> None:
     from ..core.redaction import redact_for_cli_output
 
     with pytest.raises(RedactionError):
-        redact_for_cli_output({"not": "a string"})  # type: ignore[arg-type]
+        # negative test: dict rejected where str is required
+        redact_for_cli_output({"not": "a string"})  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
 
 
 def test_redaction_error_registered() -> None:
@@ -203,10 +209,12 @@ def test_overview_agenda_error_raised_for_non_positive_horizon() -> None:
 
     with pytest.raises(OverviewAgendaError):
         build_overview_agenda(
-            profile=None,  # type: ignore[arg-type]
+            # negative test: None rejected where TaxpayerProfile is required
+            profile=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             as_of=date.today(),
             horizon_days=0,
-            engine=None,  # type: ignore[arg-type]
+            # negative test: None rejected where the engine is required
+            engine=None,  # pyright: ignore[reportArgumentType]
             raw_values={},
         )
 
@@ -261,12 +269,13 @@ def test_portal_validation_error_both_url_and_path() -> None:
     from ..domain.portals._errors import PortalValidationError
 
     with pytest.raises(PortalValidationError):
+        # negative test: None passed for enum/struct args; rejected before use
         build_entry(
-            portal=None,  # type: ignore[arg-type]
-            subdomain=None,  # type: ignore[arg-type]
-            category=None,  # type: ignore[arg-type]
+            portal=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+            subdomain=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+            category=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             auth_methods=[],
-            url_stability=None,  # type: ignore[arg-type]
+            url_stability=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             label="test",
             purpose="test",
             url="https://example.com",
@@ -280,12 +289,13 @@ def test_portal_validation_error_path_not_starting_slash() -> None:
     from ..domain.portals._errors import PortalValidationError
 
     with pytest.raises(PortalValidationError):
+        # negative test: None passed for enum/struct args; rejected before use
         build_entry(
-            portal=None,  # type: ignore[arg-type]
-            subdomain=None,  # type: ignore[arg-type]
-            category=None,  # type: ignore[arg-type]
+            portal=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+            subdomain=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+            category=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             auth_methods=[],
-            url_stability=None,  # type: ignore[arg-type]
+            url_stability=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             label="test",
             purpose="test",
             path="no-leading-slash",
@@ -348,7 +358,8 @@ def test_m232_binding_error_too_many_rows() -> None:
     six_rows = tuple([dummy_row] * 6)
 
     with pytest.raises(RegistryValidationError):
-        materialize_m232_related_party_rows(None, six_rows)  # type: ignore[arg-type]
+        # negative test: None rejected where ModeloRevision is required
+        materialize_m232_related_party_rows(None, six_rows)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
 
 
 # ---------------------------------------------------------------------------
