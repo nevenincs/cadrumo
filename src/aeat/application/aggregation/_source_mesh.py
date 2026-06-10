@@ -50,6 +50,22 @@ CalculationSourceDiagnosticReason = Literal[
     "unhandled_binding_source",
 ]
 
+# Source kinds that are explicitly deferred — no mesh resolver is built yet, but
+# they are known to the system and must produce a standing advisory on
+# source_diagnostics rather than a silent blank.  Listed here so the S26
+# boundary gate (in _calculation_actions) can accept them without flagging
+# them as unknown-novel sources, and so the S08 safety net emits the advisory
+# while keeping them off the manual_sources allowlist (W02.P06.S10).
+DEFERRED_SOURCE_KINDS: frozenset[str] = frozenset(
+    {
+        "withholding",          # M190/M193 per-perceptor rollup — resolver BUILT in S27
+        "atribucion_member",    # M184 — Sheets-pull-only, no live resolver yet
+        "related_party_operation",  # M232 — Sheets-pull-only
+        "foreign_asset",        # M720 — Sheets-pull-only
+        "refund_operation",     # M360 — Sheets-pull-only
+    }
+)
+
 
 class CalculationSourceContext(BaseModel):
     """Context supplied to a calculation source resolver."""
@@ -333,6 +349,7 @@ def _claim_relation(owners: dict[str, str], relation_id: str, resolver_id: str) 
 
 
 __all__ = [
+    "DEFERRED_SOURCE_KINDS",
     "CalculationSourceContext",
     "CalculationSourceDiagnostic",
     "CalculationSourceDiagnosticReason",

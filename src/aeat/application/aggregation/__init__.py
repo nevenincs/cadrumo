@@ -71,6 +71,7 @@ from ._ledger_filing_snapshot import stale_filed_revisions
 from ._modelo_bindings import (
     LedgerIvaAggregationSourceResolver,
     LedgerRentaExpenseAggregationSourceResolver,
+    LedgerRentaIncomeAggregationSourceResolver,
     ModeloLedgerBindingAggregation,
     aggregation_period_for_modelo,
     resolve_modelo_ledger_binding_values_from_repositories,
@@ -125,6 +126,7 @@ from ._service import (
     get_per_modelo_aggregation_contract,
 )
 from ._source_mesh import (
+    DEFERRED_SOURCE_KINDS,
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceDiagnosticReason,
@@ -139,6 +141,7 @@ from ._source_profile import ProfileSourceResolver
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
+    "DEFERRED_SOURCE_KINDS",
     "AggregationCategoryCoverageError",
     "AggregationConfigError",
     "AggregationError",
@@ -170,6 +173,7 @@ __all__ = [
     "IvaOperationKind",
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
+    "LedgerRentaIncomeAggregationSourceResolver",
     "ModeloLedgerBindingAggregation",
     "ModeloSourceResolver",
     "OperationKind347",

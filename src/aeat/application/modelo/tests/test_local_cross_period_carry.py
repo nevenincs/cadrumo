@@ -82,8 +82,13 @@ _NEGATIVE_1T_INPUTS: dict[str, Decimal] = {
     "16": Decimal("5000"),
     "18": Decimal("0"),
 }
+# Casilla "01" (actividad-económica gross income) is now owned by the enrolled
+# LedgerRentaIncomeAggregationSourceResolver (S09).  Callers must not supply it
+# on the aggregation path; the resolver returns zero for an empty transaction
+# bucket, which is correct for these carry-forward tests that do not seed income
+# transactions.  The carry-forward assertion (casilla 15 == 1T saldo-negativo)
+# is independent of casilla 01 and remains valid with resolver-supplied zero.
 _2T_INPUTS_WITHOUT_15: dict[str, Decimal] = {
-    "01": Decimal("30000"),
     "02": Decimal("12000"),
     "05": Decimal("0"),
     "06": Decimal("0"),
