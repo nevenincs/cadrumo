@@ -161,21 +161,6 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
     return f"iva-wallet-decision-event:{digest}"
 
 
-def _legacy_iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: str) -> str:
-    """Pre-hardening cleartext key kept only as a read fallback.
-
-    Migration bridge: this fallback can be removed once persisted records are
-    confirmed migrated (grep _data/ for cleartext iva-wallet-decision:<NIF>
-    keys; if count == 0 across all environments, delete this function and the
-    load_decision fallback call).
-    """
-    safe_repository_id(taxpayer_nif, context="taxpayer_nif")
-    safe_repository_id(target_period, context="target_period")
-    if not 2000 <= target_year <= 2099:
-        raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
-    return f"{taxpayer_nif}:{target_year}:{target_period}"
-
-
 class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelopePayload]):
     """Repository over encrypted SQL-backed past-filing observations."""
 
@@ -295,8 +280,6 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     ) -> IvaCompensationReconciliationDecision | None:
         """Return the latest persisted :class:`IvaCompensationReconciliationDecision` for the given period."""
         payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
-        if payload is None:
-            payload = super().load(_legacy_iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
         return payload.decision if payload is not None else None
 
     def list_decisions(self) -> tuple[IvaCompensationReconciliationDecision, ...]:

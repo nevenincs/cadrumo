@@ -147,23 +147,6 @@ def test_iva_wallet_decision_event_key_succeeds_for_valid_decision() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Site 5: _legacy_iva_wallet_decision_key — target_year out of range
-# (internal function; exercised indirectly via import-level white-box call)
-# ---------------------------------------------------------------------------
-
-
-def test_legacy_decision_key_year_guard() -> None:
-    """The private legacy key helper must raise ObservationKeyError for out-of-range years."""
-    from .._observations_repository import _legacy_iva_wallet_decision_key
-
-    with pytest.raises(ObservationKeyError, match="out of supported range"):
-        _legacy_iva_wallet_decision_key("12345678A", 1999, "1T")
-
-    with pytest.raises(ObservationKeyError, match="out of supported range"):
-        _legacy_iva_wallet_decision_key("12345678A", 2100, "1T")
-
-
-# ---------------------------------------------------------------------------
 # Type contract: ObservationKeyError is a subtype of ValueError
 # ---------------------------------------------------------------------------
 
@@ -175,16 +158,15 @@ def test_observation_key_error_is_value_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# contract: legacy decision-key bridge behaviour
+# contract: decision-key lookup behaviour
 # ---------------------------------------------------------------------------
 
 
 def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
     """load_decision finds records written under the current hashed key.
 
-    Exercises the primary (non-fallback) path of load_decision: a record
-    persisted via save_decision is keyed with iva_wallet_decision_key (hashed)
-    and must be returned directly without triggering the legacy fallback.
+    Exercises the load_decision path: a record persisted via save_decision is
+    keyed with iva_wallet_decision_key (hashed) and must be returned directly.
     """
 
     from ....tests.secure_sql import isolated_runtime_profile
@@ -214,72 +196,3 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
         loaded = repo.load_decision("87654321B", 2025, "2T")
 
     assert loaded == decision, f"Expected decision to be found via hashed key; got {loaded!r}"
-
-
-def test_load_decision_falls_back_to_legacy_cleartext_key(tmp_path: Path) -> None:
-    """load_decision finds pre-hardening records written under the cleartext key.
-
-    Simulates a record that was persisted before the sha256-key hardening
-    by writing the envelope directly under the legacy key format
-    `{nif}:{year}:{period}`. load_decision must return the decision via
-    the _legacy_iva_wallet_decision_key fallback path.
-
-    This test defends the migration bridge: if the fallback call in
-    load_decision is removed before all pre-hardening records are migrated,
-    this test fails loudly.
-    """
-    from datetime import UTC, datetime
-
-    from ....adapters.persistence.storage.envelope._envelope import Envelope
-    from ....tests.secure_sql import isolated_runtime_profile
-    from .._observations_repository import (
-        IvaWalletDecisionRepository,
-        _IvaWalletDecisionEnvelopePayload,
-        _legacy_iva_wallet_decision_key,
-    )
-
-    decided_at = datetime(2024, 3, 15, 9, 0, 0, tzinfo=UTC)
-    pre_hardening_decision = IvaCompensationReconciliationDecision(
-        taxpayer_nif="11223344C",
-        target_year=2024,
-        target_period="1T",
-        selected_authority="aeat_wallet",
-        selected_amount=Decimal("750.00"),
-        wallet_amount=Decimal("750.00"),
-        local_recurrence_amount=Decimal("750.00"),
-        override_amount=None,
-        divergence="match",
-        blocked=False,
-        stale_wallet=False,
-        reason="Pre-hardening legacy key test.",
-        decided_at=decided_at,
-    )
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = IvaWalletDecisionRepository()
-        legacy_key = _legacy_iva_wallet_decision_key("11223344C", 2024, "1T")
-
-        # Simulate a pre-hardening record by writing directly under the cleartext key.
-        payload = _IvaWalletDecisionEnvelopePayload(decision=pre_hardening_decision)
-        envelope = Envelope[_IvaWalletDecisionEnvelopePayload](
-            schema_version=repo.schema_version,
-            written_at=decided_at,
-            classification=repo.sensitivity,
-            payload=payload,
-        )
-        repo._objects.save(
-            namespace=repo.namespace,
-            object_key=legacy_key,
-            classification=repo.sensitivity,
-            schema_version=repo.schema_version,
-            written_at=decided_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
-
-        # load_decision must find it via the legacy fallback path.
-        loaded = repo.load_decision("11223344C", 2024, "1T")
-
-    assert loaded == pre_hardening_decision, (
-        f"Expected legacy-keyed decision to be found via fallback; got {loaded!r}. "
-        "The _legacy_iva_wallet_decision_key bridge in load_decision may have been removed prematurely."
-    )
