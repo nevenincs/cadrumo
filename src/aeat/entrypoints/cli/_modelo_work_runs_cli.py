@@ -9,7 +9,9 @@ import typer
 
 from ...application.workflow import (
     WorkflowError,
+    WorkflowResumeContext,
     WorkflowResumeRefusedError,
+    WorkflowResumeTargetResolution,
     list_runs,
     resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
@@ -186,7 +188,12 @@ def register_work_run_commands(
         _emit_work_resume(ctx, result=result, resolution=resolution)
 
 
-def _emit_work_resume(ctx: typer.Context, *, result: object, resolution: object) -> None:
+def _emit_work_resume(
+    ctx: typer.Context,
+    *,
+    result: WorkflowResumeContext,
+    resolution: WorkflowResumeTargetResolution,
+) -> None:
     resume_result = WorkResumeResult(
         prior_workflow_run_id=result.resumed_from_run_id,
         resolved_source=resolution.source,
