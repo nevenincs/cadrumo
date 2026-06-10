@@ -13,6 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ..._export_field_kind import CasillaFieldKind
 from .._schema import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -33,7 +34,7 @@ def _record(*, record_id: str, encoding: str) -> ExportRecordDefinition:
         fields=(
             ExportFieldDefinition(
                 id=f"{record_id}.f1",
-                kind="literal",
+                kind=CasillaFieldKind.LITERAL,
                 literal="X",
                 offset=1,
                 length=1,

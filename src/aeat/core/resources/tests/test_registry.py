@@ -58,6 +58,11 @@ class _DummyKey(TypedResourceKey):
 
     name: str
 
+    @override
+    def __hash__(self) -> int:
+        """Explicit hash to make this class Hashable for type checking."""
+        return hash(self.name)
+
 
 class _DummyRepository(ResourceCacheRepository[str, _DummyKey]):
     """A minimal ResourceCacheRepository subclass returning the key's name uppercased."""
