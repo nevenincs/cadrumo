@@ -10,6 +10,7 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Literal
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import Cell
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -106,6 +107,7 @@ def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     """Materialise a ``SheetExportPlan`` as an offline openpyxl workbook."""
     workbook = Workbook()
     default = workbook.active
+    assert default is not None
     default.title = TabName.ENTRADAS.value
     for tab in TabName:
         if tab.value not in workbook.sheetnames:
@@ -240,16 +242,16 @@ def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResu
 def _write_value_cells(workbook: Workbook, cells: Iterable[SheetValueCell]) -> None:
     for cell in cells:
         worksheet = workbook[cell.address.tab.value]
-        target = worksheet.cell(row=cell.address.row, column=cell.address.column)
-        target.value = _coerce_cell_value(cell.value)
+        target = worksheet.cell(row=cell.address.row, column=cell.address.column, value=_coerce_cell_value(cell.value))
         if cell.note is not None:
+            assert isinstance(target, Cell)
             target.comment = Comment(cell.note, "AEAT")
 
 
 def _write_formula_cells(workbook: Workbook, cells: Iterable[SheetFormulaCell]) -> None:
     for cell in cells:
         worksheet = workbook[cell.address.tab.value]
-        worksheet.cell(row=cell.address.row, column=cell.address.column).value = f"={cell.formula}"
+        worksheet.cell(row=cell.address.row, column=cell.address.column, value=f"={cell.formula}")
 
 
 def _write_row_set_headers(workbook: Workbook, row_sets: Iterable[SheetRowSet]) -> None:
@@ -259,13 +261,14 @@ def _write_row_set_headers(workbook: Workbook, row_sets: Iterable[SheetRowSet]) 
             worksheet.cell(
                 row=column.header_address.row,
                 column=column.header_address.column,
-            ).value = column.header_label
+                value=column.header_label,
+            )
 
 
 def _write_guide(worksheet: Worksheet, plan: SheetExportPlan) -> None:
     worksheet["A1"] = plan.guide.title
     for row, paragraph in enumerate(plan.guide.paragraphs, start=3):
-        worksheet.cell(row=row, column=1).value = paragraph
+        worksheet.cell(row=row, column=1, value=paragraph)
 
     metadata = plan.metadata
     base_row = 3 + len(plan.guide.paragraphs) + 2
@@ -278,15 +281,15 @@ def _write_guide(worksheet: Worksheet, plan: SheetExportPlan) -> None:
         ("Exportado", metadata.exported_at.isoformat()),
     )
     for offset, (label, value) in enumerate(stamps):
-        worksheet.cell(row=base_row + offset, column=1).value = label
-        worksheet.cell(row=base_row + offset, column=2).value = value
+        worksheet.cell(row=base_row + offset, column=1, value=label)
+        worksheet.cell(row=base_row + offset, column=2, value=value)
 
 
 def _write_evidence(worksheet: Worksheet, plan: SheetExportPlan) -> None:
     worksheet["A1"] = "Snapshot fingerprint"
     worksheet["B1"] = plan.evidence.snapshot_fingerprint or ""
     for column, header in enumerate(_EVIDENCE_HEADERS, start=1):
-        worksheet.cell(row=3, column=column).value = header
+        worksheet.cell(row=3, column=column, value=header)
 
     row_index = 4
     for row in plan.evidence.contributor_rows:
@@ -300,12 +303,12 @@ def _write_evidence(worksheet: Worksheet, plan: SheetExportPlan) -> None:
     worksheet.protection.sheet = True
 
 
-def _write_evidence_row(worksheet: Worksheet, row_index: int, values: Sequence[object]) -> None:
+def _write_evidence_row(worksheet: Worksheet, row_index: int, values: Sequence[str]) -> None:
     for column, value in enumerate(values, start=1):
-        worksheet.cell(row=row_index, column=column).value = value
+        worksheet.cell(row=row_index, column=column, value=value)
 
 
-def _contributor_values(row: SheetEvidenceContributorRow) -> tuple[object, ...]:
+def _contributor_values(row: SheetEvidenceContributorRow) -> tuple[str, ...]:
     return (
         "ledger",
         row.casilla_id,
@@ -326,7 +329,7 @@ def _contributor_values(row: SheetEvidenceContributorRow) -> tuple[object, ...]:
     )
 
 
-def _manual_values(row: SheetEvidenceManualEntry) -> tuple[object, ...]:
+def _manual_values(row: SheetEvidenceManualEntry) -> tuple[str, ...]:
     return (
         "manual",
         row.casilla_id,
@@ -347,7 +350,7 @@ def _manual_values(row: SheetEvidenceManualEntry) -> tuple[object, ...]:
     )
 
 
-def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
+def _coerce_cell_value(value: Decimal | str | bool | None) -> str | bool:
     if value is None:
         return ""
     if isinstance(value, Decimal):
