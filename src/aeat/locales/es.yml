@@ -1327,6 +1327,12 @@ cli:
           de lectura protegida de cartera; las puertas de representación solo continuan
           en modo nombre propio.
         taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
+      justificante:
+        app_help: 'Capturas de justificantes AEAT (solo lectura): descarga un justificante presentado y concilia contra él.'
+        capture_help: 'Descarga en vivo el justificante AEAT de un periodo presentado y lo guarda como evidencia oficial.'
+        list_help: 'Lista las capturas de justificantes guardadas en el bucket activo.'
+        snapshot_id_help: 'Id de instantánea (o prefijo inequívoco).'
+        view_help: 'Muestra una captura de justificante.'
       limit_help: Número máximo de filas a capturar
       modelo_help: Código de modelo
       notifications:
@@ -2039,7 +2045,7 @@ cli:
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
-    bucket:
+    bucket: null
     custody:
       confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
       confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto

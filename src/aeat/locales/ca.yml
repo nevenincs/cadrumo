@@ -1321,6 +1321,12 @@ cli:
           protegida de cartera; les portes de representació només continuen en mode
           nom propi.
         taxpayer_nif_help: NIF del contribuent; per defecte, la identitat autenticada.
+      justificante:
+        app_help: 'Captures de justificants AEAT (només lectura): descarrega un justificant presentat i concilia-hi.'
+        capture_help: 'Descarrega en viu el justificant AEAT d''un període presentat i el desa com a evidència oficial.'
+        list_help: 'Llista les captures de justificants desades al bucket actiu.'
+        snapshot_id_help: 'Id d''instantània (o prefix inequívoc).'
+        view_help: 'Mostra una captura de justificant.'
       limit_help: Nombre màxim de files a capturar
       modelo_help: Codi de model
       notifications:
@@ -2011,7 +2017,7 @@ cli:
       test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''aeat config auth --help'' per veure els identificadors vàlids.'
-    bucket:
+    bucket: null
     custody:
       confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
       confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret

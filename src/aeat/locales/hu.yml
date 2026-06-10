@@ -1262,6 +1262,12 @@ cli:
           Az egyetlen engedélyezett AEAT-formanyomtatvány-művelet a védett pénztárca-lekérdezés;
           képviseleti kapuk csak saját nevű módban folytatódnak.
         taxpayer_nif_help: 'Az adóalany NIF-je; alapértelmezés: a hitelesített azonosság.'
+      justificante:
+        app_help: 'AEAT igazolás-rögzítések (csak olvasható): tölts le egy benyújtott igazolást és egyeztess vele.'
+        capture_help: 'Élőben letölti egy benyújtott időszak AEAT igazolását, és hivatalos bizonyítékként menti.'
+        list_help: 'Listázza az aktív bucket mentett igazolás-rögzítéseit.'
+        snapshot_id_help: 'Pillanatkép-azonosító (vagy egyértelmű előtag).'
+        view_help: 'Megjelenít egy igazolás-rögzítést.'
       limit_help: Rögzítendő sorok maximális száma.
       modelo_help: Nyomtatványkód.
       notifications:
@@ -1962,7 +1968,7 @@ cli:
       test_help: Helyi hitelesítési készség ellenőrzése.
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa:
         `aeat config auth --help` az érvényes azonosítókhoz.'
-    bucket:
+    bucket: null
     custody:
       confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.
       confirm_new_passphrase_prompt: 'Uj AEAT titkos tar passphrase megerositese: '

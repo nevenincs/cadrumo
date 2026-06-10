@@ -1231,6 +1231,12 @@ cli:
           AEAT form action allowed is the guarded wallet read query; representation
           gates only continue in own-name mode.
         taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
+      justificante:
+        app_help: cli.app.live.justificante.app_help
+        capture_help: cli.app.live.justificante.capture_help
+        list_help: cli.app.live.justificante.list_help
+        snapshot_id_help: cli.app.live.justificante.snapshot_id_help
+        view_help: cli.app.live.justificante.view_help
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
       notifications:
@@ -1898,7 +1904,7 @@ cli:
       test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
-    bucket:
+    bucket: null
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
       confirm_new_passphrase_prompt: 'Confirm new AEAT secret-store passphrase: '
