@@ -908,25 +908,34 @@ def test_missing_casilla_finding_legal_refs_empty_when_casilla_def_absent() -> N
 
 
 # ---------------------------------------------------------------------------
-# M131 no-silent-under-declaration advisory (RD 439/2007 art. 110.1.b)
+# M131 no-silent-under-declaration advisory
 #
 # C01 ("Suma de rendimientos netos" — manual módulos sum) and C02 ("Pago
-# fraccionado del trimestre por datos-base" — manual) are operator inputs
-# because the módulos rendimiento is determined externally (the annual Orden
-# de módulos, not modelled in the registry). The official M131 instructions
-# and art. 110.1.b establish C02 = C01 × a per-actividad percentage whose
-# estimación-objetiva floor is 2 por 100 ("no se permiten porcentajes
-# inferiores"), so a strictly positive C01 ALWAYS yields a strictly positive
-# C02. A positive C01 with C02 = 0 is a silent under-declaration: the
-# datos-base section contributes nothing to C07 = C02 + C04 + C06 and the
-# resultado collapses to zero on positive módulos activity.
+# fraccionado previo por datos-base" — manual) are operator inputs because
+# the módulos rendimiento is determined externally (the annual Orden de
+# módulos, not modelled in the registry).
+#
+# Legal attribution:
+# - RD 439/2007 art. 110.1.b establishes the datos-base determination
+#   obligation with a 4 por 100 headline rate, making C02 derivable from C01.
+# - The official M131 instructions (aeat-modelo-131-instructions, Casilla 02)
+#   establish the 4/3/2 por 100 personal-asalariado percentage scale; the
+#   2 por 100 is the scale minimum.
+# - RD 439/2007 art. 110.4 grants the right to apply higher percentages;
+#   the instructions confirm "no se permiten porcentajes inferiores".
+#
+# A strictly positive C01 therefore ALWAYS yields a strictly positive C02
+# (the scale minimum is 2 por 100 > 0). A positive C01 with C02 = 0 is a
+# silent under-declaration: the datos-base section contributes nothing to
+# C07 = C02 + C04 + C06 and the resultado collapses to zero on positive
+# módulos activity.
 #
 # These tests load the REAL shipped predicate from the registry authority
 # (not a hand-built one) so they assert the declaration actually rides in
 # every M131 revision, and exercise the real _evaluate_verification_predicates
 # path. Non-tautological: the expected firing/non-firing is derived from the
-# art. 110.1.b minimum-rate rule, not from re-running the (unmodelled) módulos
-# formula.
+# M131-instructions scale minimum (2 por 100 > 0), not from re-running the
+# (unmodelled) módulos formula.
 # ---------------------------------------------------------------------------
 
 _M131_ADVISORY_PREDICATE_IDS = {
