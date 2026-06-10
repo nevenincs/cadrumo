@@ -37,7 +37,7 @@ from ...domain.calculations.registry import (
 from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository
-from ._observations_repository import CalculationObservationRepository
+from ._observations_repository import CalculationObservationRepository, _ObservationEnvelopePayload
 
 
 def _selector_year_delta(value: object) -> int:
@@ -73,6 +73,34 @@ _MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendie
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
+def _revision_prefill_advisory(payload: _ObservationEnvelopePayload) -> bool:
+    """Return True when the payload has no revision stamp (legacy record, non-blocking advisory).
+
+    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
+    a missing stamp means the record predates the provenance field;
+    the carry proceeds but callers should surface this advisory.
+    """
+    return payload.stamped_revision_id is None
+
+
+def _revision_prefill_divergence(payload: _ObservationEnvelopePayload) -> bool:
+    """Return True when the payload's stamped revision diverges from the law-determined revision.
+
+    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
+    a divergent stamp means the prior was filed under a revision that is
+    no longer the law-determined revision for its source context. The carry
+    must be refused (the caller drops the observation from resolution).
+    """
+    if payload.stamped_revision_id is None:
+        return False
+    obs = payload.observation
+    try:
+        snapshot = resources().modelos.authority.snapshot(obs.modelo, filing_year=obs.filing_year, period=obs.period)
+        return payload.stamped_revision_id != snapshot.revision.id
+    except Exception:
+        return False
+
+
 class _GatheredObservation(BaseModel):
     """Registry observation plus the persisted source channel that produced it."""
 
@@ -81,17 +109,21 @@ class _GatheredObservation(BaseModel):
     observation: RegistryModeloObservation
     source_kind: str
     casilla_source_kinds: Mapping[str, str]
+    unstamped_revision_advisory: bool = False
+    """Non-blocking advisory: source observation has no revision stamp (legacy record)."""
 
 
 def _gathered_observation(
     observation: RegistryModeloObservation,
     *,
     source_kind: str,
+    unstamped_revision_advisory: bool = False,
 ) -> _GatheredObservation:
     return _GatheredObservation(
         observation=observation,
         source_kind=source_kind,
         casilla_source_kinds={item.casilla_id: source_kind for item in observation.observations},
+        unstamped_revision_advisory=unstamped_revision_advisory,
     )
 
 
@@ -141,6 +173,13 @@ class PrefilledBinding(BaseModel):
     source_filing_year: int
     source_periods: tuple[str, ...]
     resolved_at: datetime
+    unstamped_revision_advisory: bool = False
+    """Non-blocking advisory: source observation has no revision stamp (legacy record).
+
+    True when the carry proceeded from a legacy observation without a revision
+    provenance stamp (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2).
+    Operators should re-file the source period to obtain a stamped record.
+    """
 
 
 class BindingPrefillReport(BaseModel):
@@ -150,6 +189,11 @@ class BindingPrefillReport(BaseModel):
 
     prefilled: tuple[PrefilledBinding, ...]
     binding_values: Mapping[str, Decimal]
+
+    @property
+    def has_unstamped_revision_advisory(self) -> bool:
+        """True when any prefilled binding carries a legacy unstamped-revision advisory."""
+        return any(item.unstamped_revision_advisory for item in self.prefilled)
 
 
 class LocalIvaCompensationRecurrence(BaseModel):
@@ -202,16 +246,29 @@ def _gather_observations(
                 obs = payload.observation
                 if (obs.modelo, obs.filing_year, obs.period) != req_key:
                     continue
+                # R2 carry gate: divergent stamp → skip; missing stamp → advisory.
+                if _revision_prefill_divergence(payload):
+                    continue
                 member_idx = seen_member.get(req_key, 0)
                 seen_member[req_key] = member_idx + 1
                 needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
-                    obs, source_kind=payload.source_kind
+                    obs,
+                    source_kind=payload.source_kind,
+                    unstamped_revision_advisory=_revision_prefill_advisory(payload),
                 )
             continue
         payload = repository.load_observation(requirement.modelo, requirement.filing_year, requirement.period)
         gathered: _GatheredObservation | None = None
         if payload is not None:
-            gathered = _gathered_observation(payload.observation, source_kind=payload.source_kind)
+            # R2 carry gate: divergent stamp → refuse the carry silently (skip observation).
+            if _revision_prefill_divergence(payload):
+                payload = None
+            else:
+                gathered = _gathered_observation(
+                    payload.observation,
+                    source_kind=payload.source_kind,
+                    unstamped_revision_advisory=_revision_prefill_advisory(payload),
+                )
         if requirement.modelo == Modelo.M303.value and iva_history_repository is not None:
             state = iva_history_repository.load_period(requirement.filing_year, requirement.period)
             if state is not None:
@@ -350,6 +407,31 @@ def _selector_value(selector: object, key: str, default: object) -> object:
     return getattr(selector, key, default)
 
 
+def _advisory_for_binding(
+    gathered: tuple[_GatheredObservation, ...],
+    *,
+    source_modelo: str,
+    source_filing_year: int,
+    source_periods: tuple[str, ...],
+) -> bool:
+    """Return True when any gathered observation matching this binding's source carries the unstamped advisory.
+
+    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
+    propagates the legacy-record non-blocking advisory from the source observation
+    through to the :class:`PrefilledBinding` so callers can surface it to operators.
+    """
+    required_periods = set(source_periods)
+    for item in gathered:
+        if (
+            item.observation.modelo == source_modelo
+            and item.observation.filing_year == source_filing_year
+            and item.observation.period in required_periods
+            and item.unstamped_revision_advisory
+        ):
+            return True
+    return False
+
+
 def _source_kind_for_binding(
     gathered: tuple[_GatheredObservation, ...],
     *,
@@ -445,6 +527,15 @@ def resolve_bindings_from_local_store(
             ),
         )
         source_casillas = _selector_source_casillas(_selector_value(selector, "source_casillas", ()))
+        # Propagate the unstamped-revision advisory from the gathered source observation
+        # for this binding's (modelo, filing_year, periods) to the prefilled record
+        # (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2).
+        unstamped_advisory = _advisory_for_binding(
+            observations,
+            source_modelo=source_modelo,
+            source_filing_year=source_filing_year,
+            source_periods=source_periods,
+        )
         prefilled.append(
             PrefilledBinding(
                 binding_id=binding_id,
@@ -460,6 +551,7 @@ def resolve_bindings_from_local_store(
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
                 resolved_at=when,
+                unstamped_revision_advisory=unstamped_advisory,
             )
         )
     return BindingPrefillReport(

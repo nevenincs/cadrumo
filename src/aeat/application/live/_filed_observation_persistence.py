@@ -36,10 +36,16 @@ def persist_filed_calculation_observation(
     registry_observation = registry_observation_from_filed_declaration(observation)
     registry_observation = _with_derived_303_compensation_available(registry_observation)
     repo = repository if repository is not None else CalculationObservationRepository()
+    stamped_revision_id = _resolve_stamped_revision_id(
+        registry_observation.modelo,
+        registry_observation.filing_year,
+        registry_observation.period,
+    )
     repo.save_observation(
         registry_observation,
         source_kind="aeat_sede_justificante",
         captured_at=observation.presented_at,
+        stamped_revision_id=stamped_revision_id,
     )
     if observation.modelo == Modelo.M303:
         IvaCompensationHistoryRepository().save_period(iva_compensation_state_from_filed_observation(observation))
@@ -181,6 +187,20 @@ def _casilla_decimal(values: Mapping[str, Decimal], *casilla_ids: str) -> Decima
         if value is not None:
             return value
     return None
+
+
+def _resolve_stamped_revision_id(modelo: str, filing_year: int, period: str) -> str | None:
+    """Resolve the registry revision id for (modelo, filing_year, period) for provenance stamping.
+
+    Returns the revision id from the law-determined :func:`select_revision` result
+    (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2), or ``None``
+    on resolution failure so the stamp is never blocking at write time.
+    """
+    try:
+        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+        return snapshot.revision.id
+    except Exception:
+        return None
 
 
 __all__ = [

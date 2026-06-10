@@ -46,6 +46,7 @@ from ..aggregation._source_mesh import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
+from ._binding_prefill import _revision_prefill_divergence
 from ._observations_repository import CalculationObservationRepository
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -426,6 +427,10 @@ class MultiYearResolver:
             if obs.filing_year not in requested_years:
                 continue
             if request.periods is not None and obs.period not in request.periods:
+                continue
+            # R2 carry gate: divergent stamp → refuse (skip); missing stamp → carry proceeds.
+            # (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2)
+            if _revision_prefill_divergence(payload):
                 continue
             observations.append(obs)
         observations.sort(key=lambda o: (o.filing_year, o.period))

@@ -15,6 +15,7 @@ from typing import Final, NamedTuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
     RegistryModeloObservationRequirement,
     RegistryRelationSourceRequirement,
@@ -27,6 +28,7 @@ from ...domain.justificante import JustificanteRepository
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    ModeloRecord,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     VerificationCompletenessStatus,
@@ -77,6 +79,15 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     INCOMPLETE_GROUP_MEMBER_COVERAGE = "incomplete_group_member_coverage"
     MISSING_EXPECTED_GROUP_MEMBER_ROSTER = "missing_expected_group_member_roster"
     UNEXPECTED_GROUP_MEMBER_SOURCE = "unexpected_group_member_source"
+    REGISTRY_REVISION_DIVERGENCE = "registry_revision_divergence"
+    """Stamped revision id does not match the law-determined revision for the source (modelo, filing_year, period).
+
+    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: a prior
+    observation captured under a revision that is no longer the law-determined
+    revision for its source context must not silently propagate its norms. The
+    carry is refused until the operator re-files and re-stamps under the correct
+    revision.
+    """
 
 
 class CrossPeriodDependencyRequirement(BaseModel):
@@ -169,6 +180,15 @@ class CrossPeriodDependencyEvidence(BaseModel):
     missing_member_nifs: tuple[str, ...] = ()
     unexpected_member_nifs: tuple[str, ...] = ()
     blockers: tuple[CrossPeriodCleanStateBlocker, ...] = ()
+    unstamped_revision_advisory: bool = False
+    """Non-blocking advisory: the source observation has no revision stamp (legacy record).
+
+    The carry proceeds but this flag is ``True`` when the persisted observation
+    predates the revision-provenance field (ADR 2026-06-10-period-revision-resolution-adr,
+    Ruling 3 / R2). Operators should re-file the source period to obtain a stamped
+    record. A divergent stamp produces ``REGISTRY_REVISION_DIVERGENCE`` in
+    :attr:`blockers` instead.
+    """
 
     @property
     def clean(self) -> bool:
@@ -197,6 +217,11 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     @property
     def blockers(self) -> tuple[CrossPeriodCleanStateBlocker, ...]:
         return tuple(dict.fromkeys(blocker for item in self.dependencies for blocker in item.blockers))
+
+    @property
+    def has_unstamped_revision_advisory(self) -> bool:
+        """True when any dependency carries a legacy unstamped-revision advisory."""
+        return any(item.unstamped_revision_advisory for item in self.dependencies)
 
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
@@ -387,6 +412,7 @@ class _CrossPeriodSource(NamedTuple):
     unexpected_member_nifs: tuple[str, ...]
     payload: object | None
     blockers: tuple[CrossPeriodCleanStateBlocker, ...]
+    unstamped_revision_advisory: bool = False
 
 
 class _MemberHistory(NamedTuple):
@@ -399,12 +425,44 @@ class _MemberHistory(NamedTuple):
     blockers: list[CrossPeriodCleanStateBlocker]
 
 
+def _revision_carry_check(
+    stamped_revision_id: str | None,
+    source_modelo: str,
+    source_filing_year: int,
+    source_period: str,
+) -> tuple[list[CrossPeriodCleanStateBlocker], bool]:
+    """Return (blockers, unstamped_advisory) for a carry-read revision check.
+
+    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
+
+    - Divergent stamp → [REGISTRY_REVISION_DIVERGENCE] blocker, False advisory.
+    - Missing stamp (legacy record) → [] blockers, True advisory (carry proceeds loudly).
+    - Matching stamp or resolution failure → [] blockers, False advisory.
+    """
+    if stamped_revision_id is None:
+        # Legacy record: no stamp — carry proceeds, but surface a non-blocking advisory.
+        return [], True
+    try:
+        snapshot = _resources().modelos.authority.snapshot(
+            source_modelo,
+            filing_year=source_filing_year,
+            period=source_period,
+        )
+        law_determined_id = snapshot.revision.id
+    except Exception:
+        return [], False
+    if stamped_revision_id != law_determined_id:
+        return [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE], False
+    return [], False
+
+
 def _resolve_cross_period_source(
     requirement: CrossPeriodDependencyRequirement,
     observation_repository: CalculationObservationRepository,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
 ) -> _CrossPeriodSource:
     blockers: list[CrossPeriodCleanStateBlocker] = []
+    unstamped_advisory = False
     value_member_payloads: tuple[object, ...] = ()
     observed_member_nifs: tuple[str, ...] = ()
     expected_member_nifs: tuple[str, ...] = ()
@@ -437,12 +495,31 @@ def _resolve_cross_period_source(
             value_member_payloads = tuple(
                 item for item in member_payloads if str(item.member_nif) in expected_member_nif_set
             )
+        # R2 carry gate: check revision stamp on each member payload.
+        for item in value_member_payloads:
+            extra_blockers, item_advisory = _revision_carry_check(
+                item.stamped_revision_id,
+                requirement.source_modelo,
+                requirement.filing_year,
+                requirement.period,
+            )
+            blockers.extend(extra_blockers)
+            unstamped_advisory = unstamped_advisory or item_advisory
     else:
         payload = observation_repository.load_observation(
             requirement.source_modelo,
             requirement.filing_year,
             requirement.period,
         )
+        # R2 carry gate: re-confirm stamped revision == law-determined revision.
+        if payload is not None:
+            extra_blockers, unstamped_advisory = _revision_carry_check(
+                payload.stamped_revision_id,
+                requirement.source_modelo,
+                requirement.filing_year,
+                requirement.period,
+            )
+            blockers.extend(extra_blockers)
     return _CrossPeriodSource(
         value_member_payloads,
         observed_member_nifs,
@@ -451,6 +528,7 @@ def _resolve_cross_period_source(
         unexpected_member_nifs,
         payload,
         tuple(blockers),
+        unstamped_advisory,
     )
 
 
@@ -487,9 +565,9 @@ def _aggregate_member_history(
     requirement: CrossPeriodDependencyRequirement,
     *,
     bucket_id: str,
-    filing_catalogue,
-    calculation_catalogue,
-    verification_catalogue,
+    filing_catalogue: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_catalogue: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepository,
     observation_source_kind: str | None,
     value_member_payloads: tuple[object, ...],
@@ -544,9 +622,9 @@ def _evaluate_requirement(
     *,
     bucket_id: str,
     observation_repository: CalculationObservationRepository,
-    filing_catalogue,
-    calculation_catalogue,
-    verification_catalogue,
+    filing_catalogue: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_catalogue: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepository,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
 ) -> CrossPeriodDependencyEvidence:
@@ -584,6 +662,7 @@ def _evaluate_requirement(
             aeat_accepted=history.aeat_accepted,
             external_evidence_kind=history.external_evidence_kind,
             blockers=_unique_blockers(blockers),
+            unstamped_revision_advisory=source.unstamped_revision_advisory,
         )
 
     filing_result = _evaluate_filing_history(
@@ -613,11 +692,12 @@ def _evaluate_requirement(
         missing_member_nifs=source.missing_member_nifs,
         unexpected_member_nifs=source.unexpected_member_nifs,
         blockers=_unique_blockers(blockers),
+        unstamped_revision_advisory=source.unstamped_revision_advisory,
     )
 
 
 def _filing_external_evidence_blockers(
-    filing,
+    filing: ModeloRecord,
     observation_source_kind: str | None,
     justificante_repository: JustificanteRepository,
 ) -> list[CrossPeriodCleanStateBlocker]:
@@ -638,9 +718,9 @@ def _filing_external_evidence_blockers(
 
 
 def _filing_revision_blockers(
-    filing,
+    filing: ModeloRecord,
     requirement: CrossPeriodDependencyRequirement,
-    calculation_catalogue,
+    calculation_catalogue: CalculationRevisionCatalogueRepositoryProtocol,
     observation_values: Mapping[str, object],
 ) -> tuple[CalculationRevisionState | None, list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
@@ -662,8 +742,8 @@ def _filing_revision_blockers(
 
 
 def _filing_verification_blockers(
-    filing,
-    verification_catalogue,
+    filing: ModeloRecord,
+    verification_catalogue: VerificationReportCatalogueRepositoryProtocol,
 ) -> tuple[VerificationCompletenessStatus | None, list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     verification_status: VerificationCompletenessStatus | None = None
@@ -695,9 +775,9 @@ def _evaluate_filing_history(
     requirement: CrossPeriodDependencyRequirement,
     *,
     bucket_id: str,
-    filing_catalogue,
-    calculation_catalogue,
-    verification_catalogue,
+    filing_catalogue: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_catalogue: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepository,
     observation_source_kind: str | None,
     observation_values: Mapping[str, object],
