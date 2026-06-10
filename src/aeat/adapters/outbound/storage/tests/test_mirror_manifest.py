@@ -271,6 +271,7 @@ def test_remote_mirror_comparison_detects_older_stale_remote_revision(tmp_path: 
 def test_remote_mirror_comparison_detects_naive_older_stale_remote_revision(tmp_path: Path) -> None:
     remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
     remote_object = remote_manifest.objects[0]
+    assert remote_object.revision_written_at is not None
     naive_remote_object = remote_object.model_copy(
         update={
             "revision_written_at": remote_object.revision_written_at.replace(tzinfo=None),
@@ -287,6 +288,7 @@ def test_remote_mirror_comparison_detects_naive_older_stale_remote_revision(tmp_
 def test_remote_mirror_comparison_keeps_unknown_older_root_revision_conflict(tmp_path: Path) -> None:
     _remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
     local_object = local_manifest.objects[0]
+    assert local_object.revision_written_at is not None
     unknown_root_object = local_object.model_copy(
         update={
             "storage_revision_id": "f" * 64,
@@ -307,6 +309,7 @@ def test_remote_mirror_comparison_keeps_unknown_older_root_revision_conflict(tmp
 def test_remote_mirror_comparison_keeps_older_divergent_revision_conflict(tmp_path: Path) -> None:
     _remote_manifest, local_manifest = _overwrite_manifest_pair(tmp_path)
     local_object = local_manifest.objects[0]
+    assert local_object.revision_written_at is not None
     divergent_object = local_object.model_copy(
         update={
             "storage_revision_id": "f" * 64,
@@ -414,6 +417,7 @@ def _three_revision_manifest_pair(
         repo = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
+        remote_manifest: RemoteMirrorNamespaceManifest | None = None
         for offset, payload in enumerate((b"first-payload", b"second-payload", b"third-payload")):
             repo.save(
                 namespace=namespace,
@@ -428,5 +432,6 @@ def _three_revision_manifest_pair(
                     namespace,
                     tuple(repo.iter_all_records_raw()),
                 )
+        assert remote_manifest is not None
         local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
         return remote_manifest, local_manifest
