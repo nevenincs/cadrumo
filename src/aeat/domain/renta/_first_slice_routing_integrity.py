@@ -21,6 +21,7 @@ through the abstract Protocol without naming ``renta``.
 
 from __future__ import annotations
 
+from ...core import Modelo
 from ..calculations.registry import register_cross_domain_snapshot_check
 from ._first_slice_routing import first_slice_target_casillas
 
@@ -32,7 +33,7 @@ def check_first_slice_routing(modelo_id: str, casilla_ids: frozenset[str]) -> li
     registry validator prefixes each failure with the snapshot
     coordinates and raises a single ``RegistryValidationError``.
     """
-    if modelo_id != "100":
+    if modelo_id != Modelo.M100:
         return []
     missing = first_slice_target_casillas() - casilla_ids
     if not missing:
