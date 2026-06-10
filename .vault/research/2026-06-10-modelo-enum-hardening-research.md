@@ -6,21 +6,7 @@ date: '2026-06-10'
 related: []
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #research) and one feature tag.
-     Replace modelo-enum-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `modelo-enum-hardening` research: `Modelo-enum sweep: residual inconsistencies and latent problems`
 
@@ -54,6 +40,17 @@ Fifteen-plus pydantic and dataclass fields declare `modelo: str` with
 `max_length=8`. The `8` (against a three-digit code) signals these may carry
 composite or loosely-validated forms, so retyping to `Modelo` needs per-field
 investigation rather than a blind change; some may legitimately stay `str`.
+
+**Verdict (P01.S02):** every such field uses `Field(min_length=1, max_length=8)`,
+a deliberately loose bound that is neither the 3-digit `ModeloCode` shape
+validator nor the closed `Modelo` set. Retyping to `Modelo` would over-constrain
+the field to the 31 enum codes and risk rejecting a valid persistence or wire
+input (a future or non-standard code the loose bound was chosen to admit), so
+these fields are left as `str`. Tightening to `ModeloCode` (3-digit shape) is
+plausible but unverified per producer and out of proportion to the cosmetic
+gain. P05 is therefore closed as "investigated; no retype warranted", satisfying
+the plan's field-disposition criterion by documented decision rather than inline
+comments.
 
 ### F4 - Registry-resolver gap for two rates
 

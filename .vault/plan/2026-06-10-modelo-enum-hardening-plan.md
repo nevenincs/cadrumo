@@ -25,7 +25,7 @@ related:
 Quantify the value-vs-member inconsistency and investigate modelo:str max_length=8 fields before any change
 
 - [x] `P01.S01` - Quantify Modelo member vs .value usage and record the decision to prefer the enum member where StrEnum semantics suffice; `src/aeat`.
-- [ ] `P01.S02` - Investigate every modelo:str max_length=8 field to determine which carry pure modelo codes versus composite/loose forms; `src/aeat/**/_schema.py, _models.py, payloads`.
+- [x] `P01.S02` - Investigate every modelo:str max_length=8 field to determine which carry pure modelo codes versus composite/loose forms; `src/aeat/**/_schema.py, _models.py, payloads`.
 
 ### Phase `P02` - Literal rollout
 
@@ -50,7 +50,7 @@ Route amortisation 3pct and REBECA 50pct through the registry-backed resolver wi
 
 Retype confirmed-pure modelo str fields to Modelo where safe; document the rest
 
-- [ ] `P05.S07` - Retype the confirmed-pure modelo:str fields to Modelo where serialization and validation stay sound; `document each field left as str; `src/aeat (modelo:str fields identified in P01.S02)`.
+- [x] `P05.S07` - Retype the confirmed-pure modelo:str fields to Modelo where serialization and validation stay sound; `document each field left as str; `src/aeat (modelo:str fields identified in P01.S02)`.
 
 ### Phase `P06` - CI gate robustness
 
