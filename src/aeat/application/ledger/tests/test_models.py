@@ -25,7 +25,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _command(**overrides: object) -> ManualLedgerTransactionCommand:
-    """Build a minimal valid command, overriding the field under test."""
+    """Build a minimal valid command, overriding the field under test.
+
+    Constructs via ``model_validate`` (matching this module's existing
+    dict-construction tests) so the override map does not splat a
+    ``dict[str, object]`` into the typed constructor.
+    """
 
     fields: dict[str, object] = {
         "bucket_id": "bucket-a",
@@ -35,7 +40,7 @@ def _command(**overrides: object) -> ManualLedgerTransactionCommand:
         "description": "material oficina",
     }
     fields.update(overrides)
-    return ManualLedgerTransactionCommand(**fields)
+    return ManualLedgerTransactionCommand.model_validate(fields)
 
 
 def test_source_jurisdiction_accepts_iso_3166_alpha2_and_strips_whitespace() -> None:
