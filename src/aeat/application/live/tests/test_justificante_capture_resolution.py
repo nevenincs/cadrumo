@@ -98,9 +98,7 @@ def test_resolves_second_quarter_to_a_distinct_expediente() -> None:
     )
     assert resolved.expediente_id == _EXP_2T
     # The primary-risk invariant: the two quarters never collapse to one.
-    first = resolve_period_expediente(
-        declarations=_DECLARATIONS, expedientes=_EXPEDIENTES, modelo=_MODELO, period="1T"
-    )
+    first = resolve_period_expediente(declarations=_DECLARATIONS, expedientes=_EXPEDIENTES, modelo=_MODELO, period="1T")
     assert resolved.expediente_id != first.expediente_id
 
 
@@ -191,8 +189,12 @@ def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) ->
         ref = JustificanteRef(
             csv="CSV2T0001ABCD2345",
             expediente_id=expediente.expediente_id,
-            cotejo_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=CSV2T0001ABCD2345"),
-            pdf_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=CSV2T0001ABCD2345"),
+            cotejo_url=AnyHttpUrl(
+                "https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=CSV2T0001ABCD2345"
+            ),
+            pdf_url=AnyHttpUrl(
+                "https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=CSV2T0001ABCD2345"
+            ),
         )
         return SedeCapture(
             expediente=expediente,
