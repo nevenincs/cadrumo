@@ -6,6 +6,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pytest
 import typer
@@ -80,7 +81,7 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _json(result) -> dict:
+def _json(result) -> dict[str, Any]:
     payload = json.loads(result.output)
     # Emit-envelope migration: ``_emit_envelope`` wraps typed CLI
     # payloads in ``{"schema_version", "command", "result", "warnings"}``.
