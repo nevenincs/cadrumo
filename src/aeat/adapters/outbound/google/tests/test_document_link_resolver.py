@@ -46,6 +46,7 @@ def test_parse_drive_file_id(reference: str, expected: str | None) -> None:
 def test_gmail_link_refused_with_gmail_scope() -> None:
     with pytest.raises(OutboundStoragePermissionError) as excinfo:
         resolve_document_link(source=AttachmentSource.GMAIL, reference="anything", credentials=None)
+    assert excinfo.value.context is not None
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/gmail.readonly"
 
 
@@ -54,6 +55,7 @@ def test_external_url_refused_with_drive_readonly_scope() -> None:
         resolve_document_link(
             source=AttachmentSource.URL, reference="https://example.com/justificante.pdf", credentials=None
         )
+    assert excinfo.value.context is not None
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"
 
 
@@ -118,4 +120,5 @@ def test_drive_403_surfaces_drive_readonly_scope() -> None:
 
     with pytest.raises(OutboundStoragePermissionError) as excinfo:
         _download_drive_file_from_service(_FILE_ID, _Svc())
+    assert excinfo.value.context is not None
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"
