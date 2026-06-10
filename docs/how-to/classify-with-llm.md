@@ -37,16 +37,18 @@ real taxpayer data.
 The LLM path is single-transaction only. It cannot be combined with
 `--from-csv` or manual `--classification` flags.
 
-An applied LLM suggestion saves the classification (business, personal, or
-mixed) and the suggested expense category. It does not fill in regulated tax
-fields such as taxable base, IVA rate, IVA amount, or IRPF category. Add those
-manually in [Classify transactions](classify-transactions.md). Use
+A plain applied LLM suggestion saves the classification (business, personal, or
+mixed) and the suggested expense category. It does not fill in the regulated
+tax fields. Add `--saturate` to also select an IVA category and derive the
+taxable base, IVA rate, and IVA amount (see [Saturate the tax fields](#saturate-the-tax-fields)).
+IRPF category is still entered manually in
+[Classify transactions](classify-transactions.md). Use
 [Review and supply calculation inputs](review-calculation-values.md) when a
 modelo later reports missing values.
 
-Future versions may use attached invoices, PDFs, or other evidence to suggest
-rates and richer classifications. That is not implemented in the current LLM
-classification command.
+The model never invents a number. With `--saturate` it only selects the IVA
+category; the rate comes from the registry and the base and IVA amount are
+computed from the transaction total.
 
 ## 1. Ask for a suggestion
 
@@ -120,6 +122,35 @@ period after important corrections:
 
 ```bash
 aeat app ledger preflight --period 2026Q1
+```
+
+## Saturate the tax fields
+
+Add `--saturate` to also select an IVA category and derive the tax substrate.
+
+Preview a saturated suggestion:
+
+```bash
+aeat app ledger classify --id <transaction-id> --llm claude --saturate
+```
+
+The preview adds the selected IVA category and, when the category has a Spanish
+rate, the derived taxable base, IVA rate, and IVA amount. The base and IVA
+amount always add up to the transaction total. A category with no simple
+Spanish rate (for example an intra-community supply or a reverse-charge
+purchase) shows a short note instead of numbers, and you complete those by hand.
+
+Apply a saturated suggestion after review:
+
+```bash
+aeat app ledger classify --id <transaction-id> --llm claude --saturate --apply
+```
+
+Override any field by classifying manually afterwards. Manual classification
+always wins:
+
+```bash
+aeat app ledger classify --id <transaction-id> --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
 ```
 
 ## Batch classification

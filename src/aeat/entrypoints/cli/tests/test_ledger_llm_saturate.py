@@ -193,6 +193,45 @@ def test_saturate_non_derivable_category_surfaces_note_no_numbers(
     assert payload["derivation_note"]
 
 
+def test_saturate_apply_then_manual_override_wins(tmp_path: Path, _saturating_claude: None) -> None:
+    """Manual classify is the explicit per-field override and flips provenance."""
+    tx = _import_one_transaction(tmp_path)
+    applied = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", "--id", tx, "--llm", "claude", "--saturate", "--apply"],
+    )
+    assert applied.exit_code == 0, applied.output
+    assert _row_by_id(tx)["classified_by"] == "llm:claude:sat-1"
+
+    # The operator overrides the saturated IVA substrate by hand; manual wins.
+    override = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            tx,
+            "--classification",
+            "BUSINESS",
+            "--iva-category",
+            IvaCategory.DOMESTIC_REDUCED_10.value,
+            "--taxable-base",
+            "110.00",
+            "--iva-rate",
+            "0.10",
+            "--iva-amount",
+            "11.00",
+        ],
+    )
+    assert override.exit_code == 0, override.output
+
+    row = _row_by_id(tx)
+    assert row["classified_by"] == "manual"
+    assert Decimal(str(row["taxable_base"])) == Decimal("110.00")
+    assert Decimal(str(row["iva_amount"])) == Decimal("11.00")
+
+
 def test_saturate_without_llm_is_refused(tmp_path: Path) -> None:
     tx = _import_one_transaction(tmp_path)
     result = _RUNNER.invoke(
