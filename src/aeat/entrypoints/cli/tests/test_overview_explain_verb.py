@@ -41,7 +41,7 @@ def test_overview_verb_roster_locks_five_verb_tree() -> None:
     explain. Adding or removing one without updating the reviewed
     surface contract is drift."""
 
-    registered = frozenset(cmd.name for cmd in overview_app.registered_commands)
+    registered = frozenset(cmd.name for cmd in overview_app.registered_commands if cmd.name is not None)
     missing = EXPECTED_OVERVIEW_VERBS - registered
     extras = registered - EXPECTED_OVERVIEW_VERBS
     assert not missing, f"overview verbs disappeared: {sorted(missing)}"

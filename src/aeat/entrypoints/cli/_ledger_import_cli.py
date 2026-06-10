@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import typer
 
@@ -167,8 +168,8 @@ def _aggregate_import_results(results: list[LedgerSourceImportResult]) -> Ledger
     """Sum per-file import results into one envelope for a folder import."""
     first = results[0]
 
-    def _concat(attr: str) -> tuple:
-        out: list = []
+    def _concat(attr: str) -> tuple[Any, ...]:
+        out: list[Any] = []
         for result in results:
             out.extend(getattr(result, attr))
         return tuple(out)
