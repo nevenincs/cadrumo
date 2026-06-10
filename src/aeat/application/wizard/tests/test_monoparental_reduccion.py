@@ -21,6 +21,7 @@ from ....domain.contribuyente._ccaa import CCAA
 from ....domain.contribuyente._renta_codes import SituacionFamiliar
 from ....domain.deadlines._models import IVARegime
 from .._verifier import (
+    WizardCheckFinding,
     WizardCheckSeverity,
     verify_setup_answers,
 )
@@ -44,7 +45,7 @@ def _base_answers(**overrides: object) -> SetupAnswers:
     return SetupAnswers.model_validate(defaults)
 
 
-def _monoparental_finding(answers: SetupAnswers) -> object:
+def _monoparental_finding(answers: SetupAnswers) -> WizardCheckFinding:
     report = verify_setup_answers(answers)
     return next(item for item in report.findings if item.name == "monoparental_requires_hijos")
 
