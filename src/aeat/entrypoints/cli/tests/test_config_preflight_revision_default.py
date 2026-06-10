@@ -248,3 +248,47 @@ def test_preflight_refuses_ambiguous_natural_key_with_candidates(cli_runner: Cli
     assert "2023-y-siguientes" in result.output
     assert "2023-y-siguientes-twin" in result.output
     assert "--revision-id" in result.output
+
+
+def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() -> None:
+    """The preflight resolver discriminates the ambiguous case by exception
+    TYPE and reads the candidate ids from the typed field, not by matching a
+    substring of the human-readable message.
+
+    This pins the W01.P02 review follow-up contract: a rewording of the
+    ``AmbiguousRevisionSelectionError`` ``str()`` message must NOT break the
+    operator-facing candidate listing, because the resolver never parses the
+    message. The test installs a real twin revision into the live authority
+    (no mock) so the genuine ``select_revision`` dedup branch fires, then
+    asserts the refusal context carries both candidate ids verbatim.
+    """
+    from ....domain.calculations.registry import AmbiguousRevisionSelectionError
+    from .._config import _resolve_preflight_revision_id
+    from .._errors import CliRefusedBoundaryError
+
+    authority = resources().modelos.authority
+    definition = authority.modelo("303")
+    base_revision = definition.revisions["2023-y-siguientes"]
+    twin = base_revision.model_copy(update={"id": "2023-y-siguientes-twin"})
+    ambiguous = definition.model_copy(update={"revisions": {**definition.revisions, twin.id: twin}})
+    original = authority._modelos_by_id["303"]
+    authority._modelos_by_id["303"] = ambiguous
+    try:
+        with pytest.raises(CliRefusedBoundaryError) as excinfo:
+            _resolve_preflight_revision_id(modelo="303", filing_year=2026, period="1T", revision_id=None)
+    finally:
+        authority._modelos_by_id["303"] = original
+
+    refusal = excinfo.value
+    # The refusal was raised from the typed ambiguous subclass...
+    cause = refusal.__cause__
+    assert isinstance(cause, AmbiguousRevisionSelectionError)
+    # ...and the candidate ids rode on the typed field, sorted.
+    assert cause.candidate_ids == ("2023-y-siguientes", "2023-y-siguientes-twin")
+    # The refusal context lists both ids so the operator surface stays intact
+    # even though no message substring was parsed.
+    assert refusal.context is not None
+    candidates = refusal.context["candidates"]
+    assert isinstance(candidates, str)
+    assert "2023-y-siguientes" in candidates
+    assert "2023-y-siguientes-twin" in candidates

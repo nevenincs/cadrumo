@@ -460,7 +460,11 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
     ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
     """
     from ....application.modelo import resolve_registry_revision_for_work_target
-    from ....domain.calculations.registry import RegistrySnapshotError
+    from ....domain.calculations.registry import (
+        AmbiguousRevisionSelectionError,
+        NoRevisionForPeriodError,
+        RegistrySnapshotError,
+    )
 
     try:
         return resolve_registry_revision_for_work_target(
@@ -469,19 +473,25 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
             period=period,
             registry_revision_id=revision_id,
         )
+    except AmbiguousRevisionSelectionError as exc:
+        # ``select_revision`` selected more than one revision. The candidate
+        # revision ids ride on the typed ``candidate_ids`` field, so the
+        # refusal lists them without parsing the human-readable message.
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_ambiguous",
+            context={"modelo": modelo, "period": period, "candidates": ", ".join(exc.candidate_ids)},
+        ) from exc
+    except NoRevisionForPeriodError as exc:
+        # The natural key resolved no revision. Point the operator at the
+        # discovery command rather than emitting a bare unresolved error.
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+        ) from exc
     except RegistrySnapshotError as exc:
-        message = str(exc)
-        # ``select_revision`` raises ``RegistrySnapshotError`` for both the
-        # ambiguous case ("ambiguous revision selection: <ids>") and the
-        # no-candidate case ("no revision for ..."). Surface the candidate
-        # ids when present, otherwise point the operator at the discovery
-        # command, never a bare unresolved error.
-        if "ambiguous revision selection:" in message:
-            candidates = message.split("ambiguous revision selection:", 1)[1].strip()
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.preflight_revision_ambiguous",
-                context={"modelo": modelo, "period": period, "candidates": candidates},
-            ) from exc
+        # Any residual snapshot failure not modelled by the two typed
+        # subclasses above still refuses instructively via the discovery
+        # pointer rather than surfacing a bare error to the operator.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period},

@@ -17,7 +17,11 @@ from datetime import date
 import pytest
 
 from .....core.resources import bundled_path
-from .._errors import RegistrySnapshotError
+from .._errors import (
+    AmbiguousRevisionSelectionError,
+    NoRevisionForPeriodError,
+    RegistrySnapshotError,
+)
 from .._loader import load_registry_tree
 from .._schema import ModeloDefinition
 from .._temporal import select_revision
@@ -88,3 +92,47 @@ def test_select_revision_raises_on_ambiguous_selection() -> None:
 
     with pytest.raises(RegistrySnapshotError, match="ambiguous revision selection"):
         select_revision(mutated, filing_year=2025, period="0A")
+
+
+def test_no_revision_raises_typed_subclass_with_structured_natural_key() -> None:
+    """The no-candidate branch raises the typed subclass carrying the
+    natural key as structured fields, not only inside the message.
+
+    A consumer dispatches by ``except NoRevisionForPeriodError`` and reads
+    ``modelo_id`` / ``filing_year`` / ``period`` / ``revision_id`` from the
+    typed fields. The subclass is still catchable as the parent type, so
+    every existing ``except RegistrySnapshotError`` site keeps working."""
+    modelo = _committed_modelo_100()
+
+    with pytest.raises(NoRevisionForPeriodError) as excinfo:
+        select_revision(modelo, filing_year=2099, period="0A", revision_id="r9")
+
+    err = excinfo.value
+    assert isinstance(err, RegistrySnapshotError)
+    assert err.modelo_id == "100"
+    assert err.filing_year == 2099
+    assert err.period == "0A"
+    assert err.revision_id == "r9"
+
+
+def test_ambiguous_selection_raises_typed_subclass_with_candidate_ids() -> None:
+    """The dedup branch raises the typed subclass carrying the candidate
+    revision ids as a structured, sorted tuple — independent of the
+    human-readable message wording (the whole point of the refactor).
+
+    Designed so a rewording of the ``str()`` message would not change the
+    assertion: the candidate ids are read from ``candidate_ids``, never
+    parsed out of the message."""
+    modelo = _committed_modelo_100()
+    original = modelo.revisions["2025"]
+    twin = original.model_copy(update={"id": "2025-twin"})
+    mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, twin.id: twin}})
+
+    with pytest.raises(AmbiguousRevisionSelectionError) as excinfo:
+        select_revision(mutated, filing_year=2025, period="0A")
+
+    err = excinfo.value
+    assert isinstance(err, RegistrySnapshotError)
+    assert err.modelo_id == "100"
+    # Sorted tuple of every matching revision id, read from the typed field.
+    assert err.candidate_ids == ("2025", "2025-twin")

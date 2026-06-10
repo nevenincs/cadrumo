@@ -4102,6 +4102,8 @@ errors:
     unsupported_currency: A megadott devizakód nem támogatott.
   snapshot:
     modelo_not_registered: A modello nincs regisztrálva a nyilvántartásban.
+    no_revision_for_period: 'A nyilvántartásban nincs a(z) %{modelo_id} modellt %{filing_year} adóévben %{period} időszakban lefedő revízió.'
+    ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik a(z) %{modelo_id} modellhez: %{candidate_ids}.'
   storage:
     engine:
       create_failed: A tárolási adatbázis-motort nem sikerült létrehozni. Ellenőrizze

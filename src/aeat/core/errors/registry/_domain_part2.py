@@ -180,6 +180,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.calculations.registry._errors.NoRevisionForPeriodError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_NO_REVISION_FOR_PERIOD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.calculations.registry._errors.AmbiguousRevisionSelectionError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_AMBIGUOUS_REVISION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.calculations.registry._errors.CasillaConstraintViolationError",
         ErrorCode(
             code="REFUSED_CALCULATIONS_CASILLA_CONSTRAINT",
