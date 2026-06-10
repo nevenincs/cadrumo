@@ -17,6 +17,7 @@ import typer
 
 from ...application.overview import (
     OverviewCalendar,
+    OverviewCalendarEvent,
     OverviewCalendarRange,
     build_overview_calendar,
     build_overview_calendar_events,
@@ -74,7 +75,7 @@ def _local_live_calendar_events(bucket_id: str, rng: OverviewCalendarRange):
     )
 
 
-def _local_calendar_filing_evidence(bucket_id: str, events: tuple):
+def _local_calendar_filing_evidence(bucket_id: str, events: tuple[OverviewCalendarEvent, ...]):
     """Return local/AEAT filing evidence rows from persisted local stores."""
     try:
         from ...adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore

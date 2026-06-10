@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -60,7 +61,7 @@ def _import_corpus() -> None:
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
-def _list_rows(*filters: str) -> list[dict]:
+def _list_rows(*filters: str) -> list[dict[str, Any]]:
     args = ["--format", "json", "app", "ledger", "list"]
     for clause in filters:
         args += ["--filter", clause]

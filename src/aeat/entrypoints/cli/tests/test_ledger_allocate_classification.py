@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -58,7 +59,7 @@ def _imported_transaction_id(tmp_path: Path) -> str:
     return rows[0]["transaction_id"]
 
 
-def _allocate(transaction_id: str, business_pct: str) -> dict:
+def _allocate(transaction_id: str, business_pct: str) -> dict[str, Any]:
     result = _RUNNER.invoke(
         app,
         [

@@ -12,6 +12,7 @@ and the application constructor both produce ``dict[str, str]``
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -30,7 +31,7 @@ _WORK_UNIT_ID = "b" * 64
 _NOW = "2025-01-01T00:00:00+00:00"
 
 
-def _base_revision_fields() -> dict:
+def _base_revision_fields() -> dict[str, Any]:
     return dict(
         calculation_revision_id=_REVISION_ID,
         work_unit_id=_WORK_UNIT_ID,
