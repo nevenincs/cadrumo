@@ -81,6 +81,7 @@ from ._action_errors import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    WorkUnitRevisionDivergenceError,
 )
 from ._amendment_actions import amend_modelo_revision
 from ._binding_readiness import profile_resolvable_binding_ids
@@ -414,6 +415,7 @@ __all__ = [
     "WorkUnitHistoryEvent",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
+    "WorkUnitRevisionDivergenceError",
     "amend_modelo_revision",
     "apply_calculation_shortcut_inputs",
     "assemble_work_unit_history",

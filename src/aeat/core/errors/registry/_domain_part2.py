@@ -413,6 +413,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._action_errors.WorkUnitRevisionDivergenceError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORK_UNIT_REVISION_DIVERGENCE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.work_unit_revision_divergence",
+            default_suggestion="aeat app modelo work discard WORK_UNIT_ID && aeat app modelo work ensure",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletSeedError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_SEED",
