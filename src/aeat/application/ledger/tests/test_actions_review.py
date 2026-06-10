@@ -41,7 +41,7 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="first bucket row",
             idempotency_key="first",
@@ -54,7 +54,7 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-b",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="other bucket row",
             idempotency_key="first",
@@ -89,7 +89,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="ready row",
             business_classification=BusinessClassification.BUSINESS,
@@ -107,7 +107,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="pending row",
             idempotency_key="pending-status",
@@ -150,7 +150,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             counterparty="Vendor SL",
             description="may row",
@@ -164,7 +164,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 6, 1),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             counterparty="Vendor SL",
             description="june row",
@@ -221,7 +221,7 @@ def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObj
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="material oficina",
             idempotency_key="dir-outgoing",

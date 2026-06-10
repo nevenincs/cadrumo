@@ -110,8 +110,10 @@ class RawTransaction(BaseModel):
         booked_date: Date the transaction posted to the account.
         value_date: Optional value date; falls back to ``booked_date``
             when ``None``.
-        amount: Signed :class:`decimal.Decimal` amount in
-            :attr:`currency`.
+        amount: Non-negative magnitude :class:`decimal.Decimal` in
+            :attr:`currency`. Flow direction is carried solely by
+            :attr:`aeat.domain.transactions.Transaction.direction`; the
+            sign is never stored on the amount.
         currency: Three-letter ISO 4217 currency code, uppercase.
         counterparty: Optional counterparty descriptor; trimmed and
             collapsed to ``None`` when blank.
@@ -141,6 +143,23 @@ class RawTransaction(BaseModel):
         if not trimmed:
             raise TransactionValidationError("field must not be blank")
         return trimmed
+
+    @field_validator("amount")
+    @classmethod
+    def _reject_negative_amount(cls, value: Decimal) -> Decimal:
+        """Reject a negative ``amount``; the stored magnitude is non-negative.
+
+        Flow direction is carried solely by
+        :attr:`aeat.domain.transactions.Transaction.direction`; the sign is
+        never stored on the amount. This gate fires on both the import and the
+        manual construction paths because every transaction wraps one
+        :class:`RawTransaction`.
+        """
+        if value < Decimal("0"):
+            raise TransactionValidationError(
+                "amount must be a non-negative magnitude; flow is carried by direction, not by sign"
+            )
+        return value
 
     @field_validator("currency")
     @classmethod

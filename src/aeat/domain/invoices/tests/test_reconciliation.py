@@ -85,6 +85,7 @@ def _transaction(
     amount: Decimal,
     counterparty: str | None = "Cliente SL",
     invoice_id: str | None = None,
+    direction: TransactionDirection = TransactionDirection.INCOMING,
 ) -> Transaction:
     raw = RawTransaction(
         transaction_id=provider_id,
@@ -106,7 +107,7 @@ def _transaction(
     )
     payload: dict[str, object] = {
         "raw": raw,
-        "direction": (TransactionDirection.INCOMING if amount > 0 else TransactionDirection.OUTGOING),
+        "direction": direction,
     }
     if invoice_id is not None:
         payload["invoice_id"] = invoice_id
@@ -131,13 +132,14 @@ def test_issued_invoice_matches_positive_incoming_transaction() -> None:
     assert suggestions[0].score == Decimal("1.0")
 
 
-def test_received_invoice_matches_negative_outgoing_transaction() -> None:
-    """RECEIVED invoices should match negative transaction amounts."""
+def test_received_invoice_matches_outgoing_transaction() -> None:
+    """RECEIVED invoices should match OUTGOING transactions by magnitude."""
     invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_name="Proveedor SL")
     transaction = _transaction(
         provider_id="row-1",
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         counterparty="Proveedor SL",
+        direction=TransactionDirection.OUTGOING,
     )
     suggestions = suggest_reconciliations(
         InvoiceCatalogue.from_invoices([invoice]),

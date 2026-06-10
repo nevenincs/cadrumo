@@ -50,7 +50,7 @@ def _populated_command() -> ManualLedgerTransactionCommand:
         bucket_id="bucket-fixture-001",
         booked_date=date(2025, 4, 15),
         value_date=date(2025, 4, 16),
-        amount=Decimal("-1234.56"),  # OUTGOING => negative
+        amount=Decimal("1234.56"),  # non-negative magnitude; flow is OUTGOING via direction
         currency="EUR",
         direction=TransactionDirection.OUTGOING,
         counterparty="Acme Office Supplies SL",
@@ -58,9 +58,9 @@ def _populated_command() -> ManualLedgerTransactionCommand:
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.75"),
         category_id="cat.actividad.suministros",
-        taxable_base=Decimal("-1020.30"),
+        taxable_base=Decimal("1020.30"),
         iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("-214.26"),
+        iva_amount=Decimal("214.26"),
         irpf_category="rendimientos.actividades",
         usage_ratio_id="usage.home-office.2025",
         prorrata_reference="prorrata.iva.2025",
@@ -79,7 +79,7 @@ def _populated_internal_transfer_command() -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand(
         bucket_id="bucket-fixture-001",
         booked_date=date(2025, 4, 20),
-        amount=Decimal("-5000.00"),
+        amount=Decimal("5000.00"),
         direction=TransactionDirection.INTERNAL_TRANSFER,
         counterparty="Personal savings account",
         description="Transfer from current account to savings",
@@ -114,10 +114,10 @@ def test_command_json_roundtrip_preserves_decimal_precision() -> None:
     encoded = original.model_dump_json()
     roundtripped = ManualLedgerTransactionCommand.model_validate_json(encoded)
     assert isinstance(roundtripped.amount, Decimal)
-    assert roundtripped.amount == Decimal("-1234.56")
-    assert roundtripped.taxable_base == Decimal("-1020.30")
+    assert roundtripped.amount == Decimal("1234.56")
+    assert roundtripped.taxable_base == Decimal("1020.30")
     assert roundtripped.iva_rate == Decimal("0.21")
-    assert roundtripped.iva_amount == Decimal("-214.26")
+    assert roundtripped.iva_amount == Decimal("214.26")
     assert roundtripped.business_pct == Decimal("0.75")
 
 

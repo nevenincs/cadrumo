@@ -60,7 +60,7 @@ def _split_setup(
     transaction_repository: TransactionCatalogueRepository,
     event_repository: BucketEventHistoryRepository,
     *,
-    parent_amount: Decimal = Decimal("-100.00"),
+    parent_amount: Decimal = Decimal("100.00"),
 ):
     direction = TransactionDirection.OUTGOING if parent_amount < Decimal("0") else TransactionDirection.INCOMING
     parent_command = ManualLedgerTransactionCommand(
@@ -195,7 +195,7 @@ def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) ->
     parent_command = ManualLedgerTransactionCommand(
         bucket_id="bucket-a",
         booked_date=date(2026, 5, 2),
-        amount=Decimal("-100.00"),
+        amount=Decimal("100.00"),
         direction=TransactionDirection.OUTGOING,
         counterparty="Vendor SL",
         description="materials",
@@ -211,9 +211,9 @@ def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) ->
         bucket_id="bucket-a",
         transaction_id=parent.ref.transaction_id,
         children=(
-            SplitChildCommand(amount=Decimal("-30.00"), description="slice-a"),
-            SplitChildCommand(amount=Decimal("-30.00"), description="slice-b"),
-            SplitChildCommand(amount=Decimal("-40.00"), description="slice-c"),
+            SplitChildCommand(amount=Decimal("30.00"), description="slice-a"),
+            SplitChildCommand(amount=Decimal("30.00"), description="slice-b"),
+            SplitChildCommand(amount=Decimal("40.00"), description="slice-c"),
         ),
         actor="operator-A",
         transaction_repository=transaction_repository,
@@ -253,7 +253,7 @@ def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> No
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 9),
-            amount=Decimal("-200.00"),
+            amount=Decimal("200.00"),
             direction=TransactionDirection.OUTGOING,
             counterparty="Other Vendor",
             description="other materials",
@@ -267,8 +267,8 @@ def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> No
         bucket_id="bucket-a",
         transaction_id=second_parent.ref.transaction_id,
         children=(
-            SplitChildCommand(amount=Decimal("-120.00"), description="b1"),
-            SplitChildCommand(amount=Decimal("-80.00"), description="b2"),
+            SplitChildCommand(amount=Decimal("120.00"), description="b1"),
+            SplitChildCommand(amount=Decimal("80.00"), description="b2"),
         ),
         actor="operator-A",
         transaction_repository=transaction_repository,

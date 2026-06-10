@@ -115,7 +115,7 @@ def test_update_changes_the_content_addressed_id() -> None:
     new id is the content hash of the edited raw row (content-addressing is
     unchanged by D3 — the read-side resolver does not freeze the id).
     """
-    old_id = _add_row(amount="-100.00", description="Material oficina", idempotency_key="row-1")
+    old_id = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     new_id = _update_description(old_id, "Material oficina (corregido)")
     assert new_id != old_id, "an id-affecting edit must re-derive the content-addressed id"
 
@@ -134,7 +134,7 @@ def test_history_resolves_a_superseded_old_id() -> None:
     """``history OLD-ID`` answers after an update re-derived the id, surfacing
     the lineage chain rather than failing id-not-found.
     """
-    old_id = _add_row(amount="-100.00", description="Material oficina", idempotency_key="row-1")
+    old_id = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     new_id = _update_description(old_id, "Material oficina (corregido)")
 
     by_old = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", old_id])
@@ -166,7 +166,7 @@ def test_view_resolves_a_superseded_old_id_to_the_current_row() -> None:
     most guessable behaviour, matching ``view``'s live-record semantics, is to
     resolve the old handle to the heir and show the corrected record.
     """
-    old_id = _add_row(amount="-100.00", description="Material oficina", idempotency_key="row-1")
+    old_id = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     new_id = _update_description(old_id, "Material oficina (corregido)")
 
     by_old = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", old_id])
@@ -178,7 +178,7 @@ def test_view_resolves_a_superseded_old_id_to_the_current_row() -> None:
 
 def test_track_resolves_a_superseded_old_id() -> None:
     """``track OLD-ID`` resolves the pre-edit handle to the corrected row."""
-    old_id = _add_row(amount="-100.00", description="Material oficina", idempotency_key="row-1")
+    old_id = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     new_id = _update_description(old_id, "Material oficina (corregido)")
 
     by_old = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "track", old_id])
@@ -189,7 +189,7 @@ def test_track_resolves_a_superseded_old_id() -> None:
 
 def test_multi_edit_chain_resolves_the_oldest_handle() -> None:
     """A handle from two edits ago still resolves through the whole chain."""
-    id_0 = _add_row(amount="-100.00", description="v0", idempotency_key="row-1")
+    id_0 = _add_row(amount="100.00", description="v0", idempotency_key="row-1")
     id_1 = _update_description(id_0, "v1")
     id_2 = _update_description(id_1, "v2")
     assert len({id_0, id_1, id_2}) == 3
@@ -206,7 +206,7 @@ def test_multi_edit_chain_resolves_the_oldest_handle() -> None:
 
 def test_current_id_still_resolves_unchanged() -> None:
     """The live-id path is unchanged: a current id resolves directly."""
-    tx = _add_row(amount="-100.00", description="Material oficina", idempotency_key="row-1")
+    tx = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     for verb in ("history", "view", "track"):
         result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", verb, tx])
         assert result.exit_code == 0, f"{verb}: {result.output}"
@@ -214,7 +214,7 @@ def test_current_id_still_resolves_unchanged() -> None:
 
 def test_unknown_id_with_no_lineage_still_refuses() -> None:
     """An id that names neither a live row nor any lineage handle is refused."""
-    _add_row(amount="-100.00", description="Material oficina", idempotency_key="row-1")
+    _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     absent = "f" * 64
     result = _RUNNER.invoke(app, ["app", "ledger", "view", absent])
     assert result.exit_code != 0, result.output
@@ -225,7 +225,7 @@ def test_split_parent_id_still_resolves_after_split() -> None:
     """The SPLIT parent stays in the catalogue, so its id keeps resolving and
     its lineage (the split children) is visible through ``history``.
     """
-    parent = _add_row(amount="-100.00", description="Subcontratacion", idempotency_key="row-1")
+    parent = _add_row(amount="100.00", description="Subcontratacion", idempotency_key="row-1")
     split = _RUNNER.invoke(
         app,
         [
@@ -235,11 +235,11 @@ def test_split_parent_id_still_resolves_after_split() -> None:
             "--id",
             parent,
             "--child-amount",
-            "-40.00",
+            "40.00",
             "--child-description",
             "Subcontratacion parte A",
             "--child-amount",
-            "-60.00",
+            "60.00",
             "--child-description",
             "Subcontratacion parte B",
             "--reason",
@@ -274,7 +274,7 @@ def test_merged_children_ids_still_resolve_after_merge() -> None:
     """After a merge the archived children stay in the catalogue, so their ids
     keep resolving, and the fresh merged row carries a new content-addressed id.
     """
-    parent = _add_row(amount="-100.00", description="Subcontratacion", idempotency_key="row-1")
+    parent = _add_row(amount="100.00", description="Subcontratacion", idempotency_key="row-1")
     split = _RUNNER.invoke(
         app,
         [
@@ -284,11 +284,11 @@ def test_merged_children_ids_still_resolve_after_merge() -> None:
             "--id",
             parent,
             "--child-amount",
-            "-40.00",
+            "40.00",
             "--child-description",
             "Subcontratacion parte A",
             "--child-amount",
-            "-60.00",
+            "60.00",
             "--child-description",
             "Subcontratacion parte B",
             "--reason",

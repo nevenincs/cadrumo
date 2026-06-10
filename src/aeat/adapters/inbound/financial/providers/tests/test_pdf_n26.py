@@ -31,6 +31,7 @@ from pathlib import Path
 
 import pytest
 
+from ......domain.transactions import TransactionDirection
 from ......tests import FIXTURES_DIR
 from .. import PdfN26Provider
 from .._detection import detect_provider
@@ -61,16 +62,24 @@ def test_pdf_n26_provider_ingests_fixture_rows(
     fixture = _FIXTURES / fixture_name
     validation = provider.validate_source(fixture)
     assert validation.is_valid, validation.warnings
-    transactions = tuple(provider.ingest(fixture))
+    parsed_rows = tuple(provider.ingest(fixture))
     expected_rows = _load_expected(expected_name)
-    assert len(transactions) == len(expected_rows)
-    for transaction, expected in zip(transactions, expected_rows, strict=True):
+    assert len(parsed_rows) == len(expected_rows)
+    for parsed, expected in zip(parsed_rows, expected_rows, strict=True):
+        transaction = parsed.raw
         assert transaction.booked_date.isoformat() == expected["booked_date"]
         expected_value_date = expected["value_date"]
         assert (
             transaction.value_date.isoformat() if transaction.value_date is not None else None
         ) == expected_value_date
-        assert transaction.amount == Decimal(str(expected["amount"]))
+        # The expected JSON carries the bank statement's signed ground truth.
+        # The parser stores the absolute magnitude and lifts the sign into
+        # the authoritative direction at the parse boundary.
+        expected_signed = Decimal(str(expected["amount"]))
+        assert transaction.amount == abs(expected_signed)
+        assert parsed.direction is (
+            TransactionDirection.OUTGOING if expected_signed < Decimal("0") else TransactionDirection.INCOMING
+        )
         assert transaction.currency == expected["currency"]
         assert transaction.counterparty == expected["counterparty"]
         assert transaction.description == expected["description"]

@@ -43,7 +43,7 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="wrong account import",
             idempotency_key="archive-row",
@@ -88,7 +88,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="wrong account import",
             idempotency_key="archived-edit-refusal",
@@ -113,7 +113,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
             command=ManualLedgerTransactionCommand(
                 bucket_id="bucket-a",
                 booked_date=date(2026, 5, 1),
-                amount=Decimal("-60.00"),
+                amount=Decimal("60.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="attempt to edit archived row",
                 actor="operator-B",
@@ -140,7 +140,7 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="hold for later classification",
             idempotency_key="stash-row",
@@ -181,7 +181,7 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="stashed by mistake",
             idempotency_key="restore-stash-row",
@@ -248,7 +248,7 @@ def test_restore_archived_transaction_returns_it_to_active(secure_objects: Secur
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-72.50"),
+            amount=Decimal("72.50"),
             direction=TransactionDirection.OUTGOING,
             description="archived by mistake",
             idempotency_key="restore-archive-row",
@@ -298,7 +298,7 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="already active row",
             idempotency_key="restore-active-refusal",
@@ -333,7 +333,7 @@ def test_restore_refuses_finalized_modelo_reference(secure_objects: SecureObject
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="modelo source row stashed",
             idempotency_key="restore-blocked",
@@ -388,7 +388,7 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="roundtrip restore row",
             idempotency_key="restore-roundtrip",
@@ -442,7 +442,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 1),
-            amount=Decimal("-50.00"),
+            amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="wrong account import",
             idempotency_key="archive-stash-refusal",
@@ -496,7 +496,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-121.00"),
+            amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="material oficina",
             business_classification=BusinessClassification.BUSINESS,
@@ -548,7 +548,7 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="dry run row",
             idempotency_key="remove-dry-run",
@@ -582,7 +582,7 @@ def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_obj
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="modelo source row",
             idempotency_key="remove-blocked",
@@ -624,7 +624,7 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_objects: Sec
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="modelo source row",
             idempotency_key="lifecycle-blocked",
@@ -663,7 +663,7 @@ def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="modelo source row",
             idempotency_key="prior-id",
@@ -677,7 +677,7 @@ def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
         command=ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-35.00"),
+            amount=Decimal("35.00"),
             direction=TransactionDirection.OUTGOING,
             description="modelo source row corrected",
             idempotency_key="prior-id",
@@ -713,7 +713,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="first reset row",
             purchase_invoice_evidence_id=purchase_evidence.invoice_id,
@@ -728,7 +728,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 3),
-            amount=Decimal("-30.00"),
+            amount=Decimal("30.00"),
             direction=TransactionDirection.OUTGOING,
             description="second reset row",
             idempotency_key="reset-second",
@@ -780,7 +780,7 @@ def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_object
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
             booked_date=date(2026, 5, 2),
-            amount=Decimal("-25.00"),
+            amount=Decimal("25.00"),
             direction=TransactionDirection.OUTGOING,
             description="modelo source row",
             idempotency_key="reset-blocked",

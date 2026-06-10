@@ -93,7 +93,7 @@ def _active_bucket_id() -> str:
     return bucket_id
 
 
-def _create_manual_ledger_row(description: str, *, amount: str = "-25.00", key: str) -> dict[str, object]:
+def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: str) -> dict[str, object]:
     result = _invoke(
         [
             "--format",
@@ -205,7 +205,7 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, Any]:
             "--date",
             "2026-05-02",
             "--amount",
-            "-121.00",
+            "121.00",
             "--direction",
             "OUTGOING",
             "--description",
@@ -265,7 +265,7 @@ def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
             "--id",
             transaction_id,
             "--amount",
-            "-121.50",
+            "121.50",
             "--taxable-base",
             "100.41",
             "--iva-amount",
@@ -277,7 +277,7 @@ def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
         ]
     )
     transaction = cast(dict[str, object], edited["transaction"])
-    assert Decimal(cast(str, transaction["amount"])) == Decimal("-121.50")
+    assert Decimal(cast(str, transaction["amount"])) == Decimal("121.50")
     assert transaction["description"] == "cash office supplies corrected"
     assert edited["bucket_event_ids"]
     return edited
@@ -567,7 +567,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
 
 def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, object]:
     """Create a manual ledger row and attach the purchase-invoice evidence reference."""
-    row = _create_manual_ledger_row("attach evidence row", amount="-121.00", key="cli-attach-row")
+    row = _create_manual_ledger_row("attach evidence row", amount="121.00", key="cli-attach-row")
     attached = _invoke(
         [
             "--format", "json",

@@ -212,7 +212,6 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     assert [token for token in forbidden_cli_tokens if token in ledger_cli] == []
     for token in (
         "import_ledger_source",
-        "_direction_from_amount",
         "query_ledger_review_rows",
         "LedgerReviewQuery",
     ):

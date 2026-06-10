@@ -67,14 +67,14 @@ def _sample_transactions() -> list[tuple[Transaction, dict[str, Any]]]:
     seen: set[str] = set()
     out: list[tuple[Transaction, dict[str, Any]]] = []
     for account in _ACCOUNTS:
-        for raw in CsvProvider().ingest(_CORPUS / account):
+        for parsed in CsvProvider().ingest(_CORPUS / account):
+            raw = parsed.raw
             for needle in _SAMPLE_NEEDLES:
                 if needle in raw.description and needle not in seen:
                     rule = _match(raw.description, rules)
                     if rule is None:
                         continue
-                    direction = TransactionDirection.INCOMING if raw.amount > 0 else TransactionDirection.OUTGOING
-                    txn = Transaction.model_validate({"raw": raw, "direction": direction})
+                    txn = Transaction.model_validate({"raw": raw, "direction": parsed.direction})
                     out.append((txn, rule))
                     seen.add(needle)
     return out
@@ -83,7 +83,7 @@ def _sample_transactions() -> list[tuple[Transaction, dict[str, Any]]]:
 def _live_classifier_or_skip():
     """Return a live Claude classifier, or skip when live LLM is unavailable."""
     classifier = build_claude_classifier(alias="claude-sonnet")
-    probe_account = next(CsvProvider().ingest(_CORPUS / _ACCOUNTS[0]))
+    probe_account = next(CsvProvider().ingest(_CORPUS / _ACCOUNTS[0])).raw
     probe = Transaction.model_validate({"raw": probe_account, "direction": TransactionDirection.OUTGOING})
     try:
         classifier.classify(probe)

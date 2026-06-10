@@ -402,7 +402,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
             (
                 _transaction(
                     provider_id="first-catalogue-row",
-                    amount=Decimal("-80.00"),
+                    amount=Decimal("80.00"),
                     description="First persisted catalogue row",
                 ),
             )
@@ -419,7 +419,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
             (
                 _transaction(
                     provider_id="second-catalogue-row",
-                    amount=Decimal("-125.00"),
+                    amount=Decimal("125.00"),
                     description="Second persisted catalogue row",
                 ),
             )

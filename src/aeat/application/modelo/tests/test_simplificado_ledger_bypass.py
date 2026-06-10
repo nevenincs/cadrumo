@@ -76,7 +76,7 @@ def _blocking_transaction() -> Transaction:
         transaction_id="tx-block-001",
         booked_date=date(2026, 2, 10),
         value_date=date(2026, 2, 10),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor",
         description="compra material",

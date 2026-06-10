@@ -39,7 +39,7 @@ def _tx(
         transaction_id="row-x",
         booked_date=date(2026, 1, 15),
         value_date=date(2026, 1, 15),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency=currency,
         counterparty="Proveedor",
         description="row",

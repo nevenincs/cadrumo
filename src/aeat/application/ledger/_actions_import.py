@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
-    from ...adapters.inbound.financial.providers import ProviderValidation
+    from ...adapters.inbound.financial.providers import ParsedLedgerRow, ProviderValidation
 
 from ...core.errors import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -43,7 +43,6 @@ from ...domain.transactions import (
     RawTransaction,
     Transaction,
     TransactionCatalogue,
-    TransactionDirection,
     TransactionValidationError,
     derive_import_fingerprint,
     derive_movement_day_key,
@@ -55,7 +54,6 @@ from ._actions_common import (
     _append_bucket_events,
     _bucket_event_repository,
     _build_bucket_event,
-    _direction_from_amount,
     _normalise_timestamp,
     _save_transaction_catalogue_and_events,
     _transaction_repository,
@@ -83,9 +81,6 @@ class LedgerProviderID(StrEnum):
     N26 = "n26"
     PDF = "pdf"
     PDF_N26 = "pdf-n26"
-
-
-DirectionResolver = Callable[[RawTransaction], TransactionDirection]
 
 
 def _transaction_dedup_fingerprint(transaction: Transaction) -> str:
@@ -141,17 +136,19 @@ def _evaluate_import_rows(
     *,
     bucket_id: str,
     catalogue: TransactionCatalogue,
-    raw_rows: tuple[RawTransaction, ...],
-    direction_resolver: Callable[[RawTransaction], object],
+    parsed_rows: tuple[ParsedLedgerRow, ...],
     currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> _ImportRowPlan:
-    """Classify every raw row as imported / skipped / likely-duplicate.
+    """Classify every parsed row as imported / skipped / likely-duplicate.
 
-    Deduplication keys on :func:`derive_import_fingerprint` â€” an
-    identity that is stable across both later edits of a transaction
-    and a re-export of the same movement in a different file format.
-    This single classifier backs both the persisting import path and
-    the ``--dry-run`` preview, so the preview count is exact.
+    Each :class:`ParsedLedgerRow` carries the magnitude
+    :class:`RawTransaction` and the authoritative ``direction`` the provider
+    derived from the source sign at the parse boundary; this classifier never
+    re-derives flow from a sign. Deduplication keys on
+    :func:`derive_import_fingerprint` â€” an identity that is stable across both
+    later edits of a transaction and a re-export of the same movement in a
+    different file format. This single classifier backs both the persisting
+    import path and the ``--dry-run`` preview, so the preview count is exact.
     """
     existing_fingerprints = {_transaction_dedup_fingerprint(transaction) for transaction in catalogue.values()}
     existing_day_keys = {derive_movement_day_key(transaction.raw) for transaction in catalogue.values()}
@@ -159,7 +156,8 @@ def _evaluate_import_rows(
     skipped_refs: list[BucketTransactionRef] = []
     likely_duplicate_refs: list[BucketTransactionRef] = []
     batch_fingerprints: set[str] = set()
-    for raw in raw_rows:
+    for parsed in parsed_rows:
+        raw = parsed.raw
         fingerprint = derive_import_fingerprint(raw)
         if fingerprint in existing_fingerprints or fingerprint in batch_fingerprints:
             skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw)))
@@ -168,7 +166,7 @@ def _evaluate_import_rows(
         transaction = Transaction.model_validate(
             {
                 "raw": raw,
-                "direction": direction_resolver(raw),
+                "direction": parsed.direction,
                 "import_fingerprint": fingerprint,
                 "fx_rate": fx_rate,
                 "value_in_eur": value_in_eur,
@@ -192,8 +190,7 @@ def _evaluate_import_rows(
 def import_ledger_transactions(
     *,
     bucket_id: str,
-    raw_transactions: Iterable[RawTransaction],
-    direction_resolver: Callable[[RawTransaction], object],
+    parsed_rows: Iterable[ParsedLedgerRow],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     actor: str = "operator",
@@ -201,7 +198,12 @@ def import_ledger_transactions(
     occurred_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> LedgerImportOperationResult:
-    """Import provider transactions into one bucket catalogue and emit events.
+    """Import provider rows into one bucket catalogue and emit events.
+
+    Each :class:`ParsedLedgerRow` carries the magnitude
+    :class:`RawTransaction` plus the authoritative ``direction`` the provider
+    derived at the parse boundary, so the import path never re-derives flow
+    from a sign.
 
     Returns a :class:`LedgerImportOperationResult` summarising the number
     of imported, skipped, and failed transactions.
@@ -210,12 +212,11 @@ def import_ledger_transactions(
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
-    raw_rows = tuple(raw_transactions)
+    rows = tuple(parsed_rows)
     plan = _evaluate_import_rows(
         bucket_id=bucket_id,
         catalogue=catalogue,
-        raw_rows=raw_rows,
-        direction_resolver=direction_resolver,
+        parsed_rows=rows,
         currency_normalizer=currency_normalizer,
     )
     imported_transactions = list(plan.imported)
@@ -230,7 +231,7 @@ def import_ledger_transactions(
     import_batch_id = _import_batch_id(
         bucket_id=bucket_id,
         source_command=source_command,
-        imported_transaction_ids=tuple(derive_transaction_id(raw) for raw in raw_rows),
+        imported_transaction_ids=tuple(derive_transaction_id(parsed.raw) for parsed in rows),
     )
     summary = ImportSummary(
         imported=len(imported_refs),
@@ -293,7 +294,7 @@ def import_ledger_source(
     from ...adapters.inbound.financial.providers import FinancialProviderError
 
     try:
-        raw_transactions = tuple(provider.ingest(command.path))
+        parsed_rows = tuple(provider.ingest(command.path))
     except FinancialProviderError as exc:
         raise TransactionValidationError(
             translated_message="errors.transaction.ledger_import_failed",
@@ -308,7 +309,7 @@ def import_ledger_source(
     diagnostic_result = (
         import_ledger_with_diagnostics(
             command.path,
-            raw_transactions,
+            tuple(parsed.raw for parsed in parsed_rows),
             existing_catalogue,
             original_source_path=command.source,
         )
@@ -329,12 +330,11 @@ def import_ledger_source(
         dry_run_plan = _evaluate_import_rows(
             bucket_id=command.bucket_id or "preview",
             catalogue=existing_catalogue,
-            raw_rows=raw_transactions,
-            direction_resolver=_direction_from_amount,
+            parsed_rows=parsed_rows,
             currency_normalizer=currency_normalizer,
         )
         return LedgerSourceImportResult(
-            rows=len(raw_transactions),
+            rows=len(parsed_rows),
             imported=len(dry_run_plan.imported),
             skipped=len(dry_run_plan.skipped_refs),
             likely_duplicates=len(dry_run_plan.likely_duplicate_refs),
@@ -355,8 +355,7 @@ def import_ledger_source(
     event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     result = import_ledger_transactions(
         bucket_id=command.bucket_id,
-        raw_transactions=raw_transactions,
-        direction_resolver=_direction_from_amount,
+        parsed_rows=parsed_rows,
         transaction_repository=repository,
         bucket_event_repository=event_repository,
         actor=command.actor,
@@ -368,14 +367,14 @@ def import_ledger_source(
         bucket_id=command.bucket_id,
         import_batch_id=result.import_batch_id,
         diagnostics=diagnostic_result.diagnostics if diagnostic_result is not None else (),
-        transaction_ids=tuple(derive_transaction_id(raw) for raw in raw_transactions),
+        transaction_ids=tuple(derive_transaction_id(parsed.raw) for parsed in parsed_rows),
         actor=command.actor,
         source_command=command.source_command,
     )
     if diagnostic_events:
         _append_bucket_events(repository=event_repository, events=diagnostic_events)
     return LedgerSourceImportResult(
-        rows=len(raw_transactions),
+        rows=len(parsed_rows),
         imported=summary.imported,
         skipped=summary.skipped,
         likely_duplicates=len(summary.likely_duplicate_refs),

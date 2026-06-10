@@ -50,7 +50,8 @@ def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object
 def _expected_csv_text() -> str:
     rules = _rules()
     lines = ["transaction_id,classification,category_id"]
-    for raw in CsvProvider().ingest(_CORPUS / _ACCOUNT):
+    for parsed in CsvProvider().ingest(_CORPUS / _ACCOUNT):
+        raw = parsed.raw
         rule = _match(raw.description, rules)
         assert rule is not None, raw.description
         if rule["classification"] == "MIXED":
