@@ -578,3 +578,29 @@ peer WIP clearing: five advisory finding locale keys (four M131 revisions + the
 M200 precedent), wordings recorded in the cli-ledger-testimonials P05-S14 step
 record. Campaign continues with the genuine-drift type slice; no lane is capped
 as done.
+
+## QHC-017 | coordinator checkpoint (2026-06-10) | check-types 850 -> 360 after genuine-drift slice
+
+The genuine-drift slice landed 22 per-file commits (~134 diagnostics resolved at
+the root; latest tranche ends `2bf756b0f`): `just check-types` now reports
+**360** (214 ty + 146 pyright). All fixes are typed-boundary work — notable
+root causes: a `_MirrorRowsResult` TypedDict replacing a `dict[str, object]`
+mirror-push return in the google config CLI, typed TOML boundary models for the
+festivos calendar (domain models stay strict), a triplicate `Literal` alias
+redefinition in `_invoice_bindings.py` (a real type-form bug), and a
+genuinely-emitted `invoice_id` declared on `InvoiceRowPayload`. Thirteen
+`type: ignore` suppressions were REMOVED net; one production `cast` added with
+a gate-verified rationale. Independent code review of the eleven production
+commits is in flight; coordinator spot-verified the invoices (62) and deadlines
+(186) suites green.
+
+Remaining tail by class: ty `invalid-argument-type` 108, `unresolved-attribute`
+46, `invalid-return-type` 16; pyright `reportArgumentType` 43,
+`reportAttributeAccessIssue` 25, `reportMissingTypeArgument` 24. The dominant
+remaining file (`_cross_period_clean_state.py`, 29) plus
+`auth/_diagnostics.py`, `calc_sheets/_workbook_export.py`, and the
+decimal-redaction test file stayed peer-WIP-locked all session; the rest is a
+flat tail (top non-locked file is 5). Known transient noise: peer M303
+legal-grounding WIP currently fails `modelo/tests/test_actions.py` and the
+M200/M303 registry suites on in-flight `legal_refs` — peer-owned, expected to
+clear when that campaign commits.
