@@ -807,6 +807,7 @@ application:
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
       work_unit_revision_divergence: 'La unidad de trabajo %{work_unit_id} se creo con la revision de registro %{work_unit_revision}, pero la revision determinada por ley para el modelo %{modelo} %{filing_year} %{period} es ahora %{law_revision}. Vuelva a crear la unidad de trabajo para vincularla a la revision actual.'
+      novel_source_kind_rejected: 'Tipo(s) de origen de cálculo no reconocido(s) %{novel_source_kinds} en la revisión %{revision_id}: el registro declara un origen de vinculación que ningún resolutor de cálculo gestiona. Registre un resolutor o márquelo como diferido antes de calcular.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.

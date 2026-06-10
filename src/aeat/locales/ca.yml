@@ -800,6 +800,7 @@ application:
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
       work_unit_revision_divergence: 'La unitat de treball %{work_unit_id} es va crear amb la revisio de registre %{work_unit_revision}, pero la revisio determinada per llei per al model %{modelo} %{filing_year} %{period} ara es %{law_revision}. Torneu a crear la unitat de treball per vincular-la a la revisio actual.'
+      novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds} a la revisió %{revision_id}: el registre declara un origen de vinculació que cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com a ajornat abans de calcular.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
