@@ -2986,7 +2986,7 @@ cli:
       welcome_no_profile: Welcome. No active profile is configured yet, so start with
         setup.
       welcome_profile: Welcome back. Active profile is `%{profile}`.
-    language_help: Interface language (e.g. en, es, ca).
+    language_help: 'Language for output and help text (en, es, ca, hu).'
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
     startup_import_error: 'Internal error: application module failed to load at startup

@@ -3147,7 +3147,7 @@ cli:
       welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
-    language_help: Llengua de la interfície (p. ex. ca, es, en).
+    language_help: 'Idioma de la sortida i del text d''ajuda (en, es, ca, hu).'
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
     startup_import_error: 'Error intern: el mòdul de l''aplicació no s''ha pogut carregar

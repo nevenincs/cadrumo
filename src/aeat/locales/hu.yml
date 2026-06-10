@@ -3105,7 +3105,7 @@ cli:
       tagline: Helyi-alapú spanyol adózási munkafolyamat önálló vállalkozóknak.
       welcome_no_profile: Üdvözöljük! Nincs aktív profil konfigurálva; kezdje a beállítással.
       welcome_profile: 'Üdvözöljük újra! Az aktív profil: `%{profile}`.'
-    language_help: A felület nyelve (pl. hu, en, es).
+    language_help: 'A kimenet és a súgószöveg nyelve (en, es, ca, hu).'
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
     startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen indításkor

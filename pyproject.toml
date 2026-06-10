@@ -455,6 +455,7 @@ convention = "google"
 "src/aeat/domain/calculations/registry/_workbook_parity.py" = ["S603"]
 "src/aeat/domain/deadlines/_festivos.py" = ["S105"]
 "src/aeat/domain/transactions/_llm.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_language_flag_help_honesty.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
 # Rationale-marker ratchets enumerate strings that ruff's S105/S106
 # heuristic flags as hardcoded passwords. They are assertion tokens,

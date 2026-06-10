@@ -3187,7 +3187,7 @@ cli:
       welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
-    language_help: Idioma de la interfaz (p. ej. es, en, ca).
+    language_help: 'Idioma de la salida y del texto de ayuda (en, es, ca, hu).'
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
     startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar
