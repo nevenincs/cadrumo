@@ -82,6 +82,7 @@ from ._actions_common import (
 )
 from ._actions_manual import update_manual_transaction_fields
 from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from ._evidence_advisory import printed_iva_advisory
 from ._evidence_input import (
     cloud_evidence_read_permitted,
     resolve_attachment_evidence_input,
@@ -137,6 +138,7 @@ class LLMClassificationSuggestion(BaseModel):
     category: SpendingCategory | None = None
     confidence: Decimal
     reason: str = Field(min_length=1)
+    evidence_id: str | None = None
 
 
 class LLMProviderAvailability(BaseModel):
@@ -198,15 +200,17 @@ def _resolve_evidence_text(
     bucket_id: str,
     settings: Settings,
     evidence_acknowledged: bool,
-) -> str | None:
-    """Resolve a transaction's linked evidence to on-host-extracted prompt text.
+) -> tuple[str | None, str | None]:
+    """Resolve a transaction's linked evidence to on-host text plus its reference.
 
-    Returns ``None`` when the transaction has no linked evidence. The only
-    classifiers wired today are cloud subprocess agents, so reading evidence
-    transmits it off-host; this is gated by the cloud-upload consent posture
-    (default-off, gestor-barred, per-invocation). Bytes are read from secure
-    storage into memory and the text layer is extracted on-host -- nothing is
-    written to disk (``sensitive-financial-data-secure-storage-only``).
+    Returns ``(None, None)`` when the transaction has no linked evidence,
+    otherwise ``(extracted_text, evidence_reference)`` where the reference is the
+    consulted ``purchase_invoice_evidence_id`` or ``attachment_id`` (for
+    provenance). The only classifiers wired today are cloud subprocess agents, so
+    reading evidence transmits it off-host; this is gated by the cloud-upload
+    consent posture (default-off, gestor-barred, per-invocation). Bytes are read
+    from secure storage into memory and the text layer is extracted on-host --
+    nothing is written to disk (``sensitive-financial-data-secure-storage-only``).
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When evidence is linked but the cloud
@@ -216,7 +220,7 @@ def _resolve_evidence_text(
     evidence_id = transaction.purchase_invoice_evidence_id
     attachment_ids = transaction.attachment_ids
     if evidence_id is None and not attachment_ids:
-        return None
+        return None, None
     if not cloud_evidence_read_permitted(settings, acknowledged=evidence_acknowledged):
         raise PurchaseInvoiceEvidenceInputError(
             "reading attached evidence sends it to a cloud model, which requires the explicit "
@@ -228,9 +232,11 @@ def _resolve_evidence_text(
     if evidence_id is not None:
         record = PurchaseInvoiceEvidenceService(settings=settings).view(bucket_id=bucket_id, evidence_id=evidence_id)
         evidence_input = resolve_purchase_invoice_evidence_input(record, store=store)
+        reference = evidence_id
     else:
-        evidence_input = resolve_attachment_evidence_input(attachment_ids[0], store=store)
-    return extract_evidence_text(evidence_input)
+        reference = attachment_ids[0]
+        evidence_input = resolve_attachment_evidence_input(reference, store=store)
+    return extract_evidence_text(evidence_input), reference
 
 
 def suggest_llm_classification(
@@ -278,7 +284,7 @@ def suggest_llm_classification(
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
     resolved_classifier = classifier if classifier is not None else _resolve_default_classifier(provider)
-    evidence_text = (
+    evidence_text, evidence_reference = (
         _resolve_evidence_text(
             transaction,
             bucket_id=bucket_id,
@@ -286,7 +292,7 @@ def suggest_llm_classification(
             evidence_acknowledged=evidence_acknowledged,
         )
         if read_evidence
-        else None
+        else (None, None)
     )
     response = resolved_classifier.classify(transaction, evidence_text=evidence_text)
     _logger.info(
@@ -304,6 +310,7 @@ def suggest_llm_classification(
         category=response.category,
         confidence=response.confidence,
         reason=response.reason,
+        evidence_id=evidence_reference,
     )
 
 
@@ -470,6 +477,8 @@ class LLMSaturatedSuggestion(BaseModel):
     iva_amount: Decimal | None = None
     rate_derivable: bool = False
     derivation_note: str = ""
+    evidence_id: str | None = None
+    evidence_advisory: str = ""
 
 
 def _resolve_saturation_classifier(provider: LLMProvider) -> LLMClassifier:
@@ -562,7 +571,7 @@ def saturate_llm_classification(
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
     resolved_classifier = classifier if classifier is not None else _resolve_saturation_classifier(provider)
-    evidence_text = (
+    evidence_text, evidence_reference = (
         _resolve_evidence_text(
             transaction,
             bucket_id=bucket_id,
@@ -570,7 +579,7 @@ def saturate_llm_classification(
             evidence_acknowledged=evidence_acknowledged,
         )
         if read_evidence
-        else None
+        else (None, None)
     )
     response = resolved_classifier.classify(transaction, evidence_text=evidence_text)
     effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
@@ -609,6 +618,8 @@ def saturate_llm_classification(
         iva_amount=iva_amount,
         rate_derivable=rate_derivable,
         derivation_note=derivation_note,
+        evidence_id=evidence_reference,
+        evidence_advisory=printed_iva_advisory(evidence_text, iva_amount) or "",
     )
 
 
