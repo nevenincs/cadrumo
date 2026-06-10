@@ -126,8 +126,7 @@ adapters:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
       suggestions:
-        create_profile: Futtassa az `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>`
-          parancsot, majd próbálja újra a Google-parancsot.
+        create_profile: 'Futtassa az `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` parancsot, majd próbálja újra a Google-parancsot.'
   inbound:
     declaracion:
       errors:
@@ -1906,8 +1905,7 @@ cli:
       new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
     errors:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
-      no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
-        NÉV --tax-id <DNI/NIE/NIF/CIF>`.'
+      no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Futtassa: `aeat config
         profile list` az elérhető kulcsok megjelenítéséhez.'
     get:
@@ -2046,7 +2044,7 @@ cli:
       submissions_dir_help: A benyújtott adóbevallás-visszaigazolások tárolási könyvtára.
       success:
         next_step: 'Következő lépés: futtassa: `aeat app overview status`'
-      tax_id_help: Spanyol adóazonosító (DNI/NIE/NIF/CIF).
+      tax_id_help: 'Spanyol adóazonosító (NIF/CIF/DNI/NIE).'
       tax_residence_ccaa_help: Az adóilletékesség autonóm közössége.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
@@ -2104,8 +2102,7 @@ cli:
         a terminalban a kovetkezo parancsok NoActiveBucketSessionError hibaval elutasitanak,
         amig nem futtatod az aeat config unlock NAME parancsot, vagy nem nyitsz uj
         terminalt es valasztasz ujra.
-      no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
-        NÉV --tax-id <DNI/NIE/NIF/CIF>`.'
+      no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
       preflight_help: Jelenti, mely profilmezők hiányoznak adott (modelo, revízió,
         év, időszak) bevallási kontextushoz.
@@ -2154,7 +2151,7 @@ cli:
         objects_help: Ellenorzi a biztonsagos objektumok integritasat.
         objects_namespace_help: Biztonsagos objektumok integritasanak ellenorzese
           egy nevterre korlatozva.
-        registry_help: Ellenorzi a profilnyilvantartas integritasat.
+        registry_help: 'Ellenőrzi a számítási nyilvántartás épségét.'
       integrity_attribution_details_help: Soronkénti biztonságos metaadat-részletek
         bevonása.
       integrity_attribution_help: Visszafejthető biztonságos objektumsorok csoportosítása
@@ -4192,7 +4189,7 @@ profile:
   keys:
     description: Profilkonfigurációs kulcsok és leírásaik
     tax:
-      id: Adóazonosító (DNI/NIE/NIF/CIF)
+      id: 'Adóazonosító (NIF/CIF/DNI/NIE)'
 review:
   adapters:
     errors:
@@ -4304,9 +4301,7 @@ topic:
       a negyedév adatait és bizonyos esetekben az előző évet veszi alapul.
     title: IRPF-előlegfizetés
   profile:
-    body: 'A helyi profil tartalmazza az adóazonosítót (DNI/NIE/NIF/CIF), a fő tevékenységet,
-      az IVA/IRPF-rezsimet és az opcionális regisztrációkat (SII, Verifactu, intrakomunitáris).
-      Szerkessze: `aeat config profile edit NÉV`.'
+    body: 'A helyi profil tartalmazza az adóazonosítót (NIF/CIF/DNI/NIE), a fő tevékenységet, az IVA/IRPF-rezsimet és az opcionális regisztrációkat (SII, Verifactu, intrakomunitáris). Szerkessze: `aeat config profile edit NÉV`.'
     title: Adóalany profilja
   providers:
     body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő előfeltételei
@@ -4368,22 +4363,12 @@ wizard:
     invalid_integer: 'Érvénytelen egész szám a következőhöz: %{prompt_key}: %{raw}.'
     invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}.
       A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
-    invalid_tax_id: 'Érvénytelen DNI/NIE/NIF/CIF a következőhöz: %{prompt_key}: %{raw}.
-      %{detail}'
+    invalid_tax_id: 'Érvénytelen NIF/CIF/DNI/NIE a következőhöz: %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes
       lehetőségek: %{choices}.'
     select_without_choices: A(z) %{prompt_key} kérdésnél nincsenek legördülő-lehetőségek
       megadva.
-    unsupported_console: 'Az irányított beállítás interaktív terminált igényel, ez
-      a futtatás azonban nem rendelkezik ilyennel. Még semmi nem lett mentve.
-
-      Ezt a profilt kétféleképpen hozhatja létre:
-
-      1. Futtassa újra a parancsot interaktív terminálból az irányított beállítás
-      használatához: aeat config profile create NAME
-
-      2. Vagy hozza létre egyetlen lépéssel, a szükséges adatokat kapcsolókként megadva:
-      aeat config profile create NAME --quiet --tax-id DNI/NIE/NIF/CIF'
+    unsupported_console: "Az irányított beállítás interaktív terminált igényel, ez a futtatás azonban nem rendelkezik ilyennel. Még semmi nem lett mentve.\nEzt a profilt kétféleképpen hozhatja létre:\n1. Futtassa újra a parancsot interaktív terminálból az irányított beállítás használatához: aeat config profile create NAME\n2. Vagy hozza létre egyetlen lépéssel, a szükséges adatokat kapcsolókként megadva: aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
     unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot
       megnyitni ebben a futtatásban. Még semmi nem lett mentve.
 
@@ -4574,7 +4559,7 @@ wizard:
       surnames:
         help: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
-        help: Adóazonosító (DNI/NIE/NIF/CIF) az aktív profilhoz
+        help: 'Adóazonosító (NIF/CIF/DNI/NIE) az aktív profilhoz'
       tax-residence-ccaa:
         help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
       taxation-type:
@@ -4600,14 +4585,7 @@ wizard:
         help: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
       uses-objective-estimation-irpf:
         help: IRPF objektív becslés szerint adózik
-    intro: 'Irányított adóügyi profil-beállítás
-
-      Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez
-      használ. Várható %{section_total} szekció. Csak %{required_total} válasz kötelező
-      a kezdéshez; a többi üresen hagyható, ha még nem ismeri. Legyen kéznél a DNI/NIE/NIF/CIF
-      azonosítója, egy rövid tevékenységleírás, IVA/IRPF adózási rend adatai, adóügyi
-      lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást
-      a következővel: .'
+    intro: "Irányított adóügyi profil-beállítás\nEz előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez használ. Várható %{section_total} szekció. Csak %{required_total} válasz kötelező a kezdéshez; a többi üresen hagyható, ha még nem ismeri. Legyen kéznél a NIF/CIF/DNI/NIE azonosítója, egy rövid tevékenységleírás, IVA/IRPF adózási rend adatai, adóügyi lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást a következővel: ."
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
@@ -4712,7 +4690,7 @@ wizard:
       surnames:
         prompt: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
-        prompt: Adóazonosító (DNI/NIE/NIF/CIF) a bevallásokhoz
+        prompt: 'Adóazonosító (NIF/CIF/DNI/NIE) a bevallásokhoz'
       taxation-type:
         choices:
           individual:

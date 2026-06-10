@@ -2189,7 +2189,7 @@ cli:
         objects_help: Comprova la integritat dels objectes segurs.
         objects_namespace_help: Limita les comprovacions d'integritat d'objectes segurs
           a un espai de noms.
-        registry_help: Comprova la integritat del registre de perfils.
+        registry_help: 'Comprova la integritat del registre de càlcul.'
       integrity_attribution_details_help: Inclou detalls de metadades segures per
         fila
       integrity_attribution_help: Agrupa les files d'objectes segurs no desxifrables
