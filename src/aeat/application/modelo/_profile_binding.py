@@ -100,7 +100,7 @@ def _profile_record_fingerprint(profile_record: object | None) -> str | None:
     """Return a stable provenance fingerprint for the loaded profile record."""
     if profile_record is None:
         return None
-    payload = profile_record.model_dump_json() if hasattr(profile_record, "model_dump_json") else repr(profile_record)
+    payload = profile_record.model_dump_json() if isinstance(profile_record, BaseModel) else repr(profile_record)
     digest = hashlib.sha256(payload.encode(UTF_8_ENCODING)).hexdigest()
     return f"sha256:{digest}"
 
@@ -205,6 +205,8 @@ def _inject_derived_family_facts(
         if convive:
             try:
                 birth = _parse_iso8601_date(str(birth_raw))
+                if birth is None:
+                    raise ValueError("birth date parsed as None")
                 age_at_year_end = filing_year - birth.year
                 if age_at_year_end < 3:
                     count_menores += 1

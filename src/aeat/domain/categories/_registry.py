@@ -7,6 +7,7 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
+from typing import cast
 
 from pydantic import ValidationError
 
@@ -126,9 +127,14 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
 
 
 def _parse_profile(raw_profile: object) -> CategoryProfile:
-    if not isinstance(raw_profile, Mapping):
+    if not isinstance(raw_profile, dict):
         raise CategoryValidationError("profile entry must be a table")
-    data = to_str_keyed_dict(raw_profile, error_factory=CategoryValidationError)
+    # CAST-RATIONALE-TOML-INVARIANT-DICT:
+    # ty infers dict[Unknown, Unknown] from isinstance(x, dict); Mapping is invariant so
+    # dict[Unknown, Unknown] is not directly assignable to Mapping[object, object].
+    # The isinstance guard above confirms the structural invariant; cast is the only
+    # way to bridge ty's gradual-type invariance limitation here.
+    data = to_str_keyed_dict(cast(dict[object, object], raw_profile), error_factory=CategoryValidationError)
     category = SpendingCategory(str(data.get("category")))
     raw_rule = data.get("proportionality")
     if not isinstance(raw_rule, dict):
@@ -145,9 +151,10 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
 
 
 def _parse_rule(raw_rule: object) -> ProportionalityRule:
-    if not isinstance(raw_rule, Mapping):
+    if not isinstance(raw_rule, dict):
         raise CategoryValidationError("proportionality rule must be a table")
-    data = to_str_keyed_dict(raw_rule, error_factory=CategoryValidationError)
+    # CAST-RATIONALE-TOML-INVARIANT-DICT: same as _parse_profile.
+    data = to_str_keyed_dict(cast(dict[object, object], raw_rule), error_factory=CategoryValidationError)
     raw_variants = data.get("statutory_cap_variants", ())
     if not isinstance(raw_variants, list | tuple):
         raise CategoryValidationError("statutory_cap_variants must be a list")
@@ -171,9 +178,10 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
 
 
 def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
-    if not isinstance(raw_variant, Mapping):
+    if not isinstance(raw_variant, dict):
         raise CategoryValidationError("statutory_cap_variants entries must be tables")
-    data = to_str_keyed_dict(raw_variant, error_factory=CategoryValidationError)
+    # CAST-RATIONALE-TOML-INVARIANT-DICT: same as _parse_profile.
+    data = to_str_keyed_dict(cast(dict[object, object], raw_variant), error_factory=CategoryValidationError)
     return StatutoryCapVariant.model_validate(
         {
             "id": data.get("id"),
@@ -184,9 +192,10 @@ def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
 
 
 def _parse_citation(raw_citation: object) -> CategoryCitation:
-    if not isinstance(raw_citation, Mapping):
+    if not isinstance(raw_citation, dict):
         raise CategoryValidationError("citations entries must be tables")
-    data = to_str_keyed_dict(raw_citation, error_factory=CategoryValidationError)
+    # CAST-RATIONALE-TOML-INVARIANT-DICT: same as _parse_profile.
+    data = to_str_keyed_dict(cast(dict[object, object], raw_citation), error_factory=CategoryValidationError)
     url = data.get("url")
     if not isinstance(url, str):
         raise CategoryValidationError("citation url must be a string")
