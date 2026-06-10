@@ -150,6 +150,8 @@ from ._iva_wallet_seed import (
 from ._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
+    list_m036_declarations,
+    read_m036_declaration,
     record_m036_declaration,
 )
 from ._maritime_preview import (
@@ -449,6 +451,7 @@ __all__ = [
     "import_external_filing_evidence",
     "list_calculation_revisions",
     "list_filing_records",
+    "list_m036_declarations",
     "list_verification_reports",
     "list_work_units",
     "maritime_facts_from_active_profile",
@@ -466,6 +469,7 @@ __all__ = [
     "project_modelo_100_from_m130",
     "project_modelo_work_target",
     "project_modelo_work_unit",
+    "read_m036_declaration",
     "record_m036_declaration",
     "registry_bindings",
     "registry_bindings_for_scope",

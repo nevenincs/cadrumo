@@ -117,6 +117,7 @@ class M036DeclarationResult(BaseModel):
     event_kind: CensoModeloEventKind
     declared_on: date
     sede_justificante: str | None = None
+    note: str | None = Field(default=None, max_length=512)
     recorded_at: datetime
 
     # SNAPSHOT-ID-ALIAS: ``SecureSnapshotRepository`` locates payloads by a
@@ -150,6 +151,61 @@ def _m036_declaration_ambiguous_prefix(declaration_id: str, full_ids: tuple[str,
     return KeyError(f"M036 declaration prefix {declaration_id!r} is ambiguous; matches {list(full_ids)!r}")
 
 
+def _m036_declaration_repository(bucket_id: BucketId):
+    """Build the single secure-object repository the write and read paths share.
+
+    Both :func:`record_m036_declaration` (write) and the read-back surface
+    (:func:`list_m036_declarations` / :func:`read_m036_declaration`) route
+    through this one factory so there is no parallel read path: the
+    :class:`SecureSnapshotRepository` it returns owns the encrypted
+    :data:`LIVE_M036_DECLARATION_NAMESPACE` rows keyed by
+    ``m036-declaration:<bucket_id>:<declaration_id>``.
+    """
+    # Local import avoids the import cycle between this module (in
+    # application.modelo) and SecureSnapshotRepository (in application.live,
+    # which depends transitively on application.modelo for the work-unit
+    # aggregations).
+    from ..live import SecureSnapshotRepository
+
+    return SecureSnapshotRepository(
+        bucket_id=bucket_id,
+        payload_model=M036DeclarationResult,
+        namespace_definition=LIVE_M036_DECLARATION_NAMESPACE,
+        object_key=_m036_declaration_object_key,
+        not_found_factory=_m036_declaration_not_found,
+        ambiguous_prefix_factory=_m036_declaration_ambiguous_prefix,
+        domain_label="m036_declaration",
+    )
+
+
+def list_m036_declarations(*, bucket_id: BucketId) -> tuple[M036DeclarationResult, ...]:
+    """Return every recorded M036 declaration in the active bucket.
+
+    Reads through the same :class:`SecureSnapshotRepository` the write path
+    persists into (no parallel read path), enumerating the encrypted
+    :data:`LIVE_M036_DECLARATION_NAMESPACE` rows scoped to ``bucket_id`` and
+    returning the typed :class:`M036DeclarationResult` records verbatim —
+    every persisted field (``declaration_id``, ``event_kind``, ``declared_on``,
+    ``recorded_at``, ``sede_justificante``, ``note``) is preserved, never
+    collapsed to a flat mapping. An empty bucket returns an empty tuple, the
+    clean "no declarations recorded yet" signal, not an error.
+    """
+    return _m036_declaration_repository(bucket_id).list_snapshots()
+
+
+def read_m036_declaration(declaration_id: str, *, bucket_id: BucketId) -> M036DeclarationResult:
+    """Return one recorded M036 declaration by id or unambiguous prefix.
+
+    Reads through the owning :class:`SecureSnapshotRepository`, resolving the
+    full content-addressed ``declaration_id`` or an unambiguous prefix of it
+    to a single typed :class:`M036DeclarationResult`. Raises the repository's
+    not-found error for an unknown id and the ambiguous-prefix error when a
+    prefix matches more than one record, mirroring the established
+    secure-object id-or-prefix resolution.
+    """
+    return _m036_declaration_repository(bucket_id).resolve(declaration_id)
+
+
 def record_m036_declaration(
     command: M036DeclarationCommand,
     *,
@@ -171,16 +227,12 @@ def record_m036_declaration(
     The persisted :class:`M036DeclarationResult` is encrypted into the
     bucket-local :data:`LIVE_M036_DECLARATION_NAMESPACE` row keyed by
     ``m036-declaration:<bucket_id>:<declaration_id>`` via the standard
-    :class:`SecureSnapshotRepository` machinery.  ``bucket_id`` is checked
-    against the repository binding at save time, so a cross-bucket payload
-    cannot land silently.
+    :class:`SecureSnapshotRepository` machinery (shared with the
+    :func:`list_m036_declarations` / :func:`read_m036_declaration` read-back
+    surface through :func:`_m036_declaration_repository`).  ``bucket_id`` is
+    checked against the repository binding at save time, so a cross-bucket
+    payload cannot land silently.
     """
-    # Local imports avoid the import cycle between this module (in
-    # application.modelo) and SecureSnapshotRepository (in
-    # application.live, which depends transitively on application.modelo
-    # for the work-unit aggregations).
-    from ..live import SecureSnapshotRepository
-
     declaration_id = derive_m036_declaration_id(
         profile_id=command.profile_id,
         event_kind=command.event_kind,
@@ -195,19 +247,11 @@ def record_m036_declaration(
         event_kind=command.event_kind,
         declared_on=command.declared_on,
         sede_justificante=command.sede_justificante,
+        note=command.note,
         recorded_at=occurred_at,
     )
 
-    repository = SecureSnapshotRepository(
-        bucket_id=bucket_id,
-        payload_model=M036DeclarationResult,
-        namespace_definition=LIVE_M036_DECLARATION_NAMESPACE,
-        object_key=_m036_declaration_object_key,
-        not_found_factory=_m036_declaration_not_found,
-        ambiguous_prefix_factory=_m036_declaration_ambiguous_prefix,
-        domain_label="m036_declaration",
-    )
-    repository.save(result)
+    _m036_declaration_repository(bucket_id).save(result)
 
     event_type = _EVENT_KIND_TO_BUCKET_EVENT[command.event_kind]
     payload: dict[str, str] = {
@@ -251,5 +295,7 @@ __all__ = [
     "M036DeclarationCommand",
     "M036DeclarationResult",
     "derive_m036_declaration_id",
+    "list_m036_declarations",
+    "read_m036_declaration",
     "record_m036_declaration",
 ]
