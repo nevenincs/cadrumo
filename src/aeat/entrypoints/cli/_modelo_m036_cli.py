@@ -18,7 +18,7 @@ from ...core.i18n import tr
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import CensoModeloEventKind
 from ._common import _emit_envelope
-from ._modelo_payloads import (
+from ._modelo_payloads_m036 import (
     M036DeclarationListResult,
     M036DeclarationRecordResult,
     M036DeclarationRowPayload,
