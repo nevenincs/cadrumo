@@ -18,6 +18,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Modelo
 from ..pdf._shared import ExtractedCasilla
 
 
@@ -95,7 +96,7 @@ class BorradorObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: Literal["100"] = "100"
+    modelo: Literal[Modelo.M100] = Modelo.M100
     ejercicio: str = Field(min_length=4, max_length=4)
     tax_id: str = Field(min_length=4, max_length=32)
     artefact_kind: ArtefactKind
