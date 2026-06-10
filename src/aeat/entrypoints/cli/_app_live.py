@@ -31,6 +31,7 @@ from ...application.operator_surface import FilingStatus
 from ...core.i18n import tr
 from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
 from ._app_live_expedientes_cli import expedientes_app, register_expedientes_commands
+from ._app_live_justificante_cli import justificante_app, register_justificante_commands
 from ._app_live_notifications_cli import notifications_app, register_notifications_commands
 from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
 from ._app_live_verify_cli import register_verify_commands, verify_app
@@ -1147,6 +1148,9 @@ register_portals_commands(app)
 register_expedientes_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
 
 
+register_justificante_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
+
+
 register_verify_commands(app, active_bucket_id=_active_bucket_id, verify_expected=_verify_expected)
 
 
@@ -1167,6 +1171,7 @@ __all__ = [
     "iva_wallet_capture_remote_state_cmd",
     "iva_wallet_history_cmd",
     "iva_wallet_pull_cmd",
+    "justificante_app",
     "notifications_app",
     "portals_app",
     "portals_list",
