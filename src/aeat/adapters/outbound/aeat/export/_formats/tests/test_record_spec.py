@@ -13,6 +13,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from aeat.core.external_constants import ISO_8859_1_ENCODING
+
 from .._record_spec import (
     DateFmt,
     FieldKind,
@@ -204,7 +206,7 @@ class TestEncodeText:
         assert encode_text("€", length=1, encoding="iso-8859-15") == b"\xa4"
         # ISO-8859-1 has no Euro.
         with pytest.raises(UnicodeEncodeError, match=r"iso-8859-1|latin"):
-            encode_text("€", length=1, encoding="iso-8859-1")
+            encode_text("€", length=1, encoding=ISO_8859_1_ENCODING)
 
     def test_non_cp1252_char_raises(self) -> None:
         # Emoji has no CP1252 mapping.
