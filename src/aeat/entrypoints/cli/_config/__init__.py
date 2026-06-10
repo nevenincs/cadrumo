@@ -14,7 +14,7 @@ import typer._click.types as typer_click_types
 
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
 from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
-from ....application.modelo import ModeloWorkRegistryYearMismatchError
+from ....application.modelo import ModeloWorkRegistryYearMismatchError as _ModeloWorkRegistryYearMismatchError
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard import build_wizard_command as _build_wizard_command
@@ -507,7 +507,7 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
             translated_message="cli.config.profile.preflight_revision_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period},
         ) from exc
-    except ModeloWorkRegistryYearMismatchError as exc:
+    except _ModeloWorkRegistryYearMismatchError as exc:
         # An explicit ``--revision-id`` override that is unknown to the
         # modelo or does not cover the filing year. List the registered
         # revisions so the operator can correct the override.
