@@ -53,7 +53,7 @@ def resolve_active_bucket_id() -> str | None:
        Per-shell override useful for CI, headless invocations, and the
        CLI ``--profile`` flag.
     2. ``<aeat-root>/active-profile`` plaintext pointer file written by
-       ``profile create`` / ``config unlock``. This is the canonical
+       ``profile create`` / ``config switch``. This is the canonical
        default for interactive sessions and resolves the chicken-and-egg
        defect where an encrypted state row could not be read without
        first knowing which bucket to unlock.

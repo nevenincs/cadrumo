@@ -159,13 +159,20 @@ def test_config_profile_validate_accepts_output_language() -> None:
 
 @pytest.mark.parametrize(
     "verb",
-    ["list", "switch", "delete", "duplicate", "rename", "export", "import", "logout", "status"],
+    ["list", "delete", "duplicate", "rename", "export", "import", "logout", "status"],
 )
 def test_config_profile_verb_accepts_output_language(verb: str) -> None:
     """Every config-profile verb that previously
     lacked ``--output-language`` now accepts it for parity with the rest
     of the config noun-group."""
     _assert_output_language_registered(["config", "profile", verb])
+
+
+def test_config_switch_accepts_output_language() -> None:
+    """``aeat config switch`` (the profile-switch verb that replaced
+    ``config unlock`` per the cli-operator-surface ADR D1) accepts
+    ``--output-language`` for parity with the rest of the config surface."""
+    _assert_output_language_registered(["config", "switch"])
 
 
 # ---------------------------------------------------------------------------

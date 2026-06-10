@@ -16,11 +16,11 @@ If a profile exists but the active setting won't load, repair it:
 aeat config repair profile
 ```
 
-If the active setting points at unreadable profile state, clear it and unlock a good profile:
+If the active setting points at unreadable profile state, clear it and switch to a good profile:
 
 ```bash
 aeat config repair profile --clear-active --yes
-aeat config unlock <profile-name>
+aeat config switch <profile-name>
 ```
 
 If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md).
@@ -35,7 +35,7 @@ The wrong profile is active. Each profile keeps its own ledger, calculations, an
 aeat config profile status
 ```
 
-Switch by unlocking the right profile with `aeat config unlock <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating and switching profiles.
+Switch to the right profile with `aeat config switch <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating and switching profiles.
 
 ## A calculation refuses because the ledger is not ready
 

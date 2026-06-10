@@ -237,7 +237,7 @@ class SecureObjectRepository:
         outcome = evaluate_idle(session=session, now=now)
         if outcome.expired:
             raise SessionExpiredError(
-                "the active profile session has expired; run `aeat config unlock NAME` to re-activate.",
+                "the active profile session has expired; run `aeat config switch NAME` to re-activate.",
             )
         if self._require_secure_active_session and session.unsecured_backend:
             raise _runtime_not_ready_error(

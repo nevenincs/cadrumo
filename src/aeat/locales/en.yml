@@ -413,10 +413,7 @@ application:
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
           not resolve to an existing file. Run `aeat config auth configure --provider
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
-        dangling_active_profile: Active profile pointer '%{active_profile}' does not
-          resolve to a registered profile bucket. Run aeat config profile list to
-          inspect registered profiles, then aeat config unlock NAME or aeat config
-          profile create NAME.
+        dangling_active_profile: 'Active profile pointer ''%{active_profile}'' does not resolve to a registered profile bucket. Run aeat config profile list to inspect registered profiles, then aeat config switch NAME or aeat config profile create NAME.'
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
@@ -709,6 +706,10 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
+        on revision %{revision_id}: the registry declares a binding source no enrolled
+        calculation resolver handles. Enroll a resolver or register it as deferred
+        before calculating.'
       reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
         implemented; use --from-justificante PATH until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
@@ -728,10 +729,12 @@ application:
       work_unit_mutation_refused: The work unit is discarded; create a fresh work
         unit to continue.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
+      work_unit_revision_divergence: Work unit %{work_unit_id} was created against
+        registry revision %{work_unit_revision}, but the law-determined revision for
+        modelo %{modelo} %{filing_year} %{period} is now %{law_revision}. Re-create
+        the work unit to bind it to the current revision.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
-      work_unit_revision_divergence: 'Work unit %{work_unit_id} was created against registry revision %{work_unit_revision}, but the law-determined revision for modelo %{modelo} %{filing_year} %{period} is now %{law_revision}. Re-create the work unit to bind it to the current revision.'
-      novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds} on revision %{revision_id}: the registry declares a binding source no enrolled calculation resolver handles. Enroll a resolver or register it as deferred before calculating.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -926,8 +929,7 @@ application:
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       no_active_profile_selected: No active profile selected.
-      profile_already_exists: Profile '%{profile}' already exists; run aeat config
-        unlock NAME to activate it or aeat config profile delete NAME first.
+      profile_already_exists: 'Profile ''%{profile}'' already exists; run aeat config switch NAME to activate it or aeat config profile delete NAME first.'
       profile_bucket_directory_removal_failed: Profile bucket directory could not
         be removed.
       profile_create_route_mismatch: Profile create route '%{route}' does not match
@@ -1436,21 +1438,23 @@ cli:
           at sede.
         baja_help: Record an M036 baja declaration (census deregistration) filed at
           sede.
+        declaration_id_help: The declaration id (or an unambiguous prefix of it) to
+          view.
         declared_on_help: ISO date (YYYY-MM-DD) the operator filed the M036 at sede.
         errors:
           bad_declared_on: --declared-on must be an ISO date (YYYY-MM-DD); got {value}.
-          declaration_not_found: 'No M036 declaration matches {value!r}. Run ''aeat app modelo m036 list'' to see recorded declarations.'
+          declaration_not_found: No M036 declaration matches {value!r}. Run 'aeat
+            app modelo m036 list' to see recorded declarations.
         group_help: Record an M036 declaration filed at sede (alta / modificacion
           / baja). The local app never files; AEAT is the authority.
         justificante_help: Optional AEAT acuse de recibo identifier emitted by sede
           for the filing.
+        list_empty: No M036 declarations recorded yet.
+        list_help: List the M036 declarations recorded in the active profile.
         modificacion_help: Record an M036 modificacion declaration (census update)
           filed at sede.
         note_help: Optional operator note (up to 512 chars).
-        list_help: 'List the M036 declarations recorded in the active profile.'
-        view_help: 'View one recorded M036 declaration by id (or unambiguous prefix).'
-        declaration_id_help: 'The declaration id (or an unambiguous prefix of it) to view.'
-        list_empty: 'No M036 declarations recorded yet.'
+        view_help: View one recorded M036 declaration by id (or unambiguous prefix).
       project:
         binding_help: Additional M100 binding override as KEY=VALUE. Repeat for multiple.
           Retenciones bindings default to zero when not supplied.
@@ -1785,9 +1789,14 @@ cli:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
       no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
-      period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g. --period 1T --year 2024).'
-      period_missing_year: 'Period token ''{token}'' needs a year on this command. Add --year (e.g. --period {token} --year 2024).'
-      period_filter_unrecognised: 'Unrecognized filter period ''{raw}''. Use a year-qualified AEAT token in the filter clause: period=2024-1T (quarters), period=2024-0A (annual), period=2024-03 (months).'
+      period_filter_unrecognised: 'Unrecognized filter period ''{raw}''. Use a year-qualified
+        AEAT token in the filter clause: period=2024-1T (quarters), period=2024-0A
+        (annual), period=2024-03 (months).'
+      period_missing_year: Period token '{token}' needs a year on this command. Add
+        --year (e.g. --period {token} --year 2024).
+      period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token: 1T-4T
+        (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g.
+        --period 1T --year 2024).'
     next:
       create_profile_command: aeat config profile create NAME
   config:
@@ -1917,7 +1926,7 @@ cli:
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
         network: 'Could not reach Google: {detail}'
-        profile_unbound: No active profile. Run aeat config unlock NAME or pass --profile.
+        profile_unbound: 'No active profile. Run aeat config switch NAME or pass --profile.'
         scope_insufficient: The access granted for Google is missing required permissions.
           Run `aeat config google login` and accept every permission.
         storage: 'Could not reach Google Drive storage: {detail}'
@@ -2025,9 +2034,7 @@ cli:
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile and config bucket.
-      delete_active_cleared: The deleted profile was the active one; the active-profile
-        pointer has been cleared. Run aeat config unlock NAME or aeat config profile
-        create NAME to resume work.
+      delete_active_cleared: 'The deleted profile was the active one; the active-profile pointer has been cleared. Run aeat config switch NAME or aeat config profile create NAME to resume work.'
       delete_help: Delete a profile and its on-disk state (--yes confirms)
       delete_name_help: Profile name to delete
       delete_requires_yes: Deletion is destructive. Re-run 'aeat config profile delete
@@ -2057,9 +2064,7 @@ cli:
       import_path_help: Path to the profile bundle JSON file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Sign out of the active profile by clearing the local pointer
-      logout_session_warning: Logout cleared the active-profile pointer. Subsequent
-        verbs in this terminal will refuse with NoActiveBucketSessionError until you
-        run aeat config unlock NAME or open a new terminal and re-select.
+      logout_session_warning: 'Logout cleared the active-profile pointer. Subsequent verbs in this terminal will refuse with NoActiveBucketSessionError until you run aeat config switch NAME or open a new terminal and re-select.'
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -2195,9 +2200,10 @@ cli:
         to get started.
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
+    switch:
+      help: 'Switch the active profile by selecting it and opening its storage session.'
+      name_help: 'Profile name to switch to. Defaults to the active profile pointer.'
     unlock:
-      help: Unlock a profile by selecting it and opening its storage session.
-      name_help: Profile name to unlock. Defaults to the active profile pointer.
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -2378,7 +2384,8 @@ cli:
       llm_exclusive: --llm cannot be combined with --classification or --from-csv;
         the manual path is the explicit operator override.
       llm_failed: 'LLM classification failed: {reason}'
-      llm_help: 'Ask a local LLM provider (claude/antigravity/codex) to classify the transaction; preview by default, persist with --apply.'
+      llm_help: Ask a local LLM provider (claude/antigravity/codex) to classify the
+        transaction; preview by default, persist with --apply.
       llm_provider_unavailable: 'LLM provider ''{provider}'' is unavailable: its CLI
         is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH, or
         run ''aeat app ledger providers'' to list usable providers.'
@@ -2391,10 +2398,12 @@ cli:
         BUSINESS or PERSONAL instead.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
+      saturate_help: 'Saturate via LLM: also select the IVA category and derive the
+        rate, base, and IVA amount.'
+      saturate_non_derivable: Rate not derivable
+      saturate_requires_llm: The --saturate option applies only with --llm; supply
+        --llm with a provider.
       taxable_base_help: Taxable base amount
-      saturate_help: 'Saturate via LLM: also select the IVA category and derive the rate, base, and IVA amount.'
-      saturate_non_derivable: 'Rate not derivable'
-      saturate_requires_llm: 'The --saturate option applies only with --llm; supply --llm with a provider.'
     doclink:
       actor_help: Operator label.
       help: Record a Gmail/Drive/URL document link on a ledger row (never fetched).
@@ -2433,8 +2442,9 @@ cli:
       help: Export canonical ledger rows from the active profile bucket
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
-      year_help: 'Filing year for --period (e.g. 2024).'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year for --period (e.g. 2024).
     history:
       help: Emit the chronological bucket-event chain for one ledger transaction id
       id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
@@ -2456,12 +2466,13 @@ cli:
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
       path_help: Path to the bank statement file or directory
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
       provider_help: 'Statement format provider. Recognised values: {providers}'
       source_help: Original file used to verify imported rows
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
-      year_help: 'Filing year for --period (e.g. 2024).'
+      year_help: Filing year for --period (e.g. 2024).
     labels:
       active: Active
       amount: Amount
@@ -2487,6 +2498,7 @@ cli:
       imported: Entries imported
       irpf_category: IRPF category
       iva_amount: IVA amount
+      iva_category: IVA category
       iva_rate: IVA rate
       lifecycle_state: Lifecycle state
       merged_id: Merged transaction id
@@ -2515,7 +2527,6 @@ cli:
       warning: Warning
       warnings: Warnings
       'yes': 'Yes'
-      iva_category: 'IVA category'
     link:
       actor_help: Operator label recorded on bucket events.
       errors:
@@ -2531,7 +2542,10 @@ cli:
       invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
-      filter_help: 'Filter rows by status, period (a year-qualified AEAT token, e.g. period=2024-1T), classification, issue, import, direction (ingreso/gasto), or text. To filter by organisational group label use the separate --group option.'
+      filter_help: Filter rows by status, period (a year-qualified AEAT token, e.g.
+        period=2024-1T), classification, issue, import, direction (ingreso/gasto),
+        or text. To filter by organisational group label use the separate --group
+        option.
       footer_truncated: Showing rows {start}-{end} of {total} (offset {offset}). Use
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.
@@ -2554,8 +2568,9 @@ cli:
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active bucket's transactions
         in a given period. Local-only; never contacts AEAT.
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
-      year_help: 'Filing year (e.g. 2024).'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year (e.g. 2024).
     providers:
       help: List which subprocess LLM providers have a usable CLI on PATH.
     remove:
@@ -2572,11 +2587,11 @@ cli:
       reason_help: Reason recorded in reset history
       yes_help: Confirm clearing the active ledger catalogue
     restore:
-      actor_help: 'Operator name recorded on the bucket event'
-      help: 'Restore one stashed or archived ledger transaction to active'
-      id_help: 'Ledger transaction id to restore to active'
-      reason_help: 'Reason recorded in lifecycle history'
-      yes_help: 'Confirm restoring the ledger transaction to active'
+      actor_help: Operator name recorded on the bucket event
+      help: Restore one stashed or archived ledger transaction to active
+      id_help: Ledger transaction id to restore to active
+      reason_help: Reason recorded in lifecycle history
+      yes_help: Confirm restoring the ledger transaction to active
     review:
       filter_help: Filter rows by status, period, issue, import, classification, text,
         or direction
@@ -2611,8 +2626,9 @@ cli:
     status:
       help: Summarize ledger state and calculation readiness for the active profile
         bucket
-      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
-      year_help: 'Filing year for --period (e.g. 2024).'
+      period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
+        01-12 (months). Combine with --year to choose the year.'
+      year_help: Filing year for --period (e.g. 2024).
     track:
       help: Show the event lineage for one ledger transaction
       transaction_id_help: Ledger transaction id to inspect
@@ -2804,7 +2820,8 @@ cli:
       year_help: Fiscal year for the applicability evaluation; defaults to the current
         year.
     period: Period
-    period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year to choose the year.'
+    period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
+      (months). Combine with --year to choose the year.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No legacy declaration drafts are saved - this
@@ -2853,7 +2870,7 @@ cli:
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.
     verbose_help: Show details and next action when available
-    year_help: 'Filing year for --period (e.g. 2024).'
+    year_help: Filing year for --period (e.g. 2024).
   registry:
     app_help: Tax models registry management
     audit_oracles_environment_help: Live parity catalogue environment to audit against
@@ -3748,8 +3765,7 @@ errors:
       is locked or unreachable. Unlock the keychain and try again.
     locked_storage_bucket_busy: The storage bucket is in use by another process. Wait
       for that process to finish and try again.
-    locked_storage_bucket_session: This operation requires an unlocked storage bucket.
-      Run `aeat config unlock` and try again.
+    locked_storage_bucket_session: 'This operation requires an unlocked storage bucket. Run `aeat config switch` and try again.'
     locked_storage_lock_acquisition: The exclusive file lock could not be acquired
       within the timeout. Another process holds it; wait and try again.
     locked_storage_master_key_keychain: The operating-system keychain is locked. Unlock
@@ -3760,9 +3776,7 @@ errors:
       try again.
     auth_profile_identity_mismatch: The active profile identity cannot own the requested
       authentication session.
-    bootstrap_already_complete: Secure storage bootstrap is already complete. Use
-      aeat config unlock NAME to activate an existing profile or aeat config profile
-      create NAME to add another profile.
+    bootstrap_already_complete: 'Secure storage bootstrap is already complete. Use aeat config switch NAME to activate an existing profile or aeat config profile create NAME to add another profile.'
     censo_apply_conflict: The censo cannot be applied because there is in-flight work
       on a dependent unit. Resolve the pending state first.
     censo_field_validation: The AEAT censo returned a value the schema cannot accept.
@@ -3803,12 +3817,10 @@ errors:
       a modelo work unit.
     modelo_work_selector_revision_conflict: The selected modelo work unit belongs
       to a different revision.
-    profile_already_registered: A profile with that name already exists. Use aeat
-      config unlock NAME to switch to it.
+    profile_already_registered: 'A profile with that name already exists. Use aeat config switch NAME to switch to it.'
     profile_import_collision: The imported profile identifier collides with an existing
       one.
-    profile_locked: This operation requires an unlocked profile. Run `aeat config
-      unlock` and try again.
+    profile_locked: 'This operation requires an unlocked profile. Run `aeat config switch` and try again.'
     profile_name_collision: The profile name provided is already in use. Choose a
       different name.
     reconciliation_cross_bucket: The addressed work unit belongs to a bucket other
@@ -3983,14 +3995,12 @@ errors:
       that already exists.
     refused_storage_bucket_no_active: No active bucket could be resolved. Select a
       profile and try again.
-    refused_storage_master_key_no_active_session: Encryption requires an active session.
-      Run `aeat config unlock` and try again.
+    refused_storage_master_key_no_active_session: 'Encryption requires an active session. Run `aeat config switch` and try again.'
     refused_storage_passphrase_too_short: The passphrase is too short. It must be
       at least 8 characters long.
     refused_storage_secret_already_exists: A secret with that key already exists.
       Use the overwrite option to replace it.
-    refused_storage_session_expired: The active session expired due to inactivity.
-      Re-activate it with aeat config unlock NAME.
+    refused_storage_session_expired: 'The active session expired due to inactivity. Re-activate it with aeat config switch NAME.'
     refused_storage_unsecured_mode: The unsecured storage backend was requested without
       the required opt-in. It is not safe for real data.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
@@ -4051,8 +4061,7 @@ errors:
         before an active profile bucket is selected.
       cold_bootstrap_explicit_database_refused: Cold-bootstrap storage cannot bypass
         an explicit database route.
-      no_active_session: No active bucket session is open. Run aeat config unlock
-        NAME to unlock a profile.
+      no_active_session: 'No active bucket session is open. Run aeat config switch NAME to unlock a profile.'
       no_detail: No detailed readiness issue was reported.
       not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
       route_bucket_mismatch: The database route does not match the active bucket session.
@@ -4060,10 +4069,8 @@ errors:
         bucket.
       session_changed: The active bucket session changed. Unlock the target profile
         again.
-      session_expired: The active bucket session has expired. Run aeat config unlock
-        NAME to re-activate the profile.
-      session_sealed: The active bucket session is sealed. Run aeat config unlock
-        NAME to re-activate the profile.
+      session_expired: 'The active bucket session has expired. Run aeat config switch NAME to re-activate the profile.'
+      session_sealed: 'The active bucket session is sealed. Run aeat config switch NAME to re-activate the profile.'
       unsecured_backend: The active bucket session uses the unsecured backend. Production
         profile-bound storage requires file or keyring custody.
     stored_data_validation_boundary: A stored profile or workflow record no longer

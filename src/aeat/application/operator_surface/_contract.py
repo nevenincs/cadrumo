@@ -34,7 +34,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         required_children=(
             "profile",
             "lock",
-            "unlock",
+            "switch",
             "rekey",
             "recover",
             "show-recovery",
@@ -102,10 +102,10 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="unlock",
-        operator_question="unlock and activate profile custody for profile-bound backend workflows",
+        child="switch",
+        operator_question="switch the active taxpayer profile for profile-bound backend workflows",
         service_owner="aeat.application.user_profile",
-        commands=("unlock",),
+        commands=("switch",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
