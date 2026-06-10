@@ -119,6 +119,15 @@ def _reject_computed_inputs(
         )
 
 
+# Observation-backed slot sources: a bound casilla whose binding carries one of
+# these sources materialises its value into ``binding_values`` (the
+# previous-filing carry resolver or, since the relation became canonical for
+# cross-modelo fold-ins, the relation prefill resolver). Both feed the bound
+# casilla through the binding_values channel and obey the same
+# source-of-truth / projection-consistency invariants below.
+_OBSERVATION_BACKED_SLOT_SOURCES: frozenset[str] = frozenset({"previous_filing", "relation_prefill"})
+
+
 def _previous_filing_binding_for_bound_casilla(
     casilla: CasillaDefinition,
     bindings_by_id: Mapping[str, DataBindingDefinition],
@@ -126,7 +135,7 @@ def _previous_filing_binding_for_bound_casilla(
     if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
         return None
     binding = bindings_by_id.get(casilla.binding)
-    if binding is None or binding.source != "previous_filing":
+    if binding is None or str(binding.source) not in _OBSERVATION_BACKED_SLOT_SOURCES:
         return None
     return binding
 
@@ -237,6 +246,13 @@ def _initial_value_for_casilla(
 
 
 def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_period: str) -> bool:
+    # A relation_prefill slot legitimately blanks when no prior filing exists to
+    # fold in (the relation resolver returns no value and the operator fills it
+    # by hand). Treat an unresolved relation_prefill slot as absent-by-design
+    # rather than raising — the same operator-manual fallback the relation
+    # resolver documents.
+    if str(binding.source) == "relation_prefill":
+        return True
     if binding.source != "previous_filing":
         return False
     try:

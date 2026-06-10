@@ -1,6 +1,6 @@
 [[revisions."2023".bindings]]
 id = "renta-2023-modelo-111-retenciones-periodicas"
-source = "previous_filing"
+source = "relation_prefill"
 selector = { source_modelo = "111", source_output = "28" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]

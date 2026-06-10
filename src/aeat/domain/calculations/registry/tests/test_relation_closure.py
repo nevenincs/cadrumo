@@ -237,6 +237,57 @@ def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
         )
 
 
+def test_registry_validator_rejects_nondirect_previous_filing_binding() -> None:
+    """S12 gate (a): a previous_filing binding with a non-direct selector is rejected.
+
+    The M100 cross-modelo slot bindings carry a non-direct selector
+    ({source_modelo, source_output}, no period anchor). They are canonically
+    ``relation_prefill``; re-stamping one back to ``previous_filing`` must trip
+    the slot-source hygiene gate (aggregation-taxonomy ADR ruling 3).
+    """
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "100")
+    revision = modelo.revisions["2025"]
+    target_id = "renta-2025-modelo-130-pagos-fraccionados"
+    mutated_bindings = tuple(
+        binding.model_copy(update={"source": "previous_filing"}) if binding.id == target_id else binding
+        for binding in revision.bindings
+    )
+    mutated_revision = revision.model_copy(update={"bindings": mutated_bindings})
+    mutated_modelo = _with_revision(modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match="non-direct selector"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_modelo)
+        )
+
+
+def test_registry_validator_rejects_relation_targeted_previous_filing_binding() -> None:
+    """S12 gate (b): a binding both relation-targeted and previous_filing is rejected.
+
+    The M180 perceptores slot is relation-targeted and canonically
+    ``relation_prefill``. Re-stamping it back to ``previous_filing`` (even with
+    its direct selector intact) must trip the relation-vs-previous_filing
+    collision gate (aggregation-taxonomy ADR ruling 3) — the two mechanisms must
+    have disjoint declared ownership.
+    """
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "180")
+    revision = modelo.revisions["2023-y-siguientes"]
+    target_id = "modelo-180-115-perceptores-anual"
+    mutated_bindings = tuple(
+        binding.model_copy(update={"source": "previous_filing"}) if binding.id == target_id else binding
+        for binding in revision.bindings
+    )
+    mutated_revision = revision.model_copy(update={"bindings": mutated_bindings})
+    mutated_modelo = _with_revision(modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match="both a relation target_binding and a 'previous_filing'"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_modelo)
+        )
+
+
 def test_fragmented_modelo_requires_relation_dependency_role(tmp_path: Path) -> None:
     directory = _copy_committed_modelo_180(tmp_path / "180")
     fragment = directory / _MODELO_180_FIRST_RELATION_FRAGMENT

@@ -961,6 +961,7 @@ class DataBindingDefinition(RegistryModel):
         AggregationSourceKind.INVOICE,
         "profile",
         "previous_filing",
+        "relation_prefill",
         "manual_input",
         "ledger_oss_aggregation",
         "ledger_iva_aggregation",
