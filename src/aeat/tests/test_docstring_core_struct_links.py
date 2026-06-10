@@ -103,7 +103,7 @@ def _imported_anchors(tree: ast.AST) -> set[str]:
     return found
 
 
-def _linked_anchors(tree: ast.AST) -> set[str]:
+def _linked_anchors(tree: ast.Module) -> set[str]:
     """Core-struct names cross-referenced in any docstring of this module."""
     docstrings: list[str] = []
     module_doc = ast.get_docstring(tree)
