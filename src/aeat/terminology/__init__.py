@@ -24,6 +24,15 @@ constrain.
 
 from __future__ import annotations
 
+from ._curation import (
+    AuditReport,
+    CurationError,
+    audit_handbook,
+    relate_concepts,
+    retire_concept,
+    set_language_field,
+    set_term,
+)
 from ._enrolment import EnrolmentCandidate, SeedLabel, collect_enrolment_candidates
 from ._enums import ConceptDomain, ConceptLifecycle, TermStatus
 from ._errors import TerminologyError, TerminologyLoadError, TerminologyValidationError
@@ -62,9 +71,11 @@ from ._validators import (
 )
 
 __all__ = [
+    "AuditReport",
     "ConceptDomain",
     "ConceptLifecycle",
     "ConceptRecord",
+    "CurationError",
     "EnrolmentCandidate",
     "GrammaticalGender",
     "HandbookValidator",
@@ -84,6 +95,7 @@ __all__ = [
     "TerminologyValidationError",
     "apply_scaffold_plan",
     "approved_completeness_validator",
+    "audit_handbook",
     "build_scaffold_plan",
     "collect_enrolment_candidates",
     "default_handbook_validators",
@@ -92,8 +104,12 @@ __all__ = [
     "lifecycle_replaced_by_validator",
     "load_bundled_terminology_handbook",
     "load_terminology_handbook",
+    "relate_concepts",
     "relation_integrity_validator",
+    "retire_concept",
     "scaffold_handbook",
     "serialise_concept",
+    "set_language_field",
+    "set_term",
     "terminology_concepts_dir",
 ]

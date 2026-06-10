@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    aeat.terminology.__main__
+   aeat.terminology._curation
    aeat.terminology._enrolment
    aeat.terminology._enums
    aeat.terminology._errors
