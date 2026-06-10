@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-161.html",
+  "source_sha256": "13b646a619c99fa9385bc6506bf0ae85af7b2fa87d0656b2fc1ac070f4258cef",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Los tipos del recargo de equivalencia serán los siguientes:\n1.º Con carácter general, el 5,2 por ciento.\n2.º Para las entregas de bienes a las que resulte aplicable el tipo impositivo establecido en el artículo 91, apartado uno de esta Ley, el 1,4 por ciento.\n3.º Para las entregas de bienes a las que sea aplicable el tipo impositivo previsto en el artículo 91, apartado dos de esta Ley, el 0,50 por ciento.\n4.º Para las entregas de bienes objeto del Impuesto Especial sobre las Labores del Tabaco, el 1,75 por ciento.\nSe modifica, con efectos desde el 1 de septiembre de 2012, por el art. 23.5 del Real Decreto-ley 20/2012, de 13 de julio. Ref. BOE-A-2012-9364.\nSe modifica por el art. 10.15 de la Ley 13/1996, de 30 de diciembre. Ref. BOE-A-1996-29117",
+      "title": "Artículo 161. Tipos.",
+      "section": "Artículo 161. Tipos.",
+      "anchor": null
+    }
+  ]
+}

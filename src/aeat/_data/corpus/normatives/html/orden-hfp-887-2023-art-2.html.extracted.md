@@ -1,0 +1,3 @@
+# Artículo 2. Obligados a presentar el Modelo 721.
+
+Estarán obligados a presentar el Modelo 721 las personas físicas y jurídicas residentes en territorio español, los establecimientos permanentes en dicho territorio de personas o entidades no residentes, y las entidades a que se refiere el artículo 35.4 de la Ley 58/2003, de 17 de diciembre, General Tributaria, que posean monedas virtuales situadas en el extranjero a 31 de diciembre cuyo valor de las mismas sea superior a 50.000 euros.

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-819-2024-art-1.html",
+  "source_sha256": "fed8928773df42bfc5bdbbd32994008f8427b8afce0cc800c0ab5085b42f4583",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se aprueba el modelo 303 de \"Impuesto sobre el Valor Añadido. Autoliquidación\", que figura como anexo I de la presente orden.\n2. Este modelo será utilizado para los períodos de liquidación correspondientes al ejercicio 2023 y siguientes por los sujetos pasivos del Impuesto sobre el Valor Añadido cuyo período de liquidación coincida con el trimestre natural o con el mes natural.\n3. La casilla [27] recoge el total de cuota devengada (suma de cuotas devengadas a todos los tipos aplicables, incluyendo inversión del sujeto pasivo). La casilla [45] recoge el total a deducir (suma de cuotas soportadas deducibles). La casilla [46] = [27] - [45] es el resultado del régimen general.\n4. La casilla [64] recoge la suma de resultados: [46] (resultado régimen general) + [58] (resultado régimen simplificado) + [76] (regularización de cuotas art. 80.Cinco.5ª LIVA). La casilla [65] recoge el porcentaje atribuible a la Administración del Estado (en el régimen de territorio común, el 100 por ciento; en territorios forales, el porcentaje que corresponda conforme al Concierto Económico o Convenio aplicable). La casilla [66] = [64] × [65] / 100 es el importe atribuible a la Administración del Estado.\n5. La casilla [69] recoge el resultado de la autoliquidación: [66] + [77] + [68] - [78], donde [77] es el IVA a la importación liquidado por la Aduana pendiente de ingreso, [68] es el resultado de regularización en tributación conjunta, y [78] son las cuotas a compensar de períodos anteriores aplicadas en este período.\n6. La casilla [71] recoge el resultado final: [69] - [70] + [109], donde [70] son los resultados a ingresar de anteriores autoliquidaciones del ejercicio y período, y [109] son las devoluciones acordadas por la AEAT en anteriores autoliquidaciones del ejercicio y período.\nOrden HAC/819/2024, de 30 de marzo, por la que se aprueba el modelo 303 «Impuesto sobre el Valor Añadido. Autoliquidación», se modifican los Anexos I y II de la Orden EHA/3786/2008, de 29 de diciembre. Ref. BOE-A-2024-6840",
+      "title": "Artículo 1. Aprobación del modelo 303.",
+      "section": "Artículo 1. Aprobación del modelo 303.",
+      "anchor": null
+    }
+  ]
+}

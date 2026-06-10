@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-68-4.html",
+  "source_sha256": "0bff4b44bd6c4da2cddd4cb4f551f33f096d88ff25bb7db25351db1c60e3c0b8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "4. Deducción por rentas obtenidas en Ceuta o Melilla.\n1.º Contribuyentes residentes en Ceuta o Melilla.\na) Los contribuyentes que tengan su residencia habitual y efectiva en Ceuta o Melilla se deducirán el 60 por ciento de la parte de la suma de las cuotas íntegras estatal y autonómica que proporcionalmente corresponda a las rentas computadas para la determinación de las bases liquidables que hubieran sido obtenidas en Ceuta o Melilla.\n3.º A los efectos previstos en esta Ley, se considerarán rentas obtenidas en Ceuta o Melilla las que procedan del ejercicio de actividades económicas efectivamente realizadas, en las condiciones que reglamentariamente se determinen, en Ceuta o Melilla.",
+      "title": "Artículo 68. Deducciones.",
+      "section": "Artículo 68. Deducciones.",
+      "anchor": null
+    }
+  ]
+}

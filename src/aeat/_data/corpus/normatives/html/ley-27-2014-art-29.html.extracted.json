@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-29.html",
+  "source_sha256": "fb3424046748975ee98d910760d05fe9373fb57973c93bdd59871f00825a292e",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. El tipo general de gravamen para los contribuyentes de este Impuesto será el 25 por ciento, excepto para las entidades cuyo importe neto de la cifra de negocios del período impositivo inmediato anterior sea inferior a 1 millón de euros que aplicarán los tipos que se indican en la siguiente escala, salvo que de acuerdo con lo previsto en este artículo deban tributar a un tipo diferente del general:\na) Por la parte de base imponible comprendida entre 0 y 50.000 euros, al tipo del 17 por ciento.\nb) Por la parte de base imponible restante, al tipo del 20 por ciento.\nNo obstante, las entidades que cumplan las previsiones previstas en el artículo 101 de esta ley tributarán al tipo del 20 por ciento, excepto si de acuerdo con lo previsto en este artículo deban tributar a un tipo diferente del general.\nFinalmente, las entidades de nueva creación que realicen actividades económicas tributarán, en el primer período impositivo en que la base imponible resulte positiva y en el siguiente, al tipo del 15 por ciento, excepto si, de acuerdo con lo previsto en este artículo, deban tributar a un tipo inferior.\n2. Las sociedades cooperativas fiscalmente protegidas tributarán a los tipos de gravamen resultantes de minorar en tres puntos porcentuales los tipos de gravamen previstos en el apartado anterior, siempre que el tipo resultante no supere el 20 por ciento, excepto por lo que se refiere a los resultados extracooperativos que tributarán a los tipos previstos en el apartado anterior.\n3. Tributarán al 10 por ciento las entidades a las que sea de aplicación el régimen fiscal establecido en la Ley 49/2002, de 23 de diciembre, de régimen fiscal de las entidades sin fines lucrativos y de los incentivos fiscales al mecenazgo.\n6. Tributarán al tipo del 30 por ciento las entidades de crédito, así como las entidades que se dediquen a la exploración, investigación y explotación de yacimientos y almacenamientos subterráneos de hidrocarburos.",
+      "title": "Artículo 29. El tipo de gravamen.",
+      "section": "Artículo 29. El tipo de gravamen.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# Artículo 3. Pago de las deudas tributarias resultantes de las declaraciones del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español, Modelos 200 y 220, mediante domiciliación bancaria.
+
+2. La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 22 de julio de 2025, ambos inclusive.
+
+# Artículo 6. Plazo de presentación de los Modelos 200 y 220 de declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español).
+
+1. De acuerdo con lo dispuesto en el artículo 124.1 de la Ley 27/2014, de 27 de noviembre, el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los 25 días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo.
+Los contribuyentes cuyo plazo de declaración se hubiera iniciado con anterioridad a la entrada en vigor de la presente orden, conforme a lo dispuesto en el párrafo anterior, deberán presentar la declaración dentro de los 25 días naturales siguientes a la entrada en vigor de esta misma orden, salvo que hubieran optado por presentar la declaración utilizando los modelos contenidos en la Orden HAC/495/2024, de 21 de mayo, por la que se aprueban los modelos de declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes y a entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español, para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023, en cuyo caso el plazo de presentación será el señalado en el párrafo anterior.
+
+# Disposición final única. Entrada en vigor.
+
+La presente orden entrará en vigor el día 1 de julio de 2025.
+Modelo 200

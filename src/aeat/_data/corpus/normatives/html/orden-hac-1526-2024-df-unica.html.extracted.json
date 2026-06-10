@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-1526-2024-df-unica.html",
+  "source_sha256": "25725f330f7c675ee1b07a8514428d615d9d8f795b013080f1d62bcab683522f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/1526/2024 - Disposicion final unica\nDisposicion final unica. Entrada en vigor.\nLa orden entra en vigor el dia 3 de febrero de 2025.\nSe aplica por primera vez a los modelos 030 y 036 que se presenten a partir de dicha fecha.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

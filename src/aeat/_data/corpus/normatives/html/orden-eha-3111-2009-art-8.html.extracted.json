@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3111-2009-art-8.html",
+  "source_sha256": "c1cc4ef7324df5bb19aed9ac1a94f7027231da5b252981ce919588794dc0d518",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La declaración-resumen anual del Impuesto sobre el Valor Añadido deberá presentarse en los treinta primeros días naturales del mes de enero siguiente al año al que se refiere la declaración, sin perjuicio, de lo establecido en el apartado 4 del artículo 4 de esta Orden.\nSe añade por el art. 1.6 de la Orden HAP/2725/2012, de 19 de diciembre. Ref. BOE-A-2012-15380.\nSu anterior numeración era art. 6.\nTexto añadido, publicado el 21/12/2012, en vigor a partir del 22/12/2012.",
+      "title": "Artículo 8. Plazo de presentación del modelo 390.",
+      "section": "Artículo 8. Plazo de presentación del modelo 390.",
+      "anchor": null
+    }
+  ]
+}

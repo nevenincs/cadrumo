@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1624-1992-art-71.html",
+  "source_sha256": "1bc43b9158e256f4bbb4aec2f03c047c30376e43764f1393ce60e9ea4a58a1b4",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Salvo lo establecido en relación con las importaciones, los sujetos pasivos deberán realizar por sí mismos la determinación de la deuda tributaria mediante declaraciones-liquidaciones ajustadas a las normas contenidas en los apartados siguientes.\nLos empresarios y profesionales deberán presentar las declaraciones-liquidaciones periódicas a que se refieren los apartados 3, 4 y 5 de este artículo, así como la declaración resumen anual prevista en el apartado 7, incluso en los casos en que no existan cuotas devengadas ni se practique deducción de cuotas soportadas o satisfechas.\nLa obligación establecida en los párrafos anteriores no alcanzará a aquellos sujetos pasivos que realicen exclusivamente las operaciones exentas comprendidas en los artículos 20 y 26 de la Ley del Impuesto.\nLa obligación de presentar la declaración resumen anual prevista en el apartado 7 no alcanzará a aquellos sujetos pasivos respecto de los que la Administración Tributaria ya posea información suficiente a efectos de las actuaciones y procedimientos de comprobación o investigación, derivada del cumplimiento de obligaciones tributarias por parte dichos sujetos pasivos o de terceros.\n2. Las declaraciones-liquidaciones deberán presentarse directamente o, a través de las Entidades colaboradoras, ante el órgano competente de la Administración tributaria.\n3. El período de liquidación coincidirá con el trimestre natural.\nNo obstante, dicho período de liquidación coincidirá con el mes natural, cuando se trate de los empresarios o profesionales que a continuación se relacionan:\n1.º Aquéllos cuyo volumen de operaciones, calculado conforme a lo dispuesto en el artículo 121 de la Ley del Impuesto hubiese excedido durante el año natural inmediato anterior de 6.010.121,04 euros.\n2.º Aquéllos que hubiesen efectuado la adquisición de la totalidad o parte de un patrimonio empresarial o profesional a que se refiere el segundo párrafo del apartado uno del artículo 121 de la Ley del Impuesto, cuando la suma de su volumen de operaciones del año natural inmediato anterior y la del volumen de operaciones que hubiese efectuado en el mismo período el transmitente de dicho patrimonio mediante la utilización del patrimonio transmitido hubiese excedido de 6.010.121,04 euros.",
+      "title": "Artículo 71. Liquidación del Impuesto. Normas generales.",
+      "section": "Artículo 71. Liquidación del Impuesto. Normas generales.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-44-2015-art-2.html",
+  "source_sha256": "d8f2e480fdeb2acf9016c4c77b5a33bb626366c3885e9b6f23dc5fcd35879cb2",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Las sociedades a que se refiere el artículo 1 incluirán en su denominación las palabras «Sociedad Anónima Laboral» o «Sociedad Limitada Laboral», o sus abreviaturas «S.A.L.» o «S.L.L.», respectivamente.\n2. Ninguna otra sociedad podrá utilizar en su denominación los términos «laboral» o «laboral» referidos a las formas societarias recogidas en esta Ley, ni tampoco aquellas otras denominaciones que puedan inducir a confusión con ellas.",
+      "title": "Artículo 2. Denominación social.",
+      "section": "Artículo 2. Denominación social.",
+      "anchor": null
+    }
+  ]
+}

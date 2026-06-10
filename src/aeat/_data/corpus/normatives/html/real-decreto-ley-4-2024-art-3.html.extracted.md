@@ -1,0 +1,5 @@
+# Artículo 3. Modificación de la Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Físicas.
+
+Se modifica la disposición adicional quincuagésima séptima de la Ley 35/2006, de 28 de noviembre, que queda redactada como deducción por residencia habitual y efectiva en la isla de La Palma durante los períodos impositivos 2022, 2023 y 2024.
+En los períodos impositivos 2022, 2023 y 2024, la deducción prevista en el número 1.º del apartado 4 del artículo 68 de esta ley será aplicable, en los mismos términos y condiciones, a los contribuyentes con residencia habitual y efectiva en la isla de La Palma.
+Para determinar el tipo del pago fraccionado correspondiente a las actividades económicas que tengan derecho a la misma, el plazo de presentación no debe haberse iniciado en el momento de la entrada en vigor del Real Decreto-ley 4/2024, de 26 de junio.
