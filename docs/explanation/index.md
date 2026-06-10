@@ -27,7 +27,7 @@ The application divides operations into two distinct surfaces to keep your works
 The configuration surface covers one-time or infrequent setup tasks. It answers the question: *Is this machine and environment ready?*
 It manages:
 - **Taxpayer Profiles**: Creating and switching between saved identities, which
-  hold the taxpayer's DNI, NIE, NIF, or CIF, plus their name and tax region.
+  hold the taxpayer's NIF, CIF, DNI, or NIE, plus their name and tax region.
 - **Authentication**: Managing the digital certificates used to download tax facts.
 - **Data Buckets**: Configuring the secure local directories where your data is stored.
 - **Diagnostics and Repair**: Checking setup integrity and restoring storage when needed.

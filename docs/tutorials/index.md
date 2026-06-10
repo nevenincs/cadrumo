@@ -30,8 +30,8 @@ Run:
 aeat config profile create tutorial --quiet --accept-defaults --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez"
 ```
 
-The sample `--tax-id` has the same shape as a Spanish citizen DNI/NIF. Use your
-own DNI, NIE, NIF, or CIF when you create a real profile.
+The sample `--tax-id` has the same shape as a Spanish citizen's NIF (their DNI
+number). Use your own NIF, CIF, DNI, or NIE when you create a real profile.
 
 The command output should identify `tutorial` as the active profile and point to
 the next modelo work command. It looks similar to:

@@ -72,12 +72,14 @@ modelo
   a three-digit code such as 100 (personal income tax), 130 (quarterly
   income-tax instalment), or 303 (value-added tax, IVA).
 
-DNI, NIE, NIF, and CIF
-: Spanish identity and tax identifiers. Spanish citizens usually use Documento
-  Nacional de Identidad (DNI). Foreign individuals usually use Número de
-  Identidad de Extranjero (NIE). Companies and other legal entities use Número
-  de Identificación Fiscal (NIF). Older records may call a company identifier
-  Código de Identificación Fiscal (CIF).
+NIF, CIF, DNI, and NIE
+: Spanish tax and identity identifiers. The Número de Identificación Fiscal
+  (NIF) is the tax identifier for everyone. For Spanish citizens the NIF is
+  their Documento Nacional de Identidad (DNI) number; for foreign individuals
+  it is their Número de Identidad de Extranjero (NIE). Companies and other
+  legal entities also use a NIF; older records may call a company identifier
+  Código de Identificación Fiscal (CIF). DNI and NIE on their own are identity
+  documents - Cl@ve registration asks for them directly.
 
 preflight
 : A readiness check on the ledger for a period. It reports rows missing a
