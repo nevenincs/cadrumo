@@ -24,7 +24,7 @@ import re
 from datetime import date
 
 from ...core.errors import ProfileAnswerTypeError
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 
 _MARRIAGE_DATE_PATH = "renta_taxpayer.marriage_date"
 _MONTH_START_PATH = "renta_taxpayer.marriage_month_start"
@@ -99,9 +99,12 @@ def parse_marriage_date_flag(raw: str) -> date:
     """
     stripped = raw.strip()
     try:
-        return _parse_iso8601_date(stripped)
+        result = _parse_iso8601_date(stripped)
     except ValueError as exc:
         raise ProfileAnswerTypeError(f"--taxpayer-marriage-date must be YYYY-MM-DD; got: {raw!r}") from exc
+    if result is None:
+        raise ProfileAnswerTypeError(f"--taxpayer-marriage-date must be YYYY-MM-DD; got: {raw!r}")
+    return result
 
 
 __all__ = [
