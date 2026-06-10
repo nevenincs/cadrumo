@@ -132,8 +132,7 @@ def _decode_manifest_envelope(payload: bytes, *, attachment_id: str | None = Non
 # behind a fixed envelope prefix makes ``payload_hash`` hash the prefixed bytes
 # instead, so the bare content digest never lands in a plaintext column. The
 # object key stays HMAC-digested and the payload stays encrypted; this only
-# removes the residual content-digest oracle. Reads tolerate legacy
-# pre-envelope blobs (no prefix) so existing on-disk data stays readable.
+# removes the residual content-digest oracle.
 _ATTACHMENT_BLOB_ENVELOPE_PREFIX = b"\x00aeat-attachment-blob-envelope-v1\x00"
 
 
@@ -143,10 +142,18 @@ def _wrap_blob_payload(data: bytes) -> bytes:
 
 
 def _unwrap_blob_payload(stored: bytes) -> bytes:
-    """Return the raw content for a stored blob, tolerating legacy un-enveloped rows."""
-    if stored.startswith(_ATTACHMENT_BLOB_ENVELOPE_PREFIX):
-        return stored[len(_ATTACHMENT_BLOB_ENVELOPE_PREFIX) :]
-    return stored
+    """Strip the envelope prefix from a stored blob; refuse an un-enveloped payload.
+
+    Every blob is wrapped by :func:`_wrap_blob_payload` at write time, so a
+    missing prefix can only mean corruption — never legacy data. Refuse it
+    rather than returning unframed bytes.
+    """
+    if not stored.startswith(_ATTACHMENT_BLOB_ENVELOPE_PREFIX):
+        raise _attachment_validation_error(
+            "attachment blob payload is missing its envelope prefix",
+            violation="blob_envelope_prefix",
+        )
+    return stored[len(_ATTACHMENT_BLOB_ENVELOPE_PREFIX) :]
 
 
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
