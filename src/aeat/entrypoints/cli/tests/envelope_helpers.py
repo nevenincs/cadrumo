@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 
 
-def unwrap_schema_envelope(output: str) -> dict:
+def unwrap_schema_envelope(output: str) -> dict[str, object]:
     """Return the inner ``result`` mapping from a CLI ``--json`` envelope.
 
     Args:

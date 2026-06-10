@@ -26,6 +26,7 @@ import os
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -133,7 +134,7 @@ def _import_one_transaction(tmp_path: Path) -> str:
     return rows[0]["transaction_id"]
 
 
-def _row_by_id(transaction_id: str) -> dict:
+def _row_by_id(transaction_id: str) -> dict[str, Any]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     rows = json.loads(listed.output)["result"]["rows"]

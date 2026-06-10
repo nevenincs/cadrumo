@@ -65,4 +65,5 @@ def test_all_per_modelo_fixture_classes_are_frozen_dataclasses() -> None:
         if cls is _Fixture and _FIXTURES:
             instance = _FIXTURES[0]
             with pytest.raises((AttributeError, TypeError)):
-                instance.modelo = "999"  # type: ignore[misc]
+                # Accessing through __dict__ bypasses the frozen check at type-check time
+                instance.modelo = "999"  # type: ignore[arg-type]

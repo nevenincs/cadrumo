@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -54,7 +55,7 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
     return rows_sorted[0]["transaction_id"], rows_sorted[1]["transaction_id"]
 
 
-def _list_transactions() -> list[dict]:
+def _list_transactions() -> list[dict[str, Any]]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
@@ -383,8 +384,7 @@ def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> No
     # Bulk-classify tx2 (gross 200.00) with IVA facts via --from-csv.
     csv_file = tmp_path / "bulk_iva.csv"
     csv_file.write_text(
-        "transaction_id,classification,taxable_base,iva_rate,iva_amount\n"
-        f"{tx2},BUSINESS,165.29,0.21,34.71\n",
+        f"transaction_id,classification,taxable_base,iva_rate,iva_amount\n{tx2},BUSINESS,165.29,0.21,34.71\n",
         encoding="utf-8",
     )
     bulk = _RUNNER.invoke(app, ["app", "ledger", "classify", "--from-csv", str(csv_file)])
