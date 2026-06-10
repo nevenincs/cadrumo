@@ -57,7 +57,7 @@ def replay_parse_operation(action: str) -> tuple[RemoteOperation, ...]:
     return (RemoteOperation(kind="local_workbook", action=action),)
 
 
-def decode_replay_observation[ObservationT](
+def decode_replay_observation[ObservationT: _CheckerBaseModel](
     payload: bytes,
     *,
     surface_label: str,
@@ -65,7 +65,9 @@ def decode_replay_observation[ObservationT](
 ) -> ObservationT:
     """Decode replay JSON into the requested observation model."""
     document = decode_replay_json_payload(payload, surface_label=surface_label)
-    return observation_type(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
+    return observation_type.model_validate(
+        {"values": dict(document.observed), "raw_evidence_locator": document.raw_evidence_locator}
+    )
 
 
 def observed_verdict(values: Mapping[str, str], key: str) -> str | None:
