@@ -403,6 +403,38 @@ class MultiYearResolver:
     binding; inject a custom repository in tests by passing
     `repository=...` (the resolver does no construction beyond the
     repository it's handed).
+
+    .. rubric:: Deferral note (W02.P04.S25)
+
+    This class has no live production caller in the current calculate path
+    (``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics``).
+    :class:`PreviousFilingSourceResolver` covers the ``previous_filing``
+    source mesh for the live path by calling
+    :func:`~aeat.application.calculations.resolve_bindings_from_local_store`
+    directly.
+
+    ``MultiYearResolver`` is the *explicit multi-year scan API* intended for
+    modelos that need structured year-set coverage reports:
+
+    - Modelo 200 IS — BIN unlimited carryforward (LIS arts. 25-26) and M202
+      pago fraccionado roll-up across prior years.
+    - Modelo 303 IVA — prorrata four-year average (LIVA art. 105) and
+      regularización inversiones five-year straight-line (LIVA art. 93).
+
+    It returns a :class:`MultiYearResolutionReport` with explicit
+    ``requested_years``, ``found_years``, and ``missing_years`` sets that
+    :class:`PreviousFilingSourceResolver` does not expose — callers can
+    decide whether to refuse, prompt the operator, or zero-fill absent years.
+
+    **Why not wired yet:** the modelos above are in DORMANT aggregation state
+    per the calculation-engine-foundations audit F6 matrix (no enrolled source
+    resolver for their multi-year inputs). This class will be wired when those
+    modelos are enrolled in W02.P06 / W03.P08.
+
+    **Follow-up:** wire ``MultiYearResolver`` as the multi-year scan back-end
+    for M200 BIN carry and M303 prorrata when the respective modelo resolvers
+    are enrolled. Reference: calculation-engine-foundations plan W02.P06 /
+    W03.P08, audit F6.
     """
 
     def __init__(
