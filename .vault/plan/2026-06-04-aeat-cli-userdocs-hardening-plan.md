@@ -48,21 +48,21 @@ Give readers a reliable place to start and choose their next page by task.
 
 - [x] `W02.P03.S08` - Rewrite the userdocs landing route so non-technical readers can choose setup, ledger, modelo filing, troubleshooting, or reference without understanding the architecture first; `docs/index.md or docs/index.rst`.
 - [x] `W02.P03.S09` - Add a short "where to ask for help" route covering the issue tracker, diagnostic outputs to include, and what not to paste publicly; `docs landing route`.
-- [ ] `W02.P03.S10` - Replace glossary-dependent routes with inline first-use definitions and search/reference-backed lookup surfaces; `do not make the monolithic glossary the primary explanation path for general readers; `docs navigation and future search/reference backlog`.
+- [x] `W02.P03.S10` - Replace glossary-dependent routes with inline first-use definitions and search/reference-backed lookup surfaces; `do not make the monolithic glossary the primary explanation path for general readers; `docs navigation and future search/reference backlog`.
 - [ ] `W02.P03.S11` - Decide whether curated root help should advertise handbook-critical surfaces omitted today: manual ledger add, evidence/doclink, verification reports, providers, and M036; `CLI root help backlog`.
 - [ ] `W02.P03.S50` - Revise the rejected documentation index through the VaultSpec documentation pipeline and present only built canonical HTML for human review; `docs/index.md`.
-- [ ] `W02.P03.S51` - Normalize landing-page route labels, target document H1s, and document filenames so user-facing guide names do not diverge; `docs/index.md and linked user guides`.
+- [x] `W02.P03.S51` - Normalize landing-page route labels, target document H1s, and document filenames so user-facing guide names do not diverge; `docs/index.md and linked user guides`.
 
 ### Phase `W02.P04` - Diataxis cleanup
 
 Split pages that currently mix tutorials, recipes, explanation, and reference material.
 
 - [x] `W02.P04.S12` - Split `docs/how-to/index.md` into an index plus focused recipes instead of a broad mixed reference-and-recipe page; `docs/how-to/index.md`.
-- [ ] `W02.P04.S13` - Remove conceptual detours from tutorial and how-to pages, replacing them with links to explanation and generated reference; `docs/tutorials and docs/how-to`.
-- [ ] `W02.P04.S14` - Convert reference-style command/flag restatement in narrative docs into stable links; `docs/cli/index.rst`.
-- [ ] `W02.P04.S55` - Audit and remove public handbook escape hatches where route pages or next-step blocks send general readers to a glossary, issue tracker, or backlog list instead of inline plain-language explanation, troubleshooting, or command reference; `docs/index.md, docs/getting-started.md, docs/how-to/index.md, docs/tutorials/index.md, and how-to next-step blocks`.
+- [x] `W02.P04.S13` - Remove conceptual detours from tutorial and how-to pages, replacing them with links to explanation and generated reference; `docs/tutorials and docs/how-to`.
+- [x] `W02.P04.S14` - Convert reference-style command/flag restatement in narrative docs into stable links; `docs/cli/index.rst`.
+- [x] `W02.P04.S55` - Audit and remove public handbook escape hatches where route pages or next-step blocks send general readers to a glossary, issue tracker, or backlog list instead of inline plain-language explanation, troubleshooting, or command reference; `docs/index.md, docs/getting-started.md, docs/how-to/index.md, docs/tutorials/index.md, and how-to next-step blocks`.
 - [ ] `W02.P04.S57` - Rewrite the generated CLI reference entry page through the full VaultSpec documentation pipeline so it acts as a navigation and root-behaviour page only: remove retired command cataloguing, move schema-registry internals out of the user-facing entry surface, avoid one-page subject conflation, and link to command-family, handbook, automation, and developer/tooling follow-up pages instead of embedding their content; `src/aeat/entrypoints/cli/_doc_reference.py and docs/cli/index.rst`.
-- [ ] `W02.P04.S58` - Gate any Mermaid or graph-based explanation before it appears on a user-facing entry page: the graph must be grounded in real top-level product architecture, mobile-first, visually constrained, scrollable when wider than the viewport, short enough to avoid long chains, and simple enough to reduce mental load rather than decorate the page; `docs visual explanation constraints`.
+- [x] `W02.P04.S58` - Gate any Mermaid or graph-based explanation before it appears on a user-facing entry page: the graph must be grounded in real top-level product architecture, mobile-first, visually constrained, scrollable when wider than the viewport, short enough to avoid long chains, and simple enough to reduce mental load rather than decorate the page; `docs visual explanation constraints`.
 
 ## Wave `W03` - Setup, profile, and enrolment guides
 
