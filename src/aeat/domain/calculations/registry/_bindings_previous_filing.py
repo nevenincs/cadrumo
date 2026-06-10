@@ -225,8 +225,9 @@ class _PreviousModeloSelector(BaseModel):
         if self.source_period_offset_from_target is None:
             anchors: tuple[tuple[int, str], ...] = tuple((0, period) for period in self.required_periods)
         else:
-            derived = _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period)
-            anchors = () if derived is None else (derived,)
+            anchors = (
+                _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period),
+            )
         if self.max_year_delta is None:
             return anchors
         return tuple(anchor for anchor in anchors if abs(anchor[0]) <= self.max_year_delta)
@@ -301,12 +302,13 @@ def _previous_filing_source_ids(selector: _PreviousModeloSelector) -> tuple[str,
     return ()
 
 
-def _derive_offset_source_period(offset: int, *, target_period: str) -> str | None:
-    return apply_period_offset(offset, target_period=target_period)[1]
-
-
 def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[int, str]:
-    return apply_period_offset(offset, target_period=target_period)
+    try:
+        return apply_period_offset(offset, target_period=target_period)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(
+            f"previous-filing source_period_offset_from_target cannot interpret target period {target_period!r}"
+        ) from exc
 
 
 def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:
