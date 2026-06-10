@@ -295,9 +295,12 @@ class PurchaseInvoiceEvidenceService:
         """Attach a new purchase invoice evidence file to a bucket (ledger).
 
         Resolves ``source_path`` to an absolute path, verifies the file
-        exists, infers the ``MediaKind`` from the extension, SHA-256 hashes
-        the file, creates a ``PurchaseInvoiceEvidence`` record, appends it to
-        the in-memory catalogue, persists the encrypted bucket-local catalogue
+        exists, infers the ``MediaKind`` from the extension, copies the file's
+        bytes into the encrypted :class:`AttachmentStore` (active bucket) and
+        records the resulting content-addressed ``attachment_id`` on the record
+        (the bytes thereafter live only in secure storage; ``source_path`` is a
+        provenance breadcrumb), creates a ``PurchaseInvoiceEvidence`` record,
+        appends it to the in-memory catalogue, persists the encrypted bucket-local catalogue
         in secure-object storage, and emits a
         ``PURCHASE_INVOICE_EVIDENCE_ATTACHED`` audit event.
 

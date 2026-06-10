@@ -135,9 +135,12 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
     row = evidence.rows[0]
     assert row.transaction_id == tx.transaction_id
     assert row.fingerprint == row_fingerprint(tx)
-    assert row.amount == Decimal("121.00")
     assert row.taxable_base == Decimal("100.00")
     assert row.iva_amount == Decimal("21.00")
+    # The projected gross mirrors the seeded transaction's base + IVA; asserting the
+    # relationship (not a standalone literal) keeps this a fidelity check, not a
+    # hand-summed aggregation.
+    assert row.amount == row.taxable_base + row.iva_amount
     assert row.category_id == "material_oficina"
     assert row.purchase_invoice_evidence_id == "purchase-evidence-1"
     assert row.attachment_ids == ("attachment-1",)

@@ -757,7 +757,12 @@ def test_cross_period_clean_state_blocks_live_capture_without_justificante_verif
     assert verdict.requires_clean_state is True
     assert verdict.clean is False
     assert first_quarter.external_evidence_kind == "aeat_live_capture"
-    assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION in first_quarter.blockers
+    # AEAT_LIVE_CAPTURE is now a justificante-verified evidence kind (the captured
+    # receipt is official filing evidence), so a live capture lacking the persisted
+    # justificante record is blocked on the missing record rather than on the kind.
+    # The safety intent — a live capture without justificante backing cannot clear a
+    # dependent period — is preserved; only the blocker classification changed.
+    assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
 
 def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tmp_path: Path) -> None:

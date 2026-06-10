@@ -17,9 +17,9 @@ raw ``data`` field is excluded from ``repr`` for the same reason.
 from __future__ import annotations
 
 import hashlib
-from typing import Never, Self, override
+from typing import Never, Self, SupportsIndex, override
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core.config import Settings
@@ -57,6 +57,12 @@ def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> 
     if not settings.aeat_evidence_cloud_upload_permitted:
         return False
     return acknowledged
+
+
+_REFUSAL_MESSAGE = (
+    "EvidenceInput must never be serialized, iterated, or persisted; it holds decrypted "
+    "FINANCIAL bytes in memory only (sensitive-financial-data-secure-storage-only)."
+)
 
 
 class EvidenceInput(BaseModel):
@@ -99,21 +105,35 @@ class EvidenceInput(BaseModel):
             raise ValueError("EvidenceInput must carry an evidence_id or an attachment_id for provenance")
         return self
 
+    @model_serializer
+    def _refuse_model_serialization(self) -> dict[str, object]:
+        """Refuse pydantic serialization on every route, including nested dumps.
+
+        Registered as the model serializer so a parent model that embeds an
+        ``EvidenceInput`` and calls ``model_dump`` / ``model_dump_json`` also raises
+        here, rather than serializing the raw ``data`` bytes through the field schema.
+        """
+        raise NotImplementedError(_REFUSAL_MESSAGE)
+
     @override
     def model_dump(self, *args: object, **kwargs: object) -> Never:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: deliberate persistence tripwire
         """Refuse serialization -- decrypted FINANCIAL bytes must never be persisted."""
-        raise NotImplementedError(
-            "EvidenceInput must never be serialized or persisted; it holds decrypted "
-            "FINANCIAL bytes in memory only (sensitive-financial-data-secure-storage-only)."
-        )
+        raise NotImplementedError(_REFUSAL_MESSAGE)
 
     @override
     def model_dump_json(self, *args: object, **kwargs: object) -> Never:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: deliberate persistence tripwire
         """Refuse JSON serialization -- decrypted FINANCIAL bytes must never be persisted."""
-        raise NotImplementedError(
-            "EvidenceInput must never be serialized or persisted; it holds decrypted "
-            "FINANCIAL bytes in memory only (sensitive-financial-data-secure-storage-only)."
-        )
+        raise NotImplementedError(_REFUSAL_MESSAGE)
+
+    @override
+    def __iter__(self) -> Never:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: deliberate persistence tripwire
+        """Refuse iteration / ``dict()`` -- it would expose the raw ``data`` bytes."""
+        raise NotImplementedError(_REFUSAL_MESSAGE)
+
+    @override
+    def __reduce_ex__(self, protocol: SupportsIndex) -> Never:
+        """Refuse pickling -- it would embed the raw ``data`` bytes."""
+        raise NotImplementedError(_REFUSAL_MESSAGE)
 
 
 def _media_kind_from_mime(mime_type: str) -> MediaKind:
