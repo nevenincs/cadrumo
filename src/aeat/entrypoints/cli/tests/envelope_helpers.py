@@ -15,10 +15,17 @@ each with the same docstring and body. New tests should import
 from __future__ import annotations
 
 import json
+from typing import Any
 
 
-def unwrap_schema_envelope(output: str) -> dict[str, object]:
+def unwrap_schema_envelope(output: str) -> dict[str, Any]:
     """Return the inner ``result`` mapping from a CLI ``--json`` envelope.
+
+    The value type is ``Any`` because the unwrapped payload is decoded
+    JSON consumed by test assertions that subscript, iterate, and compare
+    nested values directly; a test reading dynamic JSON is the canonical
+    place ``Any`` is appropriate (test modules are exempt from the
+    production ``Any``-rationale gate).
 
     Args:
         output: Raw stdout captured from a CLI ``--json`` invocation.
