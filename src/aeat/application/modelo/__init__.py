@@ -117,6 +117,10 @@ from ._export import (
     export_modelo_revision,
 )
 from ._external_import_actions import import_external_filing_evidence
+from ._filed_revision_observation import (
+    APP_FILING_SOURCE_KIND,
+    persist_filed_revision_observation,
+)
 from ._filing_actions import (
     file_modelo_revision,
     get_filing_record,
@@ -294,6 +298,7 @@ from ._work_plazo import (
 from ._workflow_gate import workflow_period_for_work_unit
 
 __all__ = [
+    "APP_FILING_SOURCE_KIND",
     "STUB_MODELO_LOCALE_KEYS",
     "STUB_ONLY_MODELOS",
     "AmendmentEvidenceMissingError",
@@ -445,6 +450,7 @@ __all__ = [
     "modelo_work_create_refusal_locale_key",
     "modelo_work_plazo_summary",
     "normalize_modelo_work_period",
+    "persist_filed_revision_observation",
     "preview_maritime_exemption_for_active_profile",
     "profile_resolvable_binding_ids",
     "project_modelo_100_from_m130",
