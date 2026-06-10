@@ -5,8 +5,7 @@ Use of :class:`PortalCategory` for compliance.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Annotated
+from typing import Annotated, TypedDict
 
 import typer
 
@@ -14,6 +13,19 @@ from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...domain.portals import PortalCategory
 from ._common import _emit_envelope
+
+
+class _PortalRow(TypedDict):
+    portal: str
+    category: str
+    subdomain: str
+    url: str
+    auth_methods: str
+    url_stability: str
+    label: str
+    purpose: str
+    active: bool
+
 
 portals_app = typer.Typer(
     name="portals",
@@ -28,24 +40,24 @@ def register_portals_commands(app: typer.Typer) -> None:
     app.add_typer(portals_app, name="portals")
 
 
-def _portal_row(metadata) -> Mapping[str, object]:
+def _portal_row(metadata) -> _PortalRow:
     from ...domain.portals._hosts import portal_host_name
 
     # `metadata.label` and `metadata.purpose` are Translatable
     # translation keys (e.g. `entries.portal_sede_root.label`). A bare
     # `str()` dumps the raw key path at the operator; route them
     # through `tr()` so the resolved label is emitted instead.
-    return {
-        "portal": metadata.portal.value,
-        "category": metadata.category.value,
-        "subdomain": portal_host_name(metadata.subdomain),
-        "url": str(metadata.url),
-        "auth_methods": ",".join(sorted(method.value for method in metadata.auth_methods)),
-        "url_stability": metadata.url_stability.value,
-        "label": tr(str(metadata.label)),
-        "purpose": tr(str(metadata.purpose)),
-        "active": metadata.active,
-    }
+    return _PortalRow(
+        portal=metadata.portal.value,
+        category=metadata.category.value,
+        subdomain=portal_host_name(metadata.subdomain),
+        url=str(metadata.url),
+        auth_methods=",".join(sorted(method.value for method in metadata.auth_methods)),
+        url_stability=metadata.url_stability.value,
+        label=tr(str(metadata.label)),
+        purpose=tr(str(metadata.purpose)),
+        active=metadata.active,
+    )
 
 
 @portals_app.command(
@@ -89,12 +101,7 @@ def portals_list(
 
     result = PortalsListResult(
         count=len(rows),
-        rows=[
-            # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-ENTRY:
-            # _portal_row returns Mapping[str, object]; splat matches PortalEntryPayload fields here.
-            PortalEntryPayload(**row)
-            for row in rows
-        ],  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-PORTAL-ENTRY-MAPPING-SPLAT
+        rows=[PortalEntryPayload(**row) for row in rows],
     )
     lines = [f"count\t{len(rows)}"]
     for row in rows:
@@ -121,11 +128,7 @@ def portals_show(
     payload = _portal_row(metadata)
     from ._app_live_payloads import PortalsViewResult
 
-    result = PortalsViewResult(
-        **payload
-        # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-VIEW:
-        # _portal_row returns Mapping[str, object]; splat matches PortalsViewResult fields here.
-    )  # type: ignore[arg-type]  # TYPE-IGNORE-RATIONALE-PORTAL-VIEW-MAPPING-SPLAT
+    result = PortalsViewResult(**payload)
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
     _emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
 
