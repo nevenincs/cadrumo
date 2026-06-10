@@ -122,10 +122,14 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
         assert_no_novel_source_kinds(patched)
 
-    assert "novel_source_kind" in exc_info.value.translated_message
+    message = exc_info.value.translated_message
+    assert message is not None
+    assert "novel_source_kind" in message
     ctx = exc_info.value.context
     assert ctx is not None
-    assert "synthetic_novel_source_xyz" in ctx["novel_source_kinds"]
+    novel_kinds = ctx["novel_source_kinds"]
+    assert isinstance(novel_kinds, list)
+    assert "synthetic_novel_source_xyz" in novel_kinds
 
 
 

@@ -208,7 +208,9 @@ def test_anti_tautology_mutating_regime_changes_projection(
                 # contract under test here — the projection inequality is.
                 enforce_unique_tax_id=False,
             )
-            return read_active_profile(state, schema=schema)
+            record = read_active_profile(state, schema=schema)
+            assert record is not None, "active profile must resolve immediately after registration"
+            return record
 
     record_impatriado = _build_record("impatriado")
     record_general = _build_record("general")
