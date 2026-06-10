@@ -84,7 +84,7 @@ class CensoModeloOwnership:
     superseded_by: str | None = None
 
 
-_ACTIVE_CENSO_MODELO = "036"
+_ACTIVE_CENSO_MODELO = Modelo.M036.value
 _HISTORICAL_CENSO_MODELO = "037"
 _HISTORICAL_037_SOURCE_REF = "boe-modelo-037-historical-suppression"
 _CENSO_FOUNDATION_YEAR = 2025
@@ -97,7 +97,7 @@ class CensoModeloFoundationContract(BaseModel):
 
     schema_version: str = "1"
     service_owner: str = Field(default=CENSO_MODELO_SERVICE_OWNER, pattern=r"^aeat\.domain\.calculations\.registry$")
-    active_modelo: str = Field(default="036", min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
+    active_modelo: str = Field(default=Modelo.M036.value, min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
     historical_modelos: tuple[str, ...] = ("037",)
     event_kinds: tuple[CensoModeloEventKind, ...]
     error_codes: tuple[str, ...]

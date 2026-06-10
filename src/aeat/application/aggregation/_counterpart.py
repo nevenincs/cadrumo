@@ -230,7 +230,7 @@ def aggregate_counterpart_347(
 
     Returns a :class:`CounterpartAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo="347", period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo.M347.value, period=period)
 
 
 def aggregate_counterpart_349(
@@ -248,7 +248,7 @@ def aggregate_counterpart_349(
     Returns a :class:`CounterpartAggregation` with rollups sorted by
     ``(source_kind, counterparty_nif, operation_kind)``.
     """
-    return _aggregate_for_modelo(observations, modelo="349", period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo.M349.value, period=period)
 
 
 def _counterpart_readiness_for_modelo(

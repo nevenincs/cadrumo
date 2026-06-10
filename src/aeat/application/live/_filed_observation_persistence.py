@@ -140,7 +140,7 @@ def _with_derived_303_compensation_available(
     observation: RegistryModeloObservation,
 ) -> RegistryModeloObservation:
     """Add the internal Modelo 303 carry-forward value from official filed casillas."""
-    if observation.modelo != "303":
+    if observation.modelo != Modelo.M303:
         return observation
     target_id = "iva.compensacion-disponible-fin-periodo"
     if target_id in observation.casilla_values:
@@ -156,7 +156,7 @@ def _with_derived_303_compensation_available(
 
     available = derive_303_compensation_available(posterior=posterior, resultado=resultado)
     snapshot = resources().modelos.authority.snapshot(
-        "303",
+        Modelo.M303.value,
         filing_year=observation.filing_year,
         period=observation.period,
     )
