@@ -130,9 +130,7 @@ def _row_by_id(transaction_id: str) -> dict[str, object]:
     return {r["transaction_id"]: r for r in rows}[transaction_id]
 
 
-def test_saturate_preview_derives_substrate_and_persists_nothing(
-    tmp_path: Path, _saturating_claude: None
-) -> None:
+def test_saturate_preview_derives_substrate_and_persists_nothing(tmp_path: Path, _saturating_claude: None) -> None:
     tx = _import_one_transaction(tmp_path)
 
     result = _RUNNER.invoke(
@@ -176,9 +174,7 @@ def test_saturate_apply_persists_derived_substrate_with_llm_provenance(
     assert Decimal(str(row["iva_amount"])) == Decimal("21.00")
 
 
-def test_saturate_non_derivable_category_surfaces_note_no_numbers(
-    tmp_path: Path, _non_derivable_claude: None
-) -> None:
+def test_saturate_non_derivable_category_surfaces_note_no_numbers(tmp_path: Path, _non_derivable_claude: None) -> None:
     tx = _import_one_transaction(tmp_path)
 
     result = _RUNNER.invoke(

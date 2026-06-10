@@ -81,8 +81,7 @@ def test_legacy_unstamped_clean_dependency_produces_warning_advisory_finding() -
     advisory = [
         f
         for f in findings
-        if f.kind is ModeloVerificationFindingKind.ADVISORY
-        and f.severity is ModeloVerificationFindingSeverity.WARNING
+        if f.kind is ModeloVerificationFindingKind.ADVISORY and f.severity is ModeloVerificationFindingSeverity.WARNING
     ]
     assert len(advisory) == 1, (
         "a clean dependency carrying unstamped_revision_advisory MUST produce exactly one "

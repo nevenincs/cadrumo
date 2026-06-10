@@ -130,11 +130,7 @@ def numeric_iva_rate_percentages() -> frozenset[Decimal]:
         Decimal("10"), Decimal("21")})``.
     """
     _prefix = "RATE_"
-    return frozenset(
-        Decimal(member.value[len(_prefix) :])
-        for member in IvaRate
-        if member.value.startswith(_prefix)
-    )
+    return frozenset(Decimal(member.value[len(_prefix) :]) for member in IvaRate if member.value.startswith(_prefix))
 
 
 __all__ = [

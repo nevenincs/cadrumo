@@ -220,6 +220,8 @@ _AutoconsumoPromotorOpt = Annotated[
         ),
     ),
 ]
+
+
 def register_work_calculate_commands(
     work_app: typer.Typer,
     *,

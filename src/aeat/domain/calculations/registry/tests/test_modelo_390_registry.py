@@ -231,9 +231,7 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
         ),
     )
 
-    relation_values = resolve_relation_values_from_observations(
-        revision, observations, filing_year=2025, period="0A"
-    )
+    relation_values = resolve_relation_values_from_observations(revision, observations, filing_year=2025, period="0A")
     resolved = materialize_relation_binding_values(revision, relation_values, period="0A")
 
     # Assert the two binding keys are present — wiring check.

@@ -562,10 +562,7 @@ class TestSemanticRoleTypoTwinHelpers:
     def test_identity_candidate_is_not_a_typo_twin(self) -> None:
         role = "taxpayer_nif"
         index = self._index(role)
-        assert (
-            _candidate_is_typo_twin(role, set(role), len(role), role, len(role), 1, index)
-            is False
-        )
+        assert _candidate_is_typo_twin(role, set(role), len(role), role, len(role), 1, index) is False
 
     def test_single_char_substitution_is_a_typo_twin(self) -> None:
         # taxpayer_niff vs taxpayer_nif: a near-duplicate that is not a sibling.
@@ -573,10 +570,7 @@ class TestSemanticRoleTypoTwinHelpers:
         known = "taxpayer_nif"
         index = self._index(known)
         max_diff = int(0.08 * (len(role) + len(known)))
-        assert (
-            _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index)
-            is True
-        )
+        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is True
 
     def test_axis_sibling_candidate_is_exempt(self) -> None:
         # ascendiente vs descendiente share a relationship axis -> not a typo twin.
@@ -586,10 +580,7 @@ class TestSemanticRoleTypoTwinHelpers:
         max_diff = int(0.08 * (len(role) + len(known)))
         # The two differ by more than the fast-check budget, so they never reach
         # the sibling exemption: the fast prefix/suffix filter rejects first.
-        assert (
-            _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index)
-            is False
-        )
+        assert _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index) is False
 
     def test_scan_finds_near_duplicate_across_length_buckets(self) -> None:
         index = self._index("taxpayer_nif", "unrelated_role_value")

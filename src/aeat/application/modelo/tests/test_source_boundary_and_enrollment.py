@@ -88,6 +88,7 @@ def _seed(
 # S26 — boundary gate rejects novel source kinds
 # ---------------------------------------------------------------------------
 
+
 def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
     """A revision whose bindings use only enrolled/deferred sources passes the gate."""
     # M303 uses ledger_iva_aggregation, borrador, previous_filing, profile, manual_input —
@@ -132,10 +133,10 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     assert "synthetic_novel_source_xyz" in novel_kinds
 
 
-
 # ---------------------------------------------------------------------------
 # S08 — unhandled-source advisory fires for a known-unrouted source
 # ---------------------------------------------------------------------------
+
 
 def test_s08_source_diagnostics_carries_advisory_for_deferred_source(
     secure_objects: SecureObjectRepository,
@@ -165,7 +166,8 @@ def test_s08_source_diagnostics_carries_advisory_for_deferred_source(
     assert isinstance(result, BucketAggregationCalculationResult)
     # source_diagnostics must carry at least one advisory for the atribucion_member source kind.
     advisories = [
-        d for d in result.source_diagnostics
+        d
+        for d in result.source_diagnostics
         if d.source_kind == "atribucion_member" and d.reason == "unhandled_binding_source"
     ]
     assert advisories, (
@@ -195,7 +197,8 @@ def test_s08_source_diagnostics_carries_advisory_for_atribucion_member(
     )
 
     advisories = [
-        d for d in result.source_diagnostics
+        d
+        for d in result.source_diagnostics
         if d.source_kind == "atribucion_member" and d.reason == "unhandled_binding_source"
     ]
     assert advisories, (
@@ -207,6 +210,7 @@ def test_s08_source_diagnostics_carries_advisory_for_atribucion_member(
 # ---------------------------------------------------------------------------
 # S09 — dormant resolvers fire on their modelos
 # ---------------------------------------------------------------------------
+
 
 def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     secure_objects: SecureObjectRepository,
@@ -266,13 +270,11 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
 
     # The merged owned_sources must include 'ledger_renta_income_aggregation'.
     assert "ledger_renta_income_aggregation" in source_resolution.owned_sources, (
-        "LedgerRentaIncomeAggregationSourceResolver is not enrolled: "
-        f"owned_sources={source_resolution.owned_sources}"
+        f"LedgerRentaIncomeAggregationSourceResolver is not enrolled: owned_sources={source_resolution.owned_sources}"
     )
     # Confirm the test is non-vacuous: M130 revision must declare this source kind.
     assert any(str(b.source) == "ledger_renta_income_aggregation" for b in revision.bindings), (
-        "M130 revision should contain ledger_renta_income_aggregation bindings "
-        "for this test to be non-tautological"
+        "M130 revision should contain ledger_renta_income_aggregation bindings for this test to be non-tautological"
     )
     # Unhandled advisory for this source kind must NOT appear.
     _pre_mesh_handled: frozenset[str] = frozenset({"profile", "borrador", "iva_wallet_decision"})
@@ -309,9 +311,9 @@ def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
 
     assert isinstance(result, BucketAggregationCalculationResult)
     unrouted_oss = [
-        d for d in result.source_diagnostics
-        if d.source_kind == "ledger_oss_aggregation"
-        and d.reason == "unhandled_binding_source"
+        d
+        for d in result.source_diagnostics
+        if d.source_kind == "ledger_oss_aggregation" and d.reason == "unhandled_binding_source"
     ]
     assert not unrouted_oss, (
         "OssIossLedgerSourceResolver is enrolled but 'ledger_oss_aggregation' "
@@ -319,8 +321,7 @@ def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
     )
     revision = _revision("369", "esquema-union")
     assert any(str(b.source) == "ledger_oss_aggregation" for b in revision.bindings), (
-        "M369 esquema-union should contain ledger_oss_aggregation bindings "
-        "for this test to be non-tautological"
+        "M369 esquema-union should contain ledger_oss_aggregation bindings for this test to be non-tautological"
     )
 
 
@@ -346,9 +347,9 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
 
     assert isinstance(result, BucketAggregationCalculationResult)
     unrouted_invoice = [
-        d for d in result.source_diagnostics
-        if d.source_kind in {"collectible_invoice", "payable_invoice"}
-        and d.reason == "unhandled_binding_source"
+        d
+        for d in result.source_diagnostics
+        if d.source_kind in {"collectible_invoice", "payable_invoice"} and d.reason == "unhandled_binding_source"
     ]
     assert not unrouted_invoice, (
         "InvoiceCatalogueSourceResolver is enrolled but invoice source kinds "
@@ -356,8 +357,7 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
     )
     revision = _revision("349", "2020-y-siguientes")
     assert any(str(b.source) == "collectible_invoice" for b in revision.bindings), (
-        "M349 revision should contain collectible_invoice bindings "
-        "for this test to be non-tautological"
+        "M349 revision should contain collectible_invoice bindings for this test to be non-tautological"
     )
 
 
@@ -365,14 +365,13 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
 # S10 — deferred source kinds produce advisory not silent blank
 # ---------------------------------------------------------------------------
 
+
 def test_s10_deferred_source_kinds_are_enumerated_and_non_empty() -> None:
     """DEFERRED_SOURCE_KINDS is non-empty and contains the five expected kinds (S10)."""
     expected = frozenset(
         {"withholding", "atribucion_member", "related_party_operation", "foreign_asset", "refund_operation"}
     )
-    assert expected.issubset(DEFERRED_SOURCE_KINDS), (
-        f"Missing deferred kinds: {expected - DEFERRED_SOURCE_KINDS}"
-    )
+    assert expected.issubset(DEFERRED_SOURCE_KINDS), f"Missing deferred kinds: {expected - DEFERRED_SOURCE_KINDS}"
 
 
 @pytest.mark.parametrize(
@@ -428,7 +427,8 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
         )
 
     advisories = [
-        d for d in result.source_diagnostics
+        d
+        for d in result.source_diagnostics
         if d.source_kind == deferred_kind and d.reason == "unhandled_binding_source"
     ]
     assert advisories, (
@@ -468,8 +468,7 @@ def test_s27_withholding_deferred_advisory_fires() -> None:
         revision, handled_sources=handled, manual_sources=frozenset({"manual_input"})
     )
     withholding_advisories = [
-        d for d in unhandled
-        if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"
+        d for d in unhandled if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"
     ]
     assert withholding_advisories, (
         "S27: expected 'unhandled_binding_source' advisory for every withholding binding "
@@ -484,6 +483,7 @@ def test_s27_withholding_deferred_advisory_fires() -> None:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
     modelo_def = next(item for item in resources().modelos.all() if item.id == modelo)

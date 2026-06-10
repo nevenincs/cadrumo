@@ -98,9 +98,7 @@ def repositories(tmp_path: Path) -> Iterator[tuple[TransactionCatalogueRepositor
         )
 
 
-def _seed_unclassified(
-    repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("-121.00")
-) -> str:
+def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("-121.00")) -> str:
     """Persist one ACTIVE, NOT_YET_PROCESSED transaction and return its id."""
     raw = RawTransaction(
         transaction_id="row-saturate-1",

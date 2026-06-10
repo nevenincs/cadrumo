@@ -20,10 +20,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Final, Literal
 
-from .....core import Modelo
-
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
+from .....core import Modelo
 from .....domain.calculations.registry import CasillaId
 from ._errors import SedeValidationError
 

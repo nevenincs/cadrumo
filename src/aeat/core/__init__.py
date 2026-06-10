@@ -39,9 +39,9 @@ if TYPE_CHECKING:
     from ._bucket_pointer_io import require_active_bucket_id, resolve_active_bucket_id
 
 __all__: list[str] = [
+    "NON_REGISTRY_MODELOS",
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
-    "NON_REGISTRY_MODELOS",
     "Modelo",
     "StandardPeriodCode",
     "require_active_bucket_id",

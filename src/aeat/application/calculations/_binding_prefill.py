@@ -306,9 +306,7 @@ def _gather_single_key_observation(
                 source_kind=_IVA_COMPENSATION_HISTORY_SOURCE_KIND,
             )
             gathered = (
-                _merge_gathered_observations(gathered, history_gathered)
-                if gathered is not None
-                else history_gathered
+                _merge_gathered_observations(gathered, history_gathered) if gathered is not None else history_gathered
             )
     return gathered
 

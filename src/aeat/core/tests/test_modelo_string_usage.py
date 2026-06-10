@@ -49,11 +49,10 @@ _CODES: frozenset[str] = frozenset(m.value for m in Modelo)
 #: small; every entry is a judgement call recorded during the Modelo-enum sweep.
 _ALLOWLIST: dict[tuple[str, str], str] = {
     ("domain/calculations/registry/_citation_blocklist.py", "100"): (
-        "FALSE POSITIVE: RIRPF *article* 100 (urban-rental withholding), not "
-        "Modelo 100."
+        "FALSE POSITIVE: RIRPF *article* 100 (urban-rental withholding), not Modelo 100."
     ),
     ("entrypoints/cli/_app_live_borrador_cli.py", "100"): (
-        "Typer command-name token (`name=\"100\"`): a CLI surface literal naming "
+        'Typer command-name token (`name="100"`): a CLI surface literal naming '
         "the borrador-100 subgroup, not program logic."
     ),
 }
@@ -154,16 +153,12 @@ def test_no_bare_modelo_code_strings_in_production_identifiers() -> None:
             if key in _ALLOWLIST:
                 stale_allowlist.discard(key)
                 continue
-            offenders.append(
-                f"src/aeat/{rel}:{node.lineno}: bare modelo code \"{node.value}\"; "
-                f"use Modelo.M{node.value}"
-            )
+            offenders.append(f'src/aeat/{rel}:{node.lineno}: bare modelo code "{node.value}"; use Modelo.M{node.value}')
 
     assert not offenders, (
         "Bare modelo-code string literals found in production identifier positions; "
         "import and use the Modelo enum (aeat.core.Modelo) instead:\n" + "\n".join(offenders)
     )
-    assert not stale_allowlist, (
-        "Stale _ALLOWLIST entries no longer present in the source; remove them:\n"
-        + "\n".join(f"  {path}: {code}" for path, code in sorted(stale_allowlist))
+    assert not stale_allowlist, "Stale _ALLOWLIST entries no longer present in the source; remove them:\n" + "\n".join(
+        f"  {path}: {code}" for path, code in sorted(stale_allowlist)
     )

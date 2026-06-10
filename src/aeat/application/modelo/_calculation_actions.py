@@ -82,6 +82,7 @@ class BucketAggregationCalculationResult:
     revision: CalculationRevision
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
+
 _apply_iva_compensation_decision_binding = _iva_wallet_gate.apply_iva_compensation_decision_binding
 _taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
 iva_wallet_blocked_message = _iva_wallet_gate.iva_wallet_blocked_message
@@ -793,9 +794,7 @@ def _previous_filing_resolution_excluding_iva_compensation(
     return resolution.model_copy(
         update={
             "binding_values": {k: v for k, v in resolution.binding_values.items() if k != excluded},
-            "provenance": tuple(
-                item for item in resolution.provenance if not item.source_ref.endswith(f":{excluded}")
-            ),
+            "provenance": tuple(item for item in resolution.provenance if not item.source_ref.endswith(f":{excluded}")),
         }
     )
 
@@ -823,9 +822,7 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
             absent from both the enrolled and the deferred sets.
     """
     _accepted = _BUCKET_AGGREGATION_OWNED_SOURCES | _DEFERRED_SOURCE_KINDS
-    novel = sorted(
-        {str(binding.source) for binding in revision.bindings if str(binding.source) not in _accepted}
-    )
+    novel = sorted({str(binding.source) for binding in revision.bindings if str(binding.source) not in _accepted})
     if novel:
         raise ModeloAggregationBindingError(
             translated_message="application.modelo.errors.novel_source_kind_rejected",

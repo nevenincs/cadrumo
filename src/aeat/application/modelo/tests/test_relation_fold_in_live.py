@@ -105,9 +105,7 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[st
                 modelo="115",
                 filing_year=_YEAR,
                 period=period,
-                observations=tuple(
-                    CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()
-                ),
+                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
             ),
             source_kind="app_filing",
             captured_at=_T0,

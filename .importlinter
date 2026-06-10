@@ -149,10 +149,14 @@ ignore_imports =
     aeat.core.resources._repos.tests.test_manuals -> aeat.domain.manuals._errors
     aeat.core.resources._repos.tests.test_normatives -> aeat.domain.normatives._errors
     aeat.core.resources._repos.tests.test_singletons -> aeat.domain.calculations.registry._schema
-    aeat.core.tests.test_external_constants -> aeat.adapters.persistence.storage.blob_store._blob_store
-    aeat.core.tests.test_external_constants -> aeat.application.aggregation._currency_predicates
-    aeat.core.tests.test_external_constants -> aeat.application.ledger._models
-    aeat.core.tests.test_external_constants -> aeat.domain.currency._service
+    aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.adapters.persistence.storage.blob_store._blob_store
+    aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.application.aggregation._currency_predicates
+    aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.application.ledger._models
+    aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.domain.currency._service
+    aeat.core.tests.test_external_constants_centralisation_part2 -> aeat.domain.iva
+    aeat.core.tests.test_modelo -> aeat.application.modelo
+    aeat.core.tests.test_modelo -> aeat.domain.calculations.registry
+    aeat.core.tests.test_modelo -> aeat.domain.modelos
     aeat.core.tests.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
     aeat.core.tests.test_setup_answers -> aeat.application.wizard._catalogue
     aeat.core.tests.test_setup_answers -> aeat.domain.deadlines._models
@@ -450,10 +454,14 @@ ignore_imports =
     aeat.core.resources._repos.tests.test_manuals -> aeat.domain.manuals._errors
     aeat.core.resources._repos.tests.test_normatives -> aeat.domain.normatives._errors
     aeat.core.resources._repos.tests.test_singletons -> aeat.domain.calculations.registry._schema
-    aeat.core.tests.test_external_constants -> aeat.adapters.persistence.storage.blob_store._blob_store
-    aeat.core.tests.test_external_constants -> aeat.application.aggregation._currency_predicates
-    aeat.core.tests.test_external_constants -> aeat.application.ledger._models
-    aeat.core.tests.test_external_constants -> aeat.domain.currency._service
+    aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.adapters.persistence.storage.blob_store._blob_store
+    aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.application.aggregation._currency_predicates
+    aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.application.ledger._models
+    aeat.core.tests.test_external_constants_centralisation_part1 -> aeat.domain.currency._service
+    aeat.core.tests.test_external_constants_centralisation_part2 -> aeat.domain.iva
+    aeat.core.tests.test_modelo -> aeat.application.modelo
+    aeat.core.tests.test_modelo -> aeat.domain.calculations.registry
+    aeat.core.tests.test_modelo -> aeat.domain.modelos
     aeat.core.tests.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
     aeat.core.tests.test_setup_answers -> aeat.application.wizard._catalogue
     aeat.core.tests.test_setup_answers -> aeat.domain.deadlines._models
@@ -588,6 +596,18 @@ ignore_imports =
     aeat.application.ledger.tests.test_bulk_classify_scale -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_export_evidence_gate -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_m036_lifecycle_service -> aeat.tests.secure_sql
+    # ── sanctioned secure_sql fixture edges from new continuity/fold-in test files ──
+    aeat.application.calculations.tests.test_revision_stamp_roundtrip -> aeat.tests.secure_sql
+    aeat.application.ledger.tests.test_llm_saturation -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_iva_wallet_correction -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_m036_lifecycle_read_back -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_modelo_100_pagos_fraccionados_fold_in_live -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_modelo_390_303_fold_in_live -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_reconciliation_history -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_relation_fold_in_live -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_renta_annual_reconciliations_fold_in_live -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_revision_id_d1_contract -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_source_boundary_and_enrollment -> aeat.tests.secure_sql
     # ── domain production cross-layer edges (lazy imports deferred for cleanup) ──
     # ── domain test cross-layer edges ──
     aeat.domain.calculations.registry.tests.test_cross_boundary_roundtrip -> aeat.application.workflow._models

@@ -39,9 +39,7 @@ from ._validate_source_outputs import revision_output_ids as _revision_output_id
 # relation's ``target_binding`` — the iva-wallet gate strips it from the
 # previous-filing resolution before the mesh runs. It is therefore the documented
 # carve-out for the relation-vs-previous_filing collision gate below.
-_IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS: frozenset[str] = frozenset(
-    {"modelo-303-compensacion-pendiente-anteriores"}
-)
+_IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS: frozenset[str] = frozenset({"modelo-303-compensacion-pendiente-anteriores"})
 
 
 def validate_relation_closure(

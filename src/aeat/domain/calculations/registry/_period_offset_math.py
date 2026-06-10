@@ -37,6 +37,4 @@ def apply_period_offset(offset: int, *, target_period: str) -> tuple[int, str]:
     if len(target_period) == 2 and target_period.isdigit():
         year_delta, zero_based = divmod(int(target_period) - 1 + offset, 12)
         return year_delta, f"{zero_based + 1:02d}"
-    raise RegistryValidationError(
-        f"source_period_offset_from_target cannot interpret target period {target_period!r}"
-    )
+    raise RegistryValidationError(f"source_period_offset_from_target cannot interpret target period {target_period!r}")
