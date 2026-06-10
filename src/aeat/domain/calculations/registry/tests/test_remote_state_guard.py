@@ -18,7 +18,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .. import build_snapshot, load_registry_tree
+from .. import ModeloDefinition, RegistryCatalogues, build_snapshot, load_registry_tree
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
@@ -596,7 +596,7 @@ def _production_oracle_catalogue() -> LiveParityCatalogue:
     return catalogue
 
 
-def _first_snapshot(modelo, catalogues):
+def _first_snapshot(modelo: ModeloDefinition, catalogues: RegistryCatalogues):
     for revision in modelo.revisions.values():
         year = (
             revision.period_selector.years[0] if revision.period_selector.years else revision.period_selector.year_from

@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
+from .. import RegistrySnapshot, RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -102,7 +102,7 @@ def _snapshot_2024(filing_year: int = 2024):
 
 
 def _calculate_2024(
-    snapshot,
+    snapshot: RegistrySnapshot,
     *,
     nperceptores_dividendos: int,
     nperceptores_resto: int,

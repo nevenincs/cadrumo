@@ -27,7 +27,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import calculate_registry_snapshot
+from .. import RegistrySnapshot, calculate_registry_snapshot
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -82,7 +82,7 @@ _RELATION_VALUES_2024: dict[str, Decimal] = {
 }
 
 
-def _run_2024(snapshot, valor_1804: Decimal):
+def _run_2024(snapshot: RegistrySnapshot, valor_1804: Decimal):
     return calculate_registry_snapshot(
         snapshot,
         inputs={"1804": valor_1804},
@@ -99,7 +99,7 @@ def _run_2024(snapshot, valor_1804: Decimal):
 # ---------------------------------------------------------------------------
 
 
-def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot) -> None:
+def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot: RegistrySnapshot) -> None:
     """With 1804 = 8500, 1811 = 8500 and 1812 must equal 1811.
 
     Oracle: 1811 = 1804 - 1806 - 1810; with 1806/1810 = 0, 1811 = 1804.
@@ -120,7 +120,7 @@ def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot) -> None:
     )
 
 
-def test_2024_1812_zero_when_no_crypto_gain(m100_2024_snapshot) -> None:
+def test_2024_1812_zero_when_no_crypto_gain(m100_2024_snapshot: RegistrySnapshot) -> None:
     """With 1804 = 0, both 1811 and 1812 must be zero.
 
     No spurious propagation: a taxpayer without crypto gain must not see
@@ -137,7 +137,7 @@ def test_2024_1812_zero_when_no_crypto_gain(m100_2024_snapshot) -> None:
     )
 
 
-def test_2024_1812_anti_tautology_different_gain(m100_2024_snapshot) -> None:
+def test_2024_1812_anti_tautology_different_gain(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Anti-tautology: 1804 = 7000 must produce 1812 = 7000, not 8500.
 
     This test uses a distinct non-default value to confirm the formula is
@@ -195,7 +195,7 @@ def _relation_values_2025() -> dict:
     }
 
 
-def _run_2025(snapshot, valor_1804: Decimal):
+def _run_2025(snapshot: RegistrySnapshot, valor_1804: Decimal):
     return calculate_registry_snapshot(
         snapshot,
         inputs={"1804": valor_1804},
@@ -207,7 +207,7 @@ def _run_2025(snapshot, valor_1804: Decimal):
     )
 
 
-def test_2025_1812_identity_copy_standard_gain(m100_2025_snapshot) -> None:
+def test_2025_1812_identity_copy_standard_gain(m100_2025_snapshot: RegistrySnapshot) -> None:
     """2025 revision: 1812 must equal 1811 when 1804 = 8500."""
     result = _run_2025(m100_2025_snapshot, Decimal("8500"))
 
@@ -218,7 +218,7 @@ def test_2025_1812_identity_copy_standard_gain(m100_2025_snapshot) -> None:
     )
 
 
-def test_2025_1812_zero_when_no_crypto_gain(m100_2025_snapshot) -> None:
+def test_2025_1812_zero_when_no_crypto_gain(m100_2025_snapshot: RegistrySnapshot) -> None:
     """2025 revision: no spurious 1812 when 1804 = 0."""
     result = _run_2025(m100_2025_snapshot, Decimal("0"))
 

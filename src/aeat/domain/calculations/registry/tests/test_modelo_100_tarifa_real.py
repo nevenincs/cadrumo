@@ -37,7 +37,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import calculate_registry_snapshot
+from .. import RegistrySnapshot, calculate_registry_snapshot
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -95,7 +95,7 @@ def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
     return registry_authority.snapshot("100", filing_year=2024, period="0A")
 
 
-def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot) -> None:
+def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot: RegistrySnapshot) -> None:
     """After contract fix, casilla 0511 must equal the LIRPF Art. 57 base value.
 
     This is the regression guard for Cluster T: before contract, casilla 0511
@@ -125,7 +125,7 @@ def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot) ->
     )
 
 
-def test_m100_2024_cuota_integra_estatal_matches_lirpf_tables(m100_2024_snapshot) -> None:
+def test_m100_2024_cuota_integra_estatal_matches_lirpf_tables(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Cuota íntegra estatal (0545) must equal the LIRPF 2024 table result.
 
     Expected derivation (LIRPF Art. 62-63, escala estatal 2024):
@@ -154,7 +154,7 @@ def test_m100_2024_cuota_integra_estatal_matches_lirpf_tables(m100_2024_snapshot
 
 
 def test_m100_2024_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
-    m100_2024_snapshot,
+    m100_2024_snapshot: RegistrySnapshot,
 ) -> None:
     """Cuota íntegra autonómica (0546) must equal the Cataluña 2024 table result.
 
@@ -178,7 +178,7 @@ def test_m100_2024_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
     )
 
 
-def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None:
+def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Any non-zero base liquidable general must produce positive cuota íntegra.
 
     This is the weakest possible guard: cuota must be > 0 for a taxpayer
@@ -316,7 +316,7 @@ _RELATION_VALUES_2024 = {
 
 
 def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
-    m100_2024_snapshot,
+    m100_2024_snapshot: RegistrySnapshot,
 ) -> None:
     """Pere age 70 (LIRPF Art. 57.2 +1,150) produces correct cuota estatal.
 
@@ -351,7 +351,7 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
 
 
 def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
-    m100_2024_snapshot,
+    m100_2024_snapshot: RegistrySnapshot,
 ) -> None:
     """Two descendants (one under 3) produce correct cuota estatal via Art. 58.
 
@@ -382,7 +382,7 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
 
 
 def test_m100_2024_cuota_estatal_ascendant_over_75(
-    m100_2024_snapshot,
+    m100_2024_snapshot: RegistrySnapshot,
 ) -> None:
     """Ascendant over 75 produces correct cuota estatal via Art. 59.
 
@@ -449,7 +449,7 @@ _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES = Decimal("949.02")
 _EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES = Decimal("602.87")
 
 
-def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None:
+def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Casilla 0505 is computed as max(0, 0500) when no anualidades are present.
 
     contract regression guard: before the fix, 0505 was manual and silently stayed
@@ -480,7 +480,7 @@ def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None:
     )
 
 
-def test_anualidades_alimentos_reduces_0505(m100_2024_snapshot) -> None:
+def test_anualidades_alimentos_reduces_0505(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Anualidades por alimentos hijos judicial reduce 0505 per LIRPF Art. 75.3.
 
     With base liquidable 14,896 EUR and judicial anualidades 3,000 EUR:
@@ -516,7 +516,7 @@ def test_anualidades_alimentos_reduces_0505(m100_2024_snapshot) -> None:
     )
 
 
-def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot) -> None:
+def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Anti-tautology: anualidades judicial must change cuota relative to no-anualidades.
 
     If the 0527 -> 0505 subtraction is not wired, both scenarios yield the same
@@ -584,7 +584,7 @@ _RETENCION_1824 = Decimal("1824")
 _RETENCION_3648 = Decimal("3648")  # doubled retención for anti-tautology
 
 
-def test_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> None:
+def test_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Casilla 0587 must equal 0585 + 0586 per renta-2024-cuota-liquida-incrementada-total.
 
     contract regression guard: before the fix, 0587 had no formula and stayed 0
@@ -616,7 +616,7 @@ def test_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> None:
     )
 
 
-def test_0609_equals_retencion_trabajo_operand(m100_2024_snapshot) -> None:
+def test_0609_equals_retencion_trabajo_operand(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Casilla 0609 must equal the supplied retenciones trabajo (0592) per RD 439/2007 Art. 110.
 
     With only casilla 0592 (retenciones trabajo) supplied and all other 0609
@@ -643,7 +643,7 @@ def test_0609_equals_retencion_trabajo_operand(m100_2024_snapshot) -> None:
     )
 
 
-def test_0610_equals_0595_minus_0609(m100_2024_snapshot) -> None:
+def test_0610_equals_0595_minus_0609(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Casilla 0610 must equal 0595 - 0609 per renta-2024-cuota-diferencial.
 
     Structural identity: cuota diferencial = cuota resultante - total pagos a cuenta.
@@ -672,7 +672,7 @@ def test_0610_equals_0595_minus_0609(m100_2024_snapshot) -> None:
 
 
 def test_anti_tautology_higher_retencion_reduces_cuota_diferencial(
-    m100_2024_snapshot,
+    m100_2024_snapshot: RegistrySnapshot,
 ) -> None:
     """Anti-tautology: doubling retenciones must halve the remaining cuota diferencial gap.
 

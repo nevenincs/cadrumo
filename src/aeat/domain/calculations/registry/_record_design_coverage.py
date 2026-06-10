@@ -10,7 +10,7 @@ from pathlib import Path
 from ._errors import RegistryValidationError
 from ._record_design_schema import RecordDesignSheet
 from ._runtime_graph import expression_casilla_refs
-from ._schema import CasillaDefinition, ModeloRevision
+from ._schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
 
 
 def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
@@ -92,7 +92,7 @@ def _selector_is_cross_modelo(selector: Mapping[str, object], modelo_id: str) ->
     return str(source_modelo) != modelo_id
 
 
-def _binding_selector_tokens(binding) -> Iterator[str]:
+def _binding_selector_tokens(binding: DataBindingDefinition) -> Iterator[str]:
     source_casillas = binding.selector.get("source_casillas")
     if isinstance(source_casillas, tuple):
         for token in source_casillas:
