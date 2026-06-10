@@ -82,7 +82,7 @@ Help a user create a complete profile without turning profile setup into a flag 
 Separate AEAT census facts from ordinary local profile editing.
 
 - [ ] `W03.P06.S18` - Create a standalone censo/enrolment how-to for config profile censo refresh, show, compare, and apply, including authenticated read-only AEAT access, local snapshot review, apply-only-after-review guidance, post-apply profile validation, and handoff to calendar or ledger setup; `censo how-to docs`.
-- [ ] `W03.P06.S19` - Create a standalone Modelo 036 lifecycle how-to for `app modelo m036 alta`, `modificacion`, and `baja`, clearly stating these record declarations filed at sede and do not file remotely; `M036 how-to docs`.
+- [x] `W03.P06.S19` - Create a standalone Modelo 036 lifecycle how-to for `app modelo m036 alta`, `modificacion`, and `baja`, clearly stating these record declarations filed at sede and do not file remotely; `M036 how-to docs`.
 - [ ] `W03.P06.S20` - Backlog any missing "what enrolments do I need?" product surface if the CLI cannot answer it from the active profile in plain language; `product backlog`.
 
 ## Wave `W04` - Ledger operation guides
@@ -101,8 +101,8 @@ Turn ledger import into a complete "make the ledger tax-ready" path.
 
 Document how paper and PDF evidence connects to ledger rows.
 
-- [ ] `W04.P08.S24` - Add a purchase-invoice evidence guide for `ledger evidence add/list/view/update/remove` and `ledger attach`; `ledger evidence docs`.
-- [ ] `W04.P08.S25` - Add a correction guide for `ledger update`, `remove`, `merge`, `split`, `stash`, and `history`, focused on safe operator workflows; `ledger correction docs`.
+- [x] `W04.P08.S24` - Add a purchase-invoice evidence guide for `ledger evidence add/list/view/update/remove` and `ledger attach`; `ledger evidence docs`.
+- [x] `W04.P08.S25` - Add a correction guide for `ledger update`, `remove`, `merge`, `split`, `stash`, and `history`, focused on safe operator workflows; `ledger correction docs`.
 - [ ] `W04.P08.S26` - Backlog any missing ledger "what still needs review?" surface if existing `ledger review`, `status`, and `preflight` cannot answer it plainly; `product backlog`.
 
 ## Wave `W05` - Modelo lifecycle and manual inputs
@@ -157,9 +157,9 @@ Make help practical when something refuses, and keep the corpus from drifting ag
 
 Move from subsystem diagnostics to symptoms a user recognizes.
 
-- [ ] `W07.P13.S41` - Rewrite troubleshooting around symptoms: no active profile, wrong profile, ledger not ready, missing binding, wrong period token, no exportable revision, deadline passed, localization mismatch, and live-read gate closed; `troubleshooting docs`.
+- [x] `W07.P13.S41` - Rewrite troubleshooting around symptoms: no active profile, wrong profile, ledger not ready, missing binding, wrong period token, no exportable revision, deadline passed, localization mismatch, and live-read gate closed; `troubleshooting docs`.
 - [ ] `W07.P13.S42` - Add a read-only live-data guide for app live and censo surfaces, emphasizing configured AEAT authentication, zero live-write capability, local-only application of downloaded facts, and that AEAT_LIVE_TESTS_ENABLED is test/developer wording rather than an operator switch; `live-read docs`.
-- [ ] `W07.P13.S43` - Add a privacy-safe support checklist naming command outputs and logs to include without exposing tax ids or personal data; `support docs`.
+- [x] `W07.P13.S43` - Add a privacy-safe support checklist naming command outputs and logs to include without exposing tax ids or personal data; `support docs`.
 
 ### Phase `W07.P14` - Verification gates
 
