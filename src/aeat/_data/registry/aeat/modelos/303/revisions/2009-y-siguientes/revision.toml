@@ -124,6 +124,79 @@ fact = "iva_amount_sum"
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
+# Intra-community-acquisition official-box parity (adquisición intracomunitaria,
+# inversión del sujeto pasivo, LIVA art. 13 hecho imponible + art. 15 concepto +
+# art. 84.Uno.2 inversión). The recipient self-assesses the AIC cuota on BOTH the
+# devengado side (official box 11) and the deducible side (official box 37).
+# These two bindings expose the same self-assessed cuota the existing
+# modelo-303-iva-autorepercutido-intracomunitaria-cuota semantic binding already
+# feeds into the resultado, so the parity casillas are NOT added to the resultado
+# formula (they would double-count) — they are official-box exposure for the
+# export/workbook parity, netting to zero (devengado box 11 - deducible box 37 = 0).
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+# Third-country import IVA deducible (importación de bienes). IVA devengado on the
+# import is settled at customs (DUA) and never reaches M303; only the deducible leg
+# (official boxes 32 base / 33 cuota) appears here. NOT net-zero — a real deduction
+# with no offsetting M303 devengado. Grounded in LIVA art. 17 (hecho imponible
+# importaciones) + art. 92 (cuotas deducibles). An operator classifying a ledger
+# transaction as IMPORT_THIRD_COUNTRY with an iva_amount projects a SOPORTADO
+# observation this binding consumes, so the #64 advisory no longer flags it.
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-soportado-importaciones-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["import_third_country"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "soportado"
+fact = "iva_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
 # Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2).
 # The recipient self-assesses BOTH an IVA devengado entry (official box 13,
 # "IVA devengado otras ops inversion sujeto pasivo excl intracom - Cuota") and a
@@ -234,6 +307,9 @@ op = "add"
 
 [[revisions.2009-y-siguientes.formulas.expression.args]]
 casilla = "iva.soportado.interiores"
+
+[[revisions.2009-y-siguientes.formulas.expression.args]]
+casilla = "iva.soportado.importaciones"
 
 [[revisions.2009-y-siguientes.formulas.expression.args]]
 casilla = "iva.autorepercutido.intracomunitaria"
@@ -583,14 +659,40 @@ source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 [[revisions.2009-y-siguientes.constructs]]
 id = "modelo-303-iva-autoliquidacion"
 title = "Modelo 303 IVA quarterly autoliquidacion"
-legal_refs = ["orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110"]
+legal_refs = [
+    "orden-eha-3786-2008:art-1",
+    "orden-eha-3786-2008:art-7",
+    "ley-37-1992:art-13",
+    "ley-37-1992:art-15",
+    "ley-37-1992:art-17",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+    "ley-37-1992:art-92",
+    "rd-1624-1992:art-71",
+    "ley-37-1992:art-99",
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
+    "ley-37-1992:art-102",
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-107",
+    "ley-37-1992:art-108",
+    "ley-37-1992:art-109",
+    "ley-37-1992:art-110",
+]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 casillas = [
     "iva.repercutido.general",
     "iva.repercutido.reducido",
     "iva.repercutido.super-reducido",
     "iva.soportado.interiores",
+    "iva.soportado.importaciones",
     "iva.autorepercutido.intracomunitaria",
+    "iva.autorepercutido.intracomunitaria.devengado",
+    "iva.autorepercutido.intracomunitaria.deducible",
     "iva.autorepercutido.interior.devengado",
     "iva.autorepercutido.interior.deducible",
     "iva.cuota-devengada-total",
@@ -610,7 +712,19 @@ casillas = [
     "decl.periodo",
 ]
 formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje"]
-bindings = ["modelo-303-iva-repercutido-general-cuota", "modelo-303-iva-repercutido-reducido-cuota", "modelo-303-iva-repercutido-super-reducido-cuota", "modelo-303-iva-soportado-interiores-cuota", "modelo-303-iva-autorepercutido-intracomunitaria-cuota", "modelo-303-iva-autorepercutido-interior-devengado-cuota", "modelo-303-iva-autorepercutido-interior-deducible-cuota", "modelo-303-compensacion-pendiente-anteriores"]
+bindings = [
+    "modelo-303-iva-repercutido-general-cuota",
+    "modelo-303-iva-repercutido-reducido-cuota",
+    "modelo-303-iva-repercutido-super-reducido-cuota",
+    "modelo-303-iva-soportado-interiores-cuota",
+    "modelo-303-iva-soportado-importaciones-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
+    "modelo-303-iva-autorepercutido-interior-devengado-cuota",
+    "modelo-303-iva-autorepercutido-interior-deducible-cuota",
+    "modelo-303-compensacion-pendiente-anteriores",
+]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
 workbook_parity_refs = ["modelo-303-dr-2025"]
@@ -643,7 +757,16 @@ number = "compensacion-disponible-fin-periodo"
 number = "compensacion-generada-periodo"
 
 [[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+number = "iva.soportado.importaciones"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
 number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.intracomunitaria.devengado"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.intracomunitaria.deducible"
 
 [[revisions.2009-y-siguientes.completeness_manifest.casillas]]
 number = "iva.autorepercutido.interior.devengado"

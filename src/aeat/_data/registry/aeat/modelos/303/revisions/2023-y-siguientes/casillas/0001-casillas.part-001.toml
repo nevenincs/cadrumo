@@ -89,6 +89,57 @@ binding = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
+# Intra-community-acquisition official-box parity casillas. They expose the
+# self-assessed AIC cuota in its official devengado (boxes 10/11) and deducible
+# (boxes 36/37) positions for the export/workbook parity surface. They are NOT
+# added to the resultado formula — the iva.autorepercutido.intracomunitaria
+# semantic casilla already books that cuota into the resultado, and adding these
+# would double-count. The devengado/deducible pair nets to zero (LIVA art. 84
+# inversión + art. 92 deduction).
+[[revisions.2023-y-siguientes.casillas]]
+id = "iva.autorepercutido.intracomunitaria.devengado"
+number = "iva.autorepercutido.intracomunitaria.devengado"
+label = "Cuota IVA autorepercutida devengada en adquisiciones intracomunitarias (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_cuota_autorepercutida_intracomunitaria_devengado"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "iva.autorepercutido.intracomunitaria.deducible"
+number = "iva.autorepercutido.intracomunitaria.deducible"
+label = "Cuota IVA deducible autorepercutida en adquisiciones intracomunitarias (LIVA art 13 + art 15 + art 84.Uno.2 + art 92; oficial casillas 36/37)"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_autorepercutida_intracomunitaria_deducible"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+# Third-country import IVA deducible (official casilla 33). IVA devengado on the
+# import is settled at customs (DUA) and never reaches M303; only the deducible
+# leg appears here. This is a real deduction (not net-zero), so it feeds the
+# cuota-deducible-total formula. Grounded in LIVA art. 17 (hecho imponible
+# importaciones) + art. 92 (cuotas deducibles).
+[[revisions.2023-y-siguientes.casillas]]
+id = "iva.soportado.importaciones"
+number = "iva.soportado.importaciones"
+label = "Cuota IVA soportado deducible en importaciones de bienes corrientes (LIVA art 17 + art 92; oficial casilla 33)"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_soportada_importaciones"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-importaciones-cuota"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autoconsumo.promotor.base"
 number = "iva.autoconsumo.promotor.base"
