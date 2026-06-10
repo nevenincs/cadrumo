@@ -48,6 +48,7 @@ CalculationSourceDiagnosticReason = Literal[
     "source_issue",
     "storage_degraded",
     "unhandled_binding_source",
+    "oss_no_live_source",
 ]
 
 # Source kinds that are explicitly deferred — no mesh resolver is built yet, but
