@@ -16,7 +16,6 @@ from ._models import (
     OperatorMutability,
     OperatorSurfaceContract,
     OperatorSurfaceLogFields,
-    RetiredOperatorSurface,
     RootSurface,
     RootSurfaceName,
     ServiceOwner,
@@ -51,120 +50,6 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         owns_storage_maintenance=False,
         owns_operational_workflow=True,
         required_children=("overview", "ledger", "live", "modelo", "registry", "review"),
-    ),
-)
-
-RETIRED_OPERATOR_SURFACES: tuple[RetiredOperatorSurface, ...] = (
-    RetiredOperatorSurface(
-        name="setup",
-        replacement="config",
-        suggestion="aeat config profile create NAME",
-        reason=tr(
-            "cli.operator_surface.retired.setup_reason",
-            default="setup and config are consolidated under the config root",
-        ),
-    ),
-    RetiredOperatorSurface(
-        name="archive",
-        replacement="config bucket",
-        suggestion="aeat config bucket",
-        reason=tr("cli.operator_surface.retired.archive_reason", default="archive is consolidated under config bucket"),
-    ),
-    RetiredOperatorSurface(
-        name="data",
-        replacement="app ledger",
-        suggestion="aeat app ledger",
-        reason=tr("cli.operator_surface.retired.data_reason", default="data work is consolidated under app ledger"),
-    ),
-    RetiredOperatorSurface(
-        name="filing",
-        replacement="app modelo",
-        suggestion="aeat app modelo",
-        reason=tr("cli.operator_surface.retired.filing_reason", default="filing work is consolidated under app modelo"),
-    ),
-    RetiredOperatorSurface(
-        name="financial",
-        replacement="app ledger",
-        suggestion="aeat app ledger",
-        reason=tr(
-            "cli.operator_surface.retired.financial_reason",
-            default="financial work is consolidated under app ledger",
-        ),
-    ),
-    RetiredOperatorSurface(
-        name="invoice",
-        replacement="app ledger",
-        suggestion="aeat app ledger",
-        reason=tr(
-            "cli.operator_surface.retired.invoice_reason",
-            default="invoice work is consolidated under app ledger",
-        ),
-    ),
-    RetiredOperatorSurface(
-        name="declaration",
-        replacement="app modelo",
-        suggestion="aeat app modelo",
-        reason=tr(
-            "cli.operator_surface.retired.declaration_reason",
-            default="declaration work is consolidated under app modelo",
-        ),
-    ),
-    RetiredOperatorSurface(
-        name="sanitize",
-        replacement="app ledger",
-        suggestion="aeat app ledger check",
-        reason=tr(
-            "cli.operator_surface.retired.sanitize_reason",
-            default="ledger checks are exposed under app ledger check",
-        ),
-    ),
-    RetiredOperatorSurface(
-        name="llm",
-        replacement=None,
-        suggestion="aeat app ledger classify",
-        reason=tr(
-            "cli.operator_surface.retired.llm_reason",
-            default="classification is exposed under app ledger classify",
-        ),
-    ),
-    RetiredOperatorSurface(
-        name="topic",
-        replacement="app registry",
-        suggestion="aeat app registry citations",
-        reason=tr(
-            "cli.operator_surface.retired.topic_reason",
-            default="topic lookup is consolidated under app registry citations",
-        ),
-    ),
-    RetiredOperatorSurface(
-        name="submit",
-        replacement=None,
-        suggestion=None,
-        reason=tr("cli.operator_surface.retired.submit_reason", default="live submission is permanently disabled"),
-    ),
-    RetiredOperatorSurface(
-        name="presentation",
-        replacement="app modelo export",
-        suggestion="aeat app modelo export",
-        reason=tr(
-            "cli.operator_surface.retired.presentation_reason",
-            default="exports belong to app modelo export",
-        ),
-    ),
-    RetiredOperatorSurface(
-        name="preflight",
-        replacement="app modelo verify",
-        suggestion="aeat app modelo verify",
-        reason=tr("cli.operator_surface.retired.preflight_reason", default="preflight belongs to modelo verification"),
-    ),
-    RetiredOperatorSurface(
-        name="workflow",
-        replacement="app modelo",
-        suggestion="aeat app modelo",
-        reason=tr(
-            "cli.operator_surface.retired.workflow_reason",
-            default="workflow operations are consolidated under app modelo",
-        ),
     ),
 )
 
@@ -370,7 +255,7 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
     ServiceOwner(
         capability="root_contract",
         owner="aeat.application.operator_surface",
-        notes="owns accepted root, retired surface, lifecycle, and source-kind contract records",
+        notes="owns accepted root, lifecycle, and source-kind contract records",
     ),
     ServiceOwner(
         capability="profile_and_bucket_state",
@@ -427,13 +312,11 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
     )
     log_fields = OperatorSurfaceLogFields(
         root_count=len(ACCEPTED_ROOTS),
-        retired_surface_count=len(RETIRED_OPERATOR_SURFACES),
         lifecycle=" -> ".join(step.value for step in lifecycle.steps),
         source_kind_count=len(SOURCE_KINDS),
     )
     contract = OperatorSurfaceContract(
         roots=ACCEPTED_ROOTS,
-        retired_surfaces=RETIRED_OPERATOR_SURFACES,
         lifecycle=lifecycle,
         source_kinds=SOURCE_KINDS,
         source_kind_aliases=SOURCE_KIND_ALIASES,
@@ -451,7 +334,7 @@ def get_operator_surface_contract() -> OperatorSurfaceContract:
     """Return the cached backend-owned operator surface contract.
 
     Returns the :class:`OperatorSurfaceContract` describing the accepted
-    root surfaces, retired surfaces, and registered feature flags.
+    root surfaces and registered feature flags.
     """
     return build_operator_surface_contract()
 
@@ -462,30 +345,14 @@ def require_accepted_root(name: str) -> RootSurface:
     for root in get_operator_surface_contract().roots:
         if root.name.value == normalized:
             return root
-    retired = retired_surface_suggestion(normalized)
-    suggestion = retired.suggestion if retired is not None else "aeat --help"
-    reason = (
-        retired.reason
-        if retired is not None
-        else tr(
+    raise OperatorSurfaceContractError(
+        normalized or name,
+        reason=tr(
             "cli.operator_surface.errors.accepted_roots_only",
             default="accepted operator roots are config and app",
-        )
+        ),
+        suggestion="aeat --help",
     )
-    raise OperatorSurfaceContractError(normalized or name, reason=reason, suggestion=suggestion)
-
-
-def retired_surface_suggestion(name: str) -> RetiredOperatorSurface | None:
-    """Return the retired-surface contract for ``name`` when one exists.
-
-    Returns a :class:`RetiredOperatorSurface` when ``name`` matches a
-    registered retired surface, or ``None`` when it does not.
-    """
-    normalized = name.strip().lower()
-    for surface in get_operator_surface_contract().retired_surfaces:
-        if surface.name == normalized:
-            return surface
-    return None
 
 
 def resolve_source_kind_alias(value: str) -> SourceKind:

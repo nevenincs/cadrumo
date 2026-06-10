@@ -730,6 +730,7 @@ application:
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+      work_unit_revision_divergence: 'Work unit %{work_unit_id} was created against registry revision %{work_unit_revision}, but the law-determined revision for modelo %{modelo} %{filing_year} %{period} is now %{law_revision}. Re-create the work unit to bind it to the current revision.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
