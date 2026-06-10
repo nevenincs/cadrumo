@@ -114,8 +114,16 @@ class LLMClassifier(Protocol):
         """Return the ``classified_by`` identifier this classifier emits."""
         ...
 
-    def classify(self, transaction: Transaction) -> LLMClassificationResponse:
+    def classify(
+        self, transaction: Transaction, *, evidence_text: str | None = None
+    ) -> LLMClassificationResponse:
         """Return one classification decision for ``transaction``.
+
+        Args:
+            transaction: The transaction to classify.
+            evidence_text: Optional on-host-extracted attached-evidence text to
+                inject into the prompt. Gating of whether evidence may reach a given
+                (on-host vs cloud) classifier is the caller's responsibility.
 
         Returns:
             A :class:`LLMClassificationResponse` with the classification result.
@@ -218,9 +226,18 @@ class PromptSpec:
         """
         return frozenset(choice.value for choice in self.iva_categories)
 
-    def render(self, transaction: Transaction) -> str:
-        """Render the prompt for ``transaction`` against this spec."""
-        return _render_prompt(self, transaction)
+    def render(self, transaction: Transaction, *, evidence_text: str | None = None) -> str:
+        """Render the prompt for ``transaction`` against this spec.
+
+        Args:
+            transaction: The transaction to classify.
+            evidence_text: Optional on-host-extracted text of an attached evidence
+                document (e.g. a purchase invoice). When present it is injected into
+                the prompt for the model to read; the model uses it only to select
+                the classification/category/iva_category and must never copy a euro
+                figure from it (the regulated numbers stay registry-derived).
+        """
+        return _render_prompt(self, transaction, evidence_text=evidence_text)
 
 
 def default_prompt_spec() -> PromptSpec:
@@ -368,7 +385,22 @@ def _render_choices(lines: Iterable[tuple[str, str]]) -> str:
     return "\n".join(f"  {value:<{width}} — {hint}" for value, hint in rows)
 
 
-def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
+def _evidence_section(evidence_text: str) -> list[str]:
+    """Render the attached-evidence block (selection-only; never emit its numbers)."""
+    return [
+        "Attached evidence document for this transaction (read it carefully; it is "
+        "authoritative for what was purchased). Use it ONLY to choose the "
+        "classification, category, and iva_category. Do NOT copy or output any euro "
+        "amount, rate, taxable base, or IVA figure from it -- those are computed "
+        "elsewhere from the registry.",
+        "--- begin evidence ---",
+        evidence_text,
+        "--- end evidence ---",
+        "",
+    ]
+
+
+def _render_prompt(spec: PromptSpec, transaction: Transaction, *, evidence_text: str | None = None) -> str:
     """Build the full prompt string for one transaction against a spec."""
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
@@ -386,6 +418,7 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
         f"  Counterparty: {raw.counterparty or '(unknown)'}",
         f"  Description: {raw.description}",
         "",
+        *(_evidence_section(evidence_text) if evidence_text else []),
         "Classify it as exactly one of these BusinessClassification values:",
         classification_block,
     ]
@@ -541,13 +574,20 @@ class SubprocessLLMClassifier:
             return f"llm:{self.name}:{self.model}"
         return f"llm:{self.name}"
 
-    def classify(self, transaction: Transaction) -> LLMClassificationResponse:
+    def classify(
+        self, transaction: Transaction, *, evidence_text: str | None = None
+    ) -> LLMClassificationResponse:
         """Shell out to the LLM CLI, parse, validate, return.
+
+        Args:
+            transaction: The transaction to classify.
+            evidence_text: Optional on-host-extracted attached-evidence text injected
+                into the prompt (sent via stdin, never a file).
 
         Returns:
             A :class:`LLMClassificationResponse` with the parsed classification result.
         """
-        prompt = self.spec.render(transaction)
+        prompt = self.spec.render(transaction, evidence_text=evidence_text)
         resolved_binary = shutil.which(self.command[0])
         if resolved_binary is None:
             _logger.warning("llm classifier %s not found on PATH: %s", self.name, self.command[0])
