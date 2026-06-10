@@ -71,6 +71,8 @@ def _choice(values: list[str]) -> typer._click.types.ParamType:
     typer-internal ``ParamType`` so the ``typer.Option`` overload resolver
     accepts it without an ``Any`` escape.
     """
+    # CAST-RATIONALE-CHOICE-PARAM-TYPE: runtime object is a real click.Choice;
+    # only the static view is narrowed to typer's vendored ParamType (see docstring).
     return typing.cast("typer._click.types.ParamType", click.Choice(values))
 
 
