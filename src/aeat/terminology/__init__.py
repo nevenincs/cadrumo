@@ -42,6 +42,14 @@ from ._schema import (
     SeedProvenance,
     TermSection,
 )
+from ._validators import (
+    approved_completeness_validator,
+    default_handbook_validators,
+    id_uniqueness_validator,
+    legal_refs_resolve_validator,
+    lifecycle_replaced_by_validator,
+    relation_integrity_validator,
+)
 
 __all__ = [
     "ConceptDomain",
@@ -59,7 +67,13 @@ __all__ = [
     "TerminologyHandbook",
     "TerminologyLoadError",
     "TerminologyValidationError",
+    "approved_completeness_validator",
+    "default_handbook_validators",
+    "id_uniqueness_validator",
+    "legal_refs_resolve_validator",
+    "lifecycle_replaced_by_validator",
     "load_bundled_terminology_handbook",
     "load_terminology_handbook",
+    "relation_integrity_validator",
     "terminology_concepts_dir",
 ]

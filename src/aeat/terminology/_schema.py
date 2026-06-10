@@ -247,8 +247,12 @@ class ConceptRecord(BaseModel):
     are authored shallow SKOS relations and ``narrower`` is DERIVED by the
     loader from the inverse of every concept's ``broader`` -- authoring
     ``narrower`` in a fragment is rejected so the inverse is never
-    double-booked. ``replaced_by`` is mandatory exactly when ``lifecycle``
-    is ``RETIRED`` (the tombstone contract).
+    double-booked. ``replaced_by`` is mandatory when ``lifecycle`` is
+    ``RETIRED`` (the tombstone contract), optional when ``DEPRECATED`` (an
+    in-use concept may name a recommended successor), and forbidden on a
+    ``DRAFT`` or ``APPROVED`` concept (a live, non-discouraged concept has
+    no successor). The successor's existence, non-retired target, and
+    acyclicity are handbook-level gates, not per-record invariants.
     """
 
     model_config = _STRICT_FROZEN
@@ -286,9 +290,11 @@ class ConceptRecord(BaseModel):
         for axis_name, axis in (("broader", self.broader), ("related", self.related)):
             if len(set(axis)) != len(axis):
                 raise TerminologyValidationError(f"concept {self.concept_id!r}: duplicate {axis_name} entries")
-        if (self.lifecycle is ConceptLifecycle.RETIRED) != (self.replaced_by is not None):
+        if self.lifecycle is ConceptLifecycle.RETIRED and self.replaced_by is None:
+            raise TerminologyValidationError(f"concept {self.concept_id!r}: retired concept requires replaced_by")
+        if self.lifecycle in (ConceptLifecycle.DRAFT, ConceptLifecycle.APPROVED) and self.replaced_by is not None:
             raise TerminologyValidationError(
-                f"concept {self.concept_id!r}: replaced_by is required exactly when lifecycle is retired"
+                f"concept {self.concept_id!r}: replaced_by is only valid on a deprecated or retired concept"
             )
         if self.replaced_by == self.concept_id:
             raise TerminologyValidationError(f"concept {self.concept_id!r}: replaced_by must not reference itself")
