@@ -309,10 +309,14 @@ def _seed_clean_cross_period_sources(
 
 
 def _target_filing_records(
-    records: tuple,
+    records: tuple[object, ...],
     work_unit: WorkUnit,
-) -> tuple:
-    return tuple(record for record in records if record.work_unit_id == work_unit.work_unit_id)
+) -> tuple[object, ...]:
+    result = []
+    for record in records:
+        if hasattr(record, "work_unit_id") and record.work_unit_id == work_unit.work_unit_id:  # type: ignore[attr-defined]
+            result.append(record)
+    return tuple(result)
 
 
 def _canonical_work_unit_period(work_unit: WorkUnit) -> str:

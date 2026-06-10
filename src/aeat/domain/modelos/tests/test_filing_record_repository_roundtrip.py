@@ -207,16 +207,15 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
         )
         is None
     )
-    assert (
-        catalogue.current_for(
-            bucket_id=bucket_id,
-            modelo="322",
-            filing_year=2026,
-            period="01",
-            member_nif="A00000000",
-        ).filing_record_id
-        == member_a_id
+    current_a = catalogue.current_for(
+        bucket_id=bucket_id,
+        modelo="322",
+        filing_year=2026,
+        period="01",
+        member_nif="A00000000",
     )
+    assert current_a is not None
+    assert current_a.filing_record_id == member_a_id
     assert tuple(
         record.filing_record_id
         for record in catalogue.history_for(

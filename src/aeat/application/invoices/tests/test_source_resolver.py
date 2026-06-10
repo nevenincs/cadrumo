@@ -45,7 +45,18 @@ def _invoice(
     base_total: Decimal,
     iva_category: IvaCategory,
 ) -> Invoice:
+    from ....domain.invoices import derive_invoice_id
+
+    invoice_id = derive_invoice_id(
+        kind=InvoiceKind.ISSUED,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
+        counterparty_tax_id=counterparty_tax_id,
+        currency="EUR",
+        grand_total=base_total,
+    )
     return Invoice(
+        invoice_id=invoice_id,
         bucket_id=bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number=invoice_number,

@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -42,7 +43,7 @@ _RUNNER = CliRunner()
 _NIF = "12345678Z"
 
 
-def _unwrap_envelope(payload: object) -> dict:
+def _unwrap_envelope(payload: object) -> dict[str, object]:
     """Return the inner ``result`` payload from a CLI emit envelope.
 
     Every CLI verb now emits ``{schema_version, command, result, warnings}``
@@ -52,10 +53,14 @@ def _unwrap_envelope(payload: object) -> dict:
     unconditionally.
     """
     if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
-        return payload["result"]
+        payload_dict = cast(dict[str, object], payload)
+        result_obj = payload_dict["result"]
+        if isinstance(result_obj, dict):
+            return cast(dict[str, object], result_obj)
+        raise AssertionError(f"result field is not a dict: {type(result_obj).__name__}")
     if not isinstance(payload, dict):
         raise AssertionError(f"unexpected JSON shape: {type(payload).__name__}")
-    return payload
+    return cast(dict[str, object], payload)
 
 
 def _state(
