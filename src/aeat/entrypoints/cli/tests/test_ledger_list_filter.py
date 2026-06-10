@@ -78,9 +78,9 @@ def test_list_without_filter_returns_full_ledger() -> None:
 
 
 def test_period_filter_narrows_to_one_year() -> None:
-    """A bare-YYYY period filter scopes the listing to that year only.
+    """A year-qualified annual period filter scopes the listing to that year only.
 
-    The corpus is cross-year; a ``period=YYYY`` filter must return a strict,
+    The corpus is cross-year; a ``period=YYYY-0A`` filter must return a strict,
     non-empty subset of the full ledger, and every returned row's date must fall
     in that year — proving the filter actually applies rather than passing the
     full set through.
@@ -90,8 +90,8 @@ def test_period_filter_narrows_to_one_year() -> None:
     years = sorted({str(r["date"])[:4] for r in full})
     assert len(years) >= 2, f"corpus must span >=2 years to exercise the year filter, got {years}"
     target = years[0]
-    filtered = _list_rows(f"period={target}")
-    assert filtered, f"period={target} must match the rows dated in {target}"
+    filtered = _list_rows(f"period={target}-0A")
+    assert filtered, f"period={target}-0A must match the rows dated in {target}"
     assert len(filtered) < len(full), "a single-year filter must be a strict subset of the cross-year ledger"
     assert all(str(r["date"]).startswith(target) for r in filtered)
 
@@ -132,8 +132,8 @@ def test_combined_filters_compose_as_intersection() -> None:
     _import_corpus()
     full = _list_rows()
     target_year = sorted({str(r["date"])[:4] for r in full})[0]
-    combined = _list_rows(f"period={target_year}", "classification=NOT_YET_PROCESSED")
-    year_only = _list_rows(f"period={target_year}")
+    combined = _list_rows(f"period={target_year}-0A", "classification=NOT_YET_PROCESSED")
+    year_only = _list_rows(f"period={target_year}-0A")
     # Every raw-import row is NOT_YET_PROCESSED, so the classification clause is a
     # no-op intersection here: combined == year_only, and both are a strict
     # subset of the full ledger.

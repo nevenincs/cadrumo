@@ -116,14 +116,14 @@ def test_corpus_spans_both_years() -> None:
 
 
 def test_annual_review_filter_renders_full_year() -> None:
-    """``review --filter period=2025`` (annual Period) is accepted and renders.
+    """``review --filter period=2025-0A`` (annual Period) is accepted and renders.
 
     The reviewer's first instinct is a full-year view. The annual ``Period``
     token works, so the operator is not forced to walk four quarters — but the
     output is a row dump, not a totalled picture.
     """
     _import_corpus()
-    annual = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025"])
+    annual = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025-0A"])
     assert annual.exit_code == 0, annual.output
     # The annual filter must contain rows dated across the year, not just Q1.
     assert "2025-01" in annual.output, annual.output
@@ -133,7 +133,7 @@ def test_annual_review_filter_renders_full_year() -> None:
 def test_all_four_quarters_reviewable() -> None:
     """Each 2025 quarter is independently reviewable (per-period is the only roll-up)."""
     _import_corpus()
-    for q in ("2025Q1", "2025Q2", "2025Q3", "2025Q4"):
+    for q in ("2025-1T", "2025-2T", "2025-3T", "2025-4T"):
         result = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", f"period={q}"])
         assert result.exit_code == 0, f"{q}: {result.output}"
 
@@ -268,15 +268,15 @@ def test_cross_year_invoice_is_settled_in_2026_under_a_2025_reference() -> None:
 def test_cross_year_invoice_falls_outside_a_2025_period_filter() -> None:
     """The cash-date filter assigns the cross-year invoice to 2026, not 2025.
 
-    PAIN POINT: filtering by ``period=2025`` (which keys off the settlement /
+    PAIN POINT: filtering by ``period=2025-0A`` (which keys off the settlement /
     value date) hides an invoice that, by accrual, belongs to the 2025 Renta.
     A year-end reviewer working from the period filter alone would under-count
     2025 income by this row unless they reconcile devengo by hand.
     """
     _import_corpus()
-    review_2025 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025"])
+    review_2025 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025-0A"])
     assert review_2025.exit_code == 0, review_2025.output
-    review_2026 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2026"])
+    review_2026 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2026-0A"])
     assert review_2026.exit_code == 0, review_2026.output
     # The cross-year invoice settles in 2026, so the 2026 period view carries it
     # and the 2025 period view does not — accrual placement is the operator's job.
@@ -294,7 +294,7 @@ def test_no_annual_money_rollup_surface_exists() -> None:
     picture is not a first-class CLI output.
     """
     _import_corpus()
-    status = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "status", "--period", "2025"])
+    status = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "status", "--period", "0A", "--year", "2025"])
     assert status.exit_code == 0, status.output
     result = json.loads(status.output)["result"]
     # Counts and readiness exist ...

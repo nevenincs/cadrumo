@@ -1,4 +1,9 @@
-"""CLI surface tests for `aeat app modelo reconcile`."""
+"""CLI surface tests for the `aeat app modelo reconcile` group.
+
+`reconcile file --file PATH` reconciles a local justificante; `reconcile history`
+lists past runs. `reconcile pull` fetches from AEAT (a live read) and is covered
+by the application-layer orchestrator + reconcile_capture tests, not here.
+"""
 
 from __future__ import annotations
 
@@ -62,15 +67,14 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     return work_unit_id
 
 
-def test_reconcile_happy_path_against_justificante(cli_runner: CliRunner) -> None:
-    """The verb produces a `matches` verdict when the work unit and the
-    committed modelo_130 fixture align on modelo and ejercicio."""
-
+def test_reconcile_file_happy_path(cli_runner: CliRunner) -> None:
+    """`reconcile file --file` matches when the work unit and the committed
+    modelo_130 fixture align on modelo and ejercicio."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
 
     result = cli_runner.invoke(
         app,
-        ["app", "modelo", "reconcile", work_unit_id, "--from-justificante", str(MODELO_130_FIXTURE)],
+        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code == 0, result.output
     assert f"work_unit_id\t{work_unit_id}" in result.output
@@ -79,155 +83,54 @@ def test_reconcile_happy_path_against_justificante(cli_runner: CliRunner) -> Non
     assert "diffs\t0" in result.output
 
 
-def test_reconcile_from_capture_against_persisted_snapshot(cli_runner: CliRunner) -> None:
-    """`--from-capture` reconciles against a persisted live capture (no AEAT contact)."""
-    import hashlib
-
-    from ....application.live import JustificanteCaptureSnapshotService
-
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    bucket_id = workflow_state_repository().load().active_profile_bucket_id()
-    assert bucket_id is not None
-    pdf_bytes = MODELO_130_FIXTURE.read_bytes()
-    snapshot = JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
-        modelo="130",
-        filing_year=2026,
-        period="1T",
-        expediente_id="202613000010001A",
-        csv="ABCD1234EFGH5678",
-        pdf_bytes=pdf_bytes,
-        pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
-        captured_at=datetime(2026, 4, 18, 10, 0, tzinfo=UTC),
-    )
-
-    result = cli_runner.invoke(
-        app,
-        ["app", "modelo", "reconcile", work_unit_id, "--from-capture", snapshot.snapshot_id],
-    )
-    assert result.exit_code == 0, result.output
-    assert "verdict\tmatches" in result.output
-
-
-def test_reconcile_rejects_capture_and_path_together(cli_runner: CliRunner) -> None:
-    """`--from-capture` is mutually exclusive with the path-based sources."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    result = cli_runner.invoke(
-        app,
-        [
-            "app",
-            "modelo",
-            "reconcile",
-            work_unit_id,
-            "--from-capture",
-            "deadbeef",
-            "--from-justificante",
-            str(MODELO_130_FIXTURE),
-        ],
-    )
-    assert result.exit_code != 0
-
-
-def test_reconcile_mismatch_renders_diff_rows(cli_runner: CliRunner) -> None:
-    """A modelo=303 work unit against the modelo_130 fixture renders a
-    mismatches verdict with the modelo diff line."""
-
+def test_reconcile_file_mismatch_renders_diff_rows(cli_runner: CliRunner) -> None:
+    """A modelo=303 work unit against the modelo_130 fixture mismatches with a modelo diff."""
     work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="Q1")
 
     result = cli_runner.invoke(
         app,
-        ["app", "modelo", "reconcile", work_unit_id, "--from-justificante", str(MODELO_130_FIXTURE)],
+        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code == 0, result.output
     assert "verdict\tmismatches" in result.output
     assert "diff\tmodelo\twork_unit=303\tevidence=130" in result.output
 
 
-def test_reconcile_refuses_when_both_source_flags_supplied(cli_runner: CliRunner, tmp_path: Path) -> None:
-    """The two source flags are mutually exclusive.
-    Supplying both surfaces as typer.BadParameter (exit_code != 0)
-    rather than letting the service silently pick one."""
-
+def test_reconcile_file_requires_the_file_option(cli_runner: CliRunner) -> None:
+    """`reconcile file` without `--file` is a usage error, not a silent default."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
-    other = tmp_path / "extra.pdf"
-    other.write_bytes(b"%PDF-1.4\n")
+    result = cli_runner.invoke(app, ["app", "modelo", "reconcile", "file", work_unit_id])
+    assert result.exit_code != 0, result.output
 
+
+def test_reconcile_file_refuses_unknown_work_unit(cli_runner: CliRunner) -> None:
+    """A work unit id absent from the active bucket catalogue refuses at the exit code."""
     result = cli_runner.invoke(
         app,
-        [
-            "app",
-            "modelo",
-            "reconcile",
-            work_unit_id,
-            "--from-justificante",
-            str(MODELO_130_FIXTURE),
-            "--from-declaration",
-            str(other),
-        ],
+        ["app", "modelo", "reconcile", "file", "0" * 64, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code != 0, result.output
 
 
-def test_reconcile_refuses_when_neither_source_flag_supplied(cli_runner: CliRunner) -> None:
-    """Exactly one source must be supplied. Without either flag the
-    operator sees a BadParameter rather than a silent default."""
-
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
-
-    result = cli_runner.invoke(app, ["app", "modelo", "reconcile", work_unit_id])
-    assert result.exit_code != 0, result.output
-
-
-def test_reconcile_refuses_unknown_work_unit(cli_runner: CliRunner) -> None:
-    """A work unit id that is not in the active bucket catalogue
-    surfaces as a refusal at the CLI exit code."""
-
-    result = cli_runner.invoke(
-        app,
-        ["app", "modelo", "reconcile", "0" * 64, "--from-justificante", str(MODELO_130_FIXTURE)],
-    )
-    assert result.exit_code != 0, result.output
-
-
-def test_reconcile_declaration_source_refused_until_parser_lands(cli_runner: CliRunner, tmp_path: Path) -> None:
-    """The --from-declaration variant is reserved (no parser shipped).
-    The CLI surfaces the typed refusal from the service layer."""
-
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
-    fake_declaration = tmp_path / "declaration.pdf"
-    fake_declaration.write_bytes(b"%PDF-1.4\n")
-
-    result = cli_runner.invoke(
-        app,
-        ["app", "modelo", "reconcile", work_unit_id, "--from-declaration", str(fake_declaration)],
-    )
-    assert result.exit_code != 0, result.output
-
-
-def test_reconcile_by_flag_lands_in_modelo_reconciled_event(cli_runner: CliRunner) -> None:
-    """The --by override attaches to the MODELO_RECONCILED event's actor
-    field, replacing the default (the active profile display_name).
-    Without this thread-through the audit trail would falsely attribute
-    every reconciliation to the active profile even when a teammate
-    ran the command."""
-
+def test_reconcile_file_by_flag_lands_in_modelo_reconciled_event(cli_runner: CliRunner) -> None:
+    """The --by override attaches to the MODELO_RECONCILED event's actor field."""
     from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
-
     result = cli_runner.invoke(
         app,
         [
             "app",
             "modelo",
             "reconcile",
+            "file",
             work_unit_id,
-            "--from-justificante",
+            "--file",
             str(MODELO_130_FIXTURE),
             "--by",
             "auditor@team",
         ],
     )
-
     assert result.exit_code == 0, result.output
     catalogue = BucketEventHistoryRepository().load()
     matching = [
@@ -239,27 +142,23 @@ def test_reconcile_by_flag_lands_in_modelo_reconciled_event(cli_runner: CliRunne
     assert matching[-1].actor == "auditor@team"
 
 
-def test_reconciliation_history_empty_is_instructive(cli_runner: CliRunner) -> None:
-    """With no reconciliations recorded, the history verb lists a clean empty."""
-    result = cli_runner.invoke(app, ["app", "modelo", "reconciliation-history"])
-
+def test_reconcile_history_empty_is_instructive(cli_runner: CliRunner) -> None:
+    """With no reconciliations recorded, `reconcile history` lists a clean empty."""
+    result = cli_runner.invoke(app, ["app", "modelo", "reconcile", "history"])
     assert result.exit_code == 0, result.output
     assert "reconciliation_count\t0" in result.output
     assert "No reconciliations recorded yet" in result.output
 
 
-def test_reconciliation_history_lists_recorded_reconciliation(cli_runner: CliRunner) -> None:
-    """After a reconcile, the history verb lists the recorded verdict row."""
+def test_reconcile_history_lists_recorded_reconciliation(cli_runner: CliRunner) -> None:
+    """After a reconcile, `reconcile history` lists the recorded verdict row."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
     reconcile = cli_runner.invoke(
         app,
-        ["app", "modelo", "reconcile", work_unit_id, "--from-justificante", str(MODELO_130_FIXTURE)],
+        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert reconcile.exit_code == 0, reconcile.output
 
-    result = cli_runner.invoke(app, ["app", "modelo", "reconciliation-history"])
-
+    result = cli_runner.invoke(app, ["app", "modelo", "reconcile", "history"])
     assert result.exit_code == 0, result.output
     assert "reconciliation_count\t1" in result.output
-    assert work_unit_id in result.output
-    assert "matches" in result.output

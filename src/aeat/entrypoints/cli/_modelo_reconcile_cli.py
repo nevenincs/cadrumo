@@ -1,7 +1,17 @@
-"""Reconciliation command registration for ``aeat app modelo``."""
+"""Reconciliation command group for ``aeat app modelo reconcile``.
+
+``reconcile`` is a command group expressing the two CLI standards:
+
+* ``reconcile pull <work-unit>`` fetches the justificante from AEAT (the
+  ``pull`` standard) and reconciles against it in one flow.
+* ``reconcile file <work-unit> --file PATH`` reconciles against a local
+  justificante PDF (the ``--file`` standard); local-only, never contacts AEAT.
+* ``reconcile history`` lists past reconciliations.
+"""
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
@@ -18,6 +28,20 @@ _resolve_default_actor: Callable[[], str] | None = None
 _active_bucket_id: Callable[[], str] | None = None
 
 
+reconcile_app = typer.Typer(
+    name="reconcile",
+    help=tr(
+        "cli.app.modelo.reconcile.app_help",
+        default=(
+            "Reconcile a modelo work unit against its AEAT justificante: `pull` fetches the receipt "
+            "from AEAT and reconciles; `file` reconciles a local PDF; `history` lists past runs."
+        ),
+    ),
+    no_args_is_help=True,
+    add_completion=False,
+)
+
+
 def register_reconcile_commands(
     app: typer.Typer,
     *,
@@ -26,46 +50,13 @@ def register_reconcile_commands(
     resolve_default_actor: Callable[[], str],
     active_bucket_id: Callable[[], str],
 ) -> None:
-    """Register local-only modelo reconciliation commands."""
+    """Mount the modelo reconcile command group on the modelo app."""
     global _require_active_profile, _resolve_work_unit_for_cli, _resolve_default_actor, _active_bucket_id
     _require_active_profile = require_active_profile
     _resolve_work_unit_for_cli = resolve_work_unit_for_cli
     _resolve_default_actor = resolve_default_actor
     _active_bucket_id = active_bucket_id
-    app.command(
-        "reconciliation-history",
-        help=tr(
-            "cli.app.modelo.reconciliation_history.help",
-            default=(
-                "List past reconciliations recorded for the active profile. Reads the "
-                "append-only MODELO_RECONCILED bucket-event history; reconciliations are "
-                "repeatable on demand, so this is a convenience read-back, not a stored record."
-            ),
-        ),
-    )(modelo_reconciliation_history_verb)
-    app.command(
-        "reconcile",
-        help=tr(
-            "cli.app.modelo.reconcile.help",
-            default=(
-                "Reconcile a modelo work unit against external evidence (justificante PDF). "
-                "Local-only; never contacts AEAT."
-            ),
-        ),
-    )(modelo_reconcile_verb)
-    app.command(
-        "reconcile-from-justificante",
-        help=tr(
-            "cli.app.modelo.reconcile_from_justificante.help",
-            default=(
-                "Reconcile a modelo work unit against a justificante PDF. Sugar for "
-                'operators who think "reconcile from this justificante" rather than '
-                '"reconcile, source = justificante". Shares the modelo_reconcile '
-                "application service entry point with the flag-based form. Local-only; "
-                "never contacts AEAT."
-            ),
-        ),
-    )(modelo_reconcile_from_justificante_verb)
+    app.add_typer(reconcile_app, name="reconcile")
 
 
 def _require_profile() -> None:
@@ -101,6 +92,12 @@ def _resolve_work_unit(
     )
 
 
+def _active_bucket() -> str:
+    if _active_bucket_id is None:
+        raise RuntimeError("modelo reconcile commands were not registered")
+    return _active_bucket_id()
+
+
 def _render_reconciliation_report(
     ctx: typer.Context,
     report: ModeloReconciliationReport,
@@ -108,7 +105,6 @@ def _render_reconciliation_report(
     command: str,
 ) -> None:
     """Render a :class:`~aeat.application.modelo.ModeloReconciliationReport` through the typed envelope."""
-    from ._common import _emit_envelope
     from ._modelo_payloads import (
         ModeloReconcileResult,
         ModeloReconciliationDiffPayload,
@@ -147,43 +143,138 @@ def _render_reconciliation_report(
     _emit_envelope(ctx, command=command, result=result, lines=lines)
 
 
-def _source_from_options(*, from_justificante: Path | None, from_declaration: Path | None):
-    from ...application.modelo import ModeloReconciliationSourceKind
+_WorkUnitIdArg = Annotated[
+    str | None,
+    typer.Argument(
+        help=tr(
+            "cli.app.modelo.reconcile.work_unit_id_help",
+            default="Work unit id (SHA-256 or unambiguous prefix).",
+        ),
+    ),
+]
+_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
+_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
+_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
+_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
+_BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help"))]
+_ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
 
-    if from_justificante is None and from_declaration is None:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.reconcile.errors.missing_source",
-                default="Supply --from-justificante PATH, --from-declaration PATH, or --from-capture SNAPSHOT_ID.",
-            ),
+
+@reconcile_app.command(
+    "pull",
+    help=tr(
+        "cli.app.modelo.reconcile.pull_help",
+        default="Pull the justificante for a work unit from AEAT and reconcile against it. Contacts AEAT (read-only).",
+    ),
+)
+def reconcile_pull_verb(
+    ctx: typer.Context,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    actor: _ActorOpt = None,
+) -> None:
+    """Pull the AEAT justificante for a work unit and reconcile against it."""
+    from ...application.live import capture_justificante_snapshot, reconcile_capture
+
+    resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
+    _require_profile()
+    unit = _resolve_work_unit(
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+    )
+    snapshot = asyncio.run(
+        capture_justificante_snapshot(
+            bucket_id=unit.bucket_id,
+            modelo=str(unit.modelo),
+            year=unit.filing_year,
+            period=unit.period,
         )
-    if from_justificante is not None and from_declaration is not None:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.reconcile.errors.exclusive_source",
-                default="--from-justificante and --from-declaration are mutually exclusive.",
+    )
+    report = reconcile_capture(work_unit_id=unit.work_unit_id, snapshot=snapshot, actor=resolved_actor)
+    _render_reconciliation_report(ctx, report, command="modelo.reconcile")
+
+
+@reconcile_app.command(
+    "file",
+    help=tr(
+        "cli.app.modelo.reconcile.file_help",
+        default="Reconcile a work unit against a local justificante PDF. Local-only; never contacts AEAT.",
+    ),
+)
+def reconcile_file_verb(
+    ctx: typer.Context,
+    file: Annotated[
+        Path,
+        typer.Option(
+            "--file",
+            help=tr(
+                "cli.app.modelo.reconcile.file_path_help",
+                default="Path to the AEAT justificante PDF to reconcile against.",
             ),
-        )
-    if from_justificante is not None:
-        return ModeloReconciliationSourceKind.JUSTIFICANTE, from_justificante
-    assert from_declaration is not None
-    return ModeloReconciliationSourceKind.DECLARATION, from_declaration
+        ),
+    ],
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
+    actor: _ActorOpt = None,
+) -> None:
+    """Reconcile a work unit against a local justificante PDF file."""
+    from ...application.modelo import (
+        ModeloReconciliationCommand,
+        ModeloReconciliationSourceKind,
+        modelo_reconcile,
+    )
+
+    resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
+    _require_profile()
+    unit = _resolve_work_unit(
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+    )
+    report = modelo_reconcile(
+        ModeloReconciliationCommand(
+            work_unit_id=unit.work_unit_id,
+            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_path=file,
+            actor=resolved_actor,
+        ),
+    )
+    _render_reconciliation_report(ctx, report, command="modelo.reconcile")
 
 
-def _active_bucket() -> str:
-    if _active_bucket_id is None:
-        raise RuntimeError("modelo reconcile commands were not registered")
-    return _active_bucket_id()
-
-
-def modelo_reconciliation_history_verb(
+@reconcile_app.command(
+    "history",
+    help=tr(
+        "cli.app.modelo.reconcile.history_help",
+        default=(
+            "List past reconciliations recorded for the active profile. Reads the append-only "
+            "MODELO_RECONCILED bucket-event history; a convenience read-back, not a stored record."
+        ),
+    ),
+)
+def reconcile_history_verb(
     ctx: typer.Context,
     work_unit_id: Annotated[
         str | None,
         typer.Option(
             "--work-unit-id",
             help=tr(
-                "cli.app.modelo.reconciliation_history.work_unit_id_help",
+                "cli.app.modelo.reconcile.history_work_unit_id_help",
                 default="Optional work unit id to narrow the history to one work unit.",
             ),
         ),
@@ -220,7 +311,7 @@ def modelo_reconciliation_history_verb(
         ],
     )
     lines = [
-        "operation\tmodelo.reconciliation-history",
+        "operation\tmodelo.reconcile.history",
         f"bucket_id\t{bucket_id}",
         f"reconciliation_count\t{len(entries)}",
     ]
@@ -242,191 +333,8 @@ def modelo_reconciliation_history_verb(
     else:
         lines.append(
             tr(
-                "cli.app.modelo.reconciliation_history.empty",
+                "cli.app.modelo.reconcile.history_empty",
                 default="No reconciliations recorded yet.",
             )
         )
     _emit_envelope(ctx, command="modelo.reconciliation_history", result=result, lines=lines)
-
-
-def modelo_reconcile_verb(
-    ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(
-            help=tr(
-                "cli.app.modelo.reconcile.work_unit_id_help",
-                default="Work unit id (SHA-256 or unambiguous prefix).",
-            ),
-        ),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-    from_justificante: Annotated[
-        Path | None,
-        typer.Option(
-            "--from-justificante",
-            help=tr(
-                "cli.app.modelo.reconcile.from_justificante_help",
-                default="Path to the AEAT justificante PDF to reconcile against.",
-            ),
-        ),
-    ] = None,
-    from_declaration: Annotated[
-        Path | None,
-        typer.Option(
-            "--from-declaration",
-            help=tr(
-                "cli.app.modelo.reconcile.from_declaration_help",
-                default="Path to the filed declaration PDF to reconcile against.",
-            ),
-        ),
-    ] = None,
-    from_capture: Annotated[
-        str | None,
-        typer.Option(
-            "--from-capture",
-            help=tr(
-                "cli.app.modelo.reconcile.from_capture_help",
-                default=(
-                    "Snapshot id (or prefix) of a persisted live justificante capture to reconcile "
-                    "against. Local-only: reads the already-captured receipt, never contacts AEAT."
-                ),
-            ),
-        ),
-    ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
-) -> None:
-    """Reconcile a modelo work unit against an external evidence source."""
-    from ...application.modelo import ModeloReconciliationCommand, modelo_reconcile
-
-    resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
-    _require_profile()
-    unit = _resolve_work_unit(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    if from_capture is not None:
-        if from_justificante is not None or from_declaration is not None:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.reconcile.errors.exclusive_capture_source",
-                    default="--from-capture is mutually exclusive with --from-justificante / --from-declaration.",
-                ),
-            )
-        from ...application.live import JustificanteCaptureSnapshotService, reconcile_capture
-
-        snapshot = JustificanteCaptureSnapshotService(bucket_id=unit.bucket_id).show(from_capture.strip())
-        report = reconcile_capture(
-            work_unit_id=unit.work_unit_id,
-            snapshot=snapshot,
-            actor=resolved_actor,
-        )
-        _render_reconciliation_report(ctx, report, command="modelo.reconcile")
-        return
-
-    source_kind, source_path = _source_from_options(
-        from_justificante=from_justificante,
-        from_declaration=from_declaration,
-    )
-    report = modelo_reconcile(
-        ModeloReconciliationCommand(
-            work_unit_id=unit.work_unit_id,
-            source_kind=source_kind,
-            source_path=source_path,
-            actor=resolved_actor,
-        ),
-    )
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile")
-
-
-def modelo_reconcile_from_justificante_verb(
-    ctx: typer.Context,
-    justificante_path: Annotated[
-        Path,
-        typer.Argument(
-            help=tr(
-                "cli.app.modelo.reconcile_from_justificante.justificante_path_help",
-                default="Path to the AEAT justificante PDF to reconcile against.",
-            ),
-        ),
-    ],
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(
-            help=tr(
-                "cli.app.modelo.reconcile_from_justificante.work_unit_id_help",
-                default="Work unit id (SHA-256 or unambiguous prefix).",
-            ),
-        ),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
-) -> None:
-    """Reconcile a work unit against the supplied justificante PDF."""
-    from ...application.modelo import (
-        ModeloReconciliationCommand,
-        ModeloReconciliationSourceKind,
-        modelo_reconcile,
-    )
-
-    _require_profile()
-    unit = _resolve_work_unit(
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        revision=revision,
-        bucket_id=bucket_id,
-    )
-    report = modelo_reconcile(
-        ModeloReconciliationCommand(
-            work_unit_id=unit.work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
-            source_path=justificante_path,
-        ),
-    )
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile_from_justificante")

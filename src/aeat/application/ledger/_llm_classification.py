@@ -46,7 +46,10 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import now
 from ...core.time._utc import coerce_utc_aware
@@ -61,6 +64,7 @@ from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rat
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassifier,
+    Transaction,
     TransactionLifecycleState,
     TransactionNotFoundError,
     TransactionValidationError,
@@ -77,6 +81,13 @@ from ._actions_common import (
     _transaction_repository,
 )
 from ._actions_manual import update_manual_transaction_fields
+from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from ._evidence_input import (
+    cloud_evidence_read_permitted,
+    resolve_attachment_evidence_input,
+    resolve_purchase_invoice_evidence_input,
+)
+from ._evidence_textlayer import extract_evidence_text
 from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
 
 _logger = get_logger(__name__)
@@ -181,6 +192,47 @@ def _resolve_default_classifier(provider: LLMProvider) -> LLMClassifier:
     return resolve_classifier(provider.value, spec=prompt_spec_with_every_spending_category())
 
 
+def _resolve_evidence_text(
+    transaction: Transaction,
+    *,
+    bucket_id: str,
+    settings: Settings,
+    evidence_acknowledged: bool,
+) -> str | None:
+    """Resolve a transaction's linked evidence to on-host-extracted prompt text.
+
+    Returns ``None`` when the transaction has no linked evidence. The only
+    classifiers wired today are cloud subprocess agents, so reading evidence
+    transmits it off-host; this is gated by the cloud-upload consent posture
+    (default-off, gestor-barred, per-invocation). Bytes are read from secure
+    storage into memory and the text layer is extracted on-host -- nothing is
+    written to disk (``sensitive-financial-data-secure-storage-only``).
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: When evidence is linked but the cloud
+            consent gate is not satisfied, or the evidence cannot be read on-host
+            (image evidence has no text layer until the on-host vision reader lands).
+    """
+    evidence_id = transaction.purchase_invoice_evidence_id
+    attachment_ids = transaction.attachment_ids
+    if evidence_id is None and not attachment_ids:
+        return None
+    if not cloud_evidence_read_permitted(settings, acknowledged=evidence_acknowledged):
+        raise PurchaseInvoiceEvidenceInputError(
+            "reading attached evidence sends it to a cloud model, which requires the explicit "
+            "per-invocation consent acknowledgement; it is off by default and barred for gestor "
+            "deployments",
+            suggestion="enable the cloud-upload consent posture and acknowledge the upload",
+        )
+    store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
+    if evidence_id is not None:
+        record = PurchaseInvoiceEvidenceService(settings=settings).view(bucket_id=bucket_id, evidence_id=evidence_id)
+        evidence_input = resolve_purchase_invoice_evidence_input(record, store=store)
+    else:
+        evidence_input = resolve_attachment_evidence_input(attachment_ids[0], store=store)
+    return extract_evidence_text(evidence_input)
+
+
 def suggest_llm_classification(
     *,
     bucket_id: str,
@@ -188,6 +240,9 @@ def suggest_llm_classification(
     provider: LLMProvider,
     classifier: LLMClassifier | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    read_evidence: bool = False,
+    evidence_acknowledged: bool = False,
+    settings: Settings | None = None,
 ) -> LLMClassificationSuggestion:
     """Run the LLM classifier for one transaction and return a suggestion.
 
@@ -203,6 +258,12 @@ def suggest_llm_classification(
         classifier: Injected classifier (dependency injection for tests). When
             None, resolved via :func:`resolve_classifier` for ``provider``.
         transaction_repository: Injected catalogue repository.
+        read_evidence: When True, resolve the transaction's linked evidence, extract
+            its text on-host, and inject it into the prompt. Off by default.
+        evidence_acknowledged: Per-invocation acknowledgement that sending the evidence
+            to a cloud model is accepted; required by the cloud-upload consent gate when
+            ``read_evidence`` is set.
+        settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
         A :class:`LLMClassificationSuggestion`.
@@ -217,7 +278,17 @@ def suggest_llm_classification(
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
     resolved_classifier = classifier if classifier is not None else _resolve_default_classifier(provider)
-    response = resolved_classifier.classify(transaction)
+    evidence_text = (
+        _resolve_evidence_text(
+            transaction,
+            bucket_id=bucket_id,
+            settings=settings if settings is not None else load_settings(),
+            evidence_acknowledged=evidence_acknowledged,
+        )
+        if read_evidence
+        else None
+    )
+    response = resolved_classifier.classify(transaction, evidence_text=evidence_text)
     _logger.info(
         "llm suggest: transaction=%s provider=%s classification=%s confidence=%s",
         transaction_id,
@@ -447,6 +518,9 @@ def saturate_llm_classification(
     classifier: LLMClassifier | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     on_date: date | None = None,
+    read_evidence: bool = False,
+    evidence_acknowledged: bool = False,
+    settings: Settings | None = None,
 ) -> LLMSaturatedSuggestion:
     """Run the saturating LLM classifier for one transaction and return a suggestion.
 
@@ -467,6 +541,12 @@ def saturate_llm_classification(
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve the registry rate; defaults to
             the transaction's value date (or booked date).
+        read_evidence: When True, resolve the transaction's linked evidence, extract
+            its text on-host, and inject it into the prompt. Off by default.
+        evidence_acknowledged: Per-invocation acknowledgement that sending the evidence
+            to a cloud model is accepted; required by the cloud-upload consent gate when
+            ``read_evidence`` is set.
+        settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
         A :class:`LLMSaturatedSuggestion` carrying the model's selections and
@@ -482,7 +562,17 @@ def saturate_llm_classification(
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
     resolved_classifier = classifier if classifier is not None else _resolve_saturation_classifier(provider)
-    response = resolved_classifier.classify(transaction)
+    evidence_text = (
+        _resolve_evidence_text(
+            transaction,
+            bucket_id=bucket_id,
+            settings=settings if settings is not None else load_settings(),
+            evidence_acknowledged=evidence_acknowledged,
+        )
+        if read_evidence
+        else None
+    )
+    response = resolved_classifier.classify(transaction, evidence_text=evidence_text)
     effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
 
     iva_rate: Decimal | None = None

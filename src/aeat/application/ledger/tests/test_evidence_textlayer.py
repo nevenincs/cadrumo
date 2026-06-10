@@ -1,0 +1,58 @@
+"""Real-behaviour tests for on-host text-layer evidence extraction.
+
+Builds a real text-bearing PDF in memory (reportlab), wraps it as an
+EvidenceInput, and asserts the on-host extractor returns the embedded text with
+no file written. No mocks.
+"""
+
+from __future__ import annotations
+
+import hashlib
+from io import BytesIO
+
+import pytest
+
+from .._evidence import MediaKind
+from .._evidence_input import EvidenceInput
+from .._evidence_textlayer import extract_evidence_text
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_INVOICE_LINE = "Factura Acme SL base imponible 100,00 IVA 21,00 total 121,00"
+
+
+def _text_pdf_bytes(line: str) -> bytes:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    buf = BytesIO()
+    page = canvas.Canvas(buf, pagesize=A4)
+    page.drawString(72, 720, line)
+    page.save()
+    return buf.getvalue()
+
+
+def _evidence_input(data: bytes, media_kind: MediaKind, mime_type: str) -> EvidenceInput:
+    return EvidenceInput(
+        media_kind=media_kind,
+        mime_type=mime_type,
+        data=data,
+        content_sha256=hashlib.sha256(data).hexdigest(),
+        attachment_id="a" * 64,
+    )
+
+
+def test_extracts_text_layer_from_pdf_bytes_on_host() -> None:
+    pdf = _text_pdf_bytes(_INVOICE_LINE)
+    ev = _evidence_input(pdf, MediaKind.PDF, "application/pdf")
+    text = extract_evidence_text(ev)
+    assert "Factura Acme SL" in text
+    assert "121,00" in text
+
+
+def test_image_evidence_has_no_text_layer() -> None:
+    ev = _evidence_input(b"\x89PNG\r\n\x1a\nfake-png-bytes", MediaKind.IMAGE, "image/png")
+    from .._evidence import PurchaseInvoiceEvidenceInputError
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError):
+        extract_evidence_text(ev)

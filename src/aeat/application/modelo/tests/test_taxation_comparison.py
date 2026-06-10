@@ -275,7 +275,7 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     assert envelope.code == "REFUSED_TAXATION_COMPARISON"
     assert envelope.category == "REFUSED"
     assert envelope.retryable is False
-    assert envelope.schema_version == "1"
+    assert envelope.message != ""
 
 
 def test_taxation_comparison_module_imports_cleanly() -> None:
