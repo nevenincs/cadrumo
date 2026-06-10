@@ -414,8 +414,15 @@ class TestBoolTypedProfileBinding:
         assert exc_info.value.context == {"binding_id": _CCAA_BINDING, "value_type": "bool"}
 
 
-def test_string_decimal_profile_parse_error_is_localized_and_redacted() -> None:
-    """Invalid profile numeric strings do not echo the raw profile value."""
+def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value() -> None:
+    """A string-typed profile fact in a Decimal channel raises a type-invalid error.
+
+    ``_coerce_profile_fact_value`` promotes canonical Decimal/bool/date strings
+    to their typed counterparts at the Pydantic boundary.  A string that is not
+    a valid Decimal, boolean token, or date falls through as ``str``.  The
+    Decimal-channel resolver now refuses it via the typed ``ProfileBindingResolutionError``
+    without echoing the raw value, preserving redaction and localization.
+    """
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
@@ -436,7 +443,7 @@ def test_string_decimal_profile_parse_error_is_localized_and_redacted() -> None:
         )
 
     assert "not-a-decimal-secret" not in str(exc_info.value)
-    assert exc_info.value.translated_message == "application.modelo.profile_binding.errors.decimal_value_invalid"
+    assert exc_info.value.translated_message == "application.modelo.profile_binding.errors.decimal_value_type_invalid"
     assert exc_info.value.context == {"binding_id": _SYNTHETIC_DECIMAL_PROFILE_BINDING, "value_type": "str"}
 
 
