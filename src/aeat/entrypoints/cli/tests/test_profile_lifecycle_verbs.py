@@ -136,7 +136,7 @@ def test_config_switch_refuses_unknown_profile(cli_runner: CliRunner) -> None:
 
 
 def test_config_unlock_is_no_longer_a_command(cli_runner: CliRunner) -> None:
-    """``config unlock`` was hard-renamed to ``config switch`` (ADR D1).
+    """``config unlock`` was hard-renamed to ``config switch``.
 
     The rename leaves no alias, synonym, or deprecation shadow: the retired
     spelling must resolve to a click ``No such command`` parse failure, not a

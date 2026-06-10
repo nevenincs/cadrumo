@@ -1,12 +1,11 @@
-"""Real-behavior suite for the stable ledger lineage handle (D3 / W02.P05).
+"""Real-behavior suite for the stable ledger lineage handle.
 
 A ledger transaction id is a content hash, so editing an id-affecting fact
 (amount, narrative, ...) via ``ledger update`` re-derives the id and the old
-handle is removed from the catalogue. The ADR's D3 decision keeps the
-content-addressed id authoritative for storage and audit but makes the
-operator read verbs (``history`` / ``view`` / ``track``) resolve any id in a
-row's edit-lineage chain, so a handle written down before a correction keeps
-answering afterwards.
+handle is removed from the catalogue. The content-addressed id stays authoritative
+for storage and audit, while the operator read verbs (``history`` / ``view`` /
+``track``) resolve any id in a row's edit-lineage chain, so a handle written
+down before a correction keeps answering afterwards.
 
 Every test here drives the real ``aeat app ledger`` CLI against an isolated
 profile bucket through the real persistence stack — no mocks, no stubs, no
@@ -162,7 +161,7 @@ def test_history_resolves_a_superseded_old_id() -> None:
 def test_view_resolves_a_superseded_old_id_to_the_current_row() -> None:
     """``view OLD-ID`` resolves the pre-edit handle to the corrected row.
 
-    Per the S26 choice (documented in the resolver): an ``update`` removes the
+    Per the resolver design: an ``update`` removes the
     old id from the catalogue, so there is no superseded *record* to show; the
     most guessable behaviour, matching ``view``'s live-record semantics, is to
     resolve the old handle to the heir and show the corrected record.

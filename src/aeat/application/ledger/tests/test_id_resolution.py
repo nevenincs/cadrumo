@@ -95,7 +95,7 @@ def test_resolve_prefix_is_case_insensitive_on_input() -> None:
     assert resolve_transaction_id(_ID_A.upper(), [_ID_A]) == _ID_A
 
 
-# --- lineage-aware resolution (D3 / W02.P05) ---------------------------------
+# --- lineage-aware resolution -------------------------------------------------
 def _raw(*, provider_id: str, amount: str, description: str) -> RawTransaction:
     return RawTransaction(
         transaction_id=provider_id,

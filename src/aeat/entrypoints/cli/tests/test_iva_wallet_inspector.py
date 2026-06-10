@@ -673,7 +673,7 @@ def test_cli_seed_help_text_contains_liva_art_99_legal_grounding(tmp_path: Path)
 
 
 # ---------------------------------------------------------------------------
-# contract: iva-wallet correct verb (guarded correction path, W04.P10 / D7)
+# contract: iva-wallet correct verb (guarded correction path)
 # ---------------------------------------------------------------------------
 
 

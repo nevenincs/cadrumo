@@ -1,6 +1,6 @@
-"""W04.P12.S28 — dormant ledger resolvers fold REAL seeded data through to a casilla.
+"""Dormant ledger resolvers fold REAL seeded data through to a casilla.
 
-W02.S09 enrolled three previously-dormant ledger source resolvers in the live
+An earlier change enrolled three previously-dormant ledger source resolvers in the live
 merge_source_resolutions mesh and proved each *claims its source kind* with EMPTY
 data (the resolver appears in owned_sources, no unhandled_binding_source advisory
 names it). Those tests are necessary but not sufficient: an enrolled resolver that
@@ -37,7 +37,7 @@ Chains:
   (``OssIossLedgerCandidate`` is only constructed in tests). So real seeded OSS
   ledger data CANNOT fold through the live operator path today: every OSS casilla
   resolves to a (claimed, non-advisory) zero. This is the same wiring-gap shape
-  S19 found for M200<-M202. The gap and the proven resolver fold are both pinned
+  found for M200<-M202. The gap and the proven resolver fold are both pinned
   below.
 
 Anti-tautological + real-adapter (no-tautological-calculation-tests,
@@ -550,7 +550,7 @@ def test_m369_live_path_cannot_fold_seeded_oss_data_documents_wiring_gap(
     This test pins the OBSERVED current behaviour and fails loudly if it drifts.
     The fix — a substrate classifier that projects bucket ledger lines into
     ``OssIossLedgerCandidate`` records and feeds them to the live resolver — is a
-    W04 epic finding (the same wiring-gap shape S19 found for M200<-M202), not a
+    a separate wiring-gap finding (the same shape found for M200<-M202), not a
     change made here. The resolver fold itself is sound (companion test above).
     """
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)

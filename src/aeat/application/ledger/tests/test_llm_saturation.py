@@ -3,8 +3,7 @@
 Exercises :func:`saturate_llm_classification` and
 :func:`apply_saturated_llm_classification` against real SQLite persistence in an
 isolated profile, with a concrete in-process classifier injected by dependency
-injection (no mocks). Covers the stage-2 P03 contract
-(``2026-06-04-llm-ledger-classification-adr``):
+injection (no mocks). Covers the llm-ledger-classification contract:
 
 * the model SELECTS an IvaCategory and the system DERIVES the rate / base /
   amount from the registry (never the model);

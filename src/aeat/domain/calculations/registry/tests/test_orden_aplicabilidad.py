@@ -1,16 +1,16 @@
-"""Real-behaviour tests for the orden_aplicabilidad ratchet gate (W01.P03.S05/S06/S24).
+"""Real-behaviour tests for the orden_aplicabilidad ratchet gate.
 
 Tests cover:
-- S05: The ratchet: new unstamped revision is a hard failure; existing unstamped
+- Ratchet: new unstamped revision is a hard failure; existing unstamped
   revision is a follow-up item (not a hard failure).
-- S05: A stamped entry that resolves in the catalogue with corpus_ref and is in
+- A stamped entry that resolves in the catalogue with corpus_ref and is in
   legal_refs passes cleanly.
-- S05: A dangling (non-existent) orden_aplicabilidad entry is a hard failure.
-- S05: An orden_aplicabilidad entry present in the catalogue but absent from
+- A dangling (non-existent) orden_aplicabilidad entry is a hard failure.
+- An orden_aplicabilidad entry present in the catalogue but absent from
   legal_refs is a hard failure.
-- S06: The backfilled revisions (M100/2025, M130, M111, M123, M131, M303, M369)
+- Backfilled revisions (M100/2025, M130, M111, M123, M131, M303, M369)
   load from the committed registry without hard failures.
-- S24: Open-ended *-y-siguientes revisions in the backfilled set have
+- Open-ended *-y-siguientes revisions in the backfilled set have
   orden_aplicabilidad declared (connective gate).
 
 No mocks, no skips, no xfail.  The ratchet date is 2026-06-10.
@@ -106,7 +106,7 @@ def _make_revision(
 
 
 # ---------------------------------------------------------------------------
-# S05 ratchet: new unstamped revision is a hard failure
+# Ratchet: new unstamped revision is a hard failure
 # ---------------------------------------------------------------------------
 
 
@@ -136,7 +136,7 @@ def test_ratchet_hard_fails_new_revision_without_orden_aplicabilidad() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S05 ratchet: existing (pre-ratchet) unstamped revision is a follow-up, not
+# Ratchet: existing (pre-ratchet) unstamped revision is a follow-up, not
 # a hard failure — the registry MUST still load.
 # ---------------------------------------------------------------------------
 
@@ -167,7 +167,7 @@ def test_ratchet_follow_up_for_existing_revision_without_orden_aplicabilidad() -
 
 
 # ---------------------------------------------------------------------------
-# S05: stamped entry resolves cleanly when catalogue, corpus_ref, legal_refs OK
+# Stamped entry resolves cleanly when catalogue, corpus_ref, legal_refs OK
 # ---------------------------------------------------------------------------
 
 
@@ -196,7 +196,7 @@ def test_valid_orden_aplicabilidad_passes_all_checks() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S05: dangling orden_aplicabilidad entry (not in catalogue) is a hard failure
+# Dangling orden_aplicabilidad entry (not in catalogue) is a hard failure
 # ---------------------------------------------------------------------------
 
 
@@ -225,7 +225,7 @@ def test_dangling_orden_aplicabilidad_entry_is_hard_failure() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S05: entry in catalogue but absent from legal_refs is a hard failure
+# Entry in catalogue but absent from legal_refs is a hard failure
 # ---------------------------------------------------------------------------
 
 
@@ -256,14 +256,14 @@ def test_orden_aplicabilidad_absent_from_legal_refs_is_hard_failure() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S24: open-ended *-y-siguientes without orden_aplicabilidad is a follow-up
+# Open-ended *-y-siguientes without orden_aplicabilidad is a follow-up
 # (pre-ratchet) — the connective gate applied as advisory backfill signal
 # ---------------------------------------------------------------------------
 
 
 def test_s24_open_ended_pre_ratchet_revision_without_orden_is_follow_up() -> None:
     """An open-ended (year_from set, valid_to None) pre-ratchet revision without
-    orden_aplicabilidad is a follow-up item (S24 connective gate).  It does NOT
+    orden_aplicabilidad is a follow-up item (connective gate).  It does NOT
     block load — it tracks the open-ended claim as needing BOE anchoring.
     """
     revision = _make_revision(
@@ -283,13 +283,13 @@ def test_s24_open_ended_pre_ratchet_revision_without_orden_is_follow_up() -> Non
     )
     assert len(hard) == 0, f"Expected no hard failures, got {hard}"
     assert len(follow_up) == 1
-    # S24 connective gate message must mention open-ended / y siguientes / BOE
+    # Connective gate message must mention open-ended / y siguientes / BOE
     msg = follow_up[0].lower()
     assert "open-ended" in msg or "y siguientes" in msg or "open_ended" in msg
 
 
 # ---------------------------------------------------------------------------
-# S06: backfilled revisions in the committed registry load cleanly
+# Backfilled revisions in the committed registry load cleanly
 # ---------------------------------------------------------------------------
 
 
@@ -321,7 +321,7 @@ def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
 def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
     """Each backfilled revision declares a non-empty orden_aplicabilidad that resolves
     in the legal catalogue with corpus_ref and is present in legal_refs — the three
-    gate checks from S05 all pass, and the hard-failure list is empty.
+    ratchet gate checks all pass, and the hard-failure list is empty.
     """
     modelos, catalogues = _committed_registry_tree()
     modelo = next((m for m in modelos if m.id == modelo_id), None)
@@ -343,7 +343,7 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
 
 
 # ---------------------------------------------------------------------------
-# S24: open-ended backfilled revisions have orden_aplicabilidad set
+# Open-ended backfilled revisions have orden_aplicabilidad set
 # (connective gate: the *-y-siguientes claim is BOE-anchored)
 # ---------------------------------------------------------------------------
 
@@ -364,7 +364,7 @@ def test_backfilled_revision_has_valid_orden_aplicabilidad(modelo_id: str, revis
 def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: str, revision_id: str) -> None:
     """Every open-ended (*-y-siguientes / year_from with no valid_to) backfilled
     revision has orden_aplicabilidad declared — the open-ended applicability claim
-    is BOE-anchored per the S24 connective gate (Ruling 5 boundary).
+    is BOE-anchored per the connective gate (Ruling 5 boundary).
     """
     modelos, _catalogues = _committed_registry_tree()
     modelo = next((m for m in modelos if m.id == modelo_id), None)

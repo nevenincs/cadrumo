@@ -3,10 +3,8 @@
 The sibling :mod:`test_documented_command_conformance` gate pins the ``aeat ...``
 invocations cited in *user-facing docs* against the live command tree. This gate
 closes the same class of drift one layer in: the CLI's *own* internally-authored
-strings that name a command path or advertise an enum-choice set, which the
-userdocs campaign found disagreeing with the CLI five distinct times in one pass
-(audit ``2026-06-10-cli-operator-surface-audit`` finding F5; decision
-``2026-06-10-cli-operator-surface-adr`` D5).
+strings that name a command path or advertise an enum-choice set, which a
+userdocs audit found disagreeing with the CLI five distinct times in one pass.
 
 Two classes of self-referential string are pinned, each against the live
 Typer/click tree walked **in process** (no shell-out):
@@ -83,7 +81,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # Workflow-engine and verify-renderer next_action strings are authored as Python
 # literals (not registry/locale data), so they are pinned here explicitly. The
 # gate asserts each resolves; a rename of the cited command reds this list, which
-# is exactly the protection the W03 renames depend on.
+# is exactly the protection the rename safety net depends on.
 _LITERAL_HINT_STRINGS: tuple[str, ...] = (
     # aeat.application.workflow._engine: draft-has-errors next_action.
     "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",

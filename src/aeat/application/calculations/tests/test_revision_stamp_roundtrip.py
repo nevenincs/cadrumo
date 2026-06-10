@@ -1,6 +1,6 @@
-"""S03 / S04: stamped_revision_id roundtrip and R2 carry-gate tests.
+"""Stamped_revision_id roundtrip and R2 carry-gate tests.
 
-Tests for ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
+Tests for the period-revision-resolution decision, Ruling 3 / R2:
 
 - ``_ObservationEnvelopePayload.stamped_revision_id`` survives the
   encrypted-storage roundtrip with a non-default (non-None) value.
@@ -8,12 +8,12 @@ Tests for ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
   JSON envelope surfaces as strict inequality on reload.
 - R2 carry gate in ``resolve_bindings_from_local_store``: a divergent
   stamped revision blocks the carry (binding absent from resolved map),
-  a missing stamp (legacy record) carries and sets the advisory flag,
+  a missing stamp (pre-stamp record) carries and sets the advisory flag,
   a matching stamp carries cleanly.
   Subject: Modelo 303/2025/2T whose single ``previous_filing`` binding
   ``modelo-303-compensacion-pendiente-anteriores`` reads from M303/2025/1T.
-  M390's five M303-sourced bindings migrated to ``relation_prefill`` in
-  W04.P10.S16; the stamp R2 gate tests now use the M303 self-carry
+  M390's five M303-sourced bindings migrated to ``relation_prefill``
+  via the relation path; the stamp R2 gate tests now use the M303 self-carry
   (prior quarter compensacion carry) as subject instead.
 - R2 carry gate in ``MultiYearResolver.resolve``: a divergent stamp silently
   drops the observation from the result, a missing stamp passes through.
@@ -72,7 +72,7 @@ def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _PE
 
 
 # ---------------------------------------------------------------------------
-# S03 roundtrip tests
+# Roundtrip tests for stamped_revision_id
 # ---------------------------------------------------------------------------
 
 
@@ -174,7 +174,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
             assert envelope["payload"]["stamped_revision_id"] == revision_id, (
                 "fixture must serialize stamped_revision_id as a non-null value for this proof to be meaningful"
             )
-            # Surgically set to null — simulating a legacy/pre-S03 record.
+            # Surgically set to null — simulating a pre-stamp record.
             envelope["payload"]["stamped_revision_id"] = None
             row.payload = _json.dumps(envelope).encode("utf-8")
 
@@ -190,7 +190,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
 
 
 # ---------------------------------------------------------------------------
-# S04 carry-gate tests for resolve_bindings_from_local_store
+# Carry-gate tests for resolve_bindings_from_local_store
 # ---------------------------------------------------------------------------
 #
 # These tests require a modelo whose registry declares a previous_filing binding
@@ -204,8 +204,8 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
 # NOTE: Modelo 390's five M303-sourced bindings (cuota-devengada-total,
 # cuota-deducible-total, resultado-regimen-general, compensacion-ultimo-periodo,
 # compensacion-generada-ejercicio-no-97) migrated from ``previous_filing`` to
-# ``relation_prefill`` in W04.P10.S16.  resolve_bindings_from_local_store for
-# M390/0A now returns an empty BindingPrefillReport; it can no longer be used
+# ``relation_prefill`` via the relation path.  resolve_bindings_from_local_store
+# for M390/0A now returns an empty BindingPrefillReport; it can no longer be used
 # as the R2 gate subject.  These three tests were repurposed to the M303 self-carry
 # (quarterly compensacion carry) instead, which retains a direct-selector
 # ``previous_filing`` binding.
@@ -351,7 +351,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# S04 carry-gate tests for MultiYearResolver
+# Carry-gate tests for MultiYearResolver
 # ---------------------------------------------------------------------------
 
 

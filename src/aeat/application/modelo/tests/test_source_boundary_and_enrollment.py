@@ -1,20 +1,21 @@
-"""Tests for W02 S08/S09/S10/S26 — source-boundary gate, safety net, and resolver enrollment.
+"""Tests for the source-boundary gate, safety net, and resolver enrollment.
 
-S08: collect_unhandled_source_diagnostics is wired into the live calculate path so
-     any binding whose source has no enrolled resolver surfaces a non-blocking advisory
-     on source_diagnostics instead of silently blanking.
+Unhandled-source advisory: collect_unhandled_source_diagnostics is wired into the live
+calculate path so any binding whose source has no enrolled resolver surfaces a
+non-blocking advisory on source_diagnostics instead of silently blanking.
 
-S09: LedgerRentaIncomeAggregationSourceResolver (M130 income), OssIossLedgerSourceResolver
-     (M369 OSS/IOSS), and InvoiceCatalogueSourceResolver (M349 collectible_invoice) are
-     enrolled in the live merge_source_resolutions tuple so they fire on their modelos.
+Resolver enrollment: LedgerRentaIncomeAggregationSourceResolver (M130 income),
+OssIossLedgerSourceResolver (M369 OSS/IOSS), and InvoiceCatalogueSourceResolver
+(M349 collectible_invoice) are enrolled in the live merge_source_resolutions tuple
+so they fire on their modelos.
 
-S10: The five deferred source kinds (withholding, atribucion_member, related_party_operation,
-     foreign_asset, refund_operation) produce an 'unhandled_binding_source' advisory on
-     source_diagnostics rather than a silent blank, and are NOT on the manual_sources
-     allowlist.
+Deferred source kinds: the five deferred source kinds (withholding, atribucion_member,
+related_party_operation, foreign_asset, refund_operation) produce an
+'unhandled_binding_source' advisory on source_diagnostics rather than a silent blank,
+and are NOT on the manual_sources allowlist.
 
-S26: assert_no_novel_source_kinds raises on a synthetic novel-source binding so a TOML
-     source that would resolve to blank fails fast instead of compiling silently.
+Boundary gate: assert_no_novel_source_kinds raises on a synthetic novel-source binding
+so a TOML source that would resolve to blank fails fast instead of compiling silently.
 """
 
 from __future__ import annotations
@@ -85,7 +86,7 @@ def _seed(
 
 
 # ---------------------------------------------------------------------------
-# S26 — boundary gate rejects novel source kinds
+# Boundary gate rejects novel source kinds
 # ---------------------------------------------------------------------------
 
 
@@ -99,7 +100,7 @@ def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
 
 def test_s26_assert_no_novel_source_kinds_accepts_deferred_revision() -> None:
     """A revision whose bindings use deferred source kinds still passes the gate."""
-    # M190 uses 'withholding' — explicitly deferred (S10).  Gate must not raise.
+    # M190 uses 'withholding' — explicitly deferred.  Gate must not raise.
     revision = _revision("190", "2024-y-siguientes")
     assert_no_novel_source_kinds(revision)  # no exception
 
@@ -134,22 +135,23 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
 
 
 # ---------------------------------------------------------------------------
-# S08 — unhandled-source advisory fires for a known-unrouted source
+# Unhandled-source advisory fires for a known-unrouted source
 # ---------------------------------------------------------------------------
 
 
 def test_s08_source_diagnostics_carries_advisory_for_deferred_source(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """S08: deferred source kind 'atribucion_member' surfaces an advisory on source_diagnostics.
+    """Deferred source kind 'atribucion_member' surfaces an advisory on source_diagnostics.
 
     M184 2015-y-siguientes bindings declare source='atribucion_member'.  The atribucion
-    resolver is not yet built; the S08 safety net must emit an 'unhandled_binding_source'
-    advisory so the operator's CLI surfaces the gap instead of a silent blank.
+    resolver is not yet built; the unhandled-source safety net must emit an
+    'unhandled_binding_source' advisory so the operator's CLI surfaces the gap instead
+    of a silent blank.
 
-    M184 is chosen over M190/M193 for this test because it has no formula relations
-    (all relations in this codebase are currently dormant — F1), so the engine does not
-    crash on a missing relation value and we can isolate the S08 advisory path cleanly.
+    M184 is chosen over M190/M193 for this test because it has no formula relations,
+    so the engine does not crash on a missing relation value and we can isolate the
+    unhandled-source advisory path cleanly.
     """
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
@@ -183,7 +185,7 @@ def test_s08_source_diagnostics_carries_advisory_for_deferred_source(
 def test_s08_source_diagnostics_carries_advisory_for_atribucion_member(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """S08: deferred source kind 'atribucion_member' surfaces an advisory on source_diagnostics."""
+    """Deferred source kind 'atribucion_member' surfaces an advisory on source_diagnostics."""
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
@@ -208,14 +210,14 @@ def test_s08_source_diagnostics_carries_advisory_for_atribucion_member(
 
 
 # ---------------------------------------------------------------------------
-# S09 — dormant resolvers fire on their modelos
+# Enrolled resolvers fire on their modelos
 # ---------------------------------------------------------------------------
 
 
 def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """S09: LedgerRentaIncomeAggregationSourceResolver is enrolled and claims M130 source kind.
+    """LedgerRentaIncomeAggregationSourceResolver is enrolled and claims M130 source kind.
 
     M130 2019-y-siguientes bindings include 'ledger_renta_income_aggregation'.
     The resolver must appear in the live merge_source_resolutions execution and claim
@@ -292,7 +294,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
 def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """S09: OssIossLedgerSourceResolver is enrolled and fires on M369 (esquema-union).
+    """OssIossLedgerSourceResolver is enrolled and fires on M369 (esquema-union).
 
     With empty candidates the resolver returns an empty resolution but claims its
     owned source so the binding does not appear as unhandled on source_diagnostics.
@@ -328,7 +330,7 @@ def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
 def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """S09: InvoiceCatalogueSourceResolver is enrolled and fires on M349.
+    """InvoiceCatalogueSourceResolver is enrolled and fires on M349.
 
     With an empty invoice catalogue the resolver returns an empty resolution but
     claims its owned sources so 'collectible_invoice' does not appear as unhandled.
@@ -362,12 +364,12 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
 
 
 # ---------------------------------------------------------------------------
-# S10 — deferred source kinds produce advisory not silent blank
+# Deferred source kinds produce advisory not silent blank
 # ---------------------------------------------------------------------------
 
 
 def test_s10_deferred_source_kinds_are_enumerated_and_non_empty() -> None:
-    """DEFERRED_SOURCE_KINDS is non-empty and contains the five expected kinds (S10)."""
+    """DEFERRED_SOURCE_KINDS is non-empty and contains the five expected kinds."""
     expected = frozenset(
         {"withholding", "atribucion_member", "related_party_operation", "foreign_asset", "refund_operation"}
     )
@@ -388,17 +390,16 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
     revision_id: str,
     deferred_kind: str,
 ) -> None:
-    """S10: each deferred source kind emits an advisory rather than silently blanking.
+    """Each deferred source kind emits an advisory rather than silently blanking.
 
     Checks that for every deferred kind that appears in some revision's bindings,
     a live calculate on a work unit for that revision surfaces the advisory.
     We use M184 (atribucion_member) and M720 (foreign_asset) as representatives:
     both have no formula relations, so a fresh-bucket calculate does not crash on a
-    missing relation operand and the S08 advisory path is isolated cleanly.  The
-    withholding deferred kind (M190/M193) is asserted separately in
+    missing relation operand and the unhandled-source advisory path is isolated cleanly.
+    The withholding deferred kind (M190/M193) is asserted separately in
     test_s27_withholding_deferred_advisory_fires (those revisions DO carry relation
-    operands that raise on an empty bucket — a W04 cross-period concern, not the
-    advisory contract under test here).
+    operands that raise on an empty bucket, orthogonal to the advisory contract here).
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
@@ -439,22 +440,21 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
 
 
 def test_s27_withholding_deferred_advisory_fires() -> None:
-    """S27: M190 'withholding' per-perceptor bindings surface the unhandled-source advisory.
+    """M190 'withholding' per-perceptor bindings surface the unhandled-source advisory.
 
-    Adjudication (W02.P06.S27): the withholding source kind is the per-perceptor detalle
-    rollup.  It is DEFER-with-advisory, NOT built.  The per-perceptor rows exist only in
+    The withholding source kind is the per-perceptor detalle rollup.  It is
+    deferred-with-advisory, NOT built.  The per-perceptor rows exist only in
     the Sheets detalle tab (assemble_withholding_observations reads calc-sheet cells), and
     the transaction ledger carries no retencion/perceptor breakdown, so a live .resolve()
     would have no source to read — a built resolver would be an empty design-only shell.
-    The annual M190<-M111 / M193<-M123 totals are relation edges (live since W03), distinct
+    The annual M190<-M111 / M193<-M123 totals are relation edges (live), distinct
     from this per-perceptor source kind.  A real ledger-derived withholding build is a future
     feature needing its own ingest surface (counterparty + retencion modelling).
 
     Asserted via the direct collect_unhandled boundary (not the full calculate path):
     M190/M193 carry relation operands that raise RegistryValidationError on a fresh empty
-    bucket (no prior M111/M123 filing) — a W04 cross-period delivery concern, orthogonal to
-    the advisory contract.  The boundary layer is the correct structural seam for proving
-    the deferred kind is never a silent blank.
+    bucket (no prior M111/M123 filing), orthogonal to the advisory contract.  The boundary
+    layer is the correct structural seam for proving the deferred kind is never a silent blank.
     """
     from ...aggregation import collect_unhandled_source_diagnostics
 
@@ -462,7 +462,7 @@ def test_s27_withholding_deferred_advisory_fires() -> None:
     assert any(str(b.source) == "withholding" for b in revision.bindings), (
         "M190 2024-y-siguientes must declare withholding bindings for this test to be non-vacuous"
     )
-    # The live _handled set: relation_prefill is owned (enrolled in W03), withholding is not.
+    # The live _handled set: relation_prefill is owned (enrolled resolver), withholding is not.
     handled = frozenset({"relation_prefill", "profile", "borrador", "iva_wallet_decision"})
     unhandled = collect_unhandled_source_diagnostics(
         revision, handled_sources=handled, manual_sources=frozenset({"manual_input"})

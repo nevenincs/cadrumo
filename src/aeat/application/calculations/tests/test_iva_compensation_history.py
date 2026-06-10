@@ -319,7 +319,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
     """M390←M303 bindings are now ``relation_prefill``; resolve via the relation path.
 
     The five M390←M303 fold bindings migrated from ``previous_filing`` to
-    ``relation_prefill`` backed by ``cross_model_output`` relations (W04.P10.S16).
+    ``relation_prefill`` backed by ``cross_model_output`` relations.
     The compensación bindings (ultimo-periodo + generada-ejercicio-no-97) read
     ``iva.compensacion-generada-periodo`` from M303 casilla observations — not
     from the IVA compensation history repository.  This test verifies the

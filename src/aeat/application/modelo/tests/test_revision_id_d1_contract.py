@@ -1,12 +1,12 @@
-"""Real-behaviour tests for the D1 reconcile-and-assert contract (period-revision-resolution ADR).
+"""Real-behaviour tests for the D1 reconcile-and-assert contract (period-revision-resolution decision).
 
 Covers:
 
-- **S01** — creation gate: ``resolve_registry_revision_for_work_target`` refuses an
+- Creation gate: ``resolve_registry_revision_for_work_target`` refuses an
   explicit ``--revision`` that diverges from the law-determined revision with an
   instructive message naming both the requested and law-determined revision.
 
-- **S02** — calc-time assertion: the equality assertion
+- Calc-time assertion: the equality assertion
   ``snapshot.revision.id == work_unit.revision_id`` fires when the registry's
   law-mapping has been corrected after unit creation (simulated by constructing a
   ``WorkUnit`` whose ``revision_id`` does not match the current law-determined
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _T0 = datetime(2026, 6, 10, 10, 0, 0, tzinfo=UTC)
 
 # -------------------------------------------------------------------
-# Fixture: real isolated profile for S02 test (needs real repository)
+# Fixture: real isolated profile for the calc-time-assertion test (real repository needed)
 # -------------------------------------------------------------------
 
 
@@ -48,7 +48,7 @@ def work_unit_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepos
 
 
 # ===========================================================================
-# S01 — creation gate strengthened to resolver-equality
+# Creation gate strengthened to resolver-equality
 # ===========================================================================
 
 
@@ -134,7 +134,7 @@ class TestS01CreationGate:
     def test_refuses_revision_that_covers_year_but_not_period(self) -> None:
         """The PRECISE D1 hole: a revision that COVERS the filing year but NOT the period.
 
-        This is the exact divergence the period-revision-resolution ADR D1 describes
+        This is the exact divergence the period-revision-resolution D1 decision describes
         and the reason the old year-only ``_revision_covers_year`` check was a hole:
         a revision covering the year but a *different period* passed the old guard and
         created a unit whose identity claimed one revision while calculation silently
@@ -181,7 +181,7 @@ class TestS01CreationGate:
 
 
 # ===========================================================================
-# S02 — calc-time assertion on revision divergence
+# Calc-time assertion on revision divergence
 # ===========================================================================
 
 
@@ -204,7 +204,7 @@ class TestS02CalcTimeAssertion:
         correction this is the shape a pre-gate unit would have.
 
         Note: We bypass ``create_work_unit`` deliberately.  The strengthened
-        creation gate (S01) would refuse this unit; we are simulating the
+        creation gate would refuse this unit; we are simulating the
         post-creation-correction scenario that the calc-time assertion guards.
         """
         stale_revision_id = "2009-y-siguientes"
@@ -294,15 +294,15 @@ class TestS02CalcTimeAssertion:
 
 
 # ===========================================================================
-# S02 (defense-in-depth) — calc-time assertion in _revision_for_work_unit
+# Defense-in-depth: calc-time assertion in _revision_for_work_unit
 # ===========================================================================
 
 
 class TestS02RevisionForWorkUnitAssertion:
     """``_calculate_input._revision_for_work_unit`` must also assert revision identity.
 
-    ``_revision_for_work_unit`` is the operator-input-normalisation calc entry the
-    ADR (ruling 2) names alongside ``calculate_modelo_revision``.  It loads a
+    ``_revision_for_work_unit`` is the operator-input-normalisation calc entry
+    named alongside ``calculate_modelo_revision`` (D1 ruling 2).  It loads a
     WorkUnit and resolves a snapshot from its year + period, so it must carry the
     same equality assertion (closing ruling 2 "both ends").
 
