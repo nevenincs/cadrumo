@@ -2177,14 +2177,11 @@ cli:
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
-      reset_state_dry_run_help: Report the envelope fingerprint without deleting the
-        row
-      reset_state_help: Drop the unreadable workflow-state envelope (destructive;
-        requires --yes)
-      reset_state_requires_yes: This operation is destructive. Re-run with --yes to
-        confirm or pass --dry-run to inspect the fingerprint.
-      reset_state_yes_help: Explicitly confirm the workflow-state reset
       yes_help: Confirm repair.
+      reset_progress_dry_run_help: 'Report the envelope fingerprint without deleting the row'
+      reset_progress_help: 'Drop the unreadable workflow-state envelope (destructive; requires --yes)'
+      reset_progress_requires_yes: 'This operation is destructive. Re-run with --yes to confirm or pass --dry-run to inspect the fingerprint.'
+      reset_progress_yes_help: 'Explicitly confirm the workflow-state reset'
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -2224,7 +2221,7 @@ cli:
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
     switch:
-      help: Switch the active profile by selecting it and opening its storage session.
+      help: 'Switch to a profile and make it the active one.'
       name_help: Profile name to switch to. Defaults to the active profile pointer.
     unlock: null
     unset:
@@ -2742,7 +2739,6 @@ cli:
         diagnostics_logs: Show the configured log path and recent lines.
         diagnostics_quarantine: Quarantine unreadable secure objects.
         diagnostics_repair: Diagnose local configuration and storage health.
-        diagnostics_reset_state: Reset unreadable workflow state.
         first_run_bootstrap: Create a local tax profile bucket.
         first_run_edit: Re-run the profile wizard for an existing profile.
         footer: Run aeat --help for the full overview.
@@ -2755,13 +2751,14 @@ cli:
         profile_rename: Rename a profile and move its bucket.
         profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
-        profile_switch: Unlock and activate a profile.
+        profile_switch: 'Switch to a profile and make it the active one.'
         section_authentication: Authentication
         section_bucket_inspection: Bucket inspection
         section_diagnostics: Diagnostics
         section_first_run: First run
         section_profile_inspection: Profile inspection
         section_profile_lifecycle: Profile lifecycle
+        diagnostics_reset_progress: 'Reset unreadable workflow state.'
       root:
         diagnostics_live_filed: List captured filed-return observations.
         diagnostics_overview: Summarize active workspace readiness.

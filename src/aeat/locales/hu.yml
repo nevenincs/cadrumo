@@ -2268,15 +2268,11 @@ cli:
       quarantine_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra a
         --yes kapcsolóval a megerősítéshez.
       quarantine_yes_help: A karantén-művelet explicit megerősítése.
-      reset_state_dry_run_help: A boríték ujjlenyomatának jelentése a sor törlése
-        nélkül.
-      reset_state_help: Az olvashatatlan munkafolyamat-állapot borítékának törlése
-        (visszafordíthatatlan; --yes szükséges).
-      reset_state_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra a
-        --yes kapcsolóval a megerősítéshez, vagy a --dry-run kapcsolóval az ujjlenyomat
-        vizsgálatához.
-      reset_state_yes_help: A munkafolyamat-állapot visszaállítás explicit megerősítése.
       yes_help: Javítás megerősítése.
+      reset_progress_dry_run_help: 'A boríték ujjlenyomatának jelentése a sor törlése nélkül.'
+      reset_progress_help: 'Az olvashatatlan munkafolyamat-állapot borítékának törlése (visszafordíthatatlan; --yes szükséges).'
+      reset_progress_requires_yes: 'Ez a művelet visszafordíthatatlan. Futtassa újra a --yes kapcsolóval a megerősítéshez, vagy a --dry-run kapcsolóval az ujjlenyomat vizsgálatához.'
+      reset_progress_yes_help: 'A munkafolyamat-állapot visszaállítás explicit megerősítése.'
     reset:
       help: Üzemeltető által megadott konfigurációs hatókörök visszaállítása.
       invalid_scope: 'Érvénytelen hatókör: %{scope}. Érvényes hatókörök: %{valid}.'
@@ -2321,8 +2317,7 @@ cli:
       help: Az aktuális konfigurációs profil készenléti állapotának megjelenítése.
       next_step: 'Következő lépés: `aeat app overview status`'
     switch:
-      help: Az aktiv profil valtasa a profil kivalasztasaval es a tarolasi munkamenet
-        megnyitasaval.
+      help: 'Váltson át egy profilra, és tegye aktívvá.'
       name_help: A profil neve, amelyre valtani szeretne. Ha nincs megadva, az aktivprofil-mutato
         az alapertelmezett.
     unlock: null
@@ -2863,8 +2858,6 @@ cli:
         diagnostics_logs: A beállított naplóútvonal és a legújabb sorok megjelenítése.
         diagnostics_quarantine: Olvashatatlan biztonságos objektumok karanténba helyezése.
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
-        diagnostics_reset_state: Olvashatatlan munkafolyamat-állapot alaphelyzetbe
-          állítása.
         first_run_bootstrap: Helyi adóprofilmappa létrehozása.
         first_run_edit: A profilvarázsló újrafuttatása meglévő profilhoz.
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
@@ -2877,13 +2870,14 @@ cli:
         profile_rename: Profil átnevezése és mappájának áthelyezése.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
-        profile_switch: Profil feloldasa es aktivalasa.
+        profile_switch: 'Switch to a profile and make it the active one.'
         section_authentication: Hitelesítés
         section_bucket_inspection: Bucket ellenorzes
         section_diagnostics: Diagnosztika
         section_first_run: Első futtatás
         section_profile_inspection: Profiladatok vizsgálata
         section_profile_lifecycle: Profil életciklusa
+        diagnostics_reset_progress: 'Olvashatatlan munkafolyamat-állapot alaphelyzetbe állítása.'
       root:
         diagnostics_live_filed: Rögzített benyújtott bevallás-megfigyelések listázása.
         diagnostics_overview: Az aktív munkaterület készültségének összefoglalása.
