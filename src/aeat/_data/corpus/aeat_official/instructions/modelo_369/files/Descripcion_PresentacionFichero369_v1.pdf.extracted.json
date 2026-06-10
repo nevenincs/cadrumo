@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "corpus_pdf",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/Descripcion_PresentacionFichero369_v1.pdf",
+  "source_sha256": "521fb8e9918b77555be781434006d560bbec28d30318ff158096ecca0e9ed56d",
+  "preprocessor_id": "corpus-pdf",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution.",
+  "units": [
+    {
+      "text": "Presentación por fichero Modelo 369\nEste documento es una ayuda complementaria al diseño de registro del modelo 369, que\ncontiene el esquema que debe seguir el fichero de texto para la presentación electrónica del\nmodelo. Se incluye una explicación de la estructura del fichero y la descripción de los datos\nque debe incluir en el fichero.\nEstructura general diseño de registro modelo 369\n- Pestaña T3690 Estruc. Gral: estructura general del fichero a presentar.\n- La estructura general contiene la información de los campos a incluir en el fichero, con\nlas posiciones relativas, absolutas, longitud, tipo y descripción de cada campo. El\ncampo ‘Contenido de la presentación’, es de longitud variable, y contendrá la\ninformación detallada de la declaración a presentar, dependiendo del régimen de que\nse trate. El contenido de la información de declaración se detalla en las pestañas\nT36900 a T369012 del Excel con el diseño de registro.\n- Cada página de información de la declaración tiene una etiqueta de apertura y cierre, y\nun contenido entre las anteriores etiquetas, todo especificado en las pestañas del\nfichero Excel de diseño de registro para la presentación por fichero.\n- Cada página puede contener los datos básicos del régimen a presentar y la lista a la\nque referencia la página. Dicha lista tiene hasta 28 elementos, donde los que no\ntengan información vendrán en blanco. Si una de las listas de la página excede los 28\nelementos rellenos, se puede añadir la misma página indicando que es\ncomplementaria y rellenando elementos en la lista con el formato anteriormente\nmencionado.\n- La presentación por fichero se generará en un fichero de texto plano siguiendo el\nesquema del Excel del fichero, según el régimen que se quiera presentar. Cada fichero\nsólo puede contener la declaración de un único declarante y para un único régimen.\n- En función del régimen de la declaración a presentar se incluirán sólo las páginas\ncorrespondientes, según se explica en columna 'Contenido' del Excel con el DR.",
+      "title": "Pag. 1",
+      "section": "Pag. 1",
+      "anchor": null
+    },
+    {
+      "text": "Contenido del fichero de texto\nRégimen de la Unión\nEl fichero incluirá los datos especificados en la pestaña ‘T3690 Estructura gral’.\nEl campo de longitud variable ‘Contenido de la presentación’ contendrá la información\ndetallada de la declaración a presentar para régimen Union.\nDicho detalle de la declaración se detalla en las pestañas T36900, T36904 a T36909:\no T36900 Info Adicional\n Contenido vacío especificado en la página\n Esta página es obligatoria\no T36904 Un\n Datos básicos del régimen\n Prestaciones de servicios desde el EMID España y desde establecimientos\npermanentes situados fuera de la UE\n Esta página es obligatoria\no T36905 Un\n Entregas de bienes expedidos o transportados desde EMID España\n Esta página es opcional\no T36906 Un\n Prestaciones de servicios desde establecimientos permanentes en otros EM\ndistintos de España\n Esta página es opcional\no T36907 Un\n Entregas de bienes expedidos o transportados desde otros EM distintos de España\n Esta página es opcional\no T36908 Un\n Correcciones de autoliquidaciones de periodos anteriores (máximo 3 años)\n Esta página es opcional\no T36909 Un\n Contenido vacío especificado en la página\n Esta página es obligatoria",
+      "title": "Pag. 2",
+      "section": "Pag. 2",
+      "anchor": null
+    },
+    {
+      "text": "Régimen exterior\nEl fichero incluirá los datos especificados en la pestaña ‘T3690 Estructura gral’.\nEl campo de longitud variable ‘Contenido de la presentación’ contendrá la información\ndetallada de la declaración a presentar para régimen Exterior.\nDicho detalle de la declaración se detalla en las pestañas T36900, T36901 a T36903:\no T36900 Info Adicional\n Contenido vacío especificado en la página\n Esta página es obligatoria\no T36901 Ext\n Datos básicos del régimen\n Prestaciones de servicios\n Esta página es obligatoria\no T36902 Ext\n Correcciones de autoliquidaciones de periodos anteriores (máximo 3 años)\n Esta página es opcional\no T36903 Ext\n Contenido vacío especificado en la página\n Esta página es obligatoria\nRégimen de importación\nEl fichero incluirá los datos especificados en la pestaña ‘T3690 Estructura gral’.\nEl campo de longitud variable ‘Contenido de la presentación’ contendrá la información\ndetallada de la declaración a presentar para régimen Importación.\nDicho detalle de la declaración se detalla en las pestañas T36900, T36910 a T36912:\no T36900 Info Adicional\n Contenido vacío especificado en la página\n Esta página es obligatoria\no T36910 Imp\n Datos básicos del régimen\n Importaciones de bienes de menos de 150 €\n Esta página es obligatoria",
+      "title": "Pag. 3",
+      "section": "Pag. 3",
+      "anchor": null
+    },
+    {
+      "text": "o T36911 Imp\n Correcciones de autoliquidaciones de periodos anteriores (máximo 3 años)\n Esta página es opcinal\no T36912 Imp\n Contenido vacío especificado en la página\n Esta página es obligatoria\nConceptos campos:\nCampo Valores\nPeriodo cabecera [1T, 2T, 3T, 4T] Trimestrales\n[01, 02, 03…, 12] Mensuales\nRégimen [MOSS, VOES, IMPO]\nMOSS -> Régimen Union\nVOES -> Régimen exterior\nIMPO -> Régimen importación\nCategoría [D]\nD -> Declaración\nTipo de pago [O, S, I, N, T]\nO -> Reconocimiento de deuda con los\nEstados Miembros de Consumo con\nimposibilidad de pago\nS -> Ingreso parcial y Reconocimiento de\ndeuda con los Estados Miembros de\nConsumo con imposibilidad de pago\nI -> A ingresar\nN -> Negativa\nT -> Ingreso por transferencia desde el\nextranjero\nComplementaria [“ “, C]\n“ “ (espacio en blanco) -> única página\nC -> página extra si hay más de 28 elementos\nTipo de periodo [T, M]\nT -> Trimestral\nM -> Mensual\nPeriodo Dependiendo tipo periodo:\nT -> 1 .. 4\nM -> 1 .. 12\nDeclaración sin actividad [0, 1]\n0 -> false\n1 -> true\nTipos de IVA [R, S]\nR -> reducido\nS -> estándar",
+      "title": "Pag. 4",
+      "section": "Pag. 4",
+      "anchor": null
+    }
+  ]
+}
