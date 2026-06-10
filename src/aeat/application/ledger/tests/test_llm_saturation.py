@@ -132,7 +132,11 @@ def test_suggest_derives_substrate_from_selected_category(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
 ) -> None:
     repository, _events = repositories
-    tx_id = _seed_unclassified(repository)
+    # The gross is the transaction input the derived substrate must reconstitute;
+    # asserting base + iva against this seeded input (not a recomputed literal) is
+    # the real invariant, not a hand-summed expectation.
+    gross = Decimal("121.00")
+    tx_id = _seed_unclassified(repository, amount=-gross)
 
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
@@ -151,7 +155,7 @@ def test_suggest_derives_substrate_from_selected_category(
     assert suggestion.provenance == "llm:claude:test-model"
     # The substrate sums to the gross to the cent — the persisted invariant.
     assert suggestion.taxable_base is not None and suggestion.iva_amount is not None
-    assert suggestion.taxable_base + suggestion.iva_amount == Decimal("121.00")
+    assert suggestion.taxable_base + suggestion.iva_amount == gross
 
 
 def test_suggest_zero_rated_category_derives_zero_iva(
@@ -205,7 +209,10 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
 ) -> None:
     repository, events = repositories
-    tx_id = _seed_unclassified(repository)
+    # The gross is the seeded transaction input the substrate must reconstitute;
+    # assert against it rather than a hand-summed literal.
+    gross = Decimal("121.00")
+    tx_id = _seed_unclassified(repository, amount=-gross)
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
@@ -234,7 +241,7 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
     reloaded = repository.load().get(tx_id)
     assert reloaded is not None
     assert reloaded.taxable_base is not None and reloaded.iva_amount is not None
-    assert reloaded.taxable_base + reloaded.iva_amount == Decimal("121.00")
+    assert reloaded.taxable_base + reloaded.iva_amount == gross
 
 
 def test_apply_non_derivable_persists_category_without_numbers(
