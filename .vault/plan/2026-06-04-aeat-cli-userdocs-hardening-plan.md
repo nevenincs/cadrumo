@@ -75,7 +75,7 @@ Help a user create a complete profile without turning profile setup into a flag 
 - [ ] `W03.P05.S15` - Rewrite the profile setup guide around choices a user recognizes: DNI for Spanish citizens, NIE for foreign individuals, NIF/CIF for tax identifiers, name fields, taxpayer type, activity, postcode, IRPF category, IVA regime, and output language; `docs/how-to/profile-setup.md`.
 - [ ] `W03.P05.S16` - Add a "check your profile facts before calculating" recipe using `aeat config profile status`, `show`, `validate`, and `preflight`; `profile how-to docs`.
 - [ ] `W03.P05.S17` - Document how wrong or missing profile facts affect modelo applicability without restating every profile flag; `profile how-to docs`.
-- [ ] `W03.P05.S53` - Normalize DNI, NIE, NIF, and CIF terminology across user-facing docs and profile tax-id CLI help so Spanish citizens are not routed toward NIE-first language; `docs/ and src/aeat/locales`.
+- [x] `W03.P05.S53` - Normalize DNI, NIE, NIF, and CIF terminology across user-facing docs and profile tax-id CLI help so Spanish citizens are not routed toward NIE-first language; `docs/ and src/aeat/locales`.
 
 ### Phase `W03.P06` - Censo and enrolment
 
@@ -171,7 +171,7 @@ Make documentation quality enforceable where machines can help and reviewed wher
 - [ ] `W07.P14.S47` - Require a technical review against live CLI help and a zero-context editorial/non-technical review before marking each handbook page complete; `review gates`.
 - [x] `W07.P14.S48` - Implement a real single-source-page docs build that writes the requested page into the canonical HTML build output without rebuilding generated API/autodoc surfaces or producing a separate preview artifact; `docs build tooling`.
 - [ ] `W07.P14.S49` - Evaluate and implement an autobuild server or watch recipe for canonical docs page rebuilds after the single-page build path is stable; `docs build tooling`.
-- [ ] `W07.P14.S54` - Run a corpus terminology sweep for identity and tax-identifier wording after each profile, censo, or authentication docs edit: DNI for Spanish citizens, NIE for foreign individuals, NIF/CIF for tax identifiers and legal entities, and DNI/NIE only where Cl@ve identity specifically requires it; `docs/ and src/aeat/locales`.
+- [x] `W07.P14.S54` - Run a corpus terminology sweep for identity and tax-identifier wording after each profile, censo, or authentication docs edit: DNI for Spanish citizens, NIE for foreign individuals, NIF/CIF for tax identifiers and legal entities, and DNI/NIE only where Cl@ve identity specifically requires it; `docs/ and src/aeat/locales`.
 - [ ] `W07.P14.S59` - Move documentation generators, build helpers, and documentation verifier tests out of production package code and unsupported `scripts/` paths into supported `docs/tools/` tooling; update Sphinx hooks, just recipes, and generated API stubs so production code does not own documentation generation responsibilities; `docs/tools, docs/conf.py, justfile, docs/api, and docs verifier tests`.
 
 ## Description
