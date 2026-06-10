@@ -6,6 +6,7 @@ tags:
 date: '2026-06-10'
 related:
   - '[[2026-06-10-ledger-filter-period-adr]]'
+  - '[[2026-06-10-ledger-filter-period-plan]]'
   - '[[2026-06-10-ledger-filter-period-research]]'
 ---
 
@@ -18,6 +19,10 @@ Auto-generated index of all documents tagged with `#ledger-filter-period`.
 ### adr
 
 - `2026-06-10-ledger-filter-period-adr` - `ledger-filter-period` adr: `Single shared year.period filter; delete residual notation; continuity gate` | (**status:** `accepted`)
+
+### plan
+
+- `2026-06-10-ledger-filter-period-plan` - `ledger-filter-period` `Ledger shared period filter: ratify, delete residual notation, continuity gate` plan
 
 ### research
 
