@@ -69,6 +69,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from functools import cache
+from pathlib import Path
+from typing import cast
 
 import click
 import pytest
@@ -100,8 +102,8 @@ _AEAT_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])aeat(?=\s|$)")
 _LINE_CONTINUATION_RE = re.compile(r"\\\s*$")
 
 
-def _flat_docs() -> list:
-    docs: list = []
+def _flat_docs() -> list[Path]:
+    docs: list[Path] = []
     for pat in _FLAT_DOC_GLOBS:
         docs.extend(sorted(PROJECT_ROOT.glob(pat)))
     for d in _TREE_DOC_DIRS:
@@ -120,7 +122,11 @@ def _flat_docs() -> list:
 @cache
 def _root_command() -> click.Command:
     """Materialize the live ``aeat`` click command (root of the tree)."""
-    return get_command(app)
+    # Typer vendors its own Click fork, so typer.main.get_command is typed to
+    # return typer._click.core.Command. It is the same object family at runtime;
+    # the cast bridges the static vendored/upstream duality so the rest of this
+    # module reasons about the tree as upstream click.Command.
+    return cast(click.Command, get_command(app))
 
 
 @cache
@@ -157,7 +163,12 @@ def _resolve_path(tokens: tuple[str, ...]) -> _Resolved:
     for tok in tokens:
         if not hasattr(cmd, "list_commands"):
             break
-        sub = cmd.get_command(ctx, tok)
+        # ``list_commands`` is the structural group marker; the vendored
+        # TyperGroup is not a guaranteed upstream ``click.Group`` subclass, so
+        # narrow by interface (cast) rather than isinstance to stay
+        # vendor-robust while exposing ``get_command`` to the checker.
+        group = cast(click.Group, cmd)
+        sub = group.get_command(ctx, tok)
         if sub is None:
             break
         ctx = click.Context(sub, info_name=tok, parent=ctx)
@@ -337,7 +348,7 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
     spans = [m.group(1) for m in _INLINE_CODE_RE.finditer(text)]
     spans += [m.group(1) for m in _FENCE_RE.finditer(text)]
     out: list[_CitedCommand] = []
-    seen: set[tuple] = set()
+    seen: set[tuple[tuple[str, ...], tuple[str, ...], bool]] = set()
     for span in spans:
         # Join shell line continuations within a fenced block before splitting.
         joined = span.replace("\\\n", " ")
