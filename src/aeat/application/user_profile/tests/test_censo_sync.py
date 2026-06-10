@@ -135,8 +135,10 @@ def test_show_refuses_explicit_snapshot_for_another_profile(secure_store: Secure
         service.show_censo(profile_id="operator", snapshot_id=other.snapshot_id)
 
     assert exc_info.value.translated_message == "errors.censo.snapshot_profile_mismatch"
-    assert exc_info.value.context["snapshot_id"] == other.snapshot_id
-    assert exc_info.value.context["snapshot_profile_id"] == "other-profile"
+    ctx = exc_info.value.context
+    assert ctx is not None
+    assert ctx["snapshot_id"] == other.snapshot_id
+    assert ctx["snapshot_profile_id"] == "other-profile"
 
 
 def test_show_refuses_when_no_snapshot_exists(secure_store: SecureObjectRepository) -> None:
