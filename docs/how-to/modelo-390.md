@@ -24,7 +24,7 @@ Modelo 390 is the annual summary of your quarterly IVA filings. To prepare it:
 The rest of this guide walks through these steps with the checks each one
 needs. To understand how the tool organises the filing work behind the
 commands, read
-[How filings, work units, and calculation revisions fit together](filing-spine.md)
+[The filing workflow: work units and calculation revisions](filing-spine.md)
 after this guide.
 
 ## Setup steps before you start
@@ -324,6 +324,6 @@ need, report that gap instead of documenting it as enforced behavior.
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Review calculations with Google Sheets](review-with-google-sheets.md)
 - [How to reconcile a filed Modelo against its justificante](reconcile.md)
-- [How filings, work units, and calculation revisions fit together](filing-spine.md)
+- [The filing workflow: work units and calculation revisions](filing-spine.md)
 - [Diagnose and repair your local setup](troubleshooting.md)
 - [CLI reference](../cli/index.rst)

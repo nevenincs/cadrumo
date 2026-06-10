@@ -34,11 +34,10 @@ rows:
 aeat app ledger import ./statement.csv --provider auto --dry-run
 ```
 
-`--provider auto` asks `aeat` to detect the statement format. Current provider
-values shown by command help include `auto`, `csv`, `ofx`, `qfx`, `xlsx`,
-`excel`, `n26`, `pdf`, and `pdf-n26`.
-
-If detection picks the wrong format, replace `auto` with the exact provider.
+`--provider auto` asks `aeat` to detect the statement format. If detection
+picks the wrong format, replace `auto` with the exact provider - run
+`aeat app ledger import --help` or see the [CLI reference](../cli/index.rst)
+for the current provider list.
 
 ## Save imported rows
 
@@ -99,13 +98,6 @@ aeat app ledger collectible-invoice --help
 
 Payable invoices are supplier invoices you owe. Collectible invoices are
 customer invoices owed to you.
-
-## Understand transaction fields
-
-Use [Classify transactions](classify-transactions.md) for category, IVA, IRPF,
-and shared-expense decisions. Use
-[Review and supply calculation inputs](review-calculation-values.md) when a
-calculation tells you a field is missing.
 
 ## Review rows
 
