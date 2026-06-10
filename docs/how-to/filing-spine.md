@@ -1,4 +1,4 @@
-# How filings, work units, and calculation revisions fit together
+# The filing workflow: work units and calculation revisions
 
 Use this guide after completing the quickstart if you want to understand how
 the tool organises and stores your filing work between steps.

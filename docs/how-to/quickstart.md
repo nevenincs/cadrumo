@@ -13,11 +13,8 @@ has tax-specific setup or review choices.
 
 ## 1. Create your taxpayer profile
 
-A profile is your personal taxpayer record inside the tool. It stores your NIF,
-your activity type, your tax regime, your income and expense records, and which
-forms you have already prepared.
-
-Create or check your profile before you import records or calculate a modelo:
+A profile is your personal taxpayer record inside the tool. Create or check
+your profile before you import records or calculate a modelo:
 
 ```bash
 aeat config profile create my-profile --quiet --tax-id 12345678Z

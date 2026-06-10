@@ -85,7 +85,7 @@ aeat app modelo work status --modelo 303 --year 2026 --period 1T
 
 For routine work, the visible target (`--modelo`, `--year`, `--period`) is all
 you need. Reference-number workflows are covered in
-[How filings, work units, and calculation revisions fit together](filing-spine.md).
+[The filing workflow: work units and calculation revisions](filing-spine.md).
 
 ## Check the ledger period
 
@@ -254,7 +254,7 @@ filing pass.
 
 ## Next steps
 
-- [How filings, work units, and calculation revisions fit together](filing-spine.md)
+- [The filing workflow: work units and calculation revisions](filing-spine.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Plan your filing calendar](filing-calendar.md)
 - [Reconcile a filing](reconcile.md)
