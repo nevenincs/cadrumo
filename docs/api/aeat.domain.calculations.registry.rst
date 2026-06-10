@@ -84,6 +84,7 @@ Submodules
    aeat.domain.calculations.registry._validate_formulas
    aeat.domain.calculations.registry._validate_helpers
    aeat.domain.calculations.registry._validate_label_artifacts
+   aeat.domain.calculations.registry._validate_orden_aplicabilidad
    aeat.domain.calculations.registry._validate_previous_filing_sources
    aeat.domain.calculations.registry._validate_record_sections
    aeat.domain.calculations.registry._validate_reference_checker
@@ -97,6 +98,7 @@ Submodules
    aeat.domain.calculations.registry._validate_revision_rules
    aeat.domain.calculations.registry._validate_revision_sections
    aeat.domain.calculations.registry._validate_semantic_role_axes
+   aeat.domain.calculations.registry._validate_semantic_role_required
    aeat.domain.calculations.registry._validate_semantic_role_typos
    aeat.domain.calculations.registry._validate_semantic_roles
    aeat.domain.calculations.registry._validate_source_outputs
