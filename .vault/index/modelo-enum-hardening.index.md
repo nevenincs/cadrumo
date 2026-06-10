@@ -6,6 +6,7 @@ tags:
 date: '2026-06-10'
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
+  - '[[2026-06-10-modelo-enum-hardening-audit]]'
   - '[[2026-06-10-modelo-enum-hardening-plan]]'
   - '[[2026-06-10-modelo-enum-hardening-research]]'
 ---
@@ -19,6 +20,10 @@ Auto-generated index of all documents tagged with `#modelo-enum-hardening`.
 ### adr
 
 - `2026-06-10-modelo-enum-hardening-adr` - `modelo-enum-hardening` adr: `Modelo identifiers as a registry-bound core enum; regulatory values centralised` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-10-modelo-enum-hardening-audit` - `modelo-enum-hardening` audit: `Verify pass: code review, broad-test triage, and incident record`
 
 ### plan
 
