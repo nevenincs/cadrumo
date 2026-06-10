@@ -166,10 +166,10 @@ def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> 
 # Canonical modelo top-level verb roster. The verbs are the registry/work
 # surface (list, describe, casillas, formulas, readiness, aggregate),
 # the work-unit lifecycle continuum (history, reconcile,
-# reconcile-from-justificante, export), and the cross-modelo analytics
-# (project, compare). Subgroups (`bindings`, `work`, `filing-record`,
-# `verification-report`, `audit`, `iva-wallet`) carry the operational
-# surfaces and are intentionally excluded from this top-level roster.
+# reconcile-from-justificante, reconciliation-history, export), and the
+# cross-modelo analytics (project, compare). Subgroups (`bindings`, `work`,
+# `filing-record`, `verification-report`, `audit`, `iva-wallet`) carry the
+# operational surfaces and are intentionally excluded from this top-level roster.
 EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
     {
         "aggregate",
@@ -184,6 +184,7 @@ EXPECTED_MODELO_TOP_LEVEL_VERBS: frozenset[str] = frozenset(
         "readiness",
         "reconcile",
         "reconcile-from-justificante",
+        "reconciliation-history",
     },
 )
 
