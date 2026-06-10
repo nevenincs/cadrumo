@@ -169,9 +169,7 @@ class LLMClassifier(Protocol):
         """Return the ``classified_by`` identifier this classifier emits."""
         ...
 
-    def classify(
-        self, transaction: Transaction, *, evidence_text: str | None = None
-    ) -> LLMClassificationResponse:
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
         """Return one classification decision for ``transaction``.
 
         Args:
@@ -629,9 +627,7 @@ class SubprocessLLMClassifier:
             return f"llm:{self.name}:{self.model}"
         return f"llm:{self.name}"
 
-    def classify(
-        self, transaction: Transaction, *, evidence_text: str | None = None
-    ) -> LLMClassificationResponse:
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
         """Shell out to the LLM CLI, parse, validate, return.
 
         Args:

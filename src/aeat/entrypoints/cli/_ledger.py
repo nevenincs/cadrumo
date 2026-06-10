@@ -499,9 +499,7 @@ def ledger_classify(
     llm: LLMProvider | None = typer.Option(None, "--llm", help=tr("cli.ledger.classify.llm_help")),
     apply: bool = typer.Option(False, "--apply", help=tr("cli.ledger.classify.apply_help")),
     saturate: bool = typer.Option(False, "--saturate", help=tr("cli.ledger.classify.saturate_help")),
-    read_evidence: bool = typer.Option(
-        False, "--read-evidence", help=tr("cli.ledger.classify.read_evidence_help")
-    ),
+    read_evidence: bool = typer.Option(False, "--read-evidence", help=tr("cli.ledger.classify.read_evidence_help")),
     evidence_acknowledged: bool = typer.Option(
         False, "--evidence-acknowledged", help=tr("cli.ledger.classify.evidence_acknowledged_help")
     ),
