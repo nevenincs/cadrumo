@@ -5,16 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.config import load_settings
+from ...core import Modelo
 
 STUB_MODELO_LOCALE_KEYS: dict[str, str] = {
-    "151": "cli.app.modelo.work.create_stub_modelo_151_refused",
-    "210": "cli.app.modelo.work.create_stub_modelo_210_refused",
+    Modelo.M151.value: "cli.app.modelo.work.create_stub_modelo_151_refused",
+    Modelo.M210.value: "cli.app.modelo.work.create_stub_modelo_210_refused",
     "600": "cli.app.modelo.work.create_stub_modelo_600_refused",
     "620": "cli.app.modelo.work.create_stub_modelo_620_refused",
     "650": "cli.app.modelo.work.create_stub_modelo_650_refused",
     "660": "cli.app.modelo.work.create_stub_modelo_660_refused",
-    "714": "cli.app.modelo.work.create_stub_modelo_714_refused",
-    "721": "cli.app.modelo.work.create_stub_modelo_refused",
+    Modelo.M714.value: "cli.app.modelo.work.create_stub_modelo_714_refused",
+    Modelo.M721.value: "cli.app.modelo.work.create_stub_modelo_refused",
 }
 
 STUB_ONLY_MODELOS: frozenset[str] = frozenset(STUB_MODELO_LOCALE_KEYS)

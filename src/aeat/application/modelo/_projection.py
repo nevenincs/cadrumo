@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, Field
 
+from ...core import Modelo
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.logging import get_logger
@@ -199,7 +200,7 @@ def project_modelo_100_from_m130(
     m130_units = [
         unit
         for unit in all_units
-        if str(unit.modelo) == "130" and unit.filing_year == year and unit.state is WorkUnitState.BORRADOR
+        if str(unit.modelo) == Modelo.M130.value and unit.filing_year == year and unit.state is WorkUnitState.BORRADOR
     ]
     if not m130_units:
         raise ModeloProjectNoM130UnitsError(
@@ -248,7 +249,7 @@ def project_modelo_100_from_m130(
         is_extrapolated = False
 
     authority = resources().modelos.authority
-    m100_snapshot = authority.snapshot("100", filing_year=year, period="0A")
+    m100_snapshot = authority.snapshot(Modelo.M100.value, filing_year=year, period="0A")
     extra_inputs = _decimal_overrides(
         casilla_overrides or {},
         translated_message="cli.app.modelo.work.casilla_not_decimal",
