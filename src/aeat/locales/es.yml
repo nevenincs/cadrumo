@@ -2334,15 +2334,11 @@ cli:
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
-      reset_state_dry_run_help: Informar la huella del envoltorio sin eliminar la
-        fila
-      reset_state_help: Descartar el envoltorio ilegible del estado del flujo de trabajo
-        (destructivo; requiere --yes)
-      reset_state_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
-        --yes para confirmar o pasa --dry-run para inspeccionar la huella.
-      reset_state_yes_help: Confirmar explícitamente el reinicio del estado del flujo
-        de trabajo
       yes_help: Confirmar la reparación.
+      reset_progress_dry_run_help: 'Informar la huella del envoltorio sin eliminar la fila'
+      reset_progress_help: 'Descartar el envoltorio ilegible del estado del flujo de trabajo (destructivo; requiere --yes)'
+      reset_progress_requires_yes: 'Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar o pasa --dry-run para inspeccionar la huella.'
+      reset_progress_yes_help: 'Confirmar explícitamente el reinicio del estado del flujo de trabajo'
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
@@ -2387,7 +2383,7 @@ cli:
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
     switch:
-      help: Cambiar el perfil activo seleccionandolo y abriendo su sesion de almacenamiento.
+      help: 'Cambia a un perfil y conviértelo en el activo.'
       name_help: Nombre del perfil al que cambiar. Si se omite, se usa el puntero
         del perfil activo.
     unlock: null
@@ -2920,7 +2916,6 @@ cli:
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
           la aplicacion.
-        diagnostics_reset_state: Reiniciar el estado interno de la aplicacion.
         first_run_bootstrap: Inicializar la configuracion en el primer uso.
         first_run_edit: Editar la configuracion inicial.
         footer: Ejecute 'aeat config <comando> --help' para obtener mas informacion
@@ -2935,13 +2930,14 @@ cli:
         profile_rename: Renombrar un perfil de contribuyente.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
-        profile_switch: Desbloquear y activar un perfil.
+        profile_switch: 'Switch to a profile and make it the active one.'
         section_authentication: Autenticacion AEAT
         section_bucket_inspection: Inspeccion de bucket
         section_diagnostics: Diagnostico
         section_first_run: Primera ejecucion
         section_profile_inspection: Inspeccion de perfil
         section_profile_lifecycle: Ciclo de vida del perfil
+        diagnostics_reset_progress: 'Reiniciar el estado interno de la aplicacion.'
       root:
         diagnostics_live_filed: Diagnosticar las declaraciones presentadas capturadas
           en vivo.
