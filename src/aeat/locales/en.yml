@@ -1110,7 +1110,7 @@ cli:
         create_help: Create an inventory ledger for one activity and tax year
         group_help: Inventory ledgers by activity, movements, and valuation
         iva_rate_help: IVA rate as a percentage
-        list_help: 'List inventory ledgers in the active profile'
+        list_help: List inventory ledgers in the active profile
         movement_add_help: Add a purchase, sale, or adjustment movement to the ledger
         movement_date_help: Movement date (YYYY-MM-DD)
         movement_group_help: Manage inventory ledger movements
@@ -1147,7 +1147,7 @@ cli:
         category_help: Spending category id (e.g. USAGE_RATIO_VEHICLE)
         eligible_help: List categories that accept a specific ratio
         group_help: Business-use ratios by spending category
-        list_help: 'List category ratios in the active profile'
+        list_help: List category ratios in the active profile
         no_override_error: No saved ratio for category {category!r} in bucket {bucket_id!r}
         ratio_help: Applicable ratio between 0 and 1
         set_help: Set or replace the ratio for a category
@@ -1232,11 +1232,13 @@ cli:
           gates only continue in own-name mode.
         taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
       justificante:
-        app_help: 'AEAT justificante captures (read-only): pull a filed receipt and reconcile against it.'
-        capture_help: 'Live-pull the AEAT justificante for a filed period and persist it as official evidence.'
-        list_help: 'List persisted justificante captures in the active profile.'
-        snapshot_id_help: 'Snapshot id (or unambiguous prefix).'
-        view_help: 'View one justificante capture.'
+        app_help: 'AEAT justificante captures (read-only): pull a filed receipt and
+          reconcile against it.'
+        capture_help: Live-pull the AEAT justificante for a filed period and persist
+          it as official evidence.
+        list_help: List persisted justificante captures in the active profile.
+        snapshot_id_help: Snapshot id (or unambiguous prefix).
+        view_help: View one justificante capture.
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
       notifications:
@@ -1389,7 +1391,7 @@ cli:
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
       filing_record:
         app_help: Inspect internal filing records
-        bucket_id_help: 'Filter by profile'
+        bucket_id_help: Filter by profile
         evidence_kind_help: Kind of imported evidence (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
         evidence_reference_id_help: Stable reference id of the imported evidence (justificante
@@ -1518,9 +1520,11 @@ cli:
         / year / period.
       reconcile:
         errors:
+          exclusive_capture_source: cli.app.modelo.reconcile.errors.exclusive_capture_source
           exclusive_source: --from-justificante and --from-declaration are mutually
             exclusive.
-          missing_source: Supply --from-justificante PATH or --from-declaration PATH.
+          missing_source: 'Supply --from-justificante PATH, --from-declaration PATH, or --from-capture SNAPSHOT_ID.'
+        from_capture_help: cli.app.modelo.reconcile.from_capture_help
         from_declaration_help: Path to the filed declaration PDF to reconcile against
           (reserved; parser pending).
         from_justificante_help: Path to the AEAT justificante PDF to reconcile against.
@@ -1570,7 +1574,7 @@ cli:
         borrador_help: Modelo 100 borrador snapshot id (full or unambiguous prefix).
           Snapshot binding values are used only for registry bindings marked aeat_prefilled;
           caller --binding overrides always take precedence.
-        bucket_id_help: 'Profile the work unit belongs to'
+        bucket_id_help: Profile the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
         calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
           %{state}). It is persisted and can be resumed later; list revisions with
@@ -1682,7 +1686,7 @@ cli:
           (SHA-256 digest)
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
         kv_format_error: '{flag} must be {key_label}={value_label}; got {spec}.'
-        list_help: 'List registered work units, optionally filtered by profile'
+        list_help: List registered work units, optionally filtered by profile
         meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child under
           3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
           Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, ''laia''). Computes
@@ -1890,7 +1894,8 @@ cli:
         AEAT session
       login_help: Acquire or verify a live AEAT session
       login_reset_lock_help: Clear a stale auth acquisition lock before starting
-      no_active_bucket: 'No active profile. Run ''aeat config profile create NAME'' before configuring authentication.'
+      no_active_bucket: No active profile. Run 'aeat config profile create NAME' before
+        configuring authentication.
       output_language_help: Output language for the response text (es, en, ca, hu).
       provider_help: Authentication provider id (e.g. certificado-electronico)
       providers:
@@ -2031,7 +2036,7 @@ cli:
       drafts_dir_help: Directory to store local filing drafts
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
-      help: 'Initialize a new active profile.'
+      help: Initialize a new active profile.
       iva_regime_help: IVA regime (general, simplificado, exento, etc.)
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
@@ -2058,7 +2063,7 @@ cli:
         snapshot_id_help: Specific snapshot id (prefixes accepted)
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
-      create_help: 'Initialize a new active profile.'
+      create_help: Initialize a new active profile.
       delete_active_cleared: The deleted profile was the active one; the active-profile
         pointer has been cleared. Run aeat config switch NAME or aeat config profile
         create NAME to resume work.
@@ -2184,7 +2189,7 @@ cli:
       profile_clear_active_mismatch: --clear-active can only clear the active profile
         pointer; '%{profile}' is not active.
       profile_help: Inspect and repair the active-profile pointer.
-      profile_name_help: 'Inspect a specific registered profile.'
+      profile_name_help: Inspect a specific registered profile.
       profile_one_action: Choose either --clear-active or --repair-manifest-status,
         not both.
       profile_repair_manifest_status_help: Backfill a legacy active bucket manifest
@@ -2199,16 +2204,21 @@ cli:
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
-      reset_progress_dry_run_help: 'Show what would be cleared without deleting it'
-      reset_progress_help: 'Clear the stuck progress saved for an interrupted command (destructive; requires --yes)'
-      reset_progress_requires_yes: 'This operation is destructive. Re-run with --yes to confirm or pass --dry-run to see what would be cleared.'
-      reset_progress_yes_help: 'Confirm clearing the saved progress'
+      reset_progress_dry_run_help: Show what would be cleared without deleting it
+      reset_progress_help: Clear the stuck progress saved for an interrupted command
+        (destructive; requires --yes)
+      reset_progress_requires_yes: This operation is destructive. Re-run with --yes
+        to confirm or pass --dry-run to see what would be cleared.
+      reset_progress_yes_help: Confirm clearing the saved progress
       yes_help: Confirm repair.
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
       requires_yes: Reset is destructive. Re-run with --yes to confirm.
-      scope_help: 'Scope to reset. profile: delete every profile (manifests, DEKs, declarations, ledger and invoice reviews). auth: clear the persisted AEAT/SEDE auth session. data: quarantine unreadable secure-object rows across all namespaces. all: apply profile, auth, and data together.'
+      scope_help: 'Scope to reset. profile: delete every profile (manifests, DEKs,
+        declarations, ledger and invoice reviews). auth: clear the persisted AEAT/SEDE
+        auth session. data: quarantine unreadable secure-object rows across all namespaces.
+        all: apply profile, auth, and data together.'
       yes_help: Explicitly confirm the reset operation
     set:
       help: Assign a value to one configuration key
@@ -2221,7 +2231,7 @@ cli:
       errors:
         missing_required_flags: Missing required flags for --quiet wizard run; supply
           a value for every required question.
-      help: 'Initialize the active tax profile'
+      help: Initialize the active tax profile
       profile_name_help: Profile name to write the answers into
       quiet_help: Run non-interactively using only the supplied flag values; required
         flags left unset cause an error. Sufficient on its own; combine with --accept-defaults
@@ -2313,7 +2323,7 @@ cli:
   ledger:
     add:
       actor_help: Operator name recorded on the bucket event
-      amount_help: 'Signed transaction amount in the transaction currency'
+      amount_help: Signed transaction amount in the transaction currency
       attachment_help: Supplementary attachment id (repeatable)
       business_pct_help: Business-use share from 0 to 1 (only when classification
         is MIXED)
@@ -2326,7 +2336,7 @@ cli:
       date_help: Booked date (YYYY-MM-DD)
       description_help: Non-blank narrative
       direction_help: Transaction direction (INCOMING / OUTGOING / INTERNAL_TRANSFER)
-      help: 'Add one manual ledger transaction in the active profile'
+      help: Add one manual ledger transaction in the active profile
       idempotency_key_help: Caller-supplied idempotency key recorded with the row
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
@@ -2360,7 +2370,7 @@ cli:
     app_help: Management of accounting ledgers and IVA records
     archive:
       actor_help: Operator name recorded on the bucket event
-      help: 'Archive one ledger transaction in the active profile'
+      help: Archive one ledger transaction in the active profile
       id_help: Ledger transaction id to archive
       reason_help: Reason recorded in lifecycle history
       yes_help: Confirm archiving the ledger transaction
@@ -2383,8 +2393,10 @@ cli:
       usage_example: Pass the bare id, e.g. --category-id {example} (not a family-prefixed
         or compound key).
     check:
-      bucket_id_help: 'Bucket id to probe (defaults to the active profile).'
-      help: 'Probe ledger transactions in the addressed profile (defaults to the active profile) and report anomaly rows aggregated across every period a transaction touches. Local-only; never contacts AEAT.'
+      bucket_id_help: Bucket id to probe (defaults to the active profile).
+      help: Probe ledger transactions in the addressed profile (defaults to the active
+        profile) and report anomaly rows aggregated across every period a transaction
+        touches. Local-only; never contacts AEAT.
     classify:
       actor_help: Operator name recorded on the bucket event
       apply_help: 'Persist the LLM suggestion with llm: provenance instead of only
@@ -2408,7 +2420,7 @@ cli:
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'CSV file not found: %{path}'
-      help: 'Classify one ledger transaction in the active profile'
+      help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: --id is required when --from-csv is not provided.
       irpf_category_help: IRPF category for modelo calculations
@@ -2468,6 +2480,9 @@ cli:
       invalid_category: 'Unknown spending category ''{category}''. Known categories:
         {known}. Run ''aeat app ledger categories'' for valid --category-id values.'
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
+      negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
+        the amount without a sign and set the flow with --direction (OUTGOING for
+        money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
       unknown_category: Unrecognised --category-id {category!r}. Pass a bare category
         id such as {example!r} - not a family-prefixed or compound key. Run `aeat
         app ledger categories` to list every recognised id.
@@ -2476,7 +2491,7 @@ cli:
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
-      help: 'Export canonical ledger rows from the active profile'
+      help: Export canonical ledger rows from the active profile
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
@@ -2587,7 +2602,7 @@ cli:
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.
       header: ACCOUNTING LEDGER TRANSACTIONS
-      help: 'List ledger transactions in the active profile'
+      help: List ledger transactions in the active profile
       limit_help: 'Maximum rows to show (default: all rows).'
       offset_help: 'Skip this many rows before listing (default: 0).'
       ungrouped_label: (ungrouped)
@@ -2602,7 +2617,9 @@ cli:
       yes_help: Confirm the merge (archives every child and the parent, persists a
         fresh content-addressed merged transaction)
     preflight:
-      help: 'Report missing ledger facts (category, taxable base, IVA amount/rate, currency, proportionality reference) for the active profile''s transactions in a given period. Local-only; never contacts AEAT.'
+      help: Report missing ledger facts (category, taxable base, IVA amount/rate,
+        currency, proportionality reference) for the active profile's transactions
+        in a given period. Local-only; never contacts AEAT.
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year (e.g. 2024).
@@ -2611,14 +2628,14 @@ cli:
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
-      help: 'Remove one ledger transaction from the active profile'
+      help: Remove one ledger transaction from the active profile
       id_help: Ledger transaction id to remove
       reason_help: Reason recorded in removal history
       yes_help: Confirm deletion of the ledger transaction
     reset:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report reset effects without clearing the ledger catalogue
-      help: 'Reset the active profile''s ledger catalogue'
+      help: Reset the active profile's ledger catalogue
       reason_help: Reason recorded in reset history
       yes_help: Confirm clearing the active ledger catalogue
     restore:
@@ -2654,12 +2671,12 @@ cli:
         child transactions)
     stash:
       actor_help: Operator name recorded on the bucket event
-      help: 'Stash one ledger transaction in the active profile'
+      help: Stash one ledger transaction in the active profile
       id_help: Ledger transaction id to stash
       reason_help: Reason recorded in lifecycle history
       yes_help: Confirm stashing the ledger transaction
     status:
-      help: 'Summarize ledger state and calculation readiness for the active profile'
+      help: Summarize ledger state and calculation readiness for the active profile
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year for --period (e.g. 2024).
@@ -2684,7 +2701,7 @@ cli:
       taxable_base_help: New IVA-exclusive base amount
       value_date_help: New value date (YYYY-MM-DD)
     view:
-      help: 'View one ledger transaction in the active profile'
+      help: View one ledger transaction in the active profile
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
@@ -2732,7 +2749,7 @@ cli:
         modelo_list: List supported modelos.
         modelo_work: Create and operate modelo work units.
         overview_status: Summarize current profile and work state.
-        paragraph_operational_workflow: 'App commands operate on the active profile.'
+        paragraph_operational_workflow: App commands operate on the active profile.
         registry_inspect: Inspect registry metadata.
         registry_verify: Verify local registry integrity.
         review_queue: List items waiting for operator review.
@@ -2752,7 +2769,7 @@ cli:
         diagnostics_quarantine: Quarantine unreadable secure objects.
         diagnostics_repair: Diagnose local configuration and storage health.
         diagnostics_reset_progress: Reset unreadable workflow state.
-        first_run_bootstrap: 'Create a local tax profile.'
+        first_run_bootstrap: Create a local tax profile.
         first_run_edit: Re-run the profile wizard for an existing profile.
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
@@ -2803,7 +2820,7 @@ cli:
         section_modelo_lifecycle: Modelo lifecycle
         section_setup: Setup
         setup_configure_auth: Configure AEAT authentication.
-        setup_create_profile: 'Create a profile.'
+        setup_create_profile: Create a profile.
         setup_inspect_profile: Inspect profile commands.
     landing:
       active_profile_message: Active profile is %{profile}.
