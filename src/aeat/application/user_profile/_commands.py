@@ -20,6 +20,7 @@ surface is unchanged: every name remains reachable via
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 
@@ -37,13 +38,12 @@ from ...domain.user_profile import (
 # Sha-256 content-fingerprint shape shared by the profile-snapshot canonical
 # hash, the stored-hash snapshot pointer, and the current-hash recompute
 # result. Stays bare-str under ADR Rule 7 (fingerprint, not identity);
-# factored to a single module-local constraint kwargs mapping to remove
-# the three-way duplication of the shape literal.
-_PROFILE_SNAPSHOT_HASH_KWARGS: dict[str, object] = {
-    "min_length": 64,
-    "max_length": 64,
-    "pattern": r"^[0-9a-f]{64}$",
-}
+# factored to a single annotated alias to remove the three-way duplication
+# of the shape literal while preserving full static type information.
+_ProfileSnapshotHash = Annotated[
+    str,
+    Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"),
+]
 
 
 # ---------------------------------------------------------------------------
@@ -238,7 +238,7 @@ class ProfileSnapshot(BaseModel):
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: str = Field(min_length=1, max_length=8)
-    canonical_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
+    canonical_hash: _ProfileSnapshotHash
     created_at: datetime
     facts: tuple[UserProfileFact, ...]
 
@@ -250,8 +250,8 @@ class ProfileStaleCheckReport(BaseModel):
 
     snapshot_id: str = Field(min_length=1, max_length=128)
     profile_id: ProfileId
-    stored_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
-    current_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
+    stored_hash: _ProfileSnapshotHash
+    current_hash: _ProfileSnapshotHash
     stale: bool
 
 
