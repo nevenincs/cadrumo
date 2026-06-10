@@ -33,11 +33,11 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import LiveApplicationInputError
 from .._justificante import resolve_period_expediente
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from ....adapters.outbound.aeat.auth import AeatSession
     from ....core.config import Settings
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = Modelo.M130.value
 _YEAR = 2026
