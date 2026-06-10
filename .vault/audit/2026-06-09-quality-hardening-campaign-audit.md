@@ -542,3 +542,39 @@ in-flight edit and MUST NOT be touched per `aeat-git-worktree-safety`. Likewise
 turn compiles and passes its own gate in isolation. The standing non-peer blockers
 remain `check-types` (multi-session ratchet) and `test-live` (credential- and
 safety-gated).
+
+## QHC-016 | coordinator reconciliation (2026-06-10) | check-types 1850 -> 850; mechanical classes done
+
+The mechanical type-lane burn-down completed across three executor sessions
+(seven commits, latest `c2608a46d`): `missing-override-decorator` 174 -> 0,
+`reportMissingParameterType` ~329 -> 7 (the 7 sit in peer-WIP-locked files),
+`reportUnsupportedDunderAll` cleared from the top classes. `just check-types`
+now reports **850** diagnostics (563 ty + 287 pyright), down from ~1850 at
+QHC-014 and 3282 at campaign start.
+
+The QHC-005 Typer-callback triage question is resolved as moot: the fresh lane
+log shows zero `unknown-argument` and only 7 `missing-argument` diagnostics —
+the QHC-006 `register_schema` keystone eliminated that cluster; no suppression
+or typed-callback pattern is needed.
+
+The remainder is genuine boundary drift, by class: ty `invalid-argument-type`
+308, `unresolved-attribute` 106, `not-subscriptable` 24, `invalid-return-type`
+23; pyright `reportArgumentType` 125, `reportAttributeAccessIssue` 49,
+`reportMissingTypeArgument` 24. Worst non-peer files:
+`domain/modelos/tests/test_row_models.py` (26 ty),
+`entrypoints/cli/_config/_google.py` (24 ty),
+`tests/test_storage_decimal_redaction_error_typing.py` (19),
+`application/auth/_diagnostics.py` (17 pyright),
+export fichero-BOE roundtrip tests (16). `_cross_period_clean_state.py`
+(15 ty + 14 pyright) is peer-WIP-locked.
+
+Sibling-lane status at this checkpoint: QHC-003 complexity 17 over-threshold
+remaining (the three latest extractions passed independent review); QHC-004
+duplication 47 clone groups (three families consolidated, one excluded by the
+substitutability pre-filter). The QHC-015 peer-WIP `IndentationError` in
+`core/errors/registry/_domain_part2.py` is resolved — `core.errors` imports
+cleanly at HEAD with no remaining WIP on that path. Deferred pending locale-file
+peer WIP clearing: five advisory finding locale keys (four M131 revisions + the
+M200 precedent), wordings recorded in the cli-ledger-testimonials P05-S14 step
+record. Campaign continues with the genuine-drift type slice; no lane is capped
+as done.
