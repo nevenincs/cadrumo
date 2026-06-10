@@ -11,12 +11,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
-from typing import Final, NamedTuple
+from typing import Final, NamedTuple, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
+    RegistryModeloObservation,
     RegistryModeloObservationRequirement,
     RegistryRelationSourceRequirement,
     RegistrySnapshot,
@@ -26,12 +27,15 @@ from ...domain.calculations.registry import (
 )
 from ...domain.justificante import JustificanteRepository
 from ...domain.modelos import (
+    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     VerificationCompletenessStatus,
+    VerificationReportCatalogue,
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ._observations_repository import CalculationObservationRepository
@@ -49,6 +53,20 @@ _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
         "aeat_justificante_pdf",
     }
 )
+
+
+class _ObservationPayload(Protocol):
+    """Structural interface for the observation envelope payload consumed here.
+
+    Matches the public attribute surface of
+    :class:`~aeat.application.calculations._observations_repository._ObservationPayload`
+    without importing its private name.
+    """
+
+    observation: RegistryModeloObservation
+    source_kind: str
+    member_nif: str | None
+    stamped_revision_id: str | None
 
 
 class CrossPeriodDependencyOrigin(StrEnum):
@@ -399,18 +417,18 @@ def _per_grupo_member_requirement_keys(snapshot: RegistrySnapshot) -> set[tuple[
 
 
 def _selector_grouping(selector: object) -> object:
-    if isinstance(selector, dict):
-        return selector.get("grouping")
+    if isinstance(selector, Mapping):
+        return next((v for k, v in selector.items() if k == "grouping"), None)
     return getattr(selector, "grouping", None)
 
 
 class _CrossPeriodSource(NamedTuple):
-    value_member_payloads: tuple[object, ...]
+    value_member_payloads: tuple[_ObservationPayload, ...]
     observed_member_nifs: tuple[str, ...]
     expected_member_nifs: tuple[str, ...]
     missing_member_nifs: tuple[str, ...]
     unexpected_member_nifs: tuple[str, ...]
-    payload: object | None
+    payload: _ObservationPayload | None
     blockers: tuple[CrossPeriodCleanStateBlocker, ...]
     unstamped_revision_advisory: bool = False
 
@@ -437,7 +455,11 @@ def _revision_carry_check(
 
     - Divergent stamp → [REGISTRY_REVISION_DIVERGENCE] blocker, False advisory.
     - Missing stamp (legacy record) → [] blockers, True advisory (carry proceeds loudly).
-    - Matching stamp or resolution failure → [] blockers, False advisory.
+    - Matching stamp → [] blockers, False advisory.
+    - Indeterminate (source context fails to resolve) → [] blockers, True advisory.
+      The carry proceeds but the operator MUST be told the stamp could not be
+      re-confirmed against the law-determined revision; a silent clean carry on
+      an unverifiable stamp would defeat the gate.
     """
     if stamped_revision_id is None:
         # Legacy record: no stamp — carry proceeds, but surface a non-blocking advisory.
@@ -450,7 +472,9 @@ def _revision_carry_check(
         )
         law_determined_id = snapshot.revision.id
     except Exception:
-        return [], False
+        # Indeterminate: the source context will not resolve, so the stamp cannot be
+        # re-confirmed. Surface the non-blocking advisory rather than carrying silently.
+        return [], True
     if stamped_revision_id != law_determined_id:
         return [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE], False
     return [], False
@@ -463,12 +487,12 @@ def _resolve_cross_period_source(
 ) -> _CrossPeriodSource:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     unstamped_advisory = False
-    value_member_payloads: tuple[object, ...] = ()
+    value_member_payloads: tuple[_ObservationPayload, ...] = ()
     observed_member_nifs: tuple[str, ...] = ()
     expected_member_nifs: tuple[str, ...] = ()
     missing_member_nifs: tuple[str, ...] = ()
     unexpected_member_nifs: tuple[str, ...] = ()
-    payload: object | None = None
+    payload: _ObservationPayload | None = None
     if requirement.requires_member_fan_in:
         member_payloads = tuple(
             item
@@ -534,8 +558,8 @@ def _resolve_cross_period_source(
 
 def _resolve_observation_values(
     requirement: CrossPeriodDependencyRequirement,
-    value_member_payloads: tuple[object, ...],
-    payload: object | None,
+    value_member_payloads: tuple[_ObservationPayload, ...],
+    payload: _ObservationPayload | None,
 ) -> tuple[str | None, dict[str, object], list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     observation_source_kind: str | None = None
@@ -565,12 +589,12 @@ def _aggregate_member_history(
     requirement: CrossPeriodDependencyRequirement,
     *,
     bucket_id: str,
-    filing_catalogue: ModeloRecordCatalogueRepositoryProtocol,
-    calculation_catalogue: CalculationRevisionCatalogueRepositoryProtocol,
-    verification_catalogue: VerificationReportCatalogueRepositoryProtocol,
+    filing_catalogue: ModeloRecordCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    verification_catalogue: VerificationReportCatalogue,
     justificante_repository: JustificanteRepository,
     observation_source_kind: str | None,
-    value_member_payloads: tuple[object, ...],
+    value_member_payloads: tuple[_ObservationPayload, ...],
     expected_member_nifs: tuple[str, ...],
     observed_member_nifs: tuple[str, ...],
 ) -> _MemberHistory:
@@ -622,9 +646,9 @@ def _evaluate_requirement(
     *,
     bucket_id: str,
     observation_repository: CalculationObservationRepository,
-    filing_catalogue: ModeloRecordCatalogueRepositoryProtocol,
-    calculation_catalogue: CalculationRevisionCatalogueRepositoryProtocol,
-    verification_catalogue: VerificationReportCatalogueRepositoryProtocol,
+    filing_catalogue: ModeloRecordCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    verification_catalogue: VerificationReportCatalogue,
     justificante_repository: JustificanteRepository,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
 ) -> CrossPeriodDependencyEvidence:
@@ -720,7 +744,7 @@ def _filing_external_evidence_blockers(
 def _filing_revision_blockers(
     filing: ModeloRecord,
     requirement: CrossPeriodDependencyRequirement,
-    calculation_catalogue: CalculationRevisionCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue,
     observation_values: Mapping[str, object],
 ) -> tuple[CalculationRevisionState | None, list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
@@ -743,7 +767,7 @@ def _filing_revision_blockers(
 
 def _filing_verification_blockers(
     filing: ModeloRecord,
-    verification_catalogue: VerificationReportCatalogueRepositoryProtocol,
+    verification_catalogue: VerificationReportCatalogue,
 ) -> tuple[VerificationCompletenessStatus | None, list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     verification_status: VerificationCompletenessStatus | None = None
@@ -775,9 +799,9 @@ def _evaluate_filing_history(
     requirement: CrossPeriodDependencyRequirement,
     *,
     bucket_id: str,
-    filing_catalogue: ModeloRecordCatalogueRepositoryProtocol,
-    calculation_catalogue: CalculationRevisionCatalogueRepositoryProtocol,
-    verification_catalogue: VerificationReportCatalogueRepositoryProtocol,
+    filing_catalogue: ModeloRecordCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    verification_catalogue: VerificationReportCatalogue,
     justificante_repository: JustificanteRepository,
     observation_source_kind: str | None,
     observation_values: Mapping[str, object],
