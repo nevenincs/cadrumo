@@ -17,7 +17,8 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from enum import StrEnum
 from typing import IO, Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
@@ -39,6 +40,84 @@ _STRICT_ROOT_CONFIG = ConfigDict(
     strict=True,
     validate_assignment=True,
 )
+
+#: Envelope contract version shared by the success :class:`SchemaEnvelope`
+#: and the stderr error envelope. Both documents carry the same outer
+#: spine (``schema_version``, ``command``, ``status``, ``notices``), so the
+#: version is pinned once here and bumped only on a backwards-incompatible
+#: change to that spine.
+ENVELOPE_SCHEMA_VERSION = "2"
+
+
+class EnvelopeStatus(StrEnum):
+    """Outcome discriminator carried on every CLI return document.
+
+    ``success`` and ``warning`` ride on the stdout :class:`SchemaEnvelope`
+    (``warning`` when the command attached at least one warning-severity
+    notice); ``error`` rides on the stderr error envelope. A machine
+    consumer reads this single field to learn the outcome instead of
+    branching on stdout-vs-stderr.
+    """
+
+    SUCCESS = "success"
+    WARNING = "warning"
+    ERROR = "error"
+
+
+class NoticeSeverity(StrEnum):
+    """Severity of a single operator-facing :class:`Notice`.
+
+    ``info`` is a non-fatal next-step hint or informational advisory;
+    ``warning`` is a non-blocking advisory the operator should act on. A
+    command that attaches any ``warning`` notice resolves to
+    :attr:`EnvelopeStatus.WARNING`.
+    """
+
+    INFO = "info"
+    WARNING = "warning"
+
+
+class Notice(BaseModel):
+    """One typed, non-blocking diagnostic on the envelope ``notices`` channel.
+
+    The single uniform surface for operator-facing warnings, advisories,
+    and next-step hints across every command. Domain diagnostics (e.g.
+    ``ModeloFinding``, source-resolution advisories) are projected into
+    this shape rather than re-modelled as bespoke per-command payload
+    fields.
+
+    Attributes:
+        severity: ``info`` or ``warning``; drives the envelope ``status``.
+        code: Stable machine-readable notice identifier (e.g.
+            ``"modelo.calculate.unconsumed_iva"``).
+        message: Operator-facing rendered text for the notice.
+        suggestion: Optional copy-paste command or next-step action,
+            mirroring the error envelope's ``suggestion`` field.
+        context: Optional structured provenance for the notice (e.g. the
+            source-resolution ``reason`` / ``source_kind``), mirroring the
+            error envelope's ``context`` so a migrated advisory keeps its
+            machine-queryable sub-fields without a bespoke payload model.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    severity: NoticeSeverity
+    code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    suggestion: str | None = None
+    context: dict[str, str] | None = None
+
+
+def derive_status(notices: Sequence[Notice]) -> EnvelopeStatus:
+    """Return :attr:`EnvelopeStatus.WARNING` if any notice is warning-severity.
+
+    Success documents never carry :attr:`EnvelopeStatus.ERROR`; that
+    status is reserved for the stderr error envelope.
+    """
+    for notice in notices:
+        if notice.severity is NoticeSeverity.WARNING:
+            return EnvelopeStatus.WARNING
+    return EnvelopeStatus.SUCCESS
 
 
 class OutputSchemaError(AeatError):
@@ -78,22 +157,28 @@ class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
 
     Every successful ``--json`` response is rendered through this
     envelope so consumers can rely on the same outer keys regardless of
-    the inner payload shape.
+    the inner payload shape. The outer spine (``schema_version``,
+    ``command``, ``status``, ``notices``) is shared with the stderr error
+    envelope so one shape describes success, warning, and error outcomes.
 
     Attributes:
         schema_version: Envelope version; bumped only on
-            backwards-incompatible changes.
+            backwards-incompatible changes to the shared spine.
         command: Stable command path string (e.g. ``"workflow list"``).
+        status: Outcome discriminator (``success`` or ``warning`` here).
         result: The strict-validated command result.
-        warnings: Free-form non-fatal diagnostics surfaced to the caller.
+        notices: Typed non-blocking diagnostics (warnings, advisories,
+            next-step hints) surfaced to the caller. Replaces the former
+            free-form ``warnings`` string list.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
 
-    schema_version: str = Field(default="1", min_length=1)
+    schema_version: str = Field(default=ENVELOPE_SCHEMA_VERSION, min_length=1)
     command: str = Field(min_length=1)
+    status: EnvelopeStatus
     result: ResultT
-    warnings: list[str] = Field(default_factory=list)
+    notices: list[Notice] = Field(default_factory=list)
 
 
 type RegisteredSchema = type[OutputSchema] | type[OutputRootSchema[Any]]
@@ -177,33 +262,38 @@ def emit_json_success(
     command: str,
     result: object,
     *,
-    warnings: list[str] | None = None,
+    notices: Sequence[Notice] | None = None,
     indent: int | None = 2,
     sort_keys: bool = False,
     stream: IO[str] | None = None,
 ) -> None:
-    """Wrap ``result`` in :class:`SchemaEnvelope` and emit it via :func:`emit_json_document`.
+    """Wrap ``result`` in the success spine and emit it via :func:`emit_json_document`.
 
-    The envelope's ``schema_version`` is pinned to ``"1"``; bumping it
-    is a contract-breaking change handled by the JSON-contract test
-    suite, not a casual edit.
+    The envelope's ``schema_version`` is pinned to
+    :data:`ENVELOPE_SCHEMA_VERSION`; bumping it is a contract-breaking
+    change handled by the JSON-contract test suite, not a casual edit.
+    The ``status`` is derived from the supplied notices
+    (:func:`derive_status`) so the JSON outcome and the shell exit code
+    never disagree.
 
     Args:
         command: Stable command path string (e.g. ``"workflow list"``).
         result: The strict-validated command payload to surface as
             ``envelope.result``.
-        warnings: Optional non-fatal diagnostics; defaults to an empty
-            list when omitted.
+        notices: Optional typed non-blocking diagnostics (warnings,
+            advisories, next-step hints); defaults to an empty list.
         indent: Indent width forwarded to :func:`emit_json_document`.
         sort_keys: Sort-keys flag forwarded to :func:`emit_json_document`.
         stream: Target text stream; defaults to :data:`sys.stdout`.
     """
+    resolved_notices = [] if notices is None else list(notices)
     envelope_payload = redact_structured_for_cli_output(
         {
-            "schema_version": "1",
+            "schema_version": ENVELOPE_SCHEMA_VERSION,
             "command": command,
+            "status": derive_status(resolved_notices).value,
             "result": _jsonable_payload(result),
-            "warnings": [] if warnings is None else list(warnings),
+            "notices": [_jsonable_payload(notice) for notice in resolved_notices],
         }
     )
     emit_json_document(
@@ -287,11 +377,16 @@ def _jsonable_payload(payload: object) -> object:
 
 
 __all__ = [
+    "ENVELOPE_SCHEMA_VERSION",
     "SCHEMA_REGISTRY",
+    "EnvelopeStatus",
+    "Notice",
+    "NoticeSeverity",
     "OutputRootSchema",
     "OutputSchema",
     "OutputSchemaError",
     "SchemaEnvelope",
+    "derive_status",
     "emit_json_document",
     "emit_json_success",
     "register_schema",

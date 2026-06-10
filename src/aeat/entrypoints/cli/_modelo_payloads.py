@@ -84,24 +84,6 @@ class ResultSummaryRowPayload(OutputSchema):
     label: str
 
 
-class SourceAdvisoryPayload(OutputSchema):
-    """One NON-blocking source-resolution advisory surfaced on calculate.
-
-    Emitted by the source mesh while resolving the bucket ledger — notably the
-    unconsumed-declarable-IVA advisory (a declarable IVA observation no
-    ``ledger_iva_aggregation`` binding selects). The calculate verb succeeded
-    regardless; the advisory keeps an unrouted observation from being silently
-    under-declared (no-silent-under-declaration). ``message`` carries the
-    observation's category / rate / flow provenance verbatim from the
-    diagnostic.
-    """
-
-    reason: str
-    source_kind: str
-    message: str
-    resolver_id: str | None = None
-
-
 class CalculationRevisionPayload(OutputSchema):
     """Calculation revision fields surfaced by calculate / revisions commands."""
 
@@ -361,21 +343,12 @@ class WorkCalculateResult(OutputSchema):
     # modelos leave these unset.
     modality: str | None = None
     modality_reason: str | None = None
-    # Multi-year-renta authorization advisory. Populated when the modelo's
+    # Backend authorization lifecycle state. Populated when the modelo's
     # calculation backend is UNAUTHORIZED (not yet proven across >=2 renta
     # years per the modelo-multiyear-renta gate) but an engine exists, so the
-    # calculation still ran. The result is informational, not refused.
-    authorization_advisory: str | None = None
+    # calculation still ran. The accompanying advisory prose is surfaced on
+    # the envelope ``notices`` channel, not as a bespoke payload field.
     authorization_state: str | None = None
-    # NON-blocking source-resolution advisories raised while resolving the
-    # bucket ledger. Notably the unconsumed-declarable-IVA advisory: a
-    # declarable IVA observation no ``ledger_iva_aggregation`` binding selects
-    # (e.g. an INTRA_COMMUNITY_SUPPLY sale on a Modelo 303 whose bindings only
-    # select domestic + intra-community-acquisition triples). The calculation
-    # still succeeded; the advisory keeps the unrouted observation from being
-    # silently under-declared (no-silent-under-declaration). Empty tuple when
-    # every resolved observation was consumed by a binding.
-    source_advisories: tuple[SourceAdvisoryPayload, ...] = ()
 
 
 @register_schema("modelo.work.revisions")

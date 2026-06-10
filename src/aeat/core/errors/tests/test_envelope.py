@@ -61,12 +61,18 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
     assert "token:sha256:0a2c77ea" in rendered_json
 
 
-def test_schema_version_is_present() -> None:
-    envelope = build_error_envelope(LockAcquisitionError())
-    assert envelope.schema_version == "1"
+def test_error_document_carries_shared_spine() -> None:
+    from ...json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus
 
     payload = json.loads(render_error_json(LockAcquisitionError()))
-    assert payload["error"]["schema_version"] == "1"
+    # The error document shares the success-envelope outer spine.
+    assert payload["schema_version"] == ENVELOPE_SCHEMA_VERSION
+    assert payload["status"] == EnvelopeStatus.ERROR.value
+    assert payload["command"] is None
+    assert payload["notices"] == []
+    # The error detail is nested under ``error``; the spine owns the version.
+    assert "schema_version" not in payload["error"]
+    assert payload["error"]["code"]
 
 
 def test_envelope_message_renders_under_every_supported_language() -> None:

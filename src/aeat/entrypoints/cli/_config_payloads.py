@@ -492,21 +492,27 @@ class BucketHistoryResult(OutputSchema):
 
 @register_schema("config.profile.create")
 class ConfigProfileCreateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile create``."""
+    """JSON envelope for ``aeat config profile create``.
+
+    The post-create next-step hint is surfaced on the envelope ``notices``
+    channel, not as a bespoke ``next`` field.
+    """
 
     profile_name: str
     status: str
-    next: str
     active_profile: str | None = None
 
 
 @register_schema("config.profile.edit")
 class ConfigProfileEditResult(OutputSchema):
-    """JSON envelope for ``aeat config profile edit``."""
+    """JSON envelope for ``aeat config profile edit``.
+
+    The post-edit next-step hint is surfaced on the envelope ``notices``
+    channel, not as a bespoke ``next`` field.
+    """
 
     profile_name: str
     status: str
-    next: str
 
 
 @register_schema("config.profile.export")

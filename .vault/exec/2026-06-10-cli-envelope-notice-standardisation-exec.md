@@ -1,0 +1,89 @@
+---
+tags:
+  - '#exec'
+  - '#cli-envelope-notice-standardisation'
+date: '2026-06-10'
+step_id: 'S18'
+related:
+  - "[[2026-06-10-cli-envelope-notice-standardisation-plan]]"
+---
+
+# notice and status standardisation landing
+
+Consolidated execution record for the notice/status standardisation burndown
+(Steps S01-S18). One record rather than per-Step files because the contract
+change is a single cohesive landing verified by one shared gate.
+
+## Description
+
+- Authored a strict frozen `Notice` model (`severity` info|warning, `code`,
+  `message`, optional `suggestion`, optional `context`) plus an
+  `EnvelopeStatus` StrEnum and an `ENVELOPE_SCHEMA_VERSION` constant in
+  `aeat.core.json_contract`. Added `derive_status` (warning if any notice is
+  warning-severity).
+- Replaced the dead `SchemaEnvelope.warnings` list with the shared spine:
+  `schema_version`, `command`, `status`, `result`, `notices`. Bumped the
+  envelope version to `"2"`.
+- Gave the stderr `ErrorEnvelope` the same spine in `render_error_json`
+  (`schema_version`, `command`, `status="error"`, nested `error`, `notices`);
+  removed `schema_version` from the error body (the spine owns it). Used a
+  function-local import to avoid the `json_contract` <-> `errors` cycle.
+- Threaded a `notices=` parameter and derived `status` through
+  `emit_json_success` and the CLI `_emit_envelope` helper.
+- Authored the `advisory_notice` projection helper in `_modelo_rendering`.
+- Migrated the four bespoke advisory/next fields onto the notices channel and
+  deleted them: calculate `source_advisories` and `authorization_advisory`
+  (`_modelo_payloads`, `_modelo_work_calculate_cli`), the M100 filing-obligation
+  advisory (`_modelo_work_lifecycle_cli`, previously text-only), and the wizard
+  `config.profile.create`/`edit` `next` (and stray `next_label`) hint
+  (`wizard/_commands`, `_config_payloads`). Text lines were rebuilt from the
+  same notices so text and JSON cannot drift.
+- Deleted the dead `_active_profile_or_exit` (and its now-orphaned `_exit`
+  helper + `NoReturn` import), which emitted a third un-enveloped
+  `{"error","next"}` shape; it had zero production callers (the real
+  `ledger list` refusal flows through the typed `_no_active_profile_refusal`).
+- Extended the no-allowlist conformance gate: success-spine lock, a
+  per-registered-schema "no bespoke notice/advisory field" parametrised check,
+  and an error-document spine assertion.
+
+## Outcome
+
+- `test_json_schema_conformance` green (92 passed), including the new spine and
+  no-bespoke-field checks across all 209 registered schemas.
+- `core/tests/test_json_envelope_roundtrip` and `core/errors/tests` green
+  (notice redaction roundtrip + error spine).
+- Config create/edit notice path green (cold-start 16 passed; wizard 270
+  passed). `test_common` green (8). Surface tests 78 passed.
+- Quality gates clean on all changed files: `ruff check`, `ruff format --check`,
+  `ty`, `pyright` (0 errors), and `apidocs scaffold --check` (no drift),
+  `locales scaffold --check` (no drift).
+
+## Notes
+
+- **Concurrent peer WIP blocks the full-suite-green criterion (S17).** A large
+  uncommitted peer campaign (666 insertions across 49 files) refactors
+  `RawTransaction` to reject negative amounts ("flow carried by direction") and
+  reshapes the source mesh / ledger period grammar. This independently breaks
+  transaction/ledger/source-mesh/calculate integration tests (e.g. negative-
+  amount fixtures in `test_modelo_source_mesh_calculate`, the
+  `ledger status --period` year requirement, source-bound casilla overrides).
+  Those failures are not caused by this change; my edits import cleanly, pass
+  the gate, and render errors correctly through the failing paths. The
+  full-suite-green gate must be re-run once the peer transaction refactor
+  settles. S17 is therefore verified for this change's scope but its
+  full-suite-green clause is deferred to a post-peer-WIP rerun.
+- **S15 (overview next-step) deferred as a non-violating enhancement.** The
+  overview status next-step guidance is text-only rendering with no bespoke JSON
+  field, so it does not violate the uniform-channel rule and the gate passes.
+  Surfacing it additionally as a JSON `info` notice is a clean follow-up that
+  requires extracting the next-step string from the text renderer; it was not
+  forced here to protect the byte-identical text-output invariant.
+- **Notice design refinement vs the ADR sketch.** The ADR sketched
+  `suggestion`/`next` on the notice; the landed model collapses the actionable
+  field to a single `suggestion` (uniform with `ErrorEnvelope.suggestion`) and
+  adds an optional `context: dict[str,str]` (mirroring `ErrorEnvelope.context`)
+  so migrated advisories keep their structured provenance (`reason`,
+  `source_kind`, `resolver_id`) without a bespoke payload model.
+- **Breaking JSON contract.** `schema_version` bumped `"1"` -> `"2"`; the
+  free-form `warnings` list is removed in favour of typed `notices`. Acceptable
+  under the project's zero-legacy / pre-beta posture.
