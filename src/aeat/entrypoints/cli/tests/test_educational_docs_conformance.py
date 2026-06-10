@@ -34,7 +34,10 @@ _runner = CliRunner()
 
 # A leading run of lowercase verb-ish tokens after `aeat` (subcommands use
 # lowercase words and hyphens). Args (NAME, paths) and flags (-x/--x) end the run.
-_AEAT_RE = re.compile(r"\baeat\s+((?:[a-z][a-z0-9-]*)(?:\s+[a-z][a-z0-9-]*)*)")
+# The lookbehind keeps `aeat` from matching the tail of a hyphenated doc page
+# name (e.g. `file-at-aeat` in a toctree), which would otherwise greedily absorb
+# the following lines as a bogus command.
+_AEAT_RE = re.compile(r"(?<![\w-])aeat\s+((?:[a-z][a-z0-9-]*)(?:\s+[a-z][a-z0-9-]*)*)")
 _LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 # Commands are only authoritative inside code formatting (inline backticks or
 # fenced blocks); a bare "aeat ..." in prose is not a cited invocation.
