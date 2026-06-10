@@ -36,10 +36,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _RUNNER = CliRunner()
 
 _ROWS = (
-    ("2026-03-01", "-49.99", "Software subscription"),
-    ("2026-03-05", "-120.00", "Office chair"),
-    ("2026-03-09", "-15.50", "Domain renewal"),
-    ("2026-03-12", "-300.00", "Accountant fee"),
+    ("2026-03-01", "49.99", "Software subscription"),
+    ("2026-03-05", "120.00", "Office chair"),
+    ("2026-03-09", "15.50", "Domain renewal"),
+    ("2026-03-12", "300.00", "Accountant fee"),
 )
 
 
