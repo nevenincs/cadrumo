@@ -156,7 +156,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     purchase = _transaction(
         "purchase-general",
         direction=TransactionDirection.OUTGOING,
-        amount=Decimal("-60.50"),
+        amount=Decimal("60.50"),
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
     )

@@ -159,7 +159,7 @@ def _recargo_purchase() -> Transaction:
         transaction_id="recargo-purchase-001",
         booked_date=date(2025, 2, 1),
         value_date=date(2025, 2, 1),
-        amount=Decimal("-121.00"),
+        amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Mayorista SL",
         description="Compra mercaderia (recargo de equivalencia)",
