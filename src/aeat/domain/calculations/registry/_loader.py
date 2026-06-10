@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -114,10 +114,9 @@ def _as_toml_table(value: object) -> dict[str, object] | None:
     key type at this single TOML deserialization boundary.
     """
     if isinstance(value, dict):
-        # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE: TOML deserialization
-        # erases str-key type after isinstance narrowing; annotation
-        # re-attaches the known str key at the boundary.
-        return value  # type: ignore[return-value]
+        # CAST-RATIONALE-TOML-STR-KEY-ERASURE: tomllib/freeze_toml always
+        # produces str-keyed dicts; isinstance loses the key type annotation.
+        return cast("dict[str, object]", value)
     return None
 
 
@@ -906,8 +905,8 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
     for path in sorted(resolved.glob("*.toml")):
         try:
             raw_data = read_toml(path, error_factory=RegistryLoadError)
-            modelo_table = raw_data.get("modelo")
-            if not isinstance(modelo_table, dict) or "id" not in modelo_table:
+            modelo_table = _as_toml_table(raw_data.get("modelo"))
+            if modelo_table is None or "id" not in modelo_table:
                 raise RegistryLoadError(f"{path}: missing [modelo].id")
             modelo_id = str(modelo_table["id"])
         except Exception as exc:
@@ -926,8 +925,8 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
             manifest_path = entry / "manifest.toml"
             try:
                 manifest_data = read_toml(manifest_path, error_factory=RegistryLoadError)
-                modelo_table = manifest_data.get("modelo")
-                if not isinstance(modelo_table, dict) or "id" not in modelo_table:
+                modelo_table = _as_toml_table(manifest_data.get("modelo"))
+                if modelo_table is None or "id" not in modelo_table:
                     raise RegistryLoadError(f"{manifest_path}: missing [modelo].id")
                 modelo_id = str(modelo_table["id"])
             except Exception as exc:

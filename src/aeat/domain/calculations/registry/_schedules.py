@@ -87,17 +87,9 @@ def profile_condition_matches(
     raise RegistryValidationError(f"profile condition uses unsupported op {condition.op!r}")
 
 
-def _mapping_get(m: Mapping, key: str) -> object:
-    """Access a Mapping with a string key using iteration to avoid Unknown key issues."""
-    for k, v in m.items():
-        if k == key:
-            return v
-    return None
-
-
 def _resolve_profile_fact(profile_facts: object, field: str) -> object:
     if isinstance(profile_facts, Mapping) and field in profile_facts:
-        return _mapping_get(profile_facts, field)
+        return next(v for k, v in profile_facts.items() if k == field)
     # Schema predicate path "iva.regime" maps to the TaxpayerProfile.iva_regime
     # attribute.  The dotted path form is what the TOML registry declares; the
     # attribute name is what the Python dataclass exposes without nesting.
@@ -108,13 +100,14 @@ def _resolve_profile_fact(profile_facts: object, field: str) -> object:
     # TaxpayerProfile.entity_type.  The "taxpayer." prefix is the namespace used
     # in the registry TOML; the attribute is a flat field on the profile object.
     if field == _TAXPAYER_ENTITY_TYPE_PATH and hasattr(profile_facts, "entity_type"):
-        return profile_facts.entity_type
+        _entity_attr = "entity_type"
+        return getattr(profile_facts, _entity_attr)
     current: object = profile_facts
     for part in field.split("."):
         if isinstance(current, Mapping):
             if part not in current:
                 raise RegistryValidationError(f"profile facts missing {field!r}")
-            current = _mapping_get(current, part)
+            current = next(v for k, v in current.items() if k == part)
             continue
         if not hasattr(current, part):
             raise RegistryValidationError(f"profile facts missing {field!r}")
