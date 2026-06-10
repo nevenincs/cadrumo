@@ -25,6 +25,8 @@ You MUST respect these rules at all times:
 @.agents/rules/aeat-swarm-orchestration.md
 @.agents/rules/aeat-user-docs-hardening.md
 @.agents/rules/aeat-vaultspec-centralisation.md
+@.agents/rules/calculation-source-canonical-mechanism.md
+@.agents/rules/carried-observations-stamp-their-revision.md
 @.agents/rules/composition-service-no-parallel-write-path.md
 @.agents/rules/core-struct-docstring-links.md
 @.agents/rules/fixture-provenance-declared-in-sidecar.md
@@ -33,10 +35,15 @@ You MUST respect these rules at all times:
 @.agents/rules/local-filed-observations-are-non-official-evidence.md
 @.agents/rules/modelo-export-mirrors-official-structure.md
 @.agents/rules/modelo-identifiers-use-core-enum.md
+@.agents/rules/no-dormant-source-resolvers.md
 @.agents/rules/no-legacy-compatibility.md
 @.agents/rules/no-silent-under-declaration.md
 @.agents/rules/no-tautological-calculation-tests.md
+@.agents/rules/one-aggregation-path-pull-equals-calculate.md
 @.agents/rules/registry-calculation-legal-grounding.md
+@.agents/rules/relation-slot-bindings-declare-relation-source.md
+@.agents/rules/revision-resolution-is-law-determined.md
+@.agents/rules/sensitive-financial-data-secure-storage-only.md
 @.agents/rules/service-imports-via-top-level-reexports.md
 @.agents/rules/tests-live-under-domain-tests-folders.md
 @.agents/rules/vaultspec-archive-discipline.builtin.md

@@ -25,6 +25,8 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-swarm-orchestration.md
 @.claude/rules/aeat-user-docs-hardening.md
 @.claude/rules/aeat-vaultspec-centralisation.md
+@.claude/rules/calculation-source-canonical-mechanism.md
+@.claude/rules/carried-observations-stamp-their-revision.md
 @.claude/rules/composition-service-no-parallel-write-path.md
 @.claude/rules/core-struct-docstring-links.md
 @.claude/rules/fixture-provenance-declared-in-sidecar.md
@@ -33,10 +35,15 @@ You MUST respect these rules at all times:
 @.claude/rules/local-filed-observations-are-non-official-evidence.md
 @.claude/rules/modelo-export-mirrors-official-structure.md
 @.claude/rules/modelo-identifiers-use-core-enum.md
+@.claude/rules/no-dormant-source-resolvers.md
 @.claude/rules/no-legacy-compatibility.md
 @.claude/rules/no-silent-under-declaration.md
 @.claude/rules/no-tautological-calculation-tests.md
+@.claude/rules/one-aggregation-path-pull-equals-calculate.md
 @.claude/rules/registry-calculation-legal-grounding.md
+@.claude/rules/relation-slot-bindings-declare-relation-source.md
+@.claude/rules/revision-resolution-is-law-determined.md
+@.claude/rules/sensitive-financial-data-secure-storage-only.md
 @.claude/rules/service-imports-via-top-level-reexports.md
 @.claude/rules/tests-live-under-domain-tests-folders.md
 @.claude/rules/vaultspec-archive-discipline.builtin.md

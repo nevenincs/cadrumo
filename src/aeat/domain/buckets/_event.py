@@ -72,6 +72,7 @@ class BucketEventType(StrEnum):
     MODELO_FILED_SUPERSEDED = "modelo.filed_superseded"
     MODELO_AMENDED = "modelo.amended"
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
+    MODELO_LIVE_EVIDENCE_STAMPED = "modelo.live_evidence.stamped"
     MODELO_RECONCILED = "modelo.reconciled"
     MODELO_EXPORTED = "modelo.exported"
     MODELO_IVA_WALLET_CORRECTED = "modelo.iva_wallet.corrected"

@@ -154,7 +154,7 @@ def _source_from_options(*, from_justificante: Path | None, from_declaration: Pa
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.reconcile.errors.missing_source",
-                default="Supply --from-justificante PATH or --from-declaration PATH.",
+                default="Supply --from-justificante PATH, --from-declaration PATH, or --from-capture SNAPSHOT_ID.",
             ),
         )
     if from_justificante is not None and from_declaration is not None:
@@ -300,6 +300,19 @@ def modelo_reconcile_verb(
             ),
         ),
     ] = None,
+    from_capture: Annotated[
+        str | None,
+        typer.Option(
+            "--from-capture",
+            help=tr(
+                "cli.app.modelo.reconcile.from_capture_help",
+                default=(
+                    "Snapshot id (or prefix) of a persisted live justificante capture to reconcile "
+                    "against. Local-only: reads the already-captured receipt, never contacts AEAT."
+                ),
+            ),
+        ),
+    ] = None,
     actor: Annotated[
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
@@ -308,10 +321,6 @@ def modelo_reconcile_verb(
     """Reconcile a modelo work unit against an external evidence source."""
     from ...application.modelo import ModeloReconciliationCommand, modelo_reconcile
 
-    source_kind, source_path = _source_from_options(
-        from_justificante=from_justificante,
-        from_declaration=from_declaration,
-    )
     resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
     _require_profile()
     unit = _resolve_work_unit(
@@ -321,6 +330,29 @@ def modelo_reconcile_verb(
         period=period,
         revision=revision,
         bucket_id=bucket_id,
+    )
+    if from_capture is not None:
+        if from_justificante is not None or from_declaration is not None:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.reconcile.errors.exclusive_capture_source",
+                    default="--from-capture is mutually exclusive with --from-justificante / --from-declaration.",
+                ),
+            )
+        from ...application.live import JustificanteCaptureSnapshotService, reconcile_capture
+
+        snapshot = JustificanteCaptureSnapshotService(bucket_id=unit.bucket_id).show(from_capture.strip())
+        report = reconcile_capture(
+            work_unit_id=unit.work_unit_id,
+            snapshot=snapshot,
+            actor=resolved_actor,
+        )
+        _render_reconciliation_report(ctx, report, command="modelo.reconcile")
+        return
+
+    source_kind, source_path = _source_from_options(
+        from_justificante=from_justificante,
+        from_declaration=from_declaration,
     )
     report = modelo_reconcile(
         ModeloReconciliationCommand(
