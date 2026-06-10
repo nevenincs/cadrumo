@@ -35,7 +35,10 @@ def _invoke(args: list[str]):
 
 
 def _console_env(tmp_path: Path) -> dict[str, str]:
-    base_settings = Settings(_env_file=None)
+    # _env_file is a pydantic-settings runtime kwarg (disables the project .env so
+    # the help-shape fixture starts from clean settings); the pydantic stubs do not
+    # surface it, so both checkers need a documented suppression here.
+    base_settings = Settings(_env_file=None)  # type: ignore[call-arg]  # ty: ignore[unknown-argument]
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     setting_env = str.upper
     env.update(
