@@ -122,8 +122,7 @@ adapters:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
       suggestions:
-        create_profile: Run `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>`
-          and then retry the Google command.
+        create_profile: 'Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` and then retry the Google command.'
   inbound:
     declaracion:
       errors:
@@ -1845,8 +1844,7 @@ cli:
       new_passphrase_prompt: 'New AEAT secret-store passphrase: '
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
-      no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
-        <DNI/NIE/NIF/CIF>' first.
+      no_active_profile: 'No active profile. Run ''aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>'' first.'
       unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile
         list'' to see the available keys.'
     get:
@@ -1970,7 +1968,7 @@ cli:
       submissions_dir_help: Directory to store submitted filing receipts
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: Spanish tax identifier (DNI/NIE/NIF/CIF)
+      tax_id_help: 'Spanish tax identifier (NIF/CIF/DNI/NIE)'
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
@@ -2023,8 +2021,7 @@ cli:
       logout_session_warning: Logout cleared the active-profile pointer. Subsequent
         verbs in this terminal will refuse with NoActiveBucketSessionError until you
         run aeat config unlock NAME or open a new terminal and re-select.
-      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
-        <DNI/NIE/NIF/CIF>` first.
+      no_active_profile: 'No active profile. Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` first.'
       preflight_filing_year_help: Four-digit filing year.
       preflight_help: Report which profile fields are missing for a given (modelo,
         revision, filing-year, period) filing context.
@@ -2068,7 +2065,7 @@ cli:
       integrity:
         objects_help: Check secure-object integrity.
         objects_namespace_help: Restrict secure-object integrity checks to one namespace.
-        registry_help: Check profile registry integrity.
+        registry_help: 'Check calculation registry integrity.'
       integrity_attribution_details_help: Include per-row safe metadata details
       integrity_attribution_help: Group undecryptable secure-object rows by safe metadata.
       integrity_help: Probe secure-object and registry integrity.
@@ -4072,7 +4069,7 @@ profile:
   keys:
     description: Profile configuration keys and their descriptions
     tax:
-      id: Tax identifier (DNI/NIE/NIF/CIF)
+      id: 'Tax identifier (NIF/CIF/DNI/NIE)'
 review:
   adapters:
     errors:
@@ -4180,9 +4177,7 @@ topic:
       in some cases, the prior year.
     title: IRPF advance payment
   profile:
-    body: The local profile carries your tax identifier (DNI/NIE/NIF/CIF), main activity,
-      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario).
-      Edit it with 'aeat config profile edit NAME'.
+    body: 'The local profile carries your tax identifier (NIF/CIF/DNI/NIE), main activity, IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario). Edit it with ''aeat config profile edit NAME''.'
     title: Taxpayer profile
   providers:
     body: Supported authentication providers; each has distinct prerequisites. 'aeat
@@ -4240,16 +4235,11 @@ wizard:
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
       is 5 digits (province code 01-52 followed by three digits).'
-    invalid_tax_id: 'Invalid DNI/NIE/NIF/CIF for %{prompt_key}: %{raw}. %{detail}'
+    invalid_tax_id: 'Invalid NIF/CIF/DNI/NIE for %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "The guided setup needs an interactive terminal, and this\
-      \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
-      \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
-      \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
-      2. Or create it in one step by supplying the required details as flags:\n  \
-      \   aeat config profile create NAME --quiet --tax-id DNI/NIE/NIF/CIF"
+    unsupported_console: "The guided setup needs an interactive terminal, and this run does not have one.\nNothing has been saved yet.\n\nYou can finish creating this profile in one of two ways:\n\n1. Run the command again from an interactive terminal to use the guided setup:\n     aeat config profile create NAME\n\n2. Or create it in one step by supplying the required details as flags:\n     aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
@@ -4427,7 +4417,7 @@ wizard:
       surnames:
         help: Surnames or company name for export headers
       tax-id:
-        help: Tax identifier (DNI/NIE/NIF/CIF) for the active profile
+        help: 'Tax identifier (NIF/CIF/DNI/NIE) for the active profile'
       tax-residence-ccaa:
         help: 'Tax-residence autonomous community. One of: %{choices}.'
       taxation-type:
@@ -4452,14 +4442,7 @@ wizard:
         help: Third-party transactions exceed Modelo 347 threshold
       uses-objective-estimation-irpf:
         help: Files IRPF under objective estimation
-    intro: 'Guided tax profile setup
-
-      This prepares the local profile the app uses for ledger work and tax-form checks.
-      Expect %{section_total} sections. Only %{required_total} answers are required
-      to start; the rest can be left blank when you do not know them yet. Have your
-      DNI/NIE/NIF/CIF, a short activity description, IVA/IRPF regime details, tax
-      residence, and family details if they apply. After saving, check progress with
-      `aeat config profile status`.'
+    intro: "Guided tax profile setup\nThis prepares the local profile the app uses for ledger work and tax-form checks. Expect %{section_total} sections. Only %{required_total} answers are required to start; the rest can be left blank when you do not know them yet. Have your NIF/CIF/DNI/NIE, a short activity description, IVA/IRPF regime details, tax residence, and family details if they apply. After saving, check progress with `aeat config profile status`."
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR
@@ -4563,7 +4546,7 @@ wizard:
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:
-        prompt: Tax identifier (DNI/NIE/NIF/CIF) for the active profile
+        prompt: 'Tax identifier (NIF/CIF/DNI/NIE) for the active profile'
       taxation-type:
         choices:
           individual:

@@ -130,8 +130,7 @@ adapters:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
       suggestions:
-        create_profile: Ejecuta `aeat config profile create NAME --tax-id <DNI/NIE/NIF/CIF>`
-          y vuelve a intentar el comando de Google.
+        create_profile: 'Ejecuta `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` y vuelve a intentar el comando de Google.'
   inbound:
     declaracion:
       errors:
@@ -1981,8 +1980,7 @@ cli:
       new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
-        NAME --tax-id <DNI/NIE/NIF/CIF>' primero.
+      no_active_profile: 'No hay un perfil activo. Ejecuta ''aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>'' primero.'
       unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
         profile list'' para ver las claves disponibles.'
     get:
@@ -2117,7 +2115,7 @@ cli:
       submissions_dir_help: Directory to store submitted filing receipts
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: Identificador fiscal español (DNI/NIE/NIF/CIF)
+      tax_id_help: 'Identificador fiscal español (NIF/CIF/DNI/NIE)'
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Listar todos los perfiles registrados y marcar el activo
@@ -2173,8 +2171,7 @@ cli:
         Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError
         hasta que ejecutes aeat config unlock NAME o abras un nuevo terminal y vuelvas
         a seleccionar.
-      no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
-        NAME --tax-id <DNI/NIE/NIF/CIF>` primero.
+      no_active_profile: 'No hay un perfil activo. Ejecuta `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>` primero.'
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
       preflight_help: Informa qué campos del perfil faltan para un contexto de presentación
         (modelo, revisión, ejercicio, periodo).
@@ -2219,7 +2216,7 @@ cli:
         objects_help: Comprueba la integridad de los objetos seguros.
         objects_namespace_help: Limita las comprobaciones de integridad de objetos
           seguros a un espacio de nombres.
-        registry_help: Comprueba la integridad del registro de perfiles.
+        registry_help: 'Comprueba la integridad del registro de cálculo.'
       integrity_attribution_details_help: Incluir detalles de metadatos seguros por
         fila
       integrity_attribution_help: Agrupa las filas de objetos seguros no descifrables
@@ -4355,7 +4352,7 @@ profile:
   keys:
     description: Profile configuration keys and their descriptions
     tax:
-      id: Identificador fiscal (DNI/NIE/NIF/CIF)
+      id: 'Identificador fiscal (NIF/CIF/DNI/NIE)'
 review:
   adapters:
     errors:
@@ -4466,9 +4463,7 @@ topic:
       los datos del trimestre y, para algunos casos, los del ejercicio anterior.
     title: Pago fraccionado IRPF
   profile:
-    body: El perfil local contiene tu identificador fiscal (DNI/NIE/NIF/CIF), actividad
-      principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat config profile edit NAME'.
+    body: 'El perfil local contiene tu identificador fiscal (NIF/CIF/DNI/NIE), actividad principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario). Edítalo con ''aeat config profile edit NAME''.'
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
@@ -4527,16 +4522,11 @@ wizard:
     invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
     invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
       postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
-    invalid_tax_id: 'DNI/NIE/NIF/CIF no válido para %{prompt_key}: %{raw}. %{detail}'
+    invalid_tax_id: 'NIF/CIF/DNI/NIE no válido para %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
-    unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
-      \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
-      \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
-      \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
-      \ profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios\
-      \ como flags:\n     aeat config profile create NAME --quiet --tax-id DNI/NIE/NIF/CIF"
+    unsupported_console: "El asistente guiado necesita una terminal interactiva, y esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde una terminal interactiva para usar el asistente guiado:\n     aeat config profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios como flags:\n     aeat config profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE"
     unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
       Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
       \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
@@ -4719,7 +4709,7 @@ wizard:
       surnames:
         help: Apellidos o razón social para cabeceras de exportación
       tax-id:
-        help: Identificador fiscal (DNI/NIE/NIF/CIF) del perfil activo
+        help: 'Identificador fiscal (NIF/CIF/DNI/NIE) del perfil activo'
       tax-residence-ccaa:
         help: 'Comunidad autónoma de residencia fiscal. Una de: %{choices}.'
       taxation-type:
@@ -4745,19 +4735,7 @@ wizard:
         help: Operaciones con terceros superan el umbral del Modelo 347
       uses-objective-estimation-irpf:
         help: Tributa IRPF en estimación objetiva
-    intro: 'Configuración guiada del perfil tributario
-
-
-      Esto prepara el perfil local que la app usa para los libros registro y las comprobaciones
-      de modelos.
-
-      Hay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias
-      para empezar; puedes dejar en blanco lo que todavía no sepas.
-
-      Ten a mano tu DNI/NIE/NIF/CIF, una descripción breve de la actividad, régimen
-      de IVA/IRPF, residencia fiscal y datos familiares si aplican.
-
-      Después de guardar, revisa el progreso con `aeat config profile status`.'
+    intro: "Configuración guiada del perfil tributario\n\nEsto prepara el perfil local que la app usa para los libros registro y las comprobaciones de modelos.\nHay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias para empezar; puedes dejar en blanco lo que todavía no sepas.\nTen a mano tu NIF/CIF/DNI/NIE, una descripción breve de la actividad, régimen de IVA/IRPF, residencia fiscal y datos familiares si aplican.\nDespués de guardar, revisa el progreso con `aeat config profile status`."
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
@@ -4860,7 +4838,7 @@ wizard:
       surnames:
         prompt: Apellidos o razón social para cabeceras de exportación
       tax-id:
-        prompt: Identificador fiscal (DNI/NIE/NIF/CIF) para declaraciones
+        prompt: 'Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones'
       taxation-type:
         choices:
           individual:

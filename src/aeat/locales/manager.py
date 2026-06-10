@@ -285,8 +285,25 @@ def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: Locale
     curr[parts[-1]] = value
 
 
-def _yaml_single_quoted(value: str) -> str:
-    """Render a scalar as a YAML single-quoted string."""
+def _yaml_quoted_scalar(value: str) -> str:
+    """Render a scalar as a single-physical-line YAML quoted string.
+
+    Single-quoted style cannot carry a literal line break on one physical
+    line (the parser folds raw breaks into spaces), so values containing
+    control characters are rendered double-quoted with escape sequences.
+    Either form occupies exactly one line, which the line-based leaf
+    writers (:func:`_replace_existing_yaml_leaf`, :func:`_append_yaml_leaf`)
+    rely on.
+    """
+    if any(ch in value for ch in ("\n", "\r", "\t")):
+        escaped = (
+            value.replace("\\", "\\\\")
+            .replace('"', '\\"')
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+        )
+        return '"' + escaped + '"'
     escaped = value.replace("'", "''")
     return "'" + escaped + "'"
 
@@ -331,7 +348,7 @@ def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> Non
         if current_parts == parts:
             line = lines[index]
             newline = "\r\n" if line.endswith("\r\n") else "\n"
-            replacement = match.group("indent") + key + ": " + _yaml_single_quoted(value) + newline
+            replacement = match.group("indent") + key + ": " + _yaml_quoted_scalar(value) + newline
             lines[index : _yaml_leaf_end(lines, index, indent)] = [replacement]
             path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
@@ -356,7 +373,7 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
             newline = _preferred_newline(lines, index)
             lines.insert(
                 insertion_index,
-                " " * (indent + 2) + leaf + ": " + _yaml_single_quoted(value) + newline,
+                " " * (indent + 2) + leaf + ": " + _yaml_quoted_scalar(value) + newline,
             )
             path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
