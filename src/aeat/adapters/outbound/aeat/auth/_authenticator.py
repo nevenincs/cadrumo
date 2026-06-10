@@ -612,7 +612,7 @@ class AeatAuthenticator:
         # directly. The authenticator passes the settings-resolved
         # secret straight through; the OpenSSL-binding env channel is
         # gone, so the secret never enters os.environ.
-        unexpected_health_failure = False
+        _deferred_error: AuthValidationError | None = None
         try:
             backend = self._settings.aeat_certificate_backend
             health = self._certificate_health_check(
@@ -665,16 +665,18 @@ class AeatAuthenticator:
                 health_summary=tr("application.auth.certificate.health.unavailable"),
             )
         except Exception as exc:
-            unexpected_health_failure = True
             log.debug(
                 "AeatAuthenticator.describe: unexpected error surfacing unavailable status failure=%s",
                 type(exc).__name__,
             )
-        if unexpected_health_failure:
-            raise AuthValidationError(
+            _deferred_error = AuthValidationError(
                 "certificate health is unavailable",
                 translated_message="application.auth.certificate.health.unavailable",
             )
+        # Raise outside the except block so __context__ stays None —
+        # the sensitive original exception must not leak through the chain.
+        if _deferred_error is not None:
+            raise _deferred_error
 
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.

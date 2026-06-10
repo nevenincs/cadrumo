@@ -366,6 +366,7 @@ def resolve_modelo_work_unit(
             tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches)
         )
 
+    assert len(matches) == 1
     work_unit = matches[0]
     if request.revision_id is not None and request.revision_id != work_unit.revision_id:
         raise ModeloWorkRevisionConflictError(

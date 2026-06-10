@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Iterator, Sequence
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Literal, Protocol, runtime_checkable
@@ -205,7 +205,7 @@ def _build_repair_integrity_report(
 
 
 @contextmanager
-def active_bucket_repair_session() -> Iterator[None]:
+def active_bucket_repair_session() -> Generator[None]:
     """Open the active bucket session so integrity probes test decryptability, not bootstrap state."""
     provider: object | None = None
     try:
