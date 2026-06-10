@@ -35,6 +35,23 @@ maps the bridge, verifies which providers and CLIs can actually read documents,
 and surfaces the architectural fork against the accepted OCR-extraction
 discipline.
 
+> **CORRECTION 2026-06-10 (operator ruling).** An early version of this research
+> framed the bridge around feeding evidence to cloud models (the `claude`/`codex`/
+> `agy` CLI agents reading a file path, and HTTP providers receiving base64), and
+> treated where the bytes go as a tunable "privacy boundary." That is wrong and is
+> superseded. The binding invariant is absolute: all sensitive financial evidence
+> persists only in the encrypted secure-storage backend (active profile bucket via
+> the runtime wrapper) and is never persisted outside it (no temp files). The
+> operator ruled evidence reading must run **on-host by default and for all serious
+> use** (in-tree text-layer + a local vision model); cloud reading is only ever a
+> narrow, explicitly-consented, default-off exception (in-memory HTTP only, never the
+> file-writing CLI-agent route, never for gestors). The provider-capability facts in
+> F3 remain true as facts, but every conclusion that assumed off-host transmission —
+> the "CLI-agent file-path is the lowest-friction bridge" framing, F6's
+> decryption-boundary framing, and F8's Option-A fork resolution — is corrected by
+> this banner and by the revised "recommended path" below. See the accepted ADR for
+> the final decision.
+
 ## Findings
 
 ### F1 — Both halves are mature; the bridge between them does not exist
@@ -193,14 +210,19 @@ understanding).
   and cite the `evidence_id`/`attachment_id` it consulted, so a later audit can
   answer "why is this casilla this value" from the bundled evidence — consistent
   with the ledger-derived-revisions-bundle-evidence discipline.
-- **Decryption boundary.** Evidence bytes live encrypted at `FINANCIAL`
-  sensitivity. Feeding them to a provider (or writing a temp file for a CLI agent
-  to read) crosses a confidentiality boundary to an external service. This is an
-  explicit privacy decision the ADR must make: which providers are permitted to
-  receive decrypted financial evidence, whether the `LOCAL` provider is the only
-  one allowed for unredacted documents, and how the decrypted-temp-file lifecycle
-  for the CLI route is bounded. The OCR ADR's `real_operator_invoice_sanitised`
-  PII-sanitisation obligation is a direct precedent.
+- **Secure-storage boundary (CORRECTED per the 2026-06-10 ruling).** Evidence bytes
+  live in the encrypted secure-storage backend and MUST stay there: decrypted bytes
+  exist only transiently in process memory and are never persisted outside secure
+  storage (no temp files). The original framing here — "feed to a provider / write a
+  temp file for a CLI agent / decide which providers may receive decrypted evidence"
+  — is withdrawn. The reader is on-host by default (in-tree text-layer + a local
+  vision model fed in-memory base64; the `LocalAdapter` Ollama path extended with the
+  `images` field); a cloud read is only a consent-gated, default-off, gestor-barred,
+  in-memory-HTTP-only exception. A precondition surfaced by this correction: the
+  existing `PurchaseInvoiceEvidence.source_path` points at a cleartext file on
+  operator disk rather than storing bytes in secure storage — invoice bytes must be
+  read from secure storage (the `Attachment` store's `read_bytes` or an equivalent
+  secure-object read), not from a disk path.
 
 ### F7 — The hard constraint: evidence must not let the LLM emit regulated numbers
 
@@ -261,73 +283,71 @@ mitigations are already in the architecture:
    cross-check advisory. Do not let the verified reading capability erode this —
    capability and permission are orthogonal.
 
-**Conclusion on the fork (F4):** the verified capability resolves the fork toward
-**Option A** — lean on the LLM multimodal read as the evidence-extraction engine
-rather than building/standing up a separate deterministic OCR engine. The
-accepted OCR-discipline ADR's machinery does not vanish; it *re-targets*: its
-confidence-surfacing and provenance obligations apply to the LLM read (a
-low-confidence or refused read must surface to the operator, never silently
-persist), and its corpus discipline (assert behaviour, never exact OCR strings)
-fits an LLM read even better than a deterministic engine. The practical caveats
-(downsample huge scans to keep small-font text legible; place the document before
-the prompt; reject sub-200px crops) become prompt/preprocessing best-practices,
-not a reason to defer to OCR. The text-layer route (F5) is retained only as a
-cheap fast-path/fallback for clean text-native PDFs and for the text-only `LOCAL`
-provider — not as a separate gated stage.
+**Conclusion on the fork (F4), CORRECTED per the ruling:** the verified capability
+means we do not need a separate deterministic OCR engine — an LLM read suffices —
+but "lean on the LLM" is realised **on-host**, not on cloud providers. The reader is
+the in-tree `pdfplumber` text-layer plus an on-host/local vision model (Ollama at
+localhost, in-memory base64 images), fed bytes read from secure storage into memory.
+A cloud read is only a consent-gated, default-off, gestor-barred, in-memory-HTTP
+exception. The accepted OCR-discipline ADR's machinery still *re-targets* onto the
+read (confidence-surfacing → low-confidence/refused read surfaces to the operator;
+provenance → `llm:<model>` + cited evidence; corpus discipline → assert behaviour,
+not exact strings). The practical vision caveats (downsample huge scans, place the
+document before the prompt, reject sub-200px crops) become on-host
+prompt/preprocessing best-practices.
 
-## Open decisions for the ADR
+## Open decisions for the ADR (RESOLVED 2026-06-10)
 
-1. **Extraction-technology fork (F4/F8) — leaning Option A (operator steer
-   2026-06-10).** Verified LLM document-reading capability resolves the fork
-   toward leaning fully on the LLM multimodal read as the evidence engine rather
-   than standing up a separate deterministic OCR engine. The ADR ratifies this and
-   records how the accepted OCR-discipline ADR re-targets onto the LLM read
-   (confidence-surfacing + provenance obligations retained; corpus discipline
-   asserts behaviour not exact strings) rather than being superseded.
-2. **Bridge shape per surface (F3):** HTTP SDK content-blocks for
-   `ANTHROPIC`/`OPENAI`/`GEMINI` vs decrypted-file-path for the `claude`/`agy`/
-   `codex` CLI agents — one unified abstraction over two transports.
-3. **Splitting scope (F2) — IN SCOPE for Stage-3 (operator steer 2026-06-10).**
-   Stage-3 includes evidence-driven N-way splitting: a new response schema (list
-   of proposed children with amount + category + iva_category + per-child evidence
-   citation) and an application path driving `split_transaction` from a reviewed
-   suggestion.
-4. **Text-layer fast-path (F5/F8):** is the `pdfplumber` text layer retained as a
-   cheap fast-path for clean text-native PDFs and the only path for the text-only
-   `LOCAL` provider, with multimodal as the primary engine? (Recommended yes.)
-5. **Privacy boundary (F6):** which providers may receive decrypted financial
-   evidence; is `LOCAL` the only unredacted path; decrypted-temp-file lifecycle for
-   the CLI agents? This is the principal new safety decision the ADR must make.
-6. **Cache-key extension (F6):** fold `Attachment.sha256` into the LLM cache key
-   for multimodal inputs.
-7. **Cross-check vs authority (F7/F8):** confirm evidence-printed IVA numbers are
-   an advisory cross-check only, never the persisted value — verified reading
-   capability does not relax this legal guardrail.
+1. **Extraction technology — LLM read, on-host (resolved).** No separate OCR engine;
+   the reader is on-host (text-layer + local vision). Cloud is a consent-gated
+   exception, not the default. (Supersedes the earlier "Option A / lean on cloud
+   LLMs" framing.)
+2. **Bridge shape (resolved).** On-host: text-layer over in-memory bytes, plus the
+   `LocalAdapter` extended with the Ollama `images` field for a local vision model;
+   on-host PDF rasterisation for scanned pages. The file-writing CLI-agent route is
+   excluded (it persists a file off secure storage). Cloud, if consented, is
+   in-memory HTTP base64 only.
+3. **Splitting scope — IN SCOPE for Stage-3 (resolved).** Evidence-driven N-way
+   splitting: a new response schema (children with amount + category + iva_category +
+   per-child evidence citation) and an application path driving `split_transaction`
+   from a reviewed suggestion.
+4. **Text-layer fast-path (resolved yes).** Retained as the cheapest on-host path for
+   clean text-native PDFs and the path for the `LOCAL` provider; on-host vision
+   handles scanned/image evidence.
+5. **Secure-storage + consent (resolved).** Evidence bytes persist only in secure
+   storage; decrypted bytes are transient in memory, never a temp file. Cloud upload
+   requires an explicit per-invocation consent gate (default-off, gestor-barred,
+   recorded). `PurchaseInvoiceEvidence.source_path` must be replaced by an in-store
+   byte read.
+6. **Cache-key extension (resolved).** Fold `Attachment.sha256` into the LLM cache
+   key for evidence-derived inputs.
+7. **Cross-check vs authority (resolved).** Evidence-printed IVA numbers are an
+   advisory cross-check only, never the persisted value.
 
 ## Recommended staged path (for the plan, post-ADR)
 
-Per the operator steer (2026-06-10): lean on the LLM multimodal read as the
-primary engine, and include splitting in Stage-3.
+Per the operator ruling (2026-06-10): on-host reader by default; splitting in
+Stage-3; cloud only behind a consent gate.
 
-- **Stage-3a — multimodal evidence reading (primary).** Add a typed multimodal
-  content path to `LLMRequest`/the provider adapters for
-  `ANTHROPIC`/`GEMINI`/`OPENAI`, and the decrypted-file-path route for the
-  `claude`/`agy`/`codex` CLI agents; extend the LLM cache key with the evidence
-  content hash. Feed the attached invoice/receipt/image/email directly into the
-  suggest/saturate prompts so the model reads the document to select category +
-  iva_category. Add the printed-vs-derived IVA cross-check advisory. Surface a
-  low-confidence or refused read to the operator rather than persisting silently.
-  The `pdfplumber` text layer (F5) is retained as a cheap fast-path for clean
-  text-native PDFs and as the only path for the text-only `LOCAL` provider.
-- **Stage-3b — evidence-driven N-way splitting.** New response schema (list of
-  proposed children, each with amount + category + iva_category + per-child
-  evidence citation) and an application path that drives `split_transaction` from
-  a reviewed suggestion, preserving the suggest → review → apply/reject contract
-  and stamping evidence provenance on each child. The model reads one invoice with
-  multiple line items and proposes the child breakdown; the operator reviews and
-  applies; child euro figures remain registry-derived per F7.
+- **Stage-3a — on-host text-layer reading (primary, cheapest, lands first).** Read
+  evidence bytes from secure storage into memory; run the in-tree `pdfplumber`
+  text-layer over them; inject the extracted text into the suggest/saturate prompts
+  so any on-host (or, if consented, cloud) model selects category + iva_category.
+  Add the printed-vs-derived IVA cross-check advisory; surface a low-confidence read;
+  stamp `llm:<model>` + cited evidence provenance. Fold `Attachment.sha256` into the
+  cache key.
+- **Stage-3b — on-host vision reading (scanned/image evidence).** Rasterise PDF pages
+  on-host and hand in-memory base64 images to a local vision model via the
+  `LocalAdapter` `images` field; covers receipts/scans the text-layer cannot.
+- **Stage-3c — evidence-driven N-way splitting.** New response schema (children with
+  amount + category + iva_category + per-child evidence citation) and an application
+  path driving `split_transaction` from a reviewed suggestion; child euro figures
+  registry-derived; per-child evidence provenance.
+- **Cross-cutting — consent gate for cloud reads.** A default-off, per-invocation,
+  gestor-barred consent acknowledgement guards any cloud transport (in-memory HTTP
+  only); recorded in provenance.
 
-Throughout, the Stage-1/2 operator contract (suggest previews, `--apply`
-persists, manual flags override and re-stamp provenance, reject = do-not-apply),
-the human-in-the-loop precision safeguard (F8), and the
+Throughout, the Stage-1/2 operator contract (suggest previews, `--apply` persists,
+manual flags override and re-stamp provenance, reject = do-not-apply), the
+human-in-the-loop precision safeguard (F8), the secure-storage invariant, and the
 `llm-selects-system-derives` constraint (F7) are preserved unchanged.
