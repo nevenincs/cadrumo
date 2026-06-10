@@ -6,13 +6,14 @@ from collections.abc import Callable
 
 import typer
 
+from ....application.workflow import ProfileBucketPointer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
-_resolve_active_profile_pointer: Callable[[], object | None] | None = None
+_resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None] | None = None
 _mounted_auth_app_ids: set[int] = set()
 _scopes_registered = False
 
@@ -31,7 +32,7 @@ scopes_app = typer.Typer(
 def register_apoderado_commands(
     auth_app: typer.Typer,
     *,
-    resolve_active_profile_pointer: Callable[[], object | None],
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
 ) -> None:
     """Mount apoderado commands on the config auth app."""
     global _scopes_registered
@@ -48,7 +49,7 @@ def register_apoderado_commands(
     _mounted_auth_app_ids.add(auth_app_id)
 
 
-def _active_profile_pointer() -> object:
+def _active_profile_pointer() -> ProfileBucketPointer:
     if _resolve_active_profile_pointer is None:
         raise RuntimeError("apoderado commands were not registered")
     pointer = _resolve_active_profile_pointer()
