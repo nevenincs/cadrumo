@@ -814,13 +814,20 @@ def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> No
     assert envelope.message
 
 
-def _assert_validation_error_caused_by_diagnostic_model_error(exc_info: pytest.ExceptionInfo, match: str) -> None:
+def _assert_validation_error_caused_by_diagnostic_model_error(
+    exc_info: pytest.ExceptionInfo[Exception], match: str
+) -> None:
     """Assert a pydantic ValidationError wraps a DiagnosticModelError with the given message."""
 
     from .._errors import DiagnosticModelError
 
     val_err = exc_info.value
-    causes = [e["ctx"]["error"] for e in val_err.errors() if "error" in e.get("ctx", {})]
+    assert isinstance(val_err, ValidationError)
+    causes: list[object] = []
+    for e in val_err.errors():
+        ctx = e.get("ctx")
+        if isinstance(ctx, dict) and "error" in ctx:
+            causes.append(ctx["error"])
     matching = [c for c in causes if isinstance(c, DiagnosticModelError) and match in str(c)]
     assert matching, f"Expected a DiagnosticModelError cause matching {match!r}; got causes: {causes!r}"
 

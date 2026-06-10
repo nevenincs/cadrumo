@@ -47,7 +47,7 @@ _RELATION_VALUES_2024 = {
 }
 
 
-def _base_binding_values(*, m111: Decimal = Decimal("0"), m123: Decimal = Decimal("0")) -> dict:
+def _base_binding_values(*, m111: Decimal = Decimal("0"), m123: Decimal = Decimal("0")) -> dict[str, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": m111,

@@ -53,7 +53,7 @@ def _tx(
         ),
         raw_fields={"k": "v"},
     )
-    payload: dict = {
+    payload: dict[str, object] = {
         "raw": raw,
         "direction": TransactionDirection.OUTGOING,
         "business_classification": BusinessClassification.BUSINESS,

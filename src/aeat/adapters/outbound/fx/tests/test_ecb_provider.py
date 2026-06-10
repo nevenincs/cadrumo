@@ -27,6 +27,7 @@ def test_get_eur_rate_inverts_ecb_eur_base_quote(provider: EcbReferenceRateProvi
     assert provider.get_eur_rate("USD", date(2026, 1, 2)) == Decimal("1") / Decimal("1.1700")
     # 1 EUR = 0.8600 GBP -> GBP->EUR = 1/0.8600 (>1, since GBP is stronger).
     rate = provider.get_eur_rate("GBP", date(2026, 1, 2))
+    assert rate is not None
     assert rate == Decimal("1") / Decimal("0.8600")
     assert rate > Decimal("1")
 
