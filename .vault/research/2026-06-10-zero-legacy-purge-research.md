@@ -342,3 +342,46 @@ KEEP — an AEAT code AEAT retired is regulatory history, not our code's legacy.
    so it becomes literally true.
 4. JUDGMENT 1/2/3 only after explicit owner answers; JUDGMENT 2 is a
    key-management boundary and must not be deleted on inference.
+
+---
+
+## Owner rulings (2026-06-10)
+
+The owner adjudicated every open item:
+
+- **Slices 1 + 2 (secure-object key migration + revision-metadata ALTER):
+  DELETE NOW (full purge).** Confirmed even though it supersedes the
+  just-landed `ensure_deterministic_object_keys` refactor and roundtrip harness
+  (`f42ad2622`, `2213be104`, `ea3d972d7`) — the whole module, its bootstrap call
+  site, the ALTER pass, and the migration test/harness are deleted. Keep
+  fresh-schema CREATE and the quarantine table (live repair verb). After
+  landing, make `sql/__init__.py`'s "forward-only ... no migration history"
+  docstring literally true. This also clears the pre-existing
+  `test_hardening_convention_guards::test_explicit_database_route_test_setup_stays_approved`
+  red, which flags the migration test file.
+- **Slices 3 + 4: DONE.** Slice 4 (iva-wallet cleartext-key bridge) landed
+  `c3118ec50`; Slice 3 (attachment pre-envelope tolerance → refusal) landed
+  `4c3649511`.
+- **Slice 5 (profile-binding string coercion): DELETE**, after an agent
+  confirms via `rg` over binding-resolution call sites + a test run that no live
+  caller passes a numeric STRING for a Decimal-channel binding; if one exists,
+  fix the caller to pass a typed value in the same slice.
+- **JUDGMENT 2 (`BucketKeySchedule.LEGACY_MASTER_KEY`): DELETE.** Owner
+  directive verbatim: "no legacy. we'll lose data, but i do not care at all."
+  Delete the enum member, change the default `key_schedule` to `BUCKET_DEK_V1`,
+  remove the `LEGACY_MASTER_KEY` data-path branch and the
+  `_master_key_bucket_dek.py` "legacy manifest without status" direct-parse
+  fallback, and the backing tests. Data minted under the old schedule becomes
+  unreadable; on a pre-beta app that is accepted.
+- **JUDGMENT 1 (retired CLI command-root redirects): NOT ACTIONABLE — struck.**
+  Owner: the list is "completely wrong" and "actively contradicts recent audit
+  findings." `RETIRED_OPERATOR_SURFACES` is a current operator-UX surface backed
+  by recent audit work, NOT legacy. Do not touch it. This inventory item was a
+  classification error.
+- **JUDGMENT 3 (`Modelo.M037` retired AEAT codes): KEEP — struck as a category
+  error.** Owner: the inventory conflated "AEAT (the Spanish tax authority)
+  retired a modelo as a matter of policy" with "our code carries legacy
+  support." They are orthogonal. M037 is a REAL modelo the application actively
+  SUPPORTS (no longer in general use, but supported); supporting it is a current
+  product feature, not backwards-compatibility for our own old data. AEAT
+  regulatory status is never evidence of code legacy.
