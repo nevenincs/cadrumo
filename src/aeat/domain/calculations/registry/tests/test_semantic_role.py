@@ -33,6 +33,12 @@ from .._schema import (
     PeriodSelector,
 )
 from .._validate_registry_scope import validate_registry_scope
+from .._validate_semantic_role_typos import (
+    _build_semantic_role_typo_index,
+    _candidate_is_typo_twin,
+    _scan_length_buckets_for_typo_twin,
+    _SemanticRoleTypoIndex,
+)
 from .._validate_semantic_roles import (
     _emit_semantic_role_typo_twin_warnings,
     _validate_semantic_role_cardinality,
@@ -538,6 +544,60 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
+
+
+class TestSemanticRoleTypoTwinHelpers:
+    """Direct coverage of the extracted near-match scan helpers.
+
+    The end-to-end warning surface above exercises these through
+    ``_emit_semantic_role_typo_twin_warnings``; these tests pin the filter-chain
+    contract at the helper boundary so the cheap-to-expensive ordering and the
+    sibling exemptions cannot silently regress.
+    """
+
+    @staticmethod
+    def _index(*known_roles: str) -> _SemanticRoleTypoIndex:
+        return _build_semantic_role_typo_index(known_roles)
+
+    def test_identity_candidate_is_not_a_typo_twin(self) -> None:
+        role = "taxpayer_nif"
+        index = self._index(role)
+        assert (
+            _candidate_is_typo_twin(role, set(role), len(role), role, len(role), 1, index)
+            is False
+        )
+
+    def test_single_char_substitution_is_a_typo_twin(self) -> None:
+        # taxpayer_niff vs taxpayer_nif: a near-duplicate that is not a sibling.
+        role = "taxpayer_niff"
+        known = "taxpayer_nif"
+        index = self._index(known)
+        max_diff = int(0.08 * (len(role) + len(known)))
+        assert (
+            _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index)
+            is True
+        )
+
+    def test_axis_sibling_candidate_is_exempt(self) -> None:
+        # ascendiente vs descendiente share a relationship axis -> not a typo twin.
+        role = "irpf_ascendiente_fecha_nacimiento"
+        known = "irpf_descendiente_fecha_nacimiento"
+        index = self._index(known)
+        max_diff = int(0.08 * (len(role) + len(known)))
+        # The two differ by more than the fast-check budget, so they never reach
+        # the sibling exemption: the fast prefix/suffix filter rejects first.
+        assert (
+            _candidate_is_typo_twin(role, set(role), len(role), known, len(known), max_diff, index)
+            is False
+        )
+
+    def test_scan_finds_near_duplicate_across_length_buckets(self) -> None:
+        index = self._index("taxpayer_nif", "unrelated_role_value")
+        assert _scan_length_buckets_for_typo_twin("taxpayer_niff", index) is True
+
+    def test_scan_returns_false_when_no_near_duplicate(self) -> None:
+        index = self._index("taxpayer_nif", "counterparty_amount")
+        assert _scan_length_buckets_for_typo_twin("completely_distinct_role", index) is False
 
 
 class TestSignedCuotaResultadoRoles:

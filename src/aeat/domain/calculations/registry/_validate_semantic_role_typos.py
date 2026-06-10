@@ -115,6 +115,11 @@ def _semantic_role_looks_like_typo(role: str, index: _SemanticRoleTypoIndex) -> 
             continue
         return True
 
+    return _scan_length_buckets_for_typo_twin(role, index)
+
+
+def _scan_length_buckets_for_typo_twin(role: str, index: _SemanticRoleTypoIndex) -> bool:
+    """Scan the length-bucketed known roles for a near-duplicate non-sibling twin."""
     role_length = len(role)
     role_set = set(role)
     for known_length in index.lengths:
@@ -122,30 +127,46 @@ def _semantic_role_looks_like_typo(role: str, index: _SemanticRoleTypoIndex) -> 
             continue
         max_diff = int(0.08 * (role_length + known_length))
         for known in index.by_length[known_length]:
-            if known == role:
-                continue
-
-            # Run the fast O(N) prefix/suffix check first
-            if not _fast_similarity_check(role, known, max_diff):
-                continue
-
-            # Unique character set check as a secondary filter
-            known_set = index.sets[known]
-            max_edits = 0.08 * (role_length + known_length)
-            if len(role_set & known_set) < max(len(role_set), len(known_set)) - max_edits:
-                continue
-
-            if _get_ratio(role, known) < _SEMANTIC_ROLE_TYPO_RATIO:
-                continue
-
-            # Only run sibling checks on potential typo matches!
-            if semantic_roles_are_tax_domain_siblings(role, known):
-                continue
-            if semantic_roles_are_axis_siblings(role, known):
-                continue
-
-            return True
+            if _candidate_is_typo_twin(role, role_set, role_length, known, known_length, max_diff, index):
+                return True
     return False
+
+
+def _candidate_is_typo_twin(
+    role: str,
+    role_set: set[str],
+    role_length: int,
+    known: str,
+    known_length: int,
+    max_diff: int,
+    index: _SemanticRoleTypoIndex,
+) -> bool:
+    """Return whether ``known`` is a near-duplicate typo twin of ``role``.
+
+    Applies, in order, the cheap-to-expensive filter chain: identity skip, the
+    fast O(N) prefix/suffix check, the unique-character-set filter, the
+    SequenceMatcher ratio, then the tax-domain and axis sibling exemptions.
+    """
+    if known == role:
+        return False
+
+    # Run the fast O(N) prefix/suffix check first
+    if not _fast_similarity_check(role, known, max_diff):
+        return False
+
+    # Unique character set check as a secondary filter
+    known_set = index.sets[known]
+    max_edits = 0.08 * (role_length + known_length)
+    if len(role_set & known_set) < max(len(role_set), len(known_set)) - max_edits:
+        return False
+
+    if _get_ratio(role, known) < _SEMANTIC_ROLE_TYPO_RATIO:
+        return False
+
+    # Only run sibling checks on potential typo matches!
+    if semantic_roles_are_tax_domain_siblings(role, known):
+        return False
+    return not semantic_roles_are_axis_siblings(role, known)
 
 
 def _max_sequence_match_ratio(left_length: int, right_length: int) -> float:
