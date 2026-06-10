@@ -32,12 +32,12 @@ class _ExecutableRequest(Protocol):
     """Structural type for google-api-python-client request objects.
 
     ``google-api-python-client-stubs`` types the concrete ``HttpRequest``
-    class. Keeping this as a variadic structural protocol avoids binding the
-    adapter to that concrete stub while still allowing ``execute_request`` to
-    pass the Google client's supported ``num_retries`` keyword.
+    class. This protocol matches the signature of the google-api-python-client
+    request's ``execute()`` method, which accepts optional ``http`` and
+    ``num_retries`` parameters for retry handling.
     """
 
-    def execute(self, *_args: object, **_kwargs: object) -> Any: ...
+    def execute(self, http: object = ..., num_retries: int = ...) -> GoogleApiResponseBody: ...
 
 
 # The google-api-python-client wire protocol returns JSON-decoded dicts whose
