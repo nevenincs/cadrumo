@@ -393,7 +393,13 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
 
     Checks that for every deferred kind that appears in some revision's bindings,
     a live calculate on a work unit for that revision surfaces the advisory.
-    We use M184 (atribucion_member) and M720 (foreign_asset) as representatives.
+    We use M184 (atribucion_member) and M720 (foreign_asset) as representatives:
+    both have no formula relations, so a fresh-bucket calculate does not crash on a
+    missing relation operand and the S08 advisory path is isolated cleanly.  The
+    withholding deferred kind (M190/M193) is asserted separately in
+    test_s27_withholding_deferred_advisory_fires (those revisions DO carry relation
+    operands that raise on an empty bucket — a W04 cross-period concern, not the
+    advisory contract under test here).
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
@@ -430,6 +436,49 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
         f"'{deferred_kind}' on M{modelo} but got none. "
         f"source_diagnostics: {result.source_diagnostics}"
     )
+
+
+def test_s27_withholding_deferred_advisory_fires() -> None:
+    """S27: M190 'withholding' per-perceptor bindings surface the unhandled-source advisory.
+
+    Adjudication (W02.P06.S27): the withholding source kind is the per-perceptor detalle
+    rollup.  It is DEFER-with-advisory, NOT built.  The per-perceptor rows exist only in
+    the Sheets detalle tab (assemble_withholding_observations reads calc-sheet cells), and
+    the transaction ledger carries no retencion/perceptor breakdown, so a live .resolve()
+    would have no source to read — a built resolver would be an empty design-only shell.
+    The annual M190<-M111 / M193<-M123 totals are relation edges (live since W03), distinct
+    from this per-perceptor source kind.  A real ledger-derived withholding build is a future
+    feature needing its own ingest surface (counterparty + retencion modelling).
+
+    Asserted via the direct collect_unhandled boundary (not the full calculate path):
+    M190/M193 carry relation operands that raise RegistryValidationError on a fresh empty
+    bucket (no prior M111/M123 filing) — a W04 cross-period delivery concern, orthogonal to
+    the advisory contract.  The boundary layer is the correct structural seam for proving
+    the deferred kind is never a silent blank.
+    """
+    from ...aggregation import collect_unhandled_source_diagnostics
+
+    revision = _revision("190", "2024-y-siguientes")
+    assert any(str(b.source) == "withholding" for b in revision.bindings), (
+        "M190 2024-y-siguientes must declare withholding bindings for this test to be non-vacuous"
+    )
+    # The live _handled set: relation_prefill is owned (enrolled in W03), withholding is not.
+    handled = frozenset({"relation_prefill", "profile", "borrador", "iva_wallet_decision"})
+    unhandled = collect_unhandled_source_diagnostics(
+        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"})
+    )
+    withholding_advisories = [
+        d for d in unhandled
+        if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"
+    ]
+    assert withholding_advisories, (
+        "S27: expected 'unhandled_binding_source' advisory for every withholding binding "
+        f"but got none. unhandled={unhandled}"
+    )
+    assert all(d.binding_id for d in withholding_advisories)
+    # withholding must NOT be silenced onto the manual_sources allowlist.
+    assert "withholding" not in frozenset({"manual_input"})
+    assert "withholding" in DEFERRED_SOURCE_KINDS
 
 
 # ---------------------------------------------------------------------------
