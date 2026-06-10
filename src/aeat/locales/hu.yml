@@ -787,6 +787,11 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Az adatbázis-tevékenységek nettó jövedelme (C01) pozitív, de az adatbázis-részletfizetés (C02) nulla; ellenőrizze a 02. rubrikát a vonatkozó százalékkal (minimum 2 százalék).'
+      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Az adatbázis-tevékenységek nettó jövedelme (C01) pozitív, de az adatbázis-részletfizetés (C02) nulla; ellenőrizze a 02. rubrikát a vonatkozó százalékkal (minimum 2 százalék).'
+      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Az adatbázis-tevékenységek nettó jövedelme (C01) pozitív, de az adatbázis-részletfizetés (C02) nulla; ellenőrizze a 02. rubrikát a vonatkozó százalékkal (minimum 2 százalék).'
+      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: 'Az adatbázis-tevékenységek nettó jövedelme (C01) pozitív, de az adatbázis-részletfizetés (C02) nulla; ellenőrizze a 02. rubrikát a vonatkozó százalékkal (minimum 2 százalék).'
+      modelo_200_base_imponible_determinada_cuando_resultado_positivo: 'A számviteli eredmény pozitív, de az adóalap (C552) nulla; ellenőrizze az adóalap meghatározását.'
     iva_wallet:
       seed_negative_amount: A vetőösszeg nem lehet negatív.
       seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
