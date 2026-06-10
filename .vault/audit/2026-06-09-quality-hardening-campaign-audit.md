@@ -687,3 +687,54 @@ single shared working tree. Operator chose **defer to the owning feature
 campaigns**, which extract a section when their work settles — not a
 mid-churn coordinator refactor for temporary green. This is an explicit,
 owner-acknowledged deferral, not a silent gap.
+
+## QHC-021 | coordinator checkpoint (2026-06-10) | complexity 12 -> 7; duplication 47 -> 41; last security hotspot cleared
+
+Three review-passed slices plus the auth-resume harness slice landed.
+
+- **Complexity slice 3** (`050d36171`, `fc1e884b4`, `6442afa95`, `0d11d24ae`):
+  cleared `_gather_observations` (31->5), `_extract_profile_values` (25->7),
+  `resolve_m210_rate` (25->8), `resolve_profile_sourced_bindings` (25->10);
+  over-threshold 12 -> 8. Independent review PASS (M210 test confirmed
+  registry-grounded + anti-tautology mutation; hoisted `value is None` proven
+  equivalent).
+- **Duplication slice 3** (`276503703`, `ad655ecdc`, `17a4bed0a`): sede
+  `_LocateHelper` Protocol, contribuyente `_RentaPersonProfileBase` validators,
+  ledger `_validate_iso_3166_jurisdiction`; clone groups 44 -> 41, one
+  constraint-shape mismatch correctly excluded. Review PASS; the flagged
+  source_jurisdiction coverage gap closed with a focused real-behaviour test
+  (`6ff86d90c`, self-fixed for a splat-induced type regression in `ec3346b71` —
+  coordinator's own test was caught reddening the type lane and corrected via
+  `model_validate`).
+- **Type-drift slice 2** (`b4b3c517f`, `7170c8a9c`, `79170ec47`, `b3800b221`,
+  `9690c62d4`): ~21 genuine-drift diagnostics cleared at the root (TypedDicts for
+  dict splats, generic-cycle return-type pin, vendored-typer casts at genuine
+  boundaries). KEY FINDING: the lane was already at **69** at slice start (peers
+  burned it from ~360); reached **12 residual, all in 4 peer-WIP-locked files**.
+  The non-peer addressable surface is effectively exhausted — corroborates
+  QHC-020's dirty-WIP-floor finding.
+- **Auth-resume slice** (`4cd10ca73` harness, `927bd21a8` refactor): the LAST
+  security-sensitive complexity hotspot,
+  `AeatAuthenticator._resume_from_storage_state_locked` (cognitive 25 -> 11),
+  cleared under the harness-first protocol. An 11-test behaviour-capture harness
+  driving the real `BrowserSessionLike`/`BrowserContextLike` seam (no mocks, no
+  live AEAT — failure injected through protocol-conforming inputs: `cert_ok`
+  flag, absent marker, raising `storage_state()`) landed and passed against the
+  unmodified function FIRST, then `_validate_persisted_session_metadata` (4
+  ordered gates) + `_teardown_resume_attempt` (cleanup) were extracted. Anti-
+  tautology proven by two source mutations (gate-order swap, `owns_session or
+  True`) each redding a test, then restored. Independent review PASS, no
+  findings: the reviewer independently confirmed the gate-order proofs use four
+  distinct non-overlapping reason codes (a reorder genuinely fails) and the
+  cleanup branch is bracketed from both sides; total refactor equivalence; no
+  live-AEAT path altered. 139 auth tests green. Over-threshold 8 -> 7.
+
+Lane positions: complexity **7** over threshold 20 (from 28 at baseline);
+check-types at its **dirty-WIP floor** (~12, all peer-locked); duplication **41**
+clone groups (from 51). Every slice this wave carries an independent review
+verdict; every commit was explicit-pathspec; no destructive git ran. The 7
+remaining complexity hotspots are ordinary behaviour-preserving extractions with
+no crypto/auth/submission sensitivity. The standing blockers are now external to
+the campaign's lanes: the peer amendment-flow / M303 campaigns settling (which
+own the type-lane residual and two docstring-link gate residuals) and the two
+owner-deferred over-budget CLI feature files.
