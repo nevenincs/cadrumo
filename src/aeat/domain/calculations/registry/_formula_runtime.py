@@ -215,7 +215,12 @@ def calculate_registry_snapshot(
     """
     _reject_non_decimal(inputs, "input")
     resolved_date_context = dict(date_context)
-    resolved_date_context.setdefault("filing_period", date(snapshot.filing_year, 12, 31))
+    default_filing_date = (
+        snapshot.filing_period.end_date
+        if snapshot.filing_period is not None and snapshot.filing_period.has_date_span()
+        else date(snapshot.filing_year, 12, 31)
+    )
+    resolved_date_context.setdefault("filing_period", default_filing_date)
     resolved_bindings = binding_values or {}
     _reject_non_decimal(resolved_bindings, "binding")
     resolved_enum_bindings = enum_binding_values or {}

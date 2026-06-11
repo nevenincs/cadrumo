@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 
 from ._export import derive_export_layouts_from_bindings
-from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
 from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_references import _check_all_id_references
@@ -132,6 +132,7 @@ def _build_validated_snapshot(
     snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
+        filing_period=filing_period_from_scope(filing_year, period),
         filing_year=filing_year,
         period=period,
         legal={ref: catalogues.legal[ref] for ref in sorted(legal_ids)},

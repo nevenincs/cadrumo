@@ -15,6 +15,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ....core import Period
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
@@ -44,6 +45,7 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     id: str = Field(min_length=1)
     modelo: str = Field(min_length=1)
     revision: str = Field(min_length=1)
+    filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1)
     inputs: dict[str, Decimal] = Field(default_factory=dict)
@@ -55,12 +57,31 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     expected_outputs: tuple[RegistryScenarioExpectedOutput, ...] = Field(min_length=1)
     notes: tuple[str, ...] = ()
 
+    @model_validator(mode="before")
+    @classmethod
+    def _hydrate_filing_period(cls, data: object) -> object:
+        if not isinstance(data, Mapping) or "filing_period" in data:
+            return data
+        filing_year = data.get("filing_year")
+        period = data.get("period")
+        if not isinstance(filing_year, int) or not isinstance(period, str):
+            return data
+        try:
+            filing_period = Period.from_year_and_code(filing_year, period)
+        except ValueError:
+            return data
+        return {**data, "filing_period": filing_period}
+
     @model_validator(mode="after")
     def _validate_scenario(self) -> RegistryCalculationScenario:
         if self.id.strip() != self.id:
             raise RegistryValidationError("scenario id must not include leading or trailing whitespace")
         if self.period.strip() != self.period:
             raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
+        if self.filing_period is not None and (
+            self.filing_period.filing_year != self.filing_year or self.filing_period.registry_token != self.period
+        ):
+            raise RegistryValidationError("scenario filing_period must match filing_year and period")
         expected_targets = [expected.target for expected in self.expected_outputs]
         if len(set(expected_targets)) != len(expected_targets):
             raise RegistryValidationError("scenario expected outputs must target unique casillas")

@@ -13,10 +13,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core import Period
 from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._period_offset_math import apply_period_offset
-from ._schema import ModeloRevision, RelationDefinition
+from ._schema import ModeloRevision, RelationDefinition, filing_period_from_scope
 
 __all__ = [
     "RegistryRelationSourceRequirement",
@@ -34,6 +35,7 @@ class RegistryRelationSourceRequirement(BaseModel):
 
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
+    filing_periods: tuple[Period, ...] = ()
     periods: tuple[str, ...] = Field(min_length=1)
     source_output: str = Field(min_length=1)
     relation_ids: tuple[str, ...] = Field(min_length=1)
@@ -96,6 +98,11 @@ def relation_source_requirements(
         RegistryRelationSourceRequirement(
             source_modelo=source_modelo,
             filing_year=source_year,
+            filing_periods=tuple(
+                filing_period
+                for source_period in source_periods
+                if (filing_period := filing_period_from_scope(source_year, source_period)) is not None
+            ),
             periods=source_periods,
             source_output=source_output,
             relation_ids=tuple(sorted(values["relation_ids"])),
