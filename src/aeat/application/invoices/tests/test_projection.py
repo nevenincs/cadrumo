@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (
@@ -124,7 +125,7 @@ def test_manual_match_projection_records_payment_and_matches_existing_transactio
     transactions = TransactionCatalogue.from_transactions([transaction])
 
     projection = project_invoice_payment_matches(
-        period="2026 1T",
+        period=Period.from_year_and_code(2026, "1T"),
         catalogue=catalogue,
         transactions=transactions,
         state=state,

@@ -42,8 +42,7 @@ def persist_filed_calculation_observation(
     repo = repository if repository is not None else CalculationObservationRepository()
     stamped_revision_id = _resolve_stamped_revision_id(
         registry_observation.modelo,
-        registry_observation.filing_year,
-        registry_observation.period,
+        Period.from_year_and_code(registry_observation.filing_year, registry_observation.period),
     )
     repo.save_observation(
         registry_observation,
@@ -162,17 +161,13 @@ def _persist_filed_calculation_observation_if_extractable(
 class _FiledDeclaracionCalculationObservation:
     modelo: str
     ejercicio: int
-    period_token: str
+    period: Period
     expediente_id: str
     status: str
     presented_at: datetime
     authenticated_identity: str
     artefacts: tuple[FiledDeclaracionArtefact, ...]
     casillas: tuple[ObservedCasillaValue, ...]
-
-    @property
-    def period(self) -> str:
-        return self.period_token
 
 
 def _calculation_observation(
@@ -181,7 +176,7 @@ def _calculation_observation(
     return _FiledDeclaracionCalculationObservation(
         modelo=observation.modelo,
         ejercicio=observation.ejercicio,
-        period_token=observation.period.registry_token,
+        period=observation.period,
         expediente_id=observation.expediente_id,
         status=observation.status,
         presented_at=observation.presented_at,
@@ -237,16 +232,19 @@ def _casilla_decimal(values: Mapping[str, Decimal], *casilla_ids: str) -> Decima
     return None
 
 
-def _resolve_stamped_revision_id(modelo: str, filing_year: int, period: str | Period) -> str | None:
-    """Resolve the registry revision id for (modelo, filing_year, period) for provenance stamping.
+def _resolve_stamped_revision_id(modelo: str, period: Period) -> str | None:
+    """Resolve the registry revision id for (modelo, period) for provenance stamping.
 
     Returns the revision id from the law-determined :func:`select_revision` result
     (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2), or ``None``
     on resolution failure so the stamp is never blocking at write time.
     """
     try:
-        period_token = period.registry_token if isinstance(period, Period) else period
-        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period_token)
+        snapshot = resources().modelos.authority.snapshot(
+            modelo,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
         return snapshot.revision.id
     except Exception:
         return None

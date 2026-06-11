@@ -13,6 +13,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core import Period
 from ...core.decimal import format_decimal
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
@@ -58,7 +59,7 @@ class InvoiceMatchProjection(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    period: str
+    period: Period
     matched: tuple[InvoiceMatchRow, ...]
     unmatched: tuple[InvoiceMatchRow, ...]
 
@@ -160,7 +161,7 @@ def apply_manual_invoice_match(state: WorkflowState, invoice_id: str, ledger_id:
 
 def project_invoice_payment_matches(
     *,
-    period: str,
+    period: Period,
     catalogue: InvoiceCatalogue,
     transactions: TransactionCatalogue,
     state: WorkflowState,
@@ -168,7 +169,7 @@ def project_invoice_payment_matches(
     """Return period-labelled invoice/payment match status.
 
     Args:
-        period: Period label embedded in the returned projection.
+        period: Filing period embedded in the returned projection.
         catalogue: The :class:`InvoiceCatalogue` whose invoices are matched.
         transactions: The :class:`TransactionCatalogue` cross-referenced for payment linkage.
         state: The workflow state carrying invoice review records.
