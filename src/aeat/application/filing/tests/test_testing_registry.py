@@ -99,31 +99,15 @@ def test_bare_period_input_uses_explicit_filing_year() -> None:
     assert draft.snapshot_ref.period == "1T"
 
 
-def test_combined_period_input_remains_transitional_inbound_only() -> None:
-    draft = build_registry_filing_draft(
-        modelo="130",
-        period="2026Q1",
-        casilla_values=_valid_inputs(),
-        binding_values=_valid_bindings(),
-        status=ModeloDraftStatus.BORRADOR,
-    )
-
-    assert draft.period == Period.from_year_and_code(2026, "1T")
-
-
-def test_combined_period_input_uses_embedded_year_not_default_year() -> None:
-    draft = build_registry_filing_draft(
-        modelo="130",
-        period="2024Q1",
-        casilla_values=_valid_inputs(),
-        binding_values=_valid_bindings(),
-        status=ModeloDraftStatus.BORRADOR,
-    )
-
-    assert draft.period == Period.from_year_and_code(2024, "1T")
-    assert draft.snapshot_ref is not None
-    assert draft.snapshot_ref.modelo_year == 2024
-    assert draft.snapshot_ref.period == "1T"
+def test_combined_period_input_is_rejected_at_helper_boundary() -> None:
+    with pytest.raises(ModeloBuilderError, match="Period or bare registry token"):
+        build_registry_filing_draft(
+            modelo="130",
+            period="2026Q1",
+            casilla_values=_valid_inputs(),
+            binding_values=_valid_bindings(),
+            status=ModeloDraftStatus.BORRADOR,
+        )
 
 
 def test_non_approved_status_clears_approval_fields() -> None:

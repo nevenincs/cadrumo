@@ -18,14 +18,19 @@ Closes two overview verb coverage gaps in one file:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
+from ....application.filing._testing_registry import build_registry_filing_draft
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
+from ....domain.filing import ModeloDraftRepository
+from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 
@@ -67,6 +72,32 @@ def test_overview_status_returns_envelope_on_empty_bucket(cli_runner: CliRunner)
     assert result.exit_code == 0, result.output
 
 
+def test_overview_status_period_filter_matches_typed_draft_period(cli_runner: CliRunner) -> None:
+    q1_draft = build_registry_filing_draft(
+        modelo="130",
+        period=Period.from_year_and_code(2026, "1T"),
+        casilla_values=_valid_modelo_130_inputs(),
+        binding_values=_valid_modelo_130_bindings(),
+        status=ModeloDraftStatus.BORRADOR,
+    )
+    q2_draft = build_registry_filing_draft(
+        modelo="130",
+        period=Period.from_year_and_code(2026, "2T"),
+        casilla_values=_valid_modelo_130_inputs(),
+        binding_values=_valid_modelo_130_bindings(),
+        status=ModeloDraftStatus.BORRADOR,
+    )
+    repository = ModeloDraftRepository()
+    repository.save(q1_draft)
+    repository.save(q2_draft)
+
+    result = cli_runner.invoke(app, ["app", "overview", "status", "--period", "1T", "--year", "2026"])
+
+    assert result.exit_code == 0, result.output
+    assert q1_draft.draft_id in result.output
+    assert q2_draft.draft_id not in result.output
+
+
 # ---------------------------------------------------------------------------
 # contract — retired-noun-group negatives
 # ---------------------------------------------------------------------------
@@ -100,3 +131,23 @@ def test_retired_deadlines_noun_group_is_unknown(
     assert "no such command" in haystack or "no such" in haystack, (
         f"retired verb path {retired_verb!r} did not surface unknown-command refusal: {result.output!r}"
     )
+
+
+def _valid_modelo_130_inputs() -> dict[str, Decimal]:
+    return {
+        "01": Decimal("10000"),
+        "02": Decimal("4000"),
+        "05": Decimal("250"),
+        "06": Decimal("100"),
+        "08": Decimal("2000"),
+        "10": Decimal("10"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }
+
+
+def _valid_modelo_130_bindings() -> dict[str, Decimal]:
+    return {
+        "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+        "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+    }

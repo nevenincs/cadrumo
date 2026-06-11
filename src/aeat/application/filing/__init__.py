@@ -64,15 +64,6 @@ from ...domain.filing import (
     derive_validation_status,
     make_amendment_id,
 )
-from ...domain.period import (
-    PeriodValidationError as _PeriodValidationError,
-)
-from ...domain.period import (
-    parse_canonical_period as _parse_canonical_period,
-)
-from ...domain.period import (
-    period_end_date as _period_end_date,
-)
 from ...domain.submission import ModeloDraftStatus
 from ._calculate import (
     DeclaracionCalculateNextAction,
@@ -112,7 +103,7 @@ from .runtime import (
 def build_draft(
     *,
     modelo: str,
-    period: str | _Period,
+    period: _Period,
     profile: ModeloProfile,
     inputs: ModeloInputs,
     schema_provider: CasillaSchemaProvider,
@@ -123,8 +114,8 @@ def build_draft(
 
     Args:
         modelo: Stable modelo string ID.
-        period: Filing period, either as the typed core period or the transitional
-            combined string still accepted at this boundary.
+        period: Typed filing period built from a filing year and bare registry
+            token.
         profile: Taxpayer profile the draft would be built for.
         inputs: Raw filing inputs.
         schema_provider: Registry-backed casilla schema provider.
@@ -140,7 +131,6 @@ def build_draft(
     """
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
-    typed_period = period if isinstance(period, _Period) else _Period.from_year_and_code(filing_year, registry_period)
     snapshot_ref = _RegistrySnapshotRef(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
@@ -258,14 +248,14 @@ def build_draft(
     draft = ModeloDraft(
         draft_id=compute_modelo_draft_id(
             modelo=modelo,
-            period=typed_period,
+            period=period,
             profile_tax_id=profile.tax_id,
             schema_version=collection.schema_version,
             values=value_tuple,
             binding_values=binding_value_tuple,
         ),
         modelo=modelo,
-        period=typed_period,
+        period=period,
         profile_tax_id=profile.tax_id,
         subject_tax_id=profile.tax_id,
         snapshot_ref=snapshot_ref,
@@ -285,7 +275,7 @@ def build_draft(
 
 
 @lru_cache(maxsize=128)
-def _load_registry_snapshot(*, modelo: str, period: str | _Period) -> _RegistrySnapshot:
+def _load_registry_snapshot(*, modelo: str, period: _Period) -> _RegistrySnapshot:
     filing_year, registry_period = _registry_period(period)
     try:
         authority = _resources().modelos.authority
@@ -300,23 +290,21 @@ def _load_registry_snapshot(*, modelo: str, period: str | _Period) -> _RegistryS
         ) from exc
 
 
-def _registry_period(period: str | _Period) -> tuple[int, str]:
-    if isinstance(period, _Period):
-        return period.filing_year, period.registry_token
-    try:
-        return _parse_canonical_period(period)
-    except _PeriodValidationError as exc:
-        raise ModeloBuilderError(str(exc)) from exc
+def _registry_period(period: _Period) -> tuple[int, str]:
+    if not isinstance(period, _Period):
+        raise ModeloBuilderError(
+            "filing period must be an aeat.core.Period built from a filing year and bare registry token",
+        )
+    return period.filing_year, period.registry_token
 
 
-def _filing_period_date(period: str | _Period) -> date:
+def _filing_period_date(period: _Period) -> date:
     filing_year, registry_period = _registry_period(period)
     if registry_period.startswith("EXT-") and registry_period.endswith("T"):
-        return _period_end_date(filing_year, registry_period.removeprefix("EXT-"))
-    try:
-        return _period_end_date(filing_year, registry_period)
-    except _PeriodValidationError:
-        return date(filing_year, 12, 31)
+        return _Period.from_year_and_code(filing_year, registry_period.removeprefix("EXT-")).end_date
+    if period.has_date_span():
+        return period.end_date
+    return date(filing_year, 12, 31)
 
 
 def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:

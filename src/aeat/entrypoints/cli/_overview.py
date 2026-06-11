@@ -168,21 +168,19 @@ def overview_status(
     if period is not None:
         if current is None:
             raise _no_active_profile_refusal()
-        from ...domain.period import PeriodValidationError, parse_canonical_period
 
         drafts = _load_drafts()
         canonical = _optional_canonical_period(period, year=year)
         assert canonical is not None  # period is not None, so --year was required and supplied
         wanted = (canonical.year, canonical.registry_token)
 
-        def _draft_matches(draft_period: str) -> bool:
-            # A draft persists its filing period in the WorkflowEngine runtime
-            # form; split it back to ``(year, registry_token)`` and compare to
-            # the operator's ``(--year, AEAT token)`` pair.
-            try:
-                return parse_canonical_period(draft_period) == wanted
-            except PeriodValidationError:
-                return False
+        def _draft_matches(draft_period: object) -> bool:
+            # Drafts persist typed periods; compare their separate filing-year
+            # and registry-token fields to the operator's ``--year``/``--period`` pair.
+            return (
+                getattr(draft_period, "year", None) == wanted[0]
+                and getattr(draft_period, "registry_token", None) == wanted[1]
+            )
 
         per_modelo_drafts = [d for d in drafts if _draft_matches(d.period)]
         from ._overview_payloads import OverviewDraftPayload

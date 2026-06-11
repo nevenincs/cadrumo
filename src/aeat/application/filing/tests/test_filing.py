@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....core.resources import resources
@@ -46,6 +47,8 @@ from ..testing import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_PERIOD = Period.from_year_and_code(2026, "1T")
+
 
 def _profile() -> ModeloTestProfile:
     return ModeloTestProfile(
@@ -61,7 +64,7 @@ def _schema_provider() -> CasillaSchemaProvider:
 def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
     return build_draft(
         modelo="130",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "01": Decimal("12500.00"),
@@ -114,7 +117,7 @@ def _transaction(
 def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
     draft = build_draft(
         modelo="130",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "01": Decimal("10000"),
@@ -142,7 +145,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
 def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
     draft = build_draft(
         modelo="111",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "03": Decimal("180.25"),
@@ -171,7 +174,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
 def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
     draft = build_draft(
         modelo="115",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "01": Decimal("1"),
@@ -194,7 +197,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
     snapshot = resources().modelos.authority.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
     draft = build_draft(
         modelo="123",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "01": Decimal("2"),
@@ -224,7 +227,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
 def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
     draft = build_draft(
         modelo="131",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "03": Decimal("1000"),
@@ -255,7 +258,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
 def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() -> None:
     draft = build_draft(
         modelo="131",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "03": Decimal("1000"),
@@ -277,7 +280,7 @@ def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() ->
 def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -> None:
     draft = build_draft(
         modelo="131",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "03": Decimal("1000"),
@@ -367,7 +370,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
     schema_provider = build_runtime_schema_provider()
     draft = build_draft(
         modelo="130",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "01": Decimal("100"),
@@ -476,7 +479,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
     schema_provider = build_runtime_schema_provider()
     draft = build_draft(
         modelo="111",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "03": Decimal("180.25"),
@@ -511,7 +514,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
     schema_provider = build_runtime_schema_provider()
     draft = build_draft(
         modelo="115",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "01": Decimal("1"),
@@ -540,7 +543,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
     schema_provider = build_runtime_schema_provider()
     draft = build_draft(
         modelo="123",
-        period="2026Q1",
+        period=_PERIOD,
         profile=_profile(),
         inputs={
             "01": Decimal("2"),
