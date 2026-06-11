@@ -1123,3 +1123,13 @@ Retire residual convention exceptions or make them explicit, localized, and priv
 Prove CLI and application output flows use the centralized redaction boundary rather than ad hoc logging or print behavior.
 
 - [x] `W20.P42.S456` - Audit and harden centralized log/print/output redaction enrollment across CLI, diagnostics, repair, live, profile, and remote-mirror surfaces, adding guard coverage for any bypass found; `src/aeat/core; src/aeat/entrypoints/cli; src/aeat/application`.
+
+## Wave `W21` - CLI verification follow-up
+
+Track current-tree CLI startup blockers discovered while exhausting secure-storage verification so backend rollout can be declared against a working command surface.
+
+### Phase `W21.P43` - CLI startup registration repair
+
+Resolve command startup registration failures that prevent real CLI verification from reaching modelo and secure-storage paths.
+
+- [x] `W21.P43.S462` - Root-cause and repair wizard catalogue registration during CLI startup so real modelo command verification reaches application paths instead of failing with INTERNAL startup errors; `src/aeat/entrypoints/cli; src/aeat/application/wizard; src/aeat/core/wizard_catalogue; src/aeat/entrypoints/cli/tests`.
