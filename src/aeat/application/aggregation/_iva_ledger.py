@@ -288,9 +288,9 @@ def aggregate_iva_ledger_candidates(
                     transaction_id=candidate.ledger_id,
                     reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
                     detail=(
-                        f"transaction date {candidate.transaction_date.isoformat()} is outside {resolved_period.raw}"
+                        f"transaction date {candidate.transaction_date.isoformat()} is outside {resolved_period}"
                     ),
-                )
+                ),
             )
             continue
         observations.append(validate_iva_ledger_observation(candidate))
@@ -406,7 +406,7 @@ _NON_DECLARABLE_IVA_CATEGORIES = frozenset(
         IvaCategory.RECARGO_EQUIVALENCIA,
         IvaCategory.UNKNOWN,
         IvaCategory.ERRONEOUS_INVOICE,
-    }
+    },
 )
 
 
@@ -432,8 +432,8 @@ def _classify_iva_transaction(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-                detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period.raw}",
-            )
+                detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period}",
+            ),
         )
     if is_non_eur_without_conversion(transaction):
         return _IvaTransactionOutcome(
@@ -441,7 +441,7 @@ def _classify_iva_transaction(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
                 detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
-            )
+            ),
         )
     flow_direction = _flow_direction_for(transaction.direction)
     if flow_direction is None:
@@ -450,7 +450,7 @@ def _classify_iva_transaction(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
                 detail=f"transaction direction {transaction.direction.value!r} is not an IVA settlement flow",
-            )
+            ),
         )
     proportionality = _business_proportionality(transaction)
     if proportionality is None:
@@ -466,7 +466,7 @@ def _classify_iva_transaction(
                 detail=(
                     f"business classification {transaction.business_classification.value!r} cannot feed IVA aggregation"
                 ),
-            )
+            ),
         )
     iva_category = transaction.iva_category
     if iva_category is not None and iva_category in _NON_DECLARABLE_IVA_CATEGORIES:
@@ -478,7 +478,7 @@ def _classify_iva_transaction(
                     f"iva_category {iva_category.value!r} does not produce a declarable IVA "
                     "observation (recargo-equivalencia is non-deductible cost; unknown/erroneous are sentinels)"
                 ),
-            )
+            ),
         )
     missing_reason = _missing_tax_fact_reason(transaction)
     if missing_reason is not None:
@@ -487,7 +487,7 @@ def _classify_iva_transaction(
                 transaction_id=transaction_id,
                 reason=missing_reason,
                 detail=_missing_tax_fact_detail(missing_reason),
-            )
+            ),
         )
     assert transaction.taxable_base is not None
     assert transaction.iva_amount is not None
@@ -499,7 +499,7 @@ def _classify_iva_transaction(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
                 detail=f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate",
-            )
+            ),
         )
     base_amount = transaction.taxable_base * proportionality
     iva_amount = transaction.iva_amount * proportionality
