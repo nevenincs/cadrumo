@@ -27,6 +27,11 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
 from ...domain.modelos._filing_repository import upsert_filing_record
+from ...domain.modelos._participation_index import (
+    TransactionParticipationIndexRepository,
+    TransactionRevisionParticipation,
+    upsert_transaction_participation,
+)
 from ...domain.modelos._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -128,9 +133,9 @@ def persist_calculation_revision(
                         update={
                             "current_calculation_revision_id": revision_id,
                             "updated_at": now,
-                        }
+                        },
                     ),
-                )
+                ),
             )
         return existing
 
@@ -157,9 +162,9 @@ def persist_calculation_revision(
                 update={
                     "current_calculation_revision_id": revision_id,
                     "updated_at": now,
-                }
+                },
             ),
-        )
+        ),
     )
     emit_bucket_event(
         repository=bucket_event_repository,
@@ -183,12 +188,44 @@ def persist_calculation_revision(
             "borrador_participated": "true" if bindings_sourced_from_borrador else "false",
             "borrador_binding_count": str(len(bindings_sourced_from_borrador)),
             "borrador_bindings_trace_sha256": hashlib.sha256(
-                "\n".join(bindings_sourced_from_borrador).encode("utf-8")
+                "\n".join(bindings_sourced_from_borrador).encode("utf-8"),
             ).hexdigest(),
             "has_provenance": "true" if observations else "false",
         },
     )
     return revision
+
+
+def _build_filed_participation_writes(
+    *,
+    filed_target: CalculationRevision,
+    work_unit: WorkUnit,
+    filing_record_id: str,
+    participation_index_repository: TransactionParticipationIndexRepository,
+) -> tuple[object, ...]:
+    """Build the per-transaction participation writes for a filed revision.
+
+    For each ``source_transaction_id`` of the filed revision, load that
+    transaction's participation index, upsert the ``PRESENTADO`` participation
+    carrying the ``filing_record_id`` (replacing the prior verified entry for the
+    same revision in place), and return the resulting ``SecureObjectWrite`` so
+    the caller co-emits them in the same atomic unit of work as the filing save.
+    """
+    writes: list[object] = []
+    for transaction_id in filed_target.source_transaction_ids:
+        index = participation_index_repository.load(transaction_id)
+        participation = TransactionRevisionParticipation(
+            calculation_revision_id=filed_target.calculation_revision_id,
+            work_unit_id=work_unit.work_unit_id,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            revision_state=CalculationRevisionState.PRESENTADO.value,
+            filing_record_id=filing_record_id,
+        )
+        updated = upsert_transaction_participation(index, participation)
+        writes.append(participation_index_repository.to_secure_object_write(updated))
+    return tuple(writes)
 
 
 def persist_filed_revision(
@@ -204,6 +241,7 @@ def persist_filed_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepository | None = None,
+    participation_index_repository: TransactionParticipationIndexRepository | None = None,
 ) -> ModeloRecord:
     """Persist the filing transition for a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
@@ -258,7 +296,7 @@ def persist_filed_revision(
                 "status": ModeloRecordStatus.SUPERSEDIDO,
                 "superseded_at": now,
                 "superseded_by_filing_record_id": new_filing_id,
-            }
+            },
         )
         updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
 
@@ -269,7 +307,7 @@ def persist_filed_revision(
                     "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
                     "superseded_at": now,
                     "updated_at": now,
-                }
+                },
             )
             revisions = upsert_calculation_revision(revisions, superseded_revision)
 
@@ -280,11 +318,24 @@ def persist_filed_revision(
             "filed_at": now,
             "filed_by": actor.strip(),
             "updated_at": now,
-        }
+        },
     )
     revisions = upsert_calculation_revision(revisions, filed_target)
 
-    calculation_repository.save(revisions)
+    participation_repo = participation_index_repository or TransactionParticipationIndexRepository(
+        bucket_id=work_unit.bucket_id,
+    )
+    participation_writes = _build_filed_participation_writes(
+        filed_target=filed_target,
+        work_unit=work_unit,
+        filing_record_id=new_filing_id,
+        participation_index_repository=participation_repo,
+    )
+    # Co-emit the per-transaction participation index (now carrying the
+    # filing_record_id) atomically with the filed-revision catalogue save, per
+    # the composition-service single-writer discipline. A non-ledger filing
+    # produces no extra writes and degenerates to the plain save.
+    calculation_repository.save_with_secure_object_writes(revisions, participation_writes)
     filing_repository.save(updated_filing_catalogue)
     work_unit_repository.save(
         upsert_work_unit(
@@ -294,9 +345,9 @@ def persist_filed_revision(
                     "filed_calculation_revision_id": calculation_revision_id,
                     "current_filing_record_id": new_filing_id,
                     "updated_at": now,
-                }
+                },
             ),
-        )
+        ),
     )
 
     if prior_current is not None:
