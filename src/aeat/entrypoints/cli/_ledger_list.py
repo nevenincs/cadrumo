@@ -71,7 +71,7 @@ def project_ledger_list(
                     result.transaction.group_label or "\uffff",
                     result.transaction.transaction_id,
                 ),
-            )
+            ),
         )
 
     total = len(all_results)
@@ -91,7 +91,7 @@ def project_ledger_list(
                 end=offset + len(rows),
                 total=total,
                 offset=offset,
-            )
+            ),
         )
     return LedgerListProjection(
         bucket_id=bucket_id,
@@ -115,7 +115,11 @@ def _filter_results_by_review_spec(
     matching = query_ledger_review_rows(
         LedgerReviewQuery(
             bucket_id=bucket_id,
-            period=_filter_canonical_period(spec.period) if spec.period else None,
+            period=(
+                _filter_canonical_period(spec.period, year=spec.year)
+                if spec.period is not None and spec.year is not None
+                else None
+            ),
             status=spec.status.value if spec.status is not None else None,
             issue=spec.issue.value if spec.issue is not None else None,
             import_id=spec.import_id,
@@ -156,11 +160,11 @@ def _ledger_list_rows_and_lines(
                 "full_id": transaction.transaction_id,
                 "display_id": display_id,
                 "group_label": transaction.group_label,
-            }
+            },
         )
         lines.append(
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
-            f"{review_payload.amount}\t{review_payload.description}\t{review_status}"
+            f"{review_payload.amount}\t{review_payload.description}\t{review_status}",
         )
     return rows, lines
 
