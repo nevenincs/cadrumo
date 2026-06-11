@@ -11,7 +11,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
-from ...core._period import Period
+from ...core import Period
 from ...core.logging import get_logger
 from ...domain.filing import (
     AmendmentKind,

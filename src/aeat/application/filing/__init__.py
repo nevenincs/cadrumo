@@ -12,7 +12,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
-from ...core._period import Period as _Period
+from ...core import Period as _Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...core.resources import resources as _resources
