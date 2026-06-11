@@ -227,7 +227,7 @@ def result_summary_lines(rev) -> list[str]:
         default="result summary  %{modelo} %{year} %{period}",
         modelo=summary.modelo,
         year=summary.filing_year,
-        period=summary.period,
+        period=summary.period.registry_token,
     )
     lines = [header, "role\tcasilla\tvalue\tlabel"]
     for row in summary.rows:

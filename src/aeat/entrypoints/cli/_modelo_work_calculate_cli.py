@@ -427,7 +427,7 @@ def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit:
         state=revision.state.value,
         modelo=work_unit.modelo,
         year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     )
 
 

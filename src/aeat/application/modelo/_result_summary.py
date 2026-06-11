@@ -22,6 +22,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
@@ -56,7 +57,7 @@ class CalculationResultSummary(BaseModel):
 
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     rows: tuple[ResultSummaryRow, ...] = Field(default_factory=tuple)
 
 
@@ -139,7 +140,7 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
     return CalculationResultSummary(
         modelo=str(work_unit.modelo),
         filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        period=work_unit.period,
         rows=tuple(rows),
     )
 
