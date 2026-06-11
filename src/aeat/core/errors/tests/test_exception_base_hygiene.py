@@ -31,6 +31,10 @@ _ALLOWLIST = {
         "not an operator-facing runtime failure needing an ErrorCode or JSON-envelope "
         "redaction) — see the rationale in aeat.terminology._errors; not raised to the CLI"
     ),
+    "aeat.domain.calculations.registry._formula_runtime._UnresolvedFormulaDependencyError": (
+        "private formula-runtime control-flow sentinel; caught inside calculate_registry_snapshot "
+        "to omit non-blocking unresolved formula targets and never raised across the public boundary"
+    ),
 }
 
 

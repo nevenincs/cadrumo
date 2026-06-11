@@ -103,6 +103,11 @@ async def fetch_iva_compensation_wallet(
     settings: Settings | None = None,
 ) -> IvaCompensationWalletObservation:
     """Fetch and parse AEAT's read-only IVA compensation wallet as a :class:`IvaCompensationWalletObservation`."""
+    if session.storage_state_path is None:
+        raise SedeNavigationError(
+            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
+        )
     if target_period.filing_year != target_year:
         raise SedeNavigationError(
             "IVA wallet target_year does not match target_period.year",
@@ -113,11 +118,6 @@ async def fetch_iva_compensation_wallet(
     _assert_read_http("GET", _WALLET_URL)
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
-    if session.storage_state_path is None:
-        raise SedeNavigationError(
-            "AeatSession has no persisted auth session; run `aeat config auth status` first",
-            translated_message=tr("adapters.sede.errors.no_auth_session"),
-        )
     browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)
