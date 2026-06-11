@@ -41,7 +41,9 @@ related:
   - '[[2026-06-10-docs-terminology-search-plan]]'
   - '[[2026-06-10-docs-terminology-search-research]]'
   - '[[2026-06-11-docs-terminology-search-audit]]'
+  - '[[2026-06-11-docs-terminology-search-code-review-audit]]'
   - '[[2026-06-11-docs-terminology-search-reconciliation-audit]]'
+  - '[[2026-06-12-docs-terminology-search-rung2-adjudication-audit]]'
 ---
 
 # `docs-terminology-search` feature index
@@ -57,7 +59,9 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 ### audit
 
 - `2026-06-11-docs-terminology-search-audit` - `docs-terminology-search` audit: `umbrella gap-concept curation pass`
+- `2026-06-11-docs-terminology-search-code-review-audit` - `docs-terminology-search` Code Review
 - `2026-06-11-docs-terminology-search-reconciliation-audit` - `docs-terminology-search` audit: `plan exec reconciliation`
+- `2026-06-12-docs-terminology-search-rung2-adjudication-audit` - `docs-terminology-search` audit: `rung-2 adjudication`
 
 ### exec
 

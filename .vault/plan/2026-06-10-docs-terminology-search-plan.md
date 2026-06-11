@@ -9,6 +9,16 @@ related:
   - '[[2026-06-10-docs-terminology-search-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `docs-terminology-search` `terminology handbook and precompiled docs search epic` plan
 
 ## Epic intent
@@ -91,7 +101,7 @@ ADR D6 core: the query-vocabulary sweep through the resident service freezes run
 
 - [x] `W03.P09.S19` - Implement the query-vocabulary sweep runner: every enrolled concept's terms, translations, and hidden forms swept through the resident RAG service (port 8766, timeout 30, reindex-before-sweep per W01.P03) into ranked term-to-target relevance mappings, with a cadence re-run verb whose diffs are reviewed like any generated-but-committed surface (ADR D6); `dev docs sweep runner`.
 - [x] `W03.P09.S20` - Land the committed relevance data files in the Handbook tree with their gates: every mapped term is an enrolled concept, every target resolves in the current build (stale mappings fail loudly), and the laundering/licence gate asserts the shipped artifact carries rankings and identifiers only - no vectors, no sparse term-weight maps, no SPLADE-derived data (ADR D6/D8); `src/aeat/_data/terminology relevance tree + gates`.
-- [ ] `W03.P09.S21` - Implement synonym-candidate mining with relative-cosine validation and the ratification queue: ratified candidates land in the Handbook as admitted terms or hidden_search_forms through human review under the allowlist-with-reason ratchet; `unratified candidates never reach the shipped index (ADR D6); `dev docs mining + Handbook ratification queue`.
+- [x] `W03.P09.S21` - Implement synonym-candidate mining with relative-cosine validation and the ratification queue: ratified candidates land in the Handbook as admitted terms or hidden_search_forms through human review under the allowlist-with-reason ratchet; `unratified candidates never reach the shipped index (ADR D6); `dev docs mining + Handbook ratification queue`.
 
 ## Wave `W04` - Shipped search surface and glossary cutover
 
@@ -128,7 +138,7 @@ Standing wave per the operator mandate: curation-backlog ratchets, the measured 
 Standing loops: the curation-backlog honesty ratchet over draft concepts and empty short descriptions, and the held-out real-query miss-rate harness that adjudicates the deferred rung-2 static term-embedding matrix with measurements instead of speculation. ADR D6 deferral gate.
 
 - [x] `W05.P13.S29` - Implement the curation-backlog honesty ratchet: draft-concept and empty-short_description counts gated non-increasing in CI with a standing review cadence, mirroring the locale translation-honesty discipline (ADR D3 consequence); `terminology audit gate + CI`.
-- [ ] `W05.P13.S30` - Build the held-out real-query miss-rate harness over the compiled mapping and adjudicate the deferred rung-2 static term-embedding matrix on measurements, persisting the adjudication in the vault (ADR D6 deferral gate); `dev docs tests + .vault adjudication record`.
+- [x] `W05.P13.S30` - Build the held-out real-query miss-rate harness over the compiled mapping and adjudicate the deferred rung-2 static term-embedding matrix on measurements, persisting the adjudication in the vault (ADR D6 deferral gate); `dev docs tests + .vault adjudication record`.
 
 ### Phase `W05.P14` - Architectural cross-reference coverage and codification
 
