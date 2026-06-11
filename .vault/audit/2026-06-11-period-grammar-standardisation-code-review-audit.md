@@ -72,3 +72,13 @@ period grammar produced `136 passed, 22 failed`. The failures were isolated to
 `src/aeat/application/auth/tests/test_operator.py` with the known shared-worktree
 `ProfileKeysRegistrationError` registration issue; the reviewed period, review, and
 submission coverage passed.
+
+## PERIOD-006 | INFO | No findings in export period fixture cleanup
+
+Review of commit `2aaa7d3fb` found no issues. The touched export tests now pass
+`Period.from_year_and_code(...)` into typed `build_draft` and `ModeloPresentado`
+surfaces without adding combined-string tolerance or weakening the byte-position and
+SHA-backed golden export assertions.
+
+Verification reported by the reviewer: focused export model and fichero-BOE roundtrip
+tests passed with `28 passed`.
