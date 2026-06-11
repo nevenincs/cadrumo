@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import Period
+from ...core import Period, PeriodError
 from ...domain.deadlines import ModeloDeadline
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
@@ -357,11 +357,9 @@ def _resolve_visible_period(*, modelo: str, year: int, period: Period | str) -> 
             )
         return period
 
-    from ..modelo import normalize_modelo_work_period
-
     try:
-        return normalize_modelo_work_period(year, period, modelo=modelo)
-    except ValueError as exc:
+        return Period.from_year_and_code(year, period)
+    except PeriodError as exc:
         raise WorkflowError(
             translated_message="application.workflow.errors.resume_target_invalid",
             context={"target": period},

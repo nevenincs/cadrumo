@@ -296,7 +296,7 @@ def test_work_calculate_enters_bucket_source_mesh_calculation_boundary() -> None
     from ....application.modelo import calculate_modelo_work_revision
 
     source = inspect.getsource(calculate_modelo_work_revision)
-    assert "calculate_modelo_revision_from_bucket_aggregation(" in source
+    assert "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(" in source
     assert "calculate_modelo_revision(" not in source
 
 
@@ -374,7 +374,7 @@ def test_bindings_list_emits_readiness_category_for_every_row() -> None:
     blocking finding / casilla)."""
 
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
     assert "operation\tregistry.modelo.bindings.list" in result.output
@@ -391,7 +391,7 @@ def test_bindings_list_emits_borrador_capable_column_per_row() -> None:
     borrador prefills versus those the operator must supply."""
 
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
     # The text-mode header carries the new column.
@@ -412,7 +412,7 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
     available so they drop out of the missing-bindings view."""
 
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1", "--missing"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T", "--missing"],
     )
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
@@ -433,7 +433,7 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--binding",
             "modelo-303-iva-repercutido-general-cuota=1234.56",
         ],
@@ -460,7 +460,7 @@ def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--binding",
             "no-such-binding=42",
         ],
@@ -487,7 +487,7 @@ def test_bindings_preview_rejects_malformed_override_syntax() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--binding",
             "missing-equals-sign",
         ],

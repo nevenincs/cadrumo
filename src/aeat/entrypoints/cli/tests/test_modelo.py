@@ -330,7 +330,7 @@ def test_work_create_rejects_unknown_modelo() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--revision",
             "2009-y-siguientes",
         ],
@@ -389,7 +389,7 @@ def test_work_create_rejects_unknown_revision() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--revision",
             "nonexistent-revision",
         ],
@@ -403,16 +403,15 @@ def test_work_create_rejects_unknown_revision() -> None:
 @pytest.mark.parametrize(
     "period,expected_normalized",
     [
-        ("Q1", "1T"),
         ("1T", "1T"),
-        ("Q4", "4T"),
+        ("1t", "1T"),
+        ("4T", "4T"),
         ("0A", "0A"),
-        ("annual", "0A"),
+        ("0a", "0A"),
     ],
 )
-def test_work_create_normalizes_valid_period_tokens(period: str, expected_normalized: str) -> None:
-    """Valid period tokens (in any accepted form) must be normalized to the
-    canonical registry form (e.g. ``Q1`` → ``1T``) before being stored."""
+def test_work_create_accepts_core_period_tokens(period: str, expected_normalized: str) -> None:
+    """Valid AEAT period tokens are resolved to core ``Period`` values."""
 
     from .._modelo import _resolve_year_period
 

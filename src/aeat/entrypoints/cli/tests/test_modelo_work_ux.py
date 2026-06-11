@@ -634,7 +634,7 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "100", "--year", "2024", "--period", "anual",
+            "--modelo", "100", "--year", "2024", "--period", "0A",
             "--revision", "2024",
         ],
     )  # fmt: skip

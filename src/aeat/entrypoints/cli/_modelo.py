@@ -52,7 +52,6 @@ from ...application.modelo import (
     get_work_unit,
     guard_active_profile_foral_ccaa,
     modelo_work_address_from_operator_target,
-    normalize_modelo_work_period,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
@@ -62,7 +61,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import RegistryValidationError
-from ._common import activate_subcommand_output_language
+from ._common import _canonical_period, activate_subcommand_output_language
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
 from ._modelo_cli_support import (
@@ -162,12 +161,13 @@ def _work_address_for_cli(
     bucket_id: str | None = None,
 ) -> object:
     exact_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    typed_period = _resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:
         return modelo_work_address_from_operator_target(
             work_unit_id=exact_id,
             modelo=modelo,
             year=year,
-            period=period,
+            period=typed_period,
             registry_revision_id=revision,
             bucket_id=bucket_id,
         )
@@ -185,12 +185,13 @@ def _resolve_work_unit_for_cli(
     bucket_id: str | None = None,
 ) -> WorkUnit:
     exact_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    typed_period = _resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:
         return resolve_modelo_work_unit_for_operator_target(
             work_unit_id=exact_id,
             modelo=modelo,
             year=year,
-            period=period,
+            period=typed_period,
             registry_revision_id=revision,
             bucket_id=bucket_id,
         )
@@ -222,13 +223,14 @@ def _resolve_revision_for_cli(
         _validate_calculation_revision_id(calculation_revision_id) if calculation_revision_id is not None else None
     )
     exact_work_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    typed_period = _resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:
         return resolve_modelo_revision_for_operator_target(
             calculation_revision_id=validated_revision_id,
             work_unit_id=exact_work_id,
             modelo=modelo,
             year=year,
-            period=period,
+            period=typed_period,
             registry_revision_id=registry_revision,
             bucket_id=bucket_id,
             selector=parsed_selector,
@@ -308,7 +310,7 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
 def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -> Period:
     """Normalise CLI ``--year/--period`` into a typed :class:`~aeat.core.Period`.
 
-    Operators pass user-facing tokens (``Q1``, ``annual``, ``01``); the
+    Operators pass AEAT registry tokens (``1T``, ``0A``, ``01``); the
     backend expects one typed filing period. Registry-only callers should
     project the returned value with ``period.year`` and
     ``period.registry_token`` at the registry boundary.
@@ -320,9 +322,16 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
     and enumerates the registry-declared period tokens for that modelo.
     """
     try:
-        return normalize_modelo_work_period(year, period, modelo=modelo)
-    except ModeloWorkPeriodTokenError as exc:
-        raise _bad_parameter_from_localized_context(exc) from exc
+        return _canonical_period(period, year=year)
+    except typer.BadParameter as exc:
+        raise typer.BadParameter(_period_token_error(year, period, modelo, fallback=str(exc))) from exc
+
+
+def _resolve_optional_cli_period(*, year: int | None, period: str | None, modelo: str | None) -> Period | None:
+    """Resolve a raw CLI period string when enough year context was supplied."""
+    if period is None or year is None:
+        return None
+    return _resolve_year_period(year, period, modelo=modelo)
 
 
 def _period_token_error(
@@ -361,7 +370,7 @@ def _period_token_error(
         default=(
             f"--period {token!r} is not a recognised period token. --year and "
             f"--period are composed separately: pass --year {year} for the "
-            f"filing year and a period token (0A for annual, Qn for a quarter, "
+            f"filing year and a period token (0A for annual, 1T-4T for quarters, "
             f"or MM for a month) for --period."
         ),
         token=token,
