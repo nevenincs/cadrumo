@@ -105,6 +105,8 @@ _M202 = "202"
 # live calculate focused on the BIN / dotaciones self-carries.
 _M202_PAGO_OUTPUT = "34"
 _M202_PAGO_PERIODS = ("1P", "2P", "3P")
+_M202_PAGO_RELATION = "modelo-200-2024-rel-202-pagos-fraccionados"
+_CASILLA_CUOTA_DIFERENCIAL = "DP200014B:00611"
 
 # The M200 ejercicio under live calculate, and the prior ejercicio the
 # filing_year_delta = -1 self-relations source.
@@ -216,7 +218,11 @@ def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None
         )
 
 
-def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregationCalculationResult:
+def _calculate_m200(
+    secure_objects: SecureObjectRepository,
+    *,
+    seed_m202_pagos: bool = True,
+) -> BucketAggregationCalculationResult:
     """Run the live M200/2024/0A calculate over the seeded bucket.
 
     Every M200 binding is either ``profile`` (filled by the profile resolver from
@@ -229,7 +235,8 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
     the cuota-diferencial formula resolves; it is not the carry under test.
     """
     _seed_m200_sociedad_profile()
-    _seed_zero_m202_pagos(obs_repo=CalculationObservationRepository())
+    if seed_m202_pagos:
+        _seed_zero_m202_pagos(obs_repo=CalculationObservationRepository())
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -335,3 +342,37 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
         f"M200 2024 casilla 01495 with no prior 01499 must resolve zero; got {values[_SALDO_INICIAL_CUMPLIDO]}"
     )
     assert result.source_diagnostics == ()
+
+
+def test_m200_missing_m202_relation_becomes_unresolved_advisory_on_live_calculate(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Missing formula-consumed M202 pagos do not raise or zero-contribute.
+
+    This pins the S31 robustness rule on the live path: a missing same-year M202
+    relation leaves the dependent M200 formula output unresolved and emits a
+    non-blocking relation-prefill advisory naming the missing source filings.
+    The bound self-carry casillas still resolve their first-ejercicio zero stock
+    without diagnostics because they are not formula relation operands.
+    """
+    result = _calculate_m200(secure_objects, seed_m202_pagos=False)
+
+    values = result.revision.casilla_values
+    assert _CASILLA_CUOTA_DIFERENCIAL not in values, (
+        "missing M202 pagos relation must leave M200 cuota diferencial unresolved; "
+        f"got {_CASILLA_CUOTA_DIFERENCIAL}={values.get(_CASILLA_CUOTA_DIFERENCIAL)!r}"
+    )
+    assert Decimal(values[_BIN_PENDIENTE_INICIO]) == Decimal("0")
+    assert Decimal(values[_SALDO_INICIAL_NO_CUMPLIDO]) == Decimal("0")
+    assert Decimal(values[_SALDO_INICIAL_CUMPLIDO]) == Decimal("0")
+
+    diagnostics = tuple(diag for diag in result.source_diagnostics if diag.relation_id == _M202_PAGO_RELATION)
+    assert len(diagnostics) == 1
+    diagnostic = diagnostics[0]
+    assert diagnostic.reason == "source_issue"
+    assert diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+    assert diagnostic.resolver_id == _RELATION_PREFILL_SOURCE
+    assert "modelo 202" in diagnostic.message
+    assert str(_FILING_YEAR) in diagnostic.message
+    for period in _M202_PAGO_PERIODS:
+        assert period in diagnostic.message

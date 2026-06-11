@@ -9,7 +9,7 @@ private underscore modules inside this package.
 from __future__ import annotations
 
 # isort: off
-from ._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
+from ._enums import IvaRate, PaymentStatus, iva_rate_kind, iva_rate_percentage, numeric_iva_rate_percentages
 from ._errors import (
     InvoiceCatalogueError,
     InvoiceError,
@@ -63,6 +63,7 @@ __all__ = [
     "classify_invoice_line_for_iva",
     "derive_invoice_id",
     "invoice_line_to_iva_observation",
+    "iva_rate_kind",
     "iva_rate_percentage",
     "link_transaction",
     "numeric_iva_rate_percentages",

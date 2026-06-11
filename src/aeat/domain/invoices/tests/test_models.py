@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...iva import InvoiceKind
+from ...iva import InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
 from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
@@ -264,6 +264,77 @@ def test_invoice_iva_category_rejects_unknown_string() -> None:
         )
 
 
+def test_invoice_accepts_oss_axes_and_destination_rate_line() -> None:
+    """OSS invoice lines carry destination-rate IVA through the explicit OSS rate tier."""
+    line = InvoiceLine(
+        description="OSS service to Germany",
+        quantity=Decimal("1"),
+        unit_price=Decimal("100"),
+        subtotal=Decimal("100"),
+        iva_rate=IvaRate.RATE_21,
+        oss_rate_kind=IvaRateKind.GENERAL,
+        iva_amount=Decimal("19"),
+    )
+    invoice = Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "OSS-DE-001",
+            "issued_at": date(2026, 4, 1),
+            "counterparty_name": "DE consumer",
+            "counterparty_tax_id": "DE123456789",
+            "counterparty_country": "DE",
+            "base_total": Decimal("100"),
+            "iva_total": Decimal("19"),
+            "grand_total": Decimal("119"),
+            "currency": "EUR",
+            "lines": (line,),
+            "payment_status": PaymentStatus.PAID,
+            "oss_ioss_regime": OssIossRegime.UNION_SCHEME,
+            "oss_transaction_kind": TransactionKind.OSS_UNION_SERVICES,
+        },
+    )
+
+    assert invoice.oss_ioss_regime is OssIossRegime.UNION_SCHEME
+    assert invoice.oss_transaction_kind is TransactionKind.OSS_UNION_SERVICES
+    assert invoice.lines[0].oss_rate_kind is IvaRateKind.GENERAL
+    assert invoice.iva_total == Decimal("19")
+
+
+def test_invoice_rejects_incomplete_oss_axes() -> None:
+    """OSS regime and transaction-kind axes must travel together."""
+    with pytest.raises(ValidationError, match=r"oss_ioss_regime and oss_transaction_kind"):
+        Invoice.model_validate(
+            {
+                **_valid_invoice(
+                    counterparty_country="DE",
+                    counterparty_tax_id="DE123456789",
+                ).model_dump(mode="python"),
+                "oss_ioss_regime": OssIossRegime.UNION_SCHEME,
+            },
+        )
+
+
+def test_invoice_rejects_oss_line_rate_without_invoice_oss_axes() -> None:
+    """A destination-rate line cannot bypass domestic validation on a non-OSS invoice."""
+    line = InvoiceLine(
+        description="OSS line without invoice axes",
+        quantity=Decimal("1"),
+        unit_price=Decimal("100"),
+        subtotal=Decimal("100"),
+        iva_rate=IvaRate.RATE_21,
+        oss_rate_kind=IvaRateKind.GENERAL,
+        iva_amount=Decimal("19"),
+    )
+
+    with pytest.raises(ValidationError, match=r"oss_rate_kind requires invoice-level OSS/IOSS axes"):
+        _valid_invoice(
+            invoice_number="NOT-OSS-001",
+            counterparty_country="DE",
+            counterparty_tax_id="DE123456789",
+            lines=(line,),
+        )
+
+
 def test_invoice_rejects_invalid_issued_at_without_typeerror_escape() -> None:
     """Invalid date input must stay inside the pydantic validation boundary."""
     with pytest.raises(ValidationError, match=r"not-a-date.*not a valid ISO-8601 date"):
@@ -454,7 +525,8 @@ def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> 
     invoice = _valid_invoice(linked_transaction_ids=(hex_a, hex_b, hex_a))
     assert invoice.linked_transaction_ids == (hex_a, hex_b)
     with pytest.raises(
-        ValidationError, match=r"each linked_transaction_id must be a 64-character lowercase hex digest",
+        ValidationError,
+        match=r"each linked_transaction_id must be a 64-character lowercase hex digest",
     ):
         _valid_invoice(linked_transaction_ids=("not-hex",))
 

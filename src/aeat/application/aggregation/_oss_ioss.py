@@ -30,11 +30,14 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...core import Period
 from ...domain.calculations.registry import (
     ModeloRevision,
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
 )
+from ...domain.invoices import Invoice, InvoiceCatalogueRepository, InvoiceLine, iva_rate_kind
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
@@ -49,6 +52,7 @@ from ._source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    storage_degradation_resolution,
 )
 
 _LedgerId = Annotated[
@@ -108,6 +112,7 @@ class OssIossLedgerCandidate(BaseModel):
 #: validation and the line is rejected before the registry resolver
 #: aggregates it.
 _IVA_TOLERANCE: Decimal = Decimal("0.01")
+_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
@@ -230,21 +235,98 @@ def aggregate_oss_ioss_bindings(
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)
 
 
+def _candidate_for_invoice_line(
+    invoice: Invoice,
+    line: InvoiceLine,
+    *,
+    line_index: int,
+) -> OssIossLedgerCandidate | None:
+    if invoice.oss_ioss_regime is None or invoice.oss_transaction_kind is None:
+        return None
+    destination = invoice.counterparty_eu_member_state
+    if destination is None:
+        return None
+    rate_kind = line.oss_rate_kind or iva_rate_kind(line.iva_rate)
+    if rate_kind is None:
+        return None
+    return OssIossLedgerCandidate(
+        ledger_id=f"{invoice.invoice_id}:{line_index}",
+        transaction_date=invoice.issued_at,
+        regime=invoice.oss_ioss_regime,
+        destination_member_state=destination,
+        rate_kind=rate_kind,
+        invoice_direction=invoice.kind,
+        transaction_kind=invoice.oss_transaction_kind,
+        base_amount=line.subtotal,
+        iva_amount=line.iva_amount,
+    )
+
+
+def oss_ioss_candidates_from_repositories(
+    *,
+    bucket_id: str,
+    period: Period,
+    invoice_repository: InvoiceCatalogueRepository | None = None,
+) -> tuple[OssIossLedgerCandidate, ...]:
+    """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates."""
+    if not period.has_date_span():
+        return ()
+    repo = invoice_repository if invoice_repository is not None else InvoiceCatalogueRepository(bucket_id=bucket_id)
+    candidates: list[OssIossLedgerCandidate] = []
+    for invoice in repo.load():
+        if invoice.kind is not InvoiceKind.ISSUED:
+            continue
+        if invoice.issued_at < period.start_date or invoice.issued_at > period.end_date:
+            continue
+        for index, line in enumerate(invoice.lines, start=1):
+            candidate = _candidate_for_invoice_line(invoice, line, line_index=index)
+            if candidate is not None:
+                candidates.append(candidate)
+    return tuple(candidates)
+
+
+def aggregate_oss_ioss_from_repositories(
+    revision: ModeloRevision,
+    *,
+    bucket_id: str,
+    period: Period,
+    invoice_repository: InvoiceCatalogueRepository | None = None,
+) -> dict[str, Decimal]:
+    """Resolve Modelo 369 OSS/IOSS bindings from the live invoice catalogue."""
+    return aggregate_oss_ioss_bindings(
+        revision,
+        oss_ioss_candidates_from_repositories(
+            bucket_id=bucket_id,
+            period=period,
+            invoice_repository=invoice_repository,
+        ),
+    )
+
+
 class OssIossLedgerSourceResolver:
     """Source mesh resolver for Modelo 369 OSS / IOSS ledger candidates."""
 
     resolver_id = "ledger_oss_aggregation"
     owned_sources = ("ledger_oss_aggregation",)
 
-    def __init__(self, *, candidates: Sequence[OssIossLedgerCandidate]) -> None:
+    def __init__(
+        self,
+        *,
+        candidates: Sequence[OssIossLedgerCandidate] | None = None,
+        invoice_repository: InvoiceCatalogueRepository | None = None,
+    ) -> None:
         """Construct the resolver with a pre-classified ledger candidate sequence.
 
         Args:
             candidates: The substrate-classified ledger lines for the
                 current period. The resolver validates and aggregates
                 these on each :meth:`resolve` call.
+            invoice_repository: Optional live invoice repository used to
+                project OSS/IOSS-tagged invoices when ``candidates`` is
+                not supplied.
         """
-        self._candidates = tuple(candidates)
+        self._candidates = tuple(candidates) if candidates is not None else None
+        self._invoice_repository = invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Validate candidates and return the resolved OSS/IOSS binding values.
@@ -254,21 +336,15 @@ class OssIossLedgerSourceResolver:
         ``resolve_ledger_oss_aggregation_binding_values`` to aggregate the
         matched lines per binding selector.
 
-        When the resolver is constructed with **no candidates** (the live
-        operator calculate path always passes ``candidates=()`` — there is no
-        bucket-substrate projection that can populate an
-        :class:`OssIossLedgerCandidate`, because neither the invoice nor the
-        transaction model carries the OSS ``regime`` or goods/services
-        ``transaction_kind`` axis the binding selectors require), the resolver
-        still CLAIMS ``ledger_oss_aggregation`` (so the binding compiles and is
-        not flagged as a novel source) but surfaces one non-blocking
-        ``oss_no_live_source`` advisory per declared OSS binding. This keeps a
-        Modelo 369 OSS cuota from resolving to a SILENT claimed-zero: an
-        operator with OSS sales is explicitly told the OSS cuotas are not
-        auto-computed from the bucket and must be supplied manually
-        (no-silent-under-declaration; parity with the deferred-detalle-kinds
-        advisory). Pre-classified callers (the Sheets calc-sync caller) pass
-        candidates and fold them normally with no advisory.
+        When the resolver is constructed with explicit ``candidates``, those
+        candidates are folded directly. When ``candidates`` is omitted, the live
+        operator path projects OSS/IOSS-tagged issued invoices from the invoice
+        repository into candidates first. If no candidate is available, the
+        resolver still CLAIMS ``ledger_oss_aggregation`` (so the binding
+        compiles and is not flagged as a novel source) but surfaces one
+        non-blocking ``oss_no_live_source`` advisory per declared OSS binding.
+        This keeps a Modelo 369 OSS cuota from resolving to a SILENT
+        claimed-zero when the catalogue carries no classifiable OSS invoices.
 
         Args:
             context: The :class:`CalculationSourceContext` carrying the
@@ -280,25 +356,44 @@ class OssIossLedgerSourceResolver:
             binding values, source transaction ids, and per-observation
             provenance records — or, when no candidates were supplied, an
             empty resolution carrying one ``oss_no_live_source`` advisory per
-            declared OSS binding.
+            declared OSS binding when no candidates can be projected.
 
         Raises:
             AggregationValidationError: When any candidate's persisted IVA
                 amount disagrees with the destination Member State rate by
                 more than one cent.
         """
-        if not self._candidates:
+        try:
+            candidates = (
+                oss_ioss_candidates_from_repositories(
+                    bucket_id=context.bucket_id,
+                    period=context.period,
+                    invoice_repository=self._invoice_repository,
+                )
+                if self._candidates is None
+                else self._candidates
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+        if not candidates:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
                 diagnostics=self._no_live_source_diagnostics(context),
             )
-        observations = validate_oss_ioss_observations(self._candidates)
+        observations = validate_oss_ioss_observations(candidates)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_ledger_oss_aggregation_binding_values(context.revision, observations),
-            source_transaction_ids=tuple(sorted(observation.ledger_id for observation in observations)),
+            source_transaction_ids=tuple(
+                sorted({observation.ledger_id.split(":", 1)[0] for observation in observations}),
+            ),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="ledger_oss_aggregation",
@@ -323,10 +418,8 @@ class OssIossLedgerSourceResolver:
                 binding_id=binding.id,
                 message=(
                     f"binding {binding.id!r} declares source 'ledger_oss_aggregation' but no "
-                    "bucket substrate can be projected into an OSS/IOSS ledger candidate "
-                    "(neither the invoice nor the transaction model carries the OSS regime or "
-                    "goods/services transaction-kind axis the selector requires); the OSS cuota "
-                    "is NOT auto-computed and must be supplied manually"
+                    "OSS/IOSS-tagged issued invoice line was available for the filing period; "
+                    "the OSS cuota is NOT auto-computed from the invoice catalogue"
                 ),
             )
             for binding in context.revision.bindings
@@ -338,6 +431,8 @@ __all__ = [
     "OssIossLedgerCandidate",
     "OssIossLedgerSourceResolver",
     "aggregate_oss_ioss_bindings",
+    "aggregate_oss_ioss_from_repositories",
+    "oss_ioss_candidates_from_repositories",
     "validate_oss_ioss_observation",
     "validate_oss_ioss_observations",
 ]
