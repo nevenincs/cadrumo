@@ -347,7 +347,7 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
             (
                 item.target_modelo,
                 str(item.target_filing_year),
-                item.target_period,
+                item.target_period.registry_token,
                 item.target_revision_id,
                 str(item.dependency_count),
                 ", ".join(item.source_modelos),
@@ -363,7 +363,7 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
             "target\t"
             f"{result.clean_state.target_modelo} "
             f"{result.clean_state.target_filing_year} "
-            f"{result.clean_state.target_period}",
+            f"{result.clean_state.target_period.registry_token}",
             f"requires_clean_state\t{result.clean_state.requires_clean_state}",
             f"clean\t{result.clean_state.clean}",
             f"blockers\t{', '.join(result.clean_state.blockers)}",
@@ -375,7 +375,7 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
             (
                 evidence.source_modelo,
                 str(evidence.filing_year),
-                evidence.period,
+                evidence.period.registry_token,
                 str(evidence.clean),
                 ", ".join(evidence.blockers),
                 evidence.external_evidence_kind or "",

@@ -404,7 +404,7 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
     # tab-separated text-mode emit uses the hyphen form for operator legibility.
     assert payload["operation"] == "modelo.iva_wallet.seed"
     assert payload["filing_year"] == 2024
-    assert payload["period"] == "4T"
+    assert payload["period"] == {"filing_year": 2024, "code": "4T"}
     assert payload["amount"] == "1200.50"
     assert payload["status"] == "seeded"
     # Stored state must match the seeded amount.

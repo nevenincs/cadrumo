@@ -193,7 +193,7 @@ def _emit_work_resume(
         calculation_revision_id=resolution.calculation_revision_id,
         short_calculation_revision_id=resolution.short_calculation_revision_id,
         modelo=result.modelo,
-        period=str(result.period),
+        period=result.period,
         aborted_reason=result.aborted_reason.value,
         obligation=result.obligation.model_dump(mode="json"),
     )
@@ -202,7 +202,7 @@ def _emit_work_resume(
         f"prior_workflow_run_id\t{result.resumed_from_run_id}",
         f"resolved_source\t{resolution.source}",
         f"modelo\t{result.modelo}",
-        f"period\t{str(result.period)}",
+        f"period\t{result.period!s}",
         f"filing_year\t{resolution.filing_year or ''}",
         f"registry_period\t{resolution.registry_period or ''}",
         f"short_work_unit_id\t{resolution.short_work_unit_id or ''}",

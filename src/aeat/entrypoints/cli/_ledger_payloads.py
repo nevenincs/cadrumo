@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ...core import Period
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
@@ -86,18 +87,6 @@ class SpendingCategoryFamilyPayload(OutputSchema):
     category_ids: list[str]
 
 
-class LedgerPeriodPayload(OutputSchema):
-    """Typed core-period projection nested in ledger envelopes (D2).
-
-    Mirrors :class:`aeat.core.Period`'s ``model_dump(mode="json")`` shape,
-    replacing the former aggregation-wrapper payload on the status, import,
-    and preflight envelopes.
-    """
-
-    filing_year: int
-    code: str
-
-
 class LedgerReviewRowPayload(OutputSchema):
     """One ledger review row."""
 
@@ -132,7 +121,7 @@ class LedgerTransactionParticipationEntryPayload(OutputSchema):
     work_unit_id: str
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     revision_state: str
     filing_record_id: str | None = None
     justificante_reference: str | None = None
@@ -514,10 +503,7 @@ class LedgerStatusResult(OutputSchema):
     pending_review_count: int
     reviewed_count: int
     skipped_count: int
-    # The filing period travels as a typed core Period on the backend report;
-    # the JSON envelope surfaces its serialised {filing_year, code} mapping,
-    # mirroring ``LedgerPreflightResult.period``.
-    period: LedgerPeriodPayload | None = None
+    period: Period | None = None
     checked_transaction_count: int = 0
     readiness_issue_count: int = 0
     ready: bool | None = None
@@ -664,9 +650,7 @@ class LedgerImportPayload(OutputSchema):
     likely_duplicates: int = 0
     dry_run: bool
     verify: bool
-    # The filing period travels as a typed core Period on the backend result;
-    # the JSON envelope surfaces its serialised {filing_year, code} mapping.
-    period: LedgerPeriodPayload | None = None
+    period: Period | None = None
     bucket_id: str | None = None
     import_batch_id: str | None = None
     bucket_event_ids: list[str] = []
@@ -868,7 +852,7 @@ class LedgerPreflightResult(OutputSchema):
     """
 
     bucket_id: str
-    period: LedgerPeriodPayload
+    period: Period
     checked_transaction_count: int
     issues: list[LedgerPreflightIssuePayload]
     ready: bool

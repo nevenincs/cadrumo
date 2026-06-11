@@ -355,7 +355,7 @@ def test_work_dependencies_lists_cross_period_inventory(_isolated_cli_backend: P
     assert payload["target_modelos"] == ["390"]
     assert "303" in payload["source_modelos"]
     assert payload["target_count"] >= 1
-    annual = next(item for item in payload["items"] if item["target_period"] == "0A")
+    annual = next(item for item in payload["items"] if item["target_period"] == {"filing_year": 2025, "code": "0A"})
     assert annual["target_modelo"] == "390"
     assert annual["dependency_count"] >= 4
     assert {dependency["source_modelo"] for dependency in annual["dependencies"]} == {"303"}
@@ -379,14 +379,14 @@ def test_work_dependencies_surfaces_current_clean_state_blockers(_isolated_cli_b
 
     assert clean_state["target_modelo"] == "390"
     assert clean_state["target_filing_year"] == 2025
-    assert clean_state["target_period"] == "0A"
+    assert clean_state["target_period"] == {"filing_year": 2025, "code": "0A"}
     assert clean_state["requires_clean_state"] is True
     assert clean_state["clean"] is False
     assert "missing_current_filing_record" in clean_state["blockers"]
     assert "missing_observation" in clean_state["blockers"]
     assert any(
         dependency["source_modelo"] == "303"
-        and dependency["period"] == "1T"
+        and dependency["period"] == {"filing_year": 2025, "code": "1T"}
         and "missing_current_filing_record" in dependency["blockers"]
         for dependency in clean_state["dependencies"]
     )
