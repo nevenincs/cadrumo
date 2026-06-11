@@ -45,7 +45,7 @@ def resolve_calculation_binding_inputs(
     bucket_id: str,
     snapshot: RegistrySnapshot,
     filing_year: int,
-    period: str,
+    period: _Period,
     casilla_inputs: Mapping[str, Decimal],
     caller_binding_values: Mapping[str, Decimal],
     caller_enum_binding_values: Mapping[str, str],
@@ -232,7 +232,7 @@ def _resolve_borrador_bindings_for_calculation(
     bucket_id: str,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: _Period,
     borrador_snapshot_id: str | None,
     caller_binding_values: Mapping[str, Decimal],
     caller_enum_binding_values: Mapping[str, str],
@@ -252,7 +252,7 @@ def _resolve_borrador_bindings_for_calculation(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
-            period=_Period.from_year_and_code(filing_year, period),
+            period=period,
             revision=registry_snapshot.revision,
         ),
     )
@@ -333,7 +333,7 @@ def _resolve_declaration_period_inputs(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    period: str,
+    period: _Period,
 ) -> dict[str, Decimal]:
     """Return informational-casilla inputs sourced from work-unit metadata."""
     resolved: dict[str, Decimal] = {}
@@ -343,10 +343,10 @@ def _resolve_declaration_period_inputs(
         if casilla.semantic_role == "filing_year":
             resolved[casilla.id] = Decimal(filing_year)
         elif casilla.semantic_role == "filing_period":
-            ordinal = _FILING_PERIOD_ORDINALS.get(period.strip().upper())
+            ordinal = _FILING_PERIOD_ORDINALS.get(period.registry_token)
             if ordinal is None:
                 raise ModeloError(
-                    f"work-unit period {period!r} has no registry period ordinal; "
+                    f"work-unit period {period.registry_token!r} has no registry period ordinal; "
                     f"cannot resolve informational casilla {casilla.id!r}",
                 )
             resolved[casilla.id] = Decimal(ordinal)

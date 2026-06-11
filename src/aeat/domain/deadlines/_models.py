@@ -263,8 +263,23 @@ class CrossPeriodGroupMemberRoster(BaseModel):
 
     source_modelo: str = Field(default=Modelo.M322.value, min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
     member_nifs: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_period_from_profile_token(cls, data: object) -> object:
+        if not isinstance(data, dict):
+            return data
+        period = data.get("period")
+        if isinstance(period, Period) or isinstance(period, dict):
+            return data
+        filing_year = data.get("filing_year")
+        if isinstance(filing_year, int) and isinstance(period, str):
+            coerced = dict(data)
+            coerced["period"] = Period.from_year_and_code(filing_year, period)
+            return coerced
+        return data
 
     @field_validator("member_nifs", mode="before")
     @classmethod
@@ -284,6 +299,15 @@ class CrossPeriodGroupMemberRoster(BaseModel):
         if len(set(cleaned)) != len(cleaned):
             raise DeadlineValidationError("cross-period group member NIFs must be unique")
         return tuple(sorted(cleaned))
+
+    @model_validator(mode="after")
+    def _validate_period_year_matches(self) -> CrossPeriodGroupMemberRoster:
+        if self.period.year != self.filing_year:
+            raise DeadlineValidationError(
+                f"cross-period group roster filing_year {self.filing_year} "
+                f"does not match period year {self.period.year}",
+            )
+        return self
 
 
 class TaxpayerProfile(BaseModel):

@@ -15,7 +15,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TypedDict
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
 from ...core.setup_answers import SetupAnswers, project_answers
@@ -268,14 +268,14 @@ def _parse_cross_period_group_member_rosters(canonical: dict[str, str]) -> tuple
             CrossPeriodGroupMemberRoster(
                 source_modelo=source_modelo,
                 filing_year=filing_year,
-                period=period,
+                period=Period.from_year_and_code(filing_year, period),
                 member_nifs=member_nifs,
             ),
         )
     return tuple(
         sorted(
             rosters,
-            key=lambda item: (item.source_modelo, item.filing_year, item.period),
+            key=lambda item: (item.source_modelo, item.period.year, item.period.registry_token),
         ),
     )
 

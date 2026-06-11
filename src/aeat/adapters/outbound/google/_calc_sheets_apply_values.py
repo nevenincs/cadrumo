@@ -90,7 +90,7 @@ def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
     stamps = (
         ("Modelo", metadata.modelo_id),
         ("Revisión", metadata.revision_id),
-        ("Período", f"{metadata.period} / {metadata.filing_year}"),
+        ("Período", f"{metadata.period.registry_token} / {metadata.filing_year}"),
         ("Motor", metadata.engine_version),
         ("Registry SHA", metadata.registry_sha),
         ("Exportado", metadata.exported_at.isoformat()),

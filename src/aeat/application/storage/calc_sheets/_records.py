@@ -27,9 +27,10 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Period
 from ....core.time import now as _utc_now
 from ....core.time._utc import validate_utc_aware
 from ....domain.calculations.registry import (
@@ -717,7 +718,7 @@ class SheetExportMetadata(BaseModel):
     modelo_id: str = Field(min_length=1)
     revision_id: RevisionId
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     engine_version: str = Field(min_length=1)
     registry_sha: str = Field(min_length=8, max_length=64, pattern=r"^[0-9a-f]+$")
     exported_at: datetime
@@ -726,6 +727,18 @@ class SheetExportMetadata(BaseModel):
     def _exported_at_is_utc(self) -> SheetExportMetadata:
         validate_utc_aware(self.exported_at)
         return self
+
+    @model_validator(mode="after")
+    def _period_year_matches_metadata(self) -> SheetExportMetadata:
+        if self.period.year != self.filing_year:
+            raise ValueError(
+                f"metadata filing_year {self.filing_year} does not match period year {self.period.year}",
+            )
+        return self
+
+    @field_serializer("period", mode="plain")
+    def _serialize_period(self, value: Period) -> dict[str, object]:
+        return value.model_dump()
 
 
 class SheetExportPlan(BaseModel):

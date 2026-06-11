@@ -85,7 +85,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
                 _apply_iva_compensation_decision_binding(
                     "303",
                     target_year,
-                    target_period,
+                    target_filing_period,
                     bucket_id=bucket_id,
                     revision=revision,
                     taxpayer_nif=taxpayer_nif,
@@ -100,7 +100,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
         _apply_iva_compensation_decision_binding(
             "303",
             target_year,
-            target_period,
+            target_filing_period,
             bucket_id=bucket_id,
             revision=revision,
             taxpayer_nif=taxpayer_nif,

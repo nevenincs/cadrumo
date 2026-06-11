@@ -7,7 +7,6 @@ calendar reflects which obligations already carry a justificante.
 
 from __future__ import annotations
 
-import re as _re
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from enum import StrEnum
@@ -48,40 +47,6 @@ if TYPE_CHECKING:
     from ..live._notifications import PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
-
-_DASHED_SUFFIX_RE = _re.compile(r"^(\d{4})-(.+)$")
-_YEAR_ONLY_RE = _re.compile(r"^(\d{4})$")
-
-
-def _obligation_period_to_core(period_str: str | _Period) -> _Period:
-    """Convert a :class:`ModeloDeadline` period string to a typed :class:`_Period`.
-
-    Handles the extended set of period formats the deadline-engine registry uses:
-    ``YYYY-0A``, ``YYYY-[1-4]T``, ``YYYY-MM``, ``YYYY-[1-3]P``,
-    ``YYYY-EXT-[1-4]T``, ``YYYY-AD-HOC``, ``YYYYQ[1-4]``, bare ``YYYY``.
-    """
-    if isinstance(period_str, _Period):
-        return period_str
-    # Try the standard parse_canonical_period bridge first (handles YYYYQ,
-    # YYYY-nT, YYYY-MM, YYYYA, bare YYYY, YYYYPn).
-    from ...domain.period import PeriodValidationError as _PeriodValidationError
-
-    try:
-        _year, _code = _parse_canonical_period(period_str)
-        return _Period.from_year_and_code(_year, _code)
-    except _PeriodValidationError:
-        pass
-    # Handle YYYY-<suffix> forms not in the base bridge.
-    if m := _DASHED_SUFFIX_RE.fullmatch(period_str):
-        _year_int = int(m.group(1))
-        _suffix = m.group(2)
-        # YYYY-0A, YYYY-1T..4T, YYYY-01..12, YYYY-1P..3P, YYYY-EXT-1T..4T, YYYY-AD-HOC
-        return _Period.from_year_and_code(_year_int, _suffix)
-    # bare YYYY fallback
-    if m := _YEAR_ONLY_RE.fullmatch(period_str):
-        return _Period.from_year_and_code(int(m.group(1)), "0A")
-    raise ValueError(f"Cannot convert deadline period {period_str!r} to core Period")
-
 
 class OverviewPeriodState(StrEnum):
     """Closed 4-state user-facing period state for the calendar view.
@@ -685,7 +650,10 @@ def calendar_filing_evidence_from_sources(
         if evidence is not None:
             _merge_filing_evidence(by_key, evidence)
     for observation in filed_declaration_observations:
-        evidence = _filing_evidence_from_filed_declaration_observation(observation)
+        evidence = _filing_evidence_from_filed_declaration_observation(
+            observation,
+            expected_tax_id=expected_tax_id,
+        )
         if evidence is not None:
             event_specific.append(evidence)
             _merge_filing_evidence(by_key, evidence)
@@ -825,13 +793,20 @@ def _filing_evidence_from_observed_event(
     )
 
 
-def _filing_evidence_from_filed_declaration_observation(observation: object) -> OverviewCalendarFilingEvidence | None:
+def _filing_evidence_from_filed_declaration_observation(
+    observation: object,
+    *,
+    expected_tax_id: str | None,
+) -> OverviewCalendarFilingEvidence | None:
     """Project a captured AEAT filed-declaration observation into calendar evidence."""
     modelo = getattr(observation, "modelo", None)
     filing_year = getattr(observation, "ejercicio", None)
     period = getattr(observation, "period", None)
     expediente_id = getattr(observation, "expediente_id", None)
     if modelo is None or filing_year is None or period is None or expediente_id is None:
+        return None
+    expected = (expected_tax_id or "").strip()
+    if expected and str(getattr(observation, "authenticated_identity", "") or "").strip() != expected:
         return None
     _year_int = int(filing_year)
     _period_obj = _Period.from_year_and_code(_year_int, str(period))
@@ -1169,7 +1144,7 @@ def _calendar_entry_from_obligation(
         reason = "calendar_unavailable"
         holiday_refs = ()
         jurisdictions = ()
-    period = _obligation_period_to_core(obligation.period)
+    period = obligation.period
     return OverviewCalendarEntry(
         modelo=obligation.modelo,
         period=period,
@@ -1308,11 +1283,10 @@ def build_overview_calendar(
             applicability = derive_modelo_applicability(profile, obligation.modelo)
             if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
                 if show_suppressed:
-                    _s_period = _obligation_period_to_core(obligation.period)
                     suppressed.append(
                         SuppressedCalendarEntry(
                             modelo=obligation.modelo,
-                            period=_s_period,
+                            period=obligation.period,
                             verdict=applicability.verdict,
                             reason=applicability.reason,
                         ),

@@ -801,7 +801,7 @@ def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
         ("aeat_modelo_id", metadata.modelo_id),
         ("aeat_revision_id", metadata.revision_id),
         ("aeat_filing_year", str(metadata.filing_year)),
-        ("aeat_period", metadata.period),
+        ("aeat_period", metadata.period.registry_token),
         ("aeat_exported_at", metadata.exported_at.isoformat()),
     ]
     if plan.relation_provenance is not None:
@@ -962,12 +962,12 @@ def _build_cell_note_requests(
 
 def _spreadsheet_title(plan: SheetExportPlan) -> str:
     metadata = plan.metadata
-    return f"AEAT {metadata.modelo_id} {metadata.period} {metadata.filing_year}"
+    return f"AEAT {metadata.modelo_id} {metadata.period.registry_token} {metadata.filing_year}"
 
 
 def _subfolder_name(plan: SheetExportPlan) -> str:
     metadata = plan.metadata
-    return f"{metadata.modelo_id}-{metadata.period}-{metadata.filing_year}"
+    return f"{metadata.modelo_id}-{metadata.period.registry_token}-{metadata.filing_year}"
 
 
 def _open_or_create_plan_spreadsheet(

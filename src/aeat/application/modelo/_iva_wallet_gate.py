@@ -73,7 +73,7 @@ def resolve_iva_compensation_decision_for_calculation(
 def apply_iva_compensation_decision_binding(
     modelo: str,
     filing_year: int,
-    period: str,
+    period: _Period,
     *,
     bucket_id: str,
     revision: ModeloRevision,
@@ -116,15 +116,14 @@ def apply_iva_compensation_decision_binding(
             translated_message="application.modelo.errors.iva_wallet_unsupported_decision_type",
             context={"decision_type": type(decision).__name__},
         )
-    filing_period = _Period.from_year_and_code(filing_year, period)
-    if decision.target_period != filing_period:
+    if decision.target_period != period:
         raise ModeloIvaWalletReconciliationBlocked(
             translated_message="application.modelo.errors.iva_wallet_target_mismatch",
             context={
                 "target_year": decision.target_year,
                 "target_period": decision.target_period.registry_token,
                 "filing_year": filing_year,
-                "period": period,
+                "period": period.registry_token,
             },
         )
     if taxpayer_nif is None:
@@ -168,7 +167,7 @@ def apply_iva_compensation_decision_binding(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
-            period=_Period.from_year_and_code(filing_year, period),
+            period=period,
             revision=revision,
         ),
     )
