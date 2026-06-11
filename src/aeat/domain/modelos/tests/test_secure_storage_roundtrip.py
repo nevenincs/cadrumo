@@ -111,6 +111,13 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     assert (profile.paths.db_dir / "aeat.db").is_file()
     assert loaded == original
     loaded_unit = loaded.work_units[work_unit.work_unit_id]
+    dumped_unit = loaded_unit.model_dump(mode="json")
+    assert dumped_unit["filing_year"] == 2025
+    assert dumped_unit["period"] == "1T"
+    assert "2025Q1" not in loaded_unit.model_dump_json()
+    database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+    assert b"2025Q1" not in database_bytes
+    assert b"2025-1T" not in database_bytes
     # Per-field witnesses: ModeloCode preservation, year/period
     # round-trip, state enum identity, content-addressed work_unit_id,
     # and the discard metadata triple (which were the test's main
