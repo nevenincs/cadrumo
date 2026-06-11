@@ -44,7 +44,7 @@ def create_work_unit(
     reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     if period.filing_year != filing_year:
         raise ValueError(f"filing_year {filing_year!r} does not match period year {period.filing_year!r}")
-    reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period.registry_token)
+    reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repo.load()

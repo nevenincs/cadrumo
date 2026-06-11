@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core import Period
 from ...domain.modelos._errors import ModeloError
 
 if TYPE_CHECKING:
@@ -44,7 +45,7 @@ def reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
     )
 
 
-def reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period: str) -> None:
+def reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period: Period) -> None:
     """Refuse a work-unit create that names a period the revision does not declare."""
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -58,10 +59,10 @@ def reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period:
     declared: set[str] = set()
     for schedule in revision.filing_schedules:
         declared.update(schedule.periods)
-    if not declared or period in declared:
+    if not declared or period.registry_token in declared:
         return
     available = ", ".join(sorted(declared))
     raise ModeloError(
-        f"period {period!r} is not declared on modelo {modelo!r} "
+        f"period {period.registry_token!r} is not declared on modelo {modelo!r} "
         f"revision {revision_id!r}. Available periods: {available}",
     )

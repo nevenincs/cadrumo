@@ -26,11 +26,13 @@ def test_google_sync_calc_snapshot_loader_accepts_typed_period() -> None:
 
 def test_google_sync_calc_period_refuses_combined_shape() -> None:
     """Calendar-shaped period input refuses before registry snapshot lookup."""
+    year = 2026
+    combined_period = f"{year}Q1"
 
     with pytest.raises(CliRefusedBoundaryError) as raised:
-        _filing_period_or_refusal(modelo="303", period="2026Q1", year=2026)
+        _filing_period_or_refusal(modelo="303", period=combined_period, year=year)
 
     refusal = raised.value
     assert refusal.context is not None
-    assert refusal.context["period"] == "2026Q1"
-    assert refusal.context["year"] == 2026
+    assert refusal.context["period"] == combined_period
+    assert refusal.context["year"] == year
