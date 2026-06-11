@@ -73,6 +73,7 @@ from .._export import (
     ModeloExportNoActiveBucketError,
     ModeloExportResult,
     ModeloIvaWalletDecisionProvenance,
+    _compose_export_headers,
     _iva_wallet_decision_export_provenance,
     export_modelo_revision,
 )
@@ -183,6 +184,32 @@ def _seed_revision(
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
     return work_unit_id, calculation_revision_id
+
+
+def test_export_headers_use_typed_instalment_period_dates(isolated_backend: None) -> None:
+    bucket_id = _seed_profile(profile_overrides={"identity.surnames": "Test Surnames", "identity.name": "Test Name"})
+    work_unit_id, calculation_revision_id = _seed_revision(
+        bucket_id=bucket_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        modelo="202",
+        filing_year=2026,
+        period="2P",
+    )
+    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
+    revision = CalculationRevisionCatalogueRepository().load().get(calculation_revision_id)
+    assert work_unit is not None
+    assert revision is not None
+
+    headers = _compose_export_headers(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=_profile(),
+        period=Period.from_year_and_code(2026, "2P"),
+    )
+
+    assert headers["fecha_inicio_periodo"] == "01102026"
+    assert headers["fecha_fin_periodo"] == "31102026"
+    assert headers["devengo_start_date"] == "01102026"
 
 
 def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
