@@ -498,3 +498,26 @@ Verification after the change: the split declarations adapter suite passed
 with `63 passed`; ruff passed for the touched adapter and test files; the
 core/domain Period gates passed with `31 passed`; and CLI import smoke printed
 `OK`.
+
+## PERIOD-029 | INFO | Overview filing evidence Period cleanup reviewed
+
+Review of the overview/live downstream cleanup found one compatibility issue:
+justificante verification accepted the `str(Period)` display projection as an
+inbound match. The implementation now compares typed `Justificante.period`
+values directly and permits only the bare registry token for generic string-like
+metadata. This preserves the rule that display strings are output projection,
+not an inbound compatibility dialect.
+
+The review also noted that calculation-observation evidence still reads
+`RegistryModeloObservation.period` as a string. That is deferred to the
+calculation-observation rollout because `RegistryModeloObservation` still owns
+a string `period` plus optional `filing_period` bridge today; this cleanup does
+not add a new combined-token parser or widen accepted input.
+
+Verification after the change: ruff passed for the touched overview/live files
+and tests; the focused live plus overview calendar suites passed with
+`93 passed`; core/domain Period gates passed with `31 passed`; explicit
+documented-command, educational-docs, and JSON-schema conformance files passed
+with `198 passed`; and CLI import smoke printed `OK`. A `-k` conformance
+attempt was blocked during unrelated full-suite collection by peer WIP in split
+support modules, so the conformance gates were rerun by explicit file path.
