@@ -94,7 +94,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=1900, le=9999)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     expediente_id: str = Field(min_length=12, max_length=32)
     csv: str = Field(min_length=8, max_length=32)
     pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -156,7 +156,7 @@ def derive_justificante_capture_snapshot_id(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     pdf_sha256: str,
 ) -> str:
     """Return the content-addressed id for one justificante capture.
@@ -170,7 +170,7 @@ def derive_justificante_capture_snapshot_id(
         {
             "modelo": modelo,
             "filing_year": filing_year,
-            "period": period.strip(),
+            "period": period.registry_token,
             "pdf_sha256": pdf_sha256,
         },
     )
@@ -181,7 +181,7 @@ def resolve_period_expediente(
     declarations: Sequence[Declaracion],
     expedientes: Sequence[Expediente],
     modelo: str,
-    period: str,
+    period: Period,
 ) -> Expediente:
     """Resolve the capturable expediente for one ``(modelo, period)`` filing.
 
@@ -208,7 +208,7 @@ def resolve_period_expediente(
             period, or the matched declaration's expediente is absent from
             the tree.
     """
-    target_period = period.strip()
+    target_period = period.registry_token
     candidates = [
         declaration
         for declaration in declarations
@@ -375,7 +375,7 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
         *,
         modelo: str,
         filing_year: int,
-        period: str,
+        period: Period,
         expediente_id: str,
         csv: str,
         pdf_bytes: bytes,
@@ -425,12 +425,12 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
         *,
         modelo: str,
         filing_year: int,
-        period: str,
+        period: Period,
     ) -> JustificanteCaptureSnapshot | None:
         snapshots = [
             snapshot
             for snapshot in self.list_snapshots(filing_year=filing_year)
-            if snapshot.modelo == modelo and snapshot.period == period.strip()
+            if snapshot.modelo == modelo and snapshot.period == period
         ]
         if not snapshots:
             return None
@@ -460,7 +460,7 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
             bucket_id=self._repository.bucket_id,
             modelo=kwargs["modelo"],
             filing_year=kwargs["filing_year"],
-            period=kwargs["period"].strip(),
+            period=kwargs["period"],
             expediente_id=kwargs["expediente_id"],
             csv=kwargs["csv"],
             pdf_sha256=kwargs["pdf_sha256"],
@@ -611,12 +611,12 @@ def register_capture_as_filing_evidence(
         bucket_id=snapshot.bucket_id,
         modelo=snapshot.modelo,
         filing_year=snapshot.filing_year,
-        period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+            period=snapshot.period,
     )
     if current is None:
         raise LiveApplicationInputError(
             f"no current filing record for modelo={snapshot.modelo!r} "
-            f"year={snapshot.filing_year} period={snapshot.period!r}; "
+            f"period={snapshot.period!s}; "
             "file the period before stamping live-capture evidence",
         )
 
@@ -640,7 +640,7 @@ def register_capture_as_filing_evidence(
         "work_unit_id": current.work_unit_id,
         "modelo": snapshot.modelo,
         "filing_year": str(snapshot.filing_year),
-        "period": snapshot.period,
+        "period": snapshot.period.registry_token,
         "evidence_kind": ExternalEvidenceKind.AEAT_LIVE_CAPTURE.value,
         "evidence_reference_id": snapshot.csv,
         "snapshot_id": snapshot.snapshot_id,

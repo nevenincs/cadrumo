@@ -146,7 +146,7 @@ def _normalise_period(
     *,
     modelo: str,
     ejercicio: str | None,
-    raw_period: str,
+    raw_period: Period | str,
     schema_provider: RegistryImportSchemaProvider,
 ) -> Period:
     """Resolve a printed AEAT period to the typed filing period.
@@ -179,6 +179,20 @@ def _normalise_period(
     except ModeloBuilderError as exc:
         raise ModeloImportError(f"modelo {modelo!r} is not present in the calculation registry") from exc
     supported_periods = set(subview.period_selector_periods)
+
+    if isinstance(raw_period, Period):
+        if ejercicio is not None and not _YEAR_RE.fullmatch(ejercicio):
+            raise ModeloImportError(f"modelo {modelo}: unexpected ejercicio {ejercicio!r}; want four-digit year")
+        if ejercicio is not None and raw_period.filing_year != int(ejercicio):
+            raise ModeloImportError(
+                f"modelo {modelo}: cannot canonicalise period {raw_period!s} for ejercicio {ejercicio!r}",
+            )
+        return _require_supported_period_token(
+            modelo=modelo,
+            filing_year=raw_period.filing_year,
+            period_code=raw_period.registry_token,
+            supported_periods=supported_periods,
+        )
 
     if _YEAR_RE.match(raw_period) and ejercicio is None:
         raise ModeloImportError(

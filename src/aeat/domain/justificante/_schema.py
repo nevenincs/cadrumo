@@ -14,7 +14,9 @@ from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+
+from ...core import Period, PeriodError
 
 
 class JustificanteParserBackend(StrEnum):
@@ -67,8 +69,8 @@ class Justificante(BaseModel):
 
     csv: str = Field(..., min_length=4, max_length=64)
     modelo: str = Field(..., min_length=1, max_length=16)
-    period: str = Field(..., min_length=1, max_length=16)
     ejercicio: str | None = Field(default=None, max_length=8)
+    period: Period | str
     presentation_id: str | None = Field(default=None, max_length=64)
     presented_at: datetime
     tax_id: str = Field(..., min_length=4, max_length=32)
@@ -78,3 +80,18 @@ class Justificante(BaseModel):
     source_pdf_path: Path
     source_pdf_sha256: str = Field(..., pattern=r"^[0-9a-f]{64}$")
     parsed_at: datetime
+
+    @field_validator("period", mode="before")
+    @classmethod
+    def _coerce_printed_period(cls, raw_period: object, info: ValidationInfo) -> object:
+        ejercicio = info.data.get("ejercicio")
+        if not isinstance(raw_period, str):
+            return raw_period
+        if not isinstance(ejercicio, str) or not ejercicio.isdigit():
+            return raw_period
+
+        period_code = "0A" if raw_period == ejercicio else raw_period
+        try:
+            return Period.from_year_and_code(int(ejercicio), period_code)
+        except PeriodError:
+            return raw_period

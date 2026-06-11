@@ -20,6 +20,7 @@ from ._parser_boundary_support import (
     Path,
     PdfModeloImportError,
     TemplateNotDetectedError,
+    _expected_period,
     _extract_pages_words,
     _modelo_130_snapshot,
     _modelo_snapshot,
@@ -198,7 +199,7 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
     )
 
     assert filing.modelo == "111"
-    assert filing.period == period
+    assert filing.period == _expected_period(year, period)
     assert filing.tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {filing.tax_id!r}"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "111"
@@ -362,7 +363,9 @@ def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: in
     )
 
     assert filing.modelo == "130", f"{pdf_stem}: expected modelo='130', got {filing.modelo!r}"
-    assert filing.period == period, f"{pdf_stem}: expected period={period!r}, got {filing.period!r}"
+    assert filing.period == _expected_period(year, period), (
+        f"{pdf_stem}: expected period={period!r}, got {filing.period!r}"
+    )
     assert filing.tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {filing.tax_id!r}"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "130"
@@ -388,7 +391,7 @@ def test_parser_extracts_modelo_123_current_registry_profile_targets_from_pdf(tm
     filing = parse_declaracion(pdf_path, modelo_override="123", año_override=2026)
 
     assert filing.modelo == "123"
-    assert filing.period == "1T"
+    assert filing.period == _expected_period(2026, "1T")
     assert filing.tax_id == "00000000T"
     assert {value.casilla_id: value.printed_value for value in filing.values} == values
 
@@ -407,7 +410,7 @@ def test_parser_extracts_modelo_123_historical_registry_profile_targets_from_pdf
     filing = parse_declaracion(pdf_path, modelo_override="123", año_override=2023)
 
     assert filing.modelo == "123"
-    assert filing.period == "4T"
+    assert filing.period == _expected_period(2023, "4T")
     assert filing.tax_id == "00000000T"
     assert {value.casilla_id: value.printed_value for value in filing.values} == values
 
@@ -450,7 +453,7 @@ def test_parser_extracts_modelo_123_2024_corpus_round_trip() -> None:
     )
 
     assert filing.modelo == "123"
-    assert filing.period == "1T"
+    assert filing.period == _expected_period(2024, "1T")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "123"
@@ -519,7 +522,7 @@ def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
     )
 
     assert filing.modelo == "123"
-    assert filing.period == "1T"
+    assert filing.period == _expected_period(2023, "1T")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "123"
@@ -570,7 +573,7 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
     )
 
     assert filing.modelo == "303"
-    assert filing.period == "1T"
+    assert filing.period == _expected_period(2024, "1T")
     assert filing.tax_id == "Y0000001S"
     # iva.compensacion-aplicada-periodo (78) captures the box number rather than
     # a synthetic amount in this corpus PDF because the sanitizer placed 1.000,00

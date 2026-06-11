@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
+from ......core import Period
 from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from .._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
@@ -46,7 +47,7 @@ def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaraci
     return FiledDeclaracionObservation(
         modelo="100",
         ejercicio=2023,
-        period="0A",
+        period=Period.from_year_and_code(2023, "0A"),
         expediente_id="202310013522456T",
         status="PRESENTADA",
         presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
@@ -87,7 +88,7 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
         observation_key = (
             "100",
             2023,
-            "0A",
+            Period.from_year_and_code(2023, "0A"),
             "202310013522456T",
         )
 
@@ -155,7 +156,7 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
             sha256=hashlib.sha256(body).hexdigest(),
             captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
         )
-        observation_key = ("100", 2023, "0A", "202310013522456T")
+        observation_key = ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T")
         persisted_artefact = store.persist_artefact(observation_key, artefact, body)
         observation = _populated_observation(persisted_artefact)
         logical_path = store.persist_observation(observation)
@@ -194,11 +195,11 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
             taxpayer_nif="12345678Z",
             authenticated_identity="12345678Z",
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             rows=(
                 IvaCompensationWalletRow(
                     generation_year=2026,
-                    generation_period="1T",
+                    generation_period=Period.from_year_and_code(2026, "1T"),
                     generated_amount=Decimal("1200"),
                     applied_amount=Decimal("0"),
                     pending_amount=Decimal("1200"),
@@ -215,6 +216,6 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
         loaded = store.load_iva_wallet_observation(logical_path)
 
         assert loaded == observation
-        assert loaded.rows[0].generation_period == "1T"
+        assert loaded.rows[0].generation_period == Period.from_year_and_code(2026, "1T")
         assert loaded.total_pending == Decimal("1200")
         assert loaded.raw_sha256 == "b" * 64

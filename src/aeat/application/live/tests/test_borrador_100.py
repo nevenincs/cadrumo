@@ -17,6 +17,7 @@ from ....adapters.persistence.storage import (
     SensitivityClass,
 )
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -35,6 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "bucket-renta"
 _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "0A")
 
 
 @pytest.fixture
@@ -52,7 +54,7 @@ def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
@@ -73,7 +75,7 @@ def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
@@ -108,7 +110,7 @@ def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
@@ -132,7 +134,7 @@ def test_borrador_100_snapshot_repository_resolves_unambiguous_prefix(
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
@@ -152,7 +154,7 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot(
 
     snapshot = service.capture(
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         binding_values=values,
@@ -160,7 +162,7 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot(
 
     assert snapshot.snapshot_id == derive_borrador_100_snapshot_id(
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         binding_values=values,
@@ -177,7 +179,7 @@ def test_borrador_100_snapshot_service_deduplicates_identical_captures(
     )
     kwargs = {
         "filing_year": 2025,
-        "period": "0A",
+        "period": _PERIOD,
         "captured_at": _CAPTURED_AT,
         "source_url": _SOURCE,
         "binding_values": {"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
@@ -197,14 +199,14 @@ def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot(
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
     older = service.capture(
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
         binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
     )
     newer = service.capture(
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
         binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("16.25")},
@@ -228,14 +230,14 @@ def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
     newer = service.capture(
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
         binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("16.25")},
     )
     older = service.capture(
         filing_year=2025,
-        period="0A",
+        period=_PERIOD,
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
         binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},

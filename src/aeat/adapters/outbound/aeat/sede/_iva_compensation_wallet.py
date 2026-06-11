@@ -20,6 +20,7 @@ from urllib.parse import quote, urljoin, urlsplit
 from bs4 import BeautifulSoup
 from pydantic import AnyUrl
 
+from .....core import Period
 from .....core.config import Settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
@@ -97,11 +98,17 @@ async def fetch_iva_compensation_wallet(
     session: AeatSession,
     *,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     taxpayer_nif: str | None = None,
     settings: Settings | None = None,
 ) -> IvaCompensationWalletObservation:
     """Fetch and parse AEAT's read-only IVA compensation wallet as a :class:`IvaCompensationWalletObservation`."""
+    if target_period.filing_year != target_year:
+        raise SedeNavigationError(
+            "IVA wallet target_year does not match target_period.year",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context={"target_year": target_year, "target_period_year": target_period.filing_year},
+        )
     _assert_read_http("GET", _PRE303_PRESENTATION_URL)
     _assert_read_http("GET", _WALLET_URL)
     settings = settings or Settings()
@@ -125,7 +132,7 @@ async def fetch_iva_compensation_wallet(
                     target_path=_PRE303.presentation_service_path,
                     expected_url=_PRE303_PRESENTATION_URL,
                     surface="pre303_presentation_service",
-                    target_year=target_year,
+                    target_year=target_period.filing_year,
                     target_period=target_period,
                 )
                 if is_aeat_wallet_auth_gate_redirect(page.url):
@@ -153,7 +160,7 @@ async def fetch_iva_compensation_wallet(
                         browser_session=browser_session,
                         settings=settings,
                         discovered_url=discovered_wallet_url,
-                        target_year=target_year,
+                        target_year=target_period.filing_year,
                         target_period=target_period,
                     )
                 else:
@@ -165,7 +172,7 @@ async def fetch_iva_compensation_wallet(
                         target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
                         expected_url=_WALLET_URL,
                         surface="iva_compensation_wallet",
-                        target_year=target_year,
+                        target_year=target_period.filing_year,
                         target_period=target_period,
                     )
             except PlaywrightError as exc:
@@ -195,7 +202,7 @@ async def fetch_iva_compensation_wallet(
                     html,
                     taxpayer_nif=taxpayer_nif or session.identity_nif,
                     authenticated_identity=session.identity_nif,
-                    target_year=target_year,
+                    target_year=target_period.filing_year,
                     target_period=target_period,
                     source_url=_WALLET_URL,
                     captured_at=now(),
@@ -230,7 +237,7 @@ async def _open_authenticated_surface(
     expected_url: str,
     surface: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
 ) -> bool:
     """Open an AEAT app through the selector so Cl@ve app-local state is minted."""
     _assert_read_http("GET", selector_url)
@@ -280,7 +287,7 @@ async def _open_authenticated_surface(
             page,
             settings=settings,
             expected_url=expected_url,
-            target_year=target_year,
+            target_year=target_period.filing_year,
             target_period=target_period,
         )
     return False
@@ -303,7 +310,7 @@ async def _open_discovered_wallet_entrypoint(
     settings: Settings,
     discovered_url: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
 ) -> bool:
     """Open a wallet link discovered from the authenticated Pre303 page."""
     _assert_read_http("GET", discovered_url)
@@ -330,7 +337,7 @@ async def _open_discovered_wallet_entrypoint(
         page,
         settings=settings,
         expected_url=_WALLET_URL,
-        target_year=target_year,
+        target_year=target_period.filing_year,
         target_period=target_period,
     )
 
@@ -473,7 +480,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
     return True
 
 
-async def _fill_wallet_query_form(page: Page, *, target_year: int, target_period: str) -> None:
+async def _fill_wallet_query_form(page: Page, *, target_year: int, target_period_token: str) -> None:
     """Fill AEAT's CarteraCuotas ejercicio/período query fields before the Ejecutar read query.
 
     The own-name CarteraCuotas form requires a target Ejercicio (year) and Período
@@ -497,10 +504,10 @@ async def _fill_wallet_query_form(page: Page, *, target_year: int, target_period
         raise SedeNavigationError(
             "AEAT IVA wallet execute gate is missing required ejercicio/período query fields",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-            context={"target_year": target_year, "target_period": target_period},
+            context={"target_year": target_year, "target_period": target_period_token},
         )
     await page.fill(ejercicio_selector, str(target_year))
-    await page.fill(periodo_selector, str(target_period))
+    await page.fill(periodo_selector, target_period_token)
 
 
 async def _submit_wallet_execute_gate_if_present(
@@ -509,7 +516,7 @@ async def _submit_wallet_execute_gate_if_present(
     settings: Settings,
     expected_url: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
 ) -> bool:
     expected_path = urlsplit(expected_url).path
     await _select_own_name_actuacion_if_present(page, settings=settings)
@@ -554,7 +561,11 @@ async def _submit_wallet_execute_gate_if_present(
         method = _wallet_execute_form_method(html)
         _assert_read_http(method, submission_url)
         _assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
-        await _fill_wallet_query_form(page, target_year=target_year, target_period=target_period)
+        await _fill_wallet_query_form(
+            page,
+            target_year=target_period.filing_year,
+            target_period_token=target_period.registry_token,
+        )
         _diag_dump_dir = settings.aeat_wallet_diagnostic_dump_dir
         if _diag_dump_dir is not None:
             await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=_diag_dump_dir)

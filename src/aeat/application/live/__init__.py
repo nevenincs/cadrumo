@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
 from ...adapters.outbound.aeat.sede import open_declarations_register as _open_declarations_register
 from ...adapters.outbound.aeat.sede import shared_playwright as _shared_playwright
+from ...core import Period
 from ...core.resources import resources as _resources
 from ...core.time import now
 from ._borrador_100 import (
@@ -307,7 +308,7 @@ async def capture_justificante_snapshot(
     bucket_id: str,
     modelo: str,
     year: int,
-    period: str,
+    period: Period,
     session_provider: Callable[[], Awaitable[tuple[AeatSession, Settings]]] = _default_justificante_session,
     declarations_provider: Callable[..., Awaitable[Sequence[Declaracion]]] = _default_justificante_declarations,
     expedientes_provider: Callable[..., Awaitable[Sequence[Expediente]]] = _default_justificante_expedientes,

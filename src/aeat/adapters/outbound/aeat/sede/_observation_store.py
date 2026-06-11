@@ -14,6 +14,7 @@ import re
 from contextlib import nullcontext
 from pathlib import Path
 
+from .....core import Period
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.time import now
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
@@ -169,7 +170,13 @@ class FiledDeclaracionObservationStore:
         return tuple(
             sorted(
                 observations,
-                key=lambda item: (item.modelo, item.ejercicio, item.period, item.presented_at, item.expediente_id),
+                key=lambda item: (
+                    item.modelo,
+                    item.ejercicio,
+                    item.period.registry_token,
+                    item.presented_at,
+                    item.expediente_id,
+                ),
             ),
         )
 
@@ -252,7 +259,7 @@ class FiledDeclaracionObservationStore:
         return tuple(
             sorted(
                 observations,
-                key=lambda item: (item.target_year, item.target_period, item.captured_at),
+                key=lambda item: (item.target_year, item.target_period.registry_token, item.captured_at),
             ),
         )
 
@@ -260,14 +267,14 @@ class FiledDeclaracionObservationStore:
         self,
         modelo: str,
         ejercicio: int,
-        period: str,
+        period: Period,
         expediente_id: str,
     ) -> str:
         key = "\x1f".join(
             (
                 _safe_segment(modelo),
                 str(ejercicio),
-                _safe_segment(period),
+                _safe_segment(period.registry_token),
                 _safe_segment(expediente_id),
             ),
         )
@@ -280,14 +287,14 @@ class FiledDeclaracionObservationStore:
         self,
         taxpayer_nif: str,
         target_year: int,
-        target_period: str,
+        target_period: Period,
         captured_at: str,
     ) -> str:
         key = "\x1f".join(
             (
                 _safe_segment(taxpayer_nif),
                 str(target_year),
-                _safe_segment(target_period),
+                _safe_segment(target_period.registry_token),
                 captured_at,
             ),
         )

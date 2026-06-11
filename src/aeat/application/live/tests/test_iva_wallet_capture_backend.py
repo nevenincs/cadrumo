@@ -17,7 +17,6 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.storage import has_active_bucket_session
 from ....core import Period
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation._reconciliation import (
     IvaCompensationAuthoritySource,
@@ -78,7 +77,7 @@ def _secure_backend(tmp_path: Path):
 def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_identity(tmp_path: Path) -> None:
     with _secure_backend(tmp_path) as db_path:
         observation_repo = CalculationObservationRepository()
-        _store_prior_compensation(observation_repo, amount=Decimal("1200.00"))
+        _store_prior_compensation(amount=Decimal("1200.00"))
         observation = parse_iva_compensation_wallet_html(
             _wallet_html(
                 total="1.200,00",
@@ -89,7 +88,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
             taxpayer_nif=_TAXPAYER_REF,
             authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=_CAPTURED_AT,
         )
@@ -128,7 +127,7 @@ def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persis
     with isolated_runtime_profile(tmp_path=tmp_path / "wallet-profile", bucket_id=_SESSION_BUCKET_ID) as profile:
         observation_repo = CalculationObservationRepository(objects=profile.repository)
         decision_repo = IvaWalletDecisionRepository(objects=profile.repository)
-        _store_prior_compensation(observation_repo, amount=Decimal("1200.00"))
+        _store_prior_compensation(amount=Decimal("1200.00"))
         observation = parse_iva_compensation_wallet_html(
             _wallet_html(
                 total="1.200,00",
@@ -139,7 +138,7 @@ def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persis
             taxpayer_nif=_TAXPAYER_REF,
             authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=_CAPTURED_AT,
         )
@@ -230,8 +229,8 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
     assert report.row_count == 2
     assert report.carry_forward_lot_count == 2
     assert [(lot.source_filing_year, lot.source_period) for lot in report.carry_forward_lots] == [
-        (2022, "4T"),
-        (2024, "1T"),
+        (2022, Period.from_year_and_code(2022, "4T")),
+        (2024, Period.from_year_and_code(2024, "1T")),
     ]
     assert report.carry_forward_lots[0].applied_amount == "40.00"
     assert report.carry_forward_lots[0].remaining_amount == "60.00"
@@ -284,7 +283,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             taxpayer_nif=_TAXPAYER_REF,
             authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
-            target_period="1T",
+            target_period=Period.from_year_and_code(2026, "1T"),
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=_CAPTURED_AT,
         )
@@ -391,29 +390,25 @@ def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_boo
     assert remote_state.history.row_count == 1
     assert remote_state.history.carry_forward_lot_count == 1
     assert remote_state.history.rows[0].year == 2025
-    assert remote_state.history.rows[0].period == "4T"
+    assert remote_state.history.rows[0].period == Period.from_year_and_code(2025, "4T")
     assert _TAXPAYER_REF not in remote_state.model_dump_json()
     assert "EXP-2025-4T" not in remote_state.model_dump_json()
 
 
-def _store_prior_compensation(repository: CalculationObservationRepository, *, amount: Decimal) -> None:
-    repository.save_observation(
-        RegistryModeloObservation(
-            modelo="303",
+def _store_prior_compensation(*, amount: Decimal) -> None:
+    IvaCompensationHistoryRepository().save_period(
+        IvaCompensationPeriodState(
+            taxpayer_nif=_TAXPAYER_REF,
             filing_year=2026,
-            period="1T",
-            observations=(
-                CasillaObservation(
-                    casilla_id="iva.compensacion-disponible-fin-periodo",
-                    value=amount,
-                    formula_id="modelo-303-compensacion-disponible-fin-periodo",
-                    legal_refs=("ley-37-1992:art-99",),
-                    source_refs=("aeat-modelo-303-instructions",),
-                ),
-            ),
+            period=Period.from_year_and_code(2026, "1T"),
+            expediente_id="EXP-2026-1T",
+            status="ALTA",
+            presented_at=_CAPTURED_AT,
+            generated_amount=amount,
+            applied_amount=Decimal("0.00"),
+            available_end_amount=amount,
+            source_observation_key="303:2026:1T:EXP-2026-1T",
         ),
-        source_kind="aeat_sede_justificante",
-        captured_at=_CAPTURED_AT,
     )
 
 

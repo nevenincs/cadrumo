@@ -16,6 +16,7 @@ from ...adapters.outbound.aeat.sede import (
     open_declarations_register,
     shared_playwright,
 )
+from ...core import Period
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import ValidatedRegistryAuthority
 from ._errors import LiveApplicationInputError
@@ -44,10 +45,13 @@ def filed_data_capture_failure_row(
     declaration: Declaracion | None = None,
 ) -> FiledDataCaptureFailureRow:
     """Map one failed capture into a :class:`FiledDataCaptureFailureRow`."""
+    failed_period = (
+        Period.from_year_and_code(declaration.ejercicio, declaration.period) if declaration is not None else None
+    )
     return FiledDataCaptureFailureRow(
         modelo=declaration.modelo if declaration is not None else modelo,
         year=declaration.ejercicio if declaration is not None else year,
-        period=declaration.period if declaration is not None else None,
+        period=failed_period,
         expediente_id=declaration.expediente_id if declaration is not None else None,
         error_type=error.__class__.__name__,
         message=bounded_context_text(error),
@@ -135,7 +139,7 @@ async def capture_filed_data(
     modelo: str,
     year: int,
     output_root: Path,
-    period: str | None = None,
+    period: Period | None = None,
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> FiledDataCaptureReport:
@@ -307,7 +311,7 @@ async def capture_source_filed_data(
     *,
     modelo: str,
     year: int,
-    period: str,
+    period: Period,
     output_root: Path,
     registry_root: Path | None = None,
     source_root: Path | None = None,
@@ -324,7 +328,7 @@ async def capture_source_filed_data(
     snapshot = authority.snapshot(
         modelo,
         filing_year=year,
-        period=period,
+        period=period.registry_token,
     )
     store = FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
@@ -356,7 +360,12 @@ async def capture_source_filed_data(
             )
         )
     for observation in observations:
-        key = (observation.modelo, observation.ejercicio, observation.period, observation.expediente_id)
+        key = (
+            observation.modelo,
+            observation.ejercicio,
+            observation.period.registry_token,
+            observation.expediente_id,
+        )
         if key in seen:
             continue
         seen.add(key)

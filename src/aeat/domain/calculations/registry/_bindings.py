@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -138,6 +138,27 @@ __all__ = [
 ]
 
 
+def _tuple_from_json_array(value: object) -> object:
+    if isinstance(value, list):
+        return tuple(value)
+    return value
+
+
+def _decimal_from_json_string(value: object) -> object:
+    if isinstance(value, str):
+        try:
+            return Decimal(value)
+        except InvalidOperation as exc:
+            raise RegistryValidationError("casilla observation decimal JSON value must be numeric") from exc
+    return value
+
+
+def _decimal_tuple_from_json_array(value: object) -> object:
+    if isinstance(value, list):
+        return tuple(_decimal_from_json_string(item) for item in value)
+    return value
+
+
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
@@ -177,12 +198,27 @@ class CasillaObservation(BaseModel):
     # absent-by-design zeros from value-bearing observations.
     absent_by_design: bool = False
 
+    @field_validator("value", mode="before")
+    @classmethod
+    def _decimal_value_from_json_string(cls, value: object) -> object:
+        return _decimal_from_json_string(value)
+
     @field_validator("value")
     @classmethod
     def _decimal_value(cls, value: Decimal) -> Decimal:
         if isinstance(value, bool) or not isinstance(value, Decimal):
             raise RegistryValidationError("casilla observation value must be Decimal")
         return value
+
+    @field_validator("operand_refs", "legal_refs", "source_refs", mode="before")
+    @classmethod
+    def _tuple_fields_from_json_arrays(cls, value: object) -> object:
+        return _tuple_from_json_array(value)
+
+    @field_validator("operand_values", mode="before")
+    @classmethod
+    def _decimal_tuple_field_from_json_array(cls, value: object) -> object:
+        return _decimal_tuple_from_json_array(value)
 
 
 class RegistryModeloObservation(BaseModel):
@@ -215,6 +251,11 @@ class RegistryModeloObservation(BaseModel):
         except ValueError:
             return data
         return {**data, "filing_period": filing_period}
+
+    @field_validator("observations", mode="before")
+    @classmethod
+    def _observations_from_json_array(cls, value: object) -> object:
+        return _tuple_from_json_array(value)
 
     @model_validator(mode="after")
     def _validate_filing_period_consistency(self) -> RegistryModeloObservation:

@@ -23,6 +23,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Protocol
 
+from ....core import Period
 from ....core.decimal import format_decimal
 from ....core.logging import get_logger
 from ....core.time import now as _utc_now
@@ -65,7 +66,6 @@ class _RegistryReconciliationProvider(Protocol):
 # rounding floor on every monetary comparison across the CLI.
 _TOLERANCE: Final[Decimal] = Decimal("0.01")
 _QUARTER_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$", re.IGNORECASE)
-_CANONICAL_MONTH_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$", re.IGNORECASE)
 _ANNUAL_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})A$", re.IGNORECASE)
 _REMOTE_QUARTER_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<quarter>[1-4])T$", re.IGNORECASE)
 _REMOTE_ANNUAL_RE: Final[re.Pattern[str]] = re.compile(r"^0A$", re.IGNORECASE)
@@ -152,28 +152,13 @@ def reconcile(
         )
 
     supported_periods = set(subview.period_selector_periods)
-    # For the draft side, use registry_token directly from the typed Period so the
-    # comparison is normalised against the same token that _normalise_period produces
-    # for the remote's "<quarter>T" / "0A" forms when an ejercicio is available.
-    draft_period_code = draft.period.registry_token
-    _draft_year_str = str(draft.period.filing_year)
-    if draft_period_code.endswith("T") and draft_period_code[0] in "1234":
-        _draft_normalised = f"{_draft_year_str}q{draft_period_code[0]}"
-    elif draft_period_code == "0A":
-        _draft_normalised = f"{_draft_year_str}a"
-    else:
-        _draft_normalised = f"{_draft_year_str}-{draft_period_code}"
-    if _draft_normalised != _normalise_period(
-        remote.period,
-        ejercicio=remote.ejercicio or _draft_year_str,
-        supported_periods=supported_periods,
-    ):
+    if not _periods_match(draft.period, remote.period, supported_periods=supported_periods, ejercicio=remote.ejercicio):
         mismatches.append(
             FieldMismatch(
                 kind=ModeloDivergenceKind.PERIOD_MISMATCH,
                 field_name="period",
                 draft_value=str(draft.period),
-                remote_value=remote.period,
+                remote_value=str(remote.period),
             ),
         )
 
@@ -341,6 +326,34 @@ def _summarise_justificante(justificante: Justificante) -> JustificanteRefSummar
     )
 
 
+def _periods_match(
+    draft_period: Period,
+    remote_period: Period | str,
+    *,
+    supported_periods: set[str],
+    ejercicio: str | None,
+) -> bool:
+    if isinstance(remote_period, Period):
+        return (
+            remote_period == draft_period
+            and remote_period.registry_token in supported_periods
+            and draft_period.registry_token in supported_periods
+        )
+    draft_period_code = draft_period.registry_token
+    draft_year_str = str(draft_period.filing_year)
+    if draft_period_code.endswith("T") and draft_period_code[0] in "1234":
+        draft_normalised = f"{draft_year_str}q{draft_period_code[0]}"
+    elif draft_period_code == "0A":
+        draft_normalised = f"{draft_year_str}a"
+    else:
+        draft_normalised = f"{draft_year_str}-{draft_period_code}"
+    return draft_normalised == _normalise_period(
+        remote_period,
+        ejercicio=ejercicio or draft_year_str,
+        supported_periods=supported_periods,
+    )
+
+
 def _normalise_period(
     period: str,
     *,
@@ -388,16 +401,6 @@ def _normalise_period(
     ):
         return f"{ejercicio}a"
     return stripped.lower()
-
-
-def _canonical_draft_period_token(period: str) -> str:
-    if match := _QUARTER_RE.fullmatch(period):
-        return f"{match.group('quarter')}T"
-    if match := _ANNUAL_RE.fullmatch(period):
-        return "0A"
-    if match := _CANONICAL_MONTH_RE.fullmatch(period):
-        return match.group("month")
-    raise ModeloBuilderError(f"cannot map draft period {period!r} to a registry period")
 
 
 def _canonical_tax_id(value: str) -> str:

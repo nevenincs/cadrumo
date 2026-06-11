@@ -15,6 +15,7 @@ from ....adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from ....adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
 from ....adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....core import Period
 from ....core.config import Settings
 from ....core.identity import nif_check_letter
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
@@ -45,6 +46,8 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CAPTURED_AT = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
+_TARGET_1T = Period.from_year_and_code(2026, "1T")
+_TARGET_2T = Period.from_year_and_code(2026, "2T")
 
 
 def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Path) -> None:
@@ -74,7 +77,7 @@ def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Pa
         year_from=2022,
         year_to=2024,
         target_year=2026,
-        target_period="2T",
+        target_period=_TARGET_2T,
         auth_result=auth_result,
         filed_history=filed_history,
     )
@@ -118,7 +121,7 @@ def test_combined_acquisition_marks_partial_filed_history_as_failed(tmp_path: Pa
         year_from=2022,
         year_to=2026,
         target_year=2026,
-        target_period="1T",
+        target_period=_TARGET_1T,
         auth_result=auth_result,
         filed_history=filed_history,
     )
@@ -212,7 +215,7 @@ def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) ->
         year_from=2024,
         year_to=2024,
         target_year=2026,
-        target_period="1T",
+        target_period=_TARGET_1T,
         auth_error=auth_error,
     )
 
@@ -262,7 +265,7 @@ def test_combined_acquisition_preserves_filed_history_when_wallet_auth_gate_fail
         year_from=2022,
         year_to=2024,
         target_year=2026,
-        target_period="2T",
+        target_period=_TARGET_2T,
         filed_history=filed_history,
         wallet_error=wallet_error,
     )
@@ -294,7 +297,7 @@ def test_combined_acquisition_reports_missing_surface_as_typed_failure(tmp_path:
         year_from=2024,
         year_to=2024,
         target_year=2026,
-        target_period="1T",
+        target_period=_TARGET_1T,
     )
 
     assert report.filed_history_succeeded is False
@@ -351,7 +354,7 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
         year_from=2024,
         year_to=2024,
         target_year=2026,
-        target_period="1T",
+        target_period=_TARGET_1T,
         filed_history_error=timeout,
     )
 
@@ -483,7 +486,7 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
             year_from=2022,
             year_to=2024,
             target_year=2026,
-            target_period="2T",
+            target_period=_TARGET_2T,
             filed_history=filed_history,
             wallet_error=wallet_error,
         )
@@ -550,7 +553,7 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
             year_from=2024,
             year_to=2024,
             target_year=2026,
-            target_period="1T",
+            target_period=_TARGET_1T,
             auth_error=auth_error,
         )
 
@@ -592,7 +595,7 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
             year_from=2024,
             year_to=2024,
             target_year=2026,
-            target_period="1T",
+            target_period=_TARGET_1T,
             wallet_error=wallet_error,
         )
         manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
@@ -623,7 +626,7 @@ def test_legacy_acquisition_manifest_without_auth_outcome_still_loads() -> None:
         year_from=2024,
         year_to=2024,
         target_year=2026,
-        target_period="1T",
+        target_period=_TARGET_1T,
         filed_history=None,
         wallet=None,
         outcomes=(),
@@ -636,7 +639,7 @@ def test_legacy_acquisition_manifest_without_auth_outcome_still_loads() -> None:
             "year_from": 2024,
             "year_to": 2024,
             "target_year": 2026,
-            "target_period": "1T",
+            "target_period": _TARGET_1T,
             "filed_history_succeeded": False,
             "wallet_succeeded": False,
             "surfaces": [
@@ -661,7 +664,7 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
             year_from=2024,
             year_to=2024,
             target_year=2026,
-            target_period="1T",
+            target_period=_TARGET_1T,
         )
 
         with pytest.raises(StorageValidationError):
@@ -679,7 +682,7 @@ def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> 
             year_from=2026,
             year_to=2026,
             target_year=2026,
-            target_period="2T",
+            target_period=_TARGET_2T,
         )
 
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
@@ -688,7 +691,7 @@ def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> 
 
 def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: Path) -> None:
     async def run() -> None:
-        await capture_iva_compensation_wallet(target_year=2026, target_period="2T")
+        await capture_iva_compensation_wallet(target_year=2026, target_period=_TARGET_2T)
 
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
         asyncio.run(run())

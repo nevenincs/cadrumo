@@ -28,7 +28,7 @@ from ....adapters.outbound.aeat.sede import (
     JustificanteRef,
     SedeCapture,
 )
-from ....core import Modelo
+from ....core import Modelo, Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import LiveApplicationInputError
 from .._justificante import resolve_period_expediente
@@ -43,6 +43,9 @@ _MODELO = Modelo.M130.value
 _YEAR = 2026
 _EXP_1T = "202613000010001A"
 _EXP_2T = "202613000020002B"
+_PERIOD_1T = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD_2T = Period.from_year_and_code(_YEAR, "2T")
+_PERIOD_3T = Period.from_year_and_code(_YEAR, "3T")
 
 
 def _declaration(
@@ -84,7 +87,7 @@ def test_resolves_first_quarter_to_its_own_expediente() -> None:
         declarations=_DECLARATIONS,
         expedientes=_EXPEDIENTES,
         modelo=_MODELO,
-        period="1T",
+        period=_PERIOD_1T,
     )
     assert resolved.expediente_id == _EXP_1T
 
@@ -94,11 +97,16 @@ def test_resolves_second_quarter_to_a_distinct_expediente() -> None:
         declarations=_DECLARATIONS,
         expedientes=_EXPEDIENTES,
         modelo=_MODELO,
-        period="2T",
+        period=_PERIOD_2T,
     )
     assert resolved.expediente_id == _EXP_2T
     # The primary-risk invariant: the two quarters never collapse to one.
-    first = resolve_period_expediente(declarations=_DECLARATIONS, expedientes=_EXPEDIENTES, modelo=_MODELO, period="1T")
+    first = resolve_period_expediente(
+        declarations=_DECLARATIONS,
+        expedientes=_EXPEDIENTES,
+        modelo=_MODELO,
+        period=_PERIOD_1T,
+    )
     assert resolved.expediente_id != first.expediente_id
 
 
@@ -108,7 +116,7 @@ def test_missing_period_declaration_refuses_rather_than_falls_back() -> None:
             declarations=_DECLARATIONS,
             expedientes=_EXPEDIENTES,
             modelo=_MODELO,
-            period="3T",
+            period=_PERIOD_3T,
         )
 
 
@@ -118,7 +126,7 @@ def test_declaration_with_expediente_absent_from_tree_refuses() -> None:
             declarations=_DECLARATIONS,
             expedientes=(_expediente(expediente_id=_EXP_1T),),  # tree missing the 2T expediente
             modelo=_MODELO,
-            period="2T",
+            period=_PERIOD_2T,
         )
 
 
@@ -130,7 +138,7 @@ def test_refiled_period_resolves_to_the_latest_active_filing() -> None:
         declarations=(early, late),
         expedientes=(_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=refile_exp)),
         modelo=_MODELO,
-        period="1T",
+        period=_PERIOD_1T,
     )
     assert resolved.expediente_id == refile_exp
 
@@ -158,7 +166,7 @@ def test_later_cancellation_does_not_win_over_earlier_active_filing() -> None:
         declarations=(accepted, cancelled),
         expedientes=(_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=cancelled_exp)),
         modelo=_MODELO,
-        period="1T",
+        period=_PERIOD_1T,
     )
     assert resolved.expediente_id == _EXP_1T
 
@@ -211,7 +219,7 @@ def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) ->
                 bucket_id=bucket_id,
                 modelo=_MODELO,
                 year=_YEAR,
-                period="2T",
+                period=_PERIOD_2T,
                 session_provider=_session,
                 declarations_provider=_declarations,
                 expedientes_provider=_expedientes,
@@ -220,7 +228,7 @@ def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) ->
         )
 
     assert persisted.modelo == _MODELO
-    assert persisted.period == "2T"
+    assert persisted.period == _PERIOD_2T
     assert persisted.expediente_id == _EXP_2T
     assert persisted.pdf_sha256 == pdf_sha256
     assert persisted.decoded_pdf_bytes() == pdf_bytes

@@ -19,7 +19,7 @@ from typing import TypedDict
 
 import pytest
 
-from ....core import Modelo
+from ....core import Modelo, Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import LiveApplicationInputError
 from .._justificante import (
@@ -36,6 +36,7 @@ _PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\
 _PDF_SHA256 = hashlib.sha256(_PDF_BYTES).hexdigest()
 _OTHER_PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog/Rev 2>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 _OTHER_PDF_SHA256 = hashlib.sha256(_OTHER_PDF_BYTES).hexdigest()
+_PERIOD_2T = Period.from_year_and_code(2026, "2T")
 
 
 class _CaptureKwargs(TypedDict):
@@ -47,7 +48,7 @@ class _CaptureKwargs(TypedDict):
 
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     expediente_id: str
     csv: str
     pdf_bytes: bytes
@@ -67,7 +68,7 @@ def _active_snapshot(
     snapshot_id = derive_justificante_capture_snapshot_id(
         modelo=Modelo.M130.value,
         filing_year=2026,
-        period="2T",
+        period=_PERIOD_2T,
         pdf_sha256=pdf_sha256,
     )
     return JustificanteCaptureSnapshot(
@@ -75,7 +76,7 @@ def _active_snapshot(
         bucket_id=bucket_id,
         modelo=Modelo.M130.value,
         filing_year=2026,
-        period="2T",
+        period=_PERIOD_2T,
         expediente_id="202613000522456T",
         csv="ABCD1234EFGH5678",
         pdf_sha256=pdf_sha256,
@@ -214,7 +215,7 @@ def test_service_capture_supersedes_prior_on_refile(tmp_path: Path) -> None:
         first = service.capture(
             modelo=Modelo.M130.value,
             filing_year=2026,
-            period="2T",
+            period=_PERIOD_2T,
             expediente_id="202613000522456T",
             csv="ABCD1234EFGH5678",
             pdf_bytes=_PDF_BYTES,
@@ -224,7 +225,7 @@ def test_service_capture_supersedes_prior_on_refile(tmp_path: Path) -> None:
         second = service.capture(
             modelo=Modelo.M130.value,
             filing_year=2026,
-            period="2T",
+            period=_PERIOD_2T,
             expediente_id="202613000522456T",
             csv="ABCD1234EFGH5678",
             pdf_bytes=_OTHER_PDF_BYTES,
@@ -248,7 +249,7 @@ def test_service_capture_is_idempotent_on_same_receipt(tmp_path: Path) -> None:
         kwargs = _CaptureKwargs(
             modelo=Modelo.M130.value,
             filing_year=2026,
-            period="2T",
+            period=_PERIOD_2T,
             expediente_id="202613000522456T",
             csv="ABCD1234EFGH5678",
             pdf_bytes=_PDF_BYTES,

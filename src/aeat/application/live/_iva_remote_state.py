@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Mapping
 from contextlib import asynccontextmanager, contextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -39,7 +40,7 @@ from ...application.calculations import IvaCompensationHistoryRepository as _Iva
 from ...application.calculations import IvaWalletDecisionRepository as _IvaWalletDecisionRepository
 from ...application.calculations import iva_wallet_decision_key as _iva_wallet_decision_key
 from ...application.calculations import reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
@@ -324,7 +325,7 @@ def _failed_declaration_ref(declaration: _Declaracion, exc: BaseException) -> st
 def _history_row(state: _IvaCompensationPeriodState) -> IvaCompensationHistoryRow:
     return IvaCompensationHistoryRow(
         year=state.filing_year,
-        period=state.period.registry_token,
+        period=state.period,
         status=state.status,
         presented_at=state.presented_at,
         prior_pending_amount=_decimal_text(state.prior_pending_amount),
@@ -341,7 +342,7 @@ def _carry_forward_lot_row(lot: _IvaCompensationCarryForwardLot) -> IvaCompensat
     return IvaCompensationCarryForwardLotRow(
         taxpayer_ref=_taxpayer_ref(lot.taxpayer_nif),
         source_filing_year=lot.source_filing_year,
-        source_period=lot.source_period.registry_token,
+        source_period=lot.source_period,
         generated_amount=str(lot.generated_amount),
         applied_amount=str(lot.applied_amount),
         remaining_amount=str(lot.remaining_amount),
@@ -355,7 +356,7 @@ def _authority_decision_row(decision: _IvaCompensationReconciliationDecision) ->
     return IvaWalletAuthorityDecisionRow(
         taxpayer_ref=_taxpayer_ref(decision.taxpayer_nif),
         target_year=decision.target_year,
-        target_period=decision.target_period.registry_token,
+        target_period=decision.target_period,
         selected_authority=decision.selected_authority,
         selected_amount=_decimal_text(decision.selected_amount),
         wallet_amount=_decimal_text(decision.wallet_amount),
@@ -459,6 +460,33 @@ def _evidence_ref(value: str) -> str:
     return f"sha256:{digest[:12]}"
 
 
+@dataclass(frozen=True, slots=True)
+class _IvaWalletReconciliationObservation:
+    taxpayer_nif: str
+    target_year: int
+    target_period_token: str
+    total_pending: Decimal
+    source_url: object
+    captured_at: datetime
+
+    @property
+    def target_period(self) -> str:
+        return self.target_period_token
+
+
+def _wallet_reconciliation_observation(
+    observation: _IvaCompensationWalletObservation,
+) -> _IvaWalletReconciliationObservation:
+    return _IvaWalletReconciliationObservation(
+        taxpayer_nif=observation.taxpayer_nif,
+        target_year=observation.target_year,
+        target_period_token=observation.target_period.registry_token,
+        total_pending=observation.total_pending,
+        source_url=observation.source_url,
+        captured_at=observation.captured_at,
+    )
+
+
 def persist_and_reconcile_iva_compensation_wallet(
     observation: _IvaCompensationWalletObservation,
     *,
@@ -483,12 +511,12 @@ def persist_and_reconcile_iva_compensation_wallet(
     snapshot = _resources().modelos.authority.snapshot(
         Modelo.M303.value,
         filing_year=reloaded.target_year,
-        period=reloaded.target_period,
+        period=reloaded.target_period.registry_token,
     )
     reconciliation = _reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=reloaded.taxpayer_nif,
-        wallet=reloaded,
+        wallet=_wallet_reconciliation_observation(reloaded),
         repository=repository,
         decision_repository=decision_repository,
         decided_at=decided_at,
@@ -528,10 +556,20 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
 
 
+def _assert_target_period_year(*, target_year: int, target_period: Period) -> None:
+    if target_period.filing_year == target_year:
+        return
+    raise LiveApplicationInputError(
+        message="target-year must match target-period year",
+        translated_message="live.errors.target_period_year_mismatch",
+        context={"target_year": str(target_year), "target_period_year": str(target_period.filing_year)},
+    )
+
+
 async def capture_iva_compensation_wallet(
     *,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     taxpayer_nif: str | None = None,
     output_root: Path | None = None,
 ) -> IvaWalletCaptureReport:
@@ -544,6 +582,7 @@ async def capture_iva_compensation_wallet(
 
     Returns an :class:`IvaWalletCaptureReport`.
     """
+    _assert_target_period_year(target_year=target_year, target_period=target_period)
     with _active_profile_storage_span():
         session, settings = await _active_verified_session(
             operation="live-iva-wallet-read",
@@ -564,18 +603,19 @@ async def _capture_iva_compensation_wallet_with_session(
     *,
     settings: _Settings,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     taxpayer_nif: str | None = None,
     output_root: Path | None = None,
     progress_context: dict[str, object] | None = None,
 ) -> IvaWalletCaptureReport:
     """Capture and persist the wallet with an already-acquired AEAT session."""
+    _assert_target_period_year(target_year=target_year, target_period=target_period)
     if progress_context is not None:
         progress_context.update(
             {
                 "stage": "fetch_iva_compensation_wallet",
                 "target_year": target_year,
-                "target_period": target_period,
+                "target_period": target_period.registry_token,
             },
         )
     observation: _IvaCompensationWalletObservation = await _fetch_iva_compensation_wallet(
@@ -594,7 +634,7 @@ async def capture_iva_remote_state(
     year_from: int,
     year_to: int,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     taxpayer_nif: str | None = None,
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
@@ -603,6 +643,7 @@ async def capture_iva_remote_state(
     Returns an :class:`IvaRemoteStateAcquisitionReport` with the acquired
     state, compensation history, and any acquisition issues.
     """
+    _assert_target_period_year(target_year=target_year, target_period=target_period)
     with _active_profile_storage_span():
         return await _capture_iva_remote_state_for_active_storage(
             year_from=year_from,
@@ -619,11 +660,12 @@ async def _capture_iva_remote_state_for_active_storage(
     year_from: int,
     year_to: int,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     taxpayer_nif: str | None = None,
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Run the combined read while the profile bucket session is active."""
+    _assert_target_period_year(target_year=target_year, target_period=target_period)
     settings = _load_settings()
     async with _suppress_live_iva_playwright_cancellation_noise(
         drain_ms=settings.aeat_live_iva_cancellation_drain_ms,
@@ -698,7 +740,7 @@ async def _capture_iva_remote_state_for_active_storage(
             wallet_progress: dict[str, object] = {
                 "stage": "not_started",
                 "target_year": target_year,
-                "target_period": target_period,
+                "target_period": target_period.registry_token,
             }
             wallet = await _await_live_iva_surface(
                 _capture_iva_compensation_wallet_with_session(
@@ -867,7 +909,7 @@ def build_iva_remote_state_acquisition_report(
     year_from: int,
     year_to: int,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     acquisition_manifest_id: str | None = None,
     auth_result: _AuthenticatedAeatSessionResult | None = None,
     auth_error: BaseException | None = None,
@@ -961,7 +1003,7 @@ def _iva_remote_state_acquisition_manifest(
             str(report.year_from),
             str(report.year_to),
             str(report.target_year),
-            report.target_period,
+            report.target_period.registry_token,
             captured_at.isoformat(),
             report.auth.model_dump_json(),
             *(surface.model_dump_json() for surface in surfaces),
@@ -969,7 +1011,9 @@ def _iva_remote_state_acquisition_manifest(
     )
     digest = _sha256_hex(manifest_seed.encode("utf-8"))
     timestamp = captured_at.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ")
-    acquisition_id = f"live-iva-acquisition:{report.target_year}:{report.target_period}:{timestamp}:{digest}"
+    acquisition_id = (
+        f"live-iva-acquisition:{report.target_year}:{report.target_period.registry_token}:{timestamp}:{digest}"
+    )
     return IvaRemoteStateAcquisitionManifest(
         acquisition_id=acquisition_id,
         captured_at=captured_at,

@@ -23,6 +23,7 @@ from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from .....core import Period
 from .....core.config import Settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
@@ -48,7 +49,7 @@ def parse_iva_compensation_wallet_html(
     taxpayer_nif: str,
     authenticated_identity: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     source_url: str,
     captured_at: datetime,
     allow_empty_wallet_shell: bool = False,
@@ -151,14 +152,14 @@ def _parse_wallet_summary_total(soup: BeautifulSoup) -> Decimal | None:
     return None
 
 
-def _assert_wallet_result_target_matches(soup: BeautifulSoup, *, target_year: int, target_period: str) -> None:
+def _assert_wallet_result_target_matches(soup: BeautifulSoup, *, target_year: int, target_period: Period) -> None:
     """Fail closed when AEAT renders result target labels that do not match the requested query."""
     rendered_year, rendered_period = _parse_wallet_result_target(soup)
     if rendered_year is not None and rendered_year != target_year:
         raise SedeParseError(
             f"IVA wallet result exercise {rendered_year} does not match requested exercise {target_year}",
         )
-    if rendered_period is not None and rendered_period != target_period.strip().upper():
+    if rendered_period is not None and rendered_period != target_period.registry_token:
         raise SedeParseError(
             f"IVA wallet result period {rendered_period!r} does not match requested period {target_period!r}",
         )
@@ -508,15 +509,15 @@ def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     cell and the generated/applied movement columns stay ``None``.
     """
     year = _parse_year(cells[0])
-    period = cells[1].strip().upper()
-    if not period:
+    period_token = cells[1].strip().upper()
+    if not period_token:
         raise SedeParseError(
             "IVA wallet period cell is empty",
             translated_message=tr("adapters.sede.errors.iva_wallet_empty_period_cell"),
         )
     return IvaCompensationWalletRow(
         generation_year=year,
-        generation_period=period,
+        generation_period=Period.from_year_and_code(year, period_token),
         pending_amount=_parse_spanish_decimal(cells[2]),
         raw_label=" | ".join(cells[:3]),
     )

@@ -15,6 +15,7 @@ from ._parser_boundary_support import (
     _MODELO_232_2018_SYNTHETIC_FIXTURE,
     _MODELO_347_SYNTHETIC_FIXTURE,
     _MODELO_720_SYNTHETIC_FIXTURE,
+    _expected_period,
     parse_declaracion,
 )
 
@@ -52,7 +53,7 @@ def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "720"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "720"
@@ -99,7 +100,7 @@ def test_parser_extracts_modelo_184_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "184"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "184"
@@ -174,7 +175,7 @@ def test_parser_extracts_modelo_232_synthetic_fixture_targets(
     )
 
     assert filing.modelo == "232"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(year, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "232"
@@ -253,7 +254,7 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "347"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "347"
@@ -315,7 +316,7 @@ def test_parser_extracts_modelo_115_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "115"
-    assert filing.period == "1T"
+    assert filing.period == _expected_period(2024, "1T")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "115"
@@ -403,7 +404,7 @@ def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
     )
 
     assert filing.modelo == "131"
-    assert filing.period == "1T"
+    assert filing.period == _expected_period(2026, "1T")
     assert filing.tax_id == "Y0000001S", f"expected tax_id='Y0000001S', got {filing.tax_id!r}"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "131"
