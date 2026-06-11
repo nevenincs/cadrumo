@@ -12,6 +12,7 @@ import pytest
 from ....application.user_profile._orchestration import profile_create_storage_span, profile_storage_session
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
@@ -139,7 +140,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         draft = ModeloDraft(
             draft_id="d1",
             modelo="130",
-            period="2026Q1",
+            period=Period.from_year_and_code(2026, "1T"),
             profile_tax_id="00000000T",
             status=ModeloDraftStatus.BORRADOR,
             values=(
