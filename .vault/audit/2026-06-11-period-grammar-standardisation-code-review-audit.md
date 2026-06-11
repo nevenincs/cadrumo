@@ -443,3 +443,22 @@ three-argument `_load_snapshot` form and the old preflight resolver signature.
 Verification after the change: ruff passed for the touched config modules and
 tests; the config preflight plus Google sync period boundary suites passed with
 `8 passed`; and CLI import smoke printed `OK`.
+
+## PERIOD-026 | INFO | No findings in modelo registry helper typed-period cleanup
+
+Review of the modelo registry-helper cleanup found no issues. Amendment,
+external-import, and work-unit lifecycle paths already hold `core.Period` on
+their baseline or work-unit records; the shared registry helper functions now
+accept that typed period and decompose only at the registry snapshot boundary.
+
+The review checked that the production callers no longer pass
+`period.registry_token` into `reject_unknown_override_casillas`,
+`reject_incomplete_amendment_casillas`, `reject_unknown_import_casillas`, or
+`reject_unknown_period_for_revision`. Registry snapshot calls still receive the
+bare registry token as required by the registry authority API.
+
+Verification after the change: ruff passed for the touched modelo application
+files; the work-unit history/addressing and amend/import suites passed with
+`50 passed`; and CLI import smoke printed `OK`. A broader natural-key CLI file
+still contains an unrelated existing calculate-path failure around source-bound
+casilla override refusal.
