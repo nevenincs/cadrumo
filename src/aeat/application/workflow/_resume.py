@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import Period, PeriodError
+from ...core import Period
 from ...domain.deadlines import ModeloDeadline
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
@@ -190,7 +190,7 @@ def resolve_modelo_workflow_resume_target(
     calculation_revision_id: str | None = None,
     modelo: str | None = None,
     year: int | None = None,
-    period: Period | str | None = None,
+    period: Period | None = None,
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
     selector: object | None = None,
@@ -241,7 +241,7 @@ def resolve_modelo_workflow_resume_target(
                 context={
                     "modelo": modelo or "",
                     "year": "" if year is None else str(year),
-                    "period": period or "",
+                    "period": "" if period is None else str(period),
                 },
             )
         return _resolve_resume_from_visible_target(
@@ -294,7 +294,7 @@ def _resolve_resume_from_visible_target(
     *,
     modelo: str,
     year: int,
-    period: Period | str,
+    period: Period,
     registry_revision_id: str | None,
     bucket_id: str | None,
     selector: object | None,
@@ -348,22 +348,13 @@ def _resolve_revision_for_resume_target(
     return resolve_modelo_revision_pick(target=target, pick=ModeloRevisionPick(selector=revision_selector))
 
 
-def _resolve_visible_period(*, modelo: str, year: int, period: Period | str) -> Period:
-    if isinstance(period, Period):
-        if period.filing_year != year:
-            raise WorkflowError(
-                translated_message="application.workflow.errors.resume_visible_target_incomplete",
-                context={"modelo": modelo, "year": str(year), "period": str(period)},
-            )
-        return period
-
-    try:
-        return Period.from_year_and_code(year, period)
-    except PeriodError as exc:
+def _resolve_visible_period(*, modelo: str, year: int, period: Period) -> Period:
+    if period.filing_year != year:
         raise WorkflowError(
-            translated_message="application.workflow.errors.resume_target_invalid",
-            context={"target": period},
-        ) from exc
+            translated_message="application.workflow.errors.resume_visible_target_incomplete",
+            context={"modelo": modelo, "year": str(year), "period": str(period)},
+        )
+    return period
 
 
 def find_latest_run_for_period(*, modelo: str, period: Period) -> WorkflowResult:

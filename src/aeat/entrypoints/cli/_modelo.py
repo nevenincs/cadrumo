@@ -329,8 +329,10 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
 
 def _resolve_optional_cli_period(*, year: int | None, period: str | None, modelo: str | None) -> Period | None:
     """Resolve a raw CLI period string when enough year context was supplied."""
-    if period is None or year is None:
+    if period is None:
         return None
+    if year is None:
+        raise typer.BadParameter(tr("cli.common.errors.period_missing_year", token=period))
     return _resolve_year_period(year, period, modelo=modelo)
 
 
@@ -885,6 +887,7 @@ register_work_run_commands(
     work_app,
     activate_output_language=activate_subcommand_output_language,
     bad_parameter_from_error=_bad_parameter_from_error,
+    resolve_optional_cli_period=_resolve_optional_cli_period,
 )
 
 
@@ -1171,6 +1174,7 @@ register_export_commands(
     bad_parameter_from_error=_bad_parameter_from_error,
     selector_bad_parameter=_selector_bad_parameter,
     resolve_default_actor=_resolve_default_actor,
+    resolve_optional_cli_period=_resolve_optional_cli_period,
 )
 
 

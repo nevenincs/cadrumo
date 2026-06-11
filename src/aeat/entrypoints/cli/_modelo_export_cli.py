@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
@@ -25,6 +26,7 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
 )
 from ...application.workflow import workflow_state_repository
+from ...core import Period
 from ...core.i18n import tr
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_cli_support import (
@@ -41,6 +43,7 @@ def register_export_commands(
     bad_parameter_from_error,
     selector_bad_parameter,
     resolve_default_actor,
+    resolve_optional_cli_period: Callable[..., Period | None],
 ) -> None:
     """Register root-level modelo export commands against the modelo Typer app."""
 
@@ -138,12 +141,13 @@ def register_export_commands(
             )
 
         try:
+            typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
             selected_revision = resolve_modelo_revision_for_operator_target(
                 calculation_revision_id=(validate_calculation_revision_id(revision) if revision is not None else None),
                 work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
                 modelo=modelo,
                 year=year,
-                period=period,
+                period=typed_period,
                 registry_revision_id=registry_revision,
                 bucket_id=bucket_id,
                 selector=parse_revision_selector(select),
