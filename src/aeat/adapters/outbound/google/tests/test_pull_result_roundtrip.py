@@ -118,7 +118,7 @@ def _populated_pull_result() -> PullResult:
             modelo_id="100",
             revision_id="2024-y-siguientes",
             filing_year=2024,
-            period="2024A",
+            period="0A",
             engine_version="v1.2.3",
             registry_sha="0123456789abcdef" * 4,  # 64-char SHA shape
             exported_at="2025-04-15T10:30:00+00:00",
