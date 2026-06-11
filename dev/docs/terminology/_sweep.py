@@ -39,6 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from aeat.core.external_constants import OutputLanguage
 from aeat.terminology import TerminologyHandbook, load_terminology_handbook
+from aeat.terminology._enums import TermStatus
 
 from ._resolution import ChunkHit, TargetResolver, resolve_chunk_hits
 from ._search_record import SearchRecordKind
@@ -55,6 +56,8 @@ __all__ = [
     "enumerate_query_vocabulary",
     "run_sweep",
 ]
+
+_SHIPPED_TERM_STATUSES: frozenset[TermStatus] = frozenset({TermStatus.PREFERRED, TermStatus.ADMITTED})
 
 #: Per-query result ceiling. Raised to 20 per the locale-crowding guidance: the
 #: parallel es/en/ca/hu source files return four near-identical hits per
@@ -186,6 +189,8 @@ def enumerate_query_vocabulary(
             continue
         for section in concept.languages:
             for term in section.terms:
+                if term.term_status not in _SHIPPED_TERM_STATUSES:
+                    continue
                 _add_query(queries, concept.concept_id, term.label, section.language, is_hidden=False)
                 for form in term.hidden_search_forms:
                     _add_query(queries, concept.concept_id, form, section.language, is_hidden=True)

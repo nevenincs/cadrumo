@@ -1,16 +1,17 @@
-"""Tripwire test that the built wheel bundles every git-tracked corpus + registry file.
+"""Tripwire test that the built wheel bundles every git-tracked shipped data file.
 
 The corpus-registry packaging contract
 relocates both data trees under ``src/aeat/_data/`` so the existing
 ``packages = ["src/aeat"]`` hatchling directive carries them inside
-the wheel without any force-include declaration. This test verifies
+the wheel without any force-include declaration. The terminology tree
+uses the same shipped-data contract. This test verifies
 that contract end-to-end by driving the real build pipeline:
 
 1. ``uv build --wheel`` is invoked into a temporary output directory.
 2. The resulting wheel archive is opened as a zip.
-3. Every path reported by ``git ls-files src/aeat/_data/corpus
-   src/aeat/_data/registry`` is asserted to appear in the archive at
-   the corresponding ``aeat/_data/<relative-path>`` prefix.
+3. Every path reported by ``git ls-files`` under the shipped data
+   subtrees is asserted to appear in the archive at the corresponding
+   ``aeat/_data/<relative-path>`` prefix.
 
 No mocks, fakes, or skips. If the worktree is missing the ``uv``
 binary the test fails loudly so the locator's bundling guarantee is
@@ -38,7 +39,13 @@ def _git_ls_files_data() -> list[str]:
     """Return git-tracked paths under ``src/aeat/_data`` relative to the project root."""
 
     completed = subprocess.run(
-        ["git", "ls-files", "src/aeat/_data/corpus", "src/aeat/_data/registry"],
+        [
+            "git",
+            "ls-files",
+            "src/aeat/_data/corpus",
+            "src/aeat/_data/registry",
+            "src/aeat/_data/terminology",
+        ],
         cwd=_PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -47,8 +54,8 @@ def _git_ls_files_data() -> list[str]:
     tracked = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
     if not tracked:
         raise AssertionError(
-            "git ls-files reported no tracked files under src/aeat/_data/{corpus,registry}; "
-            "the corpus-registry-packaging move has regressed or the worktree is detached",
+            "git ls-files reported no tracked files under the shipped data trees; "
+            "the data packaging contract has regressed or the worktree is detached",
         )
     return tracked
 
