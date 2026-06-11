@@ -18,8 +18,14 @@ class _EnvelopePayload(OutputSchema):
 
 
 def test_emit_envelope_text_path_redacts_lines_through_common_renderer(capsys: pytest.CaptureFixture[str]) -> None:
-    # Create a typer app and get its click command to create a proper typer.Context
+    # Create a typer app and get its click command to create a proper typer.Context.
+    # The Typer must carry at least one command; the current (vendored-click) typer
+    # raises "Could not get a command for this Typer instance" for an empty app.
     app = typer.Typer()
+
+    @app.command()
+    def _noop() -> None: ...
+
     click_cmd = typer.main.get_command(app)
     ctx = typer.Context(click_cmd, obj={"format": "text"})
 
