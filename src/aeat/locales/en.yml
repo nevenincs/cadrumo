@@ -715,8 +715,7 @@ application:
         on revision %{revision_id}: the registry declares a binding source no enrolled
         calculation resolver handles. Enroll a resolver or register it as deferred
         before calculating.'
-      reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
-        implemented; use --from-justificante PATH until the declaration parser lands.
+      reconcile_declaration_unsupported: 'Declaration-PDF reconcile source is not yet implemented; reconcile a downloaded justificante via aeat app modelo reconcile file until the declaration parser lands.'
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
       verification_report_not_found: No verification report found with id=%{verification_report_id}.
@@ -1188,7 +1187,7 @@ cli:
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots
-        capture_all_modelo_help: Limit capture-all to this modelo.
+        capture_all_modelo_help: 'Limit pull-all to this modelo.'
         latest_help: Show the most recent expediente snapshot
         list_help: List saved expediente snapshots
         pull_all_help: 'Pull the AEAT declaration register for every requested registry modelo across a year range and persist bucket-scoped snapshots.'
@@ -1196,7 +1195,7 @@ cli:
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
       filed:
-        capture_all_modelo_help: Limit capture-all to this modelo.
+        capture_all_modelo_help: 'Limit pull-all to this modelo.'
         list_help: List filed declaration rows without downloading artefacts
         pull_all_help: 'Pull filed declarations and justificantes for every requested registry modelo across a year range. Read-only; reports per-modelo failures explicitly.'
         pull_help: 'Pull filed-declaration data from the authenticated AEAT register.'
@@ -1217,8 +1216,7 @@ cli:
             qr_required: QR approval required
             unknown: Unknown
             wrong_identity: wrong identity
-        app_help: AEAT IVA compensation wallet capture (read-only; allows only own-name
-          representation and the guarded wallet read query).
+        app_help: 'AEAT IVA compensation wallet pull (read-only; allows only own-name representation and the guarded wallet read query).'
         as_of_year_help: Year used to age IVA compensation carry-forward lots.
         history_help: List secure local IVA compensation history, carry-forward lots,
           and persisted wallet authority decisions derived from Modelo 303 captures.
@@ -4140,8 +4138,7 @@ filing:
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.
-    iva_history_modelo_303_only: IVA compensation history capture only accepts Modelo
-      303 observations.
+    iva_history_modelo_303_only: 'IVA compensation history pull only accepts Modelo 303 observations.'
     year_range_invalid: From-year must be less than or equal to to-year.
 locales:
   cli:

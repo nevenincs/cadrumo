@@ -1,6 +1,6 @@
 """Application-live persistence for captured AEAT justificante receipts.
 
-The live justificante capture pulls the authentic, AEAT-signed
+The live justificante pull retrieves the authentic, AEAT-signed
 *justificante de presentación* PDF for a filed work unit through the
 read-only sede surface (``capture_justificante`` →
 :class:`~aeat.adapters.outbound.aeat.sede.SedeCapture`) and persists it
@@ -172,7 +172,7 @@ def derive_justificante_capture_snapshot_id(
             "filing_year": filing_year,
             "period": period.strip(),
             "pdf_sha256": pdf_sha256,
-        }
+        },
     )
 
 
@@ -291,12 +291,12 @@ class JustificanteCaptureSnapshotRepository:
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
                 f"justificante capture snapshot payload bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}"
+                f"does not match repository bucket {self._bucket_id!r}",
             )
         if snapshot.snapshot_id != snapshot_id:
             raise LiveApplicationInputError(
                 f"justificante capture snapshot payload id={snapshot.snapshot_id!r} "
-                f"does not match requested snapshot {snapshot_id!r}"
+                f"does not match requested snapshot {snapshot_id!r}",
             )
         return snapshot
 
@@ -338,7 +338,7 @@ class JustificanteCaptureSnapshotRepository:
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
                 f"justificante capture snapshot bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}"
+                f"does not match repository bucket {self._bucket_id!r}",
             )
         envelope = Envelope[JustificanteCaptureSnapshot](
             schema_version=_JUSTIFICANTE_CAPTURE_SNAPSHOT_VERSION,
@@ -497,7 +497,7 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
             update={
                 "state": SnapshotLifecycleState.SUPERSEDED,
                 "superseded_by_snapshot_id": superseded_by,
-            }
+            },
         )
 
 
@@ -546,7 +546,7 @@ def reconcile_capture(
     Materialises the captured PDF to a transient path and delegates to the
     existing local-only ``modelo_reconcile``; the reconciler never contacts
     AEAT. This is the live-sourced equivalent of the operator hand-passing a
-    downloaded justificante via ``--from-justificante``.
+    downloaded justificante via the local ``reconcile file --file PATH`` surface.
     """
     from ..modelo import (
         ModeloReconciliationCommand,
@@ -668,7 +668,7 @@ def register_capture_as_filing_evidence(
                 payload_version=1,
                 payload=event_payload,
             ),
-        )
+        ),
     )
     return stamped
 

@@ -1112,7 +1112,7 @@ class ModeloReconciliationDiffPayload(OutputSchema):
 @register_schema("modelo.reconcile.pull")
 @register_schema("modelo.reconcile.file")
 class ModeloReconcileResult(OutputSchema):
-    """Result payload for ``modelo reconcile`` and ``reconcile-from-justificante``.
+    """Result payload for ``modelo reconcile file`` and ``modelo reconcile pull``.
 
     Both verbs share the :class:`ModeloReconciliationReport` shape from
     the application service: a work-unit-level verdict, the bucket
