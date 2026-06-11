@@ -34,6 +34,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._period import Period
 from ._protocols import ModeloInputs
 from ._schema import ModeloDraft
 
@@ -81,7 +82,7 @@ class BaseAmendment(BaseModel):
     submission_id: str = Field(min_length=1)
     original_csv: str = Field(min_length=1)
     original_model: ModeloCode = Field(min_length=1)
-    original_period: str = Field(min_length=1)
+    original_period: Period
     delta: CasillaDelta = Field(min_length=1)
     amended_draft: ModeloDraft
     created_at: datetime

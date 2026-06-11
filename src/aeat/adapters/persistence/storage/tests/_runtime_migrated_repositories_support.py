@@ -345,7 +345,7 @@ def _modelo_amendment(label: str) -> ModeloComplementaria:
         submission_id=submission_id,
         original_csv="ABCD12345678EFGH",
         original_model="303",
-        original_period="2026Q1",
+        original_period=draft.period,
         delta=delta,
         amended_draft=draft,
         created_at=datetime.now(UTC).replace(microsecond=0),

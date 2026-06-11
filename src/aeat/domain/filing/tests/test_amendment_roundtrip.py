@@ -108,7 +108,7 @@ def _populated_amendment() -> ModeloComplementaria:
         submission_id=submission_id,
         original_csv="ABCD12345678EFGH",
         original_model="303",
-        original_period="2025Q1",
+        original_period=Period.from_year_and_code(2025, "1T"),
         delta=delta,
         amended_draft=_populated_amended_draft(),
         created_at=now,

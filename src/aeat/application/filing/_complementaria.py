@@ -45,25 +45,6 @@ class _SubmittedOriginal(Protocol):
     justificante_csv: str
 
 
-def _period_to_canonical_str(period: Period) -> str:
-    """Reconstruct a canonical period string from a :class:.
-
-    Returns the form accepted by :func:
-    (e.g. "2026-1T" for quarterly, "2026-03" for monthly, "2026A" for
-    annual, "2026P1" for pago-fraccionado instalments).
-    """
-    code = period.registry_token
-    year = period.filing_year
-    if code in ("1T", "2T", "3T", "4T"):
-        return f"{year}-{code}"
-    if code == "0A":
-        return f"{year}A"
-    if code in ("1P", "2P", "3P", "4P"):
-        return f"{year}P{code[0]}"
-    # Monthly codes ("01"-"12")
-    return f"{year}-{code}"
-
-
 def build_complementaria(
     original: object,
     updated_inputs: CasillaInputs,
@@ -79,11 +60,9 @@ def build_complementaria(
     merged_inputs = _merge_inputs(original_draft, updated_inputs)
     from . import build_draft
 
-    # build_draft still accepts str; reconstruct the canonical period token from Period.
-    _period_str = _period_to_canonical_str(original_draft.period)
     amended_draft = build_draft(
         modelo=original_submission.modelo,
-        period=_period_str,
+        period=original_draft.period,
         profile=_DraftProfile(
             tax_id=original_submission.profile_tax_id,
             display_name=f"Complementaria {original_submission.submission_id}",
@@ -103,7 +82,7 @@ def build_complementaria(
         submission_id=original_submission.submission_id,
         original_csv=original_submission.justificante_csv,
         original_model=original_submission.modelo,
-        original_period=_period_str,
+        original_period=original_draft.period,
         delta=delta,
         amended_draft=amended_draft,
         created_at=amended_draft.created_at,
