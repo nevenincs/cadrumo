@@ -559,3 +559,20 @@ Verification after the change: ruff passed for the touched import action and
 test file; the focused external import flow suite passed with `25 passed`;
 core/domain Period gates passed with `31 passed`; and CLI import smoke printed
 `OK`.
+
+## PERIOD-032 | INFO | Clean-state justificante typed evidence cleanup reviewed
+
+Review of the clean-state external-evidence matcher found no issues in the
+focused scope. The matcher now accepts the repository-returned `Justificante`
+contract directly and compares its typed `period` field against the filing's
+`core.Period`, removing the residual generic-object and string-token fallback.
+
+The reviewer attempted the mandated vaultspec-rag query for this seam, but the
+service timed out with `http_search_timeout`; the review was grounded with `rg`
+and direct source inspection instead.
+
+Verification after the change: ruff passed for the touched clean-state source
+and test file; the focused cross-period clean-state suite passed with
+`23 passed`; core/domain Period gates passed with `31 passed`; CLI import smoke
+printed `OK`; and the period plan check reported only the existing `PLAN022`
+ordering warning.
