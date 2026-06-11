@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from re import Pattern
@@ -272,22 +271,15 @@ def test_repo_has_no_unallowlisted_combined_period_strings() -> None:
 
 
 def _tracked_text_files() -> list[Path]:
-    result = subprocess.run(  # noqa: S603
-        ["git", "ls-files", "--", *SCAN_ROOTS],  # noqa: S607
-        cwd=REPOSITORY_ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
     paths: list[Path] = []
-    for raw_path in result.stdout.splitlines():
-        path = REPOSITORY_ROOT / raw_path
-        if _should_scan(path):
-            paths.append(path)
-    return paths
+    for root in SCAN_ROOTS:
+        paths.extend(path for path in (REPOSITORY_ROOT / root).rglob("*") if _should_scan(path))
+    return sorted(paths)
 
 
 def _should_scan(path: Path) -> bool:
+    if not path.is_file():
+        return False
     relative_parts = path.relative_to(REPOSITORY_ROOT).parts
     if any(part in SKIPPED_PARTS for part in relative_parts):
         return False
