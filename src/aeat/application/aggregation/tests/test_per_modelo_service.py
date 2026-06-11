@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from ....core.errors import get_registered_error_code
 from ... import aggregation
 from .. import (
@@ -35,6 +36,9 @@ from .. import (
 from .._counterpart import CounterpartSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_P_2025_Q1 = Period.from_year_and_code(2025, "1T")
+_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
 
 
 def _retencion_obs(*, source_kind: str = "ledger_transaction") -> RetencionObservation:
@@ -106,7 +110,7 @@ def test_contract_maps_supported_modelos_to_application_aggregation_owner() -> N
 def test_command_contract_is_strict_and_immutable() -> None:
     command = PerModeloAggregationCommand(
         modelo="111",
-        period="2025-Q1",
+        period=_P_2025_Q1,
         retencion_observations=(_retencion_obs(),),
     )
 
@@ -115,19 +119,19 @@ def test_command_contract_is_strict_and_immutable() -> None:
         PerModeloAggregationCommand.model_validate(
             {
                 "modelo": "111",
-                "period": "2025-Q1",
+                "period": _P_2025_Q1,
                 "retencion_observations": (_retencion_obs(),),
                 "unexpected": "field",
-            }
+            },
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        command.period = "2025-Q2"
+        command.period = Period.from_year_and_code(2025, "2T")
 
 
 def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None:
     command = PerModeloAggregationCommand(
         modelo="111",
-        period="2025-Q1",
+        period=_P_2025_Q1,
         retencion_observations=(_retencion_obs(source_kind="ledger_transaction"),),
     )
 
@@ -140,7 +144,7 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
     assert result.log_fields.as_extra() == {
         "service_name": "per_modelo_aggregation",
         "modelo": "111",
-        "period": "2025-Q1",
+        "period": "1T",
         "provider": "retenciones",
         "observation_count": 1,
         "source_kind_count": 1,
@@ -155,7 +159,7 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
     )
     command = PerModeloAggregationCommand(
         modelo="347",
-        period="2025",
+        period=_P_2025_ANNUAL,
         counterpart_observations=observations,
     )
 
@@ -177,7 +181,7 @@ def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics(
     )
     command = PerModeloAggregationCommand(
         modelo="720",
-        period="2025",
+        period=_P_2025_ANNUAL,
         foreign_asset_observations=observations,
     )
 
@@ -196,14 +200,14 @@ def test_command_rejects_observations_from_non_selected_provider_family() -> Non
     with pytest.raises(ValidationError, match="foreign_assets"):
         PerModeloAggregationCommand(
             modelo="111",
-            period="2025-Q1",
+            period=_P_2025_Q1,
             foreign_asset_observations=(_asset_obs(),),
         )
 
 
 def test_unsupported_modelo_uses_registered_aggregation_error() -> None:
     with pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info:
-        PerModeloAggregationCommand(modelo="999", period="2025")
+        PerModeloAggregationCommand(modelo="999", period=_P_2025_ANNUAL)
 
     error = exc_info.value
     assert error.suggestion == "use one of 111, 115, 123, 180, 190, 193, 347, 349, 720"
@@ -214,7 +218,7 @@ def test_modelo_whitespace_is_rejected_before_dispatch() -> None:
     with pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info:
         PerModeloAggregationCommand(
             modelo=" 347 ",
-            period="2025",
+            period=_P_2025_ANNUAL,
             counterpart_observations=(_counterpart_obs(),),
         )
 
@@ -225,21 +229,21 @@ def test_result_contract_rejects_incoherent_envelope_payload() -> None:
     aggregation_payload = aggregate_per_modelo(
         PerModeloAggregationCommand(
             modelo="347",
-            period="2025",
+            period=_P_2025_ANNUAL,
             counterpart_observations=(_counterpart_obs(),),
-        )
+        ),
     ).aggregation
 
     with pytest.raises(ValidationError, match="does not match result modelo"):
         PerModeloAggregationResult(
             modelo="349",
-            period="2025",
+            period=_P_2025_ANNUAL,
             provider=PerModeloAggregationProvider.COUNTERPART,
             aggregation=aggregation_payload,
             source_kinds=(AggregationSourceKind.LEDGER_TRANSACTION,),
             log_fields=PerModeloAggregationLogFields(
                 modelo="349",
-                period="2025",
+                period=_P_2025_ANNUAL,
                 provider=PerModeloAggregationProvider.COUNTERPART,
                 observation_count=1,
                 source_kind_count=1,
@@ -252,21 +256,21 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
     aggregation_payload = aggregate_per_modelo(
         PerModeloAggregationCommand(
             modelo="111",
-            period="2025-Q1",
+            period=_P_2025_Q1,
             retencion_observations=(_retencion_obs(),),
-        )
+        ),
     ).aggregation
 
     with pytest.raises(ValidationError, match="does not match aggregation payload"):
         PerModeloAggregationResult(
             modelo="111",
-            period="2025-Q1",
+            period=_P_2025_Q1,
             provider=PerModeloAggregationProvider.COUNTERPART,
             aggregation=aggregation_payload,
             source_kinds=(AggregationSourceKind.LEDGER_TRANSACTION,),
             log_fields=PerModeloAggregationLogFields(
                 modelo="111",
-                period="2025-Q1",
+                period=_P_2025_Q1,
                 provider=PerModeloAggregationProvider.COUNTERPART,
                 observation_count=1,
                 source_kind_count=1,
@@ -281,7 +285,7 @@ def test_service_surface_has_no_cli_dependency() -> None:
             inspect.getsource(aggregation._service),
             inspect.getsource(aggregation.PerModeloAggregationCommand),
             inspect.getsource(aggregation.PerModeloAggregationResult),
-        ]
+        ],
     )
 
     assert "typer" not in source.lower()
