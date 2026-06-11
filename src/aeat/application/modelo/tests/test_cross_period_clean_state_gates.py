@@ -140,7 +140,10 @@ def _seed_303_cross_period_sources(
     snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
     source_casillas_by_period: dict[str, set[str]] = {}
     for requirement in cross_period_dependency_requirements(snapshot):
-        source_casillas_by_period.setdefault(requirement.period, set()).update(requirement.source_casillas)
+        source_casillas_by_period.setdefault(
+            requirement.period.registry_token,
+            set(),
+        ).update(requirement.source_casillas)
 
     for period, source_casillas in sorted(source_casillas_by_period.items()):
         evidence_kind = (
@@ -198,7 +201,7 @@ def _clean_state_repair_evidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="303",
             filing_year=2025,
-            period="1T",
+            period=Period.from_year_and_code(2025, "1T"),
             source_casillas=("01",),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("binding-303-casilla-01",),
@@ -216,7 +219,7 @@ def _clean_state_repair_verdict(
         bucket_id=_BUCKET_ID,
         target_modelo="390",
         target_filing_year=2025,
-        target_period="0A",
+        target_period=Period.from_year_and_code(2025, "0A"),
         dependencies=(evidence,),
     )
 

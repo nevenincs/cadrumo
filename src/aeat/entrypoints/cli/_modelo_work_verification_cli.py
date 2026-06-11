@@ -23,6 +23,7 @@ from ...application.modelo import (
     verify_modelo_revision,
 )
 from ...application.workflow import workflow_state_repository
+from ...core import Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.resources import resources
@@ -272,7 +273,7 @@ def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedM
         CrossPeriodExpectedMemberSet(
             source_modelo=roster.source_modelo,
             filing_year=roster.filing_year,
-            period=roster.period,
+            period=Period.from_year_and_code(roster.filing_year, roster.period),
             member_nifs=roster.member_nifs,
         )
         for roster in getattr(profile, "cross_period_group_member_rosters", ())
@@ -284,14 +285,14 @@ def _dependency_inventory_item_payload(item: object) -> CrossPeriodDependencyInv
         target_modelo=item.target_modelo,
         target_revision_id=item.target_revision_id,
         target_filing_year=item.target_filing_year,
-        target_period=item.target_period,
+        target_period=item.target_period.registry_token,
         dependency_count=len(item.dependencies),
         source_modelos=item.source_modelos,
         dependencies=tuple(
             CrossPeriodDependencyRequirementPayload(
                 source_modelo=requirement.source_modelo,
                 filing_year=requirement.filing_year,
-                period=requirement.period,
+                period=requirement.period.registry_token,
                 source_casillas=requirement.source_casillas,
                 origin=requirement.origin.value,
                 origin_ids=requirement.origin_ids,
@@ -306,7 +307,7 @@ def _clean_state_payload(verdict: object) -> CrossPeriodCleanStatePayload:
     return CrossPeriodCleanStatePayload(
         target_modelo=verdict.target_modelo,
         target_filing_year=verdict.target_filing_year,
-        target_period=verdict.target_period,
+        target_period=verdict.target_period.registry_token,
         requires_clean_state=verdict.requires_clean_state,
         clean=verdict.clean,
         blockers=tuple(blocker.value for blocker in verdict.blockers),
@@ -314,7 +315,7 @@ def _clean_state_payload(verdict: object) -> CrossPeriodCleanStatePayload:
             CrossPeriodDependencyEvidencePayload(
                 source_modelo=evidence.requirement.source_modelo,
                 filing_year=evidence.requirement.filing_year,
-                period=evidence.requirement.period,
+                period=evidence.requirement.period.registry_token,
                 clean=evidence.clean,
                 blockers=tuple(blocker.value for blocker in evidence.blockers),
                 observation_source_kind=evidence.observation_source_kind,
