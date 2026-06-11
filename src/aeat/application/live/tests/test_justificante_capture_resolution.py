@@ -133,7 +133,11 @@ def test_declaration_with_expediente_absent_from_tree_refuses() -> None:
 def test_refiled_period_resolves_to_the_latest_active_filing() -> None:
     early = _declaration(period=_PERIOD_1T, expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC))
     refile_exp = "202613000010099Z"
-    late = _declaration(period=_PERIOD_1T, expediente_id=refile_exp, presented_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC))
+    late = _declaration(
+        period=_PERIOD_1T,
+        expediente_id=refile_exp,
+        presented_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC),
+    )
     resolved = resolve_period_expediente(
         declarations=(early, late),
         expedientes=(_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=refile_exp)),

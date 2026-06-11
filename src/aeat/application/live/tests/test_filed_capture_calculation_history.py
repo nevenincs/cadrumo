@@ -191,7 +191,10 @@ def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> Non
         ),
     )
 
-    assert tuple(row.period for row in selected) == ("1T", "2T")
+    assert tuple(row.period for row in selected) == (
+        Period.from_year_and_code(2026, "1T"),
+        Period.from_year_and_code(2026, "2T"),
+    )
     assert selected[0].expediente_id == "200030300000007Z"
     assert selected[1].expediente_id == "200030300000008Z"
 
@@ -413,7 +416,7 @@ def _parsed_303_submitted_file_observation(
     declaration = Declaracion(
         modelo="303",
         ejercicio=year,
-        period=period,
+        period=observation_period,
         expediente_id=expediente_id,
         estado="ALTA",
         tipo_solicitud=None,
@@ -571,7 +574,7 @@ def _declaration(
     return Declaracion(
         modelo="303",
         ejercicio=2026,
-        period=period,
+        period=Period.from_year_and_code(2026, period),
         expediente_id=expediente_id,
         estado=estado,
         tipo_solicitud=None,
