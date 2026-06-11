@@ -34,15 +34,16 @@ class RegistryTestProfile:
 def build_registry_filing_draft(
     *,
     modelo: str,
-    period: str | Period,
+    period: Period,
     profile_tax_id: str = "Y0000001S",
     casilla_values: ModeloInputs,
     binding_values: ModeloInputs | None = None,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
-    filing_year: int = 2026,
 ) -> ModeloDraft:
     """Build and return a :class:`ModeloDraft` through the validated registry runtime path."""
-    typed_period = _resolve_test_period(period, filing_year=filing_year)
+    if not isinstance(period, Period):
+        raise ModeloBuilderError("registry filing test helper requires a core.Period")
+    typed_period = period
     schema_provider = build_runtime_schema_provider(
         modelos=(modelo,),
         filing_year=typed_period.year,
@@ -85,12 +86,11 @@ def build_registry_filing_draft(
 def build_registry_filing_draft_from_decimals(
     *,
     modelo: str,
-    period: str | Period,
+    period: Period,
     profile_tax_id: str = "Y0000001S",
     casilla_decimals: Mapping[str, str | Decimal],
     binding_decimals: Mapping[str, str | Decimal] | None = None,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
-    filing_year: int = 2026,
 ) -> ModeloDraft:
     """Coerce decimal strings before building through the registry runtime.
 
@@ -109,20 +109,7 @@ def build_registry_filing_draft_from_decimals(
         casilla_values=coerced,
         binding_values=coerced_bindings,
         status=status,
-        filing_year=filing_year,
     )
-
-
-def _resolve_test_period(period: str | Period, *, filing_year: int) -> Period:
-    """Resolve test helper period input without constructing combined runtime strings."""
-    if isinstance(period, Period):
-        return period
-    try:
-        return Period.from_year_and_code(filing_year, period)
-    except ValueError as exc:
-        raise ModeloBuilderError(
-            f"cannot map filing period {period!r} to a registry period; pass a Period or bare registry token",
-        ) from exc
 
 
 __all__ = [

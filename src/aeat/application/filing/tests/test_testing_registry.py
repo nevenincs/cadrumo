@@ -16,6 +16,15 @@ from .._testing_registry import build_registry_filing_draft, build_registry_fili
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
+
+
+_ANNUAL_2026 = _period(2026, "0A")
+_Q1_2024 = _period(2024, "1T")
+_Q1_2026 = _period(2026, "1T")
+
+
 def _valid_inputs(*, ingresos: Decimal = Decimal("10000")) -> dict[str, Decimal]:
     return {
         "01": ingresos,
@@ -39,13 +48,13 @@ def _valid_bindings() -> dict[str, Decimal]:
 def test_builds_frozen_draft_through_registry_runtime() -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
     )
 
     assert isinstance(draft, ModeloDraft)
-    assert draft.period == Period.from_year_and_code(2026, "1T")
+    assert draft.period == _Q1_2026
     assert draft.schema_version.startswith("registry:130:")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         draft.status = ModeloDraftStatus.BORRADOR
@@ -54,7 +63,7 @@ def test_builds_frozen_draft_through_registry_runtime() -> None:
 def test_approved_status_uses_application_approval_path() -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
     )
@@ -83,24 +92,23 @@ def test_typed_period_input_is_passed_to_draft_without_string_roundtrip() -> Non
     assert draft.snapshot_ref.period == period.registry_token
 
 
-def test_bare_period_input_uses_explicit_filing_year() -> None:
+def test_typed_period_input_uses_period_year() -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period="1T",
-        filing_year=2024,
+        period=_Q1_2024,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
         status=ModeloDraftStatus.BORRADOR,
     )
 
-    assert draft.period == Period.from_year_and_code(2024, "1T")
+    assert draft.period == _Q1_2024
     assert draft.snapshot_ref is not None
     assert draft.snapshot_ref.modelo_year == 2024
     assert draft.snapshot_ref.period == "1T"
 
 
-def test_combined_period_input_is_rejected_at_helper_boundary() -> None:
-    with pytest.raises(ModeloBuilderError, match="Period or bare registry token"):
+def test_string_period_input_is_rejected_at_helper_boundary() -> None:
+    with pytest.raises(ModeloBuilderError, match=r"requires a core\.Period"):
         build_registry_filing_draft(
             modelo="130",
             period="2026Q1",
@@ -113,7 +121,7 @@ def test_combined_period_input_is_rejected_at_helper_boundary() -> None:
 def test_non_approved_status_clears_approval_fields() -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
         status=ModeloDraftStatus.BORRADOR,
@@ -130,7 +138,7 @@ def test_unsupported_modelo_fails_at_registry_boundary() -> None:
     with pytest.raises(ModeloBuilderError, match="missing requested modelo definitions"):
         build_registry_filing_draft(
             modelo="999",
-            period="0A",
+            period=_ANNUAL_2026,
             casilla_values={"0511": Decimal("5550.00")},
         )
 
@@ -139,7 +147,7 @@ def test_duplicate_casilla_and_binding_ids_are_rejected() -> None:
     with pytest.raises(ModeloBuilderError, match="duplicate casilla/binding input ids"):
         build_registry_filing_draft(
             modelo="130",
-            period="1T",
+            period=_Q1_2026,
             casilla_values=_valid_inputs(),
             binding_values={**_valid_bindings(), "01": Decimal("99")},
         )
@@ -148,7 +156,7 @@ def test_duplicate_casilla_and_binding_ids_are_rejected() -> None:
 def test_values_are_registry_projected_and_sorted() -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_values=_valid_inputs(ingresos=Decimal("12000")),
         binding_values=_valid_bindings(),
         status=ModeloDraftStatus.BORRADOR,
@@ -166,13 +174,13 @@ def test_values_are_registry_projected_and_sorted() -> None:
 def test_draft_id_is_deterministic_for_same_registry_inputs() -> None:
     a = build_registry_filing_draft(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
     )
     b = build_registry_filing_draft(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
     )
@@ -183,7 +191,7 @@ def test_draft_id_is_deterministic_for_same_registry_inputs() -> None:
 def test_decimal_string_inputs_are_coerced_before_registry_build() -> None:
     draft = build_registry_filing_draft_from_decimals(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_decimals={key: str(value) for key, value in _valid_inputs().items()},
         binding_decimals={key: str(value) for key, value in _valid_bindings().items()},
         status=ModeloDraftStatus.BORRADOR,
@@ -196,7 +204,7 @@ def test_decimal_string_inputs_are_coerced_before_registry_build() -> None:
 def test_decimal_passthrough() -> None:
     draft = build_registry_filing_draft_from_decimals(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_decimals=_valid_inputs(ingresos=Decimal("100.50")),
         binding_decimals=_valid_bindings(),
         status=ModeloDraftStatus.BORRADOR,
@@ -213,7 +221,7 @@ def test_invalid_decimal_string_raises() -> None:
     with pytest.raises(InvalidOperation, match=r"ConversionSyntax|InvalidOperation|conversion"):
         build_registry_filing_draft_from_decimals(
             modelo="130",
-            period="1T",
+            period=_Q1_2026,
             casilla_decimals=bad_inputs,
             binding_decimals=_valid_bindings(),
         )
@@ -226,7 +234,7 @@ def test_spanish_thousands_rejected_at_boundary() -> None:
     with pytest.raises(InvalidOperation, match=r"ConversionSyntax|InvalidOperation|conversion"):
         build_registry_filing_draft_from_decimals(
             modelo="130",
-            period="1T",
+            period=_Q1_2026,
             casilla_decimals=bad_inputs,
             binding_decimals=_valid_bindings(),
         )
