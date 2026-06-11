@@ -195,7 +195,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
                 filed_by="aeat.cli.modelo.file",
                 aeat_accepted=True,
             ),
-        }
+        },
     )
 
     assert (
@@ -276,7 +276,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     filed_by="aeat.cli.modelo.file",
                     aeat_accepted=True,
                 ),
-            }
+            },
         )
 
 
@@ -401,3 +401,133 @@ def test_filing_record_catalogue_unsupported_inner_version_is_localized(
         "stored_schema_version": stored_schema_version,
         "max_supported_version": _FILING_CATALOGUE_VERSION,
     }
+
+
+def _source_transaction_ids() -> tuple[str, ...]:
+    return (_hex("7"), _hex("8"))
+
+
+def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) -> None:
+    """The denormalised source_transaction_ids footprint round-trips with non-default values."""
+    work_unit_id = _hex("a")
+    revision_id = _hex("c")
+    filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+    record = ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id="bucket-A",
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period="2T",
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+        aeat_accepted=True,
+        source_transaction_ids=_source_transaction_ids(),
+    )
+    original = ModeloRecordCatalogue(records={filing_id: record})
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(original)
+        loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert loaded == original
+    (loaded_record,) = loaded.records.values()
+    assert loaded_record.source_transaction_ids == _source_transaction_ids()
+
+
+def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids() -> None:
+    """source_transaction_ids is excluded from the content address; the id is unaffected."""
+    work_unit_id = _hex("a")
+    revision_id = _hex("c")
+    filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    derived = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+
+    empty_footprint = ModeloRecord(
+        filing_record_id=derived,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id="bucket-A",
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period="2T",
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+    full_footprint = empty_footprint.model_copy(update={"source_transaction_ids": _source_transaction_ids()})
+
+    # Same derived id accepted by both — the validator's derived-id check is
+    # independent of source_transaction_ids.
+    assert empty_footprint.filing_record_id == full_footprint.filing_record_id == derived
+
+
+def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path: Path) -> None:
+    """Anti-tautology proof: a payload missing source_transaction_ids loads as ()."""
+    import json as _json
+
+    work_unit_id = _hex("a")
+    revision_id = _hex("c")
+    filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+    record = ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id="bucket-A",
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period="2T",
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+        source_transaction_ids=_source_transaction_ids(),
+    )
+    original = ModeloRecordCatalogue(records={filing_id: record})
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(original)
+
+        stored = profile.repository.load(
+            _FILING_NAMESPACE,
+            _FILING_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_FILING_CATALOGUE_VERSION,
+        )
+        assert stored is not None
+        envelope = _json.loads(stored.payload.decode("utf-8"))
+        persisted = envelope["payload"]["records"][filing_id]
+        assert persisted["source_transaction_ids"] == list(_source_transaction_ids())
+        # Drop the field: the model default of () must surface on reload, so the
+        # mutated catalogue compares UNEQUAL to the original (which carried two ids).
+        del persisted["source_transaction_ids"]
+        profile.repository.save(
+            namespace=_FILING_NAMESPACE,
+            object_key=_FILING_OBJECT_KEY,
+            classification=stored.classification,
+            schema_version=stored.schema_version,
+            written_at=stored.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        mutated = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    (mutated_record,) = mutated.records.values()
+    assert mutated_record.source_transaction_ids == ()
+    assert mutated != original

@@ -286,6 +286,7 @@ def persist_filed_revision(
         notes=notes.strip() if notes else None,
         aeat_accepted=False,
         status=ModeloRecordStatus.VIGENTE,
+        source_transaction_ids=target.source_transaction_ids,
     )
 
     revisions = calculation_repository.load()

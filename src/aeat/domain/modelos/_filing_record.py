@@ -177,6 +177,13 @@ class ModeloRecord(BaseModel):
     superseded_by_filing_record_id: FilingRecordId | None = None
     external_evidence: ExternalEvidence | None = None
     amends_filing_record_id: FilingRecordId | None = None
+    # Denormalised footprint of the filed revision's contributing ledger
+    # transactions, so an external audit tool holding only a filing record
+    # resolves its transaction set in one hop. Deliberately EXCLUDED from
+    # ``derive_filing_record_id`` (mirroring the ledger_filing_snapshot exclusion
+    # on the revision hash) so the content address is unaffected; defaults to ()
+    # for non-ledger filings.
+    source_transaction_ids: tuple[str, ...] = ()
 
     @field_validator("modelo", mode="before")
     @classmethod
@@ -198,7 +205,7 @@ class ModeloRecord(BaseModel):
         )
         if derived != self.filing_record_id:
             raise ModeloValidationError(
-                f"filing_record_id {self.filing_record_id!r} does not match the derived id {derived!r}"
+                f"filing_record_id {self.filing_record_id!r} does not match the derived id {derived!r}",
             )
         if self.status is ModeloRecordStatus.VIGENTE:
             if self.superseded_at is not None or self.superseded_by_filing_record_id is not None:
@@ -206,11 +213,11 @@ class ModeloRecord(BaseModel):
         elif self.status is ModeloRecordStatus.SUPERSEDIDO:
             if self.superseded_at is None or self.superseded_by_filing_record_id is None:
                 raise ModeloValidationError(
-                    "superseded filing record must carry superseded_at and superseded_by_filing_record_id"
+                    "superseded filing record must carry superseded_at and superseded_by_filing_record_id",
                 )
             if self.superseded_at < self.filed_at:
                 raise ModeloValidationError(
-                    f"superseded_at {self.superseded_at.isoformat()} precedes filed_at {self.filed_at.isoformat()}"
+                    f"superseded_at {self.superseded_at.isoformat()} precedes filed_at {self.filed_at.isoformat()}",
                 )
         return self
 
@@ -235,7 +242,7 @@ class ModeloRecordCatalogue(BaseModel):
         for key, record in self.records.items():
             if key != record.filing_record_id:
                 raise ModeloValidationError(
-                    f"catalogue key {key!r} does not match filing_record_id {record.filing_record_id!r}"
+                    f"catalogue key {key!r} does not match filing_record_id {record.filing_record_id!r}",
                 )
         # Exactly one CURRENT record per (bucket, modelo, year, period, member) tuple.
         currents: dict[tuple[str, str, int, str, str | None], str] = {}
@@ -252,7 +259,7 @@ class ModeloRecordCatalogue(BaseModel):
             if current_key in currents:
                 raise ModeloValidationError(
                     f"more than one current filing record for {current_key!r}: "
-                    f"{currents[current_key]!r} and {record.filing_record_id!r}"
+                    f"{currents[current_key]!r} and {record.filing_record_id!r}",
                 )
             currents[current_key] = record.filing_record_id
         return self

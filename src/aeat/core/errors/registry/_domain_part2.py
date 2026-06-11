@@ -567,6 +567,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.modelos._calculation_revision.LedgerFilingCoverageError",
+        ErrorCode(
+            code="FAIL_MODELO_LEDGER_FILING_COVERAGE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_modelo_calculation_revision_persistence",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.modelos._filing_repository.ModeloRecordPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_FILING_RECORD_PERSISTENCE",
