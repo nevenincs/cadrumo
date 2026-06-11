@@ -45,7 +45,7 @@ def modelo_work_plazo_summary(
     closes_on = resolve_filing_closes_on(
         str(work_unit.modelo),
         work_unit.filing_year,
-        work_unit.period.registry_token,
+        work_unit.period,
     )
     if closes_on is None:
         return None
