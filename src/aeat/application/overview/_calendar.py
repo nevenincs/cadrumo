@@ -690,7 +690,7 @@ def _filing_evidence_from_modelo_record(
         return None
     modelo = str(record.modelo)
     filing_year = int(record.filing_year)
-    period = _Period.from_year_and_code(filing_year, str(record.period))
+    period = _period_from_observed_value(filing_year, record.period)
     external_evidence = record.external_evidence
     local_state = (
         OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
@@ -757,14 +757,11 @@ def _modelo_record_has_verified_justificante(
         return False
     if str(getattr(justificante, "ejercicio", "") or "").strip() != str(filing_year):
         return False
-    observed_period = str(getattr(justificante, "period", "") or "").strip().upper()
-    expected_periods = {
-        period.registry_token.upper(),
-        str(period).upper(),
-    }
-    if period.registry_token.upper() == "0A":
-        expected_periods.add(str(filing_year))
-    return observed_period in expected_periods
+    observed = getattr(justificante, "period", None)
+    if isinstance(observed, _Period):
+        return observed == period
+    observed_period = str(observed or "").strip().upper()
+    return observed_period == period.registry_token.upper()
 
 
 def _filing_evidence_from_observed_event(
@@ -805,7 +802,7 @@ def _filing_evidence_from_filed_declaration_observation(
     if expected and str(getattr(observation, "authenticated_identity", "") or "").strip() != expected:
         return None
     _year_int = int(filing_year)
-    _period_obj = _Period.from_year_and_code(_year_int, str(period))
+    _period_obj = _period_from_observed_value(_year_int, period)
     justificante = next(
         (
             artefact
@@ -843,7 +840,7 @@ def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCa
     if observation is None:
         return None
     _obs_year = int(observation.filing_year)
-    _obs_period = _Period.from_year_and_code(_obs_year, str(observation.period))
+    _obs_period = _period_from_observed_value(_obs_year, observation.period)
     return OverviewCalendarFilingEvidence(
         modelo=str(observation.modelo),
         filing_year=_obs_year,
@@ -854,6 +851,12 @@ def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCa
         justificante_verified=False,
         evidence_source=source_kind,
     )
+
+
+def _period_from_observed_value(filing_year: int, value: object) -> _Period:
+    if isinstance(value, _Period):
+        return value
+    return _Period.from_year_and_code(filing_year, str(value))
 
 
 def _merge_filing_evidence(

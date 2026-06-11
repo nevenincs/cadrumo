@@ -247,7 +247,7 @@ async def _capture_iva_compensation_history_with_session(
                             "stage": "capture_declaration_observation",
                             "modelo": declaration.modelo,
                             "ejercicio": declaration.ejercicio,
-                            "period": declaration.period,
+                            "period": declaration.period.registry_token,
                         },
                     )
                 try:
@@ -318,7 +318,7 @@ def _iva_compensation_history_capture_report(
 def _failed_declaration_ref(declaration: _Declaracion, exc: BaseException) -> str:
     return (
         f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
-        f"period={declaration.period};failure_type={type(exc).__name__}"
+        f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
     )
 
 

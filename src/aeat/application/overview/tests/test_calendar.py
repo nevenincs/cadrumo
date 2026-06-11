@@ -61,13 +61,14 @@ _SOURCE_URL = aeat_url("sede", "/")
 _WORK_UNIT_ID = "a" * 64
 _CALCULATION_REVISION_ID = "b" * 64
 _BUCKET_ID = "c" * 32
+_PERIOD_2025_1T = Period.from_year_and_code(2025, "1T")
 
 
 def _modelo_record(
     *,
     modelo: str = "303",
     filing_year: int = 2025,
-    period: str = "1T",
+    period: Period = _PERIOD_2025_1T,
     aeat_accepted: bool = False,
     external_evidence: ExternalEvidence | None = None,
 ) -> ModeloRecord:
@@ -102,7 +103,7 @@ def _filed_declaration_observation(
     return FiledDeclaracionObservation(
         modelo="303",
         ejercicio=2025,
-        period="1T",
+        period=_PERIOD_2025_1T,
         expediente_id=expediente_id,
         status="ALTA",
         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -133,7 +134,7 @@ def _justificante_metadata(
     csv: str = "JUST-303-2025-1T",
     modelo: str = "303",
     filing_year: int = 2025,
-    period: str = "1T",
+    period: Period = _PERIOD_2025_1T,
     tax_id: str = "X1234567L",
 ) -> Justificante:
     pdf_bytes = f"{csv}-pdf".encode()
@@ -388,7 +389,7 @@ def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
             Declaracion(
                 modelo="303",
                 ejercicio=2025,
-                period="1T",
+                period=_PERIOD_2025_1T,
                 expediente_id="12345678901234567890",
                 estado="ALTA",
                 presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -557,7 +558,7 @@ def test_expedientes_event_marks_observed_submission_but_not_justificante_verifi
                     Declaracion(
                         modelo="303",
                         ejercicio=2025,
-                        period="1T",
+                        period=_PERIOD_2025_1T,
                         expediente_id="12345678901234567890",
                         estado="ALTA",
                         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -704,7 +705,7 @@ def test_imported_justificante_record_for_wrong_taxpayer_is_not_verified() -> No
     [
         pytest.param({"modelo": "130"}, id="wrong-modelo"),
         pytest.param({"filing_year": 2024}, id="wrong-ejercicio"),
-        pytest.param({"period": "2T"}, id="wrong-period"),
+        pytest.param({"period": Period.from_year_and_code(2025, "2T")}, id="wrong-period"),
     ],
 )
 def test_imported_justificante_record_for_wrong_obligation_is_not_verified(
@@ -746,7 +747,7 @@ def test_calendar_entry_carries_distinct_local_and_aeat_states() -> None:
                     Declaracion(
                         modelo="303",
                         ejercicio=2025,
-                        period="1T",
+                        period=_PERIOD_2025_1T,
                         expediente_id="12345678901234567890",
                         estado="ALTA",
                         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -787,7 +788,7 @@ def test_calendar_event_carries_verified_justificante_from_filed_observation() -
                     Declaracion(
                         modelo="303",
                         ejercicio=2025,
-                        period="1T",
+                        period=_PERIOD_2025_1T,
                         expediente_id="12345678901234567890",
                         estado="ALTA",
                         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -827,7 +828,7 @@ def test_calendar_event_justificante_verification_is_expediente_specific() -> No
                     Declaracion(
                         modelo="303",
                         ejercicio=2025,
-                        period="1T",
+                        period=_PERIOD_2025_1T,
                         expediente_id="12345678901234567890",
                         estado="ALTA",
                         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -835,7 +836,7 @@ def test_calendar_event_justificante_verification_is_expediente_specific() -> No
                     Declaracion(
                         modelo="303",
                         ejercicio=2025,
-                        period="1T",
+                        period=_PERIOD_2025_1T,
                         expediente_id="12345678901234567891",
                         estado="ALTA",
                         presented_at=datetime(2025, 4, 16, 9, 30, tzinfo=UTC),
