@@ -113,8 +113,8 @@ Ledger --period accepts only canonical AEAT tokens (0A/1T-4T/01-12); year travel
 Calendar shapes (2026Q1/2026-03/2026) and the 2026-1T hybrid refuse with instructive localised messages naming the AEAT tokens and --year; no dual-notation wording survives.
 
 - [x] `P02.S05` - Assert calendar shapes (2026Q1/2026-03/2026) and the year-qualified hybrid (2026-1T) refuse at every ledger period site with an instructive message naming the AEAT tokens and --year; `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
-- [ ] `P02.S06` - Rewrite the period refusal locale messages via the aeat.locales CLI to name the AEAT tokens and the --year argument, removing every both-notations / calendar-shape phrasing; `src/aeat/locales/en.yml`.
-- [ ] `P02.S07` - Run the documented-command and educational-docs conformance gates green after the grammar and locale changes; `src/aeat/entrypoints/cli/tests`.
+- [x] `P02.S06` - Rewrite the period refusal locale messages via the aeat.locales CLI to name the AEAT tokens and the --year argument, removing every both-notations / calendar-shape phrasing; `src/aeat/locales/en.yml`.
+- [x] `P02.S07` - Run the documented-command and educational-docs conformance gates green after the grammar and locale changes; `src/aeat/entrypoints/cli/tests`.
 
 ### Phase `P03` - Backend parser de-conflation: domain/period.py + work-period normalisation
 
@@ -130,7 +130,7 @@ Delete the combined-input regexes from parse_canonical_period; remove the round-
 
 Every how-to and reference teaches only --year --period <token>; a repo-wide grep gate confirms zero 2026Q1 / YYYY-nT / period=YYYY usage outside refusal-regression fixtures.
 
-- [ ] `P04.S13` - Sweep every how-to and reference doc to teach only --year --period <token>, removing every 2026Q1 / period=2026-1T / bare-year example; `docs/how-to, docs/reference`.
+- [x] `P04.S13` - Sweep every how-to and reference doc to teach only --year --period <token>, removing every 2026Q1 / period=2026-1T / bare-year example; `docs/how-to, docs/reference`.
 - [ ] `P04.S14` - Add a final repo-wide grep gate asserting zero 2026Q1 / YYYY-nT / period=YYYY usage in code, tests and docs outside the refusal-regression fixtures; `run the relevant suites green; `src/aeat, docs`.
 
 ### Phase `P05` - DEEP LAYER (outstanding): internal combined-token representation migration
