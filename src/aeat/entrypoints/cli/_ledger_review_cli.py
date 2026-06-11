@@ -62,7 +62,11 @@ def _ledger_review_query(
     return LedgerReviewQuery(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_record_id,
-        period=_filter_canonical_period(spec.period) if spec.period else None,
+        period=(
+            _filter_canonical_period(spec.period, year=spec.year)
+            if spec.period is not None and spec.year is not None
+            else None
+        ),
         status=spec.status.value if spec.status is not None else None,
         issue=spec.issue.value if spec.issue is not None else None,
         import_id=spec.import_id,

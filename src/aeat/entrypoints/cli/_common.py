@@ -18,12 +18,11 @@ from __future__ import annotations
 import re as _re
 from collections.abc import Iterable, Sequence
 from datetime import date as _date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 import typer
 
-from ...core import Modelo
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.output_rendering import render_command_output
@@ -38,15 +37,20 @@ from ...core.output_rendering import render_command_output
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
 # resolving them.
 if TYPE_CHECKING:
+    from ...application.aggregation import Period
     from ...application.auth import AuthProviderListing
     from ...application.workflow import WorkflowState
     from ...core.json_contract import Notice
-    from ...domain.calculations.registry import ModeloRevision
     from ...domain.contribuyente import ProfileKey
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft, ModeloDraftRepository
     from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
     from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
+
+__all__ = [
+    "parse_decimal_amount",
+    "parse_optional_decimal_amount",
+]
 
 # ---------------------------------------------------------------------
 # Transport helpers
@@ -183,32 +187,12 @@ def _fmt_decimal(value: Decimal | None) -> str:
 # own, so every ledger ``--period`` command also takes ``--year`` to supply
 # the year context — exactly the modelo ``--year``/``--period`` composition,
 # so ``--period 1T --year 2024`` reads identically across ledger and modelo.
-# The ledger stores each period in an internal calendar shape that embeds the
-# year (``2024Q1`` / ``2024-03`` / ``2024``); this normaliser converts the
-# ``(--year, AEAT token)`` pair into that internal representation. No calendar
-# shape, year-qualified hybrid, or other notation is accepted on input — a
-# calendar shape (``2024Q1`` / ``2024-03`` / ``2024``) is refused with a
-# message naming the AEAT tokens and the ``--year`` argument.
-
-
-def _aeat_token_to_calendar(year: str, registry_period: str) -> str | None:
-    """Map a ledger-meaningful registry token onto the internal calendar shape.
-
-    The ledger filters transactions by a calendar date span, so only the
-    span-shaped :class:`StandardPeriodCode` members convert: quarters
-    (``1T``-``4T`` → ``YYYYQn``), the annual period (``0A`` → bare ``YYYY``),
-    and months (``01``-``12`` → ``YYYY-MM``). Instalment claves (``1P``-``4P``,
-    Modelo 202 pago fraccionado) are payment events, not a ledger date span,
-    so they have no ledger calendar shape; this returns ``None`` for them and
-    the caller refuses with the instructive message.
-    """
-    if registry_period.endswith("T") and len(registry_period) == 2 and registry_period[0].isdigit():
-        return f"{year}Q{registry_period[0]}"
-    if registry_period == "0A":
-        return year
-    if registry_period.isdigit():  # Monthly token ``01``-``12``.
-        return f"{year}-{registry_period}"
-    return None
+# A filing period is ALWAYS carried as a ``(year, bare-token)`` pair — never a
+# combined calendar string. The internal value the ledger filters by is a
+# :class:`Period` date span built directly from that pair; there is no calendar
+# shape, no year-qualified hybrid, and no conversion layer. A calendar shape
+# (``2024Q1`` / ``2024-03`` / ``2024``) is refused with a message naming the
+# AEAT tokens and the ``--year`` argument.
 
 
 def _ledger_aeat_token(token: str) -> str | None:
@@ -231,8 +215,8 @@ def _ledger_aeat_token(token: str) -> str | None:
     return registry_period
 
 
-def _canonical_period(period: str, *, year: int) -> str:
-    """Convert a strict AEAT ``--period`` token plus ``--year`` to the internal shape.
+def _canonical_period(period: str, *, year: int) -> Period:
+    """Resolve a strict AEAT ``--period`` token plus ``--year`` to a :class:`Period`.
 
     The ledger ``--period`` surface accepts only the canonical AEAT modelo
     tokens (``0A`` annual, ``1T``-``4T`` quarters, ``01``-``12`` months),
@@ -240,55 +224,43 @@ def _canonical_period(period: str, *, year: int) -> str:
     and composes them with ``--year`` exactly as the modelo surface does. A
     calendar shape (``2026Q1`` / ``2026-03`` / ``2026``) or any other notation
     is refused with a message naming the AEAT tokens and the ``--year``
-    argument. The ``(year, token)`` pair converts to the internal calendar
-    representation the ledger filters by.
+    argument. The ``(year, token)`` pair builds the :class:`Period` date span
+    the ledger filters by — there is no intermediate calendar string.
     """
+    from ...application.aggregation import Period
+    from ...application.aggregation._errors import AggregationPeriodError
+
     stripped = period.strip()
     if not stripped:
         raise _bad(tr("cli.common.errors.period_empty"))
 
     registry_period = _ledger_aeat_token(stripped)
     if registry_period is not None:
-        calendar = _aeat_token_to_calendar(str(year), registry_period)
-        if calendar is not None:
-            return calendar
+        try:
+            return Period.from_year_and_token(year=year, token=registry_period)
+        except AggregationPeriodError:
+            # A registry-valid token the ledger cannot filter by (an instalment
+            # clave such as ``1P``): refuse with the AEAT-token guidance below.
+            pass
 
     raise _bad(tr("cli.common.errors.period_unrecognised", raw=period))
 
 
-# A ``--filter period=`` clause is a ``KEY=VALUE`` mini-grammar with no place
-# for a separate ``--year``, so the year travels inline on the AEAT token:
-# ``period=2026-1T`` / ``period=2026-0A`` / ``period=2026-03``. The strict
-# grammar still holds — only an AEAT token (year-qualified) is accepted, never
-# a calendar shape. This regex only splits the year off so the trailing token
-# can be validated against the registry period union.
-_FILTER_YEAR_QUALIFIED_RE = _re.compile(r"^(?P<year>\d{4})-(?P<token>[0-9A-Za-z]+)$")
+def _filter_canonical_period(token: str, *, year: int) -> Period:
+    """Resolve a ``--filter period=`` bare token plus a ``--filter year=`` year to a :class:`Period`.
 
-
-def _filter_canonical_period(value: str) -> str:
-    """Convert a ``--filter period=`` clause (a year-qualified AEAT token) to the internal shape.
-
-    The filter mini-grammar carries no ``--year``, so the year is inline on the
-    AEAT token (``2026-1T`` / ``2026-0A`` / ``2026-03``). Only an AEAT token is
-    accepted; a calendar shape (``2026Q1`` / ``2026``) is refused with a message
-    naming the AEAT tokens. Reuses the same ``(year, token)→internal`` mapping
-    the ``--period`` / ``--year`` commands use.
+    The ledger ``--filter`` grammar carries the filing year as a separate
+    ``year=`` clause, so ``period=`` is the same bare AEAT token the
+    ``--period`` option accepts (``1T`` / ``0A`` / ``03``). A calendar shape or
+    a year-qualified hybrid (``2026Q1`` / ``2026-1T``) is refused with a message
+    naming the AEAT tokens. Reuses the same ``(year, token)→Period`` mapping the
+    ``--period`` / ``--year`` commands use.
     """
-    stripped = value.strip()
-    if not stripped:
-        raise _bad(tr("cli.common.errors.period_empty"))
-    qualified = _FILTER_YEAR_QUALIFIED_RE.fullmatch(stripped)
-    if qualified is not None:
-        registry_period = _ledger_aeat_token(qualified.group("token"))
-        if registry_period is not None:
-            calendar = _aeat_token_to_calendar(qualified.group("year"), registry_period)
-            if calendar is not None:
-                return calendar
-    raise _bad(tr("cli.common.errors.period_filter_unrecognised", raw=value))
+    return _canonical_period(token, year=year)
 
 
-def _optional_canonical_period(period: str | None, *, year: int | None) -> str | None:
-    """Resolve an optional ``--period`` / ``--year`` pair to an internal period or ``None``.
+def _optional_canonical_period(period: str | None, *, year: int | None) -> Period | None:
+    """Resolve an optional ``--period`` / ``--year`` pair to a :class:`Period` or ``None``.
 
     Returns ``None`` when no ``--period`` is supplied (the command scopes the
     whole ledger). When ``--period`` is supplied it requires ``--year`` (the
@@ -308,6 +280,99 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
         return _date.fromisoformat(raw.strip())
     except ValueError as exc:
         raise _bad(tr("cli.common.errors.invalid_iso_date", label=label, raw=raw)) from exc
+
+
+def _parse_iso_date_str(raw: str, *, label: str) -> str:
+    """Validate ``raw`` as an ISO-8601 date and return its canonical string.
+
+    The shared ISO gate (:func:`_parse_iso_date`) refuses every non-ISO
+    ordering by construction (``15/01/2026``, ``01-15-2026``, ``2026/01/15``);
+    this wrapper returns the canonical ``YYYY-MM-DD`` form for the several
+    service contracts that persist the date as a 10-character string rather
+    than a :class:`datetime.date`. The DD/MM-vs-MM/DD ambiguity never arises
+    because only the ISO ordering parses.
+    """
+    return _parse_iso_date(raw, label=label).isoformat()
+
+
+def _parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
+    """Validate an optional ISO-8601 date, returning its canonical string or ``None``.
+
+    Returns ``None`` when ``raw`` is ``None`` (the date was not supplied);
+    otherwise delegates to :func:`_parse_iso_date_str`, so a supplied non-ISO
+    date refuses at the CLI boundary.
+    """
+    if raw is None:
+        return None
+    return _parse_iso_date_str(raw, label=label)
+
+
+# ---------------------------------------------------------------------
+# Canonical decimal-amount validator
+# ---------------------------------------------------------------------
+#
+# One accepted grammar for every manual-entry numeric input: a dot decimal
+# separator, an optional one- or two-digit (euro-cent) fractional part, no
+# thousands grouping, no scientific notation, no ``NaN``/``Infinity``. This is
+# the ``_DECIMAL_RE`` shape the declaration-edit path enforces
+# (``aeat.application.review._edit``), tightened to a two-digit fractional cap so
+# the Spanish thousands-grouping shape ``1.000`` (a dot followed by three digits)
+# refuses rather than silently becoming ``1.0`` — the F1 silent-misparse the
+# input-localisation ADR closes. ``1234.56`` (two fractional digits) and a bare
+# ``1000`` / ``0`` accept; ``1.000``, ``1.234,56``, ``1e3``, ``NaN``,
+# ``Infinity`` all refuse. The regex runs *before* ``Decimal(...)`` so the
+# refusal carries the instructive, localised message; ``is_finite()`` is
+# asserted as defence-in-depth, mirroring the financial CSV adapter.
+#
+# Two variants: the non-negative form (``^\d+(\.\d{1,2})?$``) is canonical for a
+# ledger amount that the absolute-amount convention makes a magnitude (a typed
+# ``-`` is itself a refusal); the signed form (``^-?\d+(\.\d{1,2})?$``) is for a
+# genuinely-signed field. Each call site selects per field.
+_DECIMAL_RE = _re.compile(r"^\d+(\.\d{1,2})?$")
+_SIGNED_DECIMAL_RE = _re.compile(r"^-?\d+(\.\d{1,2})?$")
+
+
+def parse_decimal_amount(raw: str, *, label: str, signed: bool = True) -> Decimal:
+    """Parse a required canonical-grammar decimal at the CLI boundary.
+
+    Validates ``raw`` against the canonical decimal regex (dot separator, no
+    thousands grouping, no scientific notation, no ``NaN``/``Infinity``) before
+    constructing :class:`~decimal.Decimal`, then asserts :meth:`~decimal.Decimal.is_finite`
+    as defence-in-depth. Refuses ``1.000``, ``1.234,56``, ``1e3``, ``NaN``,
+    ``Infinity``, and ``-Infinity`` with the localised
+    ``cli.ledger.errors.invalid_decimal`` refusal that names the field, echoes
+    the raw value, and states the accepted form.
+
+    Args:
+        raw: The operator-supplied raw string.
+        label: The field label echoed in the refusal message.
+        signed: When ``True`` (default) a leading ``-`` is accepted; when
+            ``False`` the non-negative variant is used and a negative input
+            refuses.
+    """
+    stripped = raw.strip()
+    pattern = _SIGNED_DECIMAL_RE if signed else _DECIMAL_RE
+    if pattern.fullmatch(stripped) is None:
+        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
+    try:
+        parsed = Decimal(stripped)
+    except InvalidOperation as exc:
+        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw)) from exc
+    if not parsed.is_finite():
+        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
+    return parsed
+
+
+def parse_optional_decimal_amount(raw: str | None, *, label: str, signed: bool = True) -> Decimal | None:
+    """Parse an optional canonical-grammar decimal, or ``None`` when unset.
+
+    Returns ``None`` when ``raw`` is ``None`` (the field was not supplied);
+    otherwise delegates to :func:`parse_decimal_amount`, so the same canonical
+    grammar and :meth:`~decimal.Decimal.is_finite` guard apply.
+    """
+    if raw is None:
+        return None
+    return parse_decimal_amount(raw, label=label, signed=signed)
 
 
 def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
@@ -375,69 +440,6 @@ def _draft_by_id(draft_id: str) -> ModeloDraft:
         if draft.draft_id == draft_id:
             return draft
     raise _bad(tr("cli.common.errors.draft_id_not_found", draft_id=draft_id))
-
-
-def _aggregate_filing_inputs(modelo: str, period: str, state: WorkflowState) -> dict[str, object]:
-    """Return filing inputs aggregated from registry-approved sources.
-
-    Returns casilla-id → Decimal binding dict consumed directly as
-    ``binding_overrides`` by the calculation engine. dict[str, object] is
-    intentional: callers may merge or extend the result before passing it
-    downstream. Mapping would block that mutation.
-    """
-    if modelo.strip() == Modelo.M100 and _annual_filing_year(period) is not None:
-        filing_year = _annual_filing_year(period)
-        assert filing_year is not None
-        bucket_id = _active_bucket_id_or_bad(state)
-        return _aggregate_renta_filing_inputs(
-            bucket_id=bucket_id,
-            filing_year=filing_year,
-            transaction_repository=_tx_repo(state),
-            invoice_repository=_invoice_repo(bucket_id=bucket_id),
-        )
-    return {}
-
-
-def _aggregate_renta_filing_inputs(
-    *,
-    bucket_id: str,
-    filing_year: int,
-    transaction_repository: TransactionCatalogueRepository,
-    invoice_repository: InvoiceCatalogueRepository,
-) -> dict[str, object]:
-    from ...application.aggregation import resolve_modelo_ledger_binding_values_from_repositories
-    from ...core.resources import resources
-
-    authority = resources().modelos.authority
-    snapshot = authority.snapshot(Modelo.M100.value, filing_year=filing_year, period="0A")
-    aggregation = resolve_modelo_ledger_binding_values_from_repositories(
-        bucket_id=bucket_id,
-        modelo=Modelo.M100.value,
-        revision=snapshot.revision,
-        filing_year=filing_year,
-        period="0A",
-        transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
-    )
-    return _bound_inputs_from_available_bindings(snapshot.revision, dict(aggregation.binding_values))
-
-
-def _bound_inputs_from_available_bindings(
-    revision: ModeloRevision,
-    binding_values: dict[str, Decimal],
-) -> dict[str, object]:
-    """Map each bound casilla in a :class:`ModeloRevision` to its supplied value.
-
-    Reads the revision's casillas and keeps those whose ``input_kind`` is
-    ``BOUND`` and whose binding selector has a value in ``binding_values``.
-    """
-    from ...domain.calculations.registry import InputKind
-
-    return {
-        casilla.id: binding_values[casilla.binding]
-        for casilla in revision.casillas
-        if casilla.input_kind == InputKind.BOUND and casilla.binding is not None and casilla.binding in binding_values
-    }
 
 
 def _annual_filing_year(period: str) -> int | None:
