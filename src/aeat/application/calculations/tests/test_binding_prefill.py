@@ -232,7 +232,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
     assert recurrence.source_kind == "aeat_sede_iva_compensation_history"
     assert recurrence.source_modelo == "303"
     assert recurrence.source_filing_year == 2025
-    assert recurrence.source_periods == ("4T",)
+    assert recurrence.source_periods == (Period.from_year_and_code(2025, "4T"),)
     assert report.prefilled
     assert {item.source_kind for item in report.prefilled} == {"aeat_sede_iva_compensation_history"}
 

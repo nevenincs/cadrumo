@@ -226,7 +226,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
     source_kind: str = _LOCAL_FILING_PROVENANCE
     source_modelo: str
     source_filing_year: int
-    source_periods: tuple[str, ...]
+    source_periods: tuple[Period, ...]
     resolved_at: datetime
 
 
@@ -701,7 +701,10 @@ def extract_modelo_303_local_iva_compensation_recurrence(
             source_kind=prefilled.source_kind,
             source_modelo=prefilled.source_modelo,
             source_filing_year=prefilled.source_filing_year,
-            source_periods=prefilled.source_periods,
+            source_periods=tuple(
+                Period.from_year_and_code(prefilled.source_filing_year, period)
+                for period in prefilled.source_periods
+            ),
             resolved_at=prefilled.resolved_at,
         ),
         report,

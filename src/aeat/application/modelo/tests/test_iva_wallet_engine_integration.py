@@ -296,7 +296,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         )
         assert filed_history_source.source_modelo == "303"
         assert filed_history_source.source_filing_year == _TARGET_YEAR
-        assert filed_history_source.source_periods == ("1T",)
+        assert filed_history_source.source_periods == (Period.from_year_and_code(_TARGET_YEAR, "1T"),)
 
         work_repo, calc_repo, event_repo = _work_unit_repositories()
         work_unit = create_work_unit(

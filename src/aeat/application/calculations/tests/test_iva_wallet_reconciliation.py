@@ -196,7 +196,7 @@ def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_a
         captured_at=_NOW,
         source_modelo="303",
         source_filing_year=2025,
-        source_periods=("4T",),
+        source_periods=(Period.from_year_and_code(2025, "4T"),),
     )
 
     decision = reconcile_iva_compensation_wallet(
