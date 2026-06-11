@@ -117,7 +117,7 @@ def test_submission_record_preserves_typed_draft_period(
     justificante = Justificante(
         csv="ABCD1234EFGH5678",
         modelo="130",
-        period="1T",
+        period=period,
         ejercicio="2026",
         presentation_id="1302026ABCD1234",
         presented_at=datetime(2026, 4, 10, 11, 23, 45),
