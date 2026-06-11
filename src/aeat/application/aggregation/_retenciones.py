@@ -53,11 +53,6 @@ class RetencionObservation(BaseModel):
     @field_validator("source_kind")
     @classmethod
     def _reject_bare_invoice_source(cls, value: str) -> str:
-        if value == AggregationSourceKind.INVOICE:
-            raise ValueError(
-                "bare 'invoice' source-kind is forbidden; use ledger_transaction, "
-                "purchase_invoice_evidence, payable_invoice, or collectible_invoice",
-            )
         if value not in _CANONICAL_SOURCE_KINDS:
             allowed = ", ".join(_CANONICAL_SOURCE_KINDS)
             raise ValueError(f"retenciones source_kind {value!r} is unsupported; use one of {allowed}")

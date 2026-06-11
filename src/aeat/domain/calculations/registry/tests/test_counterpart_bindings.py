@@ -378,9 +378,9 @@ def test_resolve_counterpart_binding_row_values_groups_by_operator_and_clave_sum
     }
 
 
-def test_resolve_counterpart_binding_row_values_does_not_treat_invoice_source_as_wildcard() -> None:
+def test_resolve_counterpart_binding_row_values_does_not_treat_non_counterpart_source_as_wildcard() -> None:
     binding = _with_selector(
-        _binding("iva-349-operador-row-base").model_copy(update={"source": "invoice"}),
+        _binding("iva-349-operador-row-base").model_copy(update={"source": "manual_input"}),
         claves=("E",),
         rectification_scope="exclude_rectifications",
     )

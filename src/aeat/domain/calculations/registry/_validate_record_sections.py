@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from ....core.aggregation import AggregationSourceKind
 from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
@@ -21,6 +20,7 @@ from ._bindings import (
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 from ._errors import RegistryValidationError
+from ._invoice_bindings import INVOICE_BINDING_SOURCE_KINDS
 from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
@@ -188,12 +188,16 @@ def _validate_per_source_binding(
 ) -> None:
     """Run the per-source typed binding-definition validators."""
     source_validators = (
-        (AggregationSourceKind.INVOICE, validate_invoice_binding_definition),
         ("ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition),
         ("ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition),
         ("ledger_renta_expense_aggregation", validate_ledger_renta_expense_aggregation_binding_definition),
         ("ledger_renta_income_aggregation", validate_ledger_renta_income_aggregation_binding_definition),
     )
+    if binding.source in INVOICE_BINDING_SOURCE_KINDS:
+        try:
+            validate_invoice_binding_definition(binding)
+        except RegistryValidationError as exc:
+            failures.append(f"{prefix}: {exc}")
     for source_name, validator in source_validators:
         if binding.source == source_name:
             try:

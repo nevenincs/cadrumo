@@ -60,7 +60,7 @@ def _binding(selector: dict[str, Any]) -> DataBindingDefinition:
     return DataBindingDefinition.model_validate(
         {
             "id": "binding-under-test",
-            "source": "invoice",
+            "source": "collectible_invoice",
             "selector": selector,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-303-2025",),

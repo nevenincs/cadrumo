@@ -997,7 +997,6 @@ class ModeloScheduleDefinition(RegistryModel):
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: Literal[
-        AggregationSourceKind.INVOICE,
         "profile",
         "previous_filing",
         "relation_prefill",
@@ -1209,6 +1208,7 @@ class RegistryVerificationPolicy:
 class RegistrySnapshot(RegistryModel):
     modelo: ModeloDefinition
     revision: ModeloRevision
+    filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     # Accommodates time-codes ("1T", "2T", "0A", "01"-"12", "EXT-1T") and
     # event-period names from ad_hoc modelos (M036 "alta", "modificacion",
@@ -1250,6 +1250,16 @@ class RegistrySnapshot(RegistryModel):
     constructs: Mapping[ConstructId, ConstructDefinition]
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
 
+    @model_validator(mode="after")
+    def _validate_filing_period_consistency(self) -> RegistrySnapshot:
+        if self.filing_period is None:
+            return self
+        if self.filing_period.filing_year != self.filing_year:
+            raise RegistryValidationError("snapshot filing_period year must match filing_year")
+        if self.filing_period.registry_token != self.period:
+            raise RegistryValidationError("snapshot filing_period code must match period")
+        return self
+
     def verification_policy(self) -> RegistryVerificationPolicy:
         """Fold this snapshot's verification expectations into one policy.
 
@@ -1271,3 +1281,11 @@ class RegistrySnapshot(RegistryModel):
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),
         )
+
+
+def filing_period_from_scope(filing_year: int, period: str) -> Period | None:
+    """Return a core Period when the registry token is a real filing-period code."""
+    try:
+        return Period.from_year_and_code(filing_year, period)
+    except ValueError:
+        return None
