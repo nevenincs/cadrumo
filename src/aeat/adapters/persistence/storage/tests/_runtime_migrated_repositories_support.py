@@ -151,11 +151,12 @@ def _session(bucket_id: str) -> BucketSession:
 
 def _workflow_state(label: str) -> WorkflowState:
     now = datetime.now(UTC).replace(microsecond=0)
+    period = _Period.from_year_and_code(2026, "1T")
     return WorkflowState(
         declarations={
-            f"303:{label}": DeclaracionPointer(
+            f"303:{period.filing_year}:{period.registry_token}": DeclaracionPointer(
                 modelo="303",
-                period=label,
+                period=period,
                 draft_id="d" * 64,
                 status="BORRADOR",
                 updated_at=now,
