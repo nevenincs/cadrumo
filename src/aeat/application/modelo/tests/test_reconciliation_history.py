@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
@@ -61,11 +62,12 @@ def _active_bucket_id() -> str:
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str, revision_suffix: str = "0") -> str:
     bucket_id = _active_bucket_id()
     revision_id = "r" + revision_suffix * 63
+    typed_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=revision_id,
     )
     work_unit = WorkUnit(
@@ -73,9 +75,9 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str, revision_suff
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
+        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
     )
@@ -103,8 +105,8 @@ def test_history_lists_recorded_reconciliations_with_typed_fields() -> None:
     modelo diff). The history projects both with the right verdict, source kind,
     diff count, and actor.
     """
-    matching_unit = _seed_work_unit(modelo="130", filing_year=2026, period="Q1", revision_suffix="0")
-    mismatching_unit = _seed_work_unit(modelo="303", filing_year=2026, period="Q1", revision_suffix="1")
+    matching_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
+    mismatching_unit = _seed_work_unit(modelo="303", filing_year=2026, period="1T", revision_suffix="1")
     _reconcile(matching_unit)
     _reconcile(mismatching_unit)
 
@@ -128,8 +130,8 @@ def test_history_lists_recorded_reconciliations_with_typed_fields() -> None:
 
 def test_history_narrows_to_one_work_unit() -> None:
     """The optional work_unit_id filter narrows the history to one work unit."""
-    unit_a = _seed_work_unit(modelo="130", filing_year=2026, period="Q1", revision_suffix="0")
-    unit_b = _seed_work_unit(modelo="130", filing_year=2026, period="Q2", revision_suffix="1")
+    unit_a = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
+    unit_b = _seed_work_unit(modelo="130", filing_year=2026, period="2T", revision_suffix="1")
     _reconcile(unit_a)
     _reconcile(unit_b)
 
@@ -140,7 +142,7 @@ def test_history_narrows_to_one_work_unit() -> None:
 
 def test_history_orders_oldest_first() -> None:
     """Repeated reconciliations of one unit list oldest-first by reconciled_at."""
-    unit = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     _reconcile(unit)
     _reconcile(unit)
 
@@ -164,8 +166,8 @@ def test_anti_tautology_unreconciled_unit_absent_from_history() -> None:
     reconcile it, then assert the history lists only the first. If this passed
     with the unreconciled unit present, the read-back would be tautological.
     """
-    reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="Q1", revision_suffix="0")
-    never_reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="Q3", revision_suffix="2")
+    reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
+    never_reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="3T", revision_suffix="2")
     _reconcile(reconciled_unit)
 
     listed_units = {entry.work_unit_id for entry in list_modelo_reconciliations(bucket_id=_active_bucket_id())}

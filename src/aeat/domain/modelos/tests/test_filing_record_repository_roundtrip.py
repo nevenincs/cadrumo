@@ -23,6 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import SensitivityClass
+from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._codes import ModeloCode
 from .._filing_record import (
@@ -44,6 +45,8 @@ from .._filing_repository import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "modelo-runtime"
+_P_2024_2T = Period.from_year_and_code(2024, "2T")
+_P_2026_01 = Period.from_year_and_code(2026, "01")
 
 
 def _hex(seed: str) -> str:
@@ -81,7 +84,7 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period="2T",
+        period=_P_2024_2T,
         filed_at=superseded_filed_at,
         filed_by="aeat.cli.modelo.file",
         notes="initial 2T filing - withheld import IVA at 21%",
@@ -102,7 +105,7 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period="2T",
+        period=_P_2024_2T,
         filed_at=current_filed_at,
         filed_by="aeat.cli.modelo.amend",
         notes="rectifying amendment - missing input IVA on invoice INV-2024-0145",
@@ -130,7 +133,7 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
         bucket_id="bucket-A",
         modelo="303",
         filing_year=2024,
-        period="2T",
+        period=_P_2024_2T,
     )
     assert current is not None
     assert current.amends_filing_record_id is not None
@@ -176,7 +179,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
                 bucket_id=bucket_id,
                 modelo=ModeloCode("322"),
                 filing_year=2026,
-                period="01",
+                period=_P_2026_01,
                 member_nif="A00000000",
                 filed_at=filed_at,
                 filed_by="aeat.cli.modelo.file",
@@ -189,7 +192,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
                 bucket_id=bucket_id,
                 modelo=ModeloCode("322"),
                 filing_year=2026,
-                period="01",
+                period=_P_2026_01,
                 member_nif="B00000001",
                 filed_at=filed_at + timedelta(minutes=5),
                 filed_by="aeat.cli.modelo.file",
@@ -203,7 +206,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
             bucket_id=bucket_id,
             modelo="322",
             filing_year=2026,
-            period="01",
+            period=_P_2026_01,
         )
         is None
     )
@@ -211,7 +214,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
         bucket_id=bucket_id,
         modelo="322",
         filing_year=2026,
-        period="01",
+        period=_P_2026_01,
         member_nif="A00000000",
     )
     assert current_a is not None
@@ -222,7 +225,7 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
             bucket_id=bucket_id,
             modelo="322",
             filing_year=2026,
-            period="01",
+            period=_P_2026_01,
             member_nif="B00000001",
         )
     ) == (member_b_id,)
@@ -257,7 +260,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     bucket_id="bucket-A",
                     modelo=ModeloCode("322"),
                     filing_year=2026,
-                    period="01",
+                    period=_P_2026_01,
                     member_nif="A00000000",
                     filed_at=filed_at,
                     filed_by="aeat.cli.modelo.file",
@@ -270,7 +273,7 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     bucket_id="bucket-A",
                     modelo=ModeloCode("322"),
                     filing_year=2026,
-                    period="01",
+                    period=_P_2026_01,
                     member_nif="A00000000",
                     filed_at=filed_at + timedelta(minutes=5),
                     filed_by="aeat.cli.modelo.file",
@@ -425,7 +428,7 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
         bucket_id="bucket-A",
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period="2T",
+        period=_P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         aeat_accepted=True,
@@ -462,7 +465,7 @@ def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids(
         bucket_id="bucket-A",
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period="2T",
+        period=_P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
@@ -493,7 +496,7 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
         bucket_id="bucket-A",
         modelo=ModeloCode("303"),
         filing_year=2024,
-        period="2T",
+        period=_P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         source_transaction_ids=_source_transaction_ids(),

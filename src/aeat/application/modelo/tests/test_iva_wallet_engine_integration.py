@@ -12,6 +12,7 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
+from ....core import Period
 from ....core.config import AuthProviderKindSetting, Settings
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
@@ -55,6 +56,10 @@ _TAXPAYER_NIF = "taxpayeralpha"
 _TARGET_YEAR = 2026
 _TARGET_PERIOD = "2T"
 _DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+
+
+def _period(filing_year: int, period: str) -> Period:
+    return Period.from_year_and_code(filing_year, period)
 
 
 @contextmanager
@@ -200,11 +205,12 @@ def _work_unit_and_revision_for_wallet_gate(
     compensation_amount: Decimal,
     state: CalculationRevisionState = CalculationRevisionState.BORRADOR,
 ) -> tuple[WorkUnit, CalculationRevision]:
+    target_period = _period(_TARGET_YEAR, _TARGET_PERIOD)
     work_unit_id = derive_work_unit_id(
         bucket_id="operator",
         modelo="303",
         filing_year=_TARGET_YEAR,
-        period=_TARGET_PERIOD,
+        period=target_period,
         revision_id="m303-wallet-gate-test",
     )
     casilla_values = {"iva.compensacion-pendiente-periodos-anteriores": compensation_amount}
@@ -219,7 +225,7 @@ def _work_unit_and_revision_for_wallet_gate(
         bucket_id="operator",
         modelo=ModeloCode("303"),
         filing_year=_TARGET_YEAR,
-        period=_TARGET_PERIOD,
+        period=target_period,
         revision_id="m303-wallet-gate-test",
         name="303 wallet gate test",
         created_at=_DECIDED_AT,
@@ -294,7 +300,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -346,7 +352,7 @@ def test_no_seed_no_override_303_calculate_lazily_reconciles_local_zero_and_surf
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -407,7 +413,7 @@ def test_first_period_zero_decision_feeds_real_modelo_303_engine_and_lifecycle_g
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -459,7 +465,7 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -545,7 +551,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -589,7 +595,7 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -638,7 +644,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -695,7 +701,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 bucket_id="operator",
                 modelo="303",
                 filing_year=_TARGET_YEAR,
-                period=_TARGET_PERIOD,
+                period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             )
             == filing
         )
@@ -735,7 +741,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -778,7 +784,7 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -842,7 +848,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
             bucket_id="operator",
             modelo="303",
             filing_year=target_year,
-            period=target_period,
+            period=_period(target_year, target_period),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -888,7 +894,7 @@ def test_wallet_divergence_blocks_real_modelo_303_engine_before_persisting_revis
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,
@@ -920,7 +926,7 @@ def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
         bucket_id="operator",
         modelo="303",
         filing_year=snapshot.filing_year,
-        period=snapshot.period,
+        period=_period(snapshot.filing_year, snapshot.period),
         revision_id=snapshot.revision.id,
         repository=work_repo,
         clock=_DECIDED_AT,
@@ -1034,7 +1040,7 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
             bucket_id="operator",
             modelo="303",
             filing_year=_TARGET_YEAR,
-            period=_TARGET_PERIOD,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_DECIDED_AT,

@@ -23,6 +23,7 @@ from typing import cast
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
@@ -50,18 +51,19 @@ _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 
 def _build_work_unit(bucket_id: str) -> WorkUnit:
     modelo: ModeloCode = cast(ModeloCode, "303")
+    period = Period.from_year_and_code(2026, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=2026,
-            period="1T",
+            period=period,
             revision_id="2009-y-siguientes",
         ),
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=2026,
-        period="1T",
+        period=period,
         revision_id="2009-y-siguientes",
         name="m303-2026-1T",
         created_at=_T0,

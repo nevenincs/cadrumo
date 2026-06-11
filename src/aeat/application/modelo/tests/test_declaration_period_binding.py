@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
@@ -102,12 +103,13 @@ def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaComp
 def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path: Path):
     with _secure_backend(tmp_path):
         snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
+        typed_period = Period.from_year_and_code(filing_year, period)
         work_repo, calc_repo, event_repo = _repositories()
         work_unit = create_work_unit(
             bucket_id="operator",
             modelo="303",
             filing_year=filing_year,
-            period=period,
+            period=typed_period,
             revision_id=snapshot.revision.id,
             repository=work_repo,
             clock=_CLOCK,

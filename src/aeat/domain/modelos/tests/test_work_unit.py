@@ -32,6 +32,7 @@ from ....application.modelo import (
     list_work_units,
     rename_work_unit,
 )
+from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import ModeloValidationError
 from .._repository import (
@@ -50,6 +51,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_P_2026_1T = Period.from_year_and_code(2026, "1T")
+_P_2026_2T = Period.from_year_and_code(2026, "2T")
 
 
 @pytest.fixture
@@ -73,7 +76,7 @@ def test_derive_work_unit_id_is_64_char_lowercase_hex() -> None:
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="Q1",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2009-y-siguientes",
     )
     assert len(wid) == 64
@@ -87,7 +90,7 @@ def test_derive_work_unit_id_is_deterministic() -> None:
         "bucket_id": "default",
         "modelo": "303",
         "filing_year": 2026,
-        "period": "Q1",
+        "period": Period.from_year_and_code(2026, "1T"),
         "revision_id": "2009-y-siguientes",
     }
     assert derive_work_unit_id(**args) == derive_work_unit_id(**args)
@@ -101,7 +104,7 @@ def test_derive_work_unit_id_distinguishes_buckets() -> None:
     base: dict[str, Any] = {
         "modelo": "303",
         "filing_year": 2026,
-        "period": "Q1",
+        "period": Period.from_year_and_code(2026, "1T"),
         "revision_id": "2009-y-siguientes",
     }
     a = derive_work_unit_id(bucket_id="bucket-A", **base)
@@ -118,14 +121,14 @@ def test_derive_work_unit_id_normalises_case_on_modelo_and_period() -> None:
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="Q1",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2009-y-siguientes",
     )
     lower_period = derive_work_unit_id(
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="q1",
+        period=Period.from_year_and_code(2026, "1t"),
         revision_id="2009-y-siguientes",
     )
     assert canonical == lower_period
@@ -140,7 +143,7 @@ def _build_unit(**overrides: Any) -> WorkUnit:
     bucket_id = overrides.pop("bucket_id", "default")
     modelo = overrides.pop("modelo", "303")
     filing_year = overrides.pop("filing_year", 2026)
-    period = overrides.pop("period", "Q1")
+    period = overrides.pop("period", Period.from_year_and_code(filing_year, "1T"))
     revision_id = overrides.pop("revision_id", "2009-y-siguientes")
     wid = overrides.pop(
         "work_unit_id",
@@ -159,7 +162,7 @@ def _build_unit(**overrides: Any) -> WorkUnit:
         "filing_year": filing_year,
         "period": period,
         "revision_id": revision_id,
-        "name": overrides.pop("name", "303-2026-Q1"),
+        "name": overrides.pop("name", f"303-2026-{period.registry_token}"),
         "created_at": overrides.pop("created_at", _T0),
         "updated_at": overrides.pop("updated_at", _T0),
     }
@@ -188,9 +191,9 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
                 "bucket_id": unit.bucket_id,
                 "modelo": "303",
                 "filing_year": 2026,
-                "period": "Q1",
+                "period": Period.from_year_and_code(2026, "1T"),
                 "revision_id": "2009-y-siguientes",
-                "name": "303-2026-Q1",
+                "name": "303-2026-1T",
                 "created_at": _T0,
                 "updated_at": _T0,
                 "unknown_axis": "extra-value",
@@ -268,7 +271,7 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatal
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -277,7 +280,7 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatal
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         name="ignored-because-already-exists",
         repository=repo,
@@ -298,7 +301,7 @@ def test_create_work_unit_uses_default_name_when_no_name_supplied(repo: WorkUnit
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -311,7 +314,7 @@ def test_create_work_unit_honours_explicit_name(repo: WorkUnitCatalogueRepositor
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         name="renta-1t-2026-draft",
         repository=repo,
@@ -335,13 +338,13 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
             bucket_id=bucket,
             modelo=modelo,
             filing_year=year,
-            period=period,
+            period=Period.from_year_and_code(year, period),
             revision_id=revision_id,
             repository=repo,
             clock=_T0,
         )
     units = list_work_units(repository=repo)
-    keys = tuple((u.bucket_id, str(u.modelo), u.period) for u in units)
+    keys = tuple((u.bucket_id, str(u.modelo), u.period.registry_token) for u in units)
     assert keys == (
         ("bucket-A", "130", "1T"),
         ("bucket-A", "303", "2T"),
@@ -354,7 +357,7 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
         bucket_id="bucket-A",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -363,7 +366,7 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
         bucket_id="bucket-B",
         modelo="303",
         filing_year=2026,
-        period="2T",
+        period=_P_2026_2T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -386,7 +389,7 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: Work
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -426,7 +429,7 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -452,7 +455,7 @@ def test_discard_work_unit_accepts_omitted_reason(repo: WorkUnitCatalogueReposit
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -483,7 +486,7 @@ def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogue
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -512,7 +515,7 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -532,7 +535,7 @@ def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRe
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -541,7 +544,7 @@ def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRe
         bucket_id="default",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -561,7 +564,7 @@ def test_list_work_units_includes_discarded_when_flag_set(repo: WorkUnitCatalogu
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -570,7 +573,7 @@ def test_list_work_units_includes_discarded_when_flag_set(repo: WorkUnitCatalogu
         bucket_id="default",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -685,7 +688,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
             bucket_id="default",
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=_P_2026_1T,
             revision_id="2009-y-siguientes",
             repository=wu_repo,
             clock=_T0,
@@ -727,7 +730,7 @@ def test_causante_ccaa_roundtrips_through_repository(repo: WorkUnitCatalogueRepo
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         causante_ccaa=CCAA.MADRID,
         repository=repo,
@@ -755,7 +758,7 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         causante_ccaa=CCAA.MADRID,
         repository=repo,
@@ -765,7 +768,7 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         causante_ccaa=CCAA.CATALUNA,
         repository=repo,
@@ -782,7 +785,7 @@ def test_causante_ccaa_none_by_default(repo: WorkUnitCatalogueRepository) -> Non
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,

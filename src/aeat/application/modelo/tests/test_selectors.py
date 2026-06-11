@@ -10,6 +10,7 @@ from typing import cast
 
 import pytest
 
+from ....core import Period
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -52,6 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _T0 = datetime(2026, 6, 4, 9, 0, 0, tzinfo=UTC)
+_P_2026_1T = Period.from_year_and_code(2026, "1T")
 
 
 @pytest.fixture
@@ -75,7 +77,7 @@ def _request(**overrides: object) -> ModeloWorkSelectorRequest:
     data: dict[str, object] = {
         "modelo": "130",
         "filing_year": 2026,
-        "period": "1T",
+        "period": _P_2026_1T,
     }
     data.update(overrides)
     return ModeloWorkSelectorRequest.model_validate(data)
@@ -86,7 +88,7 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
         bucket_id=wu_repo.bucket_id or "modelo-revision-selector-test",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
@@ -142,7 +144,7 @@ def test_visible_target_resolution_reports_absent_before_exact_creation(work_rep
     assert resolution.bucket_id == work_repo.bucket_id
     assert resolution.modelo == "130"
     assert resolution.filing_year == 2026
-    assert resolution.period == "1T"
+    assert resolution.period == _P_2026_1T
 
 
 def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkUnitCatalogueRepository) -> None:
@@ -150,7 +152,7 @@ def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkU
         bucket_id=work_repo.bucket_id or "modelo-selector-test",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         repository=work_repo,
         clock=_T0,
@@ -176,7 +178,7 @@ def test_visible_target_resolution_returns_single_active_work_unit(work_repo: Wo
         bucket_id=work_repo.bucket_id or "modelo-selector-test",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         repository=work_repo,
         clock=_T0,
@@ -195,7 +197,7 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: W
         bucket_id=work_repo.bucket_id or "modelo-selector-test",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         repository=work_repo,
         clock=_T0,
@@ -213,7 +215,7 @@ def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkU
         bucket_id=work_repo.bucket_id or "modelo-selector-test",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         repository=work_repo,
         clock=_T0,
@@ -236,7 +238,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
         bucket_id=bucket_id,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         repository=work_repo,
         clock=_T0,
@@ -245,7 +247,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
         bucket_id=bucket_id,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="legacy-manual-revision",
     )
     second = WorkUnit(
@@ -253,7 +255,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
         bucket_id=bucket_id,
         modelo=cast(ModeloCode, "130"),
         filing_year=2026,
-        period="1T",
+        period=_P_2026_1T,
         revision_id="legacy-manual-revision",
         name="legacy ambiguous unit",
         created_at=_T0 + timedelta(minutes=1),
@@ -493,7 +495,7 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         },
     )
     wu_repo.save(upsert_work_unit(wu_repo.load(), current_draft))
-    address = ModeloWorkAddress(modelo="130", filing_year=2026, period="1T")
+    address = ModeloWorkAddress(modelo="130", filing_year=2026, period=_P_2026_1T)
 
     assert resolve_verifiable_modelo_calculation_revision_address(address=address) == draft
     assert (

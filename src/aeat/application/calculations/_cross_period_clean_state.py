@@ -16,6 +16,7 @@ from typing import Final, NamedTuple, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import Period
 from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
     RegistryModeloObservation,
@@ -849,7 +850,7 @@ def _evaluate_filing_history(
         bucket_id=bucket_id,
         modelo=requirement.source_modelo,
         filing_year=requirement.filing_year,
-        period=requirement.period,
+        period=Period.from_year_and_code(requirement.filing_year, requirement.period),
         member_nif=member_nif,
     )
     current_filings = tuple(record for record in filing_history if record.status is ModeloRecordStatus.VIGENTE)

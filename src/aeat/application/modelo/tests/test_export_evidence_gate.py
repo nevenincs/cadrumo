@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.deadlines import TaxpayerProfile
 from ....domain.deadlines._models import IVARegime
 from ....domain.modelos._calculation_repository import (
@@ -57,7 +58,7 @@ def _revision(
         bucket_id="bucket-operator",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="gate",
     )
     revision_id = derive_calculation_revision_id(

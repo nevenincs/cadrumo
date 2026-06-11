@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import CrossPeriodGroupMemberRoster, IVARegime, TaxpayerProfile
@@ -66,7 +67,7 @@ def _seed_verified_revision(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         revision_id=snapshot.revision.id,
         clock=_CLOCK,
     )
@@ -102,7 +103,7 @@ def _seed_draft_revision(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         revision_id=snapshot.revision.id,
         clock=_CLOCK,
     )
@@ -249,7 +250,7 @@ def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                 bucket_id=profile.bucket_id,
                 modelo=source_modelo,
                 filing_year=filing_year,
-                period=period,
+                period=Period.from_year_and_code(filing_year, period),
                 revision_id=source_snapshot.revision.id,
                 clock=_CLOCK,
             )

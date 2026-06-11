@@ -27,6 +27,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ...core import Period
 from ...core.identity import BucketId
 from ..contribuyente._ccaa import CCAA
 from ._codes import ModeloCode
@@ -71,10 +72,6 @@ _OptionalHex64 = Annotated[
         pattern=r"^[0-9a-f]{64}$",
     ),
 ]
-_Period = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
-]
 _RevisionId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -90,7 +87,7 @@ def derive_work_unit_id(
     bucket_id: str,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     revision_id: str,
 ) -> str:
     """Return the deterministic ``work_unit_id`` for a four-axis key.
@@ -106,11 +103,17 @@ def derive_work_unit_id(
     same four-axis key see the same identifier without
     round-tripping through storage.
     """
+    if not isinstance(period, Period):
+        raise ModeloValidationError(f"expected Period, got {type(period).__name__}")
+    if period.filing_year != int(filing_year):
+        raise ModeloValidationError(
+            f"filing_year {filing_year!r} does not match period year {period.filing_year!r}",
+        )
     components = (
         bucket_id.strip(),
         modelo.strip().upper(),
         str(int(filing_year)),
-        period.strip().upper(),
+        period.registry_token,
         revision_id.strip(),
     )
     payload = "\x1f".join(components).encode("utf-8")
@@ -131,8 +134,8 @@ class WorkUnit(BaseModel):
             ``work_unit_id`` values.
         modelo: AEAT modelo code (e.g. ``"303"``, ``"130"``).
         filing_year: Tax year for which the modelo is being filed.
-        period: Filing period token (e.g. ``"Q1"``, ``"4T"``,
-            ``"0A"``, ``"01"``).
+        period: Typed filing period value carrying the filing year and
+            bare registry token (e.g. ``"4T"``, ``"0A"``, ``"01"``).
         revision_id: Stable id of the registry-known modelo
             revision the work unit targets.
         name: Display name. Defaults to ``"<modelo>-<year>-<period>"``
@@ -168,7 +171,7 @@ class WorkUnit(BaseModel):
     bucket_id: BucketId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
-    period: _Period
+    period: Period
     revision_id: _RevisionId
     name: _DisplayName
     created_at: datetime
@@ -218,6 +221,10 @@ class WorkUnit(BaseModel):
         editing), reads will refuse the record. This keeps the
         catalogue's content-addressing invariant intact.
         """
+        if self.period.filing_year != self.filing_year:
+            raise ModeloValidationError(
+                f"filing_year {self.filing_year!r} does not match period year {self.period.filing_year!r}",
+            )
         derived = derive_work_unit_id(
             bucket_id=self.bucket_id,
             modelo=self.modelo,

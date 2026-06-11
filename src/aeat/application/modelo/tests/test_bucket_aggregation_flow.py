@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -111,11 +112,12 @@ def _seed_303_work_unit(
     *,
     period: str = "1T",
 ):
+    typed_period = Period.from_year_and_code(2026, period)
     return create_work_unit(
         bucket_id="bucket-a",
         modelo="303",
         filing_year=2026,
-        period=period,
+        period=typed_period,
         # The law-determined M303 revision for filing_year 2026 is
         # ``2023-y-siguientes`` (``2009-y-siguientes`` covers only 2009-2022).
         # The calc-time assertion (snapshot.revision.id ==

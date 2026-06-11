@@ -10,7 +10,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-from ...core import resolve_active_bucket_id
+from ...core import Period, resolve_active_bucket_id
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._codes import ModeloCode
@@ -26,10 +26,6 @@ from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 _BucketId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
-_Period = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
 ]
 _RevisionId = Annotated[
     str,
@@ -153,7 +149,7 @@ class ModeloWorkSelectorRequest(BaseModel):
 
     modelo: ModeloCode | None = None
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
-    period: _Period | None = None
+    period: Period | None = None
     revision_id: _RevisionId | None = None
     bucket_id: _BucketId | None = None
     work_unit_id: WorkUnitId | None = None
@@ -166,11 +162,6 @@ class ModeloWorkSelectorRequest(BaseModel):
         if isinstance(value, str):
             return ModeloCode(value)
         raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
-
-    @field_validator("period")
-    @classmethod
-    def _normalise_period(cls, value: str | None) -> str | None:
-        return value.strip().upper() if value is not None else None
 
     @field_validator("revision_id", "bucket_id")
     @classmethod
@@ -193,7 +184,7 @@ class ModeloWorkUnitCandidate(BaseModel):
     bucket_id: _BucketId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
-    period: _Period
+    period: Period
     revision_id: _RevisionId
     state: WorkUnitState
     current_calculation_revision_id: str | None = None
@@ -275,7 +266,7 @@ class ModeloWorkResolution(BaseModel):
     bucket_id: _BucketId
     modelo: ModeloCode | None = None
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
-    period: _Period | None = None
+    period: Period | None = None
     requested_revision_id: _RevisionId | None = None
     work_unit: WorkUnit | None = None
     candidates: tuple[ModeloWorkUnitCandidate, ...] = ()

@@ -27,6 +27,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import SensitivityClass
+from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._participation_index import (
     PARTICIPATION_INDEX_NAMESPACE,
@@ -41,6 +42,7 @@ from .._participation_index import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "modelo-participation-runtime"
+_P_2024_2T = Period.from_year_and_code(2024, "2T")
 
 
 def _hex(seed: str) -> str:
@@ -64,7 +66,7 @@ def _populated_index() -> TransactionRevisionParticipationIndex:
         work_unit_id=_hex("c"),
         modelo="303",
         filing_year=2024,
-        period="2T",
+        period=_P_2024_2T,
         revision_state="presentado",
         filing_record_id=_hex("d"),
         justificante_reference="2024-303-2T-JUST-0001",
@@ -74,7 +76,7 @@ def _populated_index() -> TransactionRevisionParticipationIndex:
         work_unit_id=_hex("f"),
         modelo="130",
         filing_year=2024,
-        period="2T",
+        period=_P_2024_2T,
         revision_state="verificado_completo",
     )
     return TransactionRevisionParticipationIndex(

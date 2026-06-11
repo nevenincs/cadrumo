@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
@@ -45,6 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "operator"
 _YEAR = 2025
 _PERIOD = "0A"
+_TYPED_PERIOD = Period.from_year_and_code(_YEAR, _PERIOD)
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
 _ESTIMACION_BINDING = "renta-2025-modelo-100-estimacion-directa-es-normal"
 _SYNTHETIC_DECIMAL_PROFILE_BINDING = "test-profile-business-ratio-decimal-binding"
@@ -265,7 +267,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=_YEAR,
-            period=_PERIOD,
+            period=_TYPED_PERIOD,
             revision_id="2025",
             repository=work_repo,
             clock=_CLOCK,
@@ -469,7 +471,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=_YEAR,
-            period=_PERIOD,
+            period=_TYPED_PERIOD,
             revision_id="2025",
             repository=work_repo,
             clock=_CLOCK,
@@ -510,7 +512,7 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=_YEAR,
-            period=_PERIOD,
+            period=_TYPED_PERIOD,
             revision_id="2025",
             repository=work_repo,
             clock=_CLOCK,
@@ -547,7 +549,7 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=_YEAR,
-            period=_PERIOD,
+            period=_TYPED_PERIOD,
             revision_id="2025",
             repository=work_repo,
             clock=_CLOCK,

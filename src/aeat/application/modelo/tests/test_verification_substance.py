@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, VerificationPredicateDefinition
@@ -436,7 +437,7 @@ def test_m130_all_zero_without_gastos_is_blocked(repos: _Repos) -> None:
         bucket_id="default",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
@@ -572,7 +573,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         bucket_id="default",
         modelo="130",
         filing_year=2026,
-        period="2T",
+        period=Period.from_year_and_code(2026, "2T"),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
@@ -649,7 +650,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         bucket_id="default",
         modelo="131",
         filing_year=2026,
-        period="2T",
+        period=Period.from_year_and_code(2026, "2T"),
         revision_id="2026",
         repository=wu_repo,
         clock=_T0,
@@ -724,7 +725,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
         bucket_id="default",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
@@ -834,7 +835,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance(repos: _Re
         bucket_id="default",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,

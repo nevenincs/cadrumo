@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
@@ -67,7 +68,7 @@ def _work_unit_3t(repos: _Repos):
             bucket_id="default",
             modelo="130",
             filing_year=2026,
-            period="3T",
+            period=Period.from_year_and_code(2026, "3T"),
             revision_id="2019-y-siguientes",
             repository=wu_repo,
             clock=_CLOCK,

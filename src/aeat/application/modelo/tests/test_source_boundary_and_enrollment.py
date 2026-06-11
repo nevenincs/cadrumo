@@ -27,6 +27,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.invoices import InvoiceCatalogueRepository
@@ -78,7 +79,7 @@ def _seed(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         revision_id=revision_id,
         repository=wu_repo,
         clock=_T0,
@@ -414,7 +415,7 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
             bucket_id=_BUCKET_ID,
             modelo=modelo,
             filing_year=2026,
-            period=period,
+            period=Period.from_year_and_code(2026, period),
             revision_id=revision_id,
             repository=wu_repo,
             clock=_T0,

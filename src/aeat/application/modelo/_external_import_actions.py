@@ -74,7 +74,7 @@ def _load_external_import_target(
     snapshot = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         casilla_values=casilla_values,
     )
     return work_units, work_unit, snapshot, cleaned_reference
@@ -112,7 +112,7 @@ def import_external_filing_evidence(
         evidence_reference_id=cleaned_reference,
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         expected_tax_id=expected_tax_id,
         justificante_repository=justificante_repository or JustificanteRepository(),
     )
@@ -240,7 +240,7 @@ def import_external_filing_evidence(
             "calculation_revision_id": revision_id,
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
+            "period": work_unit.period.registry_token,
             "evidence_kind": evidence_kind.value,
             "evidence_reference_id": cleaned_reference,
             "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),

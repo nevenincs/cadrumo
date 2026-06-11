@@ -215,7 +215,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     return repository.load_decision(
         taxpayer_nif,
         work_unit.filing_year,
-        work_unit.period,
+        work_unit.period.registry_token,
     )
 
 
@@ -303,7 +303,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
             iva_wallet_blocked_message(decision),
             translated_message="application.modelo.errors.iva_wallet_blocked",
         )
-    if decision.target_year != work_unit.filing_year or decision.target_period != work_unit.period:
+    if decision.target_year != work_unit.filing_year or decision.target_period != work_unit.period.registry_token:
         raise ModeloIvaWalletReconciliationBlocked(
             translated_message="application.modelo.errors.iva_wallet_blocked",
             context={

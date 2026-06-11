@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -26,6 +27,7 @@ from ....domain.buckets import (
 )
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
+    upsert_calculation_revision,
 )
 from ....domain.modelos._calculation_revision import (
     CalculationRevisionAmendmentKind,
@@ -35,9 +37,11 @@ from ....domain.modelos._filing_record import (
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
+    derive_filing_record_id,
 )
 from ....domain.modelos._filing_repository import (
     ModeloRecordCatalogueRepository,
+    upsert_filing_record,
 )
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._verification_repository import (
@@ -60,7 +64,6 @@ from .. import (
     import_external_filing_evidence,
     mark_revision_verificado_completo,
 )
-from ._file_flow_support import _file_revision
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -105,7 +108,7 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository):
         bucket_id="default",
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
@@ -138,7 +141,7 @@ def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
         "JUST-2026-303-Q1-OPERATOR1",
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         captured_at=_T1,
     )
     filing = import_external_filing_evidence(
@@ -155,6 +158,47 @@ def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
         clock=_T1,
     )
     return _ImportOutcome(work_unit=work_unit, filing=filing)
+
+
+def _seed_local_filing_record(
+    *,
+    work_unit: WorkUnit,
+    revision_id: str,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    filing_repository: ModeloRecordCatalogueRepository,
+    filed_at: datetime,
+    filed_by: str,
+) -> ModeloRecord:
+    revision = get_calculation_revision(revision_id, calculation_repository=calculation_repository)
+    filed_revision = revision.model_copy(
+        update={
+            "state": CalculationRevisionState.PRESENTADO,
+            "filed_at": filed_at,
+            "filed_by": filed_by,
+            "updated_at": filed_at,
+        },
+    )
+    calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), filed_revision))
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=filed_revision.calculation_revision_id,
+        filed_at=filed_at,
+        filed_by=filed_by,
+    )
+    filing = ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=filed_revision.calculation_revision_id,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=filed_at,
+        filed_by=filed_by,
+        external_evidence=None,
+    )
+    filing_repository.save(upsert_filing_record(filing_repository.load(), filing))
+    return filing
 
 
 def test_import_filing_is_current_and_accepted(repos: _Repos) -> None:
@@ -267,7 +311,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
         "JUST-FIRST",
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         captured_at=_T1,
     )
 
@@ -329,7 +373,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
         "JUST-BASELINE",
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         captured_at=_T1,
     )
 
@@ -479,7 +523,7 @@ def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Re
         "JUST-NO-TAX-ID",
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         captured_at=_T1,
     )
 
@@ -534,7 +578,7 @@ def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Rep
         "JUST-WRONG-TAXPAYER",
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         captured_at=_T1,
     )
 
@@ -627,22 +671,19 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verificado_completo(
+    verified_revision = mark_revision_verificado_completo(
         revision.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    locally_filed = _file_revision(
-        revision.calculation_revision_id,
-        revision=revision,
+    locally_filed = _seed_local_filing_record(
         work_unit=work_unit,
-        actor="operator-A",
-        work_unit_repository=wu_repo,
+        revision_id=verified_revision.calculation_revision_id,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T3,
+        filed_at=_T3,
+        filed_by="operator-A",
     )
     assert locally_filed.external_evidence is None
 

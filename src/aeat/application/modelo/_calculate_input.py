@@ -289,7 +289,7 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
     snapshot = resources().modelos.authority.snapshot(
         str(unit.modelo),
         filing_year=unit.filing_year,
-        period=unit.period,
+        period=unit.period.registry_token,
     )
     # D1 calc-time assertion (defense-in-depth, ruling 2 "both ends"): the
     # law-determined revision must equal the revision the work unit was created
@@ -299,7 +299,7 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
         raise WorkUnitRevisionDivergenceError(
             f"work unit {unit.work_unit_id!r} was created against registry revision "
             f"{unit.revision_id!r}, but the law-determined revision for "
-            f"modelo {unit.modelo!r} {unit.filing_year} {unit.period!r} "
+            f"modelo {unit.modelo!r} {unit.filing_year} {unit.period.registry_token!r} "
             f"is now {snapshot.revision.id!r}. "
             f"The registry's law-mapping was corrected after this work unit was created. "
             f"Re-create the work unit (discard this one and run `aeat app modelo work ensure`) "
@@ -478,7 +478,7 @@ def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> str:
     snapshot = resources().modelos.authority.snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     )
     for casilla in snapshot.revision.casillas:
         if getattr(casilla, "semantic_role", None) == semantic_role:

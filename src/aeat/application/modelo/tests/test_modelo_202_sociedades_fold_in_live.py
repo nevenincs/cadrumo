@@ -86,6 +86,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaObservation,
@@ -234,7 +235,7 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
         bucket_id=_BUCKET_ID_M200,
         modelo=_M200,
         filing_year=_FILING_YEAR,
-        period="0A",
+        period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision_id=snapshot.revision.id,
         repository=wu_repo,
         clock=_T0,
@@ -332,7 +333,7 @@ def _calculate_m202(secure_objects: SecureObjectRepository, *, period: str) -> B
         bucket_id=_BUCKET_ID,
         modelo=_M202,
         filing_year=_FILING_YEAR,
-        period=period,
+        period=Period.from_year_and_code(_FILING_YEAR, period),
         revision_id=snapshot.revision.id,
         repository=wu_repo,
         clock=_T0,

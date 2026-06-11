@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
@@ -67,7 +68,7 @@ def _persist_390_draft(
         bucket_id=_BUCKET_ID,
         modelo="390",
         filing_year=2025,
-        period="0A",
+        period=Period.from_year_and_code(2025, "0A"),
         revision_id="2025-clean-state-test",
     )
     work_unit = WorkUnit(
@@ -75,7 +76,7 @@ def _persist_390_draft(
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("390"),
         filing_year=2025,
-        period="0A",
+        period=Period.from_year_and_code(2025, "0A"),
         revision_id="2025-clean-state-test",
         name="390-2025-0A",
         created_at=_CLOCK,
@@ -154,7 +155,7 @@ def _seed_303_cross_period_sources(
             bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2025,
-            period=period,
+            period=Period.from_year_and_code(2025, period),
             revision_id=_M303_REVISION,
             repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,

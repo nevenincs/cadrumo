@@ -151,16 +151,16 @@ def _sealed_modelo_303_blocker_for_period(
             continue
         if work_unit.modelo != Modelo.M303.value:
             continue
-        consuming_key = (work_unit.filing_year, _period_order_key(work_unit.period))
+        consuming_key = (work_unit.filing_year, _period_order_key(work_unit.period.registry_token))
         if consuming_key < seeded_key:
             continue
         candidates.append(
             (
-                (work_unit.filing_year, _period_order_key(work_unit.period)),
+                (work_unit.filing_year, _period_order_key(work_unit.period.registry_token)),
                 work_unit.work_unit_id,
                 revision.calculation_revision_id,
                 work_unit.filing_year,
-                work_unit.period,
+                work_unit.period.registry_token,
             ),
         )
     if not candidates:
