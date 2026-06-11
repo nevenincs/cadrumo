@@ -78,7 +78,8 @@ class DeclaracionObservation(BaseModel):
 
     Attributes:
         modelo: Stable modelo identifier.
-        period: Canonical period (``"2026Q1"`` / ``"2026-01"`` / ``"2026A"``).
+        period: Raw AEAT period token as printed on the declaration.
+            The filing year is carried separately in ``ejercicio``.
         ejercicio: Four-digit tax year as printed on the receipt.
         tax_id: NIF / NIE of the filer (as printed).
         template_revision: Which AEAT template the PDF matches.

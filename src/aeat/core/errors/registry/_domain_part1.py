@@ -262,7 +262,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_DEADLINES_SCHEDULE_COMPUTATION",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_deadlines_schedule_computation",
-            default_suggestion="aeat app overview status --period 2024Q1",
+            default_suggestion="aeat app overview status --year 2024 --period 1T",
             retryable=False,
             runbook_id=None,
         ),
