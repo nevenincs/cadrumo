@@ -73,7 +73,7 @@ def _isolated_storage(tmp_path: Path) -> Iterator[None]:
                 aeat_active_profile=None,
                 aeat_secret_store_backend=SecretStoreBackend.FILE,
                 aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-            )
+            ),
         )
         _ACTIVE_STORAGE_STACK = stack
         _PROFILE_SPAN_OPEN = False
@@ -289,7 +289,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
             iva_rate=Decimal("0.21"),
             iva_amount=Decimal("21.00"),
             actor="operator",
-        )
+        ),
     )
 
     projection = build_operator_state_projection(
@@ -308,7 +308,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     assert readiness.ledger_preflight_required is True
     assert readiness.ledger_ready is False
     assert readiness.ready is False
-    assert readiness.ledger_period == "2026Q1"
+    assert readiness.ledger_period == "2026 1T"
     assert readiness.ledger_checked_transaction_count == 1
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
 

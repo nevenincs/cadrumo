@@ -132,7 +132,7 @@ _BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
         "borrador",
         "iva_wallet_decision",
         "manual_input",
-    }
+    },
 )
 
 # Caller-override lock set — the subset of OWNED sources whose resolvers are
@@ -149,7 +149,7 @@ _BUCKET_AGGREGATION_LOCK_SOURCES = frozenset(
         "ledger_oss_aggregation",
         "collectible_invoice",
         "payable_invoice",
-    }
+    },
 )
 
 # Explicitly-deferred source kinds (S10): advisory fires on source_diagnostics,
@@ -328,7 +328,7 @@ def calculate_modelo_revision(
     )
 
     inputs_snapshot: dict[str, str] = dict(
-        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_inputs.items())
+        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_inputs.items()),
     )
     binding_overrides: dict[str, str] = dict(
         sorted(
@@ -341,8 +341,8 @@ def calculate_modelo_revision(
             # determinism). The draft-builder routes them back onto the engine's
             # date_binding_values / relation_values channels by registry id-set.
             + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
-            + [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()]
-        )
+            + [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()],
+        ),
     )
     casilla_values = dict(engine_result.values)
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
@@ -397,7 +397,7 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
     {
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
-    }
+    },
 )
 # IVA regimes that do not use ledger aggregation for IVA repercutido; these
 # clients supply régimen-simplificado casillas (47-58) directly as manual
@@ -434,9 +434,9 @@ def _raise_if_ledger_preflight_blocks_calculation(
         context={
             "transaction_id": first_issue.transaction_id,
             "reason": first_issue.reason.value,
-            "period": report.period.raw,
+            "period": str(report.period),
         },
-        suggestion=f"aeat app ledger preflight --period {report.period.raw}",
+        suggestion=f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.year}",
     )
 
 
@@ -573,7 +573,7 @@ def _resolve_bucket_source_mesh(
             # binding is excluded here because the iva-wallet compensación
             # decision owns it (ruling D3).
             _previous_filing_resolution_excluding_iva_compensation(
-                PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)
+                PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context),
             ),
             # Relation canonical for cross-modelo fold-in. The relation resolver
             # folds prior filed observations through each declared relation's
@@ -586,7 +586,7 @@ def _resolve_bucket_source_mesh(
             # credits, M180/M190/M193 reconciliations, M200/M202 carries) live on
             # the operator calculate path.
             RelationPrefillSourceResolver(registry_snapshot=snapshot).resolve(context),
-        )
+        ),
     )
     # Safety net: collect non-blocking advisories for every binding whose declared
     # source has no enrolled resolver and is not explicitly deferred.
@@ -603,7 +603,7 @@ def _resolve_bucket_source_mesh(
     )
     if _unhandled_diagnostics:
         source_resolution = source_resolution.model_copy(
-            update={"diagnostics": source_resolution.diagnostics + _unhandled_diagnostics}
+            update={"diagnostics": source_resolution.diagnostics + _unhandled_diagnostics},
         )
     return source_resolution
 
@@ -821,7 +821,7 @@ def _previous_filing_resolution_excluding_iva_compensation(
         update={
             "binding_values": {k: v for k, v in resolution.binding_values.items() if k != excluded},
             "provenance": tuple(item for item in resolution.provenance if not item.source_ref.endswith(f":{excluded}")),
-        }
+        },
     )
 
 
@@ -886,7 +886,7 @@ def _reject_caller_overrides_of_source_bindings(
     the engine.
     """
     rejected_bindings = sorted(
-        set(caller_binding_values).intersection(_source_owned_binding_ids(revision, owned_sources))
+        set(caller_binding_values).intersection(_source_owned_binding_ids(revision, owned_sources)),
     )
     if rejected_bindings:
         # For the IVA compensation binding the operator should use the seed verb, not
@@ -901,7 +901,7 @@ def _reject_caller_overrides_of_source_bindings(
             suggestion=seed_suggestion,
         )
     rejected_casillas = sorted(
-        set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources))
+        set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources)),
     )
     if rejected_casillas:
         raise ModeloAggregationBindingError(
@@ -992,7 +992,7 @@ def mark_revision_verificado_completo(
     if existing.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
-            f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete"
+            f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete",
         )
     now = clock or _utc_now()
     verified = existing.model_copy(
@@ -1001,7 +1001,7 @@ def mark_revision_verificado_completo(
             "verified_at": now,
             "verified_by": actor.strip(),
             "updated_at": now,
-        }
+        },
     )
     cr_repo.save(upsert_calculation_revision(catalogue, verified))
     return verified

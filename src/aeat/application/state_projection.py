@@ -350,7 +350,7 @@ def _build_auth_readiness(
                     and backend_settings.aeat_certificate_path is None
                 ):
                     backend_settings = backend_settings.model_copy(
-                        update={"aeat_certificate_path": Path(auth.certificate_path)}
+                        update={"aeat_certificate_path": Path(auth.certificate_path)},
                     )
                 backend = select_provider(AuthProviderKind(provider), settings=backend_settings)
                 description = backend.describe()
@@ -592,13 +592,13 @@ def _build_modelo_readiness(
                 profile_ready=profile_report.ready,
                 ledger_preflight_required=ledger_report is not None,
                 ledger_ready=ledger_report.ready if ledger_report is not None else None,
-                ledger_period=ledger_report.period.raw if ledger_report is not None else None,
+                ledger_period=str(ledger_report.period) if ledger_report is not None else None,
                 ledger_checked_transaction_count=(
                     ledger_report.checked_transaction_count if ledger_report is not None else 0
                 ),
                 ledger_issues=tuple(ledger_report.issues) if ledger_report is not None else (),
                 ready=profile_report.ready and (ledger_report is None or ledger_report.ready),
-            )
+            ),
         )
     return tuple(reports)
 

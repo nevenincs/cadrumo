@@ -241,7 +241,7 @@ def _resolve_quarterly_period(period: Period | str) -> Period:
     if resolved.kind is not PeriodKind.QUARTERLY:
         raise AggregationPeriodError(
             t("aggregation.renta_ledger.errors.quarterly_period_required"),
-            context={"period": resolved.raw},
+            context={"period": str(resolved)},
         )
     return resolved
 
@@ -364,7 +364,7 @@ def _income_casilla_aggregation(
                 category_id=None,
                 transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
                 subtotal=sum((row.gross_amount for row in rows), start=Decimal("0")),
-            )
+            ),
         )
     return CasillaAggregation(
         modelo=Modelo.M130.value,
