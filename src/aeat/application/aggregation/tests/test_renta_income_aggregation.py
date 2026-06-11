@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -32,7 +33,6 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import Period
 from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_income_ledger,
@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_token(year=year, token=code)
+    return Period.from_year_and_code(year, code)
 
 
 _ANNUAL_2024 = _period(2024, "0A")

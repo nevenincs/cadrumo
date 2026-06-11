@@ -35,7 +35,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo
+from ...core import Modelo, Period, PeriodKind
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -49,7 +49,7 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
+from ._models import CasillaAggregation, CasillaProvenance
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
 _TARGET_CASILLA_INGRESOS = "01"
@@ -208,7 +208,7 @@ def aggregate_renta_income_ledger(
     # Cumulative start: Jan 1 of the fiscal year.
     cumulative_start = date(resolved_period.year, 1, 1)
     # Cumulative end: last day of the declared quarter.
-    cumulative_end = resolved_period.end
+    cumulative_end = resolved_period.end_date
 
     observations: list[RentaIncomeObservation] = []
     issues: list[RentaIncomeLedgerAggregationIssue] = []

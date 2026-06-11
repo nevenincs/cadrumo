@@ -24,9 +24,10 @@ from pathlib import Path
 
 import pytest
 
-from ..application.aggregation import Period, aggregate_renta_ledger_expenses
+from ..application.aggregation import aggregate_renta_ledger_expenses
 from ..application.aggregation._iva_ledger import aggregate_iva_ledger_observations
 from ..application.aggregation._renta_income_ledger import aggregate_renta_income_ledger
+from ..core import Period
 from ..domain.categories import SpendingCategory
 from ..domain.invoices import InvoiceCatalogue
 from ..domain.iva import IvaCategory, IvaFlowDirection
@@ -48,7 +49,7 @@ _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 
 
 def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_token(year=year, token=code)
+    return Period.from_year_and_code(year, code)
 
 
 _ANNUAL_2025 = _period(2025, "0A")

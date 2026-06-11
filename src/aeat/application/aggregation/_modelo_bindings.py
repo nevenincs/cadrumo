@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period, PeriodError
 from ...domain.calculations.registry import (
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
@@ -31,12 +32,11 @@ from ...domain.calculations.registry import (
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersistenceError
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
-from ._errors import AggregationPeriodError, AggregationValidationError, t
+from ._errors import AggregationValidationError, t
 from ._iva_ledger import (
     IvaLedgerAggregationIssue,
     aggregate_iva_ledger_observations_from_repositories,
 )
-from ._models import Period
 from ._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssue,
     aggregate_renta_income_ledger_from_repositories,
@@ -355,22 +355,28 @@ class LedgerRentaIncomeAggregationSourceResolver:
 
 
 def aggregation_period_for_modelo(*, filing_year: int, period: str) -> Period:
-    """Translate a canonical ``StandardPeriodCode`` token to an aggregation period.
+    """Translate a canonical ``StandardPeriodCode`` token to a core period.
 
     Accepts only the span-shaped canonical AEAT tokens the calc engine and the
     CLI ledger filter share: quarters (``1T``-``4T``), the annual period
-    (``0A``), and months (``01``-``12``). The result is the typed aggregation
+    (``0A``), and months (``01``-``12``). The result is the typed core
     :class:`Period` consumed by ledger filters. Any other token raises
     :class:`AggregationValidationError`.
     """
     normalized = period.strip().upper()
     try:
-        return Period.from_year_and_token(year=filing_year, token=normalized)
-    except AggregationPeriodError as exc:
+        resolved = Period.from_year_and_code(filing_year, normalized)
+    except PeriodError as exc:
         raise AggregationValidationError(
             t("aggregation.modelo_bindings.errors.unsupported_period"),
             context={"filing_year": str(filing_year), "period": period},
         ) from exc
+    if not resolved.has_date_span():
+        raise AggregationValidationError(
+            t("aggregation.modelo_bindings.errors.unsupported_period"),
+            context={"filing_year": str(filing_year), "period": period},
+        )
+    return resolved
 
 
 def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:

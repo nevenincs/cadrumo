@@ -23,6 +23,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...domain.calculations.registry import (
     IvaLedgerObservation,
     ModeloRevision,
@@ -55,7 +56,6 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationValidationError, t
-from ._models import Period
 
 _LedgerId = Annotated[
     str,

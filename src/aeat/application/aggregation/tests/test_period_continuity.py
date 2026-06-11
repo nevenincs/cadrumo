@@ -3,14 +3,14 @@
 ADR ``2026-06-10-ledger-filter-period`` (decision 4) requires a continuity gate
 proving the fully-closed ``[start, end]`` boundary is gap-free and overlap-free:
 for every adjacent quarter pair and every adjacent month pair across at least two
-years, ``prior.end + one day == next.start`` and no real calendar date is
+years, ``prior.end_date + one day == next.start_date`` and no real calendar date is
 contained by both periods.
 
 The test is non-tautological: the *expected* boundary days are derived from the
 :mod:`calendar` and :mod:`datetime` stdlib (the true first/last calendar day),
 NOT by re-running the :class:`Period` boundary formula under test. A regression
-that introduced a one-day overlap or gap in :meth:`Period.end` /
-:meth:`Period.start` would fail here against the independent calendar oracle.
+that introduced a one-day overlap or gap in :meth:`Period.end_date` /
+:meth:`Period.start_date` would fail here against the independent calendar oracle.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from itertools import pairwise
 
 import pytest
 
-from .. import Period
+from ....core import Period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -31,12 +31,12 @@ _QUARTER_TOKENS = ("1T", "2T", "3T", "4T")
 
 def _quarter_period(year: int, quarter_index: int) -> Period:
     """Build the Period for quarter ``quarter_index`` (1-4) of ``year``."""
-    return Period.from_year_and_token(year=year, token=f"{quarter_index}T")
+    return Period.from_year_and_code(year, f"{quarter_index}T")
 
 
 def _month_period(year: int, month: int) -> Period:
     """Build the Period for ``month`` (1-12) of ``year``."""
-    return Period.from_year_and_token(year=year, token=f"{month:02d}")
+    return Period.from_year_and_code(year, f"{month:02d}")
 
 
 # --- Independent calendar oracle (does NOT call Period) -----------------------
@@ -62,21 +62,21 @@ def _calendar_month_bounds(year: int, month: int) -> tuple[date, date]:
 @pytest.mark.parametrize("year", _YEARS)
 @pytest.mark.parametrize("quarter_index", (1, 2, 3, 4))
 def test_quarter_bounds_match_calendar_oracle(year: int, quarter_index: int) -> None:
-    """Period quarter start/end equal the stdlib-derived calendar bounds."""
+    """Period quarter start/end dates equal the stdlib-derived calendar bounds."""
     period = _quarter_period(year, quarter_index)
     expected_start, expected_end = _calendar_quarter_bounds(year, quarter_index)
-    assert period.start == expected_start
-    assert period.end == expected_end
+    assert period.start_date == expected_start
+    assert period.end_date == expected_end
 
 
 @pytest.mark.parametrize("year", _YEARS)
 @pytest.mark.parametrize("month", range(1, 13))
 def test_month_bounds_match_calendar_oracle(year: int, month: int) -> None:
-    """Period month start/end equal the stdlib-derived calendar bounds."""
+    """Period month start/end dates equal the stdlib-derived calendar bounds."""
     period = _month_period(year, month)
     expected_start, expected_end = _calendar_month_bounds(year, month)
-    assert period.start == expected_start
-    assert period.end == expected_end
+    assert period.start_date == expected_start
+    assert period.end_date == expected_end
 
 
 # --- Continuity: no gap, no overlap between adjacent periods ------------------
@@ -93,12 +93,12 @@ def test_adjacent_quarters_are_gap_free_and_overlap_free() -> None:
         prior = _quarter_period(prior_year, prior_q)
         nxt = _quarter_period(next_year, next_q)
 
-        # No gap, no overlap: the day after prior.end is exactly next.start.
-        assert prior.end + timedelta(days=1) == nxt.start, (prior_year, prior_q, next_year, next_q)
+        # No gap, no overlap: the day after prior.end_date is exactly next.start_date.
+        assert prior.end_date + timedelta(days=1) == nxt.start_date, (prior_year, prior_q, next_year, next_q)
 
         # No real date is contained by both periods (anti-double-count).
-        assert not nxt.contains(prior.end)
-        assert not prior.contains(nxt.start)
+        assert not nxt.contains(prior.end_date)
+        assert not prior.contains(nxt.start_date)
 
 
 def test_adjacent_months_are_gap_free_and_overlap_free() -> None:
@@ -111,9 +111,9 @@ def test_adjacent_months_are_gap_free_and_overlap_free() -> None:
         prior = _month_period(prior_year, prior_m)
         nxt = _month_period(next_year, next_m)
 
-        assert prior.end + timedelta(days=1) == nxt.start, (prior_year, prior_m, next_year, next_m)
-        assert not nxt.contains(prior.end)
-        assert not prior.contains(nxt.start)
+        assert prior.end_date + timedelta(days=1) == nxt.start_date, (prior_year, prior_m, next_year, next_m)
+        assert not nxt.contains(prior.end_date)
+        assert not prior.contains(nxt.start_date)
 
 
 def test_quarter_covers_its_three_constituent_months_exactly() -> None:
@@ -129,14 +129,14 @@ def test_quarter_covers_its_three_constituent_months_exactly() -> None:
             first_month = 3 * (quarter_index - 1) + 1
             constituent = [_month_period(year, first_month + offset) for offset in range(3)]
 
-            assert quarter.start == constituent[0].start
-            assert quarter.end == constituent[-1].end
+            assert quarter.start_date == constituent[0].start_date
+            assert quarter.end_date == constituent[-1].end_date
 
             # Every constituent-month boundary day is inside the quarter.
             for month_period in constituent:
-                assert quarter.contains(month_period.start)
-                assert quarter.contains(month_period.end)
+                assert quarter.contains(month_period.start_date)
+                assert quarter.contains(month_period.end_date)
 
             # The day before the quarter and the day after are outside.
-            assert not quarter.contains(quarter.start - timedelta(days=1))
-            assert not quarter.contains(quarter.end + timedelta(days=1))
+            assert not quarter.contains(quarter.start_date - timedelta(days=1))
+            assert not quarter.contains(quarter.end_date + timedelta(days=1))
