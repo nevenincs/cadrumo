@@ -121,7 +121,7 @@ An operator persona drives the shipped pipeline end to end against real authenti
 - [ ] `W04.P09.S35` - Roll classify --llm with a real cloud CLI (agy/codex) and --read-evidence --evidence-acknowledged; `confirm the model reads the invoice and the decision stamps llm provenance; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W04.P09.S36` - Roll classify --llm --saturate against a real cloud CLI; `confirm the model selects the IVA category, the system derives rate/base/amount, and the printed-vs-derived advisory behaves; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W04.P09.S37` - Roll split --llm --read-evidence --apply against a real multi-line invoice with a real cloud CLI; `confirm children sum to parent, registry-derived numbers, evidence links, and provenance; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [ ] `W04.P09.S38` - Capture the persona testimonial as a vault audit document and track every surfaced gap or confusion as a follow-up step with a verification gate; `.vault/audit/`.
+- [x] `W04.P09.S38` - Capture the persona testimonial as a vault audit document and track every surfaced gap or confusion as a follow-up step with a verification gate; `.vault/audit/`.
 
 ## Description
 
