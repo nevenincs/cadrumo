@@ -1,0 +1,37 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "revision"
+domain = "concepto"
+lifecycle = "approved"
+related = ["modelo"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "La version de las reglas de un modelo que se aplica a un periodo, segun el registro."
+definition = "La version de las reglas de un modelo que rige para un periodo de presentacion concreto, nombrada en el registro. Por ejemplo, una revision como 2019-y-siguientes cubre las presentaciones de 2019 en adelante. La AEAT publica una revision por cada (modelo, ano, periodo) mediante Orden Ministerial, de modo que la revision aplicable es un hecho derivado, no una eleccion."
+
+[language.es.source]
+citation = "AEAT, Ordenes Ministeriales que aprueban cada revision de modelo publicadas en el BOE."
+authority = "aeat"
+
+[[language.es.term]]
+label = "revision"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "feminine"
+
+[language.en]
+short_description = "The version of a modelo's rules that applies to a given period, named in the registry."
+
+[language.ca]
+short_description = "La versio de les regles d'un model que s'aplica a un periode, segons el registre."
+
+[language.hu]
+short_description = "Egy modelo szabalyainak adott idoszakra ervenyes valtozata, a nyilvantartasban megnevezve."

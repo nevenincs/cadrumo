@@ -14,7 +14,7 @@ These two files are not the same file, and you shouldn't expect one to do the ot
 
 ## The spreadsheet review surface
 
-Your calculation is laid out as a spreadsheet in Google Sheets: a row for each input, a row for each result, and the totals built from them. The totals carry live formulas (the spreadsheet recomputes as you change a number), so if you correct an input, every total that depends on it updates in front of you. You can see exactly how a casilla - a numbered box on the official modelo (an AEAT tax form) - arrives at its figure, rather than taking it on trust.
+Your calculation is laid out as a spreadsheet in Google Sheets: a row for each input, a row for each result, and the totals built from them. The totals carry live formulas (the spreadsheet recomputes as you change a number), so if you correct an input, every total that depends on it updates in front of you. You can see exactly how a {term}`casilla` on the official {term}`modelo` arrives at its figure, rather than taking it on trust.
 
 That makes the spreadsheet a place to think, not just to look. You change a figure, the dependent totals recompute in front of you, and when you're satisfied you pull your reviewed edits back so the tool records them against your filing. The spreadsheet is tied to the exact calculation it was built from, so the edits land in the right place.
 

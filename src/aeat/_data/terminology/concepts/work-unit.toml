@@ -1,0 +1,36 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "work-unit"
+domain = "concepto"
+lifecycle = "approved"
+related = ["modelo", "revision"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El identificador de un calculo concreto de un modelo, ano, periodo y revision."
+definition = "Identificador de un unico calculo de un modelo para un ano, periodo y revision determinados. La aplicacion registra cada declaracion que la persona prepara como una work unit, lo que le permite seguir su estado a lo largo del flujo de calculo, verificacion y presentacion."
+
+[language.es.source]
+citation = "Documentacion de la aplicacion aeat; concepto interno del producto."
+authority = "other"
+
+[[language.es.term]]
+label = "work unit"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "A handle over one calculation of a single modelo, year, period, and revision."
+
+[language.ca]
+short_description = "L'identificador d'un calcul concret d'un model, any, periode i revisio."
+
+[language.hu]
+short_description = "Egy modelo, ev, idoszak es revizio egyetlen szamitasanak azonositoja."

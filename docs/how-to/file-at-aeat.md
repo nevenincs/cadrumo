@@ -1,8 +1,7 @@
 # Upload your exported modelo at the AEAT portal
 
 This guide walks you through the handoff from a verified draft to a real filing
-at AEAT, as an ordered checklist. You prepare and export a modelo (a numbered
-official AEAT tax form) with `aeat`, but the tool never submits anything to
+at AEAT, as an ordered checklist. You prepare and export a {term}`modelo` with `aeat`, but the tool never submits anything to
 AEAT. You upload the exported file at the AEAT portal yourself, signed with
 your own credentials. The `work file` command at the end records a local marker
 only; it does not and cannot file on your behalf.
