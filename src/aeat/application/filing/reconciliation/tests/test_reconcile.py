@@ -65,6 +65,9 @@ _MODELO_123_INPUTS = {
     "11": Decimal("7.50"),
     "13": Decimal("12.25"),
 }
+_P_2024_Q1 = Period.from_year_and_code(2024, "1T")
+_P_2024_Q4 = Period.from_year_and_code(2024, "4T")
+_P_2026_Q1 = Period.from_year_and_code(2026, "1T")
 
 
 def _provider_for(draft: ModeloDraft) -> RegistrySchemaProvider:
@@ -78,7 +81,7 @@ def _provider_for(draft: ModeloDraft) -> RegistrySchemaProvider:
 
 def _draft_for_130(
     *,
-    period: str = "2024Q1",
+    period: Period = _P_2024_Q1,
     profile_tax_id: str = "12345678Z",
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
@@ -94,7 +97,7 @@ def _draft_for_130(
 
 def _draft_for_111(
     *,
-    period: str = "2026Q1",
+    period: Period = _P_2026_Q1,
     profile_tax_id: str = "12345678Z",
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
@@ -109,7 +112,7 @@ def _draft_for_111(
 
 def _draft_for_123(
     *,
-    period: str = "2026Q1",
+    period: Period = _P_2026_Q1,
     profile_tax_id: str = "12345678Z",
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
@@ -156,7 +159,7 @@ class TestReconcileMatch:
     def test_matching_modelo_130_fixture_reports_match(self) -> None:
         justificante = _justificante("130", "2024-1T")
         draft = _draft_for_130(
-            period="2024Q1",
+            period=_P_2024_Q1,
             profile_tax_id=justificante.tax_id,
         )
 
@@ -172,7 +175,7 @@ class TestReconcileMatch:
     def test_quarter_period_normalization_uses_justificante_year(self) -> None:
         justificante = _justificante("130", "2024-4T")
         draft = _draft_for_130(
-            period="2024Q4",
+            period=_P_2024_Q4,
             profile_tax_id=justificante.tax_id,
         )
 
@@ -211,7 +214,7 @@ class TestReconcileMatch:
     def test_year_only_remote_period_does_not_match_quarterly_revision(self) -> None:
         justificante = _justificante("130", "2024-1T").model_copy(update={"period": "2024"})
         draft = _draft_for_130(
-            period="2024Q1",
+            period=_P_2024_Q1,
             profile_tax_id=justificante.tax_id,
         )
 
@@ -246,7 +249,7 @@ class TestReconcileDivergent:
 
     def test_tax_id_mismatch_surfaces(self) -> None:
         justificante = _justificante("130", "2024-1T")
-        draft = _draft_for_130(period="2024Q1", profile_tax_id="12345678Z")
+        draft = _draft_for_130(period=_P_2024_Q1, profile_tax_id="12345678Z")
 
         report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
@@ -257,7 +260,7 @@ class TestReconcileDivergent:
     def test_tax_id_comparison_is_case_insensitive(self) -> None:
         justificante = _justificante("130", "2024-1T")
         draft = _draft_for_130(
-            period="2024Q1",
+            period=_P_2024_Q1,
             profile_tax_id=justificante.tax_id.lower(),
         )
 

@@ -24,6 +24,8 @@ from ..testing import build_registry_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_Q1_2026 = Period.from_year_and_code(2026, "1T")
+
 
 def _hint() -> str:
     return "filing.test_calculate.hint"
@@ -38,7 +40,7 @@ def _make_draft(
     status: ModeloDraftStatus,
     findings: tuple[ModeloValidationFinding, ...] = (),
     modelo: str = "130",
-    period: str = "2026Q1",
+    period: Period = _Q1_2026,
 ) -> ModeloDraft:
     draft = build_registry_filing_draft(
         modelo=modelo,
