@@ -208,7 +208,7 @@ class OverviewCalendarEntry(BaseModel):
 
     Attributes:
         modelo: Modelo identifier.
-        period: Canonical period string (e.g. ``"2026Q1"``).
+        period: Filing period as a typed :class:`~aeat.core.Period` value.
         opens_on: First day the filing window accepts submissions.
         closes_on: Last day the filing window accepts submissions.
         payment_cutoff_on: Direct-debit payment cutoff. ``None`` when
@@ -377,7 +377,7 @@ class SuppressedCalendarEntry(BaseModel):
 
     Attributes:
         modelo: Modelo identifier.
-        period: Canonical period string (e.g. ``"2026Q1"``).
+        period: Suppressed filing period as a typed :class:`~aeat.core.Period` value.
         verdict: The :class:`ApplicabilityVerdict` that caused the entry
             to be suppressed (``NOT_APPLICABLE``, ``ATTRIBUTION_PASS_THROUGH``,
             or ``INCOMPLETE``).
