@@ -134,13 +134,16 @@ def test_relevance_file_present_is_loaded(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 @pytest.mark.hex_core
-def test_injection_lands_records_per_language(tmp_path: Path) -> None:
-    """The concept records inject and the es/en/hu language splits form.
+def test_injection_lands_one_record_per_concept_in_primary_language(
+    tmp_path: Path,
+) -> None:
+    """Each concept injects once into the primary (page) index, discoverably.
 
     Real Pagefind build (no mock): the directory pass indexes the English
-    pages and the injected concept records add per-language custom records, so
-    the resulting index carries multiple language splits with the injected
-    content.
+    pages; the injection adds ONE custom record per concept into the primary
+    language with combined multilingual content, so the record is in the index
+    a reader's page loads. Asserts one record per concept (not four) and that
+    the en index split is present.
     """
     site = _fixture_site(tmp_path)
     materialised = _concept_records()
@@ -155,47 +158,77 @@ def test_injection_lands_records_per_language(tmp_path: Path) -> None:
     assert result.page_count == 3
     stats = captured[0]
     assert stats.concepts == materialised.concepts
-    assert stats.custom_records_written > materialised.concepts  # multi-language
-    # The Spanish-invariant description means every concept yields an es record.
-    assert "es" in stats.languages
+    # One custom record per concept (single primary language), not per-language.
+    assert stats.custom_records_written == materialised.concepts
+    assert stats.languages == ("en",)
 
     pf = site / "pagefind"
     languages = {p.name.split("_")[0] for p in pf.rglob("*.pf_index")}
-    # English (the pages) plus Spanish (every concept) must both split out.
-    assert "es" in languages
     assert "en" in languages
 
 
 @pytest.mark.integration
 @pytest.mark.hex_core
-def test_full_four_language_splits_form_with_substantive_content(
-    tmp_path: Path,
-) -> None:
-    """All four es/en/ca/hu splits form when records carry per-language text.
+def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
+    """A weight-sorted Pagefind search returns ONLY the injected records.
 
-    Proves the language routing end to end with one substantive record per
-    language (the concept ca/hu descriptions are sometimes short; this isolates
-    the routing from content-length effects).
+    This is the load-bearing mechanism the Ctrl-K palette relies on to surface
+    term cards above the full-text pages (ADR D5): the injected records carry a
+    ``weight`` sort key, the docs pages do not, so a search sorted by ``weight``
+    drops the pages and returns the term/casilla/CLI cards ordered by tier
+    weight (concept 1.0 first). Without this the concept record is buried under
+    the many page hits for a corpus term like "prorrata".
+
+    Driven through the real Pagefind WASM in a headless browser (no mock), over
+    a built index whose pages match the query, so it proves the cards win even
+    against competing page hits.
     """
-    site = _fixture_site(tmp_path, pages=1)
+    import http.server
+    import socketserver
+    import threading
+    from functools import partial
+
+    site = _fixture_site(tmp_path, pages=3)
+    materialised = _concept_records()
 
     async def inject(index: object) -> None:
-        for language in ("es", "en", "ca", "hu"):
-            await index.add_custom_record(  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]  # reason: pagefind index is dynamically typed
-                url=f"/glossary.html#term-prorrata-{language}",
-                content=(
-                    f"prorrata especial deduccion sectors activitat {language} "
-                    f"contingut significatiu per formar un index separat"
-                ),
-                language=language,
-                meta={"kind": "concept"},
-                filters={"kind": ["concept"]},
-            )
+        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
 
     build_search_index(site, inject=inject)
-    pf = site / "pagefind"
-    languages = {p.name.split("_")[0] for p in pf.rglob("*.pf_index")}
-    assert {"es", "en", "ca", "hu"} <= languages, languages
+
+    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(site))
+    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
+    port = httpd.server_address[1]
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    try:
+        from playwright.sync_api import sync_playwright
+
+        page_name = sorted(p.name for p in site.glob("*.html"))[0]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch()
+            page = browser.new_page()
+            page.goto(f"http://127.0.0.1:{port}/{page_name}", wait_until="networkidle")
+            result = page.evaluate(
+                """async () => {
+                  const pf = await import('/pagefind/pagefind.js');
+                  const s = await pf.search('prorrata', { sort: { weight: 'desc' } });
+                  const datas = await Promise.all(
+                    s.results.slice(0, 5).map((r) => r.data())
+                  );
+                  return datas.map((d) => ({
+                    kind: d.meta && d.meta.kind,
+                    cid: d.meta && d.meta.concept_id,
+                  }));
+                }"""
+            )
+            browser.close()
+    finally:
+        httpd.shutdown()
+
+    # Every weight-sorted result is an injected concept card (no page noise).
+    assert result, "weight-sorted search returned nothing"
+    assert all(row["kind"] == "concept" for row in result), result
+    assert any(row["cid"] == "prorrata" for row in result), result
 
 
 @pytest.mark.integration

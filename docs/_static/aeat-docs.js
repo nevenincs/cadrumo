@@ -238,6 +238,118 @@
     var entries = null;
     var rows = [];
     var selected = 0;
+    var queryToken = 0;
+
+    /* ── Pagefind tier (term cards / full text) ───────────────────────── */
+    /* Pagefind ships a chunked index under <site>/pagefind/ when the docs
+     * build runs the post-build index pass. The palette lazy-loads it on
+     * first open and queries it for the injected term/casilla/CLI cards and
+     * the full-text page hits. When the index is absent (a dev preview built
+     * without the pass), the palette silently keeps its nav-only behaviour. */
+    var pagefindPromise = null;
+    /* Resolve the index URL against the page so the dynamic import gets an
+     * absolute specifier: a bare/relative one (e.g. "pagefind/pagefind.js")
+     * is treated as a package name and fails. searchUrl is page-relative
+     * (e.g. "search.html" or "../search.html"); strip its filename and append
+     * the pagefind bundle, resolved against the document base. */
+    var pagefindBase = new URL(
+      searchUrl.replace(/[^/]*$/, "") + "pagefind/",
+      document.baseURI
+    ).href;
+
+    function loadPagefind() {
+      if (pagefindPromise) return pagefindPromise;
+      pagefindPromise = import(pagefindBase + "pagefind.js")
+        .then(function (pf) {
+          if (pf && typeof pf.options === "function") {
+            pf.options({ excerptLength: 24 });
+          }
+          return pf;
+        })
+        .catch(function () {
+          return null;
+        });
+      return pagefindPromise;
+    }
+
+    /* Per-kind ranking tier (ADR D5: term cards first, navigation second,
+     * full text third). Higher sorts first. The injected `weight` meta is the
+     * fine axis within a kind. */
+    var KIND_TIER = { concept: 4, cli: 3, casilla: 2, page: 1 };
+    var KIND_LABEL = {
+      concept: "Term",
+      cli: "Command",
+      casilla: "Casilla",
+      page: "Page",
+    };
+
+    function cardFromPagefind(meta, fallbackTitle, url, excerpt) {
+      var kind = (meta && meta.kind) || "page";
+      var title = (meta && meta.title) || fallbackTitle || url;
+      var crumbParts = [KIND_LABEL[kind] || "Result"];
+      if (meta && meta.modelo && meta.number) {
+        crumbParts.push("Modelo " + meta.modelo + " · " + meta.number);
+      } else if (meta && meta.command_path) {
+        crumbParts.push(meta.command_path);
+      } else if (meta && meta.domain) {
+        crumbParts.push(meta.domain);
+      }
+      var weight = meta && meta.weight ? parseFloat(meta.weight) : 0;
+      if (isNaN(weight)) weight = 0;
+      return {
+        title: title,
+        href: url,
+        crumb: crumbParts.join(" · "),
+        excerpt: excerpt || "",
+        kind: kind,
+        tierRank: (KIND_TIER[kind] || 1) * 10 + weight,
+      };
+    }
+
+    function dataToCards(results, limit) {
+      return Promise.all(
+        results.slice(0, limit).map(function (result) {
+          return result.data();
+        })
+      ).then(function (datas) {
+        return datas.map(function (data) {
+          return cardFromPagefind(
+            data.meta,
+            data.meta && data.meta.title,
+            data.url,
+            data.excerpt
+          );
+        });
+      });
+    }
+
+    /* The injected term/casilla/CLI records and the docs pages share one index
+     * (the injection files every record under the page language with combined
+     * multilingual content, so a Spanish term is found from an English page,
+     * and stamps a `weight` sort key on every record). Two passes compose the
+     * ADR-D5 ladder reliably:
+     *   1. a search SORTED by `weight` returns ONLY the injected records (the
+     *      docs pages carry no `weight` key, so Pagefind drops them) ordered by
+     *      tier weight (concept 1.0 > cli 0.8 > casilla 0.7) - these are the
+     *      term-card tiers, guaranteed above the full text;
+     *   2. a normal relevance search yields the full-text page hits (third
+     *      tier). A page that is also a card is deduped away in compose(). */
+    function searchPagefind(query) {
+      return loadPagefind().then(function (pf) {
+        if (!pf || typeof pf.search !== "function") return [];
+        var cardSearch = pf.search(query, { sort: { weight: "desc" } });
+        var pageSearch = pf.search(query);
+        return Promise.all([cardSearch, pageSearch]).then(function (both) {
+          var cardResults = both[0] && both[0].results ? both[0].results : [];
+          var pageResults = both[1] && both[1].results ? both[1].results : [];
+          return dataToCards(cardResults, 12).then(function (cards) {
+            return dataToCards(pageResults, 6).then(function (pages) {
+              return cards.concat(pages);
+            });
+          });
+        });
+      });
+    }
 
     function fullSearchEntry(query) {
       return {
@@ -247,33 +359,55 @@
       };
     }
 
-    function render(query) {
+    function navMatches(query) {
       if (entries === null) entries = navIndex();
-      var matches;
-      if (!query) {
-        matches = entries.slice(0, 9);
-      } else {
-        matches = entries
-          .map(function (entry) {
-            return { entry: entry, value: score(entry, query.toLowerCase()) };
-          })
-          .filter(function (item) {
-            return item.value >= 0;
-          })
-          .sort(function (a, b) {
-            return b.value - a.value;
-          })
-          .slice(0, 9)
-          .map(function (item) {
-            return item.entry;
-          });
-      }
-      matches = matches.concat([fullSearchEntry(query)]);
+      if (!query) return entries.slice(0, 9);
+      return entries
+        .map(function (entry) {
+          return { entry: entry, value: score(entry, query.toLowerCase()) };
+        })
+        .filter(function (item) {
+          return item.value >= 0;
+        })
+        .sort(function (a, b) {
+          return b.value - a.value;
+        })
+        .slice(0, 9)
+        .map(function (item) {
+          return item.entry;
+        });
+    }
 
+    /* Compose the ADR-D5 progressive ladder: Pagefind term/casilla/CLI cards
+     * first (ordered by injected tier+weight), navigation titles second, the
+     * full-text handoff third. Dedupe by href across tiers: a hit that is both
+     * a term card and a nav/full-text result shows once, in its higher tier. */
+    function compose(query, pagefindCards) {
+      var seenHref = {};
+      var ordered = [];
+      var cards = (pagefindCards || []).slice().sort(function (a, b) {
+        return b.tierRank - a.tierRank;
+      });
+      cards.forEach(function (card) {
+        if (seenHref[card.href]) return;
+        seenHref[card.href] = true;
+        ordered.push(card);
+      });
+      navMatches(query).forEach(function (entry) {
+        if (seenHref[entry.href]) return;
+        seenHref[entry.href] = true;
+        ordered.push(entry);
+      });
+      ordered.push(fullSearchEntry(query));
+      return ordered.slice(0, 18);
+    }
+
+    function paint(items) {
       list.textContent = "";
-      rows = matches.map(function (entry, index) {
+      rows = items.map(function (entry, index) {
         var item = document.createElement("li");
         item.className = "aeat-palette-item";
+        if (entry.kind) item.classList.add("aeat-palette-item--" + entry.kind);
         item.setAttribute("role", "option");
         var link = document.createElement("a");
         link.href = entry.href;
@@ -287,6 +421,12 @@
           crumb.textContent = entry.crumb;
           link.appendChild(crumb);
         }
+        if (entry.excerpt) {
+          var ex = document.createElement("span");
+          ex.className = "aeat-palette-item-excerpt";
+          ex.textContent = entry.excerpt;
+          link.appendChild(ex);
+        }
         item.appendChild(link);
         item.addEventListener("mousemove", function () {
           select(index);
@@ -295,6 +435,18 @@
         return item;
       });
       select(0);
+    }
+
+    function render(query) {
+      var token = ++queryToken;
+      /* Paint nav + full-text immediately so the palette never blanks while
+       * Pagefind loads, then upgrade with term cards when the query resolves. */
+      paint(compose(query, []));
+      if (!query) return;
+      searchPagefind(query).then(function (cards) {
+        if (token !== queryToken) return; /* a newer keystroke superseded this */
+        if (cards.length) paint(compose(query, cards));
+      });
     }
 
     function select(index) {
