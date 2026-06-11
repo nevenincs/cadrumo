@@ -128,7 +128,7 @@ _DOWNSTREAM_STATUSES: frozenset[ModeloDraftStatus] = frozenset(
         ModeloDraftStatus.RECHAZADA,
         ModeloDraftStatus.ENMENDADO,
         ModeloDraftStatus.ANULADO,
-    }
+    },
 )
 """Statuses where the draft has left the calculate/approve/export flow."""
 
@@ -194,7 +194,7 @@ def summarise_calculation(
     return DeclaracionCalculateSummary(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
-        period=draft.period,
+        period=str(draft.period),
         status=draft.status,
         blocker_count=counts[BaseSeverity.ERROR],
         warning_count=counts[BaseSeverity.WARNING],

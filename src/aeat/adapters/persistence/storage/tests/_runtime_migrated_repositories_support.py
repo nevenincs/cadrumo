@@ -1,12 +1,11 @@
 """Shared support for split adapter tests."""
 
-# ruff: noqa: F401
 
 from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -15,59 +14,39 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from .....application.auth._apoderado import ApoderadoService
-from .....application.auth._diagnostics import list_auth_diagnostics
-from .....application.calculations._iva_compensation_history import (
-    IvaCompensationHistoryRepository,
-)
-from .....application.calculations._observations_repository import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
-from .....application.config_reset import ConfigResetScope, reset_config
-from .....application.diagnostics import preview_quarantine_unreadable_secure_objects, secure_object_unreadable_total
 from .....application.filing import ModeloHistory, ModeloHistoryEntry
-from .....application.filing._history_repository import ModeloHistoryRepository
-from .....application.live._borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
+from .....application.live._borrador_100 import Borrador100Snapshot
 from .....application.live._snapshot_base import SnapshotLifecycleState
 from .....application.repair_integrity import (
     RepairRemediationDecision,
-    RepairRemediationDecisionRepository,
     repair_remediation_decision_id,
 )
 from .....application.workflow import DeclaracionPointer, WorkflowResult, WorkflowStage, WorkflowState, WorkflowStep
-from .....application.workflow._persistence import WorkflowRunRepository, WorkflowStateRepository
+from .....core._period import Period as _Period
 from .....core.config import override_settings
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....domain._identifiers import ModeloIdentifier
-from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
-    BucketEventHistoryCatalogue,
-    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
 )
-from .....domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotRef
+from .....domain.calculations.registry import RegistrySnapshotRef
 from .....domain.categories import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
 from .....domain.filing import (
     AmendmentKind,
     CasillaChange,
-    ModeloAmendmentRepository,
     ModeloComplementaria,
     ModeloDraft,
-    ModeloDraftRepository,
     ModeloValue,
     ModeloValueKind,
     make_amendment_id,
 )
 from .....domain.invoices import (
     Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
@@ -77,9 +56,7 @@ from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from .....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
-from .....domain.justificante._repository import JustificanteRepository
 from .....domain.modelos import ModeloCode
-from .....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from .....domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -91,21 +68,17 @@ from .....domain.modelos._filing_record import (
     ModeloRecordCatalogue,
     derive_filing_record_id,
 )
-from .....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from .....domain.modelos._repository import WorkUnitCatalogueRepository
 from .....domain.modelos._verification_report import (
     VerificationCompletenessStatus,
     VerificationReport,
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from .....domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from .....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from .....domain.modelos._work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from .....domain.submission import (
     ModeloDraftStatus,
     ModeloPresentado,
     SubmissionAttempt,
-    SubmissionRepository,
     SubmissionStatus,
     make_submission_id,
 )
@@ -114,11 +87,9 @@ from .....domain.transactions import (
     RawTransaction,
     SourceFormat,
     Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepository,
     TransactionDirection,
 )
-from .....domain.usage_ratios import UsageRatioProfile, load_usage_ratios, save_usage_ratios
+from .....domain.usage_ratios import UsageRatioProfile
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AUTH_DIAGNOSTIC_PATH_FIXTURE,
@@ -127,27 +98,11 @@ from .....tests.aeat_literal_fixtures import (
     JUSTIFICANTE_VERIFY_PATH_FIXTURE,
     aeat_url,
 )
-from ....outbound.aeat.auth import _session_store
-from ....outbound.aeat.sede import ExpedienteNotFoundError
-from ....outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
 from ....outbound.aeat.sede._schema import FiledDeclaracionArtefact
-from ....outbound.google import _session_store as google_session_store
 from ....outbound.google._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
-from ....outbound.llm._cache import LLMCache
 from ....outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
-from ....outbound.llm._usage import UsageRecorder
-from ...profile.assets import (
-    load_amortizacion_ledger,
-    load_assets,
-    save_amortizacion_ledger,
-    save_assets,
-)
-from ...profile.inventory import load_inventory, save_inventory
 from .. import EphemeralMasterKeyProvider, SensitivityClass
 from .._namespace_registry import LLM_USAGE_NAMESPACE
-from ..attachment import AttachmentStore
-from ..errors import StorageValidationError
-from ..master_key._active_session import activate_session
 from ..master_key._bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import dispose_engine
@@ -204,7 +159,7 @@ def _workflow_state(label: str) -> WorkflowState:
                 draft_id="d" * 64,
                 status="BORRADOR",
                 updated_at=now,
-            )
+            ),
         },
         updated_at=now,
     )
@@ -250,7 +205,7 @@ def _storage_state(label: str) -> dict[str, object]:
                 "value": label,
                 "domain": f".{AEAT_HOST_SUFFIX_EXPECTED}",
                 "path": "/",
-            }
+            },
         ],
         "origins": [],
     }
@@ -344,7 +299,7 @@ def _modelo_draft(label: str) -> ModeloDraft:
     return ModeloDraft(
         draft_id=_hex(f"draft-{label}"),
         modelo="303",
-        period="2026Q1",
+        period=_Period.from_year_and_code(2026, "1T"),
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
         snapshot_ref=RegistrySnapshotRef(
@@ -599,7 +554,7 @@ def _google_records(label: str) -> tuple[OAuthClient, OAuthToken, OAuthMetadata,
                 "token_uri": _GOOGLE_OAUTH_ENDPOINT,
                 "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
                 "redirect_uris": ("http://127.0.0.1:8765/callback",),
-            }
+            },
         ),
         OAuthToken.model_validate({"refresh_token": f"1//refresh-token-{label}", "token_uri": _GOOGLE_OAUTH_ENDPOINT}),
         OAuthMetadata(

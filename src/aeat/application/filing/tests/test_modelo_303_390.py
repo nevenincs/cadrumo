@@ -15,6 +15,8 @@ from decimal import Decimal
 
 import pytest
 
+from ....core._period import Period
+from ....domain.period import parse_canonical_period as _parse_canonical_period
 from .. import ModeloInputs, build_draft, build_runtime_schema_provider
 from ..testing import ModeloTestProfile
 
@@ -73,6 +75,7 @@ def test_modelo_build_draft_projects_registry_backed_draft(
         schema_provider=build_runtime_schema_provider(modelos=("303", "390")),
     )
 
+    expected_period = Period.from_year_and_code(*_parse_canonical_period(period))
     assert draft.modelo == modelo
-    assert draft.period == period
+    assert draft.period == expected_period
     assert draft.profile_tax_id == "12345678Z"
