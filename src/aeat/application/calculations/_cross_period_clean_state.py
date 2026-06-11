@@ -542,8 +542,7 @@ def _resolve_cross_period_source(
     else:
         payload = observation_repository.load_observation(
             requirement.source_modelo,
-            requirement.filing_year,
-            requirement.period,
+            Period.from_year_and_code(requirement.filing_year, requirement.period),
         )
         # R2 carry gate: re-confirm stamped revision == law-determined revision.
         if payload is not None:

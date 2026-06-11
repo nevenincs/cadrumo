@@ -23,7 +23,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -296,7 +296,10 @@ def _gather_single_key_observation(
     app-filing observation (when both exist) so neither source shadows the other.
     """
     gathered = _gathered_from_payload(
-        repository.load_observation(requirement_modelo, requirement_filing_year, requirement_period),
+        repository.load_observation(
+            requirement_modelo,
+            Period.from_year_and_code(requirement_filing_year, requirement_period),
+        ),
     )
     if requirement_modelo == Modelo.M303.value and iva_history_repository is not None:
         state = iva_history_repository.load_period(requirement_filing_year, requirement_period)

@@ -18,6 +18,7 @@ from ....adapters.outbound.aeat.sede import (
     ObservedCasillaValue,
 )
 from ....adapters.outbound.aeat.sede._declarations import _observed_casillas_from_submitted_file
+from ....core import Period
 from ....core.external_constants import load_external_constants
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
@@ -70,7 +71,7 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
         )
 
         assert calculation_key == "303:2026:1T"
-        assert repository.load_observation("303", 2026, "1T") is not None
+        assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is not None
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
         assert prefill.prefilled[0].source_modelo == "303"
         assert prefill.prefilled[0].source_periods == ("1T",)
@@ -134,7 +135,7 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
             captured_at=_CAPTURED_AT,
         )
 
-        assert repository.load_observation("303", 2026, "1T") is None
+        assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is None
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("13.22")}
         assert prefill.prefilled[0].source_modelo == "303"
         assert prefill.prefilled[0].source_filing_year == 2026
@@ -213,7 +214,7 @@ def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(
             ),
         )
 
-        stored = repository.load_observation("303", 2026, "1T")
+        stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
 
         assert stored is not None
         assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("1200.00")
@@ -279,7 +280,7 @@ def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: P
         )
 
         history = IvaCompensationHistoryRepository().load_period(2026, "1T")
-        stored = CalculationObservationRepository().load_observation("303", 2026, "1T")
+        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
 
         assert key == "303:2026:1T"
         assert history is not None
