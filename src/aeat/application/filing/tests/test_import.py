@@ -41,53 +41,55 @@ def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
     assert casilla_19.id == "19"
 
 
-def test_normalise_period_returns_core_period_for_printed_bare_token(
+def test_normalise_period_returns_supported_typed_period(
     schema_provider: RegistrySchemaProvider,
 ) -> None:
+    expected = Period.from_year_and_code(2026, "1T")
     period = _normalise_period(
         modelo="130",
         ejercicio="2026",
-        raw_period="1T",
+        raw_period=expected,
         schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
     )
-    assert period == Period.from_year_and_code(2026, "1T")
+    assert period == expected
     assert period.model_dump() == {"filing_year": 2026, "code": "1T"}
 
 
-def test_normalise_period_rejects_combined_fixture_token_at_import_boundary(
+def test_normalise_period_rejects_typed_period_year_mismatch(
     schema_provider: RegistrySchemaProvider,
 ) -> None:
-    with pytest.raises(ModeloImportError, match=r"period token '2026Q1'"):
+    with pytest.raises(ModeloImportError, match=r"cannot canonicalise period 2025 1T"):
         _normalise_period(
             modelo="130",
             ejercicio="2026",
-            raw_period="2026Q1",
+            raw_period=Period.from_year_and_code(2025, "1T"),
             schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
         )
 
 
-def test_normalise_period_wraps_registry_tokens_outside_core_period(
+def test_normalise_period_rejects_period_not_declared_by_registry(
     schema_provider: RegistrySchemaProvider,
 ) -> None:
-    with pytest.raises(ModeloImportError, match=r"core Period"):
+    with pytest.raises(ModeloImportError, match=r"period token '1T' is not declared"):
         _normalise_period(
-            modelo="036",
-            ejercicio="2025",
-            raw_period="alta",
+            modelo="390",
+            ejercicio="2021",
+            raw_period=Period.from_year_and_code(2021, "1T"),
             schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
         )
 
 
-def test_normalise_period_maps_annual_year_only_receipt_to_annual_token(
+def test_normalise_period_accepts_supported_annual_typed_period(
     schema_provider: RegistrySchemaProvider,
 ) -> None:
+    expected = Period.from_year_and_code(2021, "0A")
     period = _normalise_period(
         modelo="390",
         ejercicio="2021",
-        raw_period="2021",
+        raw_period=expected,
         schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
     )
-    assert period == Period.from_year_and_code(2021, "0A")
+    assert period == expected
 
 
 def test_submission_record_preserves_typed_draft_period(
