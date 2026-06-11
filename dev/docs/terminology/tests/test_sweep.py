@@ -154,7 +154,9 @@ def test_real_sweep_maps_prorrata_to_its_grounding_targets() -> None:
 
     # A concept card target deep-links to the glossary anchor.
     concept_targets = [t for t in targets if t.kind is SearchRecordKind.CONCEPT]
-    assert any("glossary.html#term-prorrata" in t.target for t in concept_targets), "no prorrata concept card target"
+    assert any("_generated/glossary.html#term-prorrata" in t.target for t in concept_targets), (
+        "no prorrata concept card target"
+    )
 
     # Targets are ranked (descending weight).
     weights = [t.ranking_weight for t in targets]

@@ -70,7 +70,7 @@ def test_concept_records_funnel_into_search_records() -> None:
     assert len(materialised.records) == materialised.concepts
     sample = next(r for r in materialised.records if r.metadata.concept_id == "prorrata")
     assert sample.kind.value == "concept"
-    assert sample.target.startswith("glossary.html#term-")
+    assert sample.target == "_generated/glossary.html#term-prorrata"
     assert sample.ranking_weight == 1.0  # concept base weight (tier one)
     assert "es" in {lang.value for lang in sample.descriptions}
 
