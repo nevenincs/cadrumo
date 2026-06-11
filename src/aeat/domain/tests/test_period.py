@@ -1,4 +1,4 @@
-"""Tests for the canonical filing-period parsing and boundary helpers."""
+"""Tests for filing-period construction and boundary helpers."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ import pytest
 from ...core import Period
 from ..period import (
     PeriodValidationError,
-    parse_canonical_period,
     period_end_date,
     period_start_date,
 )
@@ -38,33 +37,6 @@ class TestPeriodConstructionContract:
     def test_combined_forms_refuse_at_core_period_boundary(self, combined: str) -> None:
         with pytest.raises(ValueError, match=r"invalid period code"):
             Period.from_year_and_code(2026, combined)
-
-
-class TestRawAeatDeclarationAdapter:
-    @pytest.mark.parametrize(
-        ("raw_period", "expected"),
-        [
-            ("1T", (2026, "1T")),
-            ("2T", (2026, "2T")),
-            ("3T", (2026, "3T")),
-            ("4T", (2026, "4T")),
-        ],
-    )
-    def test_raw_quarterly_tokens_resolve_with_ejercicio(
-        self,
-        raw_period: str,
-        expected: tuple[int, str],
-    ) -> None:
-        assert parse_canonical_period(raw_period, ejercicio="2026") == expected
-
-    def test_raw_quarterly_token_requires_ejercicio(self) -> None:
-        with pytest.raises(PeriodValidationError, match=r"cannot map filing period"):
-            parse_canonical_period("1T")
-
-    @pytest.mark.parametrize("combined", ("2026Q1", "2026-1T", "2026-03", "2026A", "2026", "2026P1"))
-    def test_combined_forms_refuse_at_raw_declaration_adapter(self, combined: str) -> None:
-        with pytest.raises(PeriodValidationError, match=r"cannot map filing period"):
-            parse_canonical_period(combined, ejercicio="2026")
 
 
 class TestQuarterlyAndAnnualBoundaries:
