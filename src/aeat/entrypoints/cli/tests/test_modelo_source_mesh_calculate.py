@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.transactions import (
@@ -184,7 +185,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2026,
-            target_period="1T",
+            target_period=Period.from_year_and_code(2026, "1T"),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
@@ -250,7 +251,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2026,
-            target_period="1T",
+            target_period=Period.from_year_and_code(2026, "1T"),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,

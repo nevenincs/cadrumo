@@ -23,6 +23,7 @@ from typing import Final, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...core import Period
 from ...core.time import now
 from ._errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
@@ -102,7 +103,7 @@ class IvaCompensationReconciliationDecision(BaseModel):
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     target_year: int = Field(ge=2000, le=2099)
-    target_period: str = Field(min_length=1, max_length=8)
+    target_period: Period
     selected_authority: IvaCompensationAuthority
     selected_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     wallet_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -118,6 +119,8 @@ class IvaCompensationReconciliationDecision(BaseModel):
 
     @model_validator(mode="after")
     def _validate_selected_amount(self) -> IvaCompensationReconciliationDecision:
+        if self.target_period.filing_year != self.target_year:
+            raise ValueError("target_period.filing_year must match target_year")
         if self.selected_authority != "missing" and self.selected_amount is None:
             raise ValueError("selected_amount is required unless selected_authority is 'missing'")
         if self.selected_authority == "missing" and self.selected_amount is not None:
@@ -182,7 +185,7 @@ class LocalIvaCompensationRecurrenceProtocol(Protocol):
 class _ReconciliationContext:
     taxpayer_nif: str
     target_year: int
-    target_period: str
+    target_period: Period
     wallet_amount: Decimal | None
     local_recurrence_amount: Decimal | None
     override: IvaCompensationOverride | None
@@ -206,18 +209,19 @@ def reconcile_iva_compensation_wallet(
     is_first_iva_period: bool = False,
 ) -> IvaCompensationReconciliationDecision:
     """Return the :class:`IvaCompensationReconciliationDecision` for casilla ``110``."""
+    target_filing_period = Period.from_year_and_code(target_year, target_period)
     if wallet is not None:
         validate_wallet_matches_snapshot(
             wallet,
             taxpayer_nif=taxpayer_nif,
             target_year=target_year,
-            target_period=target_period,
+            target_period=target_filing_period,
         )
     when = decided_at if decided_at is not None else now()
     ctx = _ReconciliationContext(
         taxpayer_nif=taxpayer_nif,
         target_year=target_year,
-        target_period=target_period,
+        target_period=target_filing_period,
         wallet_amount=wallet.total_pending if wallet is not None else None,
         local_recurrence_amount=local_recurrence_amount,
         override=override,
@@ -553,14 +557,14 @@ def validate_wallet_matches_snapshot(
     *,
     taxpayer_nif: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
 ) -> None:
     """Refuse a wallet observation that does not match the requested Modelo 303 target."""
     if wallet.taxpayer_nif != taxpayer_nif:
         raise IvaCompensationReconciliationInputError(
             "IVA wallet observation taxpayer does not match the requested taxpayer",
         )
-    if wallet.target_year != target_year or wallet.target_period != target_period:
+    if wallet.target_year != target_year or wallet.target_period != target_period.registry_token:
         raise IvaCompensationReconciliationInputError(
             "IVA wallet observation target does not match the Modelo 303 snapshot",
         )

@@ -764,7 +764,7 @@ def _iva_wallet_decision_covers_cross_period_dependency(
         return False
     if getattr(decision, "target_year", None) != verdict.target_filing_year:
         return False
-    if getattr(decision, "target_period", None) != verdict.target_period.registry_token:
+    if getattr(decision, "target_period", None) != verdict.target_period:
         return False
     if getattr(decision, "selected_amount", None) is None:
         return False

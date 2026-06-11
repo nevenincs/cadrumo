@@ -190,7 +190,7 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
-        target_period=period,
+        target_period=Period.from_year_and_code(2026, period),
         selected_authority="missing",
         selected_amount=None,
         wallet_amount=Decimal("1200.00"),
@@ -214,7 +214,7 @@ def _filed_history_only_wallet_decision(
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
-        target_period=period,
+        target_period=Period.from_year_and_code(2026, period),
         selected_authority="filed_history",
         selected_amount=Decimal("800.00"),
         wallet_amount=None,
@@ -237,7 +237,7 @@ def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompen
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
-        target_period=period,
+        target_period=Period.from_year_and_code(2026, period),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),
@@ -284,7 +284,9 @@ def _seed_modelo_303_1t_clean_state(
         {
             casilla_id
             for requirement in cross_period_dependency_requirements(snapshot)
-            if requirement.source_modelo == "303" and requirement.filing_year == 2026 and requirement.period == "1T"
+            if requirement.source_modelo == "303"
+            and requirement.filing_year == 2026
+            and requirement.period == Period.from_year_and_code(2026, "1T")
             for casilla_id in requirement.source_casillas
         },
     )
@@ -428,7 +430,7 @@ def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locato
     decision = IvaCompensationReconciliationDecision(
         taxpayer_nif="synthetic-sensitive-marker",
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),
@@ -636,7 +638,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
@@ -800,7 +802,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         report = verify_modelo_revision(
@@ -837,7 +839,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-file.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):

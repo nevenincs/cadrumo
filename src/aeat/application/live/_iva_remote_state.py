@@ -355,7 +355,7 @@ def _authority_decision_row(decision: _IvaCompensationReconciliationDecision) ->
     return IvaWalletAuthorityDecisionRow(
         taxpayer_ref=_taxpayer_ref(decision.taxpayer_nif),
         target_year=decision.target_year,
-        target_period=decision.target_period,
+        target_period=decision.target_period.registry_token,
         selected_authority=decision.selected_authority,
         selected_amount=_decimal_text(decision.selected_amount),
         wallet_amount=_decimal_text(decision.wallet_amount),
@@ -503,7 +503,6 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
     loaded_decision = decision_repo.load_decision(
         decision.taxpayer_nif,
-        decision.target_year,
         decision.target_period,
     )
     if loaded_decision != decision:
@@ -515,7 +514,7 @@ def persist_and_reconcile_iva_compensation_wallet(
         target_year=reloaded.target_year,
         target_period=reloaded.target_period,
         observation_path=str(path),
-        decision_key=_iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period),
+        decision_key=_iva_wallet_decision_key(decision.taxpayer_nif, decision.target_period),
         row_count=len(reloaded.rows),
         total_pending=str(reloaded.total_pending),
         selected_authority=decision.selected_authority,

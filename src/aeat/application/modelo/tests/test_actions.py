@@ -275,7 +275,7 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
 
     decision = IvaCompensationReconciliationDecision(
         target_year=2026,
-        target_period="1T",
+        target_period=Period.from_year_and_code(2026, "1T"),
         taxpayer_nif="12345678Z",
         divergence="wallet_missing",
         blocked=True,
