@@ -161,7 +161,7 @@ The coordinator authors core.Period in core/_period.py composing filing_year + S
 
 Delegate: re-seat application/aggregation Period on core.Period (drop the raw combined-string field, delegate from_year_and_token), preserving the live ledger-filter parity the one-aggregation-path rule protects.
 
-- [ ] `W02.P07.S21` - Re-seat application/aggregation Period on core.Period: drop the raw combined-string field, delegate from_year_and_token to core.from_year_and_code, and prove the live ledger-filter parity is preserved; `src/aeat/application/aggregation/_models.py`.
+- [x] `W02.P07.S21` - Re-seat application/aggregation Period on core.Period: drop the raw combined-string field, delegate from_year_and_token to core.from_year_and_code, and prove the live ledger-filter parity is preserved; `src/aeat/application/aggregation/_models.py`.
 
 ### Phase `W02.P08` - Roll out core.Period across application schema/model fields (sonnet swarm)
 
@@ -184,7 +184,7 @@ Delegate: hydrate core.Period at the registry loader boundary and migrate every 
 Delegate: replace the workflow_period_for_work_unit combined-token contract and the _resume / _workflow_gate consumers with core.Period, migrating the ~30 dependent test assertions off 2026Q1/2026-1T.
 
 - [ ] `W02.P10.S27` - Replace the workflow_period_for_work_unit combined-token contract and the _resume / _workflow_gate consumers with core.Period, migrating every dependent test assertion off 2026Q1 / 2026-1T; `src/aeat/application/modelo/_workflow_gate.py, src/aeat/application/workflow/_resume.py`.
-- [ ] `W02.P10.S32` - DISCOVERY (recon): P09 registry deadline-window and P10 WorkflowEngine are INSEPARABLY COUPLED via _deadline_window_period_for_registry_period (workflow_gate.py:47-72) which returns str(window.period) as the workflow period; plus ModeloDeadline.period and RegistrySnapshot.period are additional sites; ~125-130 test lines across ~30 files — migrate as ONE atomic dispatch, not parallel; `src/aeat/application/modelo/_workflow_gate.py, src/aeat/application/workflow, src/aeat/domain/deadlines, src/aeat/domain/calculations/registry`.
+- [ ] `W02.P10.S32` - DISCOVERY (recon): P09 registry deadline-window and P10 WorkflowEngine are INSEPARABLY COUPLED via _deadline_window_period_for_registry_period (workflow_gate.py:47-72) which returns str(window.period) as the workflow period; `plus ModeloDeadline.period and RegistrySnapshot.period are additional sites; ~125-130 test lines across ~30 files — migrate as ONE atomic dispatch, not parallel; `src/aeat/application/modelo/_workflow_gate.py, src/aeat/application/workflow, src/aeat/domain/deadlines, src/aeat/domain/calculations/registry`.
 
 ### Phase `W02.P11` - Cleanup: delete dead regexes, reconcile dialect, final gate (sonnet + coordinator verify)
 
