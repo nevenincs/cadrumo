@@ -462,3 +462,21 @@ files; the work-unit history/addressing and amend/import suites passed with
 `50 passed`; and CLI import smoke printed `OK`. A broader natural-key CLI file
 still contains an unrelated existing calculate-path failure around source-bound
 casilla override refusal.
+
+## PERIOD-027 | INFO | No findings in modelo export typed-header cleanup
+
+Review of the modelo export header cleanup found no remaining issues. The first
+review pass caught that `Period.start_date` raises for instalment tokens before
+a `None` guard can run; the implementation now keeps `_compose_export_headers`
+typed while routing non-date-span instalment date derivation through the
+existing bare-token date-boundary helper.
+
+The review checked that export no longer rebuilds a `Period` from
+`(filing_year, registry_token)` when the `WorkUnit` already carries the typed
+value, and that the header composer accepts a `core.Period` instead of separate
+raw year/token arguments. A regression test covers Modelo 202 `2P` export
+header dates so this does not collapse back to the core date-span accessor.
+
+Verification after the change: focused modelo export suites passed with
+`20 passed`; core/domain Period gates passed with `31 passed`; and CLI import
+smoke printed `OK`.
