@@ -582,7 +582,8 @@ def _build_modelo_readiness(
     service = ProfilePreflightService(schema=_shared_schema())
     reports: list[ProjectionModeloReadiness] = []
     for request in requests:
-        period_token = request.period.registry_token if request.period is not None else ""
+        readiness_period = _ledger_period_for_modelo_readiness(request)
+        period_token = readiness_period.registry_token
         profile_report = service.report(
             record=record,
             modelo=request.modelo,
@@ -594,7 +595,7 @@ def _build_modelo_readiness(
         if _modelo_requires_ledger_preflight(request):
             ledger_report = preflight_ledger_tax_readiness(
                 bucket_id=pointer.bucket_id,
-                period=_ledger_period_for_modelo_readiness(request),
+                period=readiness_period,
             )
         # Bridge profile_report.period (bare registry token str) back to a
         # typed Period using the report's own filing_year.
@@ -640,7 +641,7 @@ def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
     from ..core.resources import resources
     from ..domain.calculations.registry import RegistrySnapshotError
 
-    period_token = request.period.registry_token if request.period is not None else ""
+    period_token = _ledger_period_for_modelo_readiness(request).registry_token
     try:
         snapshot = resources().modelos.authority.snapshot(
             request.modelo,

@@ -316,6 +316,24 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
 
 
+def test_modelo_readiness_without_period_uses_annual_period() -> None:
+    bucket_id = _register_active_profile()
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="303",
+                revision_id="2009-y-siguientes",
+                filing_year=2026,
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.profile_id == bucket_id
+    assert readiness.period == Period.from_year_and_code(2026, "0A")
+
+
 def test_missing_registry_snapshot_ledger_preflight_skip_is_debug_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
