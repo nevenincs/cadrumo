@@ -115,6 +115,16 @@ def test_enumerate_vocabulary_dedupes_identical_query_strings() -> None:
 
 
 @pytest.mark.unit
+def test_enumerate_vocabulary_uses_only_shipped_term_statuses() -> None:
+    """Forbidden/deprecated term rows do not own shipped query metadata."""
+    queries = enumerate_query_vocabulary(concept_ids={"casilla"})
+    by_text = {q.query: q for q in queries}
+
+    assert by_text["box"].language is OutputLanguage.EN
+    assert by_text["box"].concept_id == "casilla"
+
+
+@pytest.mark.unit
 def test_enumerate_full_vocabulary_is_a_bounded_closed_set() -> None:
     """The full 95-concept vocabulary is a finite, deduplicated closed set."""
     queries = enumerate_query_vocabulary()

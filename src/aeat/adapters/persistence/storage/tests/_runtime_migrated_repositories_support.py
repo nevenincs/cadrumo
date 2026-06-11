@@ -261,7 +261,7 @@ def _workflow_state(label: str) -> WorkflowState:
             f"303:{period.filing_year}:{period.registry_token}": DeclaracionPointer(
                 modelo="303",
                 period=period,
-                draft_id="d" * 64,
+                draft_id=(label.replace("-", "")[-1:] or "d") * 64,
                 status="BORRADOR",
                 updated_at=now,
             ),
@@ -487,7 +487,7 @@ def _justificante(tmp_path: Path, label: str) -> Justificante:
     return Justificante(
         csv=csv,
         modelo="303",
-        period="1T",
+        period=_Period.from_year_and_code(2026, "1T"),
         ejercicio="2026",
         presentation_id=None,
         presented_at=datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC),
@@ -504,7 +504,7 @@ def _justificante(tmp_path: Path, label: str) -> Justificante:
 def _work_unit(bucket_id: str, label: str) -> WorkUnit:
     now = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
     modelo = ModeloCode("303")
-    period = "1T"
+    period = _Period.from_year_and_code(2026, "1T")
     revision_id = f"revision-{label}"
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -568,7 +568,7 @@ def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogu
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
         filing_year=2026,
-        period="1T",
+        period=_Period.from_year_and_code(2026, "1T"),
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         notes=f"runtime migrated filing record {label}",
@@ -729,7 +729,7 @@ def _borrador_snapshot(bucket_id: str, label: str) -> Borrador100Snapshot:
         bucket_id=bucket_id,
         modelo="100",
         filing_year=2026,
-        period="0A",
+        period=_Period.from_year_and_code(2026, "0A"),
         captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         source_url=aeat_url("sede", BORRADOR_STORAGE_PATH_FIXTURE),
         state=SnapshotLifecycleState.ACTIVE,

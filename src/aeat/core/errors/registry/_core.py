@@ -92,6 +92,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core._period.PeriodError",
+        ErrorCode(
+            code="INTEGRITY_PERIOD",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_period",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.errors.ProfileAnswerTypeError",
         ErrorCode(
             code="INTEGRITY_PROFILE_ANSWER_TYPE",
@@ -339,6 +350,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_LOCALE_MANAGER",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_locale_manager",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.locales._modelo_manager.ModeloLocaleError",
+        ErrorCode(
+            code="FAIL_MODELO_LOCALE_MANAGER",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_modelo_locale_manager",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

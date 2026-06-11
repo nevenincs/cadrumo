@@ -384,7 +384,7 @@ def _classify_metadata_match(
         metadata.modelo_id == snapshot.modelo.id
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
-        and metadata.period == Period.from_year_and_code(snapshot.filing_year, snapshot.period)
+        and metadata.period == Period.from_year_and_code(snapshot.filing_year, snapshot.period).registry_token
         and metadata.registry_sha == registry_sha(snapshot)
     )
     return (MetadataMatchState.MATCHES if matches else MetadataMatchState.STALE), metadata

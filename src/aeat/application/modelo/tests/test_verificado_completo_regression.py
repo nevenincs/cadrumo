@@ -92,7 +92,7 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
-def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, period: str) -> None:
+def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, period: Period) -> None:
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
     JustificanteRepository().save(
         Justificante(
@@ -145,19 +145,21 @@ def _seed_clean_cross_period_sources_for_m130(
         source_snapshot = resources().modelos.authority.snapshot(
             requirement.source_modelo,
             filing_year=requirement.filing_year,
-            period=requirement.period,
+            period=requirement.period.registry_token,
         )
         source_work_unit = create_work_unit(
             bucket_id=work_unit.bucket_id,
             modelo=requirement.source_modelo,
             filing_year=requirement.filing_year,
-            period=Period.from_year_and_code(requirement.filing_year, requirement.period),
+            period=requirement.period,
             revision_id=source_snapshot.revision.id,
             repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
             clock=_T0,
         )
-        evidence_reference_id = f"JUST-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period}"
+        evidence_reference_id = (
+            f"JUST-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period.registry_token}"
+        )
         _persist_justificante_metadata(
             evidence_reference_id,
             modelo=requirement.source_modelo,
@@ -181,7 +183,7 @@ def _seed_clean_cross_period_sources_for_m130(
             RegistryModeloObservation(
                 modelo=requirement.source_modelo,
                 filing_year=requirement.filing_year,
-                period=requirement.period,
+                period=requirement.period.registry_token,
                 observations=tuple(
                     CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in values.items()
                 ),

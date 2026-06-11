@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "description": "Standing held-out operator-query sample for the compiled terminology relevance mapping. Cases are curated outside the sweep runner and are used only for evaluation/adjudication.",
+  "cases": [
+    {
+      "query": "regla de prorrata",
+      "concept_id": "prorrata",
+      "expected_record_ids": [
+        "legal:ley-37-1992:art-104",
+        "legal:ley-37-1992:art-102",
+        "concept:prorrata-especial"
+      ],
+      "source": "Golden prorrata query captured from the live RAG sweep fixture and retained as the legal-grounding worked example."
+    },
+    {
+      "query": "pro rata",
+      "concept_id": "prorrata",
+      "expected_record_ids": [
+        "concept:prorrata",
+        "legal:ley-37-1992:art-104",
+        "legal:ley-37-1992:art-102"
+      ],
+      "source": "English preferred Handbook term for the prorrata concept, held out from tuning decisions."
+    },
+    {
+      "query": "box",
+      "concept_id": "casilla",
+      "expected_record_ids": [
+        "concept:casilla"
+      ],
+      "source": "English preferred Handbook term for the casilla concept, retained after forbidden Spanish metadata was removed."
+    },
+    {
+      "query": "modelo 303",
+      "concept_id": "modelo-303",
+      "expected_record_ids": [
+        "concept:modelo-303"
+      ],
+      "source": "Operator-facing model identifier query from the Handbook."
+    },
+    {
+      "query": "recargo de equivalencia",
+      "concept_id": "recargo-equivalencia",
+      "expected_record_ids": [
+        "concept:recargo-equivalencia"
+      ],
+      "source": "Operator-facing IVA regime term from the Handbook."
+    }
+  ]
+}

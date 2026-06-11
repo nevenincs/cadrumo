@@ -33,7 +33,7 @@ import pytest
 from aeat.core.config import PROJECT_ROOT
 from aeat.domain.calculations.registry import bundled_authority
 from aeat.terminology import load_terminology_handbook
-from dev.docs.terminology._sweep import SweepResult
+from dev.docs.terminology._sweep import SweepResult, enumerate_query_vocabulary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -59,6 +59,31 @@ def test_every_mapped_concept_is_enrolled(relevance: SweepResult) -> None:
     mapped = {mapping.concept_id for mapping in relevance.mappings}
     unknown = sorted(mapped - enrolled)
     assert not unknown, f"relevance data references non-enrolled concept(s): {unknown}"
+
+
+def test_every_mapping_query_is_shippable_vocabulary(relevance: SweepResult) -> None:
+    """Every committed mapping comes from preferred/admitted terms or hidden forms.
+
+    This is the synonym-ratification safety gate: forbidden/deprecated rows and
+    unratified candidates must not appear in the shipped relevance data.
+    """
+    eligible = {(query.concept_id, query.query.casefold()): query.language for query in enumerate_query_vocabulary()}
+    leaks: list[str] = []
+    wrong_language: list[str] = []
+    for mapping in relevance.mappings:
+        key = (mapping.concept_id, mapping.query.casefold())
+        expected_language = eligible.get(key)
+        if expected_language is None:
+            leaks.append(f"{mapping.concept_id}:{mapping.query}")
+            continue
+        if mapping.language is not expected_language:
+            wrong_language.append(
+                f"{mapping.concept_id}:{mapping.query} is {mapping.language.value}, expected {expected_language.value}",
+            )
+    assert not leaks, "relevance data contains non-shippable query rows:\n" + "\n".join(f"  - {row}" for row in leaks)
+    assert not wrong_language, "relevance data query language drift:\n" + "\n".join(
+        f"  - {row}" for row in wrong_language
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -100,9 +125,7 @@ def _target_resolves(target: str, surfaces: dict[str, object]) -> bool:
     assert isinstance(permalinks, set)
 
     # Concept card anchor: _generated/glossary.html#term-<concept_id>
-    concept_match = re.fullmatch(
-        r"_generated/glossary\.html#term-(?P<id>[a-z0-9-]+)", target
-    )
+    concept_match = re.fullmatch(r"_generated/glossary\.html#term-(?P<id>[a-z0-9-]+)", target)
     if concept_match:
         return concept_match.group("id") in concept_ids
 
@@ -176,16 +199,12 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: dict[str, ob
     concept / casilla / module is reported as unresolved, so the gate cannot
     pass on stale data.
     """
-    assert not _target_resolves(
-        "_generated/glossary.html#term-this-concept-does-not-exist", build_surfaces
-    )
+    assert not _target_resolves("_generated/glossary.html#term-this-concept-does-not-exist", build_surfaces)
     assert not _target_resolves("search.html?q=000+99999", build_surfaces)
     assert not _target_resolves("api/aeat.module.that.is.not.real.html", build_surfaces)
     # A real one resolves (sanity: the check is not refusing everything).
     real_concept = next(iter(build_surfaces["concept_ids"]))  # type: ignore[arg-type]
-    assert _target_resolves(
-        f"_generated/glossary.html#term-{real_concept}", build_surfaces
-    )
+    assert _target_resolves(f"_generated/glossary.html#term-{real_concept}", build_surfaces)
 
 
 # ---------------------------------------------------------------------------
@@ -238,6 +257,4 @@ def test_prorrata_maps_to_grounding_targets(relevance: SweepResult) -> None:
     all_targets = [t.target for m in prorrata for t in m.targets]
     assert any("_generated/glossary.html#term-prorrata" in t for t in all_targets) or any(
         "boe.es" in t for t in all_targets
-    ), (
-        "prorrata maps to neither its concept card nor a BOE article"
-    )
+    ), "prorrata maps to neither its concept card nor a BOE article"

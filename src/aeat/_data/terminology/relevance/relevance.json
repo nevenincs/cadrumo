@@ -75,7 +75,7 @@
     {
       "query": "box",
       "concept_id": "casilla",
-      "language": "es",
+      "language": "en",
       "targets": [],
       "dropped_count": 0,
       "collapsed_count": 0,
