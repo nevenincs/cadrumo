@@ -26,6 +26,7 @@ from ._errors import (
 )
 from ._models import Attachment, AttachmentCatalogue
 from ._protocols import AttachmentStoreProtocol
+from ._service import add_attachment, add_attachment_bytes, list_attachments, load_attachment
 
 __all__ = [
     "Attachment",
@@ -38,4 +39,8 @@ __all__ = [
     "AttachmentStoreProtocol",
     "AttachmentValidationError",
     "DocumentLinkSource",
+    "add_attachment",
+    "add_attachment_bytes",
+    "list_attachments",
+    "load_attachment",
 ]

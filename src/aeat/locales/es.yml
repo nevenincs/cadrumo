@@ -2605,12 +2605,12 @@ cli:
       taxable_base_help: Importe de base imponible
     doclink:
       actor_help: Etiqueta del operador.
-      help: Registra un enlace a documento de Gmail/Drive/URL en una fila de libro
-        mayor (nunca se descarga).
+      help: 'Descarga un enlace de documento de Drive y guarda sus bytes como evidencia cifrada en una fila del libro.'
       id_help: Identificador de transacción del libro mayor.
       note_help: Nota opcional.
       reference_help: Referencia del enlace al documento.
       source_help: 'Origen del enlace: gmail, google_drive o url.'
+      refused: 'No se puede descargar el documento de %{source} para %{reference}%{scope_hint}: la evidencia debe contener los bytes cifrados del documento, y un enlace nunca se guarda por sí solo. Descarga el documento y adjúntalo con ''aeat app ledger attach --attachment-id ...'', o concede el permiso de Google requerido e inténtalo de nuevo.'
     errors:
       business_pct_out_of_range: La proporción de uso profesional %{value} (= %{percent})
         está fuera de rango. Introduce una proporción entre 0 y 1, p. ej. 0.5 para

@@ -79,7 +79,7 @@ def _import_corpus() -> int:
 def _import_bbva() -> None:
     """Lighter import (single business account) for row-targeted journeys."""
     result = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"]
+        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
 
@@ -107,7 +107,7 @@ def test_reimport_is_idempotent_dedups() -> None:
     first = len(_list_rows())
     # Re-import one file; fingerprint dedup must skip every row.
     result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(_CORPUS / _FILES[0]), "--provider", "csv"]
+        app, ["--format", "json", "app", "ledger", "import", str(_CORPUS / _FILES[0]), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -375,7 +375,7 @@ def test_ratios_eligible_set_list_validate() -> None:
 # --- Journey 7: filter and search via review typed spec ---------------------
 def test_review_filter_by_period_and_status() -> None:
     _import_bbva()
-    by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025-1T"])
+    by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
     assert by_period.exit_code == 0, by_period.output
     by_status = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "status=pending"])
     assert by_status.exit_code == 0, by_status.output
@@ -740,7 +740,7 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
     old_id = target["transaction_id"]
 
     res = _RUNNER.invoke(
-        app, ["app", "ledger", "update", "--id", old_id, "--description", "Material oficina (corregido)"]
+        app, ["app", "ledger", "update", "--id", old_id, "--description", "Material oficina (corregido)"],
     )
     assert res.exit_code == 0, res.output
 
@@ -815,7 +815,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     assert bucket_id is not None
 
     work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id, modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes"
+        bucket_id=bucket_id, modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -840,8 +840,8 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
                     updated_at=now,
                     current_calculation_revision_id=revision_id,
                 ),
-            )
-        )
+            ),
+        ),
     )
     CalculationRevisionCatalogueRepository().save(
         CalculationRevisionCatalogue(
@@ -858,9 +858,9 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
                     updated_at=now,
                     verified_at=now,
                     verified_by="operator",
-                )
-            }
-        )
+                ),
+            },
+        ),
     )
 
     refused = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx, "--notes", "tweak"])
@@ -868,15 +868,12 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     assert "finalized modelo" in refused.output.lower() or "modelo" in refused.output.lower()
 
 
-# --- Offline Gmail/Drive document-link metadata ------------------------------------
-def test_doclink_records_drive_link_as_local_evidence_never_fetched() -> None:
-    """A Gmail/Drive/URL link is recorded as local ledger-row evidence without
-    any network fetch: the stored attachment carries the link reference and the
-    row's attachment_ids gains the content-addressed id.
+# --- Drive document-link fetch-and-encrypt-or-refuse -------------------------------
+def test_doclink_refuses_when_document_bytes_are_unreachable() -> None:
+    """A Drive link the app cannot fetch (no connected Google credentials) is
+    refused: evidence must carry encrypted document bytes, so the verb never
+    falls back to storing the bare link, and the row gains no attachment.
     """
-    from ....adapters.persistence.storage.attachment import AttachmentStore
-    from ....domain.attachments._service import load_attachment
-
     _import_bbva()
     rows = _list_rows()
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
@@ -886,19 +883,12 @@ def test_doclink_records_drive_link_as_local_evidence_never_fetched() -> None:
         app,
         ["app", "ledger", "doclink", "--id", tx, "--source", "GOOGLE_DRIVE", "--reference", link, "--note", "ticket"],
     )
-    assert res.exit_code == 0, res.output
+    assert res.exit_code != 0, res.output
 
     catalogue = _active_repo().load()
     txn = catalogue.get(tx)
     assert txn is not None
-    assert txn.attachment_ids, "doclink must bind an attachment id to the row"
-    attachment = load_attachment(AttachmentStore(), txn.attachment_ids[0])
-    # The link reference is recorded verbatim; the payload is the link itself
-    # (mime text/uri-list) — proof the remote document was never fetched.
-    assert attachment.source_reference == link
-    assert attachment.source.value == "GOOGLE_DRIVE"
-    assert attachment.mime_type == "text/uri-list"
-    assert attachment.notes == "ticket"
+    assert not txn.attachment_ids, "a refused doclink must not bind any attachment to the row"
 
 
 def test_doclink_refuses_non_link_source(tmp_path: Path) -> None:
@@ -988,7 +978,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     )
     assert cls_biz.exit_code == 0, cls_biz.output
     cls_per = _RUNNER.invoke(
-        app, ["app", "ledger", "classify", "--id", per_child.transaction_id, "--classification", "PERSONAL"]
+        app, ["app", "ledger", "classify", "--id", per_child.transaction_id, "--classification", "PERSONAL"],
     )
     assert cls_per.exit_code == 0, cls_per.output
 
@@ -1052,7 +1042,7 @@ def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
     xlsx_path = tmp_path / "bbva.xlsx"
     _xlsx_mirror_of_csv(csv_path, xlsx_path)
     reimport = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"]
+        app, ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"],
     )
     assert reimport.exit_code == 0, reimport.output
     # Cross-format re-import of identical rows dedups to zero new rows.
