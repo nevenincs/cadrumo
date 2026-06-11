@@ -272,6 +272,8 @@ ignore_imports =
     aeat.application.ledger.tests.test_business_operation_invoice -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_evidence -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_evidence -> aeat.tests.secure_sql
+    aeat.application.ledger.tests.test_llm_evidence_split -> aeat.adapters.persistence.storage.sql
+    aeat.application.ledger.tests.test_llm_evidence_split -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_merge -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_merge -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_preflight -> aeat.adapters.persistence.storage.sql
