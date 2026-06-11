@@ -8,7 +8,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.resources import resources
-from ...domain.calculations.registry import RegistryValidationError, parse_modelo_period
 from ...domain.calculations.registry._errors import RegistrySnapshotError
 from ...domain.calculations.registry._temporal import select_revision
 from ...domain.contribuyente import CCAA
@@ -274,40 +273,43 @@ def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddres
 
 def normalize_modelo_work_period(year: int, period: str, *, modelo: str | None = None) -> tuple[int, str]:
     """Normalize an operator-facing period token into registry filing scope."""
-    token = period.strip()
-    if not token:
+    period_text = period.strip()
+    if not period_text:
         raise ModeloWorkPeriodTokenError(year=year, token=period, modelo=modelo, declared_tokens=())
-    lowered = token.lower()
+    lowered = period_text.lower()
     declared = declared_modelo_period_tokens(modelo)
+    if year < 1000 or year > 9999:
+        raise ModeloWorkPeriodTokenError(year=year, token=period_text, modelo=modelo, declared_tokens=declared)
     declared_match = next((declared_token for declared_token in declared if declared_token.lower() == lowered), None)
     if declared_match is not None:
         return year, declared_match
     if lowered in {"annual", "anual", "0a"}:
-        composed = f"{year}"
+        return year, "0A"
     elif lowered in {"q1", "1t", "1"}:
-        composed = f"{year}Q1"
+        return year, "1T"
     elif lowered in {"q2", "2t", "2"}:
-        composed = f"{year}Q2"
+        return year, "2T"
     elif lowered in {"q3", "3t", "3"}:
-        composed = f"{year}Q3"
+        return year, "3T"
     elif lowered in {"q4", "4t", "4"}:
-        composed = f"{year}Q4"
+        return year, "4T"
     elif lowered.isdigit() and len(lowered) == 2:
-        composed = f"{year}-{lowered}"
+        if 1 <= int(lowered) <= 12:
+            return year, lowered
+        raise ModeloWorkPeriodTokenError(year=year, token=period_text, modelo=modelo, declared_tokens=declared)
     elif lowered.isdigit() and len(lowered) == 4:
-        raise ModeloWorkPeriodTokenError(year=year, token=token, modelo=modelo, declared_tokens=declared)
-    else:
-        composed = f"{year}{token}" if token.upper().startswith("Q") else f"{year}-{token}"
-    try:
-        return parse_modelo_period(composed)
-    except RegistryValidationError as exc:
         raise ModeloWorkPeriodTokenError(
             year=year,
-            token=token,
+            token=period_text,
             modelo=modelo,
             declared_tokens=declared,
-            fallback=str(exc),
-        ) from exc
+        )
+    raise ModeloWorkPeriodTokenError(
+        year=year,
+        token=period_text,
+        modelo=modelo,
+        declared_tokens=declared,
+    )
 
 
 def modelo_work_address_from_operator_target(
