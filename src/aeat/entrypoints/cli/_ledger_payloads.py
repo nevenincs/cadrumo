@@ -863,17 +863,20 @@ class RatiosValidateResult(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# P06 — Business operation invoice sub-apps
-# (payable-invoice and collectible-invoice share the same record shape)
+# P06 — Unified business operation invoice sub-app
+# (one ``invoice`` noun-group gated by ``--kind issued|received``; the
+# persisted ``source_kind`` discriminator carries payable / collectible)
 # ---------------------------------------------------------------------------
 
 
 class BusinessInvoiceRecordPayload(OutputSchema):
     """One business-operation invoice record.
 
-    Mirrors ``BusinessOperationInvoiceRecord.model_dump(mode='json')``
+    Mirrors ``BusinessOperationInvoice.model_dump(mode='json')``
     plus the ``bucket_event_ids`` field the CLI appends at the emit
-    site for mutation verbs (defaults to empty for read verbs).
+    site for mutation verbs (defaults to empty for read verbs). The
+    ``source_kind`` field carries the persisted ``payable_invoice`` /
+    ``collectible_invoice`` taxonomy value selected by ``--kind``.
     """
 
     invoice_id: str
@@ -898,61 +901,41 @@ class BusinessInvoiceRecordPayload(OutputSchema):
 
 
 class BusinessInvoiceListResult(OutputSchema):
-    """Shared list result for payable / collectible invoice list verbs."""
+    """Shared list result for the unified invoice ``list`` verb.
+
+    ``rows`` carries both ``payable_invoice`` and ``collectible_invoice``
+    records when ``--kind`` is omitted (each row's own ``source_kind``
+    discriminates the kind), or a single kind when ``--kind`` filters.
+    """
 
     bucket_id: str
     rows: list[dict[str, object]]
     count: int
 
 
-@register_schema("ledger.payable_invoice.add")
-class PayableInvoiceAddResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger payable-invoice add``."""
+@register_schema("ledger.invoice.add")
+class InvoiceAddResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger invoice add``."""
 
 
-@register_schema("ledger.payable_invoice.view")
-class PayableInvoiceViewResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger payable-invoice view``."""
+@register_schema("ledger.invoice.view")
+class InvoiceViewResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger invoice view``."""
 
 
-@register_schema("ledger.payable_invoice.update")
-class PayableInvoiceUpdateResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger payable-invoice update``."""
+@register_schema("ledger.invoice.update")
+class InvoiceUpdateResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger invoice update``."""
 
 
-@register_schema("ledger.payable_invoice.remove")
-class PayableInvoiceRemoveResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger payable-invoice remove``."""
+@register_schema("ledger.invoice.remove")
+class InvoiceRemoveResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger invoice remove``."""
 
 
-@register_schema("ledger.payable_invoice.list")
-class PayableInvoiceListResult(BusinessInvoiceListResult):
-    """JSON envelope for ``aeat app ledger payable-invoice list``."""
-
-
-@register_schema("ledger.collectible_invoice.add")
-class CollectibleInvoiceAddResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger collectible-invoice add``."""
-
-
-@register_schema("ledger.collectible_invoice.view")
-class CollectibleInvoiceViewResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger collectible-invoice view``."""
-
-
-@register_schema("ledger.collectible_invoice.update")
-class CollectibleInvoiceUpdateResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger collectible-invoice update``."""
-
-
-@register_schema("ledger.collectible_invoice.remove")
-class CollectibleInvoiceRemoveResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger collectible-invoice remove``."""
-
-
-@register_schema("ledger.collectible_invoice.list")
-class CollectibleInvoiceListResult(BusinessInvoiceListResult):
-    """JSON envelope for ``aeat app ledger collectible-invoice list``."""
+@register_schema("ledger.invoice.list")
+class InvoiceListResult(BusinessInvoiceListResult):
+    """JSON envelope for ``aeat app ledger invoice list``."""
 
 
 # ---------------------------------------------------------------------------

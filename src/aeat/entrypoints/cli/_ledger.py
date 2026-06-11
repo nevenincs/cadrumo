@@ -64,8 +64,7 @@ from ._common import (
     _tx_repo,
 )
 from ._ledger_business_invoice_cli import (
-    collectible_invoice_app,
-    payable_invoice_app,
+    invoice_app,
     register_business_invoice_commands,
 )
 from ._ledger_classify_cli import ledger_classify_bulk_csv
@@ -101,8 +100,8 @@ _log = get_logger(__name__)
 
 __all__ = [
     "app",
-    "collectible_invoice_app",
     "inventory_app",
+    "invoice_app",
     "ledger_archive",
     "ledger_attach",
     "ledger_doclink",
@@ -111,7 +110,6 @@ __all__ = [
     "ledger_reset",
     "ledger_split",
     "ledger_stash",
-    "payable_invoice_app",
     "ratios_app",
     "rule_app",
 ]
@@ -356,11 +354,13 @@ def ledger_add(
     from ._ledger_payloads import LedgerAddResult
 
     transaction_payload = ledger_transaction_payload(result.transaction)
+    review_status = ledger_transaction_review_status(result.transaction)
     add_result = LedgerAddResult.model_validate(
         {
             "bucket_id": result.ref.bucket_id,
             "transaction_id": result.ref.transaction_id,
             "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
             "transaction": transaction_payload.model_dump(mode="json"),
         },
     )
@@ -373,6 +373,7 @@ def ledger_add(
             f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
             f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
         ],
     )
 
