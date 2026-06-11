@@ -1,0 +1,26 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-total-pagos-a-cuenta"
+target = "0609"
+expression = { op = "sum", args = [
+    { casilla = "0592" },
+    { casilla = "0593" },
+    { casilla = "0594" },
+    { casilla = "0596" },
+    { casilla = "0597" },
+    { casilla = "0598" },
+    { casilla = "0599" },
+    { casilla = "0600" },
+    { casilla = "0601" },
+    { casilla = "0602" },
+    { casilla = "0603" },
+    { casilla = "0604" },
+    { casilla = "0605" },
+    { casilla = "0606" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110"]
+source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "boe-modelo-100-2021-form"
+required_text = ["Modelo 100", "ejercicio 2021"]
