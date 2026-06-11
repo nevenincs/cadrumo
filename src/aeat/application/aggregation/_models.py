@@ -13,7 +13,6 @@ adapters.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
@@ -57,9 +56,6 @@ def _coerce_spending_category(value: object) -> object:
 
 _SpendingCategoryField = Annotated[SpendingCategory, BeforeValidator(_coerce_spending_category)]
 
-_PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:(?:-?Q(?P<quarter>[1-4]))|(?:-(?P<month>0[1-9]|1[0-2])))?$")
-
-
 class Quarter(StrEnum):
     """Calendar quarter token used by aggregation period parsing."""
 
@@ -80,9 +76,9 @@ class PeriodType(StrEnum):
 class Period(BaseModel):
     """Inclusive fiscal period used by transaction aggregation.
 
-    Accepts ``YYYY``, ``YYYY-MM``, ``YYYY-Qn``, or ``YYYYQn`` strings
-    via the :meth:`_parse_raw_period` validator and exposes derived
-    bounds via :attr:`start`, :attr:`end`, and :attr:`period_type`.
+    Accepts separated structured payloads only. Use
+    :meth:`from_year_and_token` for the operator grammar ``(year, token)``
+    pair; combined calendar strings are intentionally refused.
 
     Date-span bounds and registry-token projection delegate to
     :class:`aeat.core.Period`; ``quarter``, ``month``, and
@@ -108,39 +104,12 @@ class Period(BaseModel):
         if isinstance(data, cls):
             return data
         if isinstance(data, str):
-            text = data.strip().upper()
-            match = _PERIOD_RE.fullmatch(text)
-            if match is None:
-                raise AggregationPeriodError(
-                    message=tr("aggregation.period.parse_error"),
-                    context={"period": data},
-                )
-            year = int(match.group("year"))
-            quarter_raw = match.group("quarter")
-            month_raw = match.group("month")
-            if quarter_raw is not None:
-                return {
-                    "year": year,
-                    "quarter": Quarter(f"Q{quarter_raw}"),
-                    "month": None,
-                    "kind": PeriodKind.QUARTERLY,
-                }
-            if month_raw is not None:
-                return {
-                    "year": year,
-                    "quarter": None,
-                    "month": int(month_raw),
-                    "kind": PeriodKind.MONTHLY,
-                }
-            return {
-                "year": year,
-                "quarter": None,
-                "month": None,
-                "kind": PeriodKind.ANNUAL,
-            }
+            raise AggregationPeriodError(
+                message=tr("aggregation.period.parse_error"),
+                context={"period": data},
+            )
         if isinstance(data, Mapping):
             payload = dict(data)
-            payload.pop("raw", None)
             payload.pop("start", None)
             payload.pop("end", None)
             payload.pop("period_type", None)

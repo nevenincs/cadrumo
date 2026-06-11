@@ -31,11 +31,12 @@ from ...domain.calculations.registry import (
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersistenceError
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
-from ._errors import AggregationValidationError, t
+from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._iva_ledger import (
     IvaLedgerAggregationIssue,
     aggregate_iva_ledger_observations_from_repositories,
 )
+from ._models import Period
 from ._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssue,
     aggregate_renta_income_ledger_from_repositories,
@@ -353,29 +354,23 @@ class LedgerRentaIncomeAggregationSourceResolver:
         )
 
 
-def aggregation_period_for_modelo(*, filing_year: int, period: str) -> str:
-    """Translate a canonical ``StandardPeriodCode`` token to an aggregation period token.
+def aggregation_period_for_modelo(*, filing_year: int, period: str) -> Period:
+    """Translate a canonical ``StandardPeriodCode`` token to an aggregation period.
 
     Accepts only the span-shaped canonical AEAT tokens the calc engine and the
-    CLI ledger filter share: quarters (``1T``-``4T`` -> ``YYYYQn``), the annual
-    period (``0A`` -> bare ``YYYY``), and months (``01``-``12`` -> ``YYYY-MM``).
-    The result is the internal calendar string consumed by
-    :meth:`Period.model_validate`, whose :meth:`Period.contains` boundary is the
-    single shared filter authority. Any other token raises
+    CLI ledger filter share: quarters (``1T``-``4T``), the annual period
+    (``0A``), and months (``01``-``12``). The result is the typed aggregation
+    :class:`Period` consumed by ledger filters. Any other token raises
     :class:`AggregationValidationError`.
     """
     normalized = period.strip().upper()
-    quarter_map = {"1T": "Q1", "2T": "Q2", "3T": "Q3", "4T": "Q4"}
-    if normalized in quarter_map:
-        return f"{filing_year}{quarter_map[normalized]}"
-    if normalized == "0A":
-        return str(filing_year)
-    if len(normalized) == 2 and normalized.isdigit():
-        return f"{filing_year}-{normalized}"
-    raise AggregationValidationError(
-        t("aggregation.modelo_bindings.errors.unsupported_period"),
-        context={"filing_year": str(filing_year), "period": period},
-    )
+    try:
+        return Period.from_year_and_token(year=filing_year, token=normalized)
+    except AggregationPeriodError as exc:
+        raise AggregationValidationError(
+            t("aggregation.modelo_bindings.errors.unsupported_period"),
+            context={"filing_year": str(filing_year), "period": period},
+        ) from exc
 
 
 def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:

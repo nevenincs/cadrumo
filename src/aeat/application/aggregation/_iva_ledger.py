@@ -210,7 +210,7 @@ class IvaLedgerAggregation(BaseModel):
 def aggregate_iva_ledger_observations_from_repositories(
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> IvaLedgerAggregation:
     """Load the bucket-local transaction catalogue and project IVA observations.
@@ -265,7 +265,7 @@ def validate_iva_ledger_observations(candidates: Iterable[IvaLedgerCandidate]) -
 def aggregate_iva_ledger_candidates(
     candidates: Iterable[IvaLedgerCandidate],
     *,
-    period: Period | str,
+    period: Period,
 ) -> IvaLedgerAggregation:
     """Project pre-classified IVA candidates into period-scoped observations.
 
@@ -278,7 +278,7 @@ def aggregate_iva_ledger_candidates(
     Returns an :class:`IvaLedgerAggregation` carrying the accepted
     observations and any period-exclusion issues.
     """
-    resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
+    resolved_period = period
     observations: list[IvaLedgerObservation] = []
     issues: list[IvaLedgerAggregationIssue] = []
     for candidate in candidates:
@@ -305,7 +305,7 @@ def aggregate_iva_ledger_candidate_bindings(
     revision: ModeloRevision,
     candidates: Iterable[IvaLedgerCandidate],
     *,
-    period: Period | str,
+    period: Period,
 ) -> dict[str, Decimal]:
     """Validate pre-classified candidates and resolve registry bindings.
 
@@ -313,8 +313,8 @@ def aggregate_iva_ledger_candidate_bindings(
         revision: The :class:`ModeloRevision` used to resolve binding values.
         candidates: Pre-classified :class:`IvaLedgerCandidate` rows to project
             into engine binding channels.
-        period: The aggregation :class:`Period` (or its canonical string form)
-            whose date range bounds the candidate set.
+        period: The aggregation :class:`Period` whose date range bounds the
+            candidate set.
     """
     aggregation = aggregate_iva_ledger_candidates(candidates, period=period)
     if aggregation.issues:
@@ -346,15 +346,15 @@ def aggregate_iva_ledger_candidate_bindings(
 def aggregate_iva_ledger_observations(
     transactions: TransactionCatalogue,
     *,
-    period: Period | str,
+    period: Period,
 ) -> IvaLedgerAggregation:
     """Project classified ledger transaction tax facts into an :class:`IvaLedgerAggregation`.
 
     Args:
         transactions: The :class:`TransactionCatalogue` supplying active ledger entries.
-        period: Filing period; either a :class:`Period` instance or a period code string.
+        period: Filing period as a typed :class:`Period` instance.
     """
-    resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
+    resolved_period = period
     observations: list[IvaLedgerObservation] = []
     prorrata_references: list[ProrrataLedgerReference] = []
     issues: list[IvaLedgerAggregationIssue] = []

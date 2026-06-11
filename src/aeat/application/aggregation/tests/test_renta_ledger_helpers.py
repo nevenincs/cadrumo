@@ -24,7 +24,7 @@ import pytest
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from .._errors import AggregationPeriodError
-from .._models import Period, PeriodKind
+from .._models import Period
 from .._renta_ledger import (
     _bounded_detail,
     _business_amount,
@@ -40,33 +40,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_token(year=year, token=code)
+
+
 def test_resolve_annual_period_accepts_annual_period_instance() -> None:
-    period = Period.model_validate("2025")
+    period = _period(2025, "0A")
 
     resolved = _resolve_annual_period(period)
 
     assert resolved is period
 
 
-def test_resolve_annual_period_coerces_annual_string_to_period() -> None:
-    resolved = _resolve_annual_period("2025")
-
-    assert resolved.year == 2025
-    assert resolved.kind is PeriodKind.ANNUAL
-
-
-def test_resolve_annual_period_rejects_quarterly_period_string() -> None:
-    with pytest.raises(AggregationPeriodError, match=r"annual|period|quarterly|2025Q1"):
-        _resolve_annual_period("2025Q1")
-
-
-def test_resolve_annual_period_rejects_monthly_period_string() -> None:
-    with pytest.raises(AggregationPeriodError, match=r"annual|period|monthly|2025-03"):
-        _resolve_annual_period("2025-03")
-
-
 def test_resolve_annual_period_rejects_already_validated_quarterly_period() -> None:
-    quarterly = Period.model_validate("2025Q2")
+    quarterly = _period(2025, "2T")
 
     with pytest.raises(AggregationPeriodError, match=r"annual|period|quarterly"):
         _resolve_annual_period(quarterly)

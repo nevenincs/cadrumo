@@ -37,12 +37,17 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
+from .. import IvaLedgerAggregationIssueReason, Period, aggregate_iva_ledger_observations
 from .._iva_ledger import casilla_59_base_imponible, casilla_60_base_imponible
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = "2026Q2"
+
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_token(year=year, token=code)
+
+
+_PERIOD = _period(2026, "2T")
 _DE = EUMemberState.DE
 _ES = EUMemberState.ES
 

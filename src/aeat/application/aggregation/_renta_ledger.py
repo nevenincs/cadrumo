@@ -22,8 +22,8 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import Modelo
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
 from ...domain.invoices import (
@@ -174,7 +174,7 @@ class RentaLedgerExpenseAggregation(BaseModel):
 def aggregate_renta_ledger_expenses_from_repositories(
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     profile_year: int | None = None,
@@ -217,7 +217,7 @@ def aggregate_renta_ledger_expenses(
     invoices: InvoiceCatalogue,
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
@@ -229,7 +229,7 @@ def aggregate_renta_ledger_expenses(
         transactions: The :class:`TransactionCatalogue` supplying active ledger entries.
         invoices: The :class:`InvoiceCatalogue` used for invoice-linked deductibility checks.
         bucket_id: Activity bucket identifier for scoping the aggregation.
-        period: Filing period; either a :class:`Period` instance or a period code string.
+        period: Filing period as a typed :class:`Period` instance.
         profile_year: Optional category-profile year override; defaults to the
             ``period.year`` when ``None``.
         usage_ratios: Optional per-:class:`SpendingCategory` business-use ratio
@@ -449,8 +449,8 @@ def _classify_renta_transaction(
         )
 
 
-def _resolve_annual_period(period: Period | str) -> Period:
-    resolved = period if isinstance(period, Period) else Period.model_validate(period)
+def _resolve_annual_period(period: Period) -> Period:
+    resolved = period
     if resolved.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(
             t("aggregation.renta_ledger.errors.annual_period_required"),

@@ -31,12 +31,12 @@ _QUARTER_TOKENS = ("1T", "2T", "3T", "4T")
 
 def _quarter_period(year: int, quarter_index: int) -> Period:
     """Build the Period for quarter ``quarter_index`` (1-4) of ``year``."""
-    return Period.model_validate(f"{year}Q{quarter_index}")
+    return Period.from_year_and_token(year=year, token=f"{quarter_index}T")
 
 
 def _month_period(year: int, month: int) -> Period:
     """Build the Period for ``month`` (1-12) of ``year``."""
-    return Period.model_validate(f"{year}-{month:02d}")
+    return Period.from_year_and_token(year=year, token=f"{month:02d}")
 
 
 # --- Independent calendar oracle (does NOT call Period) -----------------------
