@@ -80,7 +80,7 @@ def test_cast_rationale_marker_present_in_errors_source() -> None:
     Acts as a CI gate: if the cast is removed without removing the rationale
     or if the rationale comment is accidentally deleted, this test fails loudly.
     """
-    source = pathlib.Path(__file__).parent / "_errors.py"
+    source = pathlib.Path(__file__).parent.parent / "_errors.py"
     text = source.read_text(encoding="utf-8")
 
     marker = "CAST-RATIONALE-ERRORS-MEMOISED-WRAPPER"
