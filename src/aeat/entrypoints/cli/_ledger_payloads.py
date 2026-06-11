@@ -520,6 +520,19 @@ class LedgerImportPayload(OutputSchema):
         return cls.model_validate(data)
 
 
+@register_schema("ledger.participation.rebuild")
+class LedgerParticipationRebuildResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger participation rebuild``.
+
+    Reports the outcome of regenerating the transaction participation index from
+    the finalized-revision catalogue.
+    """
+
+    transaction_count: int
+    participation_count: int
+    revision_count: int
+
+
 @register_schema("ledger.track")
 class LedgerTrackResult(OutputSchema):
     """JSON envelope for ``aeat app ledger track``."""

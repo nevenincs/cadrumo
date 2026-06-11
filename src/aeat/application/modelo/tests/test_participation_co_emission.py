@@ -23,7 +23,6 @@ from ....domain.modelos._calculation_repository import (
 )
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )

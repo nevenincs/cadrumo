@@ -162,6 +162,10 @@ from ._maritime_preview import (
     maritime_facts_from_active_profile,
     preview_maritime_exemption_for_active_profile,
 )
+from ._participation_index_rebuild import (
+    ParticipationRebuildStats,
+    rebuild_participation_index,
+)
 from ._profile_binding import (
     ProfileBindingResolutionError,
     ProfileSourcedBindingResult,
@@ -411,6 +415,7 @@ __all__ = [
     "ModeloWorkUnitNotFoundError",
     "ModeloWorkVisibleTargetAmbiguousError",
     "ModeloWorkflowGateError",
+    "ParticipationRebuildStats",
     "ProfileBindingResolutionError",
     "ProfileSourcedBindingResult",
     "ReconciliationCrossBucketRefusedError",
@@ -480,6 +485,7 @@ __all__ = [
     "project_modelo_work_target",
     "project_modelo_work_unit",
     "read_m036_declaration",
+    "rebuild_participation_index",
     "record_m036_declaration",
     "registry_bindings",
     "registry_bindings_for_scope",

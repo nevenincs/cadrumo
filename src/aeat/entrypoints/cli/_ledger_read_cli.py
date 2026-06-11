@@ -41,6 +41,7 @@ from ...domain.transactions import Transaction, TransactionCatalogueRepository
 from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 from ._ledger_list import parse_ledger_list_filter_spec, project_ledger_list
 from ._ledger_review_cli import register_ledger_review_command
+from ._participation_cli import register_participation_commands
 
 ResolveTransactionId = Callable[[Any, str], str]
 
@@ -73,6 +74,7 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
     _register_ledger_status_command(app)
     _register_ledger_track_command(app, resolve_transaction_id=resolve_transaction_id)
     register_ledger_review_command(app, resolve_transaction_id=resolve_transaction_id)
+    register_participation_commands(app, resolve_transaction_id=resolve_transaction_id)
 
 
 def _register_ledger_providers_command(app: typer.Typer) -> None:
@@ -92,8 +94,8 @@ def _register_ledger_providers_command(app: typer.Typer) -> None:
                         "resolved_path": item.resolved_path,
                     }
                     for item in listings
-                ]
-            }
+                ],
+            },
         )
         lines: list[str] = []
         for item in listings:
@@ -136,7 +138,7 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
                     "families": families,
                     "category_ids": [category.value for category in SpendingCategory],
                     "income_requires_category": False,
-                }
+                },
             ),
             lines=lines,
         )
@@ -288,7 +290,7 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
         payload = report.model_dump(mode="json")
         lines = [
             f"bucket\t{report.bucket_id}",
-            f"period\t{canonical}",
+            f"period\t{canonical.registry_token} {canonical.year}",
             f"checked\t{report.checked_transaction_count}",
             f"issues\t{len(report.issues)}",
             f"ready\t{str(report.ready).lower()}",
@@ -344,7 +346,7 @@ def _register_ledger_history_command(app: typer.Typer, *, resolve_transaction_id
                     "transaction_id": resolved_id,
                     "event_count": len(matches),
                     "events": [event.model_dump(mode="json") for event in matches],
-                }
+                },
             ),
             lines=lines,
         )
@@ -451,7 +453,7 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
                     "offset": projection.offset,
                     "limit": projection.limit,
                     "truncated": projection.truncated,
-                }
+                },
             ),
             lines=projection.lines,
         )
@@ -547,11 +549,11 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         if report.period is not None:
             lines.extend(
                 [
-                    f"{tr('cli.ledger.labels.period')}\t{report.period}",
+                    f"{tr('cli.ledger.labels.period')}\t{report.period.registry_token} {report.period.year}",
                     f"{tr('cli.ledger.labels.checked')}\t{report.checked_transaction_count}",
                     f"{tr('cli.ledger.labels.readiness_issues')}\t{report.readiness_issue_count}",
                     f"{tr('cli.ledger.labels.ready')}\t{report.ready}",
-                ]
+                ],
             )
             from ...application.ledger import preflight_ledger_tax_readiness
 
@@ -565,7 +567,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
                 if transaction is None:
                     continue
                 lines.append(
-                    _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail)
+                    _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail),
                 )
         from ...application.aggregation import stale_filed_revisions
         from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -587,8 +589,8 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
                         f"revision={revision.calculation_revision_id}",
                         f"changed={len(verdict.changed)}",
                         f"removed={len(verdict.removed)}",
-                    )
-                )
+                    ),
+                ),
             )
 
         from ._ledger_payloads import LedgerStatusResult
@@ -625,7 +627,7 @@ def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: 
                     "bucket_id": result.ref.bucket_id,
                     "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
                     "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
-                }
+                },
             ),
             lines=_ledger_track_lines(result.ref.transaction_id, result.transaction),
         )
@@ -700,7 +702,7 @@ def _ledger_status_readiness_issue_line(transaction: Transaction, *, reason: str
             f"iva_amount={_value(transaction.iva_amount)}",
             f"reason={reason}",
             f"detail={detail}",
-        )
+        ),
     )
 
 
