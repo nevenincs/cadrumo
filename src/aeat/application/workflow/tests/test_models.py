@@ -10,6 +10,7 @@ stability and the validators on :class:`aeat.application.workflow.WorkflowStep`,
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
@@ -20,6 +21,7 @@ from ....adapters.outbound.aeat.browser._site_health import (
     SiteHealthState,
     SiteHealthStatus,
 )
+from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url
 from .. import (
     SiteHealthAlert,
@@ -33,24 +35,40 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _period(year: int = 2026, code: str = "1T") -> Period:
+    return Period.from_year_and_code(year, code)
+
+
 class TestComputeRunId:
     """Stable hash for a workflow run."""
 
     def test_deterministic(self) -> None:
         """Same seed → same 16-char hex id."""
         started = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
-        a = compute_run_id(tax_id="X1234567L", modelo="130", period="2026Q1", started_at=started)
-        b = compute_run_id(tax_id="X1234567L", modelo="130", period="2026Q1", started_at=started)
+        a = compute_run_id(tax_id="X1234567L", modelo="130", period=_period(), started_at=started)
+        b = compute_run_id(tax_id="X1234567L", modelo="130", period=_period(), started_at=started)
         assert a == b
+        assert a == "71f95b6c466e52b7"
         assert len(a) == 16
         assert all(c in "0123456789abcdef" for c in a)
 
     def test_differs_by_tax_id(self) -> None:
         """Different tax ids produce different ids."""
-        started = datetime(2026, 4, 12, tzinfo=UTC)
-        a = compute_run_id(tax_id="A", modelo="130", period="2026Q1", started_at=started)
-        b = compute_run_id(tax_id="B", modelo="130", period="2026Q1", started_at=started)
+        started = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+        a = compute_run_id(tax_id="A", modelo="130", period=_period(), started_at=started)
+        b = compute_run_id(tax_id="B", modelo="130", period=_period(), started_at=started)
         assert a != b
+
+    def test_rejects_combined_string_period(self) -> None:
+        """A combined token must not enter the workflow run-id contract."""
+        combined_period = cast(Any, "2026Q1")
+        with pytest.raises(TypeError, match=r"aeat\.core\.Period"):
+            compute_run_id(
+                tax_id="X1234567L",
+                modelo="130",
+                period=combined_period,
+                started_at=datetime.now(UTC),
+            )
 
 
 class TestWorkflowStepValidation:

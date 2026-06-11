@@ -35,6 +35,7 @@ from ....adapters.outbound.aeat.browser._site_health import SiteHealthState
 from ....adapters.outbound.aeat.browser._site_health_parsers import evaluate_response
 from ....adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, RemoteNotification
 from ....application.auth import AuthProviderDescription, AuthProviderKind
+from ....core import Period
 from ....core.config import Settings
 from ....core.errors import BaseSeverity, SiteHealthError, build_error_envelope
 from ....core.errors._registry import ErrorCategory, ErrorEnvelope
@@ -57,7 +58,6 @@ from .. import (
     WorkflowPurpose,
     WorkflowStage,
 )
-from ....core import Period
 from .._errors import UnhandledWorkflowError, WorkflowInputMismatchError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -865,7 +865,7 @@ class TestSiteUnavailableArm:
         placeholder_hash = _compute_run_id(
             tax_id=fx.profile.tax_id,
             modelo="-",
-            period="-",
+            period=None,
             started_at=result.started_at,
         )
         assert last.site_health_alert.run_id != placeholder_hash
