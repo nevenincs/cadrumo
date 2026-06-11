@@ -98,7 +98,7 @@ related:
 
 ## Wave `W01` - Operator-facing period grammar standardisation (AEAT-token-only)
 
-Landed: the ledger and modelo --period surfaces accept only canonical AEAT tokens with the year on a separate --year clause; calendar shapes and the 2026-1T hybrid refuse; locale, docs, and conformance gates are green. The backend parser de-conflation (P03/P05) remains blocked on the core Period rollout in W02.
+Landed: the ledger and modelo --period surfaces accept only canonical AEAT tokens with the year on a separate --year clause; calendar shapes and the 2026-1T hybrid refuse; locale, docs, and conformance gates are green. The backend parser de-conflation (P03/P11) remains blocked on removal of the transitional adapters.
 
 ### Phase `W01.P01` - CLI operator-input grammar: AEAT-token-only + separate --year, conversion layer deleted
 
@@ -137,12 +137,12 @@ Every how-to and reference teaches only --year --period <token>; a repo-wide gre
 - [x] `W01.P04.S13` - Sweep every how-to and reference doc to teach only --year --period <token>, removing every 2026Q1 / period=2026-1T / bare-year example; `docs/how-to, docs/reference`.
 - [ ] `W01.P04.S14` - Add a final repo-wide grep gate asserting zero 2026Q1 / YYYY-nT / period=YYYY usage in code, tests and docs outside the refusal-regression fixtures; `run the relevant suites green; `src/aeat, docs`.
 
-### Phase `W01.P05` - DEEP LAYER (outstanding): internal combined-token representation migration
+### Phase `W01.P05` - DEEP LAYER: internal combined-token representation migration
 
 Discovery: combined 2026Q1/2026-1T strings are load-bearing BELOW the operator surface — registry deadline-window TOML (period = 2026Q1 across every modelo), the WorkflowEngine period contract (workflow_period_for_work_unit emits 2026Q1/2026-1T, asserted across _workflow_gate, _resume and dozens of tests), and the source docstrings that honestly describe that token. Deleting the domain/period.py combined regexes is BLOCKED until this internal representation migrates to separated (filing_year, registry_token). High blast radius across the registry authoring tree in a shared worktree; tracked as outstanding follow-on, not completed this pass.
 
-- [ ] `W01.P05.S15` - OUTSTANDING — Migrate the registry deadline-window schema and every modelo deadline_windows TOML from a combined period string (period = 2026Q1) to a separated (filing_year, registry_token) shape, through the loader/compiler per aeat-registry-authority-flow; `src/aeat/_data/registry/aeat/modelos/**/deadline_windows, src/aeat/domain/calculations/registry`.
-- [x] `W01.P05.S16` - OUTSTANDING — Replace the WorkflowEngine combined-token contract: have workflow_period_for_work_unit and the resume/gate paths carry (filing_year, registry_token) instead of composing 2026Q1/2026-1T, and migrate every dependent test assertion; `src/aeat/application/modelo/_workflow_gate.py, src/aeat/application/workflow/_resume.py`.
+- [x] `W01.P05.S15` - Hydrate registry deadline-window TOML period strings into core.Period at the loader boundary, preserving free-form registry authoring input per aeat-registry-authority-flow while exposing the separated (filing_year, registry_token) model shape downstream; `src/aeat/_data/registry/aeat/modelos/**/deadline_windows, src/aeat/domain/calculations/registry`.
+- [x] `W01.P05.S16` - Replace the WorkflowEngine combined-token contract: have workflow_period_for_work_unit and the resume/gate paths carry (filing_year, registry_token) instead of composing 2026Q1/2026-1T, and migrate every dependent test assertion; `src/aeat/application/modelo/_workflow_gate.py, src/aeat/application/workflow/_resume.py`.
 - [ ] `W01.P05.S17` - OUTSTANDING — Once the deep layer is separated, delete the combined-input regexes from parse_canonical_period (unblocks P03.S08) and rewrite the source docstrings that cite 2026Q1 as the canonical token; `src/aeat/domain/period.py, src/aeat/application/workflow/_resume.py, src/aeat/domain/calculations/registry/_queries.py`.
 
 ## Wave `W02` - Core Period value object: implementation and backend rollout
@@ -174,11 +174,11 @@ Delegate per module: replace period: str fields with core.Period in state_projec
 - [x] `W02.P08.S31` - DISCOVERY (recon): the period:str substrate splits into 8 file-disjoint clusters A-H — A overview/_calendar, B state_projection, C aggregation service/retenciones/source_mesh (waits on P07), D filing/_schema ModeloDraft (encrypted-SQL roundtrip), E submission/_models ModeloPresentado (encrypted-SQL roundtrip), F verification/_schema, G iva/_prorrata (DIFFERENT vocabulary Q1/M01/annual — NOT a core.Period candidate, out of scope), H modelo/_export bucket-event; `agents bridge inbound combined strings via parse_canonical_period during transition; `src/aeat/application, src/aeat/domain`.
 - [x] `W02.P08.S33` - DEFERRED C2 (from cluster C): migrate CalculationSourceContext.period (aggregation/_source_mesh.py) plus the ~26 calculation resolvers that read it and the observation-store key derivation (observation_key in _observations_repository.py) to core.Period as one isolated atomic commit; `src/aeat/application/aggregation/_source_mesh.py, src/aeat/application/calculations`.
 
-### Phase `W02.P09` - Registry deadline-window schema + TOML migration (sonnet)
+### Phase `W02.P09` - Registry deadline-window loader-boundary hydration (sonnet)
 
-Delegate: hydrate core.Period at the registry loader boundary and migrate every modelo deadline_windows TOML off the combined period = 2026Q1 form per aeat-registry-authority-flow.
+Delegate: hydrate core.Period at the registry loader boundary while preserving modelo deadline_windows TOML as free-form authoring input per aeat-registry-authority-flow.
 
-- [ ] `W02.P09.S26` - Hydrate core.Period at the registry loader boundary and migrate every modelo deadline_windows TOML off the combined period = 2026Q1 form, through the loader/compiler per aeat-registry-authority-flow; `src/aeat/domain/calculations/registry, src/aeat/_data/registry/aeat/modelos`.
+- [x] `W02.P09.S26` - Hydrate core.Period at the registry loader boundary while preserving free-form deadline_windows TOML authoring input, and prove model_dump/model_dump_json expose the separated Period object shape rather than a combined period string; `src/aeat/domain/calculations/registry, src/aeat/_data/registry/aeat/modelos`.
 
 ### Phase `W02.P10` - WorkflowEngine period contract migration (sonnet)
 
@@ -216,32 +216,28 @@ stratified by depth:
   `2026-1T` hybrid refuse with an instructive, four-locale-parity message naming
   the AEAT tokens and `--year`; the documented-command and educational-docs
   conformance gates stay green.
-- **P03 — backend parser de-conflation (outstanding, blocked by P05).**
+- **P03 — backend parser de-conflation (outstanding, blocked by P11 cleanup).**
   `domain/period.py::parse_canonical_period` still accepts the combined input
   regexes, and `normalize_modelo_work_period` round-trips through a `2026Q1`
-  intermediate. These cannot be deleted until the deep representation migrates.
+  intermediate. These cannot be deleted until the remaining transitional
+  adapters are removed or replaced with local loader-boundary parsers.
 - **P04 — docs + final gate.** The hand-authored how-to / reference docs already
   teach only `--year --period`; the final repo-wide zero-conflation grep gate is
-  blocked until P05 clears the internal `2026Q1` strings.
-- **P05 — DEEP internal-representation layer (outstanding).** The combined token
-  is load-bearing below the operator surface: the registry deadline-window TOML
-  hardcodes `period = "2026Q1"` across every modelo, and the WorkflowEngine
-  contract (`workflow_period_for_work_unit`, `_resume`, `_workflow_gate`) emits
-  and asserts `2026Q1 / 2026-1T`. Migrating these to a separated
-  `(filing_year, registry_token)` is a high-blast-radius registry-authoring +
-  workflow refactor tracked here as a follow-on, not completed in this pass.
+  blocked until P11 removes transitional combined-string adapters and defines
+  the explicit allowlist for registry authoring inputs and refusal fixtures.
+- **P05 — DEEP internal-representation layer (complete).** The registry
+  deadline-window loader now hydrates authored strings into `core.Period` at the
+  schema boundary, and the WorkflowEngine contract carries `core.Period`
+  instead of `2026Q1 / 2026-1T` strings.
 
 ## Parallelization
 
-P01 and P02 are landed. P03 (`domain/period.py` regex deletion) is hard-blocked
-by P05.S15 + P05.S16: the regexes are still exercised by the registry
-deadline-window parse and the WorkflowEngine token, so deletion regresses both
-until the deep layer carries `(filing_year, registry_token)`. P04.S14 (the
-repo-wide zero-conflation gate) is likewise blocked by P05 because the registry
-TOML and workflow legitimately still hold `2026Q1` until migrated. P05.S15
-(registry deadline-window TOML) and P05.S16 (WorkflowEngine contract) may
-proceed in parallel — they touch disjoint files — but both must land before
-P05.S17 / P03.S08 delete the now-dead regexes.
+P01, P02 and P05 are landed. P03 (`domain/period.py` regex deletion) remains
+blocked by P11: `parse_canonical_period` is still the transitional adapter for
+registry loader-boundary TOML hydration and older inbound seams. P04.S14 (the
+repo-wide zero-conflation gate) is likewise blocked until P11 defines the final
+allowlist for registry authoring inputs and refusal fixtures, then deletes the
+now-dead transitional adapters.
 
 ## Verification
 
@@ -250,7 +246,7 @@ The plan is complete when all of the following hold:
 - `uv run --no-sync pytest src/aeat/domain/tests/test_period.py src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py src/aeat/application/aggregation/tests/test_period_boundary_authority.py -m "integration or not integration"` is green, with calendar shapes and the `2026-1T` hybrid asserted to refuse (the 5 `register_wizard_catalogue` integration-harness failures are tracked separately and are not period-logic).
 - `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py src/aeat/entrypoints/cli/tests/test_educational_docs_conformance.py` is green (landed: 107 passed).
 - `python -m aeat.locales scaffold --check` is clean and the four locale catalogues carry the period-refusal keys at parity.
-- A final repo-wide grep finds zero `YYYYQ[1-4]` / `YYYY-[1-4]T` / `period=YYYY` usage in code, tests, and docs **outside** the refusal-regression fixtures — gated only after P05 migrates the registry deadline-window TOML and the WorkflowEngine token off the combined form.
+- A final repo-wide grep finds zero `YYYYQ[1-4]` / `YYYY-[1-4]T` / `period=YYYY` usage in code, tests, and docs **outside** the explicit registry-authoring and refusal-regression allowlist — gated only after P11 removes transitional adapters.
 - `uv run --no-sync vaultspec-core vault check all` stays green for this feature.
 
 The plan is complete when every Step in every Wave is closed
