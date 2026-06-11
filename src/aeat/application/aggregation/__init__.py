@@ -35,6 +35,10 @@ from ._counterpart import (
     declarable_counterparty_nifs_347,
     declarable_for_347,
 )
+from ._evidence_advisory import (
+    MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND,
+    missing_evidence_advisory_observations,
+)
 from ._errors import (
     AggregationCategoryCoverageError,
     AggregationConfigError,
@@ -74,7 +78,6 @@ from ._modelo_bindings import (
     LedgerRentaIncomeAggregationSourceResolver,
     ModeloLedgerBindingAggregation,
     aggregation_period_for_modelo,
-    resolve_modelo_ledger_binding_values_from_repositories,
 )
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind, Quarter
 from ._oss_ioss import (
@@ -142,6 +145,7 @@ from ._source_profile import ProfileSourceResolver
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
     "DEFERRED_SOURCE_KINDS",
+    "MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND",
     "AggregationCategoryCoverageError",
     "AggregationConfigError",
     "AggregationError",
@@ -227,7 +231,7 @@ __all__ = [
     "get_per_modelo_aggregation_contract",
     "iva_ledger_missing_fact_reasons",
     "merge_source_resolutions",
-    "resolve_modelo_ledger_binding_values_from_repositories",
+    "missing_evidence_advisory_observations",
     "resolve_per_modelo_registry_binding_values",
     "stale_filed_revisions",
     "storage_degradation_resolution",
