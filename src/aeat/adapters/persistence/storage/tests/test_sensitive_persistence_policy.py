@@ -200,6 +200,16 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "output.write_text",
     ): "registry verification report export through the registry service",
     (
+        "src/aeat/application/live/_justificante.py",
+        "_materialized_capture_pdf",
+        "tempfile.mkstemp",
+    ): "short-lived justificante PDF materialisation uses a private tempfile for parser handoff",
+    (
+        "src/aeat/locales/_modelo_manager.py",
+        "write_translation_file",
+        "expected_path.write_text",
+    ): "modelo locale translation writer updates non-financial registry-localised text",
+    (
         "src/aeat/locales/manager.py",
         "scaffold",
         "open",
@@ -302,6 +312,21 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "export_ledger_transactions",
         "command.output_path.write_bytes",
     ): "explicit operator-directed ledger transaction export to a caller-chosen path",
+    (
+        "src/aeat/terminology/_curation.py",
+        "_commit_concept",
+        "path.write_text",
+    ): "terminology curation writes committed handbook concept TOML, not user financial data",
+    (
+        "src/aeat/terminology/_scaffold.py",
+        "apply_scaffold_plan",
+        "path.write_text",
+    ): "terminology scaffold writes committed handbook concept TOML, not user financial data",
+    (
+        "src/aeat/terminology/_seed_import.py",
+        "_commit_seeded_concept",
+        "path.write_text",
+    ): "terminology seed import writes committed handbook concept TOML, not user financial data",
 }
 
 

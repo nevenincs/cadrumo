@@ -165,7 +165,9 @@ def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         target = _populated_observation()
-        other = target.model_copy(update={"modelo": "130", "period": "2T"})
+        other = target.model_copy(
+            update={"modelo": "130", "filing_period": Period.from_year_and_code(2025, "2T"), "period": "2T"},
+        )
         repo.save_observation(
             target,
             source_kind="aeat_sede_justificante",

@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -121,8 +122,13 @@ def _objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
+    period = Period.from_year_and_code(2025, "1T")
     work_unit_id = derive_work_unit_id(
-        bucket_id="bucket-a", modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes",
+        bucket_id="bucket-a",
+        modelo="303",
+        filing_year=2025,
+        period=period,
+        revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,

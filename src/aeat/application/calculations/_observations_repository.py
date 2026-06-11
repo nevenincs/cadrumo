@@ -207,7 +207,9 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     @override
     def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
         observation = payload.observation
-        period = Period.from_year_and_code(observation.filing_year, observation.period)
+        period = observation.filing_period
+        if period is None:
+            period = Period.from_year_and_code(observation.filing_year, observation.period)
         return member_observation_key(
             observation.modelo,
             period,

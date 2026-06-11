@@ -60,6 +60,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
@@ -194,7 +195,7 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
         bucket_id=_BUCKET_ID,
         modelo=_MODELO,
         filing_year=filing_year,
-        period=_PERIOD,
+        period=Period.from_year_and_code(filing_year, _PERIOD),
         revision_id=str(filing_year),
         repository=work_repo,
         clock=_CLOCK,
