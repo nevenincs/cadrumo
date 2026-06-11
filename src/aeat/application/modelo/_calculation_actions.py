@@ -33,7 +33,6 @@ from ...domain.modelos._row_models import ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
-from ..aggregation import Period as _LedgerPeriod
 from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS as _DEFERRED_SOURCE_KINDS
 from ..live import Borrador100SnapshotRepository
 from . import _iva_wallet_gate
@@ -423,7 +422,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
 
     report = preflight_ledger_tax_readiness(
         bucket_id=work_unit.bucket_id,
-        period=_ledger_preflight_period_for_work_unit(work_unit),
+        period=work_unit.period,
         transaction_repository=transaction_repository,
     )
     if report.ready:
@@ -438,11 +437,6 @@ def _raise_if_ledger_preflight_blocks_calculation(
         },
         suggestion=f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.year}",
     )
-
-
-def _ledger_preflight_period_for_work_unit(work_unit: WorkUnit) -> _LedgerPeriod:
-    return _LedgerPeriod.from_year_and_token(year=work_unit.period.year, token=work_unit.period.registry_token)
-
 
 def calculate_modelo_revision_from_bucket_aggregation(
     work_unit_id: str,
