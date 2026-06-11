@@ -10,9 +10,9 @@ the direct ``resolve_relations_from_local_store`` resolver path the existing
 continuity tests
 (``aeat.application.calculations.tests.test_modelo_200_bin_carry_forward_continuity``
 and ``...test_modelo_200_dotaciones_deterioro_carry_continuity``) exercise. This
-module closes honesty-review finding F-B (plan step ``W05.P14.S39``): before it,
-the relation resolver was proven to fire, but only on the now-non-canonical direct
-path — never on the operator's live calculate.
+module closes the M200 self-carry honesty-review gap: before it, the relation
+resolver was proven to fire, but only on the now-non-canonical direct path —
+never on the operator's live calculate.
 
 * **BIN-pendiente self-carry** (LIS art. 26.1, BIN carries forward without time
   limit). The prior ejercicio's casilla ``00671`` ("pendiente de aplicación en
