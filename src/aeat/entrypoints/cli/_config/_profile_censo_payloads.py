@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from ....application.user_profile import CensoApplyResult as _AppCensoApplyResult
 
 
-@register_schema("config.profile.censo.refresh")
+@register_schema("config.profile.censo.pull")
 class CensoRefreshResult(OutputSchema):
     """JSON envelope for ``aeat config profile censo refresh``."""
 

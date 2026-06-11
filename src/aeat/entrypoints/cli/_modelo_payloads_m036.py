@@ -103,7 +103,7 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
     reconciled_at: str
 
 
-@register_schema("modelo.reconciliation_history")
+@register_schema("modelo.reconcile.history")
 class ModeloReconciliationHistoryResult(OutputSchema):
     """Listing returned by ``aeat app modelo reconciliation-history``.
 
