@@ -593,7 +593,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
                         "ledger_filing_stale",
                         f"modelo={work_unit.modelo}",
                         f"year={work_unit.filing_year}",
-                        f"period={work_unit.period}",
+                        f"period={work_unit.period.registry_token}",
                         f"revision={revision.calculation_revision_id}",
                         f"changed={len(verdict.changed)}",
                         f"removed={len(verdict.removed)}",
