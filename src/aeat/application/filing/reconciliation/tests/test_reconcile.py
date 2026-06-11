@@ -75,7 +75,7 @@ def _provider_for(draft: ModeloDraft) -> RegistrySchemaProvider:
     return build_runtime_schema_provider(
         modelos=(draft.modelo,),
         filing_year=draft.snapshot_ref.modelo_year,
-        period=draft.snapshot_ref.period,
+        period=Period.from_year_and_code(draft.snapshot_ref.modelo_year, draft.snapshot_ref.period),
     )
 
 

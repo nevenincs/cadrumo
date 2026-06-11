@@ -62,7 +62,7 @@ def _isolated_storage(tmp_path: Path):
 
 
 def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path: Path) -> None:
-    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=2026, period="1T")
+    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026)
     draft = _ready_modelo_130_draft()
 
     with (
@@ -77,7 +77,7 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
 
 
 def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_default(tmp_path: Path) -> None:
-    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=2026, period="1T")
+    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026)
     draft = _ready_modelo_130_draft()
 
     with (

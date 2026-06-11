@@ -8,6 +8,7 @@ record does not yet carry.
 
 from __future__ import annotations
 
+from ...core import Period
 from ...domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
 from . import (
     ProfilePreflightReport,
@@ -34,8 +35,7 @@ class ProfilePreflightService:
         record: UserProfileRecord,
         modelo: str,
         revision_id: str,
-        filing_year: int,
-        period: str,
+        period: Period,
     ) -> ProfilePreflightReport:
         """Compute missing required profile fields for the given filing context.
 
@@ -49,8 +49,7 @@ class ProfilePreflightService:
             record: The caller's current :class:`UserProfileRecord`.
             modelo: Numeric modelo identifier (e.g. ``"303"``).
             revision_id: Revision tag from the registry (e.g. ``"2024-0A"``).
-            filing_year: Four-digit filing year.
-            period: Period code (e.g. ``"1T"``, ``"1P"``).
+            period: Typed filing period.
 
         Returns:
             A :class:`ProfilePreflightReport` with ``ready=True`` when all
@@ -80,7 +79,7 @@ class ProfilePreflightService:
             profile_id=record.profile_id,
             modelo=modelo,
             revision_id=revision_id,
-            filing_year=filing_year,
+            filing_year=period.filing_year,
             period=period,
             missing=tuple(missing),
             ready=not missing,

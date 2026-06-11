@@ -20,11 +20,12 @@ surface is unchanged: every name remains reachable via
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Annotated
+from typing import Annotated, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId
@@ -204,9 +205,15 @@ class ProfilePreflightReport(BaseModel):
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     ready: bool
+
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> Self:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("filing_year must match period.filing_year")
+        return self
 
 
 # ---------------------------------------------------------------------------
@@ -223,7 +230,13 @@ class ProfileSnapshotRequest(BaseModel):
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
+
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> Self:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("filing_year must match period.filing_year")
+        return self
 
 
 class ProfileSnapshot(BaseModel):
@@ -237,10 +250,16 @@ class ProfileSnapshot(BaseModel):
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
     canonical_hash: _ProfileSnapshotHash
     created_at: datetime
     facts: tuple[UserProfileFact, ...]
+
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> Self:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("filing_year must match period.filing_year")
+        return self
 
 
 class ProfileStaleCheckReport(BaseModel):

@@ -47,7 +47,7 @@ def build_registry_filing_draft(
     schema_provider = build_runtime_schema_provider(
         modelos=(modelo,),
         filing_year=typed_period.year,
-        period=typed_period.registry_token,
+        period=typed_period,
     )
     duplicate_input_ids = sorted(set(casilla_values).intersection(binding_values or {}))
     if duplicate_input_ids:

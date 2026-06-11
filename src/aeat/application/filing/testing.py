@@ -12,6 +12,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core import Period
 from ...core.errors import FixtureProvisioningError
 from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
@@ -46,7 +47,7 @@ class ModeloTestDeadlineChecker(BaseModel):
 
     status: ModeloTestDeadlineStatus
 
-    def check(self, modelo: str, period: str) -> ModeloTestDeadlineStatus:
+    def check(self, modelo: str, period: Period) -> ModeloTestDeadlineStatus:
         """Return the configured :class:`ModeloTestDeadlineStatus`."""
         del modelo, period
         return self.status
