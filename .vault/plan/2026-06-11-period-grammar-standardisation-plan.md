@@ -127,7 +127,7 @@ Delete the combined-input regexes from parse_canonical_period; remove the round-
 - [ ] `W01.P03.S08` - Delete the combined-input regexes (_QUARTER_PERIOD_RE, _DASHED_QUARTER_PERIOD_RE, _MONTH_PERIOD_RE, _ANNUAL_PERIOD_RE, _BARE_YEAR_RE) from parse_canonical_period and rewrite the module docstring to drop the combined-token-storage claim; `src/aeat/domain/period.py`.
 - [ ] `W01.P03.S09` - Confirm WorkUnit / draft / deadline-window persist a separated (filing_year, registry_token) and add or extend a roundtrip test proving no combined period string is ever persisted; `src/aeat/application/modelo/_work_addressing.py`.
 - [x] `W01.P03.S10` - Remove the round-trip through a combined token in normalize_modelo_work_period; `build (year, registry_token) directly without composing 2026Q1-style intermediates; `src/aeat/application/modelo/_work_addressing.py`.
-- [ ] `W01.P03.S11` - Reconcile the registry parse_modelo_period dashed YYYY-Qn dialect with the AEAT-token-only mandate or document why the registry-introspection dialect is out of the operator-period scope; `src/aeat/domain/calculations/registry`.
+- [x] `W01.P03.S11` - Reconcile the registry parse_modelo_period dashed YYYY-Qn dialect with the AEAT-token-only mandate or document why the registry-introspection dialect is out of the operator-period scope; `src/aeat/domain/calculations/registry`.
 - [ ] `W01.P03.S12` - Update test_period.py to assert the combined forms now refuse and only the bare-token (with ejercicio), month, 0A and nP tokens are accepted; `src/aeat/domain/tests/test_period.py`.
 
 ### Phase `W01.P04` - Docs sweep and final repo-wide conflation gate
@@ -192,7 +192,7 @@ Delegate: replace the workflow_period_for_work_unit combined-token contract and 
 Delegate then verify: once every consumer carries core.Period, delete the combined-input regexes from parse_canonical_period, reconcile or retire the parse_modelo_period dashed dialect, and add the repo-wide zero-combined-string regression gate.
 
 - [ ] `W02.P11.S28` - Delete the combined-input regexes from parse_canonical_period and rewrite the module docstring once every consumer carries core.Period; `src/aeat/domain/period.py`.
-- [ ] `W02.P11.S29` - Reconcile or retire the registry parse_modelo_period dashed YYYY-Qn dialect against core.Period; `src/aeat/domain/calculations/registry`.
+- [x] `W02.P11.S29` - Reconcile or retire the registry parse_modelo_period dashed YYYY-Qn dialect against core.Period; `src/aeat/domain/calculations/registry`.
 - [ ] `W02.P11.S30` - Add the repo-wide regression gate asserting zero combined-period-string construction or storage outside refusal-regression fixtures and the Period __str__ projection; `src/aeat/core/tests`.
 - [ ] `W02.P11.S34` - Remove the transitional _coerce_period BeforeValidator inbound coercions and the outbound _to_canonical_period / _period_to_canonical_str combined-string adapters (introduced by clusters C/E/H) once every producer emits core.Period, so combined strings can no longer enter at any pydantic boundary; `src/aeat/domain/submission/_models.py, src/aeat/application/aggregation, src/aeat/application/modelo/_export.py, src/aeat/application/filing/_complementaria.py`.
 
