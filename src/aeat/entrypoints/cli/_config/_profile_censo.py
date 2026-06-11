@@ -62,7 +62,7 @@ def _build_service(bucket_id: str):
 
 
 def _register_censo_refresh(censo_app: typer.Typer) -> None:
-    """Register the censo refresh transport command."""
+    """Register the censo pull transport command."""
 
     @censo_app.command(
         "pull",

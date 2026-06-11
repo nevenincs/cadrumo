@@ -789,9 +789,7 @@ application:
         en la revisión %{revision_id}: el registro declara un origen de vinculación
         que ningún resolutor de cálculo gestiona. Registre un resolutor o márquelo
         como diferido antes de calcular.'
-      reconcile_declaration_unsupported: La reconciliación desde PDF de declaración
-        aún no está disponible; usa --from-justificante PATH hasta que el parser de
-        declaración esté implementado.
+      reconcile_declaration_unsupported: 'La reconciliación desde PDF de declaración aún no está disponible; reconcilia un justificante descargado con aeat app modelo reconcile file hasta que el parser de declaraciones esté disponible.'
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una unidad de trabajo.
       verification_report_not_found: No existe ningún informe de verificación con
@@ -1276,7 +1274,7 @@ cli:
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
-        capture_all_modelo_help: Limita capture-all a este modelo.
+        capture_all_modelo_help: 'Limita pull-all a este modelo.'
         latest_help: Muestra el snapshot de expedientes más reciente
         list_help: Lista los snapshots de expedientes guardados
         pull_all_help: 'Descarga el registro de declaraciones de AEAT para cada modelo del registro solicitado en un rango de anos y guarda instantaneas del bucket.'
@@ -1284,7 +1282,7 @@ cli:
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de expedientes
       filed:
-        capture_all_modelo_help: Limita capture-all a este modelo.
+        capture_all_modelo_help: 'Limita pull-all a este modelo.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
         pull_all_help: 'Descarga declaraciones y justificantes presentados para cada modelo del registro solicitado en un rango de anos. Solo lectura; informa de los fallos por modelo.'
         pull_help: 'Descarga datos de declaraciones presentadas del registro autenticado de AEAT.'
@@ -1305,9 +1303,7 @@ cli:
             qr_required: aprobación QR requerida
             unknown: desconocido
             wrong_identity: identidad incorrecta
-        app_help: Captura de la cartera de compensación de IVA de la AEAT (solo lectura;
-          solo permite representación en nombre propio y la consulta de lectura protegida
-          de cartera).
+        app_help: 'Descarga de la cartera de compensación de IVA de la AEAT (solo lectura; solo permite representación en nombre propio y la consulta de lectura protegida de cartera).'
         as_of_year_help: Ejercicio usado para calcular la antigüedad de los saldos
           de compensación de IVA.
         history_help: Lista el historial local seguro de compensación de IVA, saldos

@@ -729,8 +729,7 @@ application:
         a(z) %{revision_id} revízióban: a regiszter olyan kötési forrást deklarál,
         amelyet egyetlen számítási feloldó sem kezel. Regisztráljon egy feloldót,
         vagy jelölje halasztottként a számítás előtt.'
-      reconcile_declaration_unsupported: A bevallás-PDF egyeztetési forrás még nincs
-        implementálva; addig használja a --from-justificante ÚTVONAL paramétert.
+      reconcile_declaration_unsupported: 'A bevallás-PDF egyeztetési forrás még nincs implementálva; egyeztessen egy letöltött justificantét az aeat app modelo reconcile file paranccsal, amíg a bevallás-elemző elérhetővé válik.'
       reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config
         profile create NÉV` az egyeztetés előtt.'
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
@@ -1213,7 +1212,7 @@ cli:
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.
-        capture_all_modelo_help: A capture-all muvelet korlatozasa erre a modellora.
+        capture_all_modelo_help: 'A pull-all muvelet korlatozasa erre a modellora.'
         latest_help: A legfrissebb expediente pillanatkép megjelenítése.
         list_help: Mentett expediente pillanatképek listázása.
         pull_all_help: 'Letolti az AEAT nyilatkozat-nyilvantartast minden kert nyilvantartasi modelora egy evtartomanyban, es bucket-szintu pillanatkepeket ment.'
@@ -1221,7 +1220,7 @@ cli:
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
       filed:
-        capture_all_modelo_help: A capture-all korlátozása erre a nyomtatványra.
+        capture_all_modelo_help: 'A pull-all korlátozása erre a nyomtatványra.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_all_help: 'Letolti a benyujtott nyilatkozatokat es igazolasokat minden kert nyilvantartasi modelora egy evtartomanyban. Csak olvasas; modellenkent jelenti a hibakat.'
         pull_help: 'Letolti a benyujtott nyilatkozatok adatait a hitelesitett AEAT nyilvantartasbol.'
@@ -1242,8 +1241,7 @@ cli:
             qr_required: QR-jóváhagyás szükséges
             unknown: ismeretlen
             wrong_identity: hibás személyazonosság
-        app_help: AEAT IVA-kompenzációs pénztárca rögzítése (csak olvasható; kizárólag
-          saját nevű képviseletet és a védett pénztárca-lekérdezést engedélyez).
+        app_help: 'AEAT IVA-kompenzációs pénztárca letöltése (csak olvasható; kizárólag saját nevű képviseletet és a védett pénztárca-lekérdezést engedélyez).'
         as_of_year_help: Az IVA-kompenzációs átviteli tételek korosításához használt
           év.
         history_help: Helyi biztonságos IVA-kompenzációs előzmények, átviteli tételek
