@@ -9,19 +9,11 @@ related:
   - '[[2026-06-10-docs-terminology-search-research]]'
 ---
 
-
-
-
-
-
-
-
 # `docs-terminology-search` `terminology handbook and precompiled docs search epic` plan
 
 ## Epic intent
 
 Build the three-layer terminology architecture accepted in 2026-06-10-docs-terminology-search-adr: enrolment sources (registry, legal catalogue, enums, CLI tree, locales) feed a committed, programmatically scaffolded, continuously curated Terminology Handbook (the middle layer between registry compilation and shipped documentation), which compiles - together with a build-time RAG sweep that pre-runs what a runtime RAG does on the fly - into uncommitted shipped search artifacts (Pagefind index, generated glossary, palette term cards). Strategic goals: one governed terminology surface replacing four unsynchronised hand stores; one offline quad-lingual search answering concept lookups (what does pro rata mean), casilla schema lookups (localised official-conforming descriptions plus legal grounding), and CLI navigation in a single ranked result set; and a generic document-preprocessing contract pushed upstream to the vaultspec-rag team (preprocess hook infrastructure with a well-defined preprocess schema) so PDF/XLS/HTML grounding corpora become indexable without project-specific knowledge leaking upstream. Every Step cites the ADR decision (D1-D9) it implements so build teams can cross-reference the architectural definitions; the Handbook enrols this epic's own architectural vocabulary so the cross-referencing surface is self-hosting. External PM association: the docs-terminology-search epic on the chore/eliminate-shims factory branch, backed by 2026-06-10-docs-terminology-search-adr (a GitHub milestone should be opened to mirror it; the W01 upstream kick-off additionally tracks a vaultspec-rag issue reference). Timeline: multi-wave, coordinator-orchestrated with per-step code-review gates; W01 unblocks the W03 sweeps; W02 unblocks everything Handbook-shaped; W04 is the user-visible cutover; W05 is standing.
-
 
 ## Wave `W01` - RAG preprocessing capability and index hardening
 
@@ -135,7 +127,7 @@ Standing wave per the operator mandate: curation-backlog ratchets, the measured 
 
 Standing loops: the curation-backlog honesty ratchet over draft concepts and empty short descriptions, and the held-out real-query miss-rate harness that adjudicates the deferred rung-2 static term-embedding matrix with measurements instead of speculation. ADR D6 deferral gate.
 
-- [ ] `W05.P13.S29` - Implement the curation-backlog honesty ratchet: draft-concept and empty-short_description counts gated non-increasing in CI with a standing review cadence, mirroring the locale translation-honesty discipline (ADR D3 consequence); `terminology audit gate + CI`.
+- [x] `W05.P13.S29` - Implement the curation-backlog honesty ratchet: draft-concept and empty-short_description counts gated non-increasing in CI with a standing review cadence, mirroring the locale translation-honesty discipline (ADR D3 consequence); `terminology audit gate + CI`.
 - [ ] `W05.P13.S30` - Build the held-out real-query miss-rate harness over the compiled mapping and adjudicate the deferred rung-2 static term-embedding matrix on measurements, persisting the adjudication in the vault (ADR D6 deferral gate); `dev docs tests + .vault adjudication record`.
 
 ### Phase `W05.P14` - Architectural cross-reference coverage and codification
