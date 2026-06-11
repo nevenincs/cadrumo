@@ -74,6 +74,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, ModeloRevision, RegistryModeloObservation
 from ....domain.invoices import (
@@ -215,7 +216,7 @@ def _income_transaction(provider_id: str, *, value_date: date, amount: Decimal) 
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -529,9 +530,9 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
             bucket_id=_M369_BUCKET,
             modelo="369",
             filing_year=_M369_YEAR,
-            period="1T",
+            period=Period.from_year_and_code(_M369_YEAR, "1T"),
             revision=revision,
-        )
+        ),
     )
     assert resolution.binding_values[_M369_DE_SERVICES_BINDING] == Decimal("19.00")
     assert resolution.binding_values[_M369_FR_SERVICES_BINDING] == Decimal("40.00")
@@ -654,7 +655,7 @@ def test_deferred_detalle_kinds_emit_unhandled_advisory_not_silent_blank(
     )
     handled = frozenset({"relation_prefill", "profile", "borrador", "iva_wallet_decision"})
     unhandled = collect_unhandled_source_diagnostics(
-        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"})
+        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"}),
     )
     advisories = [d for d in unhandled if d.source_kind == deferred_kind and d.reason == "unhandled_binding_source"]
     assert advisories, (

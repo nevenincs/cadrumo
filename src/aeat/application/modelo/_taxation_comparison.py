@@ -27,6 +27,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 from ...core import Modelo
+from ...core import Period as _Period
 from ...core.errors import CoreError
 from ...domain.calculations.registry import (
     RegistrySnapshot,
@@ -147,7 +148,7 @@ def compare_taxation_modes(
             f"revision {snapshot.revision.id!r} of modelo "
             f"{snapshot.modelo.id!r} does not declare a "
             f"'{_DECLARATION_TYPE_BINDING_SUFFIX}' binding; "
-            "conjunta-vs-individual comparison is not available for this modelo"
+            "conjunta-vs-individual comparison is not available for this modelo",
         )
 
     cuota_casilla = _casilla_by_semantic_role(snapshot, _CUOTA_RESULTANTE_ROLE)
@@ -156,7 +157,7 @@ def compare_taxation_modes(
         raise TaxationComparisonError(
             f"revision {snapshot.revision.id!r} is missing expected "
             f"casilla roles '{_CUOTA_RESULTANTE_ROLE}' or "
-            f"'{_RESULTADO_ROLE}'; cannot build cuota differential"
+            f"'{_RESULTADO_ROLE}'; cannot build cuota differential",
         )
 
     resolved_relations = dict(relation_values or {})
@@ -274,7 +275,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
         )
     except (FileNotFoundError, RegistrySnapshotError) as exc:
         raise TaxationComparisonError(
-            f"registry snapshot unavailable for trabajo unit {work_unit_id!r}: {exc}"
+            f"registry snapshot unavailable for trabajo unit {work_unit_id!r}: {exc}",
         ) from exc
 
     # Resolve profile bindings — exclude declaration_type so the comparison
@@ -288,9 +289,9 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
             bucket_id=work_unit.bucket_id,
             modelo=snapshot.modelo.id,
             filing_year=snapshot.filing_year,
-            period=snapshot.period,
+            period=_Period.from_year_and_code(snapshot.filing_year, snapshot.period),
             revision=snapshot.revision,
-        )
+        ),
     )
 
     from ...domain.period import period_end_date

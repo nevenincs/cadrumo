@@ -15,6 +15,7 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...core import Period
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
@@ -70,14 +71,21 @@ DEFERRED_SOURCE_KINDS: frozenset[str] = frozenset(
 
 
 class CalculationSourceContext(BaseModel):
-    """Context supplied to a calculation source resolver."""
+    """Context supplied to a calculation source resolver.
+
+    The ``period`` field is the typed :class:`~aeat.core.Period` value
+    carrying both the filing year and the bare registry period code.  Consumers
+    that need the raw token for a downstream ``str``-typed API should use
+    ``context.period.registry_token``; those that need only the year can use
+    ``context.period.year`` (which mirrors ``context.filing_year``).
+    """
 
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=32)
+    period: Period
     revision: ModeloRevision
     calculated_at: datetime | None = None
 

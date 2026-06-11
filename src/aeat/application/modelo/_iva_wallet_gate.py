@@ -10,6 +10,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from ...core import Modelo
+from ...core import Period as _Period
 from ...core.i18n import tr
 from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ...domain.modelos._calculation_revision import CalculationRevision
@@ -166,9 +167,9 @@ def apply_iva_compensation_decision_binding(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
-            period=period,
+            period=_Period.from_year_and_code(filing_year, period),
             revision=revision,
-        )
+        ),
     )
     backend_binding_values.update(resolution.binding_values)
 

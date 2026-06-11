@@ -15,6 +15,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
+from ....core import Period
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -94,9 +95,9 @@ def test_profile_source_resolver_matches_existing_profile_binding_resolution() -
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=2025,
-            period="0A",
+            period=Period.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
-        )
+        ),
     )
 
     assert resolution.binding_values == legacy.binding_values
@@ -104,10 +105,10 @@ def test_profile_source_resolver_matches_existing_profile_binding_resolution() -
     assert resolution.source_transaction_ids == ()
     assert resolution.provenance
     assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
-        f"profile:{_BUCKET_ID}:binding:{_CCAA_BINDING}"
+        f"profile:{_BUCKET_ID}:binding:{_CCAA_BINDING}",
     }
     assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
-        _PROFILE_FINGERPRINT
+        _PROFILE_FINGERPRINT,
     }
 
 
@@ -122,14 +123,14 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=2025,
-            period="0A",
+            period=Period.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
-        )
+        ),
     )
 
     assert resolution.enum_binding_values[_CCAA_BINDING] == "madrid"
     assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
-        _PROFILE_FINGERPRINT
+        _PROFILE_FINGERPRINT,
     }
 
 
@@ -146,9 +147,9 @@ def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=2025,
-            period="0A",
+            period=Period.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
-        )
+        ),
     )
 
     assert _CCAA_BINDING not in resolution.binding_values
@@ -172,9 +173,9 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
             bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2026,
-            period="2T",
+            period=Period.from_year_and_code(2026, "2T"),
             revision=snapshot.revision,
-        )
+        ),
     )
 
     assert resolution.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200")}

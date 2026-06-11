@@ -208,7 +208,7 @@ class Modelo100BorradorSourceResolver:
             snapshot = resources().modelos.authority.snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
-                period=context.period,
+                period=context.period.registry_token,
             )
         try:
             result = resolve_modelo_100_borrador_bindings(
@@ -216,7 +216,7 @@ class Modelo100BorradorSourceResolver:
                     bucket_id=context.bucket_id,
                     modelo=context.modelo,
                     filing_year=context.filing_year,
-                    period=context.period,
+                    period=context.period.registry_token,
                     borrador_snapshot_id=self._borrador_snapshot_id,
                     caller_binding_values=self._caller_binding_values,
                     caller_enum_binding_values=self._caller_enum_binding_values,

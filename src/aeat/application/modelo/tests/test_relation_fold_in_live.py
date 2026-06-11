@@ -38,6 +38,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaObservation,
@@ -178,7 +179,7 @@ def test_relation_target_collision_refused_by_mesh_guard(secure_objects: SecureO
         bucket_id=_BUCKET_ID,
         modelo="180",
         filing_year=_YEAR,
-        period="0A",
+        period=Period.from_year_and_code(_YEAR, "0A"),
         revision=snapshot_180.revision,
         calculated_at=_T1,
     )

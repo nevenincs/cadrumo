@@ -52,7 +52,6 @@ from ._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
     _file_revision,
     _Repos,
-    repos,  # noqa: F401  (pytest fixture)
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -157,7 +156,7 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
     return saldo
 
 
-def test_local_file_then_next_period_calculate_carries_previous_filing_value(repos: _Repos) -> None:  # noqa: F811
+def test_local_file_then_next_period_calculate_carries_previous_filing_value(repos: _Repos) -> None:
     """E2E: filing 1T auto-carries its saldo-negativo into 2T's casilla 15 on calculate.
 
     No manual ``--casilla 15`` / ``--binding`` is supplied for 2T. The carry contract:
@@ -196,7 +195,7 @@ def test_app_filing_source_kind_is_not_official_evidence() -> None:
     assert APP_FILING_SOURCE_KIND not in _OFFICIAL_SOURCE_KINDS
 
 
-def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repos) -> None:  # noqa: F811
+def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repos) -> None:
     """D1 (E2E): a locally-filed 1T does NOT let 2T FILE — it still blocks on evidence.
 
     Filing 1T persists an ``app_filing`` carry observation. When 2T is then verified and
@@ -279,7 +278,7 @@ def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repo
         )
 
 
-def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repos) -> None:  # noqa: F811
+def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repos) -> None:
     """D2: a caller ``--binding`` of the carry binding overrides the auto-carried value.
 
     After filing 1T with a positive saldo-negativo carry, calculating 2T while supplying
@@ -310,7 +309,7 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
     )
 
 
-def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> None:  # noqa: F811
+def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> None:
     """D3: the previous_filing resolver does not emit the M303 IVA-compensation binding.
 
     A prior 303 filing whose observation carries the compensation casillas is persisted
@@ -319,6 +318,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     enrollment helper :func:`_previous_filing_resolution_excluding_iva_compensation`
     strips it so the iva-wallet decision remains the sole owner.
     """
+    from ....core import Period
     from ...aggregation import CalculationSourceContext
     from ...calculations import PreviousFilingSourceResolver
 
@@ -341,7 +341,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         bucket_id=work_unit_303.bucket_id,
         modelo="303",
         filing_year=2026,
-        period="2T",
+        period=Period.from_year_and_code(2026, "2T"),
         revision=snapshot.revision,
     )
     raw = PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context)

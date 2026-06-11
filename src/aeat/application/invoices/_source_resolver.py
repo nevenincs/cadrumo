@@ -98,7 +98,7 @@ def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozense
 def _invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> bool:
     if invoice.bucket_id != context.bucket_id:
         return False
-    return _date_in_period(invoice.issued_at, filing_year=context.filing_year, period=context.period)
+    return _date_in_period(invoice.issued_at, filing_year=context.filing_year, period=context.period.registry_token)
 
 
 def _date_in_period(value: date, *, filing_year: int, period: str) -> bool:
