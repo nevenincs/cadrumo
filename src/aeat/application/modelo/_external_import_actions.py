@@ -13,7 +13,7 @@ from ...core import Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.justificante import JustificanteRepository
+from ...domain.justificante import Justificante, JustificanteRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -317,22 +317,16 @@ def _require_bound_justificante_artifact(
 
 
 def _justificante_matches_import_target(
-    justificante: object,
+    justificante: Justificante,
     *,
     modelo: str,
     filing_year: int,
     period: Period,
     expected_tax_id: str,
 ) -> bool:
-    justificante_period = getattr(justificante, "period", None)
-    if not isinstance(justificante_period, Period):
-        try:
-            justificante_period = Period.from_year_and_code(filing_year, str(justificante_period or ""))
-        except ValueError:
-            return False
     return (
-        str(getattr(justificante, "modelo", "")).strip() == modelo
-        and str(getattr(justificante, "ejercicio", "") or "").strip() == str(filing_year)
-        and justificante_period == period
-        and str(getattr(justificante, "tax_id", "") or "").strip() == expected_tax_id
+        justificante.modelo.strip() == modelo
+        and str(justificante.ejercicio or "").strip() == str(filing_year)
+        and justificante.period == period
+        and justificante.tax_id.strip() == expected_tax_id
     )
