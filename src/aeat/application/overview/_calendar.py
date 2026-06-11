@@ -39,7 +39,6 @@ from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
 from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
-from ...domain.period import parse_canonical_period as _parse_canonical_period
 
 if TYPE_CHECKING:
     from ...domain.modelos import ModeloRecord
@@ -545,10 +544,7 @@ def calendar_events_from_expedientes_snapshots(
             event_date = declaration.presented_at.date()
             if not calendar_range.covers(event_date):
                 continue
-            _year, _code = _parse_canonical_period(
-                declaration.period, ejercicio=str(declaration.ejercicio)
-            )
-            _period = _Period.from_year_and_code(_year, _code)
+            _period = _Period.from_year_and_code(declaration.ejercicio, declaration.period)
             summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {_period.registry_token} filed at AEAT"
             events.append(
                 OverviewCalendarEvent(

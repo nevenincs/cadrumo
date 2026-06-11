@@ -2,13 +2,10 @@
 
 ``aeat.core.Period`` is the backend filing-period authority: a filing
 year plus registry token, constructed with ``Period.from_year_and_code``.
-This module provides registry-token date-boundary helpers and one narrow
-adapter for raw AEAT declaration input where a bare quarterly token is
-paired with ``ejercicio``.
+This module provides registry-token date-boundary helpers.
 
 Do not treat this module as canonical period storage. Prefer typed
-``aeat.core.Period`` at domain boundaries; use ``ejercicio`` here only
-when adapting raw AEAT declaration payloads.
+``aeat.core.Period`` at domain boundaries.
 
 The ``nP`` tokens are the Impuesto sobre Sociedades pago-fraccionado
 instalment claves (Modelo 202). Per the AEAT Modelo 202 instructions,
@@ -23,7 +20,6 @@ they own.
 
 from __future__ import annotations
 
-import re
 from datetime import date
 
 from ..core.errors import AeatError
@@ -35,31 +31,6 @@ class PeriodError(AeatError):
 
 class PeriodValidationError(PeriodError, ValueError):
     """Raised when a period token is malformed. Inherits from ValueError for Pydantic."""
-
-
-_RAW_QUARTER_RE = re.compile(r"^(?P<quarter>[1-4])T$")
-
-
-def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tuple[int, str]:
-    """Parse a bare AEAT quarterly token from raw declaration input.
-
-    Args:
-        period: Raw AEAT quarterly token (``nT``).
-        ejercicio: Filing year supplied by the raw AEAT declaration row.
-
-    Returns:
-        ``(filing_year, registry_period)`` where the second element is a
-        bare registry token such as ``"1T"``.
-
-    Raises:
-        PeriodValidationError: When ``period`` is not a raw quarterly
-            token paired with ``ejercicio``. Combined year/token values,
-            year-month values, annual shorthand, bare filing years, and
-            pago-fraccionado period-number forms are refused.
-    """
-    if ejercicio is not None and (match := _RAW_QUARTER_RE.fullmatch(period)):
-        return int(ejercicio), f"{match.group('quarter')}T"
-    raise PeriodValidationError(f"cannot map filing period {period!r} to a registry period")
 
 
 def period_start_date(filing_year: int, registry_period: str) -> date:
@@ -143,7 +114,6 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
 __all__ = [
     "PeriodError",
     "PeriodValidationError",
-    "parse_canonical_period",
     "period_end_date",
     "period_start_date",
 ]
