@@ -8,6 +8,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....adapters.outbound.aeat.sede import Declaracion
+from ....core import Period
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -99,7 +100,7 @@ def test_calendar_undeclared_profile_preserves_observed_events() -> None:
                     Declaracion(
                         modelo="303",
                         ejercicio=2026,
-                        period="1T",
+                        period=Period.from_year_and_code(2026, "1T"),
                         expediente_id="202630313520389Q",
                         estado="ALTA",
                         presented_at=datetime(2026, 4, 15, 9, 30, tzinfo=UTC),
