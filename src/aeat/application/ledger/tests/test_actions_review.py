@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import Period
 from ._action_test_support import (
     UTC,
     BucketEventType,
@@ -25,10 +26,12 @@ from ._action_test_support import (
     ledger_transaction_review_status,
     list_manual_transactions,
     query_ledger_review_rows,
+    secure_objects,
     stash_manual_transaction,
     summarize_manual_transactions,
 )
 
+__all__ = ["secure_objects"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -127,7 +130,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
 
     report = summarize_manual_transactions(
         bucket_id="bucket-a",
-        period="2026-05",
+        period=Period.from_year_and_code(2026, "05"),
         transaction_repository=transaction_repository,
     )
 
@@ -176,7 +179,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
     )
 
     listed = query_ledger_review_rows(
-        LedgerReviewQuery(bucket_id="bucket-a", period="2026-05", status="pending"),
+        LedgerReviewQuery(bucket_id="bucket-a", period=Period.from_year_and_code(2026, "05"), status="pending"),
         transaction_repository=transaction_repository,
     )
     single = query_ledger_review_rows(
@@ -184,12 +187,16 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
         transaction_repository=transaction_repository,
     )
     single_filtered_out = query_ledger_review_rows(
-        LedgerReviewQuery(bucket_id="bucket-a", period="2026-06", transaction_id=may.ref.transaction_id),
+        LedgerReviewQuery(
+            bucket_id="bucket-a",
+            period=Period.from_year_and_code(2026, "06"),
+            transaction_id=may.ref.transaction_id,
+        ),
         transaction_repository=transaction_repository,
     )
 
     assert [row.description for row in listed.rows] == ["may row"]
-    assert listed.filters == ("period=2026-05", "status=pending")
+    assert listed.filters == ("period=2026 05", "status=pending")
     assert single.rows[0].id == may.ref.transaction_id
     assert single.rows[0].transaction is not None
     assert single_filtered_out.rows == ()
@@ -291,7 +298,7 @@ def test_query_ledger_review_rows_filters_quarter_import_and_issue_events(
     }
 
     quarter_rows = query_ledger_review_rows(
-        LedgerReviewQuery(bucket_id="bucket-a", period="2026Q2"),
+        LedgerReviewQuery(bucket_id="bucket-a", period=Period.from_year_and_code(2026, "2T")),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )

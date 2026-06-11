@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     pass
 
+from ...core import Period
 from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
@@ -28,7 +29,6 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
-from ..aggregation import Period
 from ..export import serialize_tabular_rows
 from ._actions_common import (
     _bucket_event_repository,

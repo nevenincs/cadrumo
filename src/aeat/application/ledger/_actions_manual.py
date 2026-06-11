@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     pass
 
+from ...core import Period
 from ...core.aggregation import AggregationSourceKind
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.attachments._protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -51,7 +52,6 @@ from ...domain.transactions._protocols import TransactionCatalogueRepositoryProt
 from ...domain.usage_ratios import (
     UsageRatioProfile,
 )
-from ..aggregation import Period
 from ..review import LedgerReviewStatus
 from ._actions_common import (
     _blocking_modelo_references,

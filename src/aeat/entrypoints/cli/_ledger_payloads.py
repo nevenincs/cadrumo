@@ -87,21 +87,15 @@ class SpendingCategoryFamilyPayload(OutputSchema):
 
 
 class LedgerPeriodPayload(OutputSchema):
-    """Typed aggregation-period projection nested in ledger envelopes (D2).
+    """Typed core-period projection nested in ledger envelopes (D2).
 
-    Mirrors :class:`aeat.application.aggregation.Period`'s
-    ``model_dump(mode="json")`` — replacing the former bare
-    ``dict[str, object]`` ``period`` shape on the status, import, and preflight
-    envelopes.
+    Mirrors :class:`aeat.core.Period`'s ``model_dump(mode="json")`` shape,
+    replacing the former aggregation-wrapper payload on the status, import,
+    and preflight envelopes.
     """
 
-    year: int
-    quarter: str | None = None
-    month: int | None = None
-    kind: str
-    start: str
-    end: str
-    period_type: str
+    filing_year: int
+    code: str
 
 
 class LedgerReviewRowPayload(OutputSchema):
@@ -520,9 +514,9 @@ class LedgerStatusResult(OutputSchema):
     pending_review_count: int
     reviewed_count: int
     skipped_count: int
-    # The filing period travels as a typed :class:`Period` date span on the
-    # backend report; the JSON envelope surfaces its serialised mapping (year,
-    # quarter/month, start/end), mirroring ``LedgerPreflightResult.period``.
+    # The filing period travels as a typed core Period on the backend report;
+    # the JSON envelope surfaces its serialised {filing_year, code} mapping,
+    # mirroring ``LedgerPreflightResult.period``.
     period: LedgerPeriodPayload | None = None
     checked_transaction_count: int = 0
     readiness_issue_count: int = 0
@@ -670,8 +664,8 @@ class LedgerImportPayload(OutputSchema):
     likely_duplicates: int = 0
     dry_run: bool
     verify: bool
-    # The filing period travels as a typed :class:`Period` date span on the
-    # backend result; the JSON envelope surfaces its serialised mapping.
+    # The filing period travels as a typed core Period on the backend result;
+    # the JSON envelope surfaces its serialised {filing_year, code} mapping.
     period: LedgerPeriodPayload | None = None
     bucket_id: str | None = None
     import_batch_id: str | None = None
@@ -870,7 +864,7 @@ class LedgerPreflightResult(OutputSchema):
 
     Mirrors ``LedgerPreflightReport.model_dump(mode='json')`` produced
     by :func:`preflight_ledger_tax_readiness`. ``period`` is the nested
-    :class:`Period` model dump; ``ready`` is the computed-field flag.
+    :class:`aeat.core.Period` model dump; ``ready`` is the computed-field flag.
     """
 
     bucket_id: str

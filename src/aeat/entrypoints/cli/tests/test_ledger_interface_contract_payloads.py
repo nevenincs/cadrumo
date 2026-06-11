@@ -71,13 +71,8 @@ def _transaction_payload(**overrides: object) -> dict[str, object]:
 
 def _period_payload(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
-        "year": 2026,
-        "quarter": "Q1",
-        "month": None,
-        "kind": "quarterly",
-        "start": "2026-01-01",
-        "end": "2026-03-31",
-        "period_type": "quarterly",
+        "filing_year": 2026,
+        "code": "1T",
     }
     base.update(overrides)
     return base

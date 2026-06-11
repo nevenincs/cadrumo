@@ -28,10 +28,10 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from ....application.aggregation._models import Period
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 from .._common import _canonical_period, _filter_canonical_period
@@ -68,8 +68,8 @@ def test_aeat_token_plus_year_resolves_to_period(
     assert isinstance(resolved, Period)
     assert resolved.year == year
     assert resolved.registry_token == registry_token
-    assert resolved.start == start
-    assert resolved.end == end
+    assert resolved.start_date == start
+    assert resolved.end_date == end
 
 
 @pytest.mark.parametrize(("token", "year", "registry_token", "start", "end"), _TOKEN_YEAR_SPAN)
