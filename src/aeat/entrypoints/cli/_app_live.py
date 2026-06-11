@@ -295,7 +295,7 @@ def iva_wallet_history_cmd(
         rows=[
             IvaCompensationHistoryRowPayload(
                 year=row.year,
-                period=row.period,
+                period=str(row.period),
                 status=row.status,
                 presented_at=row.presented_at.isoformat(),
                 prior_pending_amount=row.prior_pending_amount,
@@ -358,7 +358,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                 "\t".join(
                     (
                         str(row.year),
-                        row.period,
+                        str(row.period),
                         row.status,
                         f"prior={row.prior_pending_amount}",
                         f"applied={row.applied_amount}",
@@ -883,7 +883,7 @@ def filed_list_cmd(
                 (
                     failure.modelo,
                     str(failure.year),
-                    failure.period or "",
+                    str(failure.period) if failure.period is not None else "",
                     failure.expediente_id or "",
                     failure.error_type,
                     failure.message,
@@ -916,7 +916,7 @@ def filed_list_cmd(
             FiledCaptureFailurePayload(
                 modelo=failure.modelo,
                 year=failure.year,
-                period=failure.period,
+                period=str(failure.period) if failure.period is not None else None,
                 expediente_id=failure.expediente_id,
                 error_type=failure.error_type,
                 message=failure.message,
