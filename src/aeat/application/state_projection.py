@@ -34,9 +34,8 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
-from ..core import resolve_active_bucket_id
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import Period
+from ..core import Period, resolve_active_bucket_id
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -54,6 +53,7 @@ from ..domain.modelos._calculation_repository import CalculationRevisionCatalogu
 from ..domain.modelos._repository import WorkUnitCatalogueRepository
 from ..domain.modelos._work_unit import WorkUnitState
 from ..domain.transactions import TransactionCatalogueRepository
+from .aggregation import Period as _LedgerPeriod
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
@@ -661,36 +661,20 @@ def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
     return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
 
 
-_QUARTERLY_TOKEN_TO_AGG: dict[str, str] = {
-    "1T": "Q1",
-    "2T": "Q2",
-    "3T": "Q3",
-    "4T": "Q4",
-}
-
-
-def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> str:
-    """Return the aggregation-parseable period string for the ledger preflight.
+def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> _LedgerPeriod:
+    """Return the typed ledger period for the ledger preflight.
 
     Converts the typed :class:`~aeat.core.Period` on the request to the
-    ``YYYY[Qn|-MM]`` form that :func:`preflight_ledger_tax_readiness` /
-    the aggregation :class:`~aeat.application.aggregation.Period` parser
-    accepts.  When the request carries no period the filing year alone
-    (annual ``0A`` fallback) is returned.
+    aggregation :class:`~aeat.application.aggregation.Period` used by
+    :func:`preflight_ledger_tax_readiness`. When the request carries no period
+    the annual ``0A`` fallback is returned.
     """
     if request.period is None:
-        return str(request.filing_year)
+        code = "0A"
+        return _LedgerPeriod.from_year_and_token(year=request.filing_year, token=code)
     code = request.period.registry_token
     year = request.period.year
-    if code in _QUARTERLY_TOKEN_TO_AGG:
-        return f"{year}{_QUARTERLY_TOKEN_TO_AGG[code]}"
-    if code == "0A":
-        return str(year)
-    # Monthly: "03" → "2026-03"
-    if len(code) == 2 and code.isdigit():
-        return f"{year}-{code}"
-    # Fallback for instalment/extended: bare code only (preflight will reject)
-    return code
+    return _LedgerPeriod.from_year_and_token(year=year, token=code)
 
 
 def build_operator_state_projection(

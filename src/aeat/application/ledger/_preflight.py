@@ -91,7 +91,7 @@ class LedgerPreflightReport(BaseModel):
 def preflight_ledger_tax_readiness(
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> LedgerPreflightReport:
     """Load a bucket-local catalogue and return a :class:`LedgerPreflightReport` describing modelo-readiness gaps.
@@ -115,19 +115,19 @@ def preflight_ledger_tax_readiness(
 def preflight_transaction_catalogue(
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
     transactions: TransactionCatalogue,
 ) -> LedgerPreflightReport:
     """Report missing ledger facts without mutating the transaction catalogue.
 
     Args:
         bucket_id: Stable bucket identifier for the ledger being checked.
-        period: Filing period; either a :class:`Period` instance or a period code string.
+        period: Filing period as a typed :class:`Period` instance.
         transactions: The :class:`TransactionCatalogue` to inspect for missing facts.
 
     Returns a :class:`LedgerPreflightReport`.
     """
-    resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
+    resolved_period = period
     issues: list[LedgerPreflightIssue] = []
     checked = 0
     for transaction in _sorted_transactions(transactions):

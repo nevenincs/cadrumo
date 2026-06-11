@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period as CorePeriod
 from ....core.resources import resources
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
@@ -43,8 +43,18 @@ from .. import (
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
+from .. import (
+    Period as AggregationPeriod,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _period(year: int, code: str) -> AggregationPeriod:
+    return AggregationPeriod.from_year_and_token(year=year, token=code)
+
+
+_ANNUAL_2025 = _period(2025, "0A")
 
 
 @pytest.fixture
@@ -173,7 +183,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
 
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
@@ -209,7 +219,7 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
 
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
     )
@@ -241,7 +251,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
             bucket_id="test",
             modelo="100",
             filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
+            period=CorePeriod.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
         ),
     )
@@ -261,7 +271,7 @@ def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mis
     with pytest.raises(AggregationValidationError, match="bucket"):
         aggregate_renta_ledger_expenses_from_repositories(
             bucket_id="test",
-            period="2025",
+            period=_ANNUAL_2025,
             transaction_repository=repo,
             invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
             profile_year=2025,
@@ -277,7 +287,7 @@ def test_repository_backed_aggregation_rejects_invoice_repository_bucket_mismatc
     with pytest.raises(AggregationValidationError, match="invoice_bucket_mismatch"):
         aggregate_renta_ledger_expenses_from_repositories(
             bucket_id="test",
-            period="2025",
+            period=_ANNUAL_2025,
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             profile_year=2025,
@@ -293,7 +303,7 @@ def test_repository_backed_aggregation_rejects_unbound_invoice_repository(
     with pytest.raises(AggregationValidationError, match="invoice_bucket_mismatch"):
         aggregate_renta_ledger_expenses_from_repositories(
             bucket_id="test",
-            period="2025",
+            period=_ANNUAL_2025,
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             profile_year=2025,
@@ -314,7 +324,7 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
         TransactionCatalogue.from_transactions((mixed,)),
         InvoiceCatalogue(),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -347,7 +357,7 @@ def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation
         TransactionCatalogue.from_transactions((active, archived, stashed)),
         InvoiceCatalogue(),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -370,7 +380,7 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
         TransactionCatalogue.from_transactions((manual,)),
         InvoiceCatalogue(),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -388,7 +398,7 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
         TransactionCatalogue.from_transactions((linked,)),
         InvoiceCatalogue.from_invoices((invoice,)),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -407,7 +417,7 @@ def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
         TransactionCatalogue.from_transactions((linked,)),
         InvoiceCatalogue.from_invoices((invoice,)),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -427,7 +437,7 @@ def test_purchase_invoice_evidence_from_other_bucket_is_reported_as_issue() -> N
         TransactionCatalogue.from_transactions((linked,)),
         InvoiceCatalogue.from_invoices((invoice,)),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -454,7 +464,7 @@ def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
         TransactionCatalogue.from_transactions((refund,)),
         InvoiceCatalogue.from_invoices((invoice,)),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -503,7 +513,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
         TransactionCatalogue.from_transactions((caja_in_year, caja_out_of_year)),
         InvoiceCatalogue(),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -531,7 +541,7 @@ def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None
         TransactionCatalogue.from_transactions((usd_expense,)),
         InvoiceCatalogue(),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 
@@ -553,7 +563,7 @@ def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
         TransactionCatalogue.from_transactions((zero_business,)),
         InvoiceCatalogue(),
         bucket_id="test",
-        period="2025",
+        period=_ANNUAL_2025,
         profile_year=2025,
     )
 

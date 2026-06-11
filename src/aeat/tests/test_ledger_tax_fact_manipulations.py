@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ..application.aggregation import aggregate_renta_ledger_expenses
+from ..application.aggregation import Period, aggregate_renta_ledger_expenses
 from ..application.aggregation._iva_ledger import aggregate_iva_ledger_observations
 from ..application.aggregation._renta_income_ledger import aggregate_renta_income_ledger
 from ..domain.categories import SpendingCategory
@@ -45,6 +45,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CENT = Decimal("0.01")
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
+
+
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_token(year=year, token=code)
+
+
+_ANNUAL_2025 = _period(2025, "0A")
+_Q1_2025 = _period(2025, "1T")
 
 
 def _q(value: Decimal) -> Decimal:
@@ -105,7 +113,7 @@ def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
             ),
         )
     catalogue = TransactionCatalogue.from_transactions(tuple(txns))
-    result = aggregate_iva_ledger_observations(catalogue, period="2025Q1")
+    result = aggregate_iva_ledger_observations(catalogue, period=_Q1_2025)
     by_cat = {o.category: o for o in result.observations}
     for _rate, category in cases:
         assert category in by_cat, f"{category} did not reach M303"
@@ -135,7 +143,7 @@ def _deductible_total(*, classification: BusinessClassification, business_pct: D
     if business_pct is not None:
         payload["business_pct"] = business_pct
     catalogue = TransactionCatalogue.from_transactions((Transaction.model_validate(payload),))
-    result = aggregate_renta_ledger_expenses(catalogue, InvoiceCatalogue(), bucket_id="corpus", period="2025")
+    result = aggregate_renta_ledger_expenses(catalogue, InvoiceCatalogue(), bucket_id="corpus", period=_ANNUAL_2025)
     return sum((o.deductible_amount for o in result.observations), start=Decimal("0"))
 
 
@@ -174,7 +182,7 @@ def _income_observation_count(irpf_category: str) -> int:
         },
     )
     catalogue = TransactionCatalogue.from_transactions((txn,))
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="corpus", period="2025Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="corpus", period=_Q1_2025)
     return len(result.observations)
 
 

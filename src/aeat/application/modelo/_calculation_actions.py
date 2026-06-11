@@ -34,6 +34,7 @@ from ...domain.modelos._row_models import ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
+from ..aggregation import Period as _LedgerPeriod
 from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS as _DEFERRED_SOURCE_KINDS
 from ..live import Borrador100SnapshotRepository
 from . import _iva_wallet_gate
@@ -404,7 +405,6 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
 # clients supply régimen-simplificado casillas (47-58) directly as manual
 # inputs rather than deriving them from the transaction ledger.
 _IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
-_ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
 
 
 def _raise_if_ledger_preflight_blocks_calculation(
@@ -441,17 +441,9 @@ def _raise_if_ledger_preflight_blocks_calculation(
     )
 
 
-def _ledger_preflight_period_for_work_unit(work_unit: WorkUnit) -> str:
-    token = work_unit.period.strip().upper()
-    if token in {"1T", "2T", "3T", "4T"}:
-        return f"{work_unit.filing_year}Q{token[0]}"
-    if token in {"Q1", "Q2", "Q3", "Q4"}:
-        return f"{work_unit.filing_year}{token}"
-    if token in _ANNUAL_REGISTRY_PERIODS:
-        return str(work_unit.filing_year)
-    if len(token) == 2 and token.isdigit():
-        return f"{work_unit.filing_year}-{token}"
-    return token
+def _ledger_preflight_period_for_work_unit(work_unit: WorkUnit) -> _LedgerPeriod:
+    code = work_unit.period.strip().upper()
+    return _LedgerPeriod.from_year_and_token(year=work_unit.filing_year, token=code)
 
 
 def calculate_modelo_revision_from_bucket_aggregation(
