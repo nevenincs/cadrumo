@@ -10,6 +10,15 @@ related:
   - '[[2026-06-04-llm-ledger-classification-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `llm-evidence-classification` `Evidence-aware LLM ledger classification (Stage-3)` plan
 
@@ -41,22 +50,22 @@ Deliver the on-host readers: the in-tree pdfplumber text-layer over in-memory by
 
 Read evidence bytes from secure storage in-memory, run the in-tree pdfplumber text-layer over them on-host, and inject the extracted text into the classify and saturate prompts. No file is written; nothing leaves the host.
 
-- [ ] `W02.P03.S07` - Extend PromptSpec.render to inject extracted evidence text and a read instruction into the classify prompt; `src/aeat/domain/transactions/_llm.py`.
-- [ ] `W02.P03.S08` - Run the in-tree pdfplumber text-layer over in-memory evidence bytes to produce the prompt text fed to the classifier; `src/aeat/application/ledger/_evidence_textlayer.py`.
-- [ ] `W02.P03.S09` - Wire opt-in permitted-provider-gated evidence resolution into suggest_llm_classification and saturate_llm_classification; `src/aeat/application/ledger/_llm_classification.py`.
-- [ ] `W02.P03.S10` - Add a --read-evidence opt-in flag to the classify --llm CLI handlers; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W02.P03.S11` - Test that extracted evidence text reaches the rendered prompt and that no evidence file is written outside secure storage; `src/aeat/domain/transactions/tests/test_llm_evidence_prompt.py`.
+- [x] `W02.P03.S07` - Extend PromptSpec.render to inject extracted evidence text and a read instruction into the classify prompt; `src/aeat/domain/transactions/_llm.py`.
+- [x] `W02.P03.S08` - Run the in-tree pdfplumber text-layer over in-memory evidence bytes to produce the prompt text fed to the classifier; `src/aeat/application/ledger/_evidence_textlayer.py`.
+- [x] `W02.P03.S09` - Wire opt-in permitted-provider-gated evidence resolution into suggest_llm_classification and saturate_llm_classification; `src/aeat/application/ledger/_llm_classification.py`.
+- [x] `W02.P03.S10` - Add a --read-evidence opt-in flag to the classify --llm CLI handlers; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W02.P03.S11` - Test that extracted evidence text reaches the rendered prompt and that no evidence file is written outside secure storage; `src/aeat/domain/transactions/tests/test_llm_evidence_prompt.py`.
 
 ### Phase `W02.P04` - Selection grounding, advisory cross-check, provenance
 
 Guard evidence-read category and IVA-category selection with the allow-list, add the printed-vs-derived IVA advisory, stamp provenance, and surface low-confidence reads.
 
-- [ ] `W02.P04.S12` - Keep the parse_response allow-list guard over evidence-read category and iva_category selection; `src/aeat/domain/transactions/_llm.py`.
-- [ ] `W02.P04.S13` - Add a printed-vs-derived IVA advisory cross-check as a non-blocking source diagnostic; `src/aeat/application/ledger/_llm_classification.py`.
-- [ ] `W02.P04.S14` - Stamp classified_by llm-model and the cited evidence_id and attachment_id into classification and evidence provenance on apply; `src/aeat/application/ledger/_llm_classification.py`.
-- [ ] `W02.P04.S15` - Surface a low-confidence or refused evidence read to the operator rather than persisting silently; `src/aeat/application/ledger/_llm_classification.py`.
-- [ ] `W02.P04.S16` - Add allow-list guard, advisory cross-check, and provenance-stamping tests; `src/aeat/application/ledger/tests/test_llm_evidence_selection.py`.
-- [ ] `W02.P04.S33` - Enforce the cloud-upload consent gate in the evidence-read path: refuse a cloud transport without per-invocation acknowledgement, exclude the file-writing CLI-agent route, and record the consent in provenance; `src/aeat/application/ledger/_llm_classification.py`.
+- [x] `W02.P04.S12` - Keep the parse_response allow-list guard over evidence-read category and iva_category selection; `src/aeat/domain/transactions/_llm.py`.
+- [x] `W02.P04.S13` - Add a printed-vs-derived IVA advisory cross-check as a non-blocking source diagnostic; `src/aeat/application/ledger/_llm_classification.py`.
+- [x] `W02.P04.S14` - Stamp classified_by llm-model and the cited evidence_id and attachment_id into classification and evidence provenance on apply; `src/aeat/application/ledger/_llm_classification.py`.
+- [x] `W02.P04.S15` - Surface a low-confidence or refused evidence read to the operator rather than persisting silently; `src/aeat/application/ledger/_llm_classification.py`.
+- [x] `W02.P04.S16` - Add allow-list guard, advisory cross-check, and provenance-stamping tests; `src/aeat/application/ledger/tests/test_llm_evidence_selection.py`.
+- [x] `W02.P04.S33` - Enforce the cloud-upload consent gate in the evidence-read path: refuse a cloud transport without per-invocation acknowledgement, exclude the file-writing CLI-agent route, and record the consent in provenance; `src/aeat/application/ledger/_llm_classification.py`.
 
 ### Phase `W02.P05` - On-host vision reading and cache key
 
@@ -75,27 +84,27 @@ Add the N-way split response schema and split-proposal prompt, parse and validat
 
 Define the N-way split response schema and split-proposal prompt and parse/validate the proposal under the allow-list.
 
-- [ ] `W03.P06.S21` - Define the N-way split response schema (children each carrying amount, category, iva_category, evidence citation); `src/aeat/domain/transactions/_llm.py`.
-- [ ] `W03.P06.S22` - Add a split-proposal prompt spec instructing the model to read the invoice and propose children; `src/aeat/domain/transactions/_llm.py`.
-- [ ] `W03.P06.S23` - Parse and validate the split response under the allow-list guard; `src/aeat/domain/transactions/_llm.py`.
-- [ ] `W03.P06.S24` - Add split-schema and parse-validation tests; `src/aeat/domain/transactions/tests/test_llm_split_schema.py`.
+- [x] `W03.P06.S21` - Define the N-way split response schema (children each carrying amount, category, iva_category, evidence citation); `src/aeat/domain/transactions/_llm.py`.
+- [x] `W03.P06.S22` - Add a split-proposal prompt spec instructing the model to read the invoice and propose children; `src/aeat/domain/transactions/_llm.py`.
+- [x] `W03.P06.S23` - Parse and validate the split response under the allow-list guard; `src/aeat/domain/transactions/_llm.py`.
+- [x] `W03.P06.S24` - Add split-schema and parse-validation tests; `src/aeat/domain/transactions/tests/test_llm_split_schema.py`.
 
 ### Phase `W03.P07` - Split application path, CLI, provenance
 
 Validate split invariants and drive split_transaction from a reviewed suggestion with registry-derived child numbers and per-child evidence provenance.
 
-- [ ] `W03.P07.S25` - Add an application path that validates children-sum-to-parent and sign invariants and drives split_transaction from a reviewed suggestion; `src/aeat/application/ledger/_llm_classification.py`.
-- [ ] `W03.P07.S26` - Derive each child's regulated iva_rate, taxable_base, and iva_amount from the registry, never from the model; `src/aeat/application/ledger/_llm_classification.py`.
-- [ ] `W03.P07.S27` - Stamp evidence provenance on each child transaction produced by the split; `src/aeat/application/ledger/_actions_split_merge.py`.
-- [ ] `W03.P07.S28` - Add a CLI surface for the evidence-driven split suggest and apply flow; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W03.P07.S29` - Add split-invariant, registry-derived-number, and per-child provenance roundtrip tests; `src/aeat/application/ledger/tests/test_llm_evidence_split.py`.
+- [x] `W03.P07.S25` - Add an application path that validates children-sum-to-parent and sign invariants and drives split_transaction from a reviewed suggestion; `src/aeat/application/ledger/_llm_classification.py`.
+- [x] `W03.P07.S26` - Derive each child's regulated iva_rate, taxable_base, and iva_amount from the registry, never from the model; `src/aeat/application/ledger/_llm_classification.py`.
+- [x] `W03.P07.S27` - Stamp evidence provenance on each child transaction produced by the split; `src/aeat/application/ledger/_actions_split_merge.py`.
+- [x] `W03.P07.S28` - Add a CLI surface for the evidence-driven split suggest and apply flow; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W03.P07.S29` - Add split-invariant, registry-derived-number, and per-child provenance roundtrip tests; `src/aeat/application/ledger/tests/test_llm_evidence_split.py`.
 
 ### Phase `W03.P08` - Documentation and conformance gates
 
 Update the classify how-to for the evidence-reading and split flow and pass the command-conformance and docs-build gates.
 
-- [ ] `W03.P08.S30` - Update the classify how-to with the evidence-reading and evidence-driven split flow; `docs/how-to/classify-with-llm.md`.
-- [ ] `W03.P08.S31` - Pass the documented-command-conformance gate for the new evidence and split flags; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
+- [x] `W03.P08.S30` - Update the classify how-to with the evidence-reading and evidence-driven split flow; `docs/how-to/classify-with-llm.md`.
+- [x] `W03.P08.S31` - Pass the documented-command-conformance gate for the new evidence and split flags; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
 - [ ] `W03.P08.S32` - Pass the nitpicky Sphinx docs-build gate; `dev/docs/tests/test_docs_build.py`.
 
 ## Description
