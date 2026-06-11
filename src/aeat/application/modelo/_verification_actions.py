@@ -40,6 +40,11 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from ...domain.modelos._participation_index import (
+    TransactionParticipationIndexRepository,
+    TransactionRevisionParticipation,
+    upsert_transaction_participation,
+)
 from ...domain.modelos._ledger_filing_snapshot import (
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
@@ -770,6 +775,7 @@ def verify_modelo_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     calculation_observation_repository: CalculationObservationRepository | None = None,
+    participation_index_repository: TransactionParticipationIndexRepository | None = None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
@@ -897,6 +903,7 @@ def verify_modelo_revision(
             work_unit=work_unit,
             transaction_repository=transaction_repository,
             calculation_repository=cr_repo,
+            participation_index_repository=participation_index_repository,
         )
 
     _emit_verification_bucket_event(
@@ -916,6 +923,37 @@ def verify_modelo_revision(
     return report
 
 
+def _build_participation_writes(
+    *,
+    verified: CalculationRevision,
+    work_unit: WorkUnit,
+    participation_index_repository: TransactionParticipationIndexRepository,
+) -> tuple[object, ...]:
+    """Build the per-transaction participation-index co-emission writes.
+
+    For each ``source_transaction_id`` of the verified revision, load that
+    transaction's existing :class:`TransactionRevisionParticipationIndex`, upsert
+    the new ``VERIFICADO_COMPLETO`` participation (replacing any prior entry for
+    the same revision), and return the resulting ``SecureObjectWrite`` so the
+    caller co-emits them in the same atomic unit of work as the revision save.
+    A revision with no contributing transactions yields no writes.
+    """
+    writes: list[object] = []
+    for transaction_id in verified.source_transaction_ids:
+        index = participation_index_repository.load(transaction_id)
+        participation = TransactionRevisionParticipation(
+            calculation_revision_id=verified.calculation_revision_id,
+            work_unit_id=work_unit.work_unit_id,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            revision_state=CalculationRevisionState.VERIFICADO_COMPLETO.value,
+        )
+        updated = upsert_transaction_participation(index, participation)
+        writes.append(participation_index_repository.to_secure_object_write(updated))
+    return tuple(writes)
+
+
 def _persist_verified_revision_evidence(
     *,
     target: CalculationRevision,
@@ -925,6 +963,7 @@ def _persist_verified_revision_evidence(
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepository | None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    participation_index_repository: TransactionParticipationIndexRepository | None,
 ) -> None:
     tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
     catalogue = tx_repo.load()
@@ -951,7 +990,20 @@ def _persist_verified_revision_evidence(
             "ledger_filing_evidence": filing_evidence,
         },
     )
-    calculation_repository.save(upsert_calculation_revision(revisions, verified))
+    updated_catalogue = upsert_calculation_revision(revisions, verified)
+    participation_repo = participation_index_repository or TransactionParticipationIndexRepository(
+        bucket_id=work_unit.bucket_id,
+    )
+    participation_writes = _build_participation_writes(
+        verified=verified,
+        work_unit=work_unit,
+        participation_index_repository=participation_repo,
+    )
+    # Co-emit the participation index atomically with the revision save (per the
+    # composition-service single-writer discipline): the index and the verified
+    # revision land or fail together. A revision with no contributing
+    # transactions produces no extra writes and degenerates to the plain save.
+    calculation_repository.save_with_secure_object_writes(updated_catalogue, participation_writes)
 
 
 def _emit_verification_bucket_event(
