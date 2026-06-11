@@ -35,6 +35,7 @@ from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
+from ...core.time import now
 from ...core.time._utc import validate_utc_aware
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
@@ -775,11 +776,9 @@ class Transaction(BaseModel):
             the Art. 93 LIRPF Beckham filter (impatriado IRPF base
             excludes foreign-source rows). ``None`` grandfathers rows
             authored before the axis was introduced.
-        created_at: UTC-aware timestamp stamped once at ``ledger add`` and
-            carried verbatim through every later edit. ``None`` for rows
-            authored before the axis existed.
+        created_at: UTC-aware timestamp stamped once at construction and
+            carried verbatim through every later edit.
         modified_at: UTC-aware timestamp re-stamped on every mutating edit.
-            ``None`` for rows authored before the axis existed.
     """
 
     model_config = _STRICT_FROZEN
@@ -834,16 +833,14 @@ class Transaction(BaseModel):
     # grouped display stays legible.
     group_label: str | None = Field(default=None, max_length=64)
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6).
-    # ``created_at`` is stamped once by the application layer at ``ledger add``
-    # and is carried verbatim through every later edit; ``modified_at`` is
-    # re-stamped on every mutating edit (update/classify/allocate/attach/
-    # doclink/archive/stash/restore/link/split/merge). They make
-    # ``--sort-by created_at|modified_at`` honest for hand-added rows, which
-    # otherwise carry no creation timestamp (only imported rows have
-    # ``raw.provenance.ingested_at``). Both are UTC-aware. ``None`` orders
-    # last under a temporal sort for rows authored before the axis existed.
-    created_at: datetime | None = None
-    modified_at: datetime | None = None
+    # ``created_at`` is stamped once and carried verbatim through every later
+    # edit; ``modified_at`` is re-stamped on every mutating edit
+    # (update/classify/allocate/attach/doclink/archive/stash/restore/link/
+    # split/merge). They make ``--sort-by created_at|modified_at`` honest for
+    # hand-added rows, which otherwise carry no creation timestamp (only
+    # imported rows have ``raw.provenance.ingested_at``). Both are UTC-aware.
+    created_at: datetime = Field(default_factory=now)
+    modified_at: datetime = Field(default_factory=now)
 
     @model_validator(mode="before")
     @classmethod

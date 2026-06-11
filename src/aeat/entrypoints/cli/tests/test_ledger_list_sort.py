@@ -4,9 +4,9 @@ Exercises the ledger-interface-contract D5 sort directly against the pure
 ``_sort_results`` projection helper and end-to-end through
 ``project_ledger_list`` over a real encrypted ``TransactionCatalogueRepository``
 (no CLI runner, no mocks). The load-bearing contract under test is: the sort is
-stable, a missing key always sorts last under both orders, and equal-key rows
-fall back to the content-addressed ``transaction_id`` so the order is fixed
-across runs.
+stable, an optional missing key always sorts last under both orders, and
+equal-key rows fall back to the content-addressed ``transaction_id`` so the
+order is fixed across runs.
 """
 
 from __future__ import annotations
@@ -41,12 +41,13 @@ def _transaction(
     provider_id: str,
     amount: Decimal,
     description: str,
-    created_at: datetime | None,
+    created_at: datetime,
+    value_date: date | None = date(2024, 4, 10),
 ) -> Transaction:
     raw = RawTransaction(
         transaction_id=provider_id,
         booked_date=date(2024, 4, 10),
-        value_date=date(2024, 4, 10),
+        value_date=value_date,
         amount=amount,
         currency="EUR",
         counterparty="Supplier SL",
@@ -66,9 +67,8 @@ def _transaction(
         "direction": TransactionDirection.OUTGOING,
         "business_classification": BusinessClassification.NOT_YET_PROCESSED,
     }
-    if created_at is not None:
-        payload["created_at"] = created_at
-        payload["modified_at"] = created_at
+    payload["created_at"] = created_at
+    payload["modified_at"] = created_at
     return Transaction.model_validate(payload)
 
 
@@ -157,19 +157,15 @@ def test_sort_is_stable_and_orders_distinct_keys() -> None:
     ]
 
 
-def test_missing_sort_key_sorts_last_under_both_orders() -> None:
-    """A row with a None created_at sorts last in ascending AND descending order.
-
-    Honest temporal sort: a row authored before the D6 axis (None created_at)
-    must never crash the sort and must deterministically trail every row that
-    carries the key, regardless of sort direction.
-    """
+def test_optional_sort_key_sorts_last_under_both_orders() -> None:
+    """A row with a missing optional value_date sorts last in both orders."""
     with_key_early = _result(
         _transaction(
             provider_id="early",
             amount=Decimal("10.00"),
             description="x",
             created_at=datetime(2024, 1, 1, tzinfo=UTC),
+            value_date=date(2024, 1, 1),
         ),
     )
     with_key_late = _result(
@@ -178,6 +174,7 @@ def test_missing_sort_key_sorts_last_under_both_orders() -> None:
             amount=Decimal("10.00"),
             description="x",
             created_at=datetime(2024, 6, 1, tzinfo=UTC),
+            value_date=date(2024, 6, 1),
         ),
     )
     missing = _result(
@@ -185,26 +182,21 @@ def test_missing_sort_key_sorts_last_under_both_orders() -> None:
             provider_id="missing",
             amount=Decimal("10.00"),
             description="x",
-            created_at=None,
+            created_at=datetime(2024, 3, 1, tzinfo=UTC),
+            value_date=None,
         ),
     )
     rows = (missing, with_key_late, with_key_early)
 
-    asc = _sort_results(rows, sort_by=LedgerSortField.CREATED_AT, sort_order=LedgerSortOrder.ASC)
-    desc = _sort_results(rows, sort_by=LedgerSortField.CREATED_AT, sort_order=LedgerSortOrder.DESC)
+    asc = _sort_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.ASC)
+    desc = _sort_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.DESC)
 
     # Missing key trails in BOTH orders.
-    assert asc[-1].transaction.created_at is None
-    assert desc[-1].transaction.created_at is None
+    assert asc[-1].transaction.raw.value_date is None
+    assert desc[-1].transaction.raw.value_date is None
     # Present keys order correctly within their block.
-    assert [r.transaction.created_at for r in asc[:2]] == [
-        datetime(2024, 1, 1, tzinfo=UTC),
-        datetime(2024, 6, 1, tzinfo=UTC),
-    ]
-    assert [r.transaction.created_at for r in desc[:2]] == [
-        datetime(2024, 6, 1, tzinfo=UTC),
-        datetime(2024, 1, 1, tzinfo=UTC),
-    ]
+    assert [r.transaction.raw.value_date for r in asc[:2]] == [date(2024, 1, 1), date(2024, 6, 1)]
+    assert [r.transaction.raw.value_date for r in desc[:2]] == [date(2024, 6, 1), date(2024, 1, 1)]
 
 
 def test_project_ledger_list_applies_sort_over_real_repository(tmp_path: Path) -> None:

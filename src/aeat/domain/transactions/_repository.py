@@ -10,14 +10,16 @@ JSON catalogue, or envelope file lands on disk.
 
 from __future__ import annotations
 
+import json
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.time import now, validate_utc_aware
 from ._errors import LedgerStorageError, StoredTransactionDriftError
 from ._models import BucketTransactionRef, TransactionCatalogue
 
@@ -89,6 +91,41 @@ class ImportSummary(BaseModel):
     catalogue_path: str
 
 
+class _PersistedTransactionTimestampWitness(BaseModel):
+    """Required lifecycle timestamps for one stored transaction row."""
+
+    created_at: datetime = Field()
+    modified_at: datetime = Field()
+
+    @field_validator("created_at", "modified_at")
+    @classmethod
+    def _require_utc_aware(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
+
+    @classmethod
+    def validate_payload(cls, payload: object) -> None:
+        """Raise ``ValidationError`` when a persisted row lacks timestamp keys."""
+        cls.model_validate(payload)
+
+
+def _validate_persisted_transaction_timestamps(payload: bytes) -> None:
+    """Reject persisted catalogues missing the mandatory D6 timestamp fields."""
+    try:
+        decoded = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return
+    if not isinstance(decoded, dict):
+        return
+    envelope_payload = decoded.get("payload")
+    if not isinstance(envelope_payload, dict):
+        return
+    transactions = envelope_payload.get("transactions")
+    if not isinstance(transactions, dict):
+        return
+    for transaction_payload in transactions.values():
+        _PersistedTransactionTimestampWitness.validate_payload(transaction_payload)
+
+
 class TransactionCatalogueRepository:
     """Repository over the encrypted SQL-backed transaction catalogue.
 
@@ -145,6 +182,7 @@ class TransactionCatalogueRepository:
             )
             return TransactionCatalogue()
         try:
+            _validate_persisted_transaction_timestamps(record.payload)
             envelope = Envelope[TransactionCatalogue].model_validate_json(record.payload)
         except ValidationError as exc:
             # pydantic ValidationError previously propagated raw and lost the

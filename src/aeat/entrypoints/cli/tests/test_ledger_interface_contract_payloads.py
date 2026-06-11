@@ -429,7 +429,5 @@ def test_transaction_payload_carries_d6_timestamps() -> None:
     payload = TransactionPayload.model_validate(_transaction_payload())
     assert payload.created_at == "2024-04-10T09:30:00+00:00"
     assert payload.modified_at == "2024-06-01T16:45:00+00:00"
-    # Grandfathered None default for pre-axis rows.
-    bare = TransactionPayload.model_validate(_transaction_payload(created_at=None, modified_at=None))
-    assert bare.created_at is None
-    assert bare.modified_at is None
+    with pytest.raises(ValueError):
+        TransactionPayload.model_validate(_transaction_payload(created_at=None, modified_at=None))
