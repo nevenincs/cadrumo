@@ -178,38 +178,38 @@ def test_verification_source_matches_fixture_producer(
         if provenance is None:
             mismatches.append(
                 f"{pdf_path.name}: sidecar declares no provenance; every gated "
-                "fixture must self-declare real_corpus or synthetic_generated"
+                "fixture must self-declare real_corpus or synthetic_generated",
             )
             continue
         seen_provenances.add(provenance)
         if provenance not in _RECOGNISED_PROVENANCE:
             mismatches.append(
                 f"{pdf_path.name}: sidecar provenance {provenance!r} is not a "
-                "recognised value (real_corpus | synthetic_generated)"
+                "recognised value (real_corpus | synthetic_generated)",
             )
         elif provenance == "synthetic_generated" and not is_synthetic:
             mismatches.append(
                 f"{pdf_path.name}: sidecar declares synthetic_generated but "
-                f"/Producer={producer!r} lacks the {_SYNTHETIC_PRODUCER_SIGNATURE!r} signature"
+                f"/Producer={producer!r} lacks the {_SYNTHETIC_PRODUCER_SIGNATURE!r} signature",
             )
         elif provenance == "real_corpus" and is_synthetic:
             mismatches.append(
                 f"{pdf_path.name}: sidecar declares real_corpus but "
-                f"/Producer={producer!r} carries the synthetic generator signature"
+                f"/Producer={producer!r} carries the synthetic generator signature",
             )
 
     expected = _TAG_TO_PROVENANCE[verification_source]
     if expected not in seen_provenances:
         mismatches.append(
             f"profile tag {verification_source!r} expects at least one "
-            f"{expected!r} fixture, but none of {sorted(seen_provenances)} match"
+            f"{expected!r} fixture, but none of {sorted(seen_provenances)} match",
         )
 
     if mismatches:
         joined = "\n  ".join(mismatches)
         pytest.fail(
             f"M{modelo_id} profile {profile_id!r} fixture provenance contradicts "
-            f"physical /Producer evidence or the {verification_source!r} tag:\n  {joined}"
+            f"physical /Producer evidence or the {verification_source!r} tag:\n  {joined}",
         )
 
 
@@ -240,5 +240,5 @@ def test_all_synthetic_profiles_have_fixture_pdfs() -> None:
     if missing:
         pytest.fail(
             "synthetic_from_aeat_published_text profiles without fixture PDFs (gate dormant):\n  "
-            + "\n  ".join(missing)
+            + "\n  ".join(missing),
         )

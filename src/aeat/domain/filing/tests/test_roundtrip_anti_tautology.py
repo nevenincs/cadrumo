@@ -33,7 +33,7 @@ from sqlalchemy import select
 
 from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
-from ....core._period import Period
+from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry._schema import RegistrySnapshotRef
 from .._repository import ModeloDraftRepository

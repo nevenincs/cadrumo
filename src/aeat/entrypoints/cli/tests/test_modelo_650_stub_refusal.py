@@ -58,7 +58,7 @@ def test_work_create_650_refuses_with_legal_authority_message(
             "--year", "2024",
             "--period", "0A",
             "--revision", "actual",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0, result.output
@@ -91,7 +91,7 @@ def test_work_create_650_refusal_fires_before_profile_check(
             "--year", "2024",
             "--period", "0A",
             "--revision", "actual",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0, result.output
@@ -123,7 +123,7 @@ def test_causante_ccaa_foral_refused_before_stub_guard(
             "--period", "0A",
             "--revision", "actual",
             "--causante-ccaa", "pais_vasco",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0, result.output
@@ -149,7 +149,7 @@ def test_causante_ccaa_navarra_foral_refused(
             "--period", "0A",
             "--revision", "actual",
             "--causante-ccaa", "navarra",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0, result.output

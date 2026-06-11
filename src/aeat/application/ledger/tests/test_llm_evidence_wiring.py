@@ -89,7 +89,7 @@ def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
 def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
     txn = _transaction(evidence_id=None)
     text, reference = _resolve_evidence_text(
-        txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True
+        txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True,
     )
     assert text is None
     assert reference is None
@@ -110,7 +110,7 @@ def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfi
 
     # Permitted deployment + per-invocation acknowledgement -> on-host text + reference.
     text, reference = _resolve_evidence_text(
-        txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=True
+        txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=True,
     )
     assert text is not None
     assert "Acme SL" in text

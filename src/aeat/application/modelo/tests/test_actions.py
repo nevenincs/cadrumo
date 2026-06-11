@@ -17,6 +17,7 @@ from typing import cast
 
 import pytest
 
+from ....core import Period
 from ....domain.calculations.registry import InputKind
 from ....domain.calculations.registry._schema import ModeloRevision, VerificationPredicateDefinition
 from ....domain.deadlines import IVARegime, TaxpayerProfile
@@ -67,20 +68,21 @@ def _resident_profile() -> TaxpayerProfile:
 
 def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int = 2026) -> WorkUnit:
     bucket_id = "test-bucket"
+    typed_period = Period.from_year_and_code(filing_year, period)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
-            period=period,
+            period=typed_period,
             revision_id="r" + "0" * 63,
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id="r" + "0" * 63,
-        name=f"{modelo}-{filing_year}-{period}",
+        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=_T0,
         updated_at=_T0,
     )
@@ -133,7 +135,7 @@ def test_workflow_period_resolves_modelo_130_quarter_from_registry_deadline_shap
 
     work_unit = _minimal_work_unit(modelo="130", period="1T", filing_year=2026)
 
-    assert workflow_period_for_work_unit(work_unit) == "2026Q1"
+    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")
 
 
 def test_workflow_period_resolves_modelo_303_quarter_from_registry_deadline_shape() -> None:
@@ -141,7 +143,7 @@ def test_workflow_period_resolves_modelo_303_quarter_from_registry_deadline_shap
 
     work_unit = _minimal_work_unit(modelo="303", period="1T", filing_year=2026)
 
-    assert workflow_period_for_work_unit(work_unit) == "2026-1T"
+    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +168,7 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     )
     # Both casillas are zero — predicate is violated.
     findings = _evaluate_verification_predicates(
-        (predicate,), {"0001": Decimal(0), "0002": Decimal(0)}, _resident_profile()
+        (predicate,), {"0001": Decimal(0), "0002": Decimal(0)}, _resident_profile(),
     )
 
     assert len(findings) == 1
@@ -187,7 +189,7 @@ def test_cross_casilla_invariant_next_action_is_localised() -> None:
         finding_kind="BLOCKING_RULE",
     )
     findings = _evaluate_verification_predicates(
-        (predicate,), {"0003": Decimal(0), "0004": Decimal(0)}, _resident_profile()
+        (predicate,), {"0003": Decimal(0), "0004": Decimal(0)}, _resident_profile(),
     )
 
     assert len(findings) == 1
@@ -273,7 +275,7 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
 
     decision = IvaCompensationReconciliationDecision(
         target_year=2026,
-        target_period="1T",
+        target_period=Period.from_year_and_code(2026, "1T"),
         taxpayer_nif="12345678Z",
         divergence="wallet_missing",
         blocked=True,
@@ -345,7 +347,7 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "1T",
+            Period.from_year_and_code(2026, "1T"),
             bucket_id="bucket-1",
             # The unsupported-decision-type guard raises before the revision is read,
             # so an empty structural double suffices for this path.
@@ -461,14 +463,14 @@ class TestWorkflowInputMismatchError:
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
                 modelo="303",
-                period="2026-2T",
+                period=Period.from_year_and_code(2026, "2T"),
                 profile=self._stub_profile(),
             )
 
         exc = exc_info.value
         assert exc.context is not None
-        assert exc.context["expected_period"] == "2026-1T"
-        assert exc.context["requested_period"] == "2026-2T"
+        assert exc.context["expected_period"] == "2026 1T"
+        assert exc.context["requested_period"] == "2026 2T"
 
     def test_error_is_core_validation_error_and_value_error(self) -> None:
         """WorkflowInputMismatchError is a CoreValidationError and ValueError subclass."""
@@ -488,7 +490,7 @@ class TestWorkflowInputMismatchError:
         try:
             provider.load_inputs(
                 modelo="999",
-                period="2026",
+                period=Period.from_year_and_code(2026, "0A"),
                 profile=self._stub_profile(),
             )
         except WorkflowInputMismatchError as exc:

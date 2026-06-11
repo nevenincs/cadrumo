@@ -294,7 +294,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
             x509.NameAttribute(NameOID.COMMON_NAME, "test - 12345678Z"),
             x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678Z"),
-        ]
+        ],
     )
     now = datetime.now(UTC)
     cert = (
@@ -324,7 +324,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
             password=secret,
             friendly_name=None,
             backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        )
+        ),
     )
 
     settings = Settings()
@@ -339,7 +339,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         provisioner=CertificateContextProvisioner(
             loaded,
             origin=settings.aeat_certificate_verify_url,
-        )
+        ),
     )
 
     kwargs: dict[str, object] = cast(RecordingContext, context).kwargs

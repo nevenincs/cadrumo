@@ -50,7 +50,7 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
             "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
             "AEAT_INVOICES_DIR": str(tmp_path / "invoices"),
             "AEAT_DRAFTS_DIR": str(tmp_path / "drafts"),
-        }
+        },
     )
     if language is not None:
         env["AEAT_OUTPUT_LANGUAGE"] = language

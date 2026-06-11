@@ -7,18 +7,22 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .. import AggregationPeriodError, Period, PeriodKind
+from ....core import Period, PeriodError, PeriodKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_period_accepts_quarter_with_dash_and_is_frozen() -> None:
-    period = Period.model_validate("2025-Q1")
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
+
+
+def test_period_constructs_quarter_from_year_and_code_and_is_frozen() -> None:
+    period = _period(2025, "1T")
 
     assert period.year == 2025
     assert period.kind is PeriodKind.QUARTERLY
-    assert period.start == date(2025, 1, 1)
-    assert period.end == date(2025, 3, 31)
+    assert period.start_date == date(2025, 1, 1)
+    assert period.end_date == date(2025, 3, 31)
     with pytest.raises(ValidationError):
         period.year = 2026
 
@@ -29,12 +33,11 @@ def test_aggregation_period_kind_values() -> None:
     assert PeriodKind.ANNUAL.value == "annual"
 
 
-def test_period_mapping_accepts_canonical_kind() -> None:
-    # ``raw`` is a legacy field that the Mapping branch strips; it must be ignored.
-    period = Period.model_validate({"raw": "2025Q1", "year": 2025, "quarter": "Q1", "kind": "quarterly"})
+def test_period_mapping_accepts_canonical_core_payload() -> None:
+    period = Period.model_validate({"filing_year": 2025, "code": "1T"})
     assert period.kind is PeriodKind.QUARTERLY
 
 
-def test_period_rejects_ambiguous_text() -> None:
-    with pytest.raises(AggregationPeriodError):
-        Period.model_validate("2025-Q5")
+def test_period_rejects_combined_code() -> None:
+    with pytest.raises(PeriodError):
+        Period.from_year_and_code(2025, "2025Q1")

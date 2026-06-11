@@ -97,7 +97,7 @@ AEAT_WRITE_FORBIDDEN_VERB_TOKENS: frozenset[str] = frozenset(
         "sign",
         "save",
         "payment",
-    }
+    },
 )
 
 # Tokens unique to URL/HTTP-method scanning (not exposed for click-time
@@ -161,7 +161,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             raise RegistryValidationError("public read surfaces are observations, not executable parity evidence")
         if self.classification == "authenticated_read_surface" and self.evidence_tier == "executable_parity_evidence":
             raise RegistryValidationError(
-                "authenticated filed-data reads are observations, not executable parity evidence"
+                "authenticated filed-data reads are observations, not executable parity evidence",
             )
         if self.classification == "static_official_only" and self.evidence_tier == "executable_parity_evidence":
             raise RegistryValidationError("static official documentation is not executable parity evidence")
@@ -196,7 +196,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             if aeat_host is not None:
                 raise RegistryValidationError(
                     f"AEAT-hosted policy {self.id!r} declares synthetic_data_allowed = true "
-                    f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces"
+                    f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces",
                 )
 
     @field_validator("allowed_hosts")

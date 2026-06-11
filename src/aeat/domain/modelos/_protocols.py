@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from ...core import Period
 from ._calculation_revision import CalculationRevisionCatalogue
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._verification_report import VerificationReportCatalogue
@@ -95,7 +96,7 @@ class ModeloRecordCatalogueQueryProtocol(Protocol):
         bucket_id: str,
         modelo: str,
         filing_year: int,
-        period: str,
+        period: Period,
         member_nif: str | None = None,
     ) -> ModeloRecord | None:
         """Return the current :class:`ModeloRecord` for a filing tuple and optional group member."""
@@ -107,7 +108,7 @@ class ModeloRecordCatalogueQueryProtocol(Protocol):
         bucket_id: str,
         modelo: str,
         filing_year: int,
-        period: str,
+        period: Period,
         member_nif: str | None = None,
     ) -> tuple[ModeloRecord, ...]:
         """Return :class:`ModeloRecord` filing history for a filing tuple and optional group member."""

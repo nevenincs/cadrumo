@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._master_key_derivation import KDF_PARAMS_VERSION
 
 

@@ -55,7 +55,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
-from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.external_constants import OutputLanguage
 from ._enums import TermStatus
 from ._errors import TerminologyError, TerminologyValidationError

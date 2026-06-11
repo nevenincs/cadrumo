@@ -317,8 +317,8 @@ def test_dependency_classifications_preserve_relation_authority_basis() -> None:
         update={
             "dependency_classifications": tuple(
                 stripped if item.id == classification.id else item for item in revision.dependency_classifications
-            )
-        }
+            ),
+        },
     )
     mutated_modelo = _replace_revision(modelo, mutated_revision)
 
@@ -335,7 +335,7 @@ def test_relation_target_bindings_preserve_relation_authority_basis() -> None:
     binding = next(item for item in revision.bindings if item.id == relation.target_binding)
     stripped = binding.model_copy(update={"legal_refs": ()})
     mutated_revision = revision.model_copy(
-        update={"bindings": tuple(stripped if item.id == binding.id else item for item in revision.bindings)}
+        update={"bindings": tuple(stripped if item.id == binding.id else item for item in revision.bindings)},
     )
     mutated_modelo = _replace_revision(modelo, mutated_revision)
 
@@ -374,6 +374,6 @@ def _replace_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> Mod
             "revisions": {
                 revision_id: revision if revision_id == revision.id else item
                 for revision_id, item in modelo.revisions.items()
-            }
-        }
+            },
+        },
     )

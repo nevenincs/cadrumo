@@ -13,7 +13,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ...domain.iva import IvaCategory
@@ -26,14 +27,14 @@ from ...domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
-from ..aggregation import IvaLedgerAggregationIssueReason, Period, iva_ledger_missing_fact_reasons
+from ..aggregation import IvaLedgerAggregationIssueReason, iva_ledger_missing_fact_reasons
 
 _CLASSIFIED_TAX_STATES = frozenset(
     {
         BusinessClassification.BUSINESS,
         BusinessClassification.MIXED,
         BusinessClassification.PERSONAL,
-    }
+    },
 )
 
 
@@ -91,7 +92,7 @@ class LedgerPreflightReport(BaseModel):
 def preflight_ledger_tax_readiness(
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> LedgerPreflightReport:
     """Load a bucket-local catalogue and return a :class:`LedgerPreflightReport` describing modelo-readiness gaps.
@@ -115,19 +116,19 @@ def preflight_ledger_tax_readiness(
 def preflight_transaction_catalogue(
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
     transactions: TransactionCatalogue,
 ) -> LedgerPreflightReport:
     """Report missing ledger facts without mutating the transaction catalogue.
 
     Args:
         bucket_id: Stable bucket identifier for the ledger being checked.
-        period: Filing period; either a :class:`Period` instance or a period code string.
+        period: Filing period as a typed :class:`Period` instance.
         transactions: The :class:`TransactionCatalogue` to inspect for missing facts.
 
     Returns a :class:`LedgerPreflightReport`.
     """
-    resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
+    resolved_period = period
     issues: list[LedgerPreflightIssue] = []
     checked = 0
     for transaction in _sorted_transactions(transactions):
@@ -154,7 +155,7 @@ def _sorted_transactions(transactions: TransactionCatalogue) -> tuple[Transactio
                 transaction.raw.value_date or transaction.raw.booked_date,
                 transaction.transaction_id,
             ),
-        )
+        ),
     )
 
 
@@ -228,7 +229,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 **common,
                 reason=LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY,
                 detail=f"transaction currency {transaction.raw.currency!r} is not supported for modelo aggregation",
-            )
+            ),
         )
         return tuple(issues)
     if _transaction_needs_expense_category(transaction) and transaction.category_id is None:
@@ -237,7 +238,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 **common,
                 reason=LedgerPreflightIssueReason.MISSING_CATEGORY,
                 detail="deductible-expense ledger transaction has no category_id",
-            )
+            ),
         )
     if transaction.business_classification is BusinessClassification.MIXED and transaction.usage_ratio_id is None:
         issues.append(
@@ -245,7 +246,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 **common,
                 reason=LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
                 detail="mixed ledger transaction has no usage_ratio_id proportionality reference",
-            )
+            ),
         )
     # Trabajo (nómina) incoming rows are IVA-exempt by definition: an
     # employer-paid wage/salary carries no taxable_base / iva_rate /
@@ -261,7 +262,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 **common,
                 reason=_preflight_reason_for_iva_issue(reason),
                 detail=_preflight_detail_for_iva_issue(reason),
-            )
+            ),
         )
     return tuple(issues)
 

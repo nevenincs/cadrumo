@@ -57,7 +57,7 @@ def validate_relation_closure(
                         revision=revision,
                         relation_scope=f"{prefix}: relation {relation.id!r}",
                         modelos_by_id=modelos_by_id,
-                    )
+                    ),
                 )
     return failures
 
@@ -92,7 +92,7 @@ def _validate_single_relation(
     if not source_revisions:
         failures.append(
             f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
-            f"matches no source revisions in modelo {source_modelo.id}"
+            f"matches no source revisions in modelo {source_modelo.id}",
         )
         return failures
     for source_revision in source_revisions:
@@ -101,7 +101,7 @@ def _validate_single_relation(
                 relation,
                 source_revision=source_revision,
                 relation_scope=relation_scope,
-            )
+            ),
         )
     # A relation that carries a PRIOR-YEAR copy of the operator's historical
     # filing (a previous_filing binding fed by a strictly-negative
@@ -123,7 +123,7 @@ def _validate_single_relation(
             filing_year_delta=relation_filing_year_delta(relation.source_revision_selector),
             fixed_source_year=relation_fixed_source_year(relation.source_revision_selector),
             source_is_observation_history=source_is_observation_history,
-        )
+        ),
     )
     return failures
 
@@ -220,7 +220,7 @@ def validate_slot_source_hygiene(
                         binding,
                         binding_scope=f"{prefix}: binding {binding.id!r}",
                         relation_targets=relation_targets,
-                    )
+                    ),
                 )
     return failures
 
@@ -240,14 +240,14 @@ def _validate_slot_binding_source(
         failures.append(
             f"{binding_scope} declares source 'previous_filing' with a non-direct selector "
             f"(no period/source_periods/offset anchor); a relation-materialisation slot must "
-            f"declare source 'relation_prefill' instead"
+            f"declare source 'relation_prefill' instead",
         )
     # Gate (b): no binding both relation-targeted and previous_filing-sourced.
     if is_relation_targeted and is_previous_filing and not iva_wallet_owned:
         failures.append(
             f"{binding_scope} is both a relation target_binding and a 'previous_filing' source; "
             f"a relation-targeted slot must declare source 'relation_prefill' (the relation owns "
-            f"the cross-period fold-in)"
+            f"the cross-period fold-in)",
         )
     return failures
 

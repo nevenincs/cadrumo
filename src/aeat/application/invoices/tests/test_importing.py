@@ -46,7 +46,7 @@ def test_parse_csv_payload_uses_same_backend_import_contract_as_json() -> None:
         [
             "invoice_number,issued_at,counterparty_tax_id,base_total,iva_total,grand_total,iva_rate",
             "INV-002,2026-04-02,B12345674,200.00,20.00,220.00,10",
-        ]
+        ],
     )
 
     invoices = parse_invoice_payload(csv_payload, default_kind="received")

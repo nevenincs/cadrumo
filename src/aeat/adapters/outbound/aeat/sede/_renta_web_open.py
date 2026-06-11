@@ -191,7 +191,7 @@ async def collect_renta_web_open_observation(
 
 
 async def _open_renta_web_open_session(
-    browser_session: BrowserSession | DefaultBrowserSession, *, live_payload: RentaWebOpenLivePayload
+    browser_session: BrowserSession | DefaultBrowserSession, *, live_payload: RentaWebOpenLivePayload,
 ) -> tuple[Page, BrowserContext]:
     """Create a Playwright context, install safety nets, and navigate to the open simulator app.
 

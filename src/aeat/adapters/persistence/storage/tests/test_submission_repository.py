@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import Period
 from .....domain.submission._models import (
     ModeloPresentado,
     SubmissionAttempt,
@@ -30,6 +31,8 @@ from ..errors import ClassificationError
 from ..sql.secure_objects import SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 def _make_filing(
@@ -50,7 +53,7 @@ def _make_filing(
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="130",
-        period="2026Q1",
+        period=_PERIOD,
         profile_tax_id="00000000T",
         status=status,
         submitted_at=submitted_at,

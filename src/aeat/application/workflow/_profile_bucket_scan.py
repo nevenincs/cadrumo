@@ -57,7 +57,7 @@ class ProfileBucketScanIssue:
 
 
 def read_profile_bucket(
-    label: str, *, root: Path | None = None, include_tombstoned: bool = False
+    label: str, *, root: Path | None = None, include_tombstoned: bool = False,
 ) -> ProfileBucketPointer | None:
     """Return the bucket pointer for the profile whose label is ``label``.
 
@@ -139,7 +139,7 @@ def read_profile_bucket_by_id(profile_id: str, *, root: Path | None = None) -> P
 
 
 def resolve_profile_bucket(
-    identifier: str, *, root: Path | None = None, include_tombstoned: bool = False
+    identifier: str, *, root: Path | None = None, include_tombstoned: bool = False,
 ) -> ProfileBucketPointer | None:
     """Resolve a profile identifier that may be a UUID bucket id OR a display label.
 
@@ -178,7 +178,7 @@ def resolve_profile_bucket(
 
 
 def list_profile_buckets(
-    *, root: Path | None = None, include_tombstoned: bool = False
+    *, root: Path | None = None, include_tombstoned: bool = False,
 ) -> dict[str, ProfileBucketPointer]:
     """Return registered profile-bucket pointers keyed by profile UUID.
 

@@ -128,6 +128,44 @@ def test_command_contract_is_strict_and_immutable() -> None:
         command.period = Period.from_year_and_code(2025, "2T")
 
 
+def test_period_boundary_accepts_period_dict_for_roundtrip() -> None:
+    command = PerModeloAggregationCommand.model_validate(
+        {"modelo": "111", "period": {"filing_year": 2025, "code": "1T"}},
+    )
+    log_fields = PerModeloAggregationLogFields.model_validate(
+        {
+            "modelo": "111",
+            "period": command.model_dump()["period"],
+            "provider": PerModeloAggregationProvider.RETENCIONES,
+            "observation_count": 0,
+            "source_kind_count": 0,
+            "result_row_count": 0,
+        },
+    )
+
+    assert command.period == _P_2025_Q1
+    assert log_fields.period == _P_2025_Q1
+
+
+def test_period_boundary_rejects_combined_period_string() -> None:
+    with pytest.raises(ValidationError) as command_exc:
+        PerModeloAggregationCommand.model_validate({"modelo": "111", "period": "2026Q1"})
+    with pytest.raises(ValidationError) as log_fields_exc:
+        PerModeloAggregationLogFields.model_validate(
+            {
+                "modelo": "111",
+                "period": "2026Q1",
+                "provider": PerModeloAggregationProvider.RETENCIONES,
+                "observation_count": 0,
+                "source_kind_count": 0,
+                "result_row_count": 0,
+            },
+        )
+
+    assert command_exc.value.errors()[0]["loc"] == ("period",)
+    assert log_fields_exc.value.errors()[0]["loc"] == ("period",)
+
+
 def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None:
     command = PerModeloAggregationCommand(
         modelo="111",

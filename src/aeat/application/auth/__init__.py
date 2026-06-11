@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     )
     from ...core.config import Settings
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._catalogue import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,

@@ -148,7 +148,7 @@ class PromptRegistry(BaseModel):
                 ),
                 expected_output_schema=None,
                 description="Faithful legal- and tax-aware translation prompt.",
-            )
+            ),
         )
         registry.register(
             PromptDefinition(
@@ -157,7 +157,7 @@ class PromptRegistry(BaseModel):
                 template=("Extract structured casilla information from the supplied source text.\n\nSource:\n{text}"),
                 expected_output_schema=None,
                 description="Placeholder seed for casilla extraction workflows.",
-            )
+            ),
         )
         registry.register(
             PromptDefinition(
@@ -166,7 +166,7 @@ class PromptRegistry(BaseModel):
                 template=("Extract structured tax rules from the supplied manual excerpt.\n\nManual excerpt:\n{text}"),
                 expected_output_schema=None,
                 description="Placeholder seed for manual rule extraction workflows.",
-            )
+            ),
         )
         return registry
 

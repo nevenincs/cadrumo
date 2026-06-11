@@ -8,6 +8,7 @@ from functools import lru_cache
 
 import pytest
 
+from .....core import Period
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
@@ -36,7 +37,7 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
         "cancellation",
         "document-submission",
         "declaration-submission",
-    ]
+    ],
 )
 
 
@@ -181,49 +182,49 @@ def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
         (
             "esquema-exterior",
             "modelo-369-exterior-2025-ext-1t",
-            "2025-EXT-1T",
+            Period.from_year_and_code(2025, "EXT-1T"),
             date(2025, 4, 1),
             date(2025, 4, 30),
         ),
         (
             "esquema-exterior",
             "modelo-369-exterior-2025-ext-4t",
-            "2025-EXT-4T",
+            Period.from_year_and_code(2025, "EXT-4T"),
             date(2026, 1, 1),
             date(2026, 1, 31),
         ),
         (
             "esquema-union",
             "modelo-369-union-2025-1t",
-            "2025-1T",
+            Period.from_year_and_code(2025, "1T"),
             date(2025, 4, 1),
             date(2025, 4, 30),
         ),
         (
             "esquema-union",
             "modelo-369-union-2025-4t",
-            "2025-4T",
+            Period.from_year_and_code(2025, "4T"),
             date(2026, 1, 1),
             date(2026, 1, 31),
         ),
         (
             "esquema-importacion",
             "modelo-369-importacion-2025-01",
-            "2025-01",
+            Period.from_year_and_code(2025, "01"),
             date(2025, 2, 1),
             date(2025, 2, 28),
         ),
         (
             "esquema-importacion",
             "modelo-369-importacion-2025-12",
-            "2025-12",
+            Period.from_year_and_code(2025, "12"),
             date(2026, 1, 1),
             date(2026, 1, 31),
         ),
         (
             "esquema-importacion",
             "modelo-369-importacion-2026-01",
-            "2026-01",
+            Period.from_year_and_code(2026, "01"),
             date(2026, 2, 1),
             date(2026, 2, 28),
         ),
@@ -232,7 +233,7 @@ def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
 def test_modelo_369_deadline_windows_close_last_day_next_natural_month(
     revision_id: str,
     window_id: str,
-    period: str,
+    period: Period,
     opens_on: date,
     closes_on: date,
 ) -> None:

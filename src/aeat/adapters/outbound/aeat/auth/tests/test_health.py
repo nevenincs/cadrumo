@@ -51,7 +51,7 @@ def _build_pkcs12(
         [
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
             x509.NameAttribute(NameOID.COMMON_NAME, "aeat-health-subject"),
-        ]
+        ],
     )
     cert = (
         x509.CertificateBuilder()

@@ -179,7 +179,7 @@ def persist_calculation_revision(
             "work_unit_id": work_unit_id,
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
+            "period": work_unit.period.registry_token,
             "input_casilla_count": str(len(inputs_snapshot)),
             "casilla_count": str(len(casilla_values)),
             "formula_count": str(formula_count),
@@ -365,7 +365,7 @@ def persist_filed_revision(
                 "calculation_revision_id": prior_current.calculation_revision_id,
                 "modelo": work_unit.modelo,
                 "filing_year": str(work_unit.filing_year),
-                "period": work_unit.period,
+                "period": work_unit.period.registry_token,
             },
         )
 
@@ -382,7 +382,7 @@ def persist_filed_revision(
             "work_unit_id": target.work_unit_id,
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
+            "period": work_unit.period.registry_token,
             "supersedes_filing_record_id": prior_current.filing_record_id if prior_current is not None else "",
         },
     )

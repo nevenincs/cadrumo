@@ -88,7 +88,7 @@ def _calculate_303(
 ) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = materialize_relation_binding_values(
-        snapshot.revision, dict(relation_values), period=period
+        snapshot.revision, dict(relation_values), period=period,
     )
     binding_values = {
         _CARRY_BINDING: Decimal("0"),
@@ -109,7 +109,7 @@ def _calculate_303(
 
 
 def _registry_observation(
-    *, filing_year: int, period: str, result: RegistryCalculationResult
+    *, filing_year: int, period: str, result: RegistryCalculationResult,
 ) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo=_MODELO,

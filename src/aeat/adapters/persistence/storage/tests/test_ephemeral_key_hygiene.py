@@ -53,7 +53,7 @@ _DEFAULT_SQL_BACKED_CONSTRUCTORS: frozenset[str] = frozenset(
         "WorkflowRunRepository",
         "WorkflowStateRepository",
         "WorkUnitCatalogueRepository",
-    }
+    },
 )
 
 _INJECTION_KEYWORDS: frozenset[str] = frozenset(
@@ -64,7 +64,7 @@ _INJECTION_KEYWORDS: frozenset[str] = frozenset(
         "objects",
         "repository",
         "secure_objects",
-    }
+    },
 )
 
 
@@ -91,7 +91,7 @@ def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -
             "EphemeralMasterKeyProvider tests must isolate default SQL-backed secure-object writes "
             "with an autouse settings override plus engine disposal, or inject an explicit repository.",
             *tuple(f"{violation.path}:{violation.line} {violation.constructor}" for violation in violations),
-        )
+        ),
     )
 
 
@@ -120,7 +120,7 @@ def test_database_operating_passphrases_use_core_test_setting() -> None:
             "Database-backed tests must read the shared dev/test password from "
             "Settings.aeat_dev_test_database_password or aeat.tests.secure_sql.",
             *violations,
-        )
+        ),
     )
 
 

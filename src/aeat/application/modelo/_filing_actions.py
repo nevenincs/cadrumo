@@ -147,14 +147,14 @@ def file_modelo_revision(
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
-            f"{target.state.value!r}; only VERIFICADO_COMPLETO revisions can be filed"
+            f"{target.state.value!r}; only VERIFICADO_COMPLETO revisions can be filed",
         )
 
     work_units = wu_repo.load()
     work_unit = work_units.get(target.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
+            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
     iva_compensation_decision = _require_iva_compensation_revision_match(
         work_unit,
@@ -172,6 +172,7 @@ def file_modelo_revision(
             workflow_profile,
             cross_period_expected_member_sets,
         ),
+        taxpayer_tax_id=workflow_profile.tax_id,
     )
 
     now = clock or _utc_now()
@@ -231,7 +232,7 @@ def list_filing_records(
         sorted(
             records,
             key=lambda r: (r.bucket_id, r.filing_year, str(r.modelo), r.period, r.filed_at),
-        )
+        ),
     )
 
 

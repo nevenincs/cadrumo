@@ -20,6 +20,7 @@ from ....application.operator_surface import render_help_text as _render_help_te
 from ....application.wizard import build_wizard_command as _build_wizard_command
 from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
 from ....application.workflow import read_profile_bucket as _read_profile_bucket
+from ....core import Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
 from ....core.external_constants import OutputLanguage
@@ -55,7 +56,7 @@ _log = _get_logger(__name__)
 # typer._click.types.ParamType. They are the same object at runtime (the vendored
 # click), so the cast only bridges the static type duality — no Any escape.
 _CONFIG_RESET_SCOPE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType, click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES)
+    typer_click_types.ParamType, click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
 )
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
@@ -184,7 +185,7 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
                 # refusal applies to a fresh `profile create` only.
                 enforce_unique_tax_id=False,
                 routing_profile_id=routing_profile_id,
-            )
+            ),
         )
     return profile_id
 
@@ -386,19 +387,19 @@ def config_profile_show(
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
         _emit_profile_record_missing(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label,
         )
         raise typer.Exit(code=2) from exc
     except _AeatError as exc:
         _emit_profile_record_unreadable(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=exc
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=exc,
         )
         raise typer.Exit(code=2) from exc
     except Exception as exc:
         _log.debug("config profile show wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=boundary
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=boundary,
         )
         raise typer.Exit(code=2) from boundary
     from ....domain.user_profile import UserProfileStatus
@@ -452,7 +453,7 @@ def config_profile_show(
         raise typer.Exit(code=2)
 
 
-def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str, revision_id: str | None) -> str:
+def _resolve_preflight_revision_id(*, modelo: str, period: Period, revision_id: str | None) -> str:
     """Resolve the registry revision a preflight check is assessed against.
 
     When ``revision_id`` is supplied it is an explicit override and is
@@ -475,7 +476,7 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
     try:
         return resolve_registry_revision_for_work_target(
             modelo=modelo,
-            filing_year=filing_year,
+            filing_year=period.filing_year,
             period=period,
             registry_revision_id=revision_id,
         )
@@ -485,14 +486,14 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
         # refusal lists them without parsing the human-readable message.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_ambiguous",
-            context={"modelo": modelo, "period": period, "candidates": ", ".join(exc.candidate_ids)},
+            context={"modelo": modelo, "period": period.registry_token, "candidates": ", ".join(exc.candidate_ids)},
         ) from exc
     except NoRevisionForPeriodError as exc:
         # The natural key resolved no revision. Point the operator at the
         # discovery command rather than emitting a bare unresolved error.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+            context={"modelo": modelo, "filing_year": period.filing_year, "period": period.registry_token},
         ) from exc
     except RegistrySnapshotError as exc:
         # Any residual snapshot failure not modelled by the two typed
@@ -500,7 +501,7 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
         # pointer rather than surfacing a bare error to the operator.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+            context={"modelo": modelo, "filing_year": period.filing_year, "period": period.registry_token},
         ) from exc
     except _ModeloWorkRegistryYearMismatchError as exc:
         # An explicit ``--revision-id`` override that is unknown to the
@@ -508,7 +509,7 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
         # revisions so the operator can correct the override.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_override_invalid",
-            context={"modelo": modelo, "filing_year": filing_year, "detail": str(exc)},
+            context={"modelo": modelo, "filing_year": period.filing_year, "detail": str(exc)},
         ) from exc
 
 
@@ -519,7 +520,7 @@ def config_profile_preflight(
     filing_year: int = typer.Option(..., "--filing-year", help=tr("cli.config.profile.preflight_filing_year_help")),
     period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
     revision_id: str | None = typer.Option(
-        None, "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help")
+        None, "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -552,10 +553,16 @@ def config_profile_preflight(
             translated_message="cli.config.profile.unknown_profile",
             context={"name": pointer.label or pointer.bucket_id},
         ) from exc
+    try:
+        filing_period = Period.from_year_and_code(filing_year, period)
+    except ValueError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+        ) from exc
     resolved_revision_id = _resolve_preflight_revision_id(
         modelo=modelo,
-        filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
     )
     from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
@@ -564,15 +571,14 @@ def config_profile_preflight(
         record=record,
         modelo=modelo,
         revision_id=resolved_revision_id,
-        filing_year=filing_year,
-        period=period,
+        period=filing_period,
     )
     result = ConfigProfilePreflightResult(
         profile_id=report.profile_id,
         modelo=report.modelo,
         revision_id=report.revision_id,
         filing_year=report.filing_year,
-        period=report.period,
+        period=report.period.registry_token,
         ready=report.ready,
         missing=[
             ProfilePreflightMissingPayload(
@@ -589,7 +595,7 @@ def config_profile_preflight(
         f"modelo\t{report.modelo}",
         f"revision_id\t{report.revision_id}",
         f"filing_year\t{report.filing_year}",
-        f"period\t{report.period}",
+        f"period\t{report.period.registry_token}",
     ]
     for requirement in report.missing:
         lines.append(f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}")
@@ -754,7 +760,7 @@ def config_profile_duplicate(
     source: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_source_help")),
     target: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_target_help")),
     display_name: str | None = typer.Option(
-        None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help")
+        None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -867,7 +873,7 @@ _config_profile_edit_callback = profile_app.command(
 def config_profile_rename(
     ctx: typer.Context,
     source: str = typer.Argument(
-        ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
+        ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name."),
     ),
     target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
     output_language: OutputLanguage | None = typer.Option(

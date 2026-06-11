@@ -139,7 +139,7 @@ def test_auth_gate_detector_matches_aeat_4033_redirect() -> None:
 
     assert is_aeat_auth_gate_redirect(_AUTH_GATE_4033_URL)
     assert is_aeat_auth_gate_redirect(
-        f"{_AUTH_GATE_4033_URL}?from={_AEAT.oracles.nif_iva_auth_locked_descriptor.rsplit(maxsplit=1)[-1]}"
+        f"{_AUTH_GATE_4033_URL}?from={_AEAT.oracles.nif_iva_auth_locked_descriptor.rsplit(maxsplit=1)[-1]}",
     )
 
 
@@ -148,7 +148,7 @@ def test_auth_gate_detector_rejects_non_4033_aeat_pages() -> None:
 
     assert not is_aeat_auth_gate_redirect(_AEAT.oracles.nif_iva_verification)
     assert not is_aeat_auth_gate_redirect(
-        f"{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033.replace('4033', '4032')}"
+        f"{_AEAT.domains.sede}{_AEAT.sede_paths.auth_gate_4033.replace('4033', '4032')}",
     )
     assert not is_aeat_auth_gate_redirect(_NIF_IVA_ENTRY_URL)
 

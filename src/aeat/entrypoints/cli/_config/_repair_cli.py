@@ -263,7 +263,7 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
                     "namespaces": namespaces,
                     "readable_total": sum(item.readable for item in namespaces),
                     "unreadable_total": sum(item.unreadable for item in namespaces),
-                }
+                },
             )
         result = RepairIntegrityObjectsResult.model_validate(
             {
@@ -272,7 +272,7 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
                     "status": "fail" if report.unreadable_total else "ok",
                     "summary": f"{report.unreadable_total} unreadable secure-object rows",
                 },
-            }
+            },
         )
         _emit_envelope(
             ctx,

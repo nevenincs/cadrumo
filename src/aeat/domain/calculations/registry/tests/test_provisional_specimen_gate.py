@@ -119,7 +119,7 @@ def test_fixture_present_round_trip_verified_validates(tmp_path: Path) -> None:
         update={
             "corpus_round_trip_verified": True,
             "verification_source": "synthetic_from_aeat_published_text",
-        }
+        },
     )
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
@@ -226,7 +226,7 @@ def test_gate_fires_via_production_path() -> None:
 
     # Scenario C via production wiring: verified + source satisfies both gates → no error
     profile_verified = _committed_profile(provisional=False).model_copy(
-        update={"corpus_round_trip_verified": True, "verification_source": "real_aeat_corpus_pdf"}
+        update={"corpus_round_trip_verified": True, "verification_source": "real_aeat_corpus_pdf"},
     )
     mutated_c = revision.model_copy(update={"extraction_profiles": (profile_verified,)})
     mutated_modelo_c = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated_c.id: mutated_c}})

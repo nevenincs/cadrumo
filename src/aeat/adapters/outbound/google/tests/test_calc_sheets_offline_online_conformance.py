@@ -16,6 +16,7 @@ from io import BytesIO
 import pytest
 from openpyxl import load_workbook
 
+from .....core import Period
 from .....application.storage.calc_sheets import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
@@ -46,7 +47,7 @@ def _plan() -> SheetExportPlan:
             modelo_id="303",
             revision_id="2009-y-siguientes",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             engine_version="test",
             registry_sha="abcd1234",
             exported_at=datetime(2026, 6, 3, 15, 0, tzinfo=UTC),
@@ -138,7 +139,7 @@ def test_apply_adapter_emits_number_format_and_emphasis_requests() -> None:
             "anchors": (
                 SheetAnchor(address=SheetCellAddress.at(TabName.CALCULOS, 2, 6), kind="final", label="RESULTADO"),
             ),
-        }
+        },
     )
     sheet_id_by_tab = {tab.value: index for index, tab in enumerate(TabName)}
     number_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)

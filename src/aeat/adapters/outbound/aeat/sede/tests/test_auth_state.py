@@ -144,7 +144,7 @@ def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path()
                 taxpayer_nif="12345678Z",
                 target_year=2025,
                 target_period="4T",
-            )
+            ),
         )
 
     assert exc_info.value.translated_message is not None

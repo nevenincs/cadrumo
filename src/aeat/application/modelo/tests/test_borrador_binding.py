@@ -12,6 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
@@ -118,11 +119,12 @@ def _command(
     filing_year: int = _YEAR,
     period: str = _PERIOD,
 ) -> Modelo100BorradorBindingCommand:
+    typed_period = Period.from_year_and_code(filing_year, period)
     return Modelo100BorradorBindingCommand(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         borrador_snapshot_id=borrador_snapshot_id,
         caller_binding_values=caller_binding_values or {},
         caller_enum_binding_values=caller_enum_binding_values or {},
@@ -183,11 +185,31 @@ def test_borrador_binding_command_rejects_unknown_fields() -> None:
                 "bucket_id": _BUCKET_ID,
                 "modelo": "100",
                 "filing_year": _YEAR,
-                "period": _PERIOD,
+                "period": {"filing_year": _YEAR, "code": _PERIOD},
                 "borrador_snapshot_id": None,
                 "unknown": "field",
-            }
+            },
         )
+
+
+def test_borrador_binding_command_rejects_bare_period_string() -> None:
+    with pytest.raises(ValidationError):
+        Modelo100BorradorBindingCommand.model_validate(
+            {
+                "bucket_id": _BUCKET_ID,
+                "modelo": "100",
+                "filing_year": _YEAR,
+                "period": _PERIOD,
+                "borrador_snapshot_id": None,
+            },
+        )
+
+
+def test_borrador_binding_command_carries_structured_period() -> None:
+    command = _command(borrador_snapshot_id=None)
+
+    assert command.period == Period.from_year_and_code(_YEAR, _PERIOD)
+    assert command.model_dump(mode="json")["period"] == {"filing_year": _YEAR, "code": _PERIOD}
 
 
 def test_borrador_binding_command_rejects_blank_caller_binding_keys() -> None:
@@ -301,9 +323,9 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=_YEAR,
-            period=_PERIOD,
+            period=Period.from_year_and_code(_YEAR, _PERIOD),
             revision=registry_snapshot.revision,
-        )
+        ),
     )
 
     assert resolution.binding_values == expected.binding_values
@@ -329,7 +351,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=_YEAR,
-        period=_PERIOD,
+        period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision_id="2025",
         repository=work_unit_repository,
     )
@@ -404,7 +426,7 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=_YEAR,
-        period=_PERIOD,
+        period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision_id="2025",
         repository=work_unit_repository,
     )

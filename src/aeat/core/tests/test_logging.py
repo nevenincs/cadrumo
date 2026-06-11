@@ -40,8 +40,8 @@ def _capture_logger_output() -> tuple[logging.Logger, logging.Logger, logging.Ha
     handler.setLevel(logging.INFO)
     handler.setFormatter(
         logging.Formatter(
-            "%(levelname)s %(message)s | cookie=%(cookie)s | bearer_header=%(bearer_header)s | region=%(region)s"
-        )
+            "%(levelname)s %(message)s | cookie=%(cookie)s | bearer_header=%(bearer_header)s | region=%(region)s",
+        ),
     )
     root_logger.addHandler(handler)
     return logger, root_logger, handler, stream

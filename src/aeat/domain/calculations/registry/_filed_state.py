@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ....core import Period
 from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
@@ -48,6 +49,7 @@ class RegistryFiledStateComparison(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=8)
     revision: str = Field(min_length=1)
+    filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
     status: Literal["satisfied", "failed"]
@@ -84,7 +86,7 @@ def compare_calculation_to_filed_observation(
     if calculation.modelo != observation.modelo:
         raise RegistryValidationError(
             f"cannot compare calculation modelo {calculation.modelo!r} "
-            f"with filed observation modelo {observation.modelo!r}"
+            f"with filed observation modelo {observation.modelo!r}",
         )
     target_casillas = tuple(sorted(set(required_casillas)))
     if not target_casillas:
@@ -117,6 +119,7 @@ def compare_calculation_to_filed_observation(
     return RegistryFiledStateComparison(
         modelo=calculation.modelo,
         revision=calculation.revision,
+        filing_period=observation.filing_period,
         filing_year=observation.filing_year,
         period=observation.period,
         status=status,

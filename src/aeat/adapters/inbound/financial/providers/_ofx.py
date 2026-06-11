@@ -203,7 +203,7 @@ class OfxProvider(FinancialProvider):
             seen_accounts.add(marker)
             if not isinstance(account, _OfxAccountLike):
                 raise InvalidFinancialSourceError(
-                    f"OFX account object is missing expected attributes: {type(account).__name__}"
+                    f"OFX account object is missing expected attributes: {type(account).__name__}",
                 )
             typed_accounts.append(account)
         if not any(getattr(account, "statement", None) is not None for account in typed_accounts):

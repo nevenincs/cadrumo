@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
 
+from .....core.resources import bundled_path
+from .....locales import ModeloLocaleFieldKind, ModeloLocaleManager
 from .._errors import RegistryValidationError
 from .._loader import load_modelo_directory
 from .._schema import ModeloDefinition
@@ -93,7 +96,7 @@ class TestRegistryLocalesLoader:
 
 [help]
 "cont_01" = "English Concept Help 01"
-"""
+""",
         }
         revision_locales = {
             "en": """
@@ -103,7 +106,7 @@ class TestRegistryLocalesLoader:
 
 [help]
 "02" = "English Revision Help 02"
-"""
+""",
         }
         _setup_modelo_dir(
             tmp_path,
@@ -134,7 +137,7 @@ class TestRegistryLocalesLoader:
             "en": """
 [labels]
 "non_existent_continuity_id" = "English Label"
-"""
+""",
         }
         _setup_modelo_dir(tmp_path, modelo_locales=modelo_locales)
 
@@ -148,7 +151,7 @@ class TestRegistryLocalesLoader:
             "en": """
 [labels]
 "99" = "English Label"
-"""
+""",
         }
         _setup_modelo_dir(tmp_path, revision_locales=revision_locales)
 
@@ -162,7 +165,7 @@ class TestRegistryLocalesLoader:
             "en": """
 [labels]
 "cont_01" = "English Concept Label 01"
-"""
+""",
         }
         _setup_modelo_dir(tmp_path, modelo_locales=modelo_locales)
 
@@ -188,7 +191,7 @@ class TestRegistryLocalesLoader:
             "en": """
 [labels]
 "cont_01" = "English Concept Label"
-"""
+""",
         }
         _setup_modelo_dir(tmp_path, modelo_locales=modelo_locales)
         modelo = load_modelo_directory(tmp_path)
@@ -200,3 +203,26 @@ class TestRegistryLocalesLoader:
         rev = reconstituted.revisions["2019-y-siguientes"]
         casilla_01 = next(c for c in rev.casillas if c.id == "01")
         assert casilla_01.get_label("en") == "English Concept Label"
+
+    def test_manager_written_locale_file_loads_through_registry_loader(self, tmp_path: Path) -> None:
+        registry_root = tmp_path / "registry" / "aeat"
+        modelos_root = registry_root / "modelos"
+        modelos_root.mkdir(parents=True)
+        shutil.copytree(bundled_path("registry", "aeat", "modelos", "130"), modelos_root / "130")
+
+        manager = ModeloLocaleManager(registry_root)
+        manager.set_translation_value(
+            "en",
+            "130",
+            "2019-y-siguientes",
+            ModeloLocaleFieldKind.LABELS,
+            "01",
+            "Revenue",
+        )
+
+        modelo = load_modelo_directory(modelos_root / "130")
+        revision = modelo.revisions["2019-y-siguientes"]
+        casilla_01 = next(casilla for casilla in revision.casillas if casilla.id == "01")
+
+        assert casilla_01.label == "Ingresos"
+        assert casilla_01.get_label("en") == "Revenue"

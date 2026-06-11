@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import Period
 from ...domain.deadlines import ModeloDeadline
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
@@ -56,7 +57,7 @@ class WorkflowResumeRunAmbiguousError(WorkflowError):
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         candidates: tuple[WorkflowResumeRunCandidate, ...],
     ) -> None:
         self.modelo = modelo
@@ -66,7 +67,7 @@ class WorkflowResumeRunAmbiguousError(WorkflowError):
             translated_message="application.workflow.errors.resume_run_ambiguous",
             context={
                 "modelo": modelo,
-                "period": period,
+                "period": str(period),
                 "candidate_count": str(len(candidates)),
                 "candidates": workflow_resume_candidate_lines(candidates),
             },
@@ -91,7 +92,7 @@ class WorkflowResumeRunCandidate(BaseModel):
 
     run_id: str = Field(min_length=16, max_length=16)
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     final_stage: str = Field(min_length=1, max_length=64)
     aborted_reason: str | None = None
     started_at: datetime
@@ -107,7 +108,7 @@ class WorkflowResumeTargetResolution(BaseModel):
     run_id: str = Field(min_length=16, max_length=16)
     source: str = Field(min_length=1, max_length=64)
     modelo: str | None = None
-    period: str | None = None
+    period: Period | None = None
     filing_year: int | None = None
     registry_period: str | None = None
     work_unit_id: str | None = None
@@ -123,7 +124,7 @@ class WorkflowResumeContext(BaseModel):
 
     resumed_from_run_id: str = Field(min_length=16, max_length=16)
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     obligation: ModeloDeadline
     aborted_reason: WorkflowAbortReason
 
@@ -189,7 +190,7 @@ def resolve_modelo_workflow_resume_target(
     calculation_revision_id: str | None = None,
     modelo: str | None = None,
     year: int | None = None,
-    period: str | None = None,
+    period: Period | None = None,
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
     selector: object | None = None,
@@ -240,7 +241,7 @@ def resolve_modelo_workflow_resume_target(
                 context={
                     "modelo": modelo or "",
                     "year": "" if year is None else str(year),
-                    "period": period or "",
+                    "period": "" if period is None else str(period),
                 },
             )
         return _resolve_resume_from_visible_target(
@@ -293,17 +294,18 @@ def _resolve_resume_from_visible_target(
     *,
     modelo: str,
     year: int,
-    period: str,
+    period: Period,
     registry_revision_id: str | None,
     bucket_id: str | None,
     selector: object | None,
 ) -> WorkflowResumeTargetResolution:
     from ..modelo import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget, resolve_modelo_work_address_unit
 
+    filing_period = _resolve_visible_period(modelo=modelo, year=year, period=period)
     target = ModeloVisibleFilingTarget(
         modelo=modelo,
         filing_year=year,
-        period=period,
+        period=filing_period,
         registry_revision_id=registry_revision_id,
         bucket_id=bucket_id,
     )
@@ -319,7 +321,7 @@ def _resolve_resume_from_visible_target(
                 "source": "visible_target_revision_selector",
                 "calculation_revision_id": revision.calculation_revision_id,
                 "short_calculation_revision_id": revision.short_calculation_revision_id,
-            }
+            },
         )
     return resolve_modelo_workflow_run_for_resume(
         target,
@@ -328,7 +330,7 @@ def _resolve_resume_from_visible_target(
 
 
 def _resolve_revision_for_resume_target(
-    *, target: ModeloWorkTarget, selector: object
+    *, target: ModeloWorkTarget, selector: object,
 ) -> ModeloResolvedRevisionProjection:
     from ..modelo import ModeloCalculationRevisionSelector, ModeloRevisionPick, resolve_modelo_revision_pick
 
@@ -346,7 +348,16 @@ def _resolve_revision_for_resume_target(
     return resolve_modelo_revision_pick(target=target, pick=ModeloRevisionPick(selector=revision_selector))
 
 
-def find_latest_run_for_period(*, modelo: str, period: str) -> WorkflowResult:
+def _resolve_visible_period(*, modelo: str, year: int, period: Period) -> Period:
+    if period.filing_year != year:
+        raise WorkflowError(
+            translated_message="application.workflow.errors.resume_visible_target_incomplete",
+            context={"modelo": modelo, "year": str(year), "period": str(period)},
+        )
+    return period
+
+
+def find_latest_run_for_period(*, modelo: str, period: Period) -> WorkflowResult:
     """Return the most recent persisted workflow run for ``(modelo, period)``.
 
     A workflow run id is a 16-character hash an operator cannot derive
@@ -362,7 +373,7 @@ def find_latest_run_for_period(*, modelo: str, period: str) -> WorkflowResult:
 
     Args:
         modelo: Target modelo identifier.
-        period: Target workflow period token (e.g. ``"2026Q1"``).
+        period: Target typed workflow period.
 
     Returns:
         The newest matching :class:`WorkflowResult`.
@@ -374,7 +385,7 @@ def find_latest_run_for_period(*, modelo: str, period: str) -> WorkflowResult:
     if not matches:
         raise WorkflowError(
             translated_message="application.workflow.errors.no_run_for_period",
-            context={"modelo": modelo, "period": period},
+            context={"modelo": modelo, "period": str(period)},
         )
     return matches[0]
 
@@ -382,7 +393,7 @@ def find_latest_run_for_period(*, modelo: str, period: str) -> WorkflowResult:
 def find_unique_run_for_period(
     *,
     modelo: str,
-    period: str,
+    period: Period,
     work_unit_id: str | None = None,
     short_work_unit_id: str | None = None,
 ) -> WorkflowResult:
@@ -396,7 +407,7 @@ def find_unique_run_for_period(
     if not matches:
         raise WorkflowError(
             translated_message="application.workflow.errors.no_run_for_period",
-            context={"modelo": modelo, "period": period},
+            context={"modelo": modelo, "period": str(period)},
         )
     if len(matches) > 1:
         raise WorkflowResumeRunAmbiguousError(
@@ -446,7 +457,7 @@ def resolve_modelo_visible_workflow_run_for_resume(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkflowResumeTargetResolution:
@@ -460,7 +471,7 @@ def resolve_modelo_visible_workflow_run_for_resume(
             period=period,
             registry_revision_id=registry_revision_id,
             bucket_id=bucket_id,
-        )
+        ),
     )
 
 
@@ -473,7 +484,7 @@ def resolve_modelo_exact_workflow_run_for_resume(
     from ..modelo import ModeloExactWorkUnitTarget
 
     return resolve_modelo_workflow_run_for_resume(
-        ModeloExactWorkUnitTarget(work_unit_id=work_unit_id, bucket_id=bucket_id)
+        ModeloExactWorkUnitTarget(work_unit_id=work_unit_id, bucket_id=bucket_id),
     )
 
 
@@ -503,7 +514,7 @@ def _resolve_resume_from_work_unit(
         modelo=projection.modelo,
         period=workflow_period,
         filing_year=projection.filing_year,
-        registry_period=projection.period,
+        registry_period=projection.period.registry_token,
         work_unit_id=projection.work_unit_id,
         short_work_unit_id=projection.short_work_unit_id,
         calculation_revision_id=calculation_revision_id,
@@ -523,19 +534,19 @@ def workflow_resume_candidate_lines(candidates: tuple[WorkflowResumeRunCandidate
                 (
                     candidate.run_id,
                     candidate.modelo,
-                    candidate.period,
+                    str(candidate.period),
                     candidate.final_stage,
                     candidate.aborted_reason or "",
                     candidate.started_at.isoformat(),
                     candidate.short_work_unit_id or "",
                     candidate.work_unit_id or "",
-                )
-            )
+                ),
+            ),
         )
     return "\n".join(rows)
 
 
-def _runs_for_period(*, modelo: str, period: str) -> list[WorkflowResult]:
+def _runs_for_period(*, modelo: str, period: Period) -> list[WorkflowResult]:
     matches = [
         run
         for run in list_runs()

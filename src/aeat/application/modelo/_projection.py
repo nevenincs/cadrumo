@@ -11,8 +11,8 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...core.resources import resources
@@ -212,8 +212,9 @@ def project_modelo_100_from_m130(
     m130_quarters: dict[str, CalculationRevision] = {}
     for unit in m130_units:
         revisions = list_calculation_revisions(work_unit_id=unit.work_unit_id)
-        if revisions and unit.period in quarters:
-            m130_quarters[unit.period] = revisions[-1]
+        period_token = unit.period.registry_token
+        if revisions and period_token in quarters:
+            m130_quarters[period_token] = revisions[-1]
 
     if not m130_quarters:
         raise ModeloProjectNoM130RevisionsError(
@@ -241,7 +242,7 @@ def project_modelo_100_from_m130(
 
     if quarters_filed < 4:
         projected_rendimiento_neto = (total_rendimiento_neto * Decimal(4) / Decimal(quarters_filed)).quantize(
-            Decimal("0.01")
+            Decimal("0.01"),
         )
         is_extrapolated = True
     else:
@@ -383,7 +384,7 @@ def _best_revision_for_compare(
             translated_message="cli.app.modelo.compare.no_work_units",
         )
 
-    period_by_unit = {unit.work_unit_id: unit.period for unit in units_for_year}
+    period_by_unit = {unit.work_unit_id: unit.period.registry_token for unit in units_for_year}
     all_revisions: list[CalculationRevision] = []
     for unit in units_for_year:
         all_revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id))
@@ -465,7 +466,7 @@ def compare_modelo_years(
                 formula_id=observation.formula_id if observation is not None else None,
                 legal_refs=tuple(observation.legal_refs) if observation is not None else (),
                 source_refs=tuple(observation.source_refs) if observation is not None else (),
-            )
+            ),
         )
 
     sections_seen: list[str] = []

@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core._bucket_pointer import BucketPointer
-from .....core._bucket_pointer_io import write_pointer
+from .....core import BucketPointer
+from .....core import write_pointer
 from .....core.config import Settings, StorageRouteKind, override_settings
 from .....core.errors import resolve_error_message
 from .....core.external_constants import OutputLanguage
@@ -249,7 +249,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
                     written_at=_NOW,
                     payload=b"runtime-payload",
                 ),
-            )
+            ),
         )
         loaded = repo.load(
             namespace,
@@ -461,7 +461,7 @@ def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_chang
                         namespace,
                         expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
                         max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
-                    )
+                    ),
                 ),
                 lambda: repo.peek_metadata(namespace, object_key),
             )

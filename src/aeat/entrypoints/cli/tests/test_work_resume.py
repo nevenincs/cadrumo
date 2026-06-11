@@ -18,7 +18,7 @@ from ....application.workflow import (
     WorkflowStep,
     save_run,
 )
-from ....core import resolve_active_bucket_id
+from ....core import Period, resolve_active_bucket_id
 from ....domain.deadlines import ModeloDeadline, ObligationStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._modelo import work_app
@@ -38,10 +38,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 
 
-def _obligation(modelo: str = "130", period: str = "2026Q1") -> ModeloDeadline:
+def _obligation(modelo: str = "130", period: Period | None = None) -> ModeloDeadline:
+    target_period = period or Period.from_year_and_code(2026, "1T")
     return ModeloDeadline(
         modelo=modelo,
-        period=period,
+        period=target_period,
         opens_on=date(2026, 4, 1),
         closes_on=date(2026, 4, 20),
         status=ObligationStatus.UPCOMING,
@@ -117,7 +118,7 @@ def test_resume_surfaces_obligation_for_resumable_run(cli_runner: CliRunner) -> 
     result = cli_runner.invoke(work_app, ["resume", run_id])
     assert result.exit_code == 0, result.output
     assert "modelo\t130" in result.output
-    assert "period\t2026Q1" in result.output
+    assert "period\t2026 1T" in result.output
     assert "aborted_reason\tSITE_UNAVAILABLE" in result.output
 
 
@@ -155,7 +156,7 @@ def test_runs_lists_persisted_run_ids(cli_runner: CliRunner) -> None:
     assert "run_count\t2" in result.output
     assert "a" * 16 in result.output
     assert "b" * 16 in result.output
-    assert "130\t2026Q1" in result.output
+    assert "130\t2026 1T" in result.output
 
 
 def test_resume_rejects_a_malformed_target(cli_runner: CliRunner) -> None:
@@ -184,8 +185,8 @@ def test_resume_accepts_modelo_year_period_without_raw_id(cli_runner: CliRunner)
     run_id = "f" * 16
     save_run(
         _aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE).model_copy(
-            update={"obligation": _obligation("130", workflow_period)}
-        )
+            update={"obligation": _obligation("130", workflow_period)},
+        ),
     )
 
     result = cli_runner.invoke(work_app, ["resume", "--modelo", "130", "--year", "2026", "--period", "1T"])
@@ -203,13 +204,13 @@ def test_resume_accepts_legacy_work_unit_id(cli_runner: CliRunner) -> None:
         update={
             "obligation": _obligation("130", workflow_period),
             "started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC),
-        }
+        },
     )
     later = _aborted_run("2" * 16, reason=WorkflowAbortReason.SITE_UNAVAILABLE).model_copy(
         update={
             "obligation": _obligation("130", workflow_period),
             "started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC),
-        }
+        },
     )
     save_run(earlier)
     save_run(later)
@@ -229,16 +230,16 @@ def test_resume_refuses_ambiguous_modelo_year_period_with_candidate_guidance(cli
             update={
                 "obligation": _obligation("130", workflow_period),
                 "started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC),
-            }
-        )
+            },
+        ),
     )
     save_run(
         _aborted_run("4" * 16, reason=WorkflowAbortReason.SITE_UNAVAILABLE).model_copy(
             update={
                 "obligation": _obligation("130", workflow_period),
                 "started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC),
-            }
-        )
+            },
+        ),
     )
 
     result = cli_runner.invoke(work_app, ["resume", "--modelo", "130", "--year", "2026", "--period", "1T"])

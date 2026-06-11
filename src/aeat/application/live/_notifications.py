@@ -97,7 +97,7 @@ def notifications_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
 
 
 def _notifications_repository(
-    settings: Settings, bucket_id: str
+    settings: Settings, bucket_id: str,
 ) -> SecureSnapshotRepository[PersistedNotificationsSnapshot]:
     return SecureSnapshotRepository(
         bucket_id=bucket_id,

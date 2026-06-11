@@ -165,8 +165,8 @@ merge`.
 Use `ledger update` for editable transaction fields:
 
 ```bash
-aeat app ledger update --id <transaction-id> --description "Corrected description"
-aeat app ledger update --id <transaction-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+aeat app ledger update <transaction-id> --description "Corrected description"
+aeat app ledger update <transaction-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
 ```
 
 Use this for corrections such as date, value date, amount, direction, currency,
@@ -176,24 +176,24 @@ notes, or group label.
 Add or modify notes when you need a short operator explanation:
 
 ```bash
-aeat app ledger update --id <transaction-id> --notes "Receipt checked against supplier PDF"
+aeat app ledger update <transaction-id> --notes "Receipt checked against supplier PDF"
 ```
 
 Attach secure purchase evidence, link an invoice, or bind a stored attachment id:
 
 ```bash
 # Attach purchase evidence or other attachment files to a transaction
-aeat app ledger attach --id <transaction-id> --purchase-invoice-evidence-id <evidence-id>
-aeat app ledger attach --id <transaction-id> --attachment-id <attachment-id>
+aeat app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
+aeat app ledger attach <transaction-id> --attachment-id <attachment-id>
 
 # Link a transaction bidirectionally with an invoice and/or purchase evidence in one command
-aeat app ledger link --id <transaction-id> --invoice-id <invoice-id> --evidence-id <evidence-id>
+aeat app ledger link <transaction-id> --invoice-id <invoice-id> --evidence-id <evidence-id>
 ```
 
 Record a link to a Gmail, Google Drive, or URL without copying the file:
 
 ```bash
-aeat app ledger doclink --id <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
+aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
 The link is saved with the transaction. aeat does not access or download the
@@ -206,15 +206,15 @@ categories or business percentages. For example, split a `-121.00` movement
 into software and personal parts:
 
 ```bash
-aeat app ledger split --id <transaction-id> --child-amount=-100.00 --child-description "Software business part" --child-amount=-21.00 --child-description "Personal part" --reason "mixed receipt" --yes
+aeat app ledger split <transaction-id> --child-amount=-100.00 --child-description "Software business part" --child-amount=-21.00 --child-description "Personal part" --reason "mixed receipt" --yes
 ```
 
 aeat replaces the original transaction with two separate entries — one for
 each part. Classify each one separately:
 
 ```bash
-aeat app ledger classify --id <business-child-id> --classification BUSINESS --category-id <category-id>
-aeat app ledger classify --id <personal-child-id> --classification PERSONAL
+aeat app ledger classify <business-child-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify <personal-child-id> --classification PERSONAL
 ```
 
 If the split was wrong, merge the complete child cohort:
@@ -250,10 +250,10 @@ Use the least destructive action that matches the problem:
 Examples:
 
 ```bash
-aeat app ledger archive --id <transaction-id> --reason "duplicate imported row" --yes
-aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
-aeat app ledger restore --id <transaction-id> --reason "stashed by mistake" --yes
-aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --yes
+aeat app ledger archive <transaction-id> --reason "duplicate imported row" --yes
+aeat app ledger stash <transaction-id> --reason "waiting for invoice" --yes
+aeat app ledger restore <transaction-id> --reason "stashed by mistake" --yes
+aeat app ledger remove <transaction-id> --reason "wrong file imported" --yes
 aeat app ledger reset --reason "re-importing all statements" --yes
 ```
 
@@ -269,7 +269,7 @@ Start with:
 
 ```bash
 aeat app ledger categories
-aeat app ledger classify --id <transaction-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
 Use [Classify transactions](classify-transactions.md) for the full

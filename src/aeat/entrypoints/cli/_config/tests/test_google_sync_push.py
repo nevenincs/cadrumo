@@ -122,7 +122,7 @@ def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifes
                 "latest_revision_id": None,
                 "latest_revision_written_at": None,
                 "objects": (),
-            }
+            },
         )
         provider = LocalFileSystemProvider(tmp_path / "mirror")
         put_remote_mirror_namespace_manifest(provider, remote_manifest)
@@ -255,13 +255,13 @@ def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_ob
                 "previous_storage_revision_id": "e" * 64,
                 "ciphertext_hash": hashlib.sha256(remote_payload).hexdigest(),
                 "byte_length": len(remote_payload),
-            }
+            },
         )
         remote_manifest = local_manifest.model_copy(
             update={
                 "latest_revision_id": remote_entry.storage_revision_id,
                 "objects": (remote_entry,),
-            }
+            },
         )
         provider = LocalFileSystemProvider(tmp_path / "mirror")
         provider.put(

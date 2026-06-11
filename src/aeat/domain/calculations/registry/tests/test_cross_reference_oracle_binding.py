@@ -99,7 +99,7 @@ def test_registry_rejects_duplicate_oracle_binding_within_a_revision() -> None:
 
     twin_a = base_xref.model_copy(update={"id": "modelo-130-static-official", "oracle_id": "aeat-nif-iva-checker"})
     twin_b = base_xref.model_copy(
-        update={"id": "modelo-130-filed-declarations-read", "oracle_id": "aeat-nif-iva-checker"}
+        update={"id": "modelo-130-filed-declarations-read", "oracle_id": "aeat-nif-iva-checker"},
     )
     duplicate_revision = _revision_with_cross_references(revision, (twin_a, twin_b))
     duplicate_modelo = _modelo_with_revision(modelo, duplicate_revision)
@@ -120,7 +120,7 @@ def test_registry_accepts_distinct_oracle_bindings_within_a_revision() -> None:
         update={
             "id": "modelo-130-filed-declarations-read",
             "oracle_id": "modelo-100-renta-web-open",
-        }
+        },
     )
     distinct_revision = _revision_with_cross_references(revision, (twin_a, twin_b))
     distinct_modelo = _modelo_with_revision(modelo, distinct_revision)

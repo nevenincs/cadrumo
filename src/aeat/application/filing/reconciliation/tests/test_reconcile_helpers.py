@@ -19,67 +19,9 @@ from decimal import Decimal
 import pytest
 
 from .....core.decimal import format_decimal as _format_decimal
-from .....domain.filing import ModeloBuilderError
-from .._reconcile import (
-    _canonical_draft_period_token,
-    _canonical_tax_id,
-)
+from .._reconcile import _canonical_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-# ---------------------------------------------------------------------------
-# _canonical_draft_period_token — map ModeloDraft period → registry token
-# ---------------------------------------------------------------------------
-
-
-def test_canonical_draft_period_token_maps_quarter_to_t_suffix() -> None:
-    assert _canonical_draft_period_token("2025Q1") == "1T"
-    assert _canonical_draft_period_token("2025Q2") == "2T"
-    assert _canonical_draft_period_token("2025Q3") == "3T"
-    assert _canonical_draft_period_token("2025Q4") == "4T"
-
-
-def test_canonical_draft_period_token_quarter_is_case_insensitive() -> None:
-    """The regex is compiled with re.IGNORECASE so lowercase `q` works."""
-    assert _canonical_draft_period_token("2025q2") == "2T"
-
-
-def test_canonical_draft_period_token_maps_annual_to_0a() -> None:
-    assert _canonical_draft_period_token("2025A") == "0A"
-    assert _canonical_draft_period_token("2030A") == "0A"
-
-
-def test_canonical_draft_period_token_annual_is_case_insensitive() -> None:
-    assert _canonical_draft_period_token("2025a") == "0A"
-
-
-def test_canonical_draft_period_token_passes_canonical_month_through() -> None:
-    """YYYY-MM is already canonical — the helper extracts the MM segment."""
-    assert _canonical_draft_period_token("2025-01") == "01"
-    assert _canonical_draft_period_token("2025-12") == "12"
-
-
-def test_canonical_draft_period_token_raises_on_unparseable_input() -> None:
-    with pytest.raises(ModeloBuilderError, match="cannot map draft period"):
-        _canonical_draft_period_token("not-a-period")
-
-
-def test_canonical_draft_period_token_raises_on_invalid_quarter_number() -> None:
-    """Quarter regex only accepts 1-4; `2025Q5` falls through every branch."""
-    with pytest.raises(ModeloBuilderError, match="cannot map draft period"):
-        _canonical_draft_period_token("2025Q5")
-
-
-def test_canonical_draft_period_token_raises_on_invalid_month_number() -> None:
-    """Month regex only accepts 01-12; `2025-13` falls through every branch."""
-    with pytest.raises(ModeloBuilderError, match="cannot map draft period"):
-        _canonical_draft_period_token("2025-13")
-
-
-# ---------------------------------------------------------------------------
-# _canonical_tax_id — strip + upper for tolerant NIF/NIE comparison
-# ---------------------------------------------------------------------------
 
 
 def test_canonical_tax_id_strips_surrounding_whitespace() -> None:

@@ -277,7 +277,7 @@ _HAS_ACTIVITY = WizardVisibility(
     any_of=(
         _ENTITY_LEGAL,
         WizardCondition(question_id="irpf-income-categories", contains=IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value),
-    )
+    ),
 )
 
 

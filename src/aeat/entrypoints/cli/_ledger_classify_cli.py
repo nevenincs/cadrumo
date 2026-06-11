@@ -35,7 +35,7 @@ def ledger_classify_bulk_csv(
         raise _bad(
             tr(
                 "cli.ledger.classify.from_csv_exclusive",
-                default="--from-csv cannot be combined with --id or --classification.",
+                default="--from-csv cannot be combined with a transaction id or --classification.",
             ),
         )
     csv_path = Path(from_csv)

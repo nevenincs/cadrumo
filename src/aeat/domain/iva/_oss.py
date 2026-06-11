@@ -130,7 +130,7 @@ REGIME_PERIODICITY: Mapping[OssIossRegime, RegimePeriodicity] = MappingProxyType
         OssIossRegime.EXTERNAL_SCHEME: RegimePeriodicity.QUARTERLY,
         OssIossRegime.UNION_SCHEME: RegimePeriodicity.QUARTERLY,
         OssIossRegime.IMPORT_SCHEME: RegimePeriodicity.MONTHLY,
-    }
+    },
 )
 """Filing cadence per regime per HAC/610/2021 art. 2.
 

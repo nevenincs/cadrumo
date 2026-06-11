@@ -112,11 +112,12 @@ def test_iva_compensation_decimal_parse_error_is_registered_and_roundtrips() -> 
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
+    from ...core import Period
     from ...domain.iva_compensation._errors import IvaCompensationYearRangeError
     from ..calculations._iva_compensation_history import iva_compensation_period_key
 
     with pytest.raises(IvaCompensationYearRangeError):
-        iva_compensation_period_key(1999, "1T")
+        iva_compensation_period_key(Period.from_year_and_code(1999, "1T"))
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -> None:

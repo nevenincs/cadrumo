@@ -53,7 +53,7 @@ _HARDENED_ERROR_KEYS: frozenset[str] = frozenset(
         # run-id-invalid x 2 (_persistence.py)
         "application.workflow.errors.run_id_invalid_separators",
         "application.workflow.errors.run_id_invalid_blank",
-    }
+    },
 )
 
 _SUPPORTED_LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")

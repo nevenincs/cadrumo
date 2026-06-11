@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.errors import resolve_error_message
 from ....domain.deadlines import ModeloDeadline, ObligationStatus
 from ....domain.modelos._calculation_repository import (
@@ -61,7 +62,12 @@ _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "test-runtime-profile"
 
 
-def _obligation(modelo: str = "130", period: str = "2026Q1") -> ModeloDeadline:
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
+
+
+def _obligation(modelo: str = "130", period: Period | None = None) -> ModeloDeadline:
+    period = period or _period(2026, "1T")
     return ModeloDeadline(
         modelo=modelo,
         period=period,
@@ -142,7 +148,7 @@ def _seed_current_revision(work_unit_id: str) -> str:
         upsert_work_unit(
             work_repository.load(),
             work_unit.model_copy(update={"current_calculation_revision_id": revision_id}),
-        )
+        ),
     )
     return revision_id
 
@@ -160,7 +166,7 @@ def test_resume_returns_context_for_resumable_aborted_run(tmp_path: Path) -> Non
     assert isinstance(context, WorkflowResumeContext)
     assert context.resumed_from_run_id == run_id
     assert context.modelo == "130"
-    assert context.period == "2026Q1"
+    assert context.period == Period.from_year_and_code(2026, "1T")
     assert context.aborted_reason is WorkflowAbortReason.SITE_UNAVAILABLE
     assert context.obligation.modelo == "130"
 
@@ -309,17 +315,17 @@ def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None
     earlier = _aborted_result(
         run_id="a" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", "2026Q1"),
+        obligation=_obligation("130", _period(2026, "1T")),
     ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
     later = _aborted_result(
         run_id="b" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", "2026Q1"),
+        obligation=_obligation("130", _period(2026, "1T")),
     ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
     save_run(earlier)
     save_run(later)
 
-    resolved = find_latest_run_for_period(modelo="130", period="2026Q1")
+    resolved = find_latest_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))
     assert resolved.run_id == later.run_id
 
 
@@ -331,11 +337,11 @@ def test_find_latest_run_for_period_ignores_other_periods(tmp_path: Path) -> Non
         _aborted_result(
             run_id="a" * 16,
             reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-            obligation=_obligation("303", "2026Q2"),
+            obligation=_obligation("303", _period(2026, "2T")),
         ),
     )
     with pytest.raises(WorkflowError) as raised:
-        find_latest_run_for_period(modelo="130", period="2026Q1")
+        find_latest_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))
     assert raised.value.translated_message == "application.workflow.errors.no_run_for_period"
 
 
@@ -347,26 +353,26 @@ def test_find_latest_run_for_period_resolves_id_for_resume(tmp_path: Path) -> No
     run = _aborted_result(
         run_id="e" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", "2026Q1"),
+        obligation=_obligation("130", _period(2026, "1T")),
     )
     save_run(run)
 
-    resolved = find_latest_run_for_period(modelo="130", period="2026Q1")
+    resolved = find_latest_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))
     context = resume_modelo_workflow(resolved.run_id)
     assert context.resumed_from_run_id == run.run_id
     assert context.modelo == "130"
-    assert context.period == "2026Q1"
+    assert context.period == Period.from_year_and_code(2026, "1T")
 
 
 def test_find_unique_run_for_period_returns_single_match(tmp_path: Path) -> None:
     run = _aborted_result(
         run_id="a" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", "2026Q1"),
+        obligation=_obligation("130", _period(2026, "1T")),
     )
     save_run(run)
 
-    resolved = find_unique_run_for_period(modelo="130", period="2026Q1")
+    resolved = find_unique_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))
 
     assert resolved.run_id == run.run_id
 
@@ -375,18 +381,18 @@ def test_find_unique_run_for_period_refuses_multiple_matches_with_candidate_guid
     earlier = _aborted_result(
         run_id="a" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", "2026Q1"),
+        obligation=_obligation("130", _period(2026, "1T")),
     ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
     later = _aborted_result(
         run_id="b" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", "2026Q1"),
+        obligation=_obligation("130", _period(2026, "1T")),
     ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
     save_run(earlier)
     save_run(later)
 
     with pytest.raises(WorkflowResumeRunAmbiguousError) as raised:
-        find_unique_run_for_period(modelo="130", period="2026Q1")
+        find_unique_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))
 
     assert raised.value.translated_message == "application.workflow.errors.resume_run_ambiguous"
     assert [candidate.run_id for candidate in raised.value.candidates] == [later.run_id, earlier.run_id]
@@ -401,7 +407,7 @@ def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Pat
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -415,11 +421,16 @@ def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Pat
     resolved = resolve_modelo_visible_workflow_run_for_resume(
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         bucket_id=_BUCKET_ID,
     )
     via_target = resolve_modelo_workflow_run_for_resume(
-        ModeloVisibleFilingTarget(modelo="130", filing_year=2026, period="1T", bucket_id=_BUCKET_ID)
+        ModeloVisibleFilingTarget(
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            bucket_id=_BUCKET_ID,
+        ),
     )
 
     assert resolved.run_id == run.run_id
@@ -431,7 +442,7 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -452,7 +463,7 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
         resolve_modelo_visible_workflow_run_for_resume(
             modelo="130",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             bucket_id=_BUCKET_ID,
         )
 
@@ -464,7 +475,7 @@ def test_exact_modelo_work_target_preserves_latest_run_resume_compatibility(tmp_
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -483,7 +494,7 @@ def test_exact_modelo_work_target_preserves_latest_run_resume_compatibility(tmp_
 
     resolved = resolve_modelo_exact_workflow_run_for_resume(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID)
     via_target = resolve_modelo_workflow_run_for_resume(
-        ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID)
+        ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID),
     )
 
     assert resolved.run_id == later.run_id
@@ -495,7 +506,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -509,7 +520,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
     resolved = resolve_modelo_workflow_resume_target(
         modelo="130",
         year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         bucket_id=_BUCKET_ID,
     )
 
@@ -526,7 +537,7 @@ def test_unified_resume_target_preserves_legacy_work_unit_id_latest_run(tmp_path
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -535,7 +546,7 @@ def test_unified_resume_target_preserves_legacy_work_unit_id_latest_run(tmp_path
             run_id="7" * 16,
             reason=WorkflowAbortReason.SITE_UNAVAILABLE,
             obligation=_obligation("130", workflow_period),
-        ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
+        ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)}),
     )
     later = _aborted_result(
         run_id="8" * 16,
@@ -556,7 +567,7 @@ def test_unified_resume_target_routes_revision_selector_through_modelo_addressin
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     calculation_revision_id = _seed_current_revision(work_unit.work_unit_id)
@@ -571,7 +582,7 @@ def test_unified_resume_target_routes_revision_selector_through_modelo_addressin
     resolved = resolve_modelo_workflow_resume_target(
         modelo="130",
         year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         bucket_id=_BUCKET_ID,
         selector=ModeloCalculationRevisionSelector.CURRENT,
     )
@@ -587,7 +598,7 @@ def test_unified_resume_target_refuses_ambiguous_visible_modelo_runs_with_work_g
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -608,7 +619,7 @@ def test_unified_resume_target_refuses_ambiguous_visible_modelo_runs_with_work_g
         resolve_modelo_workflow_resume_target(
             modelo="130",
             year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             bucket_id=_BUCKET_ID,
         )
 

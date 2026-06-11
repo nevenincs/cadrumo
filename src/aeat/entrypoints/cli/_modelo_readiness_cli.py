@@ -10,7 +10,7 @@ from ...application.state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
 )
-from ...core._period import Period
+from ...core import Period
 from ...core.i18n import tr
 from ...domain.user_profile import ProfileNotFoundError
 from ._common import _emit_envelope
@@ -83,7 +83,6 @@ def register_readiness_commands(app: typer.Typer) -> None:
             modelo=modelo,
             revision_id=revision_id,
             filing_year=filing_year,
-            period=period,
         )
         _emit_envelope(
             ctx,
@@ -122,14 +121,13 @@ def _readiness_result(
     modelo: str,
     revision_id: str,
     filing_year: int,
-    period: str | None,
 ) -> ModeloReadinessResult:
     return ModeloReadinessResult(
         profile_id=str(report.profile_id),
         modelo=modelo,
         revision_id=revision_id,
         filing_year=filing_year,
-        period=period or "",
+        period=report.period,
         ready=report.ready,
         profile_ready=report.profile_ready,
         missing=[
@@ -142,7 +140,7 @@ def _readiness_result(
         ],
         ledger_preflight_required=report.ledger_preflight_required,
         ledger_ready=report.ledger_ready,
-        ledger_period=str(report.ledger_period) if report.ledger_period is not None else None,
+        ledger_period=report.ledger_period,
         ledger_checked_transaction_count=report.ledger_checked_transaction_count,
         ledger_issues=[
             LedgerIssuePayload(

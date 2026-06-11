@@ -91,7 +91,7 @@ def register_work_revision_commands(
                 "work_unit_id_filter": resolved_work_unit_id,
                 "revision_count": len(revisions),
                 "revisions": [calculation_revision_payload(rev) for rev in revisions],
-            }
+            },
         )
         lines = [
             "operation\tmodelo.work.revisions",
@@ -108,7 +108,7 @@ def register_work_revision_commands(
                     rev.work_unit_id,
                     rev.state.value,
                     rev.created_at.isoformat(),
-                )
+                ),
             )
             for rev in revisions
         )
@@ -188,7 +188,7 @@ def register_work_revision_commands(
             {
                 **calculation_revision_payload(selected_revision).model_dump(mode="python"),
                 **modality_payload,
-            }
+            },
         )
         lines = [
             "operation\tmodelo.work.revision",

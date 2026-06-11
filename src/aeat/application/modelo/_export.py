@@ -23,8 +23,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core._period import Period, PeriodError
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period, PeriodError
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.time import now as _utc_now
@@ -241,7 +241,7 @@ def _iva_wallet_decision_export_provenance(
         selected_authority=str(decision.selected_authority),
         divergence=str(decision.divergence),
         target_year=decision.target_year,
-        target_period=Period.from_year_and_code(decision.target_year, decision.target_period),
+        target_period=decision.target_period,
         authority_source_kinds=tuple(str(source.source_kind) for source in decision.authority_sources),
         authority_source_refs=tuple(_sha256_ref(source.source_locator) for source in decision.authority_sources),
     )
@@ -390,46 +390,14 @@ def _compose_export_headers(
     return headers
 
 
-def _to_canonical_period(period: Period) -> str:
-    """Map a :class:`~aeat.core.Period` to the canonical period string.
-
-    ``build_draft`` accepts a canonical period string that
-    :func:`~aeat.domain.period.parse_canonical_period` can map (e.g.
-    ``"2026Q1"``, ``"2026A"``, ``"2026-03"``). This helper produces
-    that string from a typed :class:`~aeat.core.Period` so the export
-    path never constructs a combined-string intermediate from raw token
-    branches.
-    """
-    year = period.filing_year
-    code = period.registry_token
-    if code.endswith("T"):
-        return f"{year}Q{code[0]}"
-    if code == "0A":
-        return f"{year}A"
-    if code.endswith("P"):
-        return f"{year}P{code[0]}"
-    # Monthly tokens "01"–"12"
-    return f"{year}-{code}"
-
-
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
-    """Return a typed :class:`~aeat.core.Period` built directly from the work unit's bare registry token.
-
-    ``WorkUnit.period`` is always stored as a bare registry token
-    (``"1T"``, ``"0A"``, ``"03"``); ``WorkUnit.filing_year`` is the
-    four-digit year. :meth:`~aeat.core.Period.from_year_and_code`
-    validates and wraps them without constructing a combined string.
-
-    Raises:
-        ModeloExportError: When the token is not a recognised registry
-            period code.
-    """
+    """Return the typed :class:`~aeat.core.Period` carried by the work unit."""
     try:
-        return Period.from_year_and_code(work_unit.filing_year, work_unit.period)
+        return Period.from_year_and_code(work_unit.filing_year, work_unit.period.registry_token)
     except PeriodError as exc:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_period_unmappable",
-            context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period},
+            context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period.registry_token},
         ) from exc
 
 
@@ -444,7 +412,7 @@ def _approve_export_draft(
     period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=period.filing_year,
-        period=period.registry_token,
+        period=period,
         modelos=(work_unit.modelo,),
     )
     inputs: filing_domain.ModeloInputs = {
@@ -454,7 +422,7 @@ def _approve_export_draft(
     try:
         draft = build_draft(
             modelo=work_unit.modelo,
-            period=_to_canonical_period(period),
+            period=period,
             profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
@@ -549,6 +517,7 @@ def export_modelo_revision(
             workflow_profile,
             cross_period_expected_member_sets,
         ),
+        taxpayer_tax_id=workflow_profile.tax_id,
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 
@@ -602,7 +571,7 @@ def export_modelo_revision(
         "format": receipt.format.value,
         "modelo": work_unit.modelo,
         "filing_year": str(work_unit.filing_year),
-        "period": work_unit.period,
+        "period": work_unit.period.registry_token,
     }
     if iva_wallet_provenance is not None:
         event_payload.update(

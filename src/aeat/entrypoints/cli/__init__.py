@@ -201,7 +201,7 @@ def _root(
             # session-closed-but-profile-exists path.
             typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
             _emit_envelope(
-                ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing)
+                ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing),
             )
             raise typer.Exit()
         # An active profile resolves AND a session is already open:
@@ -216,13 +216,12 @@ def _root(
         typed_overview = RootStatusResult.model_validate(overview_report.model_dump(mode="json"))
         _emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
         raise typer.Exit()
-    else:
-        # A subcommand is being invoked. Activate the bucket session here
-        # so verbs that need it have access to the active profile's
-        # encrypted records. This is deferred after the bare-invocation
-        # path to keep it out of the state-free surfaces (--version,
-        # --help, bare invocation).
-        _activate_active_bucket_session(ctx)
+    # A subcommand is being invoked. Activate the bucket session here
+    # so verbs that need it have access to the active profile's
+    # encrypted records. This is deferred after the bare-invocation
+    # path to keep it out of the state-free surfaces (--version,
+    # --help, bare invocation).
+    _activate_active_bucket_session(ctx)
 
 
 def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
@@ -376,11 +375,11 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         # (handled by the caller) intact. Bootstrap-exempt verbs also
         # return — they run cleanly with no profile by design.
         return
+    _register_wizard_catalogue_for_profile_keys()
     if has_active_bucket_session():
         return
     if exempt:
         return
-    _register_wizard_catalogue_for_profile_keys()
     ctx.with_resource(get_master_key_provider())
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
@@ -548,7 +547,7 @@ _LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
         "._overview",
         "._review",
         ".registry",
-    }
+    },
 )
 
 

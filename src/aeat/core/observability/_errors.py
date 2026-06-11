@@ -22,7 +22,6 @@ class RunContextMissingError(AeatObservabilityError):
     context enters.
     """
 
-    pass
 
 
 class RunTraceValidationError(AeatObservabilityError):
@@ -32,7 +31,6 @@ class RunTraceValidationError(AeatObservabilityError):
     JSON line) and pydantic strict-mode validation failures.
     """
 
-    pass
 
 
 class RunTracePersistenceError(AeatObservabilityError):

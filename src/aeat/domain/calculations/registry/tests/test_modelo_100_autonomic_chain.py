@@ -51,7 +51,7 @@ _EXPECTED_CCAA_KEYS: frozenset[str] = frozenset(
         "la_rioja",
         "madrid",
         "murcia",
-    }
+    },
 )
 _SUPPORTED_EJERCICIOS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024", "2025")
 

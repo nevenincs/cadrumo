@@ -62,7 +62,7 @@ def _seed_workflow_state() -> None:
             "00000000T",
             "--activity",
             "Servicios",
-        ]
+        ],
     )
     assert created.exit_code == 0, created.output
 

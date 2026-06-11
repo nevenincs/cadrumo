@@ -26,7 +26,7 @@ The command prints the evidence ID. Note the full ID down - later commands need 
 Attach the evidence record to the transaction it supports:
 
 ```bash
-aeat app ledger attach --id <transaction-id> --purchase-invoice-evidence-id <evidence-id>
+aeat app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
 ```
 
 A transaction carries at most one purchase-invoice evidence record. The command refuses a second one, and refuses re-attaching the same one.
@@ -34,7 +34,7 @@ A transaction carries at most one purchase-invoice evidence record. The command 
 Generic file attachments are separate. Use `--attachment-id` (repeatable) to attach stored files to a transaction without the purchase-invoice role:
 
 ```bash
-aeat app ledger attach --id <transaction-id> --attachment-id <file-id>
+aeat app ledger attach <transaction-id> --attachment-id <file-id>
 ```
 
 ## Link an external document instead
@@ -42,7 +42,7 @@ aeat app ledger attach --id <transaction-id> --attachment-id <file-id>
 When the document lives elsewhere - in Google Drive, in Gmail, or at a URL - record a document link instead:
 
 ```bash
-aeat app ledger doclink --id <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
+aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
 Accepted sources are `GMAIL`, `GOOGLE_DRIVE`, and `URL`.

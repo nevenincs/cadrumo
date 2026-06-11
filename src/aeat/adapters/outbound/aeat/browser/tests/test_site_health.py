@@ -400,7 +400,7 @@ class TestSiteHealthModels:
                     "html_fragment": "",
                     "detected_markers": (),
                     "bogus": "field",
-                }
+                },
             )
 
     def test_evidence_rejects_out_of_bounds_status(self) -> None:

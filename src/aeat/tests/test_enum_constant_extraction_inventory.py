@@ -37,7 +37,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
         # OracleEnvironment StrEnum definition + match validator
         _SRC_ROOT / "domain" / "calculations" / "registry" / "_live_parity.py",
         _SRC_ROOT / "application" / "registry" / "__init__.py",
-    ]
+    ],
 )
 
 
@@ -165,10 +165,11 @@ _RE_INVOICE_SOURCE_KIND = re.compile(r'(?:==\s*"invoice"|source_kind\s*==\s*"inv
 
 
 def test_no_bare_invoice_source_kind_literals() -> None:
-    """Runtime invoice source-kind comparison/assignment sites must use AggregationSourceKind.INVOICE."""
+    """Runtime source-kind code must not revive the retired bare invoice alias."""
     files = _production_py_files()
     hits = _scan(files, _RE_INVOICE_SOURCE_KIND)
     assert not hits, (
         f"Found {len(hits)} bare 'invoice' literal(s) in source-kind context; "
-        "use AggregationSourceKind.INVOICE:\n" + "\n".join(f"  {h}" for h in hits)
+        "use payable_invoice, collectible_invoice, or purchase_invoice_evidence:\n"
+        + "\n".join(f"  {h}" for h in hits)
     )

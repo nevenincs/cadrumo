@@ -154,7 +154,7 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
             "--year", year,
             "--period", period,
             "--revision", revision,
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -239,7 +239,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
             # Relation value: sum of M202 pagos fraccionados for the year.
             # Zero means no prior instalments have been paid.
             "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -306,7 +306,7 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
             "--binding", "modelo-202-2025-y-siguientes-incn-prior-12-months=500000",
             # Prior pagos-fraccionados (casilla 30): zero for first period.
             "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -378,7 +378,7 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
             "irpf.previous_year_economic_activity_net_income=13000",
             "--binding",
             "modelo-130-resultados-negativos-anteriores=0",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -431,7 +431,7 @@ def test_modelo_303_calculate_surface_is_reachable(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-        ]
+        ],
     )  # fmt: skip
     # The CLI may refuse with missing-bindings error; that is still a
     # reachable non-traceback response.  We assert no Python traceback.
@@ -478,6 +478,6 @@ def test_modelo_100_calculate_surface_is_reachable(
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
-        ]
+        ],
     )  # fmt: skip
     assert "Traceback" not in result.output

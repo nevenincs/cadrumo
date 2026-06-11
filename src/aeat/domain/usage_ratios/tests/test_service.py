@@ -66,7 +66,7 @@ def test_save_round_trips(tmp_path: Path) -> None:
         ratios={
             SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),
             SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
-        }
+        },
     )
     save_usage_ratios(profile, bucket_id="bucket-a")
     assert load_usage_ratios(bucket_id="bucket-a") == profile

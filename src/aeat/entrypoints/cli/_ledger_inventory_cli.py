@@ -81,7 +81,8 @@ inventory_valuation_app = typer.Typer(
 @inventory_app.command(
     "list",
     help=tr(
-        "cli.app.ledger.inventory.list_help", default="List every per-actividad inventory ledger on the active profile.",
+        "cli.app.ledger.inventory.list_help",
+        default="List every per-actividad inventory ledger on the active profile.",
     ),
 )
 def inventory_list(ctx: typer.Context) -> None:
@@ -194,7 +195,9 @@ def inventory_movement_add(
         help=tr("cli.app.ledger.inventory.unit_cost_help", default="Unit cost (purchase movements)."),
     ),
     taxable_base: str | None = typer.Option(
-        None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for IVA)."),
+        None,
+        "--taxable-base",
+        help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for IVA)."),
     ),
     iva_rate: str = typer.Option(
         str(DEFAULT_IVA_GENERAL_RATE_PCT),

@@ -259,7 +259,7 @@ def evaluate_renta_deductibility(
     """Evaluate one classified ledger fact and return a :class:`RentaDeductibilityResult`."""
     if profile.category is not fact.category:
         raise RentaValidationError(
-            f"profile category {profile.category.value!r} does not match fact category {fact.category.value!r}"
+            f"profile category {profile.category.value!r} does not match fact category {fact.category.value!r}",
         )
     rule = profile.proportionality
     deductible_abs: Decimal

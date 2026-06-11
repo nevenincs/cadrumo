@@ -6,7 +6,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Literal
 
-from ...domain.period import PeriodValidationError, parse_canonical_period
+from ...core import Period
 from ._errors import WorkflowError
 
 CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
@@ -27,27 +27,14 @@ class FilingWindowState(StrEnum):
     CLOSED = "closed"
 
 
-def registry_period_token(period: str) -> tuple[int, str]:
-    """Resolve a deadline-engine period token to ``(filing_year, registry_period)``."""
-    try:
-        return parse_canonical_period(period)
-    except PeriodValidationError as exc:
-        raise WorkflowError(
-            translated_message="application.workflow.errors.period_registry_unmappable",
-            context={"period": period},
-        ) from exc
+def registry_period_token(period: Period) -> tuple[int, str]:
+    """Resolve a :class:`~aeat.core.Period` to ``(filing_year, registry_period)``."""
+    return period.year, period.registry_token
 
 
-def registry_filing_year(period: str) -> int:
-    """Resolve the filing year from a workflow period token."""
-    try:
-        filing_year, _registry_period = parse_canonical_period(period)
-    except PeriodValidationError as exc:
-        raise WorkflowError(
-            translated_message="application.workflow.errors.period_registry_year_unresolvable",
-            context={"period": period},
-        ) from exc
-    return filing_year
+def registry_filing_year(period: Period) -> int:
+    """Return the filing year from a typed :class:`~aeat.core.Period`."""
+    return period.year
 
 
 def classify_cert_expiry(

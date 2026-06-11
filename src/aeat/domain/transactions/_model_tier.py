@@ -226,7 +226,7 @@ def resolve_profile(
         if not eligible:
             available_tiers = sorted({p.tier.name for p in candidates})
             raise TransactionError(
-                f"no {normalised_provider} model meets minimum tier {minimum_tier.name}; available: {available_tiers}"
+                f"no {normalised_provider} model meets minimum tier {minimum_tier.name}; available: {available_tiers}",
             )
         return eligible[0]
 
@@ -236,7 +236,7 @@ def resolve_profile(
             if profile.tier < minimum_tier:
                 raise TransactionError(
                     f"model {profile.alias!r} is tier {profile.tier.name} "
-                    f"but classification requires at least {minimum_tier.name}"
+                    f"but classification requires at least {minimum_tier.name}",
                 )
             return profile
     known_aliases = sorted(p.alias for p in candidates)

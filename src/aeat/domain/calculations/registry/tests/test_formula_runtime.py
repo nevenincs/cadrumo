@@ -417,21 +417,21 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
                 "max_year_delta": 0,
             },
             "aggregation": {"op": "copy"},
-        }
+        },
     )
     extended_revision = committed_modelo_130_snapshot.revision.model_copy(
         update={"bindings": (*committed_modelo_130_snapshot.revision.bindings, capped_binding)},
     )
 
     requirements_first_period = previous_filing_observation_requirements(
-        extended_revision, filing_year=2026, period="1T"
+        extended_revision, filing_year=2026, period="1T",
     )
     assert all(
         "test-cap-suppressed-binding" not in requirement.binding_ids for requirement in requirements_first_period
     )
 
     requirements_second_period = previous_filing_observation_requirements(
-        extended_revision, filing_year=2026, period="2T"
+        extended_revision, filing_year=2026, period="2T",
     )
     matching = [
         requirement
@@ -459,7 +459,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
                 "max_year_delta": 0,
             },
             "aggregation": {"op": "copy"},
-        }
+        },
     )
     extended_revision = committed_modelo_130_snapshot.revision.model_copy(
         update={"bindings": (*committed_modelo_130_snapshot.revision.bindings, capped_binding)},
@@ -475,7 +475,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
     )
 
     resolved = resolve_previous_filing_binding_values(
-        extended_revision, observations=(m100_observation,), filing_year=2026, period="1T"
+        extended_revision, observations=(m100_observation,), filing_year=2026, period="1T",
     )
 
     assert "test-cap-suppressed-binding-resolve" not in resolved

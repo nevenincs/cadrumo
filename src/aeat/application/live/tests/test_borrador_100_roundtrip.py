@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_template_path
 from ....tests.secure_sql import isolated_runtime_profile
 from .._borrador_100 import (
@@ -32,6 +33,7 @@ from .._borrador_100 import (
 from .._errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_PERIOD = Period.from_year_and_code(2024, "0A")
 
 
 def _borrador_detail_url(expediente_id: str) -> str:
@@ -56,7 +58,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
     source_url = _borrador_detail_url("202410013522456T")
     snapshot_id = derive_borrador_100_snapshot_id(
         filing_year=2024,
-        period="0A",
+        period=_PERIOD,
         captured_at=captured_at,
         source_url=source_url,
         binding_values=binding_values,
@@ -66,7 +68,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
         bucket_id=bucket_id,
         modelo="100",
         filing_year=2024,
-        period="0A",
+        period=_PERIOD,
         captured_at=captured_at,
         source_url=source_url,
         state=SnapshotLifecycleState.ACTIVE,
@@ -137,7 +139,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
         source_url = _borrador_detail_url("202410013522401X")
         snapshot_id = derive_borrador_100_snapshot_id(
             filing_year=2024,
-            period="0A",
+            period=_PERIOD,
             captured_at=captured_at,
             source_url=source_url,
             binding_values=binding_values,
@@ -147,7 +149,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
             bucket_id=bucket_id,
             modelo="100",
             filing_year=2024,
-            period="0A",
+            period=_PERIOD,
             captured_at=captured_at,
             source_url=source_url,
             state=SnapshotLifecycleState.SUPERSEDED,
@@ -202,7 +204,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         source_url = _borrador_detail_url("202410013522401X")
         snapshot_id = derive_borrador_100_snapshot_id(
             filing_year=2024,
-            period="0A",
+            period=_PERIOD,
             captured_at=captured_at,
             source_url=source_url,
             binding_values=binding_values,
@@ -212,7 +214,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
             bucket_id=bucket_id,
             modelo="100",
             filing_year=2024,
-            period="0A",
+            period=_PERIOD,
             captured_at=captured_at,
             source_url=source_url,
             state=SnapshotLifecycleState.SUPERSEDED,

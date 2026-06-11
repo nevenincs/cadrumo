@@ -40,8 +40,8 @@ def quarantine_unreadable_rows(
                     "previous_payload_hash, payload_hash, "
                     "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
                     "conflict_policy, payload "
-                    "FROM secure_objects WHERE namespace = :namespace"
-                ).bindparams(bindparam("namespace", value=namespace))
+                    "FROM secure_objects WHERE namespace = :namespace",
+                ).bindparams(bindparam("namespace", value=namespace)),
             ).all()
             quarantined = 0
             retained = 0
@@ -75,7 +75,7 @@ def quarantine_unreadable_rows(
                             "        :previous_revision_id, :previous_payload_hash, "
                             "        :revision_ancestor_ids, :payload_hash, "
                             "        :ciphertext_hash, :revision_written_at, :write_provenance, "
-                            "        :source_event_id, :conflict_policy, :payload, :quarantined_at)"
+                            "        :source_event_id, :conflict_policy, :payload, :quarantined_at)",
                         ),
                         {
                             "source_id": int(raw.id),
@@ -110,7 +110,7 @@ def quarantine_unreadable_rows(
                     namespace=namespace,
                     readable=retained,
                     unreadable=quarantined,
-                )
+                ),
             )
     return tuple(per_namespace)
 
@@ -129,7 +129,7 @@ def probe_namespace_integrity(
     unreadable = 0
     with session_scope(engine) as session:
         stmt = text("SELECT payload FROM secure_objects WHERE namespace = :namespace").bindparams(
-            bindparam("namespace", value=namespace)
+            bindparam("namespace", value=namespace),
         )
         rows = session.execute(stmt).all()
     for raw in rows:
@@ -161,7 +161,7 @@ def iter_namespace_decryptability(
             text(
                 "SELECT id, object_key, classification, schema_version, written_at, payload "
                 "FROM secure_objects WHERE namespace = :namespace "
-                "ORDER BY object_key"
+                "ORDER BY object_key",
             )
             .bindparams(bindparam("namespace", value=namespace))
             .columns(

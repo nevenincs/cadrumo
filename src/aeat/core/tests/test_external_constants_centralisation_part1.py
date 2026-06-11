@@ -266,7 +266,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
                         offenders.append(
                             f"{py_file.relative_to(repo_root)}:{node.lineno}: "
                             f"local classified_by sentinel '{target.id} = \"manual\"'; "
-                            f"import CLASSIFIED_BY_MANUAL from aeat.core.external_constants"
+                            f"import CLASSIFIED_BY_MANUAL from aeat.core.external_constants",
                         )
 
     assert offenders == [], (
@@ -422,7 +422,7 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
         offenders.append(f"_declarations.py:{node.lineno}: bare 'application/json' literal")
 
     assert offenders == [], "Bare 'application/json' literals found; use _JSON_MIME_TYPE instead:\n" + "\n".join(
-        offenders
+        offenders,
     )
 
 
@@ -555,7 +555,7 @@ def test_no_bare_threshold_720_literal_in_foreign_assets() -> None:
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "50000.00":
             offenders.append(
-                f"_foreign_assets.py:{node.lineno}: bare Decimal('50000.00'); use MODELO_720_REPORTING_THRESHOLD_EUR"
+                f"_foreign_assets.py:{node.lineno}: bare Decimal('50000.00'); use MODELO_720_REPORTING_THRESHOLD_EUR",
             )
 
     assert offenders == [], (
@@ -657,7 +657,7 @@ def test_no_bare_art_7p_cap_decimal_literal_in_maritime_exemption() -> None:
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "60100":
             offenders.append(
-                f"_maritime_exemption.py:{node.lineno}: bare Decimal('60100'); use ART_7P_EXEMPTION_CAP_EUR"
+                f"_maritime_exemption.py:{node.lineno}: bare Decimal('60100'); use ART_7P_EXEMPTION_CAP_EUR",
             )
 
     assert offenders == [], (
@@ -725,7 +725,7 @@ def test_no_bare_multiple_pagadores_threshold_literal_in_deadlines_models() -> N
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "1500":
             offenders.append(
-                f"_models.py:{node.lineno}: bare Decimal('1500'); use MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR"
+                f"_models.py:{node.lineno}: bare Decimal('1500'); use MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR",
             )
 
     assert offenders == [], (

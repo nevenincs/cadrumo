@@ -39,7 +39,7 @@ def _condition(field: str, op: str, value: bool | int | str, explanation: str = 
             "explanation": explanation,
             "legal_refs": ("ley-35-2006:art-1",),
             "source_refs": ("aeat-renta-2025-manual-parte1",),
-        }
+        },
     )
 
 

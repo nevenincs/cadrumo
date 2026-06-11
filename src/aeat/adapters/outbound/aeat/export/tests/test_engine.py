@@ -15,6 +15,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
 from ......application.auth import AuthProviderDescription, AuthProviderKind
+from ......core import Period
 from ......core.config import Settings
 from ......domain.submission import (
     ModeloDraftStatus,
@@ -52,7 +53,7 @@ class _Draft(BaseModel):
 
     draft_id: str = "draft-ut"
     modelo: str = "130"
-    period: str = "2026Q1"
+    period: Period = Field(default_factory=lambda: Period.from_year_and_code(2026, "1T"))
     profile_tax_id: str = "X1234567L"
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO
     values: dict[str, str] = Field(default_factory=dict)
@@ -62,7 +63,7 @@ class _Draft(BaseModel):
 class _OpenDeadlines:
     """Deadline checker test double that always reports the filing window as open."""
 
-    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+    def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         """Return ``True`` for every (modelo, period, today) tuple."""
         return True
 
@@ -105,7 +106,7 @@ def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> Mod
         submission_id=submission_id,
         draft_id="draft-1",
         modelo=modelo,
-        period="2026Q1",
+        period=Period.from_year_and_code(2026, "1T"),
         profile_tax_id="X1234567L",
         status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
         submitted_at=now,

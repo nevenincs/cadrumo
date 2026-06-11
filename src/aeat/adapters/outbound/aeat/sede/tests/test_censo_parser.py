@@ -38,7 +38,7 @@ _FULL_FIXTURE = dedent(
         </table>
       </body>
     </html>
-    """
+    """,
 )
 
 

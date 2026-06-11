@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from ....core.aggregation import AggregationSourceKind
 from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
@@ -21,6 +20,7 @@ from ._bindings import (
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 from ._errors import RegistryValidationError
+from ._invoice_bindings import INVOICE_BINDING_SOURCE_KINDS
 from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
@@ -59,7 +59,7 @@ def validate_casilla_section(
         ):
             failures.append(
                 f"{prefix}: casilla {casilla.id!r} references formula {casilla.formula!r} "
-                f"targeting {formulas[casilla.formula].target!r}"
+                f"targeting {formulas[casilla.formula].target!r}",
             )
         if casilla.binding is not None and casilla.binding not in bindings:
             failures.append(f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}")
@@ -94,7 +94,7 @@ def validate_formula_section(
                 formula.source_refs,
                 formula.source_citations,
                 "official_source_guidance",
-            )
+            ),
         )
         if formula.target not in casillas:
             failures.append(f"{prefix}: formula {formula.id!r} targets unknown casilla {formula.target!r}")
@@ -107,7 +107,7 @@ def validate_formula_section(
                 bindings=bindings,
                 parameters=parameters,
                 relations=relations,
-            )
+            ),
         )
 
     for target in sorted(_duplicates([formula.target for formula in revision.formulas])):
@@ -136,7 +136,7 @@ def validate_parameter_section(
                 parameter.source_refs,
                 parameter.source_citations,
                 "official_source_guidance",
-            )
+            ),
         )
         failures.extend(validate_dated_values(prefix, parameter.id, parameter.values))
 
@@ -161,7 +161,7 @@ def validate_binding_section(
             failures.extend(evidence.require_source_tier(prefix, owner, binding.source_refs, "layout_authority"))
         else:
             failures.extend(
-                evidence.require_source_tier(prefix, owner, binding.source_refs, "official_source_guidance")
+                evidence.require_source_tier(prefix, owner, binding.source_refs, "official_source_guidance"),
             )
             failures.extend(
                 evidence.validate_source_citations(
@@ -170,7 +170,7 @@ def validate_binding_section(
                     binding.source_refs,
                     binding.source_citations,
                     "official_source_guidance",
-                )
+                ),
             )
         _validate_per_source_binding(failures, prefix=prefix, binding=binding)
 
@@ -188,12 +188,16 @@ def _validate_per_source_binding(
 ) -> None:
     """Run the per-source typed binding-definition validators."""
     source_validators = (
-        (AggregationSourceKind.INVOICE, validate_invoice_binding_definition),
         ("ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition),
         ("ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition),
         ("ledger_renta_expense_aggregation", validate_ledger_renta_expense_aggregation_binding_definition),
         ("ledger_renta_income_aggregation", validate_ledger_renta_income_aggregation_binding_definition),
     )
+    if binding.source in INVOICE_BINDING_SOURCE_KINDS:
+        try:
+            validate_invoice_binding_definition(binding)
+        except RegistryValidationError as exc:
+            failures.append(f"{prefix}: {exc}")
     for source_name, validator in source_validators:
         if binding.source == source_name:
             try:
@@ -228,7 +232,7 @@ def validate_extraction_profile_section(
             if missing_exported_casillas:
                 failures.append(
                     f"{prefix}: export_record extraction profile {profile.id!r} targets casillas without "
-                    f"export fields {missing_exported_casillas!r}"
+                    f"export fields {missing_exported_casillas!r}",
                 )
         failures.extend(validate_extraction_profile_artefacts(prefix, profile))
         for target in profile.target_casillas:

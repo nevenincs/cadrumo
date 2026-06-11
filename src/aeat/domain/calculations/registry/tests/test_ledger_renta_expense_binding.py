@@ -168,7 +168,7 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
             "aggregation": {"op": "sum"},
             "legal_refs": ("ley-35-2006:art-28",),
             "source_refs": ("aeat-renta-2025-manual-parte1",),
-        }
+        },
     )
 
     with pytest.raises(RegistryValidationError, match="outside the first Modelo 100 Renta ledger expense slice"):

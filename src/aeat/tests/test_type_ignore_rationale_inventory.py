@@ -92,7 +92,7 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
         ("application/workflow/_adapters.py", 151),
         ("domain/buckets/_event.py", 307),
         ("entrypoints/cli/_app_live.py", 1681),
-    }
+    },
 )
 
 
@@ -163,5 +163,5 @@ def test_no_new_type_ignore_without_rationale() -> None:
             "  # CAST-RATIONALE-<LABEL>: <reason>  (if a cast escape)\n"
             "  # ANY-RETURN-RATIONALE-<LABEL>: <reason>  (if a return-type escape)\n"
             "Do NOT add to _KNOWN_VIOLATING_LINES — add a marker instead.\n"
-            f"Ratchet holds {len(_KNOWN_VIOLATING_LINES)} pre-existing sites for paydown."
+            f"Ratchet holds {len(_KNOWN_VIOLATING_LINES)} pre-existing sites for paydown.",
         )

@@ -50,7 +50,7 @@ _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
         #    by the structural non-overlap property the pin either equals the
         #    law-determined revision or the run refuses.
         "domain/calculations/registry/_scenarios.py",
-    }
+    },
 )
 
 
@@ -62,7 +62,7 @@ def _aeat_src_root() -> Path:
         if parent.name == "aeat" and (parent.parent.name == "src" or (parent / "__init__.py").exists()):
             return parent
     raise RuntimeError(  # pragma: no cover
-        "Cannot locate the src/aeat/ package root from this test's path"
+        "Cannot locate the src/aeat/ package root from this test's path",
     )
 
 

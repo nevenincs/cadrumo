@@ -23,6 +23,7 @@ from typing import Final, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...core import Period
 from ...core.time import now
 from ._errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
@@ -35,7 +36,7 @@ _AEAT_FILED_HISTORY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
         "aeat_sede_justificante",
         "aeat_sede_iva_compensation_history",
         _FILED_HISTORY_OBSERVATION,
-    }
+    },
 )
 
 type IvaCompensationAuthority = Literal[
@@ -87,7 +88,17 @@ class IvaCompensationAuthoritySource(BaseModel):
     captured_at: datetime | None = None
     source_modelo: str | None = Field(default=None, min_length=1, max_length=8)
     source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
-    source_periods: tuple[str, ...] = ()
+    source_periods: tuple[Period, ...] = ()
+
+    @model_validator(mode="after")
+    def _source_period_years_match(self) -> IvaCompensationAuthoritySource:
+        if not self.source_periods:
+            return self
+        if self.source_filing_year is None:
+            raise ValueError("source_filing_year is required when source_periods are present")
+        if any(period.filing_year != self.source_filing_year for period in self.source_periods):
+            raise ValueError("source_periods filing_year values must match source_filing_year")
+        return self
 
 
 class IvaCompensationReconciliationDecision(BaseModel):
@@ -102,7 +113,7 @@ class IvaCompensationReconciliationDecision(BaseModel):
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     target_year: int = Field(ge=2000, le=2099)
-    target_period: str = Field(min_length=1, max_length=8)
+    target_period: Period
     selected_authority: IvaCompensationAuthority
     selected_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     wallet_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -118,6 +129,8 @@ class IvaCompensationReconciliationDecision(BaseModel):
 
     @model_validator(mode="after")
     def _validate_selected_amount(self) -> IvaCompensationReconciliationDecision:
+        if self.target_period.filing_year != self.target_year:
+            raise ValueError("target_period.filing_year must match target_year")
         if self.selected_authority != "missing" and self.selected_amount is None:
             raise ValueError("selected_amount is required unless selected_authority is 'missing'")
         if self.selected_authority == "missing" and self.selected_amount is not None:
@@ -144,7 +157,7 @@ class IvaCompensationWalletObservationProtocol(Protocol):
     @property
     def target_year(self) -> int: ...
     @property
-    def target_period(self) -> str: ...
+    def target_period(self) -> Period: ...
     @property
     def total_pending(self) -> Decimal: ...
     @property
@@ -173,7 +186,7 @@ class LocalIvaCompensationRecurrenceProtocol(Protocol):
     @property
     def source_filing_year(self) -> int: ...
     @property
-    def source_periods(self) -> tuple[str, ...]: ...
+    def source_periods(self) -> tuple[Period, ...]: ...
     @property
     def resolved_at(self) -> datetime: ...
 
@@ -182,7 +195,7 @@ class LocalIvaCompensationRecurrenceProtocol(Protocol):
 class _ReconciliationContext:
     taxpayer_nif: str
     target_year: int
-    target_period: str
+    target_period: Period
     wallet_amount: Decimal | None
     local_recurrence_amount: Decimal | None
     override: IvaCompensationOverride | None
@@ -196,7 +209,7 @@ def reconcile_iva_compensation_wallet(
     *,
     taxpayer_nif: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     wallet: IvaCompensationWalletObservationProtocol | None,
     local_recurrence_amount: Decimal | None,
     local_recurrence_source: IvaCompensationAuthoritySource | None = None,
@@ -485,7 +498,7 @@ def _authority_sources(
                 amount=wallet.total_pending,
                 source_locator=str(wallet.source_url),
                 captured_at=wallet.captured_at,
-            )
+            ),
         )
     if local_recurrence_amount is not None:
         recurrence_source = local_recurrence_source or IvaCompensationAuthoritySource(
@@ -503,7 +516,7 @@ def _authority_sources(
                     source_modelo=recurrence_source.source_modelo,
                     source_filing_year=recurrence_source.source_filing_year,
                     source_periods=recurrence_source.source_periods,
-                )
+                ),
             )
         sources.append(recurrence_source)
     if override is not None:
@@ -513,7 +526,7 @@ def _authority_sources(
                 amount=override.amount,
                 source_locator=override.evidence_locator,
                 captured_at=override.recorded_at,
-            )
+            ),
         )
     return tuple(sources)
 
@@ -532,7 +545,7 @@ def local_recurrence_authority_source(
     binding_id = str(recurrence.binding_id)
     source_modelo = str(recurrence.source_modelo)
     source_filing_year = int(recurrence.source_filing_year)
-    source_periods = tuple(str(item) for item in recurrence.source_periods)
+    source_periods = tuple(recurrence.source_periods)
     resolved_at = recurrence.resolved_at
     source_kind: IvaCompensationAuthoritySourceKind = (
         _FILED_HISTORY_OBSERVATION if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS else "local_recurrence"
@@ -553,16 +566,16 @@ def validate_wallet_matches_snapshot(
     *,
     taxpayer_nif: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
 ) -> None:
     """Refuse a wallet observation that does not match the requested Modelo 303 target."""
     if wallet.taxpayer_nif != taxpayer_nif:
         raise IvaCompensationReconciliationInputError(
-            "IVA wallet observation taxpayer does not match the requested taxpayer"
+            "IVA wallet observation taxpayer does not match the requested taxpayer",
         )
     if wallet.target_year != target_year or wallet.target_period != target_period:
         raise IvaCompensationReconciliationInputError(
-            "IVA wallet observation target does not match the Modelo 303 snapshot"
+            "IVA wallet observation target does not match the Modelo 303 snapshot",
         )
 
 

@@ -17,7 +17,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.properties import PageSetupProperties
 from pydantic import BaseModel, Field
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import UTF_8_ENCODING
 from ._records import (
     SheetAutoFilter,
@@ -306,7 +306,7 @@ def _write_guide(worksheet: Worksheet, plan: SheetExportPlan) -> None:
     stamps = (
         ("Modelo", metadata.modelo_id),
         ("Revision", metadata.revision_id),
-        ("Periodo", f"{metadata.period} / {metadata.filing_year}"),
+        ("Periodo", f"{metadata.period.registry_token} / {metadata.filing_year}"),
         ("Motor", metadata.engine_version),
         ("Registry SHA", metadata.registry_sha),
         ("Exportado", metadata.exported_at.isoformat()),

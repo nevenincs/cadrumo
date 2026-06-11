@@ -10,7 +10,7 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
-from ...core._toml import read_toml, to_str_keyed_dict
+from ...core import read_toml, to_str_keyed_dict
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
@@ -130,7 +130,7 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
             "manual_references": tuple(manual_refs),
             "citations": tuple(_parse_citation(raw_citation) for raw_citation in raw_citations),
             "notes": data.get("notes", ""),
-        }
+        },
     )
 
 
@@ -146,7 +146,7 @@ def _parse_citation(raw_citation: object) -> IvaCitation:
             "url": data.get("url"),
             "quoted_text": tr(str(data.get("quoted_text"))),
             "retrieval_date": data.get("retrieval_date"),
-        }
+        },
     )
 
 

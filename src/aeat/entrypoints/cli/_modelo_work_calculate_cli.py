@@ -393,7 +393,7 @@ def _run_work_calculate(
             **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
             **modality_payload,
             **authorization_payload,
-        }
+        },
     )
     lines = [
         "operation\tmodelo.work.calculate",
@@ -427,7 +427,7 @@ def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit:
         state=revision.state.value,
         modelo=work_unit.modelo,
         year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     )
 
 
@@ -478,7 +478,7 @@ def _work_calculate_authorization_output(
                 "modelo.work.calculate.unauthorized_backend",
                 advisory_text,
                 context={"authorization_state": str(advisory.state)},
-            )
+            ),
         ],
         [f"authorization_state\t{advisory.state}", advisory_text],
     )

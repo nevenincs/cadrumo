@@ -171,7 +171,7 @@ def test_existing_surface_categories_still_validate() -> None:
             requires_aeat_authorization=False,
             legal_refs=("orden-hac-174-2020:art-1",),
             source_refs=("aeat-modelo-349-procedure",),
-        )
+        ),
     )
     # public_read_surface
     decisions.append(
@@ -188,7 +188,7 @@ def test_existing_surface_categories_still_validate() -> None:
             requires_aeat_authorization=False,
             legal_refs=("orden-hac-174-2020:art-1",),
             source_refs=("aeat-modelo-349-procedure",),
-        )
+        ),
     )
     # authenticated_read_surface
     decisions.append(
@@ -205,7 +205,7 @@ def test_existing_surface_categories_still_validate() -> None:
             requires_aeat_authorization=True,
             legal_refs=("orden-hac-174-2020:art-1",),
             source_refs=("aeat-modelo-349-procedure",),
-        )
+        ),
     )
     # static_official_documentation
     decisions.append(
@@ -222,7 +222,7 @@ def test_existing_surface_categories_still_validate() -> None:
             requires_aeat_authorization=False,
             legal_refs=("orden-hac-174-2020:art-1",),
             source_refs=("aeat-modelo-349-procedure",),
-        )
+        ),
     )
 
     assert [d.surface for d in decisions] == [

@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     pass
 
+from ...core import Period
 from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
@@ -28,7 +29,6 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
-from ..aggregation import Period
 from ..export import serialize_tabular_rows
 from ._actions_common import (
     _bucket_event_repository,
@@ -93,12 +93,11 @@ def export_ledger_transactions(
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
-    export_period = Period.model_validate(command.period) if command.period else None
     rows = _ledger_export_rows(
         catalogue,
         bucket_id=command.bucket_id,
         include_inactive=command.include_inactive,
-        period=export_period,
+        period=command.period,
     )
     serialized = serialize_tabular_rows(
         tuple(row.model_dump(mode="json") for row in rows),

@@ -162,5 +162,5 @@ def _emit_revision_payload_failures(
         return
     failures.append(
         f"{prefix}: revision must declare at least one casilla; zero-casilla "
-        "revisions are unsupported placeholder definitions"
+        "revisions are unsupported placeholder definitions",
     )

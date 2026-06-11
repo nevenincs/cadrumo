@@ -1,6 +1,5 @@
 """Shared support for split adapter tests."""
 
-# ruff: noqa: F401
 
 from __future__ import annotations
 
@@ -11,7 +10,7 @@ import logging
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import NoReturn, cast
+from typing import cast
 
 import pytest
 from cryptography import x509
@@ -20,9 +19,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from ......application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
+from ......application.auth import AuthProviderKind
 from ......core.config import CertificateBackend, Settings
-from ......core.i18n import tr
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -36,21 +34,15 @@ from .. import (
     AeatSessionExpiredError,
     BrowserContextLike,
     BrowserSessionLike,
-    CertificateError,
     CertificateLoginAssertionDetail,
-    CertificateNifParseError,
     CertificateSessionDetail,
-    ClaveMovilLoginAssertionDetail,
-    ClaveMovilSessionDetail,
     HandshakeResult,
     LoadedCertificate,
     _session_store,
     extract_nif_from_subject,
     load_certificate,
-    select_provider,
 )
 from .. import _authenticator as authenticator_module
-from .._errors import AuthValidationError
 from .._fixtures import SECRET_PASSPHRASE
 from ..certificate import CertificateBundle
 

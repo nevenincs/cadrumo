@@ -394,7 +394,7 @@ def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
                     quantity=movement.quantity,
                     unit_cost=unit_cost,
                     source_movement_id=movement.movement_id,
-                )
+                ),
             )
             if movement.kind is MovementKind.PURCHASE:
                 purchase_value += movement.quantity * unit_cost

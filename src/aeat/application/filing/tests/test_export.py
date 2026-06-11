@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from ....domain.calculations.registry import ExportLayoutDefinition, RegistryValidationError, parse_export_payload
 from ....domain.filing import FilingExportError
 from ....domain.submission import ModeloDraftStatus
@@ -30,6 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _HEX_DIGEST = "a" * 64
+_PERIOD = Period.from_year_and_code(2026, "1T")
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
 _SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None, tuple[str, ...]], RegistrySchemaProvider] = {}
@@ -51,9 +53,14 @@ def _schema_provider(
     key = (filing_year, period, selected_modelos)
     provider = _SCHEMA_PROVIDER_CACHE.get(key)
     if provider is None:
+        typed_period = (
+            Period.from_year_and_code(filing_year, period)
+            if filing_year is not None and period is not None
+            else None
+        )
         provider = build_runtime_schema_provider(
             filing_year=filing_year,
-            period=period,
+            period=typed_period,
             modelos=selected_modelos,
         )
         _SCHEMA_PROVIDER_CACHE[key] = provider
@@ -74,7 +81,7 @@ def _provider_without_export_layout(provider: RegistrySchemaProvider, modelo: st
 def _approved_registry_draft():
     draft = build_draft(
         modelo="130",
-        period="2026Q1",
+        period=_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -126,7 +133,7 @@ def _modelo_130_export_headers() -> dict[str, str]:
 def _approved_modelo_131_registry_draft():
     draft = build_draft(
         modelo="131",
-        period="2026Q1",
+        period=_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -148,7 +155,7 @@ def _approved_modelo_131_registry_draft():
 def _approved_modelo_131_registry_draft_without_direct_debit():
     draft = build_draft(
         modelo="131",
-        period="2026Q1",
+        period=_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -169,7 +176,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
 def _approved_modelo_131_zero_payable_direct_debit_draft():
     draft = build_draft(
         modelo="131",
-        period="2026Q1",
+        period=_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -187,7 +194,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
 def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_prefix: str):
     draft = build_draft(
         modelo="131",
-        period=f"{filing_year}Q1",
+        period=Period.from_year_and_code(filing_year, "1T"),
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -210,7 +217,7 @@ def _approved_modelo_131_historical_registry_draft():
     provider = _schema_provider(filing_year=2023, period="4T", modelos=("131",))
     draft = build_draft(
         modelo="131",
-        period="2023Q4",
+        period=Period.from_year_and_code(2023, "4T"),
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -234,7 +241,7 @@ def _approved_modelo_131_historical_registry_draft():
 def _approved_modelo_111_registry_draft():
     draft = build_draft(
         modelo="111",
-        period="2026Q1",
+        period=_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -269,7 +276,7 @@ def _modelo_111_export_headers() -> dict[str, str]:
 def _approved_modelo_115_registry_draft():
     draft = build_draft(
         modelo="115",
-        period="2026Q1",
+        period=_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -297,7 +304,7 @@ def _modelo_115_export_headers() -> dict[str, str]:
 def _approved_modelo_123_registry_draft():
     draft = build_draft(
         modelo="123",
-        period="2026Q1",
+        period=_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -331,7 +338,7 @@ def _approved_modelo_123_2019_registry_draft():
     provider = _schema_provider(filing_year=2023, period="4T", modelos=("123",))
     draft = build_draft(
         modelo="123",
-        period="2023Q4",
+        period=Period.from_year_and_code(2023, "4T"),
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -371,7 +378,7 @@ def test_export_result_round_trips_canonical_fields() -> None:
     receipt = DeclaracionExportResult(
         draft_id="d-130-2026Q1",
         modelo="130",
-        period="2026Q1",
+        period=_PERIOD,
         format=DeclaracionExportFormat.FICHERO_BOE,
         output_path=_EXPORT_PATH,
         byte_size=512,
@@ -385,6 +392,8 @@ def test_export_result_round_trips_canonical_fields() -> None:
     assert receipt.byte_size == 512
     assert receipt.file_sha256 == _HEX_DIGEST
     assert receipt.narrative
+    assert receipt.period == _PERIOD
+    assert receipt.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
 
 
 def test_export_result_rejects_uppercase_digest() -> None:
@@ -392,7 +401,7 @@ def test_export_result_rejects_uppercase_digest() -> None:
         DeclaracionExportResult(
             draft_id="d",
             modelo="130",
-            period="2026Q1",
+            period=_PERIOD,
             format=DeclaracionExportFormat.FICHERO_BOE,
             output_path=_OTHER_EXPORT_PATH,
             byte_size=1,
@@ -407,7 +416,7 @@ def test_export_result_rejects_non_hex_digest() -> None:
         DeclaracionExportResult(
             draft_id="d",
             modelo="130",
-            period="2026Q1",
+            period=_PERIOD,
             format=DeclaracionExportFormat.FICHERO_BOE,
             output_path=_OTHER_EXPORT_PATH,
             byte_size=1,
@@ -421,7 +430,7 @@ def test_export_result_is_frozen() -> None:
     receipt = DeclaracionExportResult(
         draft_id="d",
         modelo="130",
-        period="2026Q1",
+        period=_PERIOD,
         format=DeclaracionExportFormat.FICHERO_BOE,
         output_path=_OTHER_EXPORT_PATH,
         byte_size=0,
@@ -516,6 +525,8 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
 
     assert receipt.byte_size == len(payload)
     assert receipt.file_sha256
+    assert receipt.period == draft.period
+    assert receipt.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
     assert receipt.casilla_provenance
     comparable = {
         casilla_id: Decimal(str(expected))
@@ -1066,7 +1077,7 @@ def _approved_modelo_303_registry_draft():
     provider = _schema_provider(modelos=("303",))
     draft = build_draft(
         modelo="303",
-        period="2026Q1",
+        period=_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",

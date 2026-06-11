@@ -103,7 +103,7 @@ def _update_description(transaction_id: str, new_description: str) -> str:
     """Edit the narrative (an id-affecting fact) and return the heir's new id."""
     result = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "update", "--id", transaction_id, "--description", new_description],
+        ["--format", "json", "app", "ledger", "update", transaction_id, "--description", new_description],
     )
     assert result.exit_code == 0, result.output
     return json.loads(result.output)["result"]["transaction_id"]
@@ -232,7 +232,6 @@ def test_split_parent_id_still_resolves_after_split() -> None:
             "app",
             "ledger",
             "split",
-            "--id",
             parent,
             "--child-amount",
             "40.00",
@@ -281,7 +280,6 @@ def test_merged_children_ids_still_resolve_after_merge() -> None:
             "app",
             "ledger",
             "split",
-            "--id",
             parent,
             "--child-amount",
             "40.00",

@@ -69,7 +69,7 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
 
 
 def test_register_rejects_schema_violations(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     with pytest.raises(ProfileSchemaValidationError) as exc_info:
@@ -85,7 +85,7 @@ def test_register_rejects_schema_violations(
 
 
 def test_register_persists_when_all_required_facts_present(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     result = svc.register(
@@ -93,14 +93,14 @@ def test_register_persists_when_all_required_facts_present(
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
     assert result.profile.profile_id == "operator"
     assert result.profile.status is UserProfileStatus.ACTIVE
 
 
 def test_register_refuses_duplicate_profile_id(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
@@ -108,7 +108,7 @@ def test_register_refuses_duplicate_profile_id(
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
     with pytest.raises(ProfileAlreadyExistsError) as exc_info:
         svc.register(
@@ -116,7 +116,7 @@ def test_register_refuses_duplicate_profile_id(
                 profile_id="operator",
                 display_name="Operator Two",
                 facts=_all_required_facts(schema),
-            )
+            ),
         )
     error = exc_info.value
     assert str(error) == "profile already exists in the active bucket"
@@ -134,14 +134,14 @@ def test_edit_field_upserts_a_fact(secure_objects: SecureObjectRepository, schem
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
     result = svc.edit_field(
         EditProfileFieldCommand(
             profile_id="operator",
             path="identity.tax_id",
             value="X1234567Z",
-        )
+        ),
     )
     assert any(fact.path == "identity.tax_id" and fact.value == "X1234567Z" for fact in result.profile.facts)
 
@@ -153,7 +153,7 @@ def test_remove_tombstones_the_profile(secure_objects: SecureObjectRepository, s
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
     result = svc.remove(RemoveProfileCommand(profile_id="operator"))
     assert result.profile.status is UserProfileStatus.TOMBSTONED
@@ -167,14 +167,14 @@ def test_duplicate_copies_to_a_new_id(secure_objects: SecureObjectRepository, sc
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
     result = svc.duplicate(
         DuplicateProfileCommand(
             source_profile_id="operator",
             target_profile_id="operator-spouse",
             target_display_name="Spouse",
-        )
+        ),
     )
     assert result.profile.profile_id == "operator-spouse"
     assert result.profile.display_name == "Spouse"
@@ -195,7 +195,7 @@ def test_rename_updates_label_only(secure_objects: SecureObjectRepository, schem
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
 
     result = svc.rename(RenameProfileCommand(profile_id="operator", target_display_name="Renamed Operator"))
@@ -213,7 +213,7 @@ def test_rename_updates_label_only(secure_objects: SecureObjectRepository, schem
 
 
 def test_rename_refuses_a_tombstoned_profile(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
 ) -> None:
     """``rename`` on a tombstoned profile is refused — only live profiles relabel."""
 
@@ -223,7 +223,7 @@ def test_rename_refuses_a_tombstoned_profile(
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
     svc.remove(RemoveProfileCommand(profile_id="operator"))
 
@@ -238,7 +238,7 @@ def test_rename_refuses_a_tombstoned_profile(
 
 
 def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
@@ -246,7 +246,7 @@ def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
     svc.remove(RemoveProfileCommand(profile_id="operator"))
 
@@ -256,7 +256,7 @@ def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(
                 source_profile_id="operator",
                 target_profile_id="operator-copy",
                 target_display_name="Copy",
-            )
+            ),
         )
     error = exc_info.value
     assert str(error) == "tombstoned profile cannot be duplicated"
@@ -275,7 +275,7 @@ def test_lifecycle_emits_bucket_events(secure_objects: SecureObjectRepository, s
             profile_id="operator",
             display_name="Operator",
             facts=_all_required_facts(schema),
-        )
+        ),
     )
     svc.edit_field(EditProfileFieldCommand(profile_id="operator", path="identity.email", value="op@example.test"))
     svc.edit_field(EditProfileFieldCommand(profile_id="operator", path="identity.email", value=None))
@@ -284,7 +284,7 @@ def test_lifecycle_emits_bucket_events(secure_objects: SecureObjectRepository, s
             source_profile_id="operator",
             target_profile_id="operator-spouse",
             target_display_name="Spouse",
-        )
+        ),
     )
     svc.remove(RemoveProfileCommand(profile_id="operator-spouse"))
 
@@ -316,7 +316,7 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
                 profile_id=source_profile_id,
                 display_name=original_label,
                 facts=_all_required_facts(schema),
-            )
+            ),
         )
         svc.rename(RenameProfileCommand(profile_id=source_profile_id, target_display_name=renamed_label))
         svc.duplicate(
@@ -324,7 +324,7 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
                 source_profile_id=source_profile_id,
                 target_profile_id=target_profile_id,
                 target_display_name=duplicate_label,
-            )
+            ),
         )
 
         catalogue = BucketEventHistoryRepository(objects=profile.repository).load()
@@ -356,11 +356,11 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
 
 
 def test_list_profiles_returns_sorted_listings(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
-        RegisterProfileCommand(profile_id="b-second", display_name="Second", facts=_all_required_facts(schema))
+        RegisterProfileCommand(profile_id="b-second", display_name="Second", facts=_all_required_facts(schema)),
     )
     svc.register(RegisterProfileCommand(profile_id="a-first", display_name="First", facts=_all_required_facts(schema)))
     listing = svc.list_profiles()
@@ -387,7 +387,7 @@ def test_read_returns_persisted_record(secure_objects: SecureObjectRepository, s
 
 
 def test_read_raises_on_unknown_profile(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
 ) -> None:
     """Service-contract gate: read() refuses an unknown profile id with
     :class:`ProfileNotFoundError`, not a silent empty record."""

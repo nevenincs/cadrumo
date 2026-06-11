@@ -40,7 +40,7 @@ _ON_DATE = date(2025, 6, 1)
     ],
 )
 def test_domestic_positive_rate_resolves_to_registry_fraction(
-    category: IvaCategory, expected_rate: Decimal, expected_kind: IvaRateKind
+    category: IvaCategory, expected_rate: Decimal, expected_kind: IvaRateKind,
 ) -> None:
     """Domestic general/reduced/super-reduced resolve to the grounded fraction."""
     resolution = resolve_category_rate(category, on_date=_ON_DATE)

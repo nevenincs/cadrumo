@@ -115,7 +115,7 @@ class PortalMetadata(BaseModel):
             if not _filing_censo_path_re().match(path):
                 raise PortalValidationError(
                     f"active {self.category.value} portal url path must match "
-                    f"{_filing_censo_path_description()}, got {path!r}"
+                    f"{_filing_censo_path_description()}, got {path!r}",
                 )
 
         # Retired-without-replacement fallback.

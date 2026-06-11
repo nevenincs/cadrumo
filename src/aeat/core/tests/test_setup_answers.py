@@ -94,7 +94,7 @@ def test_profiles_no_deferred_application_imports() -> None:
                         deferred_violations.append(f"line {child.lineno}: import {alias.name}")
 
     assert not deferred_violations, "_profiles.py contains deferred application.wizard imports:\n" + "\n".join(
-        deferred_violations
+        deferred_violations,
     )
 
 

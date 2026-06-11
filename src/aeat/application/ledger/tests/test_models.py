@@ -106,7 +106,7 @@ def test_manual_ledger_transaction_command_rejects_multi_purchase_evidence_value
                 "direction": TransactionDirection.OUTGOING,
                 "description": "duplicate evidence",
                 "purchase_invoice_evidence_id": ("evidence-1", "evidence-2"),
-            }
+            },
         )
 
 

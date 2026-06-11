@@ -42,7 +42,7 @@ def _casilla(
             "semantic_role": semantic_role,
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
-        }
+        },
     )
 
 

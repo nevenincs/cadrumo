@@ -10,7 +10,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-from ...core import resolve_active_bucket_id
+from ...core import Period, resolve_active_bucket_id
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._codes import ModeloCode
@@ -26,10 +26,6 @@ from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 _BucketId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
-_Period = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
 ]
 _RevisionId = Annotated[
     str,
@@ -153,7 +149,7 @@ class ModeloWorkSelectorRequest(BaseModel):
 
     modelo: ModeloCode | None = None
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
-    period: _Period | None = None
+    period: Period | None = None
     revision_id: _RevisionId | None = None
     bucket_id: _BucketId | None = None
     work_unit_id: WorkUnitId | None = None
@@ -166,11 +162,6 @@ class ModeloWorkSelectorRequest(BaseModel):
         if isinstance(value, str):
             return ModeloCode(value)
         raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
-
-    @field_validator("period")
-    @classmethod
-    def _normalise_period(cls, value: str | None) -> str | None:
-        return value.strip().upper() if value is not None else None
 
     @field_validator("revision_id", "bucket_id")
     @classmethod
@@ -193,7 +184,7 @@ class ModeloWorkUnitCandidate(BaseModel):
     bucket_id: _BucketId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
-    period: _Period
+    period: Period
     revision_id: _RevisionId
     state: WorkUnitState
     current_calculation_revision_id: str | None = None
@@ -275,7 +266,7 @@ class ModeloWorkResolution(BaseModel):
     bucket_id: _BucketId
     modelo: ModeloCode | None = None
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
-    period: _Period | None = None
+    period: Period | None = None
     requested_revision_id: _RevisionId | None = None
     work_unit: WorkUnit | None = None
     candidates: tuple[ModeloWorkUnitCandidate, ...] = ()
@@ -316,7 +307,7 @@ def visible_target_work_units(
                 and unit.period == period
             ),
             key=lambda unit: (unit.revision_id, unit.created_at, unit.work_unit_id),
-        )
+        ),
     )
 
 
@@ -363,7 +354,7 @@ def resolve_modelo_work_unit(
         )
     if len(matches) > 1:
         raise ModeloWorkVisibleTargetAmbiguousError(
-            tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches)
+            tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
         )
 
     assert len(matches) == 1
@@ -402,7 +393,7 @@ def _validate_explicit_work_unit_matches_request(
         if supplied is not None and supplied != actual:
             raise ModeloWorkSelectorContradictionError(
                 f"explicit work_unit_id {work_unit.work_unit_id} has {field_name}={actual!r}, "
-                f"but selector supplied {field_name}={supplied!r}"
+                f"but selector supplied {field_name}={supplied!r}",
             )
 
 
@@ -516,7 +507,7 @@ def select_current_draft_revision(
     if selection.revision.state is not CalculationRevisionState.BORRADOR:
         raise ModeloCalculationRevisionSelectorStateError(
             f"current revision {selection.revision.calculation_revision_id!r} is in state "
-            f"{selection.revision.state.value!r}; verification requires a draft revision"
+            f"{selection.revision.state.value!r}; verification requires a draft revision",
         )
     return selection
 
@@ -538,7 +529,7 @@ def select_current_verified_revision(
     if selection.revision.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise ModeloCalculationRevisionSelectorStateError(
             f"current revision {selection.revision.calculation_revision_id!r} is in state "
-            f"{selection.revision.state.value!r}; filing requires a verified-complete revision"
+            f"{selection.revision.state.value!r}; filing requires a verified-complete revision",
         )
     return selection
 
@@ -583,7 +574,7 @@ def select_exportable_revision(
             )
         if current_revision.state is CalculationRevisionState.BORRADOR:
             raise ModeloCalculationRevisionSelectorStateError(
-                "current revision is still draft; verify it before exporting or select a verified revision explicitly"
+                "current revision is still draft; verify it before exporting or select a verified revision explicitly",
             )
 
     verified = tuple(
@@ -601,7 +592,7 @@ def select_exportable_revision(
         )
     if len(verified) > 1:
         raise ModeloCalculationRevisionSelectorAmbiguousError(
-            tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified)
+            tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified),
         )
     raise ModeloCalculationRevisionSelectorNotFoundError("no exportable verified or filed revision exists")
 
@@ -625,12 +616,12 @@ def _explicit_revision_for_work_unit(
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
         raise ModeloCalculationRevisionSelectorNotFoundError(
-            f"no calculation revision found with id={calculation_revision_id}"
+            f"no calculation revision found with id={calculation_revision_id}",
         )
     if revision.work_unit_id != work_unit.work_unit_id:
         raise ModeloCalculationRevisionSelectorStateError(
             f"calculation revision {calculation_revision_id} belongs to work_unit_id={revision.work_unit_id}, "
-            f"not {work_unit.work_unit_id}"
+            f"not {work_unit.work_unit_id}",
         )
     return revision
 

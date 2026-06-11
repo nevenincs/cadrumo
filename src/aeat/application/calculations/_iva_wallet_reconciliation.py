@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...domain.calculations.registry import RegistrySnapshot
 from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
 from ...domain.iva_compensation._reconciliation import (
@@ -77,11 +77,11 @@ class IvaWalletDecisionSourceResolver:
         decision = self._decision
         if decision.target_year != context.filing_year or decision.target_period != context.period:
             raise IvaCompensationReconciliationInputError(
-                "IVA wallet reconciliation decision target does not match the Modelo 303 work unit"
+                "IVA wallet reconciliation decision target does not match the Modelo 303 work unit",
             )
         if decision.blocked:
             raise IvaCompensationReconciliationInputError(
-                f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}"
+                f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}",
             )
         if decision.selected_amount is None:
             raise IvaCompensationReconciliationInputError("IVA wallet reconciliation decision has no selected amount")
@@ -142,14 +142,15 @@ def reconcile_modelo_303_iva_compensation(
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
         raise IvaCompensationReconciliationInputError(
-            "IVA compensation wallet reconciliation only applies to Modelo 303"
+            "IVA compensation wallet reconciliation only applies to Modelo 303",
         )
+    snapshot_period = Period.from_year_and_code(snapshot.filing_year, snapshot.period)
     if wallet is not None:
         validate_wallet_matches_snapshot(
             wallet,
             taxpayer_nif=taxpayer_nif,
             target_year=snapshot.filing_year,
-            target_period=snapshot.period,
+            target_period=snapshot_period,
         )
 
     from ._binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
@@ -179,7 +180,7 @@ def reconcile_modelo_303_iva_compensation(
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=taxpayer_nif,
         target_year=snapshot.filing_year,
-        target_period=snapshot.period,
+        target_period=snapshot_period,
         wallet=wallet,
         local_recurrence_amount=local_recurrence_amount,
         local_recurrence_source=local_recurrence_authority_source(recurrence),

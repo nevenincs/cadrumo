@@ -17,6 +17,7 @@ from typer.testing import CliRunner
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
@@ -44,11 +45,12 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     revision_id = "r" + "0" * 63
+    filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
     )
     work_unit = WorkUnit(
@@ -56,7 +58,7 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
         created_at=datetime.now(UTC),
@@ -70,7 +72,7 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
 def test_reconcile_file_happy_path(cli_runner: CliRunner) -> None:
     """`reconcile file --file` matches when the work unit and the committed
     modelo_130 fixture align on modelo and ejercicio."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
     result = cli_runner.invoke(
         app,
@@ -85,7 +87,7 @@ def test_reconcile_file_happy_path(cli_runner: CliRunner) -> None:
 
 def test_reconcile_file_mismatch_renders_diff_rows(cli_runner: CliRunner) -> None:
     """A modelo=303 work unit against the modelo_130 fixture mismatches with a modelo diff."""
-    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
 
     result = cli_runner.invoke(
         app,
@@ -98,7 +100,7 @@ def test_reconcile_file_mismatch_renders_diff_rows(cli_runner: CliRunner) -> Non
 
 def test_reconcile_file_requires_the_file_option(cli_runner: CliRunner) -> None:
     """`reconcile file` without `--file` is a usage error, not a silent default."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     result = cli_runner.invoke(app, ["app", "modelo", "reconcile", "file", work_unit_id])
     assert result.exit_code != 0, result.output
 
@@ -116,7 +118,7 @@ def test_reconcile_file_by_flag_lands_in_modelo_reconciled_event(cli_runner: Cli
     """The --by override attaches to the MODELO_RECONCILED event's actor field."""
     from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     result = cli_runner.invoke(
         app,
         [
@@ -152,7 +154,7 @@ def test_reconcile_history_empty_is_instructive(cli_runner: CliRunner) -> None:
 
 def test_reconcile_history_lists_recorded_reconciliation(cli_runner: CliRunner) -> None:
     """After a reconcile, `reconcile history` lists the recorded verdict row."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     reconcile = cli_runner.invoke(
         app,
         ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],

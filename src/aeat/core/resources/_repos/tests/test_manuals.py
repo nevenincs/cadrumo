@@ -79,7 +79,7 @@ def test_manual_repository_get_raises_for_unextracted_manual(tmp_path: Path) -> 
                 "content_length": 12,
                 "fetched_at": "2026-01-01T00:00:00Z",
                 "synthetic": True,
-            }
+            },
         ),
         encoding="utf-8",
     )

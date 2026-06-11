@@ -23,7 +23,7 @@ _REQUIRED_CUOTA_CHAIN_ARTICLES: frozenset[str] = frozenset(
         "ley-35-2006:art-74",  # Escala autonómica del Impuesto
         "ley-35-2006:art-75",  # Cuota íntegra autonómica
         "ley-35-2006:art-77",  # Cuota líquida autonómica
-    }
+    },
 )
 
 _MINIMO_PERSONAL_Y_FAMILIAR_TARGETS: frozenset[str] = frozenset(
@@ -34,7 +34,7 @@ _MINIMO_PERSONAL_Y_FAMILIAR_TARGETS: frozenset[str] = frozenset(
         "0522",  # Mínimo en base liquidable del ahorro — gravamen estatal
         "0523",  # Mínimo en base liquidable general — gravamen autonómica
         "0524",  # Mínimo en base liquidable del ahorro — gravamen autonómica
-    }
+    },
 )
 
 _BASE_IMPONIBLE_LIQUIDABLE_TARGETS: frozenset[str] = frozenset(
@@ -44,7 +44,7 @@ _BASE_IMPONIBLE_LIQUIDABLE_TARGETS: frozenset[str] = frozenset(
         "0460",  # Base imponible del ahorro
         "0500",  # Base liquidable general
         "0510",  # Base liquidable del ahorro
-    }
+    },
 )
 
 _CUOTA_INTEGRA_TARGETS: frozenset[str] = frozenset(
@@ -53,7 +53,7 @@ _CUOTA_INTEGRA_TARGETS: frozenset[str] = frozenset(
         "0533",  # Cuota base liquidable general — parte autonómica
         "0545",  # Cuota íntegra estatal
         "0546",  # Cuota íntegra autonómica
-    }
+    },
 )
 
 _CUOTA_LIQUIDA_TARGETS: frozenset[str] = frozenset(
@@ -62,7 +62,7 @@ _CUOTA_LIQUIDA_TARGETS: frozenset[str] = frozenset(
         "0571",  # Cuota líquida autonómica
         "0585",  # Cuota líquida estatal incrementada
         "0586",  # Cuota líquida autonómica incrementada
-    }
+    },
 )
 
 _MULTI_YEAR_CUOTA_CHAIN_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024")

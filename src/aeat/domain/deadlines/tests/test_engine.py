@@ -6,6 +6,7 @@ from datetime import date
 
 import pytest
 
+from ....core import Period
 from .. import (
     DeadlineEngine,
     IVARegime,
@@ -23,6 +24,10 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
 
 
 def _profile(**overrides: object) -> TaxpayerProfile:
@@ -55,14 +60,14 @@ class TestCompute:
             if obligation.modelo in {"130", "303"}
         ]
         assert irpf_iva == [
-            ("130", "2026Q1"),
-            ("303", "2026-1T"),
-            ("130", "2026Q2"),
-            ("303", "2026-2T"),
-            ("130", "2026Q3"),
-            ("303", "2026-3T"),
-            ("130", "2026Q4"),
-            ("303", "2026-4T"),
+            ("130", _period(2026, "1T")),
+            ("303", _period(2026, "1T")),
+            ("130", _period(2026, "2T")),
+            ("303", _period(2026, "2T")),
+            ("130", _period(2026, "3T")),
+            ("303", _period(2026, "3T")),
+            ("130", _period(2026, "4T")),
+            ("303", _period(2026, "4T")),
         ]
 
     def test_profile_condition_can_remove_registry_deadline(self) -> None:
@@ -110,18 +115,18 @@ class TestCompute:
         withholding_periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "111"]
 
         assert withholding_periods == [
-            "2026-01",
-            "2026-02",
-            "2026-03",
-            "2026-04",
-            "2026-05",
-            "2026-06",
-            "2026-07",
-            "2026-08",
-            "2026-09",
-            "2026-10",
-            "2026-11",
-            "2026-12",
+            _period(2026, "01"),
+            _period(2026, "02"),
+            _period(2026, "03"),
+            _period(2026, "04"),
+            _period(2026, "05"),
+            _period(2026, "06"),
+            _period(2026, "07"),
+            _period(2026, "08"),
+            _period(2026, "09"),
+            _period(2026, "10"),
+            _period(2026, "11"),
+            _period(2026, "12"),
         ]
 
     def test_intracommunity_profile_selects_quarterly_modelo_349_when_threshold_is_not_exceeded(self) -> None:
@@ -132,7 +137,7 @@ class TestCompute:
         )
         periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "349"]
 
-        assert periods == ["2026-1T", "2026-2T", "2026-3T", "2026-4T"]
+        assert periods == [_period(2026, "1T"), _period(2026, "2T"), _period(2026, "3T"), _period(2026, "4T")]
 
     def test_intracommunity_threshold_selects_monthly_modelo_349(self) -> None:
         schedule = _engine().compute(
@@ -146,18 +151,18 @@ class TestCompute:
         periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "349"]
 
         assert periods == [
-            "2026-01",
-            "2026-02",
-            "2026-03",
-            "2026-04",
-            "2026-05",
-            "2026-06",
-            "2026-07",
-            "2026-08",
-            "2026-09",
-            "2026-10",
-            "2026-11",
-            "2026-12",
+            _period(2026, "01"),
+            _period(2026, "02"),
+            _period(2026, "03"),
+            _period(2026, "04"),
+            _period(2026, "05"),
+            _period(2026, "06"),
+            _period(2026, "07"),
+            _period(2026, "08"),
+            _period(2026, "09"),
+            _period(2026, "10"),
+            _period(2026, "11"),
+            _period(2026, "12"),
         ]
 
     def test_registry_condition_can_add_rental_withholding_deadline(self) -> None:
@@ -200,7 +205,7 @@ class TestCompute:
 
     def test_q1_2026_window_comes_from_registry_data(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
-        q1 = next(o for o in schedule.obligations if o.period == "2026Q1")
+        q1 = next(o for o in schedule.obligations if o.period == _period(2026, "1T"))
 
         assert q1.opens_on == date(2026, 4, 1)
         assert q1.closes_on == date(2026, 4, 20)
@@ -251,8 +256,8 @@ class TestPreRegistrationObligationGate:
         assert profile.activity_start_date is None
         schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
 
-        iva_quarters = sorted(o.period for o in schedule.obligations if o.modelo == "303")
-        assert iva_quarters == ["2025-1T", "2025-2T", "2025-3T", "2025-4T"]
+        iva_quarters = sorted((o.period for o in schedule.obligations if o.modelo == "303"), key=lambda p: p.code)
+        assert iva_quarters == [_period(2025, "1T"), _period(2025, "2T"), _period(2025, "3T"), _period(2025, "4T")]
 
     def test_alta_inside_2025_keeps_only_post_alta_quarters(self) -> None:
         """A mid-2025 alta keeps only the windows closing on or after it.
@@ -264,13 +269,13 @@ class TestPreRegistrationObligationGate:
         profile = _profile(activity_start_date=date(2025, 9, 1))
         schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
 
-        iva_quarters = sorted(o.period for o in schedule.obligations if o.modelo == "303")
-        assert iva_quarters == ["2025-3T", "2025-4T"]
+        iva_quarters = sorted((o.period for o in schedule.obligations if o.modelo == "303"), key=lambda p: p.code)
+        assert iva_quarters == [_period(2025, "3T"), _period(2025, "4T")]
 
 
 class TestStatusTransitions:
     def _find_q1(self, schedule: Schedule) -> ModeloDeadline:
-        return next(o for o in schedule.obligations if o.period == "2026Q1")
+        return next(o for o in schedule.obligations if o.period == _period(2026, "1T"))
 
     def test_overdue(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 4, 21))
@@ -376,17 +381,24 @@ class TestAnnualFilingWindows:
     def test_modelo_303_quarterly_windows_resolve(self) -> None:
         for year in (2025, 2026):
             quarterly_periods = sorted(
-                window.period
+                (window.period
                 for code, _revision, window in _engine()._registry.deadline_windows(year)
-                if code == "303" and window.period_kind == "quarterly"
+                if code == "303" and window.period_kind == "quarterly"),
+                key=lambda p: p.code,
             )
-            assert quarterly_periods == [f"{year}-1T", f"{year}-2T", f"{year}-3T", f"{year}-4T"]
+            assert quarterly_periods == [
+                _period(year, "1T"),
+                _period(year, "2T"),
+                _period(year, "3T"),
+                _period(year, "4T"),
+            ]
             # SII-enrolled monthly windows also appear; assert they are present as a
             # regression guard.
             monthly_periods = sorted(
-                window.period
+                (window.period
                 for code, _revision, window in _engine()._registry.deadline_windows(year)
-                if code == "303" and window.period_kind == "monthly"
+                if code == "303" and window.period_kind == "monthly"),
+                key=lambda p: p.code,
             )
             assert len(monthly_periods) > 0, f"M303 monthly windows absent for {year}"
 
@@ -395,7 +407,7 @@ class TestAnnualFilingWindows:
             windows = [
                 window for code, _revision, window in _engine()._registry.deadline_windows(year) if code == "347"
             ]
-            assert [window.period for window in windows] == [f"{year}-0A"]
+            assert [window.period for window in windows] == [_period(year, "0A")]
 
 
 class TestEnginePurity:

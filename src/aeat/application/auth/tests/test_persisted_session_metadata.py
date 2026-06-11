@@ -43,7 +43,7 @@ def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_pat
                     "httpOnly": True,
                     "secure": True,
                     "sameSite": "Lax",
-                }
+                },
             ],
             "origins": [],
         }

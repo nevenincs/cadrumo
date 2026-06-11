@@ -19,7 +19,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.identity import BucketId
 from .._namespace_registry import (
     BUCKET_AUDIT_DIRNAME,

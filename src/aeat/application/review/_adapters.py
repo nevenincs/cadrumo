@@ -178,7 +178,7 @@ def _to_transaction_item(
         modelo=None,
         severity=severity,
         summary=summary,
-        drill_command=f"aeat app ledger review --id {transaction.transaction_id}",
+        drill_command=f"aeat app ledger review {transaction.transaction_id}",
         since=since,
         source=transaction,
     )

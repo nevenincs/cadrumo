@@ -5,8 +5,6 @@ Use of :class:`OutputSchema`, :class:`TransactionCatalogueRepository` for compli
 
 from __future__ import annotations
 
-from typing import Protocol
-
 import typer
 from pydantic import ValidationError
 
@@ -20,11 +18,9 @@ from ...application.ledger import (
     is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_review_status,
-    list_manual_transactions,
     merge_transactions,
     remove_manual_transaction,
     reset_ledger_catalogue,
-    resolve_transaction_id,
     restore_manual_transaction,
     split_transaction,
     stash_manual_transaction,
@@ -37,17 +33,11 @@ from ...domain.attachments import DocumentLinkSource
 from ...domain.transactions import (
     LLMClassifierError,
     Transaction,
-    TransactionCatalogueRepository,
-    TransactionIdPrefixError,
     TransactionValidationError,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
+from ._ledger_support import _resolve_id
 from ._schemas import OutputSchema
-
-
-class _TransactionRepo(Protocol):
-    @property
-    def bucket_id(self) -> str: ...
 
 
 def register_lifecycle_commands(app: typer.Typer) -> None:
@@ -67,42 +57,6 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     app.command("reset", help=tr("cli.ledger.reset.help"))(ledger_reset)
     app.command("split", help=tr("cli.ledger.split.help"))(ledger_split)
     app.command("merge", help=tr("cli.ledger.merge.help"))(ledger_merge)
-
-
-def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[str, ...]:
-    bucket_id = transaction_repository.bucket_id
-    results = list_manual_transactions(
-        bucket_id=bucket_id,
-        transaction_repository=transaction_repository
-        if isinstance(transaction_repository, TransactionCatalogueRepository)
-        else None,
-    )
-    return tuple(result.transaction.transaction_id for result in results)
-
-
-def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
-    try:
-        return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
-    except TransactionIdPrefixError as exc:
-        raw_message = str(exc)
-        if "is empty" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_empty")) from exc
-        if "non-hex" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix)) from exc
-        if "longer than" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix)) from exc
-        if "no transaction" in raw_message:
-            raise _bad(tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix)) from exc
-        if "matches" in raw_message:
-            _, _, candidates = raw_message.partition(":")
-            raise _bad(
-                tr(
-                    "cli.ledger.errors.id_prefix_collision",
-                    prefix=prefix,
-                    candidates=candidates.strip() or "?",
-                ),
-            ) from exc
-        raise _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message)) from exc
 
 
 def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
@@ -148,7 +102,7 @@ def _emit_update_result(
 
 def ledger_attach(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.attach.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.attach.id_help")),
     purchase_invoice_evidence_id: str | None = typer.Option(
         None,
         "--purchase-invoice-evidence-id",
@@ -208,9 +162,8 @@ def _sniff_document_mime_type(reference: str, data: bytes) -> str:
 
 def ledger_doclink(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(
+    transaction_id: str = typer.Argument(
         ...,
-        "--id",
         help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id."),
     ),
     source: DocumentLinkSource = typer.Option(
@@ -325,7 +278,7 @@ def ledger_doclink(
 
 def ledger_archive(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.archive.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.archive.id_help")),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.archive.reason_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.archive.yes_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.archive.actor_help")),
@@ -358,7 +311,7 @@ def ledger_archive(
 
 def ledger_stash(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.stash.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.stash.id_help")),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.stash.reason_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.stash.yes_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.stash.actor_help")),
@@ -391,7 +344,7 @@ def ledger_stash(
 
 def ledger_restore(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.restore.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.restore.id_help")),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.restore.reason_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.restore.yes_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.restore.actor_help")),
@@ -424,7 +377,7 @@ def ledger_restore(
 
 def ledger_remove(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.remove.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.remove.id_help")),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.remove.reason_help")),
     dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.remove.dry_run_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.remove.yes_help")),
@@ -497,7 +450,7 @@ def ledger_reset(
 
 def ledger_split(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.split.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.split.id_help")),
     child_amount: list[str] = typer.Option([], "--child-amount", help=tr("cli.ledger.split.child_amount_help")),
     child_description: list[str] = typer.Option(
         [],

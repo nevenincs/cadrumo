@@ -92,7 +92,7 @@ def _parameters_from_catalogue(
         lookback_raw = _parameter_value(parameters, _LOOKBACK_PARAM_ID)
     except KeyError as exc:
         raise FincaValidationError(
-            f"the IRPF legal-parameter catalogue is missing LIRPF art. 85 parameter {exc.args[0]!r}"
+            f"the IRPF legal-parameter catalogue is missing LIRPF art. 85 parameter {exc.args[0]!r}",
         ) from exc
 
     try:

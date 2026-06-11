@@ -55,7 +55,7 @@ def validate_application_link_closure(
                 scope,
                 revision,
                 surfaces=surfaces,
-            )
+            ),
         )
     return failures
 

@@ -189,11 +189,37 @@ class TestInvariants:
                 total_invoice_total=Decimal("0"),
             )
 
+    def test_combined_period_string_is_not_coerced(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Period"):
+            CounterpartAggregation(
+                modelo="347",
+                period="2025",
+                rollups=(),
+                total_counterparties=0,
+                total_taxable_base=Decimal("0"),
+                total_invoice_total=Decimal("0"),
+            )
+
+    def test_period_dict_is_not_coerced(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Period"):
+            CounterpartAggregation(
+                modelo="347",
+                period={"filing_year": 2025, "code": "0A"},
+                rollups=(),
+                total_counterparties=0,
+                total_taxable_base=Decimal("0"),
+                total_invoice_total=Decimal("0"),
+            )
+
     def test_input_order_invariance(self) -> None:
         observations = (
             _obs(nif="Z1", op_kind=OperationKind347.RENTAL.value, base="500", source_id="t1"),
             _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="800", source_id="t2"),
         )
         forward = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
-        reverse = aggregate_counterpart_347(tuple(reversed(observations)), period="2025")
+        reverse = aggregate_counterpart_347(tuple(reversed(observations)), period=_P_2025_ANNUAL)
         assert forward.model_dump_json() == reverse.model_dump_json()

@@ -59,7 +59,7 @@ def test_binding_to_production_oracle_passes_under_production() -> None:
     revision = next(iter(modelo.revisions.values()))
     cross_references = list(revision.live_cross_references)
     cross_references[0] = cross_references[0].model_copy(
-        update={"oracle_id": ORACLE_ID, "surface": "public_read_surface"}
+        update={"oracle_id": ORACLE_ID, "surface": "public_read_surface"},
     )
     new_revision = revision.model_copy(update={"live_cross_references": tuple(cross_references)})
     modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, new_revision.id: new_revision}})
@@ -112,7 +112,7 @@ def test_aggregate_audit_collects_failures_across_modelos() -> None:
     catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
 
     failures = audit_registry_oracle_bindings(
-        (bound_130, bound_111), catalogue, environment=OracleEnvironment.PRODUCTION
+        (bound_130, bound_111), catalogue, environment=OracleEnvironment.PRODUCTION,
     )
 
     assert len(failures) == 2

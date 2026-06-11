@@ -24,7 +24,7 @@ from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from pydantic import BaseModel, Field
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..errors import DecryptionError, EncryptionError
 

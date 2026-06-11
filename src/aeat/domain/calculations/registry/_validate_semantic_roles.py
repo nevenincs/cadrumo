@@ -16,11 +16,6 @@ from collections.abc import Iterable, Mapping
 
 from . import _validate_semantic_role_typos as _semantic_role_typos
 from ._schema import CasillaDefinition, ModeloDefinition
-from ._validate_semantic_role_required import (
-    _REQUIRED_ROLE_LABEL_PATTERNS,  # noqa: F401 — re-export for call-site stability
-    _validate_required_role_declarations,  # noqa: F401 — re-export for call-site stability
-    collect_casillas_by_semantic_role,  # noqa: F401 — re-export for call-site stability
-)
 
 
 class _RoleObservation:
@@ -114,7 +109,7 @@ def _validate_semantic_role_consistency(
                     f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
                     f"data_type {obs.data_type!r} but role canonical "
                     f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id} "
-                    f"declares data_type {canonical.data_type!r}"
+                    f"declares data_type {canonical.data_type!r}",
                 )
             obs_sig = _constraints_signature(obs.constraints)
             if obs_sig != canonical_constraints_sig:
@@ -122,7 +117,7 @@ def _validate_semantic_role_consistency(
                     f"semantic_role {role!r}: casilla "
                     f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
                     f"constraints incompatible with role canonical "
-                    f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id}"
+                    f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id}",
                 )
     return tuple(failures)
 
@@ -149,7 +144,7 @@ def _validate_semantic_role_cardinality(
                 f"semantic_role {role!r}: casilla "
                 f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
                 "semantic_role_cardinality 'intentional_singleton' but role appears "
-                f"{len(observations)} times"
+                f"{len(observations)} times",
             )
     return tuple(failures)
 

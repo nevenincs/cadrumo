@@ -46,7 +46,7 @@ def test_application_production_secure_object_namespaces_use_registry_definition
             ):
                 lineno = getattr(node, "lineno", "?")
                 offences.append(
-                    f"{relative}:{lineno}: secure-object namespace constant must come from storage registry"
+                    f"{relative}:{lineno}: secure-object namespace constant must come from storage registry",
                 )
 
     assert offences == []
@@ -54,7 +54,7 @@ def test_application_production_secure_object_namespaces_use_registry_definition
 
 def _iter_application_production_sources() -> tuple[Path, ...]:
     return tuple(
-        sorted(path for path in (PROJECT_ROOT / "src/aeat/application").rglob("*.py") if not _is_test_surface(path))
+        sorted(path for path in (PROJECT_ROOT / "src/aeat/application").rglob("*.py") if not _is_test_surface(path)),
     )
 
 

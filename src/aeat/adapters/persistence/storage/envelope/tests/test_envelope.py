@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ......core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ......core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import ClassificationError, DecryptionError, EnvelopeVersionError, StorageValidationError
@@ -285,7 +285,7 @@ class TestEncryptionMetadata:
                     "algorithm": "some-future-thing",
                     "nonce_b64": base64.b64encode(b"\x00" * 12).decode("ascii"),
                     "ciphertext_b64": base64.b64encode(b"x" * 16).decode("ascii"),
-                }
+                },
             )
 
     def test_explicit_empty_associated_data_is_empty(self) -> None:
@@ -302,7 +302,7 @@ class TestEncryptionMetadata:
                 {
                     "nonce_b64": base64.b64encode(b"\x00" * 12).decode("ascii"),
                     "ciphertext_b64": base64.b64encode(b"x" * 16).decode("ascii"),
-                }
+                },
             )
 
     def test_invalid_base64_metadata_raises_decryption_error(self) -> None:

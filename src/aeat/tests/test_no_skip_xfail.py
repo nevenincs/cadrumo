@@ -41,7 +41,7 @@ _DOCUMENTED_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset(
             "src/aeat/core/observability/tests/test_sink.py",
             "skipif",
         ),
-    }
+    },
 )
 
 _FORBIDDEN_MARKERS = frozenset({"skip", "skipif", "xfail"})

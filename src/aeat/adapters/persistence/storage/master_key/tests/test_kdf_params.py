@@ -92,7 +92,7 @@ def test_rejects_unknown_algorithm() -> None:
                 "parallelism": 1,
                 "salt": secrets.token_bytes(16),
                 "output_length": 32,
-            }
+            },
         )
 
 
@@ -116,5 +116,5 @@ def test_rejects_unknown_keys() -> None:
                 "salt": secrets.token_bytes(16),
                 "output_length": 32,
                 "unexpected": 1,
-            }
+            },
         )

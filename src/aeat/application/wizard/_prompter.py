@@ -186,7 +186,7 @@ class QuestionaryPrompter:
                 section_total=len(flow.sections),
                 question_total=question_total,
                 required_total=required_total,
-            )
+            ),
         )
 
     def emit_progress(self, text: str) -> None:

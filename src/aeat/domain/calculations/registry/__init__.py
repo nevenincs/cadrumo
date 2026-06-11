@@ -220,7 +220,6 @@ from ._queries import (
     ModeloListReport,
     ModeloListRow,
     RegistryQueryService,
-    parse_modelo_period,
 )
 from ._record_design import (
     DerivedDisenoCasilla,
@@ -616,7 +615,6 @@ __all__ = [
     "load_registry_tree",
     "materialize_relation_binding_values",
     "parse_export_payload",
-    "parse_modelo_period",
     "parse_renta_web_open_live_payload",
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",

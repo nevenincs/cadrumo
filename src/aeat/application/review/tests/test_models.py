@@ -73,7 +73,7 @@ def _transaction() -> Transaction:
             "raw": _raw(),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
-        }
+        },
     )
 
 
@@ -105,7 +105,7 @@ def _invoice() -> Invoice:
             "lines": (line,),
             "payment_status": PaymentStatus.PENDING,
             "linked_transaction_ids": (),
-        }
+        },
     )
 
 
@@ -124,7 +124,7 @@ def test_transaction_review_item_round_trips_through_json() -> None:
         modelo=None,
         severity=ReviewSeverity.NORMAL,
         summary=_summary("tx"),
-        drill_command="aeat app ledger review --id t-1",
+        drill_command="aeat app ledger review t-1",
         since=datetime(2026, 4, 10, tzinfo=UTC),
         source=_transaction(),
     )
@@ -140,7 +140,7 @@ def test_review_item_discriminator_resolves_each_kind() -> None:
             modelo=None,
             severity=ReviewSeverity.NORMAL,
             summary=_summary("tx"),
-            drill_command="aeat app ledger review --id t-1",
+            drill_command="aeat app ledger review t-1",
             since=datetime(2026, 4, 10, tzinfo=UTC),
             source=_transaction(),
         ),
@@ -194,7 +194,7 @@ def test_review_item_rejects_naive_since_timestamp() -> None:
             modelo=None,
             severity=ReviewSeverity.NORMAL,
             summary=_summary("tx"),
-            drill_command="aeat app ledger review --id t-1",
+            drill_command="aeat app ledger review t-1",
             since=datetime(2026, 4, 10),
             source=_transaction(),
         )
@@ -207,7 +207,7 @@ def test_review_item_rejects_empty_item_id() -> None:
             modelo=None,
             severity=ReviewSeverity.NORMAL,
             summary=_summary("tx"),
-            drill_command="aeat app ledger review --id t-1",
+            drill_command="aeat app ledger review t-1",
             since=datetime(2026, 4, 10, tzinfo=UTC),
             source=_transaction(),
         )
@@ -221,9 +221,9 @@ def test_review_item_rejects_extra_fields() -> None:
                 "modelo": None,
                 "severity": "normal",
                 "summary": _summary("tx"),
-                "drill_command": "aeat app ledger review --id t-1",
+                "drill_command": "aeat app ledger review t-1",
                 "since": "2026-04-10T00:00:00+00:00",
                 "source": _transaction().model_dump(mode="python"),
                 "stray": "value",
-            }
+            },
         )

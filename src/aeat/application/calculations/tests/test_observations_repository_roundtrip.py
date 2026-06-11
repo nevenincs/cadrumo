@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -79,7 +80,7 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             source_kind="aeat_sede_justificante",
             captured_at=captured_at,
         )
-        loaded = repo.load_observation("303", 2025, "1T")
+        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
         assert loaded is not None
         assert loaded.observation == original
@@ -141,7 +142,7 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
             source_kind="aeat_sede_justificante",
             captured_at=captured_at,
         )
-        loaded = repo.load_observation("130", 2026, "1T")
+        loaded = repo.load_observation("130", Period.from_year_and_code(2026, "1T"))
 
         assert loaded is not None
         assert loaded.observation == absent_by_design_observation
@@ -222,7 +223,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             captured_at=captured_at,
         )
 
-        object_key = observation_key("303", 2025, "1T")
+        object_key = observation_key("303", Period.from_year_and_code(2025, "1T"))
         with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == observation_namespace,
@@ -237,7 +238,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             casillas[1]["legal_refs"] = []
             row.payload = _json.dumps(envelope).encode("utf-8")
 
-        loaded = repo.load_observation("303", 2025, "1T")
+        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
         assert loaded.observation != original, (
             "anti-tautology proof failed: deleting legal_refs from a "
@@ -259,7 +260,7 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             selected_authority="aeat_wallet",
             selected_amount=Decimal("1200"),
             wallet_amount=Decimal("1200"),
@@ -274,15 +275,17 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
         )
 
         repo.save_decision(decision)
-        loaded = repo.load_decision("12345678Z", 2026, "2T")
+        loaded = repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T"))
 
         assert loaded == decision
         assert loaded is not None
         assert loaded.selected_authority == "aeat_wallet"
         assert loaded.selected_amount == Decimal("1200")
         assert loaded.blocked is False
-        assert repo.load_decision_history("12345678Z", 2026, "2T") == (decision,)
-        assert iva_wallet_decision_key("12345678Z", 2026, "2T").startswith("iva-wallet-decision:")
+        assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
+        assert iva_wallet_decision_key("12345678Z", Period.from_year_and_code(2026, "2T")).startswith(
+            "iva-wallet-decision:",
+        )
         assert iva_wallet_decision_event_key(decision).startswith("iva-wallet-decision-event:")
         database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
         assert b"12345678Z" not in database_bytes
@@ -301,7 +304,7 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
         first = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             selected_authority="aeat_wallet",
             selected_amount=Decimal("1200"),
             wallet_amount=Decimal("1200"),
@@ -323,14 +326,14 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
                 "reason": "Using later valid AEAT wallet observation without local recurrence.",
                 "wallet_captured_at": second_at,
                 "decided_at": second_at,
-            }
+            },
         )
 
         repo.save_decision(first)
         repo.save_decision(second)
 
-        assert repo.load_decision("12345678Z", 2026, "2T") == second
-        assert repo.load_decision_history("12345678Z", 2026, "2T") == (first, second)
+        assert repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T")) == second
+        assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (first, second)
         database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes
@@ -359,7 +362,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
                 captured_at=decided_at,
                 source_modelo="303",
                 source_filing_year=2025,
-                source_periods=("4T",),
+                source_periods=(Period.from_year_and_code(2025, "4T"),),
             ),
             IvaCompensationAuthoritySource(
                 source_kind="filed_history_observation",
@@ -368,7 +371,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
                 captured_at=decided_at,
                 source_modelo="303",
                 source_filing_year=2025,
-                source_periods=("4T",),
+                source_periods=(Period.from_year_and_code(2025, "4T"),),
             ),
             IvaCompensationAuthoritySource(
                 source_kind="taxpayer_override",
@@ -380,7 +383,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             selected_authority="taxpayer_override",
             selected_amount=Decimal("1000"),
             wallet_amount=Decimal("1200"),
@@ -396,7 +399,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
         )
 
         repo.save_decision(decision)
-        loaded = repo.load_decision("12345678Z", 2026, "2T")
+        loaded = repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T"))
 
         assert loaded == decision
         assert loaded is not None
@@ -417,7 +420,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
             Decimal("800"),
             Decimal("1000"),
         )
-        assert repo.load_decision_history("12345678Z", 2026, "2T") == (decision,)
+        assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
         assert repo.list_decisions() == (decision,)
         database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
         assert b"12345678Z" not in database_bytes

@@ -67,7 +67,7 @@ def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Pa
                             payload=b"stale-batch-overwrite",
                             expected_revision_id="e" * 64,
                         ),
-                    )
+                    ),
                 )
 
             with sqlite3.connect(db_path) as con:

@@ -257,7 +257,7 @@ def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
         if sig_flags is not None and int(sig_flags) != 0:
             raise SignaturePresentError(
                 "Source PDF carries a digital signature (SigFlags set); "
-                "the sanitiser refuses to modify signed documents."
+                "the sanitiser refuses to modify signed documents.",
             )
         fields = acroform.get("/Fields")
         if fields is not None:
@@ -266,5 +266,5 @@ def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
                 ft = field.get("/FT")
                 if ft is not None and ft == pikepdf.Name.Sig:
                     raise SignaturePresentError(
-                        "Source PDF contains a signature field; the sanitiser refuses to modify signed documents."
+                        "Source PDF contains a signature field; the sanitiser refuses to modify signed documents.",
                     )

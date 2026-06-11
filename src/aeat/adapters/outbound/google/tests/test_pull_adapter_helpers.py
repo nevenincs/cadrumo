@@ -260,7 +260,7 @@ def test_merge_developer_metadata_allows_duplicate_exported_at_for_reapplied_sam
             {"metadataKey": "aeat_registry_sha", "metadataValue": "da9952e1610f7db6"},
             {"metadataKey": "aeat_exported_at", "metadataValue": "2026-06-02T17:54:13+00:00"},
             {"metadataKey": "aeat_exported_at", "metadataValue": "2026-06-02T17:55:32+00:00"},
-        )
+        ),
     )
 
     assert pairs["aeat_registry_sha"] == "da9952e1610f7db6"

@@ -128,7 +128,7 @@ def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos: _Repo
         clock=_T1,
     )
     stale_work_unit = get_work_unit(work_unit.work_unit_id, repository=wu_repo).model_copy(
-        update={"current_calculation_revision_id": None}
+        update={"current_calculation_revision_id": None},
     )
     wu_repo.save(upsert_work_unit(wu_repo.load(), stale_work_unit))
 

@@ -168,7 +168,7 @@ class VerificationReport(BaseModel):
         )
         if derived != self.verification_report_id:
             raise ModeloValidationError(
-                f"verification_report_id {self.verification_report_id!r} does not match the derived id {derived!r}"
+                f"verification_report_id {self.verification_report_id!r} does not match the derived id {derived!r}",
             )
         # granted_verificado_completo is a True iff completeness_status is COMPLETE
         # AND no blocking findings exist.
@@ -181,7 +181,7 @@ class VerificationReport(BaseModel):
         else:
             if self.completeness_status is VerificationCompletenessStatus.COMPLETE and not has_blocking:
                 raise ModeloValidationError(
-                    "completeness_status=COMPLETE with no blocking findings must set granted_verificado_completo=True"
+                    "completeness_status=COMPLETE with no blocking findings must set granted_verificado_completo=True",
                 )
         # Required-casilla sets must be disjoint from resolved.
         overlap = set(self.resolved_casillas) & set(self.missing_required_casillas)
@@ -210,7 +210,7 @@ class VerificationReportCatalogue(BaseModel):
         for key, report in self.reports.items():
             if key != report.verification_report_id:
                 raise ModeloValidationError(
-                    f"catalogue key {key!r} does not match verification_report_id {report.verification_report_id!r}"
+                    f"catalogue key {key!r} does not match verification_report_id {report.verification_report_id!r}",
                 )
         return self
 

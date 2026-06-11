@@ -10,7 +10,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, TypeAdapter
 from typer.testing import CliRunner
 
 from ....adapters.outbound.aeat.sede import Declaracion
@@ -22,8 +22,20 @@ from ....application.live import ExpedientesCapture, ExpedientesService, Notific
 from ....application.user_profile._orchestration import profile_create_storage_span, profile_storage_session
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ....tests.aeat_literal_fixtures import aeat_url
+from ....domain.justificante import Justificante, JustificanteRepository
+from ....domain.modelos import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloCode,
+    ModeloRecord,
+    ModeloRecordCatalogueRepository,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+    upsert_filing_record,
+)
+from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 from .._overview import _local_calendar_filing_evidence
@@ -31,6 +43,8 @@ from .._overview import _local_calendar_filing_evidence
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
+_WORK_UNIT_ID = "a" * 64
+_CALCULATION_REVISION_ID = "b" * 64
 
 
 @pytest.fixture(autouse=True)
@@ -43,6 +57,52 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             lambda state: register_minimal_profile(state, profile_id="operator"),
         )
         yield
+
+
+def _modelo_record_with_external_justificante(*, csv: str, bucket_id: str = "operator") -> ModeloRecord:
+    filed_at = datetime(2025, 4, 16, 12, 0, tzinfo=UTC)
+    return ModeloRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=_WORK_UNIT_ID,
+            calculation_revision_id=_CALCULATION_REVISION_ID,
+            filed_at=filed_at,
+            filed_by="operator",
+        ),
+        work_unit_id=_WORK_UNIT_ID,
+        calculation_revision_id=_CALCULATION_REVISION_ID,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=2025,
+        period="1T",
+        filed_at=filed_at,
+        filed_by="operator",
+        aeat_accepted=True,
+        status=ModeloRecordStatus.VIGENTE,
+        external_evidence=ExternalEvidence(
+            kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            reference_id=csv,
+            imported_at=filed_at,
+        ),
+    )
+
+
+def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justificante:
+    body = f"{csv}-pdf".encode()
+    return Justificante(
+        csv=csv,
+        modelo="303",
+        period="1T",
+        ejercicio="2025",
+        presentation_id=None,
+        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+        tax_id=tax_id,
+        total_a_ingresar=None,
+        total_a_devolver=None,
+        verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+        source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
+        source_pdf_sha256=hashlib.sha256(body).hexdigest(),
+        parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    )
 
 
 def test_calendar_requires_from_flag(cli_runner: CliRunner) -> None:
@@ -269,8 +329,6 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     with profile_storage_session("operator"):
         operator_evidence = _local_calendar_filing_evidence("operator", ())
 
-    from ....core._period import Period
-
     assert second_evidence == ()
     by_period = {row.period: row for row in operator_evidence}
     assert sorted(
@@ -285,6 +343,32 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     assert by_period[period_1t].justificante_verified is True
     assert by_period[period_2t].aeat_submission_state.value == "submitted_observed"
     assert by_period[period_2t].justificante_verified is False
+
+
+def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata() -> None:
+    csv = "JUST-303-2025-1T"
+    with profile_storage_session("operator"):
+        repo = ModeloRecordCatalogueRepository(bucket_id="operator")
+        repo.save(upsert_filing_record(repo.load(), _modelo_record_with_external_justificante(csv=csv)))
+        JustificanteRepository().save(_justificante_metadata(csv=csv))
+
+        evidence = _local_calendar_filing_evidence(
+            "operator",
+            (),
+            expected_tax_id="X1234567L",
+        )
+
+    matching = [
+        row
+        for row in evidence
+        if row.modelo == "303" and row.filing_year == 2025 and row.period == Period.from_year_and_code(2025, "1T")
+    ]
+    assert len(matching) == 1
+    row = matching[0]
+    assert row.local_filing_state.value == "external_baseline_imported"
+    assert row.aeat_submission_state.value == "justificante_verified"
+    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
+    assert row.justificante_verified is True
 
 
 def test_all_profiles_flag_iterates_every_registered_profile(cli_runner: CliRunner) -> None:

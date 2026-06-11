@@ -6,6 +6,7 @@ from typing import cast
 
 import pytest
 
+from .....core import Period
 from ._runtime_migrated_repositories_support import (
     LLM_USAGE_NAMESPACE,
     AmortizacionLedger,
@@ -122,7 +123,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
         (
             "sede_artefact",
             lambda: FiledDeclaracionObservationStore(Path("sede-cache")).load_artefact(
-                "secure-object:financial:" + "a" * 64
+                "secure-object:financial:" + "a" * 64,
             ),
         ),
         (
@@ -143,12 +144,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
         ("modelo_verification_reports", lambda: VerificationReportCatalogueRepository(bucket_id="bucket-a").load()),
         (
             "calculation_observations",
-            lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T"),
+            lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation(
+                "303",
+                Period.from_year_and_code(2026, "1T"),
+            ),
         ),
         ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
         (
             "iva_wallet_decision_history",
-            lambda: IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T"),
+            lambda: IvaWalletDecisionRepository().load_decision_history(
+                "ESBUCKET-A",
+                Period.from_year_and_code(2026, "2T"),
+            ),
         ),
         ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()),
         ("usage_ratios", lambda: load_usage_ratios(bucket_id="bucket-a")),
@@ -194,7 +201,7 @@ def test_migrated_runtime_defaults_refuse_missing_session(
         (
             "sede_artefact",
             lambda: FiledDeclaracionObservationStore(Path("sede-cache")).load_artefact(
-                "secure-object:financial:" + "a" * 64
+                "secure-object:financial:" + "a" * 64,
             ),
         ),
         (
@@ -215,12 +222,18 @@ def test_migrated_runtime_defaults_refuse_missing_session(
         ("modelo_verification_reports", lambda: VerificationReportCatalogueRepository(bucket_id="bucket-a").load()),
         (
             "calculation_observations",
-            lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T"),
+            lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation(
+                "303",
+                Period.from_year_and_code(2026, "1T"),
+            ),
         ),
         ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
         (
             "iva_wallet_decision_history",
-            lambda: IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T"),
+            lambda: IvaWalletDecisionRepository().load_decision_history(
+                "ESBUCKET-A",
+                Period.from_year_and_code(2026, "2T"),
+            ),
         ),
         ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()),
         ("usage_ratios", lambda: load_usage_ratios(bucket_id="bucket-a")),
@@ -453,7 +466,7 @@ def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None
 
     with _active_runtime(tmp_path, "bucket-a"):
         WorkUnitCatalogueRepository(bucket_id="bucket-a").save(
-            WorkUnitCatalogue(work_units={work_a.work_unit_id: work_a})
+            WorkUnitCatalogue(work_units={work_a.work_unit_id: work_a}),
         )
         CalculationRevisionCatalogueRepository(bucket_id="bucket-a").save(calc_a)
         ModeloRecordCatalogueRepository(bucket_id="bucket-a").save(filing_a)
@@ -465,7 +478,7 @@ def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None
         assert ModeloRecordCatalogueRepository(bucket_id="bucket-b").load().records == {}
         assert VerificationReportCatalogueRepository(bucket_id="bucket-b").load().reports == {}
         WorkUnitCatalogueRepository(bucket_id="bucket-b").save(
-            WorkUnitCatalogue(work_units={work_b.work_unit_id: work_b})
+            WorkUnitCatalogue(work_units={work_b.work_unit_id: work_b}),
         )
         CalculationRevisionCatalogueRepository(bucket_id="bucket-b").save(calc_b)
         ModeloRecordCatalogueRepository(bucket_id="bucket-b").save(filing_b)
@@ -505,9 +518,18 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 
     with _active_runtime(tmp_path, "bucket-b"):
         assert ModeloHistoryRepository(bucket_id="bucket-b").list_modelos() == ()
-        assert CalculationObservationRepository(bucket_id="bucket-b").load_observation("303", 2026, "1T") is None
+        assert (
+            CalculationObservationRepository(bucket_id="bucket-b").load_observation(
+                "303",
+                Period.from_year_and_code(2026, "1T"),
+            )
+            is None
+        )
         assert IvaWalletDecisionRepository().list_decisions() == ()
-        assert IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T") == ()
+        assert IvaWalletDecisionRepository().load_decision_history(
+            "ESBUCKET-A",
+            Period.from_year_and_code(2026, "2T"),
+        ) == ()
         assert IvaCompensationHistoryRepository(bucket_id="bucket-b").list_periods() == ()
         assert load_usage_ratios(bucket_id="bucket-b") == UsageRatioProfile()
         ModeloHistoryRepository(bucket_id="bucket-b").save(history_b)
@@ -521,10 +543,13 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 
     with _active_runtime(tmp_path, "bucket-a"):
         modelo_ids = ModeloHistoryRepository(bucket_id="bucket-a").list_modelos()
-        observed = CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T")
+        observed = CalculationObservationRepository(bucket_id="bucket-a").load_observation(
+            "303",
+            Period.from_year_and_code(2026, "1T"),
+        )
         wallet_repo = IvaWalletDecisionRepository()
         decisions = wallet_repo.list_decisions()
-        decision_history = wallet_repo.load_decision_history("ESBUCKET-A", 2026, "2T")
+        decision_history = wallet_repo.load_decision_history("ESBUCKET-A", Period.from_year_and_code(2026, "2T"))
         iva_periods = IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()
         usage = load_usage_ratios(bucket_id="bucket-a")
 
@@ -533,7 +558,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
     assert observed.observation == observation_a
     assert decisions == (decision_a,)
     assert decision_history == (decision_a,)
-    assert tuple(state.period for state in iva_periods) == ("1TA",)
+    assert tuple(state.period for state in iva_periods) == (Period.from_year_and_code(2026, "1T"),)
     assert usage == usage_a
 
 
@@ -614,7 +639,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         inventory = load_inventory()
         amortizacion = load_amortizacion_ledger()
         loaded_body = FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(
-            stored_a.storage_ref or ""
+            stored_a.storage_ref or "",
         )
         assert google_session_store.load_client(profile) == google_a[0]
         assert google_session_store.load_token(profile) == google_a[1]

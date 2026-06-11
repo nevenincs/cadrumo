@@ -84,7 +84,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
         for row in rows:
             lines.append(
                 f"{row.snapshot_id}\t{row.filing_year}\t{row.period}\t{row.captured_at.isoformat()}\t"
-                f"bindings={len(row.binding_values)}\t{row.state.value}"
+                f"bindings={len(row.binding_values)}\t{row.state.value}",
             )
         _emit_envelope(ctx, command="app.live.borrador.100.list", result=result, lines=lines)
 

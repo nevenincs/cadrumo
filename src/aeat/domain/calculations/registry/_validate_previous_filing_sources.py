@@ -29,7 +29,7 @@ def validate_previous_filing_binding_closure(
                         binding,
                         binding_scope=f"{prefix}: binding {binding.id!r}",
                         modelos_by_id=modelos_by_id,
-                    )
+                    ),
                 )
     return failures
 
@@ -58,7 +58,7 @@ def _validate_previous_filing_binding(
     )
     if not matching_revisions:
         failures.append(
-            f"{binding_scope} matches no source revisions in modelo {source_modelo.id} for periods {source_periods!r}"
+            f"{binding_scope} matches no source revisions in modelo {source_modelo.id} for periods {source_periods!r}",
         )
         return failures
 
@@ -71,7 +71,7 @@ def _validate_previous_filing_binding(
         if source_output not in revision_outputs:
             failures.append(
                 f"{binding_scope} source output {source_output!r} is not defined by any "
-                f"period-compatible {source_modelo.id} revision"
+                f"period-compatible {source_modelo.id} revision",
             )
     return failures
 

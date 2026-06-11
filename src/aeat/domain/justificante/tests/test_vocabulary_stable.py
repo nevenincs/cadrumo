@@ -28,7 +28,7 @@ _FROZEN_PUBLIC_SURFACE: frozenset[str] = frozenset(
         "JustificanteParseError",
         "JustificanteParserBackend",
         "JustificanteVerificationError",
-    }
+    },
 )
 
 

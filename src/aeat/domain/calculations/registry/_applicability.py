@@ -92,7 +92,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ....core import Modelo
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...deadlines.taxpayer_model import (
     EntityType,
     IrpfEstimationRegime,
@@ -578,7 +578,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             {
                 IrpfEstimationRegime.DIRECTA_NORMAL,
                 IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
-            }
+            },
         ),
         applicable_reason=(
             "Modelo 130 (pago fraccionado del IRPF): la persona física "

@@ -26,7 +26,7 @@ def register_ledger_review_command(app: typer.Typer, *, resolve_transaction_id: 
     def ledger_review(
         ctx: typer.Context,
         filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.review.filter_help")),
-        record_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.review.id_help")),
+        record_id: str | None = typer.Argument(None, help=tr("cli.ledger.review.id_help")),
         verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.review.verbose_help")),
     ) -> None:
         """Render rows or a single row using the typed filter spec."""

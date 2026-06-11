@@ -54,6 +54,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaObservation,
@@ -172,7 +173,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
         bucket_id=_BUCKET_ID,
         modelo="390",
         filing_year=_YEAR,
-        period="0A",
+        period=Period.from_year_and_code(_YEAR, "0A"),
         revision_id=snapshot.revision.id,
         repository=wu_repo,
         clock=_T0,

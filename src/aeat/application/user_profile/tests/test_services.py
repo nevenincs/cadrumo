@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import Period
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
 from ....domain.user_profile import (
@@ -111,8 +112,7 @@ def test_preflight_returns_ready_when_no_modelo_selectors_match(schema: ProfileS
         record=record,
         modelo="100",
         revision_id="2024-y-siguientes",
-        filing_year=2024,
-        period="0A",
+        period=Period.from_year_and_code(2024, "0A"),
     )
     assert report.ready is True
     assert report.missing == ()
@@ -126,12 +126,11 @@ def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinitio
         record=record,
         modelo="303",
         revision_id="rev-2024",
-        filing_year=2024,
-        period="1T",
+        period=Period.from_year_and_code(2024, "1T"),
     )
     assert report.profile_id == "operator"
     assert report.modelo == "303"
     assert report.revision_id == "rev-2024"
     assert report.filing_year == 2024
-    assert report.period == "1T"
+    assert report.period == Period.from_year_and_code(2024, "1T")
     del svc

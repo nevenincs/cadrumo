@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING
 
+from ...core import Period
 from ...core.config import Settings, load_settings
 from ...core.identity import SubjectTaxId
 
@@ -110,7 +111,7 @@ class ModeloDraftBuilderAdapter:
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
         inputs: ModeloInputs,
         fail_on_warning: bool = False,

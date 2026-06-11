@@ -76,7 +76,7 @@ def _engine_result(snapshot: RegistrySnapshot) -> RegistryCalculationResult:
                     op="literal",
                     legal_refs=formula.legal_refs,
                     source_refs=formula.source_refs,
-                )
+                ),
             )
         else:
             observations.append(
@@ -85,7 +85,7 @@ def _engine_result(snapshot: RegistrySnapshot) -> RegistryCalculationResult:
                     value=Decimal("0"),
                     legal_refs=casilla.legal_refs,
                     source_refs=casilla.source_refs,
-                )
+                ),
             )
     return RegistryCalculationResult(
         modelo=str(revision.id).split(":")[0] if ":" in str(revision.id) else "100",

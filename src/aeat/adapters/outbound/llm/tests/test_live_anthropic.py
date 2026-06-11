@@ -40,8 +40,8 @@ def test_live_anthropic_round_trip(tmp_path: Path) -> None:
                 prompt="Reply with exactly the word AEAT.",
                 max_tokens=16,
                 temperature=0.0,
-            )
-        )
+            ),
+        ),
     )
     assert response.provider.value == "ANTHROPIC"
     assert "AEAT" in response.text

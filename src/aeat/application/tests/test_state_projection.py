@@ -36,7 +36,7 @@ from ...adapters.persistence.storage.bucket._manifest import (
 )
 from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core._period import Period
+from ...core import Period
 from ...core.config import SecretStoreBackend, override_settings
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ...tests.secure_sql import dev_test_database_password
@@ -51,6 +51,7 @@ from ..state_projection import (
     build_operator_state_projection,
 )
 from ..user_profile._testing import register_minimal_profile
+from ..wizard import WIZARD_FLOWS
 from ..workflow._models import WorkflowState
 from ..workflow._persistence import workflow_state_repository
 
@@ -66,6 +67,7 @@ def _isolated_storage(tmp_path: Path) -> Iterator[None]:
 
     global _ACTIVE_STORAGE_STACK, _PROFILE_SPAN_OPEN
 
+    assert WIZARD_FLOWS
     dispose_engine()
     with ExitStack() as stack:
         stack.enter_context(
@@ -150,7 +152,7 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2023-y-siguientes",
     )
 
@@ -165,12 +167,12 @@ def test_overview_status_distinguishes_drafts_from_work_units() -> None:
     silently folded into the other."""
 
     bucket_id = _register_active_profile()
-    for period in ("1T", "2T"):
+    for period_token in ("1T", "2T"):
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
-            period=period,
+            period=Period.from_year_and_code(2026, period_token),
             revision_id="2023-y-siguientes",
         )
 
@@ -188,19 +190,19 @@ def test_work_units_counter_excludes_discarded_units() -> None:
     operator is never shown a misleading total."""
 
     bucket_id = _register_active_profile()
-    for period in ("1T", "2T", "3T"):
+    for period_token in ("1T", "2T", "3T"):
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
-            period=period,
+            period=Period.from_year_and_code(2026, period_token),
             revision_id="2023-y-siguientes",
         )
     discarded = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="4T",
+        period=Period.from_year_and_code(2026, "4T"),
         revision_id="2023-y-siguientes",
     )
     discard_work_unit(discarded.work_unit_id, actor="operator", reason="superseded")
@@ -228,12 +230,12 @@ def test_surfaces_agree_on_one_projection() -> None:
     disagreement."""
 
     bucket_id = _register_active_profile()
-    for period in ("1T", "2T"):
+    for period_token in ("1T", "2T"):
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
-            period=period,
+            period=Period.from_year_and_code(2026, period_token),
             revision_id="2023-y-siguientes",
         )
 
@@ -314,6 +316,24 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
 
 
+def test_modelo_readiness_without_period_uses_annual_period() -> None:
+    bucket_id = _register_active_profile()
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="303",
+                revision_id="2009-y-siguientes",
+                filing_year=2026,
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.profile_id == bucket_id
+    assert readiness.period == Period.from_year_and_code(2026, "0A")
+
+
 def test_missing_registry_snapshot_ledger_preflight_skip_is_debug_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -345,7 +365,7 @@ def test_projection_is_pure_read() -> None:
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2023-y-siguientes",
     )
 

@@ -9,7 +9,8 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -34,7 +35,6 @@ from ...domain.transactions._models import (
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
 )
-from ..aggregation import Period
 from ..export import ExportSerializationFormat
 from ..review import LedgerReviewStatus
 
@@ -326,9 +326,9 @@ class LedgerTransactionPayload(BaseModel):
     value_in_eur: str | None = None
     fx_rate: str | None = None
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
-    # rendered as ISO-8601 strings. ``None`` for rows authored before the axis.
-    created_at: str | None = None
-    modified_at: str | None = None
+    # rendered as ISO-8601 strings.
+    created_at: str
+    modified_at: str
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -371,9 +371,9 @@ class LedgerTransactionReviewPayload(BaseModel):
     value_in_eur: str | None = None
     fx_rate: str | None = None
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
-    # rendered as ISO-8601 strings. ``None`` for rows authored before the axis.
-    created_at: str | None = None
-    modified_at: str | None = None
+    # rendered as ISO-8601 strings.
+    created_at: str
+    modified_at: str
 
     @field_validator("source_jurisdiction")
     @classmethod

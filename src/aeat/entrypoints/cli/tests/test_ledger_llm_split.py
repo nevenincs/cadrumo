@@ -148,7 +148,7 @@ def test_llm_split_suggest_returns_children_and_persists_nothing(
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "split", "--id", tx, "--llm", "claude"])
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "split", tx, "--llm", "claude"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["llm"] is True
@@ -171,7 +171,7 @@ def test_llm_split_apply_persists_split_and_classified_children(
 
     result = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "split", "--id", tx, "--llm", "claude", "--apply", "--yes"],
+        ["--format", "json", "app", "ledger", "split", tx, "--llm", "claude", "--apply", "--yes"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -198,7 +198,7 @@ def test_llm_split_apply_without_yes_is_refused(
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    result = _RUNNER.invoke(app, ["app", "ledger", "split", "--id", tx, "--llm", "claude", "--apply"])
+    result = _RUNNER.invoke(app, ["app", "ledger", "split", tx, "--llm", "claude", "--apply"])
     assert result.exit_code != 0
     # Nothing was persisted: the single parent row is intact.
     assert len(_rows()) == 1
@@ -212,7 +212,7 @@ def test_llm_split_rejects_manual_child_flags(
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "split", "--id", tx, "--llm", "claude",
+            "app", "ledger", "split", tx, "--llm", "claude",
             "--child-amount", "60.00", "--child-description", "manual",
         ],
     )

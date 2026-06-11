@@ -68,7 +68,7 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
                 modelo=_LIVE_MODELO,
                 year=year,
                 period=period,
-            )
+            ),
         )
     except LiveApplicationInputError as exc:
         pytest.fail(f"live justificante capture could not resolve/pull the receipt: {exc}")

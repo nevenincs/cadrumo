@@ -125,7 +125,7 @@ def test_remote_state_guard_blocks_stateful_tokens_in_browser_actions() -> None:
 )
 def test_remote_state_guard_blocks_non_read_only_browser_action_matrix(action: str, token: str) -> None:
     policy = _open_policy().model_copy(
-        update={"allowed_browser_action_patterns": ("representation-gate-own-name-continue",)}
+        update={"allowed_browser_action_patterns": ("representation-gate-own-name-continue",)},
     )
 
     with pytest.raises(RegistryValidationError, match=token):

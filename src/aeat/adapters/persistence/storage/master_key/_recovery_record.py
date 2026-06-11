@@ -14,7 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time._utc import validate_utc_aware
 from ..errors import StorageValidationError
 

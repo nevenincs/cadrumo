@@ -102,7 +102,7 @@ def test_bulk_stash_recovery_restores_every_row_without_a_reset() -> None:
     for transaction_id in added_ids:
         stashed = _RUNNER.invoke(
             app,
-            ["app", "ledger", "stash", "--id", transaction_id, "--reason", "bulk stash slip", "--yes"],
+            ["app", "ledger", "stash", transaction_id, "--reason", "bulk stash slip", "--yes"],
         )
         assert stashed.exit_code == 0, stashed.output
 
@@ -120,7 +120,6 @@ def test_bulk_stash_recovery_restores_every_row_without_a_reset() -> None:
                 "app",
                 "ledger",
                 "restore",
-                "--id",
                 transaction_id,
                 "--reason",
                 "undo bulk stash",
@@ -152,7 +151,7 @@ def test_restore_refuses_an_already_active_row_with_an_instructive_message() -> 
     [active_id] = _add_rows()[:1]
     refused = _RUNNER.invoke(
         app,
-        ["app", "ledger", "restore", "--id", active_id, "--reason", "no-op", "--yes"],
+        ["app", "ledger", "restore", active_id, "--reason", "no-op", "--yes"],
     )
     assert refused.exit_code != 0
     assert "already active" in refused.output.lower(), refused.output
@@ -161,6 +160,6 @@ def test_restore_refuses_an_already_active_row_with_an_instructive_message() -> 
 def test_restore_requires_explicit_confirmation() -> None:
     """``restore`` without ``--yes`` refuses, mirroring the forward verbs."""
     [transaction_id] = _add_rows()[:1]
-    _RUNNER.invoke(app, ["app", "ledger", "stash", "--id", transaction_id, "--reason", "park", "--yes"])
-    unconfirmed = _RUNNER.invoke(app, ["app", "ledger", "restore", "--id", transaction_id])
+    _RUNNER.invoke(app, ["app", "ledger", "stash", transaction_id, "--reason", "park", "--yes"])
+    unconfirmed = _RUNNER.invoke(app, ["app", "ledger", "restore", transaction_id])
     assert unconfirmed.exit_code != 0, unconfirmed.output

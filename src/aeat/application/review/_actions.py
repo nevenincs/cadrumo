@@ -59,6 +59,6 @@ def update_invoice_review(
             "fields": {**current.fields, **{normalise_key(key): raw for key, raw in fields.items()}},
             "history": (*current.history, event),
             "updated_at": utc_now(),
-        }
+        },
     )
     return state.model_copy(update={"invoice_reviews": reviews, "updated_at": utc_now()})

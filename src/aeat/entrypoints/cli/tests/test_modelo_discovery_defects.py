@@ -49,7 +49,7 @@ def _create_profile() -> None:
             "--tax-id", "12345678Z",
             "--name", "Operator",
             "--activity", "design",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
 
@@ -61,7 +61,7 @@ def _create_303_work_unit() -> str:
             "app", "modelo", "work", "create",
             "--modelo", "303", "--year", "2025", "--period", "1T",
             "--revision", "2023-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -76,7 +76,7 @@ def _create_111_work_unit() -> str:
             "app", "modelo", "work", "create",
             "--modelo", "111", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -108,7 +108,7 @@ def test_work_calculate_accepts_registry_number_as_casilla_alias() -> None:
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "regularizacion-inversiones=10.00",
-        ]
+        ],
     )  # fmt: skip
     # The alias was resolved: the calculation succeeded with a draft revision.
     # An alias-rejection regression would produce "unknown casilla" before reaching the engine.
@@ -132,7 +132,7 @@ def test_work_calculate_rejects_a_genuinely_unknown_casilla_number() -> None:
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "9999=10.00",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
@@ -219,14 +219,14 @@ def test_bindings_list_year_resolves_the_year_covering_revision() -> None:
 
 
 # ---------------------------------------------------------------------------
-# D4 - censo period tokens accepted by every modelo surface
+# D4 - censo registry tokens stay outside filing-period work units
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
-def test_work_create_accepts_censo_period_tokens(token: str) -> None:
-    """``modelo work create --modelo 036`` accepts every censo period
-    token Modelo 036 declares as valid."""
+def test_work_create_rejects_censo_tokens_as_non_filing_periods(token: str) -> None:
+    """``modelo work create`` refuses censo registry tokens because work
+    units carry typed filing periods, while Modelo 036 declares event tokens."""
 
     _create_profile()
     result = invoke_cached_cli(
@@ -235,10 +235,15 @@ def test_work_create_accepts_censo_period_tokens(token: str) -> None:
             "app", "modelo", "work", "create",
             "--modelo", "036", "--year", "2025", "--period", token,
             "--revision", "2025-02-03-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    assert _payload(result.output)["period"] == token
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = result.output.replace("\n", " ")
+    assert f"--period '{token}'" in flat
+    assert "is not a valid period token" in flat
+    assert "modelo 036" in flat
+    assert "alta" in flat and "modificacion" in flat and "baja" in flat
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
@@ -260,7 +265,7 @@ def test_work_create_still_rejects_an_undeclared_censo_token() -> None:
             "app", "modelo", "work", "create",
             "--modelo", "036", "--year", "2025", "--period", "bogus",
             "--revision", "2025-02-03-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
@@ -278,10 +283,10 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
             "app", "modelo", "work", "create",
             "--modelo", "303", "--year", "2024", "--period", "1T",
             "--revision", "2023-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert _payload(result.output)["period"] == "1T"
+    assert _payload(result.output)["period"] == {"filing_year": 2024, "code": "1T"}
 
 
 # ---------------------------------------------------------------------------
@@ -327,7 +332,7 @@ def test_modelo_readiness_names_preflight_scope() -> None:
             "2026",
             "--period",
             "1T",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
     assert "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness" in result.output
@@ -354,6 +359,10 @@ def test_work_calculate_leads_with_a_result_summary() -> None:
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
+    assert any(line == "result summary  Modelo 111 2025 1T" for line in lines), result.output
+    assert "result summary  Modelo 111 2025 2025 1T" not in result.output
+    assert "--year 2025 --period 1T" in result.output
+    assert "--period 2025 1T" not in result.output
     summary_header_index = next(i for i, line in enumerate(lines) if line.startswith("role\tcasilla\tvalue\tlabel"))
     first_casilla_index = next(i for i, line in enumerate(lines) if line.startswith("casilla\t"))
     # The summary block precedes the full casilla table.
@@ -396,11 +405,11 @@ def _create_202_work_unit(period: str) -> str:
             "app", "modelo", "work", "create",
             "--modelo", "202", "--year", "2026", "--period", period,
             "--revision", "2025-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
-    assert payload["period"] == period
+    assert payload["period"] == {"filing_year": 2026, "code": period}
     return payload["work_unit_id"]
 
 

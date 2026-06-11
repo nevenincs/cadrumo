@@ -129,7 +129,6 @@ class NameReplacement(_ReplacementBase):
 class AddressReplacement(_ReplacementBase):
     """Replacement entry for a postal address."""
 
-    pass
 
 
 class ExpedienteReplacement(_ReplacementBase):
@@ -208,7 +207,6 @@ class ArbitraryReplacement(_ReplacementBase):
     capture-time fingerprints or one-off identifiers.
     """
 
-    pass
 
 
 class TokenMap(BaseModel):

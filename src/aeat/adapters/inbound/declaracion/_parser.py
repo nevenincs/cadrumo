@@ -14,6 +14,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+from ....core import Period
 from ....core.logging import get_logger
 from ....core.resources import bundled_path
 from ....core.time import now
@@ -232,7 +233,7 @@ def _parse_declaracion_pages(
     )
     return DeclaracionObservation(
         modelo=template.modelo,
-        period=period,
+        period=_filing_period_for_observation(template.año, period),
         ejercicio=str(template.año),
         tax_id=tax_id,
         template_revision=template,
@@ -243,6 +244,14 @@ def _parse_declaracion_pages(
         source_pdf_sha256=source_pdf_sha256,
         parsed_at=now(),
     )
+
+
+def _filing_period_for_observation(filing_year: int, registry_selector: str) -> Period:
+    """Resolve the parser's registry selector to the stored filing period."""
+    normalized = registry_selector.strip().upper()
+    if normalized in {"ALTA", "MODIFICACION", "MODIFICACIÓN", "BAJA"}:
+        return Period.from_year_and_code(filing_year, "AD-HOC")
+    return Period.from_year_and_code(filing_year, "0A" if normalized == str(filing_year) else normalized)
 
 
 def _resolve_template(
@@ -470,7 +479,7 @@ def _classify_target(
             source_page=page_number,
             source_bbox=None,
             extraction_confidence=1.0,
-        )
+        ),
     )
 
 
@@ -612,7 +621,7 @@ def _find_bbox_casilla_hits(
 
         for anchor_word in anchor_words:
             value_word = _resolve_value_word(
-                words, anchor_word, anchor_spec.value_offset, value_x_max=anchor_spec.value_x_max
+                words, anchor_word, anchor_spec.value_offset, value_x_max=anchor_spec.value_x_max,
             )
             if value_word is not None:
                 hits.append((page_index, value_word["text"]))

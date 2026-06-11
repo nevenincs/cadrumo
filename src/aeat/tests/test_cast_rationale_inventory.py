@@ -146,5 +146,5 @@ def test_every_cast_has_rationale_marker(
         raise AssertionError(
             f"{len(violations)} cast() call(s) lack a CAST-RATIONALE-* marker:\n  {joined}\n\n"
             "Add a '# CAST-RATIONALE-<SLUG>: ...' comment on the cast line or "
-            "in the immediately preceding comment block."
+            "in the immediately preceding comment block.",
         )

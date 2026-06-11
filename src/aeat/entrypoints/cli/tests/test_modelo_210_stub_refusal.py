@@ -60,7 +60,7 @@ def test_work_create_210_refuses_with_legal_authority_message(
             "--year", "2024",
             "--period", "1T",
             "--revision", "anual",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0, result.output
@@ -92,7 +92,7 @@ def test_work_create_210_refusal_fires_before_profile_check(
             "--year", "2024",
             "--period", "1T",
             "--revision", "anual",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0, result.output

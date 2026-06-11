@@ -51,7 +51,7 @@ _INTERNAL_NARRATIVES = frozenset(
         "Solidaritätszuschlag",
         "An Hauptkonto",
         "Von Hauptkonto",
-    }
+    },
 )
 _ROW_RE = re.compile(
     r"^(?P<narrative>.+?) (?P<booked_date>\d{2}\.\d{2}\.\d{4}) (?P<amount>[+-][\d\.,]+)EUR$",

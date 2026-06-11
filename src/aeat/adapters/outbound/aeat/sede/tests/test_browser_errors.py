@@ -116,7 +116,7 @@ def test_open_renta_web_open_session_raises_browser_adapter_type_error_on_wrong_
             _open_renta_web_open_session(
                 fake_session,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test double
                 live_payload=fake_payload,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test double
-            )
+            ),
         )
 
     assert "actual_type" in (exc_info.value.context or {})
@@ -144,7 +144,7 @@ def test_collect_nif_iva_check_observations_raises_browser_adapter_type_error_on
                 expected={"ES12345678A": None},
                 # test double: factory vends a fake session, not a real BrowserSession
                 browser_session_factory=_fake_browser_factory,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
-            )
+            ),
         )
 
     assert exc_info.value.context is not None
@@ -171,7 +171,7 @@ def test_collect_groi_observations_raises_browser_adapter_type_error_on_wrong_pa
                 expected={"B12345678": None},
                 # test double: factory vends a fake session, not a real BrowserSession
                 browser_session_factory=_fake_browser_factory,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
-            )
+            ),
         )
 
     assert exc_info.value.context is not None

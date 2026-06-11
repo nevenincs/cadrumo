@@ -90,7 +90,7 @@ def _section_multilingual_warnings(section: Section) -> list[ManualVerificationI
                         section_id=section.section_id,
                         field_name=field_name,
                     ),
-                )
+                ),
             )
     return issues
 
@@ -119,7 +119,7 @@ def _cross_reference_issues(
                             section_id=section.section_id,
                             target=target,
                         ),
-                    )
+                    ),
                 )
         for rule in section.rules:
             for target in rule.references_sections:
@@ -134,7 +134,7 @@ def _cross_reference_issues(
                                 rule_id=rule.rule_id,
                                 target=target,
                             ),
-                        )
+                        ),
                     )
     return issues
 
@@ -190,7 +190,7 @@ def verify_manual_dir(
                     default="%{manifest_path} is absent; run 'aeat manual fetch' to materialise it",
                     manifest_path=manifest_path,
                 ),
-            )
+            ),
         )
 
     structure_dir = part_root / "structure"
@@ -218,7 +218,7 @@ def verify_manual_dir(
                 level="error",
                 code="load-failed",
                 message=str(exc),
-            )
+            ),
         )
         return ManualVerificationReport(
             manual_id=manual_id,

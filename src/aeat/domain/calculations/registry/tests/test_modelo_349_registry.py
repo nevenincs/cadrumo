@@ -155,7 +155,7 @@ def test_committed_modelo_349_casilla_numbers_match_official_record_design() -> 
     ],
 )
 def test_committed_modelo_349_casilla_data_types_match_official_record_design(
-    casilla_id: str, expected_data_type: str
+    casilla_id: str, expected_data_type: str,
 ) -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
@@ -319,8 +319,7 @@ def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_
     expected_periods = {f"{m:02d}" for m in range(1, 13)} | {f"{q}T" for q in range(1, 5)}
     by_year: dict[int, set[str]] = {}
     for window in revision.deadline_windows:
-        period_code = window.period.split("-", 1)[1]
-        by_year.setdefault(window.filing_year, set()).add(period_code)
+        by_year.setdefault(window.filing_year, set()).add(window.period.registry_token)
 
     assert set(by_year) == {2024, 2025, 2026}
     for filing_year, periods in by_year.items():
@@ -358,10 +357,11 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules(
 def test_committed_modelo_349_deadline_windows_are_unique_by_period() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
-    seen: set[str] = set()
+    seen: set[tuple[int, str]] = set()
     for window in revision.deadline_windows:
-        assert window.period not in seen, f"duplicate deadline window for period {window.period}"
-        seen.add(window.period)
+        key = (window.period.filing_year, window.period.registry_token)
+        assert key not in seen, f"duplicate deadline window for period {window.period}"
+        seen.add(key)
 
 
 def test_committed_modelo_349_deadline_app_link_is_registered() -> None:
@@ -397,7 +397,7 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
     ],
 )
 def test_committed_modelo_349_export_records_open_with_official_record_type_literal(
-    record_type: str, expected_record_type_literal: str
+    record_type: str, expected_record_type_literal: str,
 ) -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]

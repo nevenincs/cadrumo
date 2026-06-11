@@ -6,11 +6,15 @@ Use of :class:`CasillaObservation` for compliance.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
+    FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
+    ObservedCasillaValue,
     SedeParseError,
     registry_observation_from_filed_declaration,
 )
@@ -20,7 +24,7 @@ from ...application.calculations import (
     iva_compensation_state_from_filed_observation,
     observation_key,
 )
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...domain.iva_compensation._carry_forward import derive_303_compensation_available
@@ -38,8 +42,7 @@ def persist_filed_calculation_observation(
     repo = repository if repository is not None else CalculationObservationRepository()
     stamped_revision_id = _resolve_stamped_revision_id(
         registry_observation.modelo,
-        registry_observation.filing_year,
-        registry_observation.period,
+        Period.from_year_and_code(registry_observation.filing_year, registry_observation.period),
     )
     repo.save_observation(
         registry_observation,
@@ -48,15 +51,20 @@ def persist_filed_calculation_observation(
         stamped_revision_id=stamped_revision_id,
     )
     if observation.modelo == Modelo.M303:
-        IvaCompensationHistoryRepository().save_period(iva_compensation_state_from_filed_observation(observation))
-    return observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
+        IvaCompensationHistoryRepository().save_period(
+            iva_compensation_state_from_filed_observation(_calculation_observation(observation))
+        )
+    return observation_key(
+        registry_observation.modelo,
+        Period.from_year_and_code(registry_observation.filing_year, registry_observation.period),
+    )
 
 
 def persist_latest_filed_calculation_observations(
     observations: tuple[FiledDeclaracionObservation, ...],
 ) -> tuple[str, ...]:
     """Persist only the latest captured observation per modelo/year/period."""
-    latest: dict[tuple[str, int, str], FiledDeclaracionObservation] = {}
+    latest: dict[tuple[str, int, Period], FiledDeclaracionObservation] = {}
     for observation in observations:
         key = (observation.modelo, observation.ejercicio, observation.period)
         current = latest.get(key)
@@ -67,7 +75,10 @@ def persist_latest_filed_calculation_observations(
             latest[key] = observation
     return tuple(
         key
-        for _key, observation in sorted(latest.items())
+        for _key, observation in sorted(
+            latest.items(),
+            key=lambda item: (item[0][0], item[0][1], item[0][2].registry_token),
+        )
         for key in _persist_filed_calculation_observation_if_extractable(observation)
     )
 
@@ -76,7 +87,7 @@ def persist_iva_compensation_history_observations_strict(
     observations: tuple[FiledDeclaracionObservation, ...],
 ) -> tuple[str, ...]:
     """Persist latest Modelo 303 observations and verify each history row reloads."""
-    latest: dict[tuple[int, str], FiledDeclaracionObservation] = {}
+    latest: dict[tuple[int, Period], FiledDeclaracionObservation] = {}
     for observation in observations:
         if observation.modelo != Modelo.M303:
             raise LiveApplicationInputError(
@@ -93,18 +104,21 @@ def persist_iva_compensation_history_observations_strict(
 
     keys: list[str] = []
     history_repo = IvaCompensationHistoryRepository()
-    for (_year, _period), observation in sorted(latest.items()):
+    for (_year, _period), observation in sorted(
+        latest.items(),
+        key=lambda item: (item[0][0], item[0][1].registry_token),
+    ):
         try:
             key = persist_filed_calculation_observation(observation)
         except SedeParseError as exc:
             raise LiveApplicationError(
-                f"filed Modelo 303 {observation.ejercicio}/{observation.period} "
-                "could not be promoted into IVA compensation history"
+                f"filed Modelo 303 {observation.period!s} "
+                "could not be promoted into IVA compensation history",
             ) from exc
-        if history_repo.load_period(observation.ejercicio, observation.period) is None:
+        if history_repo.load_period(observation.period) is None:
             raise LiveApplicationError(
                 f"secure IVA compensation history did not reload after persisting "
-                f"Modelo 303 {observation.ejercicio}/{observation.period}"
+                f"Modelo 303 {observation.period!s}",
             )
         keys.append(key)
     return tuple(keys)
@@ -141,6 +155,35 @@ def _persist_filed_calculation_observation_if_extractable(
         return (persist_filed_calculation_observation(observation),)
     except SedeParseError:
         return ()
+
+
+@dataclass(frozen=True)
+class _FiledDeclaracionCalculationObservation:
+    modelo: str
+    ejercicio: int
+    period: Period
+    expediente_id: str
+    status: str
+    presented_at: datetime
+    authenticated_identity: str
+    artefacts: tuple[FiledDeclaracionArtefact, ...]
+    casillas: tuple[ObservedCasillaValue, ...]
+
+
+def _calculation_observation(
+    observation: FiledDeclaracionObservation,
+) -> _FiledDeclaracionCalculationObservation:
+    return _FiledDeclaracionCalculationObservation(
+        modelo=observation.modelo,
+        ejercicio=observation.ejercicio,
+        period=observation.period,
+        expediente_id=observation.expediente_id,
+        status=observation.status,
+        presented_at=observation.presented_at,
+        authenticated_identity=observation.authenticated_identity,
+        artefacts=observation.artefacts,
+        casillas=observation.casillas,
+    )
 
 
 def _with_derived_303_compensation_available(
@@ -189,15 +232,19 @@ def _casilla_decimal(values: Mapping[str, Decimal], *casilla_ids: str) -> Decima
     return None
 
 
-def _resolve_stamped_revision_id(modelo: str, filing_year: int, period: str) -> str | None:
-    """Resolve the registry revision id for (modelo, filing_year, period) for provenance stamping.
+def _resolve_stamped_revision_id(modelo: str, period: Period) -> str | None:
+    """Resolve the registry revision id for (modelo, period) for provenance stamping.
 
     Returns the revision id from the law-determined :func:`select_revision` result
     (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2), or ``None``
     on resolution failure so the stamp is never blocking at write time.
     """
     try:
-        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+        snapshot = resources().modelos.authority.snapshot(
+            modelo,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
         return snapshot.revision.id
     except Exception:
         return None

@@ -46,7 +46,7 @@ _LAZY_NAMES: frozenset[str] = frozenset(
         "get_portal",
         "portals_by_category",
         "portals_for_modelo",
-    }
+    },
 )
 
 

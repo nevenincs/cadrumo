@@ -185,7 +185,7 @@ class SnapshotService[TPayload: BaseModel](ABC):
     def __init__(self, *, bucket_id: str, repository: SnapshotRepository[TPayload]) -> None:
         if repository.bucket_id != bucket_id.strip():
             raise LiveApplicationInputError(
-                f"snapshot service bucket_id={bucket_id!r} does not match repository bucket {repository.bucket_id!r}"
+                f"snapshot service bucket_id={bucket_id!r} does not match repository bucket {repository.bucket_id!r}",
             )
         self._repository: SnapshotRepository[TPayload] = repository
 
@@ -245,7 +245,7 @@ class SnapshotService[TPayload: BaseModel](ABC):
         candidate = self._build_active_payload(snapshot_id=snapshot_id, **kwargs)
         active_snapshot = self._latest_active_for_axis(candidate)
         if active_snapshot is not None and self._payload_captured_at(active_snapshot) > self._payload_captured_at(
-            candidate
+            candidate,
         ):
             # Late-arriving capture: demote the incoming snapshot to SUPERSEDED.
             demoted = self._demote_to_superseded(candidate, superseded_by=self._payload_snapshot_id(active_snapshot))
@@ -324,7 +324,7 @@ class StatelessSnapshotService[TPayload: BaseModel](ABC):
         repository = self._repository_factory(bucket_id)
         if repository.bucket_id != bucket_id.strip():
             raise LiveApplicationInputError(
-                f"snapshot repository for bucket_id={bucket_id!r} reported bucket {repository.bucket_id!r}"
+                f"snapshot repository for bucket_id={bucket_id!r} reported bucket {repository.bucket_id!r}",
             )
         return repository
 
@@ -413,12 +413,12 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         if _bucket_id_of(snapshot) != self._bucket_id:
             raise LiveApplicationInputError(
                 f"{self._domain_label} snapshot bucket_id={_bucket_id_of(snapshot)!r} "
-                f"does not match repository bucket {self._bucket_id!r}"
+                f"does not match repository bucket {self._bucket_id!r}",
             )
         if _snapshot_id_of(snapshot) != snapshot_id:
             raise LiveApplicationInputError(
                 f"{self._domain_label} snapshot id={_snapshot_id_of(snapshot)!r} "
-                f"does not match requested snapshot {snapshot_id!r}"
+                f"does not match requested snapshot {snapshot_id!r}",
             )
         return snapshot
 
@@ -467,7 +467,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         if snapshot_bucket != self._bucket_id:
             raise LiveApplicationInputError(
                 f"{self._domain_label} snapshot bucket_id={snapshot_bucket!r} "
-                f"does not match repository bucket {self._bucket_id!r}"
+                f"does not match repository bucket {self._bucket_id!r}",
             )
         envelope = self._envelope_cls()(
             schema_version=self._namespace_definition.schema_version,

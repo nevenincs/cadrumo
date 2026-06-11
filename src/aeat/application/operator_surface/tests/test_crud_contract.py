@@ -75,14 +75,14 @@ class TestStrictCrudContract:
                     OrthogonalAxis.LINK,
                     OrthogonalAxis.CHECK,
                     OrthogonalAxis.PREFLIGHT,
-                }
+                },
             ),
             lifecycle_state_verbs=frozenset(
                 {
                     LifecycleStateVerb.ARCHIVE,
                     LifecycleStateVerb.STASH,
                     LifecycleStateVerb.RESET,
-                }
+                },
             ),
         )
         verbs = contract.all_verb_names()

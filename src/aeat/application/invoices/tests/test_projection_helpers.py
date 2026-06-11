@@ -65,10 +65,10 @@ def _invoice(
                         "subtotal": base_total,
                         "iva_rate": IvaRate.RATE_21,
                         "iva_amount": iva_total,
-                    }
+                    },
                 ),
             ),
-        }
+        },
     )
 
 

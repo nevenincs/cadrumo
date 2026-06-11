@@ -223,7 +223,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
         {
             "observed": {"A28015865": "valid", "B12345678": "invalid"},
             "raw_evidence_locator": "corpus/aeat_official/groi/sample.txt",
-        }
+        },
     ).encode()
 
     # Direct schema validation — strict, frozen, extra=forbid.

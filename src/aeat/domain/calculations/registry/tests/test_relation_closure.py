@@ -187,7 +187,7 @@ def test_registry_validator_rejects_relation_to_unknown_source_modelo() -> None:
 
     with pytest.raises(RegistryValidationError, match="unknown source modelo"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
-            _replace_modelo(modelos, mutated_modelo)
+            _replace_modelo(modelos, mutated_modelo),
         )
 
 
@@ -201,7 +201,7 @@ def test_registry_validator_rejects_relation_source_period_outside_source_revisi
 
     with pytest.raises(RegistryValidationError, match="does not support source periods"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
-            _replace_modelo(modelos, mutated_modelo)
+            _replace_modelo(modelos, mutated_modelo),
         )
 
 
@@ -215,7 +215,7 @@ def test_registry_validator_rejects_cross_model_relation_years_without_source_re
         update={
             "valid_from": revision.valid_from.replace(year=2014),
             "period_selector": widened_selector,
-        }
+        },
     )
     mutated_target = _with_revision(target_modelo, widened_revision)
 
@@ -233,7 +233,7 @@ def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
 
     with pytest.raises(RegistryValidationError, match="has no source output"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
-            _replace_modelo(modelos, mutated_modelo)
+            _replace_modelo(modelos, mutated_modelo),
         )
 
 
@@ -258,7 +258,7 @@ def test_registry_validator_rejects_nondirect_previous_filing_binding() -> None:
 
     with pytest.raises(RegistryValidationError, match="non-direct selector"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
-            _replace_modelo(modelos, mutated_modelo)
+            _replace_modelo(modelos, mutated_modelo),
         )
 
 
@@ -284,7 +284,7 @@ def test_registry_validator_rejects_relation_targeted_previous_filing_binding() 
 
     with pytest.raises(RegistryValidationError, match="both a relation target_binding and a 'previous_filing'"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
-            _replace_modelo(modelos, mutated_modelo)
+            _replace_modelo(modelos, mutated_modelo),
         )
 
 

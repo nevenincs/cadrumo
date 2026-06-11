@@ -23,7 +23,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,

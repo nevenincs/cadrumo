@@ -44,7 +44,7 @@ def verify_source_file(root: Path, source: SourceReference) -> None:
                 load_manual(manual_id=manual_id, year=year, part=part, settings=settings)
         except Exception as exc:
             raise RegistryValidationError(
-                f"source {source.id!r} manual structure check failed for path {source.corpus_path!r}: {exc}"
+                f"source {source.id!r} manual structure check failed for path {source.corpus_path!r}: {exc}",
             ) from exc
 
     stat = path.stat()

@@ -68,7 +68,7 @@ _FORAL_ALIASES = frozenset(
         "país_vasco",
         "euskadi",
         "navarra",
-    }
+    },
 )
 
 

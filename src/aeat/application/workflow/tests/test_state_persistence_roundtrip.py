@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...auth._models import AuthState
 from ...review._models import InvoiceReviewRecord, LedgerReviewRecord
@@ -45,12 +46,12 @@ def _populated_workflow_state() -> WorkflowState:
     return WorkflowState(
         auth=AuthState(),
         declarations={
-            "303:2025Q1": DeclaracionPointer(
+            "303:2025:1T": DeclaracionPointer(
                 modelo="303",
-                period="2025Q1",
+                period=Period.from_year_and_code(2025, "1T"),
                 draft_id="d" * 64,
                 status="BORRADOR",
-                exported_path="exports/303-2025Q1.txt",
+                exported_path="exports/303-2025-1T.txt",
                 verified=False,
                 updated_at=now,
             ),
@@ -112,10 +113,11 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
         loaded_normalised = loaded.model_copy(update={"updated_at": original.updated_at})
         assert loaded_normalised == original
         assert loaded.updated_at >= original.updated_at
-        assert "303:2025Q1" in loaded.declarations
-        loaded_decl = loaded.declarations["303:2025Q1"]
+        assert "303:2025:1T" in loaded.declarations
+        loaded_decl = loaded.declarations["303:2025:1T"]
+        assert loaded_decl.period == Period.from_year_and_code(2025, "1T")
         assert loaded_decl.draft_id == "d" * 64
-        assert loaded_decl.exported_path == "exports/303-2025Q1.txt"
+        assert loaded_decl.exported_path == "exports/303-2025-1T.txt"
         assert len(loaded.bucket_events) == 1
         assert loaded.bucket_events[0].action == "profile.bucket.created"
         assert loaded.bucket_events[0].bucket_id == "b" * 32

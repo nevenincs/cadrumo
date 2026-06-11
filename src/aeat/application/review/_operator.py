@@ -8,7 +8,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import AggregationSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
@@ -66,7 +66,7 @@ _ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingPro
         "modelo_finding": frozenset({ReviewItemKind.FINDING}),
         "live_notification": frozenset(),
         "sync_divergence": frozenset(),
-    }
+    },
 )
 
 

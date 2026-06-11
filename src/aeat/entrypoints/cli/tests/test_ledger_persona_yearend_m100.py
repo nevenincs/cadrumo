@@ -116,14 +116,14 @@ def test_corpus_spans_both_years() -> None:
 
 
 def test_annual_review_filter_renders_full_year() -> None:
-    """``review --filter period=2025-0A`` (annual Period) is accepted and renders.
+    """``review --filter period=0A --filter year=2025`` (annual Period) is accepted and renders.
 
     The reviewer's first instinct is a full-year view. The annual ``Period``
     token works, so the operator is not forced to walk four quarters — but the
     output is a row dump, not a totalled picture.
     """
     _import_corpus()
-    annual = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025-0A"])
+    annual = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
     assert annual.exit_code == 0, annual.output
     # The annual filter must contain rows dated across the year, not just Q1.
     assert "2025-01" in annual.output, annual.output
@@ -268,15 +268,15 @@ def test_cross_year_invoice_is_settled_in_2026_under_a_2025_reference() -> None:
 def test_cross_year_invoice_falls_outside_a_2025_period_filter() -> None:
     """The cash-date filter assigns the cross-year invoice to 2026, not 2025.
 
-    PAIN POINT: filtering by ``period=2025-0A`` (which keys off the settlement /
-    value date) hides an invoice that, by accrual, belongs to the 2025 Renta.
-    A year-end reviewer working from the period filter alone would under-count
-    2025 income by this row unless they reconcile devengo by hand.
+    PAIN POINT: filtering by ``period=0A --filter year=2025`` (which keys off the
+    settlement / value date) hides an invoice that, by accrual, belongs to the
+    2025 Renta. A year-end reviewer working from the period filter alone would
+    under-count 2025 income by this row unless they reconcile devengo by hand.
     """
     _import_corpus()
-    review_2025 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025-0A"])
+    review_2025 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
     assert review_2025.exit_code == 0, review_2025.output
-    review_2026 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2026-0A"])
+    review_2026 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2026"])
     assert review_2026.exit_code == 0, review_2026.output
     # The cross-year invoice settles in 2026, so the 2026 period view carries it
     # and the 2025 period view does not — accrual placement is the operator's job.

@@ -130,7 +130,7 @@ def resolve_maritime_exemption(
     if art_7p_eligible(facts):
         if annual_salary is None or qualifying_days is None:
             raise RentaValidationError(
-                "annual_salary and qualifying_days are required when Art. 7.p) eligibility applies"
+                "annual_salary and qualifying_days are required when Art. 7.p) eligibility applies",
             )
         obs = calculate_art_7p_exemption(
             annual_salary=annual_salary,

@@ -109,7 +109,8 @@ def _rates_from_catalogue(parameters: Mapping[str, object]) -> LivaArt161Recargo
         tabaco_raw = _parameter_value(parameters, _TABACO_PARAM_ID)
     except KeyError as exc:
         raise IvaCatalogueError(
-            f"the IVA recargo-equivalencia legal-parameter catalogue is missing LIVA art. 161 parameter {exc.args[0]!r}"
+            "the IVA recargo-equivalencia legal-parameter catalogue is missing "
+            f"LIVA art. 161 parameter {exc.args[0]!r}",
         ) from exc
 
     try:

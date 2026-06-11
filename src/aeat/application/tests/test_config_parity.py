@@ -41,7 +41,7 @@ def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") ->
             profile_id="default",
             display_name="operator",
             facts=facts,
-        )
+        ),
     )
 
 
@@ -64,7 +64,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
                 "design",
                 "--iva-regime",
                 "GENERAL",
-            ]
+            ],
         )
         assert created.exit_code == 0, created.output
 
@@ -109,7 +109,7 @@ def test_config_create_then_config_status_surfaces_assigned_value(
                 "design",
                 "--iva-regime",
                 "SIMPLIFICADO",
-            ]
+            ],
         )
         assert created.exit_code == 0, created.output
 

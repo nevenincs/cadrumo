@@ -64,7 +64,7 @@ def _create_profile(name: str = "test-operator") -> None:
             "Servicios",
             "--iva-regime",
             "GENERAL",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
 

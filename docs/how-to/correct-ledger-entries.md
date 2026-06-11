@@ -29,7 +29,7 @@ The [transactions guide](import-bank-statements.md) covers listing and filtering
 Change one or more fields directly:
 
 ```bash
-aeat app ledger update --id <transaction-id> --amount=-121.00 --description "Office chair, corrected price"
+aeat app ledger update <transaction-id> --amount=-121.00 --description "Office chair, corrected price"
 ```
 
 Each flag fully replaces that field - write the complete new value, not an addition to the old one. The updatable fields are: date, value-date, amount, direction, currency, counterparty, description, taxable-base, iva-rate, iva-amount, irpf-category, notes, and group.
@@ -43,8 +43,8 @@ Update works on active transactions only. Archived and stashed transactions refu
 Remove deletes a transaction from your active records. To preview what would happen without deleting anything, run with `--dry-run` first:
 
 ```bash
-aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --dry-run
-aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --yes
+aeat app ledger remove <transaction-id> --reason "wrong file imported" --dry-run
+aeat app ledger remove <transaction-id> --reason "wrong file imported" --yes
 ```
 
 ## Split one transaction into parts
@@ -52,7 +52,7 @@ aeat app ledger remove --id <transaction-id> --reason "wrong file imported" --ye
 When one payment covers two different things - for example, a card payment that mixes business and personal items - split it into parts:
 
 ```bash
-aeat app ledger split --id <transaction-id> --child-amount=-100.00 --child-description "office supplies" --child-amount=-21.00 --child-description "personal items" --reason "mixed receipt" --yes
+aeat app ledger split <transaction-id> --child-amount=-100.00 --child-description "office supplies" --child-amount=-21.00 --child-description "personal items" --reason "mixed receipt" --yes
 ```
 
 Amounts and descriptions pair up one per part: the first amount goes with the first description, and so on. The original transaction becomes the split parent, and the parts carry the balance from then on.
@@ -74,7 +74,7 @@ Stash sets a transaction aside. A stashed transaction leaves the everyday lists 
 Use stash for a row you have not resolved yet and archive for a row you have deliberately set aside, such as a confirmed duplicate. Both are reversible: [restore](#restore-a-stashed-or-archived-transaction) returns the row to active.
 
 ```bash
-aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
+aeat app ledger stash <transaction-id> --reason "waiting for invoice" --yes
 ```
 
 ## Archive a transaction
@@ -82,7 +82,7 @@ aeat app ledger stash --id <transaction-id> --reason "waiting for invoice" --yes
 Archive keeps a transaction in history but out of ordinary work - it's the right choice for duplicates you want to keep a deliberate trace of:
 
 ```bash
-aeat app ledger archive --id <transaction-id> --reason "duplicate imported row" --yes
+aeat app ledger archive <transaction-id> --reason "duplicate imported row" --yes
 ```
 
 ## Restore a stashed or archived transaction
@@ -90,14 +90,14 @@ aeat app ledger archive --id <transaction-id> --reason "duplicate imported row" 
 If you stashed or archived a transaction by mistake, restore it to active. Restore is the inverse of stash and archive: the row returns to your everyday lists and totals.
 
 ```bash
-aeat app ledger restore --id <transaction-id> --reason "stashed by mistake" --yes
+aeat app ledger restore <transaction-id> --reason "stashed by mistake" --yes
 ```
 
 Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, list the stashed rows first, then restore each one - you do not need to reset the whole ledger:
 
 ```bash
 aeat app ledger list --filter classification=NOT_YET_PROCESSED
-aeat app ledger restore --id <transaction-id> --reason "bulk stash undo" --yes
+aeat app ledger restore <transaction-id> --reason "bulk stash undo" --yes
 ```
 
 Restore refuses a row that is already active, and it refuses a row whose period you have already filed - restoring it would change the inputs behind a return you have presented. Restore one of these only after you have corrected the filing through an amendment.

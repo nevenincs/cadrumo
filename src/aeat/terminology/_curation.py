@@ -178,7 +178,7 @@ def set_language_field(
 
     if field_name == "source":
         updated_section = section.model_copy(
-            update={"source": LanguageSource(citation=value, authority=source_authority)}
+            update={"source": LanguageSource(citation=value, authority=source_authority)},
         )
     elif field_name in _CURATED_FIELDS:
         updated_section = section.model_copy(update={field_name: value})
@@ -264,7 +264,7 @@ def retire_concept(
             "lifecycle": ConceptLifecycle.RETIRED,
             "replaced_by": replaced_by,
             "updated_at": _stamp(today),
-        }
+        },
     )
     return _commit_concept(handbook, new_concept, target_dir)
 

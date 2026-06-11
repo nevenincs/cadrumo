@@ -86,7 +86,7 @@ def persist_filed_revision_observation(
     observation = RegistryModeloObservation(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         observations=revision.observations,
     )
     repository.save_observation(
@@ -95,7 +95,7 @@ def persist_filed_revision_observation(
         captured_at=captured_at,
         stamped_revision_id=work_unit.revision_id,
     )
-    return observation_key(work_unit.modelo, work_unit.filing_year, work_unit.period)
+    return observation_key(work_unit.modelo, work_unit.period)
 
 
 __all__ = [

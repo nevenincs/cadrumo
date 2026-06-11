@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core import Period
 from ....core.aggregation import AggregationSourceKind, CounterpartSourceKind, RowSetGroupingKind
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._bindings_previous_filing import (
@@ -137,6 +138,27 @@ __all__ = [
 ]
 
 
+def _tuple_from_json_array(value: object) -> object:
+    if isinstance(value, list):
+        return tuple(value)
+    return value
+
+
+def _decimal_from_json_string(value: object) -> object:
+    if isinstance(value, str):
+        try:
+            return Decimal(value)
+        except InvalidOperation as exc:
+            raise RegistryValidationError("casilla observation decimal JSON value must be numeric") from exc
+    return value
+
+
+def _decimal_tuple_from_json_array(value: object) -> object:
+    if isinstance(value, list):
+        return tuple(_decimal_from_json_string(item) for item in value)
+    return value
+
+
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
@@ -176,12 +198,27 @@ class CasillaObservation(BaseModel):
     # absent-by-design zeros from value-bearing observations.
     absent_by_design: bool = False
 
+    @field_validator("value", mode="before")
+    @classmethod
+    def _decimal_value_from_json_string(cls, value: object) -> object:
+        return _decimal_from_json_string(value)
+
     @field_validator("value")
     @classmethod
     def _decimal_value(cls, value: Decimal) -> Decimal:
         if isinstance(value, bool) or not isinstance(value, Decimal):
             raise RegistryValidationError("casilla observation value must be Decimal")
         return value
+
+    @field_validator("operand_refs", "legal_refs", "source_refs", mode="before")
+    @classmethod
+    def _tuple_fields_from_json_arrays(cls, value: object) -> object:
+        return _tuple_from_json_array(value)
+
+    @field_validator("operand_values", mode="before")
+    @classmethod
+    def _decimal_tuple_field_from_json_array(cls, value: object) -> object:
+        return _decimal_tuple_from_json_array(value)
 
 
 class RegistryModeloObservation(BaseModel):
@@ -195,9 +232,40 @@ class RegistryModeloObservation(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str = Field(min_length=1, max_length=8)
+    filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _hydrate_filing_period(cls, data: object) -> object:
+        if not isinstance(data, Mapping) or "filing_period" in data:
+            return data
+        filing_year = data.get("filing_year")
+        period = data.get("period")
+        if not isinstance(filing_year, int) or not isinstance(period, str):
+            return data
+        try:
+            filing_period = Period.from_year_and_code(filing_year, period)
+        except ValueError:
+            return data
+        return {**data, "filing_period": filing_period}
+
+    @field_validator("observations", mode="before")
+    @classmethod
+    def _observations_from_json_array(cls, value: object) -> object:
+        return _tuple_from_json_array(value)
+
+    @model_validator(mode="after")
+    def _validate_filing_period_consistency(self) -> RegistryModeloObservation:
+        if self.filing_period is None:
+            return self
+        if self.filing_period.filing_year != self.filing_year:
+            raise RegistryValidationError("observation filing_period year must match filing_year")
+        if self.filing_period.registry_token != self.period:
+            raise RegistryValidationError("observation filing_period code must match period")
+        return self
 
     @property
     def casilla_values(self) -> Mapping[str, Decimal]:
@@ -345,7 +413,7 @@ class _ProfileSelector(BaseModel):
         if shape_count != 1:
             raise RegistryValidationError(
                 "profile selector must declare exactly one of profile_key (scalar), "
-                "profile_keys (composite), or profile_model (collection)"
+                "profile_keys (composite), or profile_model (collection)",
             )
         if has_composite and self.format is None:
             raise RegistryValidationError("profile composite selector (profile_keys) requires a format renderer")
@@ -363,7 +431,7 @@ class _ProfileSelector(BaseModel):
         # required_when_* must be paired
         if (self.required_when_profile_key is None) != (self.required_when_value is None):
             raise RegistryValidationError(
-                "profile selector required_when_profile_key and required_when_value must be declared together"
+                "profile selector required_when_profile_key and required_when_value must be declared together",
             )
         return self
 
@@ -432,7 +500,7 @@ class _ManualInputSelector(BaseModel):
         has_record_shape = any(getattr(self, key) is not None for key in record_shape_keys)
         if has_casilla and has_record_shape:
             raise RegistryValidationError(
-                "manual_input selector must declare either the casilla shape or the record-field shape, not both"
+                "manual_input selector must declare either the casilla shape or the record-field shape, not both",
             )
         if not has_casilla and not has_record_shape:
             raise RegistryValidationError("manual_input selector must declare a casilla or a record-field shape")
@@ -440,14 +508,14 @@ class _ManualInputSelector(BaseModel):
             missing = [key for key in record_shape_keys if getattr(self, key) is None]
             if missing:
                 raise RegistryValidationError(
-                    f"manual_input record-field selector is missing required keys: {sorted(missing)!r}"
+                    f"manual_input record-field selector is missing required keys: {sorted(missing)!r}",
                 )
         # Boolean casilla shape always pairs the data_type with explicit
         # true_value / false_value strings so the on-wire encoding is
         # deterministic.
         if has_casilla and self.data_type == "boolean" and (self.true_value is None or self.false_value is None):
             raise RegistryValidationError(
-                "manual_input boolean-casilla selector must declare true_value and false_value"
+                "manual_input boolean-casilla selector must declare true_value and false_value",
             )
         return self
 
@@ -474,7 +542,6 @@ def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelect
 _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "previous_filing": _PreviousModeloSelector,
     "relation_prefill": _RelationPrefillSelector,
-    AggregationSourceKind.INVOICE: _InvoiceSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
     # optional row_field / grouping / record) is validated against
@@ -527,11 +594,6 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     Sources NOT in the registry are intentionally free-form today;
     those bindings short-circuit with an empty failure list.
     """
-    if binding.source == AggregationSourceKind.INVOICE:
-        return [
-            f"binding {binding.id!r} source 'invoice' is retired; use "
-            "collectible_invoice / payable_invoice / purchase_invoice_evidence"
-        ]
     selector_model = _BINDING_SELECTOR_REGISTRY.get(binding.source)
     if binding.source == RowSetGroupingKind.WITHHOLDING:
         return validate_withholding_binding_selector_shape(binding)
@@ -541,7 +603,7 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
         selector_model.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         return [
-            f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: {exc}"
+            f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: {exc}",
         ]
     # Counterpart-source bindings get the additional fact/op
     # invariants that ``_validated_counterpart_selector`` runs at

@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.filing import (
@@ -23,6 +24,8 @@ from ..testing import build_registry_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_Q1_2026 = Period.from_year_and_code(2026, "1T")
+
 
 def _hint() -> str:
     return "filing.test_calculate.hint"
@@ -37,7 +40,7 @@ def _make_draft(
     status: ModeloDraftStatus,
     findings: tuple[ModeloValidationFinding, ...] = (),
     modelo: str = "130",
-    period: str = "2026Q1",
+    period: Period = _Q1_2026,
 ) -> ModeloDraft:
     draft = build_registry_filing_draft(
         modelo=modelo,
@@ -84,6 +87,15 @@ def test_clean_validated_draft_routes_to_review() -> None:
     assert summary.blocker_count == 0
     assert summary.warning_count == 0
     assert summary.info_count == 0
+
+
+def test_summary_carries_typed_period_not_combined_string() -> None:
+    period = Period.from_year_and_code(2026, "1T")
+    draft = _make_draft(status=ModeloDraftStatus.VALIDADO).model_copy(update={"period": period})
+    summary = summarise_calculation(draft)
+    assert summary.period == period
+    assert summary.model_dump()["period"] == {"filing_year": 2026, "code": "1T"}
+    assert summary.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
 
 
 def test_ready_to_submit_clean_draft_routes_to_approve() -> None:

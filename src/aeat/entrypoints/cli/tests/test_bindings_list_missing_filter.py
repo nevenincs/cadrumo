@@ -55,7 +55,7 @@ _RESOLVED_BINDING_IDS = frozenset(
         "renta-2025-profile-declaration-type",
         "renta-2025-profile-taxpayer-birth-date",
         "renta-2025-profile-family-minor-children-in-unit",
-    }
+    },
 )
 
 

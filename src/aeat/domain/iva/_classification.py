@@ -290,7 +290,7 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
         ):
             raise IvaValidationError(
                 "rate_tier is required for ES-to-ES domestic transactions; "
-                "supply GENERAL / REDUCED / SUPER_REDUCED / ZERO / EXEMPT explicitly"
+                "supply GENERAL / REDUCED / SUPER_REDUCED / ZERO / EXEMPT explicitly",
             )
         return self
 

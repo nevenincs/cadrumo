@@ -275,7 +275,7 @@ def test_remote_mirror_comparison_detects_naive_older_stale_remote_revision(tmp_
     naive_remote_object = remote_object.model_copy(
         update={
             "revision_written_at": remote_object.revision_written_at.replace(tzinfo=None),
-        }
+        },
     )
     naive_remote_manifest = remote_manifest.model_copy(update={"objects": (naive_remote_object,)})
 
@@ -296,7 +296,7 @@ def test_remote_mirror_comparison_keeps_unknown_older_root_revision_conflict(tmp
             "revision_ancestor_ids": (),
             "ciphertext_hash": "d" * 64,
             "revision_written_at": local_object.revision_written_at - timedelta(minutes=5),
-        }
+        },
     )
     unknown_root_manifest = local_manifest.model_copy(update={"objects": (unknown_root_object,)})
 
@@ -316,7 +316,7 @@ def test_remote_mirror_comparison_keeps_older_divergent_revision_conflict(tmp_pa
             "previous_storage_revision_id": "e" * 64,
             "ciphertext_hash": "d" * 64,
             "revision_written_at": local_object.revision_written_at - timedelta(minutes=5),
-        }
+        },
     )
     divergent_manifest = local_manifest.model_copy(update={"objects": (divergent_object,)})
 
@@ -333,13 +333,13 @@ def test_remote_mirror_comparison_detects_revision_conflict(tmp_path: Path) -> N
             "storage_revision_id": "f" * 64,
             "previous_storage_revision_id": "e" * 64,
             "ciphertext_hash": "d" * 64,
-        }
+        },
     )
     conflicted_manifest = local_manifest.model_copy(
         update={
             "latest_revision_id": conflicted_object.storage_revision_id,
             "objects": (conflicted_object,),
-        }
+        },
     )
 
     inspection = compare_remote_mirror_manifests(local=local_manifest, remote=conflicted_manifest)

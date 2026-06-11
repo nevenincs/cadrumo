@@ -39,7 +39,7 @@ def check_first_slice_routing(modelo_id: str, casilla_ids: frozenset[str]) -> li
     if not missing:
         return []
     return [
-        f"renta first-slice routing targets casillas {sorted(missing)!r} that are absent from the modelo-100 revision"
+        f"renta first-slice routing targets casillas {sorted(missing)!r} that are absent from the modelo-100 revision",
     ]
 
 

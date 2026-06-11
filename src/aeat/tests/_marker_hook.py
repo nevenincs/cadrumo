@@ -37,7 +37,7 @@ _HEX_MARKERS = frozenset(
         "hex_inbound_adapter",
         "hex_outbound_adapter",
         "hex_persistence_adapter",
-    }
+    },
 )
 
 
@@ -58,12 +58,12 @@ def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
         if len(execution) != 1:
             raise pytest.UsageError(
                 f"{item.nodeid}: must carry exactly one of {{unit, integration, aeat_live}}, "
-                f"found {sorted(execution) or 'none'}"
+                f"found {sorted(execution) or 'none'}",
             )
         hex_markers = {name for name in owned if name.startswith("hex_")}
         if len(hex_markers) != 1 or not hex_markers <= _HEX_MARKERS:
             raise pytest.UsageError(
-                f"{item.nodeid}: must carry exactly one accepted hex_* marker, found {sorted(hex_markers) or 'none'}"
+                f"{item.nodeid}: must carry exactly one accepted hex_* marker, found {sorted(hex_markers) or 'none'}",
             )
         remaining.append(item)
     items[:] = remaining

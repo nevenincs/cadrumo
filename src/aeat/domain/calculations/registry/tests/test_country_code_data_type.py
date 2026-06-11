@@ -30,7 +30,7 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
             "data_type": data_type,
             "legal_refs": ("ley-37-1992:art-25",),
             "source_refs": ("aeat-modelo-349-instructions",),
-        }
+        },
     )
 
 

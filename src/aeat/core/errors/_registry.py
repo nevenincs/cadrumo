@@ -162,7 +162,7 @@ def register(code: ErrorCode) -> ErrorCode:
 from .registry import _ALL_DECLARED_ERROR_CODES
 
 _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
-    {qualname: register(code) for qualname, code in _ALL_DECLARED_ERROR_CODES}
+    {qualname: register(code) for qualname, code in _ALL_DECLARED_ERROR_CODES},
 )
 ERROR_REGISTRY: Mapping[str, ErrorCode] = MappingProxyType(_ERROR_REGISTRY_MUTABLE)
 
@@ -232,7 +232,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
             f"registry entry. If this class was just added, declare it in the "
             f"error-code registry alongside the class. If you encountered this "
             f"during a test run, the class may have been added by a peer agent "
-            f"mid-flight: run `git status` and rerun once peer state settles."
+            f"mid-flight: run `git status` and rerun once peer state settles.",
         )
     _CLASS_CODE_REGISTRY[error_type] = code
     type.__setattr__(error_type, "code", code)
@@ -260,7 +260,7 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
         if resolved is None:
             raise ValueError(
                 f"AeatError subclass {_qualname(error_type)} has no registered ErrorCode "
-                f"even after deferred-bind drain; ensure it is declared in the error-code registry."
+                f"even after deferred-bind drain; ensure it is declared in the error-code registry.",
             )
         code = resolved
     return code

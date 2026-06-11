@@ -46,7 +46,7 @@ _ALLOWLIST: frozenset[str] = frozenset(
         # so the WRITE has no Settings equivalent; the os.environ mutation
         # is observed by the child invocation's subsequent Settings load.
         "core/observability/_replay.py",
-    }
+    },
 )
 
 _AEAT_KEY_PATTERN: re.Pattern[str] = re.compile(r"^AEAT_[A-Z0-9_]+$")

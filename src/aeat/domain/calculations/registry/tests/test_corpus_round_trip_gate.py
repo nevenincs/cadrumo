@@ -48,7 +48,7 @@ def _committed_profile(
             "provisional_pending_specimen": provisional,
             "corpus_round_trip_verified": round_trip_verified,
             "verification_source": verification_source,
-        }
+        },
     )
 
 
@@ -288,7 +288,7 @@ def test_corpus_round_trip_verified_without_verification_source_fails(tmp_path: 
     ],
 )
 def test_corpus_round_trip_verified_with_each_verification_source_passes(
-    tmp_path: Path, verification_source: str
+    tmp_path: Path, verification_source: str,
 ) -> None:
     """corpus_round_trip_verified=True with any valid verification_source enum value must pass."""
     modelo, catalogues = _committed_130()

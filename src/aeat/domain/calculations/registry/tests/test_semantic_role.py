@@ -72,7 +72,7 @@ def _casilla(
             "constraints": constraints,
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
-        }
+        },
     )
 
 
@@ -107,7 +107,7 @@ def _registry_modelo(modelo_id: str, revision_id: str, casillas: Iterable[Casill
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": tuple(casillas),
-        }
+        },
     )
     return ModeloDefinition.model_validate(
         {
@@ -120,7 +120,7 @@ def _registry_modelo(modelo_id: str, revision_id: str, casillas: Iterable[Casill
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "revisions": {revision_id: revision},
-        }
+        },
     )
 
 

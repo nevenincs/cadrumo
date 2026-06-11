@@ -262,7 +262,7 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
             "sl",
             "--incn-prior-12-months",
             "7500000.00",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
 
@@ -282,7 +282,7 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
             "1P",
             "--revision",
             "2025-y-siguientes",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)

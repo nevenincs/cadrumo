@@ -359,7 +359,7 @@ def configure_logging() -> None:
                     "propagate": True,
                 },
             },
-        }
+        },
     )
 
     # Local import: the observability layer imports ``aeat.core.logging`` for

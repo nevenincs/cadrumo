@@ -80,7 +80,7 @@ def _create(name: str, tax_id: str = "12345678Z") -> None:
             "--name", name.capitalize(),
             "--activity", "design",
             "--iva-regime", "GENERAL",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
 
@@ -182,7 +182,7 @@ def test_atomic_create_roundtrip_duplicate_lands_through_provisioner(_cli_storag
     _create("alice")
 
     duplicate = _invoke(
-        ["--format", "json", "config", "profile", "duplicate", "alice", "alice-copy", "--display-name", "Copy"]
+        ["--format", "json", "config", "profile", "duplicate", "alice", "alice-copy", "--display-name", "Copy"],
     )
     assert duplicate.exit_code == 0, duplicate.output
     # The duplicate's target UUID is redacted at the CLI boundary; the

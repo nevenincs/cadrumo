@@ -20,8 +20,8 @@ from ._validate_relation_sources import (
     validate_slot_source_hygiene,
 )
 from ._validate_revision_identity import _duplicates
+from ._validate_semantic_role_required import _validate_required_role_declarations
 from ._validate_semantic_roles import (
-    _validate_required_role_declarations,
     _validate_semantic_role_cardinality,
     _validate_semantic_role_consistency,
     _validate_semantic_role_typo_twins,

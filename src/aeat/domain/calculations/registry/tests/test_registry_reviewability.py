@@ -49,7 +49,7 @@ def _toml_sizes() -> list[_TomlSize]:
                 path=path.relative_to(_REGISTRY_ROOT),
                 line_count=len(lines),
                 max_line_chars=max((len(line) for line in lines), default=0),
-            )
+            ),
         )
     return sizes
 

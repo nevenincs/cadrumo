@@ -436,7 +436,7 @@ def _bool_setting(value: str | None) -> bool:
 
 def test_context_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
     settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
-        update={"aeat_browser_close_timeout_ms": 1}
+        update={"aeat_browser_close_timeout_ms": 1},
     )
     provider = ClaveMovilAuthProvider(settings)
     context = _HangingCloseContext(target_path=settings.aeat_sede_expedientes_path)
@@ -451,7 +451,7 @@ def test_context_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
 
 def test_browser_session_cleanup_is_bounded_by_settings_timeout(tmp_path: Path) -> None:
     settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
-        update={"aeat_browser_close_timeout_ms": 1}
+        update={"aeat_browser_close_timeout_ms": 1},
     )
     provider = ClaveMovilAuthProvider(settings)
     session = _HangingCloseBrowserSession(target_path=settings.aeat_sede_expedientes_path)
@@ -493,7 +493,7 @@ class TestAttemptDiagnostics:
                     overrides={"identity.tax_id": "X1234567L"},
                     secure_objects=secure_object_repository_for_active_bucket(),
                     enforce_unique_tax_id=False,
-                )
+                ),
             )
             settings = Settings(
                 aeat_clave_movil_dni_nie=SecretStr("X1234567L"),
@@ -829,7 +829,7 @@ class TestPostAuthLanding:
         )
         selector = provider._is_authenticated_aeat_landing(
             landing_url=external.aeat.clave_movil.selector_access_url_template.format(
-                target=external.aeat.pre303.presentation_service_path
+                target=external.aeat.pre303.presentation_service_path,
             ),
             target_path=external.aeat.pre303.presentation_service_path,
         )

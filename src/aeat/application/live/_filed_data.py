@@ -10,6 +10,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.outbound.aeat.sede import Declaracion
+from ...core import Period
 from ._errors import LiveApplicationInputError
 
 
@@ -20,7 +21,7 @@ class FiledDataListingRow(BaseModel):
 
     modelo: str
     year: int
-    period: str
+    period: Period
     expediente_id: str
     status: str
     presented_at: datetime
@@ -44,14 +45,14 @@ class FiledDataListingReport(BaseModel):
 def select_declarations_for_capture(
     declarations: tuple[Declaracion, ...],
     *,
-    period: str | None = None,
+    period: Period | None = None,
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> tuple[Declaracion, ...]:
     """Select :class:`Declaracion` rows for capture from one register query."""
     selected = declarations
     if period is not None:
-        selected = tuple(row for row in selected if row.period.upper() == period.upper())
+        selected = tuple(row for row in selected if row.period.upper() == period.registry_token)
     if expediente_id is not None:
         selected = tuple(row for row in selected if row.expediente_id == expediente_id)
     if expediente_id is not None and not selected:
@@ -70,13 +71,13 @@ def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
     return FiledDataListingRow(
         modelo=declaration.modelo,
         year=declaration.ejercicio,
-        period=declaration.period,
+        period=Period.from_year_and_code(declaration.ejercicio, declaration.period),
         expediente_id=declaration.expediente_id,
         status=declaration.estado,
         presented_at=declaration.presented_at,
         has_submitted_file=bool(declaration.archive_link_text and declaration.archive_cell_index is not None),
         has_declaration_copy=bool(
-            declaration.declaration_copy_link_text and declaration.declaration_copy_cell_index is not None
+            declaration.declaration_copy_link_text and declaration.declaration_copy_cell_index is not None,
         ),
         has_justificante=bool(declaration.justificante_link_text and declaration.justificante_cell_index is not None),
     )

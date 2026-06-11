@@ -91,7 +91,7 @@ def validate_orden_aplicabilidad(
                     f"{_ORDEN_APLICABILIDAD_RATCHET_DATE.isoformat()}) and MUST declare "
                     f"orden_aplicabilidad citing the orden ministerial that approves this form; "
                     f"see registry-calculation-legal-grounding rule and D3 of the "
-                    f"period-revision-resolution ADR"
+                    f"period-revision-resolution ADR",
                 )
             else:
                 # Pre-ratchet open-ended: follow-up so it burns down.
@@ -101,7 +101,7 @@ def validate_orden_aplicabilidad(
                     f"orden_aplicabilidad — the open-ended applicability claim is not "
                     f"BOE-anchored; add the orden that establishes 'y siguientes' "
                     f"applicability (S24 connective gate, Ruling 5 boundary, "
-                    f"period-revision-resolution ADR)"
+                    f"period-revision-resolution ADR)",
                 )
         else:
             # Pre-ratchet bounded: simple follow-up.
@@ -109,7 +109,7 @@ def validate_orden_aplicabilidad(
                 f"{scope}: revision {revision.id!r} (valid_from {revision.valid_from.isoformat()}) "
                 f"has no orden_aplicabilidad — follow-up backfill required; cite the orden "
                 f"ministerial that approves this form revision in the legal catalogue with a "
-                f"corpus_ref (D3 backfill, period-revision-resolution ADR)"
+                f"corpus_ref (D3 backfill, period-revision-resolution ADR)",
             )
         # No entries to validate further.
         return hard, follow_up
@@ -122,7 +122,7 @@ def validate_orden_aplicabilidad(
             hard.append(
                 f"{scope}: revision {revision.id!r} orden_aplicabilidad entry {ref_id!r} "
                 f"does not resolve in the legal catalogue; add the full LegalReference "
-                f"entry to a legal/*.toml file (registry-calculation-legal-grounding rule)"
+                f"entry to a legal/*.toml file (registry-calculation-legal-grounding rule)",
             )
             continue  # Cannot check corpus_ref on an absent entry.
 
@@ -133,7 +133,7 @@ def validate_orden_aplicabilidad(
             hard.append(
                 f"{scope}: revision {revision.id!r} orden_aplicabilidad entry {ref_id!r} "
                 f"exists in the catalogue but has no corpus_ref; add a corpus_ref pointing "
-                f"to real BOE/AEAT text (registry-calculation-legal-grounding rule)"
+                f"to real BOE/AEAT text (registry-calculation-legal-grounding rule)",
             )
 
         # (iii) Must also appear in legal_refs so snapshot ref-collection carries it.
@@ -141,7 +141,7 @@ def validate_orden_aplicabilidad(
             hard.append(
                 f"{scope}: revision {revision.id!r} orden_aplicabilidad entry {ref_id!r} "
                 f"is not present in the revision's legal_refs; add it to legal_refs so "
-                f"snapshot ref-collection carries the orden (D3, period-revision-resolution ADR)"
+                f"snapshot ref-collection carries the orden (D3, period-revision-resolution ADR)",
             )
 
     return hard, follow_up

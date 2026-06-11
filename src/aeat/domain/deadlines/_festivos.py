@@ -48,7 +48,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
 from ...core import Modelo
-from ...core._toml import read_toml
+from ...core import read_toml
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
 
@@ -259,7 +259,7 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
     declared_year = raw.get("year")
     if declared_year != year:
         raise DeadlineValidationError(
-            f"holiday calendar year mismatch: filename declares {year} but TOML declares {declared_year!r}"
+            f"holiday calendar year mismatch: filename declares {year} but TOML declares {declared_year!r}",
         )
 
     try:
@@ -364,7 +364,7 @@ def next_business_day(
     raise DeadlineValidationError(
         f"could not find a business day within 14 days of {start.isoformat()} "
         f"(ccaa={ccaa_code.value if ccaa_code else 'none'}); the calendar may "
-        f"have invalid contiguous holidays"
+        f"have invalid contiguous holidays",
     )
 
 

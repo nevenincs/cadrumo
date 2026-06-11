@@ -38,6 +38,7 @@ from pathlib import Path
 
 import pytest
 
+from .......core import Period
 from .......core.external_constants import ISO_8859_1_ENCODING
 from ..._errors import AeatExportFormatError
 from .._deserialise import deserialise
@@ -466,7 +467,7 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
     provider = build_runtime_schema_provider(modelos=("130",))
     draft = build_draft(
         modelo="130",
-        period="2026Q1",
+        period=Period.from_year_and_code(2026, "1T"),
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Golden test",
@@ -648,7 +649,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     provider = build_runtime_schema_provider(modelos=("303",))
     draft = build_draft(
         modelo="303",
-        period="2025Q1",
+        period=Period.from_year_and_code(2025, "1T"),
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Golden test IVA",

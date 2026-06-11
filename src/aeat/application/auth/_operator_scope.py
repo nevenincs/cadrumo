@@ -58,7 +58,7 @@ def auth_operator_settings_scope(settings: Settings | None) -> Iterator[Settings
 
 def active_bucket_id_from_settings(settings: Settings) -> str | None:
     """Resolve the active bucket for ``settings`` without falling through to process globals."""
-    from ...core._bucket_pointer_io import read_pointer
+    from ...core import read_pointer
 
     override = (settings.aeat_active_profile or "").strip()
     if override:

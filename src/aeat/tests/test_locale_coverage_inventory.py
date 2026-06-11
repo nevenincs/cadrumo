@@ -66,7 +66,7 @@ _OPERATOR_ERROR_LOCALE_KEYS: frozenset[str] = frozenset(
         "aggregation.grouping.errors.unsupported_modelo",
         # wizard labels
         "application.wizard.next_hint.modelo_work_create",
-    }
+    },
 )
 
 _SUPPORTED_LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")

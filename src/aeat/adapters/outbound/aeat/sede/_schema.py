@@ -22,7 +22,7 @@ from typing import Final, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
-from .....core import Modelo
+from .....core import Modelo, Period
 from .....domain.calculations.registry import CasillaId
 from ._errors import SedeValidationError
 
@@ -212,7 +212,7 @@ class IvaCompensationWalletRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     generation_year: int = Field(ge=2000, le=2099)
-    generation_period: str = Field(min_length=1, max_length=8)
+    generation_period: Period
     generated_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     applied_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     pending_amount: Decimal = Field(ge=Decimal("0"))
@@ -235,7 +235,7 @@ class IvaCompensationWalletObservation(BaseModel):
     authenticated_identity: str = Field(min_length=1, max_length=32)
     target_modelo: Literal[Modelo.M303] = Modelo.M303
     target_year: int = Field(ge=2000, le=2099)
-    target_period: str = Field(min_length=1, max_length=8)
+    target_period: Period
     rows: tuple[IvaCompensationWalletRow, ...] = ()
     total_pending: Decimal = Field(ge=Decimal("0"))
     source_url: AnyHttpUrl
@@ -257,7 +257,7 @@ class FiledDeclaracionObservation(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
     expediente_id: str = Field(min_length=12, max_length=32)
     status: str = Field(min_length=1, max_length=32)
     presented_at: datetime

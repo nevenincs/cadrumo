@@ -8,7 +8,9 @@ error (malformed period, unknown modelo) must surface as a
 from __future__ import annotations
 
 import pytest
+import typer
 
+from ....core import Period
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....tests.cli_runner import invoke_cached_cli
 
@@ -59,7 +61,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         bucket_id="default",
         modelo=ModeloCode("130"),
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
@@ -113,7 +115,7 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
         bucket_id="default",
         modelo=ModeloCode("130"),
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
@@ -166,7 +168,7 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
         bucket_id="default",
         modelo=ModeloCode("130"),
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
@@ -243,7 +245,7 @@ def test_work_amend_batch_reports_partial_missing_options() -> None:
             "f" * 64,
             "--kind",
             "complementaria",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -300,7 +302,7 @@ def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
             period,
             "--revision",
             "2009-y-siguientes",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, f"period {period!r} should be rejected; got: {result.output}"
@@ -329,10 +331,10 @@ def test_work_create_rejects_unknown_modelo() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--revision",
             "2009-y-siguientes",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -365,7 +367,7 @@ def test_work_create_rejects_out_of_range_year(year: str) -> None:
             "Q1",
             "--revision",
             "2009-y-siguientes",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -388,10 +390,10 @@ def test_work_create_rejects_unknown_revision() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--revision",
             "nonexistent-revision",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -402,23 +404,36 @@ def test_work_create_rejects_unknown_revision() -> None:
 @pytest.mark.parametrize(
     "period,expected_normalized",
     [
-        ("Q1", "1T"),
         ("1T", "1T"),
-        ("Q4", "4T"),
+        ("1t", "1T"),
+        ("4T", "4T"),
         ("0A", "0A"),
-        ("annual", "0A"),
+        ("0a", "0A"),
+        ("1P", "1P"),
     ],
 )
-def test_work_create_normalizes_valid_period_tokens(period: str, expected_normalized: str) -> None:
-    """Valid period tokens (in any accepted form) must be normalized to the
-    canonical registry form (e.g. ``Q1`` → ``1T``) before being stored."""
+def test_work_create_accepts_core_period_tokens(period: str, expected_normalized: str) -> None:
+    """Valid AEAT period tokens are resolved to core ``Period`` values."""
 
     from .._modelo import _resolve_year_period
 
-    _, normalized = _resolve_year_period(2026, period)
-    assert normalized == expected_normalized, (
-        f"period {period!r} normalized to {normalized!r}, expected {expected_normalized!r}"
+    normalized = _resolve_year_period(2026, period)
+    assert normalized.year == 2026
+    assert normalized.registry_token == expected_normalized, (
+        f"period {period!r} normalized to {normalized.registry_token!r}, expected {expected_normalized!r}"
     )
+
+
+def test_optional_cli_period_requires_year() -> None:
+    """A supplied ``--period`` must not be dropped when ``--year`` is absent."""
+
+    from .._modelo import _resolve_optional_cli_period
+
+    with pytest.raises(typer.BadParameter) as raised:
+        _resolve_optional_cli_period(year=None, period="1T", modelo="130")
+
+    assert "--year" in str(raised.value)
+    assert "1T" in str(raised.value)
 
 
 # --- Period-token confusion: --year and --period are composed ---
@@ -448,7 +463,7 @@ def test_work_create_year_repeated_into_period_explains_composition() -> None:
             "2024",
             "--revision",
             "2024",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output

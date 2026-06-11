@@ -86,7 +86,7 @@ def serialise(
     if len(body) != total_length:
         raise AeatExportFormatError(
             f"serialised body is {len(body)} bytes but total_length={total_length} "
-            f"was declared; likely an encoder width mismatch."
+            f"was declared; likely an encoder width mismatch.",
         )
     return body + _CRLF
 
@@ -97,7 +97,7 @@ def _require_headers_present(headers: Mapping[str, HeaderValue], required_field_
         value = headers.get(required)
         if value is None or (isinstance(value, str) and not value):
             raise AeatExportFormatError(
-                f"required header {required!r} missing from draft; cannot serialise fichero-BOE payload"
+                f"required header {required!r} missing from draft; cannot serialise fichero-BOE payload",
             )
 
 
@@ -126,7 +126,7 @@ def _encode_reserved_field(spec: RecordFieldSpec, *, encoding: FicheroBoeEncodin
     lit = spec.literal_value.encode(encoding)
     if len(lit) != spec.length:
         raise AeatExportFormatError(
-            f"RESERVED field {spec.field_id!r} literal width {len(lit)} != declared length {spec.length}"
+            f"RESERVED field {spec.field_id!r} literal width {len(lit)} != declared length {spec.length}",
         )
     return lit
 
@@ -145,7 +145,7 @@ def _encode_currency_field(
         header_val = headers.get(spec.field_id, _ZERO)
         if isinstance(header_val, (str, date)):
             raise AeatExportFormatError(
-                f"CURRENCY field {spec.field_id!r} requires a Decimal in headers; got {type(header_val).__name__}"
+                f"CURRENCY field {spec.field_id!r} requires a Decimal in headers; got {type(header_val).__name__}",
             )
         value = header_val
     return encode_currency(
@@ -167,7 +167,7 @@ def _encode_date_field(
     dval = headers.get(spec.field_id)
     if not isinstance(dval, date):
         raise AeatExportFormatError(
-            f"DATE field {spec.field_id!r} requires a date in headers; got {type(dval).__name__}"
+            f"DATE field {spec.field_id!r} requires a date in headers; got {type(dval).__name__}",
         )
     return encode_date(dval, spec.date_fmt, encoding=encoding)
 
@@ -231,7 +231,7 @@ def serialise_envelope(
         value = headers.get(required)
         if value is None or (isinstance(value, str) and not value):
             raise AeatExportFormatError(
-                f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope"
+                f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope",
             )
 
     chunks: list[bytes] = []

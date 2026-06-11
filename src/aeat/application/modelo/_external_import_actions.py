@@ -9,9 +9,11 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
+from ...core import Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.justificante import JustificanteRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -41,6 +43,13 @@ from ._calculation_helpers import external_filing_observations as _external_fili
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 
+_JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
+    {
+        ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+    },
+)
+
 
 def _load_external_import_target(
     *,
@@ -66,7 +75,7 @@ def _load_external_import_target(
     snapshot = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         casilla_values=casilla_values,
     )
     return work_units, work_unit, snapshot, cleaned_reference
@@ -83,6 +92,8 @@ def import_external_filing_evidence(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    justificante_repository: JustificanteRepository | None = None,
+    expected_tax_id: str | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
     """Persist an externally-filed return and return a :class:`ModeloRecord`."""
@@ -96,6 +107,15 @@ def import_external_filing_evidence(
         casilla_values=casilla_values,
         evidence_reference_id=evidence_reference_id,
         work_unit_repository=wu_repo,
+    )
+    _require_bound_justificante_artifact(
+        evidence_kind=evidence_kind,
+        evidence_reference_id=cleaned_reference,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        expected_tax_id=expected_tax_id,
+        justificante_repository=justificante_repository or JustificanteRepository(),
     )
 
     inputs_snapshot: dict[str, str] = {}
@@ -176,7 +196,7 @@ def import_external_filing_evidence(
                 "status": ModeloRecordStatus.SUPERSEDIDO,
                 "superseded_at": now,
                 "superseded_by_filing_record_id": new_filing_id,
-            }
+            },
         )
         updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
         prior_revision = revisions.get(prior_current.calculation_revision_id)
@@ -186,7 +206,7 @@ def import_external_filing_evidence(
                     "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
                     "superseded_at": now,
                     "updated_at": now,
-                }
+                },
             )
             revisions = upsert_calculation_revision(revisions, superseded_revision)
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
@@ -203,9 +223,9 @@ def import_external_filing_evidence(
                     "filed_calculation_revision_id": revision_id,
                     "current_filing_record_id": new_filing_id,
                     "updated_at": now,
-                }
+                },
             ),
-        )
+        ),
     )
 
     _emit_bucket_event(
@@ -221,7 +241,7 @@ def import_external_filing_evidence(
             "calculation_revision_id": revision_id,
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
+            "period": work_unit.period.registry_token,
             "evidence_kind": evidence_kind.value,
             "evidence_reference_id": cleaned_reference,
             "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),
@@ -246,3 +266,73 @@ def _validated_external_reference(
             translated_message="application.modelo.errors.external_filing_evidence_reference_blank",
         )
     return cleaned_reference
+
+
+def _require_bound_justificante_artifact(
+    *,
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    expected_tax_id: str | None,
+    justificante_repository: JustificanteRepository,
+) -> None:
+    if evidence_kind not in _JUSTIFICANTE_BOUND_EVIDENCE_KINDS:
+        return
+    cleaned_expected_tax_id = (expected_tax_id or "").strip()
+    if not cleaned_expected_tax_id:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_tax_id_missing",
+            context={
+                "evidence_reference_id": evidence_reference_id,
+                "evidence_kind": evidence_kind.value,
+            },
+        )
+    justificante = justificante_repository.load(evidence_reference_id)
+    if justificante is None:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_justificante_missing",
+            context={
+                "evidence_reference_id": evidence_reference_id,
+                "evidence_kind": evidence_kind.value,
+            },
+        )
+    if not _justificante_matches_import_target(
+        justificante,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        expected_tax_id=cleaned_expected_tax_id,
+    ):
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_justificante_mismatch",
+            context={
+                "evidence_reference_id": evidence_reference_id,
+                "modelo": modelo,
+                "filing_year": str(filing_year),
+                "period": period.registry_token,
+            },
+        )
+
+
+def _justificante_matches_import_target(
+    justificante: object,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    expected_tax_id: str,
+) -> bool:
+    justificante_period = getattr(justificante, "period", None)
+    if not isinstance(justificante_period, Period):
+        try:
+            justificante_period = Period.from_year_and_code(filing_year, str(justificante_period or ""))
+        except ValueError:
+            return False
+    return (
+        str(getattr(justificante, "modelo", "")).strip() == modelo
+        and str(getattr(justificante, "ejercicio", "") or "").strip() == str(filing_year)
+        and justificante_period == period
+        and str(getattr(justificante, "tax_id", "") or "").strip() == expected_tax_id
+    )

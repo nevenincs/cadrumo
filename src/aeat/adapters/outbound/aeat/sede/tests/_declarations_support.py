@@ -1,6 +1,5 @@
 """Shared support for split adapter tests."""
 
-# ruff: noqa: F401
 
 from __future__ import annotations
 
@@ -25,6 +24,7 @@ from ......application.filing import (
     build_runtime_schema_provider,
     export_draft,
 )
+from ......core import Period
 from ......core.config import Settings
 from ......core.resources import bundled_path, resources
 from ......domain.calculations.registry import (
@@ -40,6 +40,7 @@ from ......tests.secure_sql import isolated_runtime_profile
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._declarations import (
     Declaracion,
+    SedeParseError,
     _assert_read_browser_action,
     _assert_read_http,
     _declarations_page_shape_context,
@@ -49,18 +50,88 @@ from .._declarations import (
     _parse_listbox,
     _parse_presented_at,
     _read_guard_policy_from_snapshot,
-    _select_authoritative_declaration,
     _select_combobox_value,
     _temporary_sensitive_pdf_path,
     _verify_submitted_file_context,
     _with_derived_303_compensation_available_observation,
     registry_observation_from_filed_declaration,
-    resolve_previous_filing_bindings_from_filed_declarations,
-    resolve_relation_values_from_filed_declarations,
 )
-from .._errors import SedeParseError
+from .._declarations import (
+    _select_authoritative_declaration as _select_authoritative_declaration_production,
+)
+from .._declarations import (
+    resolve_previous_filing_bindings_from_filed_declarations as _resolve_previous_filing_bindings,
+)
+from .._declarations import (
+    resolve_relation_values_from_filed_declarations as _resolve_relation_values,
+)
 from .._observation_store import FiledDeclaracionObservationStore
 from .._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
+
+__all__ = [
+    "UTC",
+    "_COTEJO_DOCUMENT_URL",
+    "_COTEJO_QUERY_URL",
+    "_DECLARATIONS_LISTING_BASE_PATH",
+    "_DECLARATIONS_LISTING_URL",
+    "_FIXTURE_ROOT",
+    "_MODELO_130_COMPUTED_CASILLAS",
+    "_MODELO_303_2022_RECORD_DESIGN",
+    "_REGISTER_DOWNLOAD_URL",
+    "_SUBMITTED_FILE_100_2023_0A",
+    "_SUBMITTED_FILE_111_2025_1T",
+    "AnyHttpUrl",
+    "Decimal",
+    "Declaracion",
+    "FiledDeclaracionArtefact",
+    "FiledDeclaracionObservation",
+    "FiledDeclaracionObservationStore",
+    "InputKind",
+    "ObservedCasillaValue",
+    "Path",
+    "Profile",
+    "RegistryValidationError",
+    "SedeParseError",
+    "Settings",
+    "_assert_read_browser_action",
+    "_assert_read_http",
+    "_declaration_pdf_payload",
+    "_declaration_row",
+    "_declarations_page_shape_context",
+    "_exported_modelo_123_payload",
+    "_extract_csv_from_url",
+    "_filed_observation",
+    "_modelo_130_snapshot",
+    "_modelo_303_design_position",
+    "_modelo_303_page_03_payload",
+    "_modelo_snapshot",
+    "_observed_casillas_from_declaration_pdf",
+    "_observed_casillas_from_submitted_file",
+    "_parse_listbox",
+    "_parse_presented_at",
+    "_read_guard_policy_from_snapshot",
+    "_renta_2025_relation_observations",
+    "_select_authoritative_declaration",
+    "_select_combobox_value",
+    "_submitted_file_payload",
+    "_temporary_sensitive_pdf_path",
+    "_verify_submitted_file_context",
+    "_whitespace_nif_session",
+    "_with_derived_303_compensation_available_observation",
+    "calculate_registry_snapshot",
+    "date",
+    "datetime",
+    "hashlib",
+    "opened_browser_page",
+    "os",
+    "parse_export_payload",
+    "registry_observation_from_filed_declaration",
+    "relation_source_requirements",
+    "resolve_export_layout",
+    "resolve_previous_filing_bindings_from_filed_declarations",
+    "resolve_relation_values_from_filed_declarations",
+    "shared_playwright_runtime",
+]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -108,6 +179,59 @@ _MODELO_303_2022_RECORD_DESIGN = bundled_path(
 )
 
 _MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"})
+
+
+def _period(ejercicio: int, period: str | Period) -> Period:
+    if isinstance(period, Period):
+        return period
+    return Period.from_year_and_code(ejercicio, period)
+
+
+def _select_authoritative_declaration(
+    declarations: tuple[Declaracion, ...],
+    *,
+    modelo: str,
+    ejercicio: int,
+    period: str | Period,
+    context: str,
+) -> Declaracion:
+    return _select_authoritative_declaration_production(
+        declarations,
+        modelo=modelo,
+        ejercicio=ejercicio,
+        period_token=_period(ejercicio, period).registry_token,
+        context=context,
+    )
+
+
+def resolve_previous_filing_bindings_from_filed_declarations(
+    revision,
+    observations: tuple[FiledDeclaracionObservation, ...],
+    *,
+    filing_year: int,
+    period: str | Period,
+) -> dict[str, Decimal]:
+    return _resolve_previous_filing_bindings(
+        revision,
+        observations,
+        filing_year=filing_year,
+        period=_period(filing_year, period),
+    )
+
+
+def resolve_relation_values_from_filed_declarations(
+    revision,
+    observations: tuple[FiledDeclaracionObservation, ...],
+    *,
+    filing_year: int,
+    period: str | Period,
+) -> dict[str, Decimal]:
+    return _resolve_relation_values(
+        revision,
+        observations,
+        filing_year=filing_year,
+        period=_period(filing_year, period),
+    )
 
 
 def _declaration_row(
@@ -182,7 +306,12 @@ def _modelo_303_page_03_payload(
 
 
 def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: str) -> bytes:
-    provider = build_runtime_schema_provider(filing_year=filing_year, period=period, modelos=("123",))
+    filing_period = Period.from_year_and_code(filing_year, period)
+    provider = build_runtime_schema_provider(
+        filing_year=filing_year,
+        period=filing_period,
+        modelos=("123",),
+    )
     if filing_year >= 2024:
         inputs = {
             "01": Decimal("2"),
@@ -219,7 +348,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
         }
     draft = build_draft(
         modelo="123",
-        period=f"{filing_year}Q{period[0]}",
+        period=filing_period,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Submitted file registry test",
@@ -304,7 +433,7 @@ def _filed_observation(
     return FiledDeclaracionObservation(
         modelo=modelo,
         ejercicio=ejercicio,
-        period=period,
+        period=Period.from_year_and_code(ejercicio, period),
         expediente_id=f"{ejercicio}10013522222A",
         status="ALTA",
         presented_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
@@ -433,7 +562,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             ejercicio=2025,
             period="0A",
             casilla_values={"decl.retenciones-total": Decimal("90")},
-        )
+        ),
     )
     observations.append(
         _filed_observation(
@@ -441,7 +570,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             ejercicio=2025,
             period="0A",
             casilla_values={"decl.retenciones-total": Decimal("178")},
-        )
+        ),
     )
     observations.append(
         _filed_observation(
@@ -449,7 +578,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             ejercicio=2025,
             period="0A",
             casilla_values={"decl.retenciones-total": Decimal("60")},
-        )
+        ),
     )
     observations.append(
         _filed_observation(
@@ -457,7 +586,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             ejercicio=2025,
             period="0A",
             casilla_values={"tipo2.renta-atribuible-importe": Decimal("77")},
-        )
+        ),
     )
     return tuple(observations)
 

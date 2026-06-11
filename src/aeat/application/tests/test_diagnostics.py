@@ -491,7 +491,7 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     with sqlite3.connect(db_path) as con:
         active = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()[0]
         archive_exists = con.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='secure_objects_quarantine'"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='secure_objects_quarantine'",
         ).fetchone()
     assert active == 3, f"preview must not delete rows; got {active} left"
     assert archive_exists is None, "preview must not create the quarantine table"
@@ -815,7 +815,7 @@ def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> No
 
 
 def _assert_validation_error_caused_by_diagnostic_model_error(
-    exc_info: pytest.ExceptionInfo[Exception], match: str
+    exc_info: pytest.ExceptionInfo[Exception], match: str,
 ) -> None:
     """Assert a pydantic ValidationError wraps a DiagnosticModelError with the given message."""
 

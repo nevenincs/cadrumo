@@ -16,7 +16,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core._models import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
 
 # Scopes the desktop app requests at first login. Per Google's

@@ -187,7 +187,7 @@ class ProfileValidationService:
                             code="required_field_missing",
                             path=f"{section.key}.{field.key}",
                             message=f"required field {section.key}.{field.key} is missing",
-                        )
+                        ),
                     )
         return tuple(issues)
 

@@ -13,7 +13,7 @@ hybrid the first D4 implementation accepted are **removed** — they now refuse.
 
 These are real-behaviour tests: the resolution and refusal cases exercise the
 production ``_canonical_period`` normaliser (which consumes the registry
-period-union validator at :mod:`aeat.core._period`), and the end-to-end cases
+period-union validator at :mod:`aeat.core`), and the end-to-end cases
 drive ``aeat app ledger preflight`` / ``status`` against a real isolated
 encrypted bucket and the real ledger backend.
 """
@@ -28,10 +28,10 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from ....application.aggregation._models import Period
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 from .._common import _canonical_period, _filter_canonical_period
@@ -68,8 +68,8 @@ def test_aeat_token_plus_year_resolves_to_period(
     assert isinstance(resolved, Period)
     assert resolved.year == year
     assert resolved.registry_token == registry_token
-    assert resolved.start == start
-    assert resolved.end == end
+    assert resolved.start_date == start
+    assert resolved.end_date == end
 
 
 @pytest.mark.parametrize(("token", "year", "registry_token", "start", "end"), _TOKEN_YEAR_SPAN)
@@ -97,9 +97,9 @@ def test_registry_union_validator_is_the_token_authority() -> None:
     """
 
     # Span-shaped tokens resolve.
-    assert _canonical_period("1T", year=2024).registry_token == "1T"
-    assert _canonical_period("0A", year=2024).registry_token == "0A"
-    assert _canonical_period("06", year=2024).registry_token == "06"
+    assert _canonical_period("1T", year=2024).registry_token == "1T"  # noqa: S105 - period token
+    assert _canonical_period("0A", year=2024).registry_token == "0A"  # noqa: S105 - period token
+    assert _canonical_period("06", year=2024).registry_token == "06"  # noqa: S105 - period token
 
     # Non-span registry-union members and instalment claves do not resolve to a
     # ledger date span; they raise rather than emit an unusable period.
@@ -167,9 +167,9 @@ def test_filter_clause_accepts_bare_token_with_year() -> None:
     there is no year-qualified combined token.
     """
 
-    assert _filter_canonical_period("1T", year=2024).registry_token == "1T"
-    assert _filter_canonical_period("0A", year=2024).registry_token == "0A"
-    assert _filter_canonical_period("03", year=2024).registry_token == "03"
+    assert _filter_canonical_period("1T", year=2024).registry_token == "1T"  # noqa: S105 - period token
+    assert _filter_canonical_period("0A", year=2024).registry_token == "0A"  # noqa: S105 - period token
+    assert _filter_canonical_period("03", year=2024).registry_token == "03"  # noqa: S105 - period token
 
 
 @pytest.mark.parametrize("rejected", ["2024Q1", "2024", "2024-1T", "not-a-period", "1P"])

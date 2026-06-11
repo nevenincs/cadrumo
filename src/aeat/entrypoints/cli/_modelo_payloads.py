@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import Field
 
+from ...core import Period
 from ...core.identity import BucketId
 from ...domain.calculations.registry import (
     CasillaId,
@@ -46,7 +47,7 @@ class WorkUnitPayload(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     revision_id: RevisionId
     name: str
     state: str
@@ -121,6 +122,60 @@ class FindingPayload(OutputSchema):
     source_refs: list[str] = Field(default_factory=list)
 
 
+class CrossPeriodDependencyRequirementPayload(OutputSchema):
+    """One upstream filing dependency declared by the registry."""
+
+    source_modelo: str
+    filing_year: int
+    period: Period
+    source_casillas: tuple[str, ...]
+    origin: str
+    origin_ids: tuple[str, ...]
+    requires_member_fan_in: bool
+
+
+class CrossPeriodDependencyInventoryItemPayload(OutputSchema):
+    """One target filing that requires clean upstream filing history."""
+
+    target_modelo: str
+    target_revision_id: str
+    target_filing_year: int
+    target_period: Period
+    dependency_count: int
+    source_modelos: tuple[str, ...]
+    dependencies: tuple[CrossPeriodDependencyRequirementPayload, ...]
+
+
+class CrossPeriodDependencyEvidencePayload(OutputSchema):
+    """Current clean-state evidence for one dependency requirement."""
+
+    source_modelo: str
+    filing_year: int
+    period: Period
+    clean: bool
+    blockers: tuple[str, ...]
+    observation_source_kind: str | None = None
+    filing_record_id: str | None = None
+    calculation_revision_id: str | None = None
+    external_evidence_kind: str | None = None
+    expected_member_nifs: tuple[str, ...] = ()
+    observed_member_nifs: tuple[str, ...] = ()
+    missing_member_nifs: tuple[str, ...] = ()
+    unexpected_member_nifs: tuple[str, ...] = ()
+
+
+class CrossPeriodCleanStatePayload(OutputSchema):
+    """Clean-state verdict for one target filing."""
+
+    target_modelo: str
+    target_filing_year: int
+    target_period: Period
+    requires_clean_state: bool
+    clean: bool
+    blockers: tuple[str, ...]
+    dependencies: tuple[CrossPeriodDependencyEvidencePayload, ...]
+
+
 class VerificationReportPayload(OutputSchema):
     """Verification report fields returned by verify / verification-report commands."""
 
@@ -152,7 +207,7 @@ class ModeloRecordPayload(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     filed_at: str
     filed_by: str
     notes: str | None = None
@@ -202,7 +257,7 @@ class WorkCreateResult(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     revision_id: RevisionId
     name: str
     state: str
@@ -240,7 +295,7 @@ class WorkStatusResult(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     revision_id: RevisionId
     name: str
     state: str
@@ -267,7 +322,7 @@ class WorkRenameResult(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     revision_id: RevisionId
     name: str
     state: str
@@ -299,7 +354,7 @@ class WorkDiscardResult(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     revision_id: RevisionId
     name: str
     state: str
@@ -417,6 +472,21 @@ class WorkVerifyResult(OutputSchema):
     findings: list[FindingPayload]
 
 
+@register_schema("modelo.work.dependencies")
+class WorkDependenciesResult(OutputSchema):
+    """Cross-period dependency inventory and optional active-bucket clean-state verdict."""
+
+    operation: str = "modelo.work.dependencies"
+    filing_year: int
+    modelo_filter: str | None = None
+    period_filter: str | None = None
+    target_modelos: tuple[str, ...]
+    source_modelos: tuple[str, ...]
+    target_count: int
+    items: tuple[CrossPeriodDependencyInventoryItemPayload, ...]
+    clean_state: CrossPeriodCleanStatePayload | None = None
+
+
 @register_schema("modelo.work.file")
 class WorkFileResult(OutputSchema):
     """Internal-filing confirmation returned by ``aeat app modelo work file``.
@@ -432,7 +502,7 @@ class WorkFileResult(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     filed_at: str
     filed_by: str
     notes: str | None = None
@@ -464,7 +534,7 @@ class WorkAmendResult(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     filed_at: str
     filed_by: str
     notes: str | None = None
@@ -498,7 +568,7 @@ class ModeloRecordShowResult(OutputSchema):
     bucket_id: BucketId
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     filed_at: str
     filed_by: str
     notes: str | None = None
@@ -686,7 +756,7 @@ class FilingRecordImportResult(OutputSchema):
     bucket_id: str
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     filed_at: str
     filed_by: str
     notes: str | None = None
@@ -840,7 +910,7 @@ class ModeloExportPayload(OutputSchema):
     bucket_id: str
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     output_path: str
     byte_size: int
     file_sha256: str
@@ -863,7 +933,7 @@ class ModeloExportPayload(OutputSchema):
             bucket_id=result.bucket_id,
             modelo=result.modelo,
             filing_year=result.filing_year,
-            period=result.period.registry_token,
+            period=result.period,
             output_path=str(result.output_path),
             byte_size=result.byte_size,
             file_sha256=result.file_sha256,
@@ -1005,13 +1075,13 @@ class ModeloReadinessResult(OutputSchema):
     modelo: str
     revision_id: str
     filing_year: int
-    period: str
+    period: Period
     ready: bool
     profile_ready: bool
     missing: list[ModeloReadinessMissingRequirementPayload]
     ledger_preflight_required: bool
     ledger_ready: bool | None
-    ledger_period: str | None
+    ledger_period: Period | None
     ledger_checked_transaction_count: int
     ledger_issues: list[LedgerIssuePayload]
 
@@ -1034,7 +1104,7 @@ class IvaWalletSeedResult(OutputSchema):
 
     operation: str = "modelo.iva_wallet.seed"
     filing_year: int
-    period: str
+    period: Period
     taxpayer_nif: str
     amount: str
     status: str
@@ -1052,7 +1122,7 @@ class WorkResumeResult(OutputSchema):
     calculation_revision_id: str | None = None
     short_calculation_revision_id: str | None = None
     modelo: str
-    period: str
+    period: Period
     aborted_reason: str
     obligation: dict[str, object]
 
@@ -1063,7 +1133,7 @@ class ModeloAggregateResult(OutputSchema):
 
     operation: str = "modelo.aggregate"
     modelo: str
-    period: str
+    period: Period
     provider: str
     observation_count: int
     source_kinds: list[str]
@@ -1159,6 +1229,10 @@ __all__ = [
     "CasillaObservationPayload",
     "CasillaRowPayload",
     "CompareSectionPayload",
+    "CrossPeriodCleanStatePayload",
+    "CrossPeriodDependencyEvidencePayload",
+    "CrossPeriodDependencyInventoryItemPayload",
+    "CrossPeriodDependencyRequirementPayload",
     "DeltaRowPayload",
     "EvidenceBundleCheckFindingPayload",
     "EvidenceRecordRefPayload",
@@ -1203,6 +1277,7 @@ __all__ = [
     "WorkCalculateResult",
     "WorkCompareTaxationResult",
     "WorkCreateResult",
+    "WorkDependenciesResult",
     "WorkDiscardResult",
     "WorkFileResult",
     "WorkHistoryResult",

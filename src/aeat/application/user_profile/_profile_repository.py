@@ -48,9 +48,9 @@ from ...adapters.persistence.storage.bucket import (
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.master_key import KdfParams
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...core._bucket_pointer import BucketPointer
-from ...core._bucket_pointer_io import pointer_path, write_pointer
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import BucketPointer
+from ...core import pointer_path, write_pointer
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import load_settings
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -314,7 +314,7 @@ class ProfileRepository:
                     profile_id=resolved_id,
                     display_name=label,
                     facts=tuple(facts),
-                )
+                ),
             )
             record = result.profile
         except (AeatError, OSError, ValidationError):
@@ -473,7 +473,7 @@ class ProfileRepository:
                 )
 
         result = self._lifecycle_service(profile_id).rename(
-            RenameProfileCommand(profile_id=profile_id, target_display_name=trimmed)
+            RenameProfileCommand(profile_id=profile_id, target_display_name=trimmed),
         )
         renamed_record = result.profile
         # The repository is the sole writer of the manifest: rewrite the
@@ -633,7 +633,7 @@ class ProfileRepository:
                     profile_id=manifest.bucket_id,
                     label=manifest.label,
                     status=UserProfileStatus(manifest.status.value),
-                )
+                ),
             )
         summaries.sort(key=lambda row: row.profile_id)
         return tuple(summaries)
@@ -815,7 +815,7 @@ class ProfileRepository:
 
     def _active_pointer_targets(self, profile_id: str) -> bool:
         """Return whether the active-profile pointer aims at ``profile_id``."""
-        from ...core._bucket_pointer_io import read_pointer
+        from ...core import read_pointer
 
         pointer = read_pointer(self._root)
         return pointer is not None and pointer.bucket_id == profile_id

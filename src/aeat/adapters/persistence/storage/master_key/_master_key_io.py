@@ -26,7 +26,7 @@ __all__ = [
 
 _log = get_logger(__name__)
 
-PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"  # noqa: S105
+PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"  # noqa: S105 - env var name, not secret value
 """Environment variable consulted by the file backend before prompting."""
 
 PassphraseCallback = Callable[[], str]

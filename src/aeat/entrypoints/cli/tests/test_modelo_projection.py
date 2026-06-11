@@ -212,7 +212,7 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
             "--year", year,
             "--period", period,
             "--revision", revision,
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -228,7 +228,7 @@ def test_modelo_project_no_units_guides_natural_m130_creation(
             "app", "modelo", "project",
             "--year", str(_FILING_YEAR),
             "--ccaa", _CCAA,
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0
@@ -257,7 +257,7 @@ def test_modelo_project_no_revisions_guides_natural_m130_calculation(
             "app", "modelo", "project",
             "--year", str(_FILING_YEAR),
             "--ccaa", _CCAA,
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0
@@ -320,7 +320,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
                 # prev_year > 12.000 → minoración = 0 (AEAT DR 130 Casilla 13)
                 "--binding", f"irpf.previous_year_economic_activity_net_income={_PREV_YEAR_INCOME}",
                 "--binding", "modelo-130-resultados-negativos-anteriores=0",
-            ]
+            ],
         )  # fmt: skip
         assert calc_result.exit_code == 0, f"M130 calculate failed for period {period}: {calc_result.output}"
         quarter_payload = _payload(calc_result.output)
@@ -343,7 +343,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             "app", "modelo", "project",
             "--year", str(_FILING_YEAR),
             "--ccaa", _CCAA,
-        ]
+        ],
     )  # fmt: skip
     assert project_result.exit_code == 0, project_result.output
     assert "Traceback" not in project_result.output

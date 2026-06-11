@@ -9,6 +9,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
 from ......application.auth import AuthProviderDescription, AuthProviderKind
+from ......core import Period
 from ......core.errors import BaseSeverity
 from ......domain.submission import (
     ModeloDraftStatus,
@@ -35,7 +36,7 @@ class _Draft(BaseModel):
 
     draft_id: str = "draft-1"
     modelo: str = "130"
-    period: str = "2026Q1"
+    period: Period = Field(default_factory=lambda: Period.from_year_and_code(2026, "1T"))
     profile_tax_id: str = "X1234567L"
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO
     values: dict[str, str] = Field(default_factory=dict)
@@ -43,12 +44,12 @@ class _Draft(BaseModel):
 
 
 class _AlwaysOpenChecker:
-    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+    def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         return True
 
 
 class _AlwaysClosedChecker:
-    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+    def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         return False
 
 
@@ -154,7 +155,7 @@ class TestPreflightGates:
         with pytest.raises(SubmissionPreflightError) as raised:
             _preflight(checker=_AlwaysClosedChecker()).check(_Draft(), today=_TODAY)
         assert raised.value.translated_message == "errors.refused.submission_preflight_deadline_closed"
-        assert raised.value.context == {"modelo": "130", "period": "2026Q1", "today": "2026-04-10"}
+        assert raised.value.context == {"modelo": "130", "period": "2026 1T", "today": "2026-04-10"}
 
     def test_gate_4_cert_load_fails(self) -> None:
         with pytest.raises(SubmissionPreflightError) as raised:

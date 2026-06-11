@@ -48,6 +48,7 @@ from ....application.storage.calc_sheets import collect_row_sets, registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Period
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
 from ....core.time._utc import coerce_utc_aware
@@ -80,7 +81,7 @@ _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
         "aeat_revision_id",
         "aeat_filing_year",
         "aeat_period",
-    }
+    },
 )
 
 # A single batch-get value-range entry from the Sheets API.
@@ -210,7 +211,7 @@ class PullMetadata(BaseModel):
             modelo_id=self.modelo_id,
             revision_id=self.revision_id,
             filing_year=self.filing_year,
-            period=self.period,
+            period=Period.from_year_and_code(self.filing_year, self.period),
             engine_version=self.engine_version,
             registry_sha=self.registry_sha,
             exported_at=dt,
@@ -383,7 +384,7 @@ def _classify_metadata_match(
         metadata.modelo_id == snapshot.modelo.id
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
-        and metadata.period == snapshot.period
+        and metadata.period == Period.from_year_and_code(snapshot.filing_year, snapshot.period)
         and metadata.registry_sha == registry_sha(snapshot)
     )
     return (MetadataMatchState.MATCHES if matches else MetadataMatchState.STALE), metadata
@@ -465,11 +466,11 @@ def pull_operator_edits(
     casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     cursor = 0
     operator_edits, cursor, casilla_cells_read = _decode_operator_edits(
-        value_ranges, cursor, operator_input_ids, casilla_by_id
+        value_ranges, cursor, operator_input_ids, casilla_by_id,
     )
     binding_edits, cursor, binding_cells_read = _decode_binding_edits(value_ranges, cursor, binding_ids)
     relation_edits, cursor, relation_cells_read = _decode_relation_edits(
-        value_ranges, cursor, relation_ids, metadata_pairs
+        value_ranges, cursor, relation_ids, metadata_pairs,
     )
 
     # Read row-set detail rows from the Detalle tab. Each row-set
@@ -568,7 +569,7 @@ def _decode_operator_edits(
                 casilla_number=casilla.number,
                 label=casilla.label,
                 value=coerced,
-            )
+            ),
         )
     return tuple(edits), cursor, cells_read
 
@@ -621,7 +622,7 @@ def _decode_relation_edits(
         if coerced is not None:
             cells_read += 1
         provenance, source_filing_year, source_periods, resolved_at = _parse_relation_metadata(
-            metadata_pairs.get(f"aeat_relation:{relation_id}", "")
+            metadata_pairs.get(f"aeat_relation:{relation_id}", ""),
         )
         edits.append(
             RelationEdit(
@@ -631,7 +632,7 @@ def _decode_relation_edits(
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
                 resolved_at=resolved_at,
-            )
+            ),
         )
     return tuple(edits), cursor, cells_read
 
@@ -868,6 +869,8 @@ def verify_pull_coverage(
     for field_name in ("modelo_id", "revision_id", "filing_year", "period", "registry_sha"):
         plan_value = getattr(plan_meta, field_name)
         pull_value = getattr(pull_meta, field_name)
+        if field_name == "period":
+            plan_value = plan_meta.period.registry_token
         if pull_value != plan_value:
             discrepancies.append(
                 PullCoverageDiscrepancy(
@@ -875,7 +878,7 @@ def verify_pull_coverage(
                     detail=f"metadata field {field_name!r} differs between plan and pull",
                     expected=str(plan_value),
                     observed=str(pull_value),
-                )
+                ),
             )
 
     # Row-set coverage: every grouping declared in the plan should
@@ -890,7 +893,7 @@ def verify_pull_coverage(
                 detail=f"row-set grouping {missing!r} is declared by the plan but absent from the pull",
                 expected=missing,
                 observed="",
-            )
+            ),
         )
     for extra in sorted(pulled_groupings - planned_groupings):
         discrepancies.append(
@@ -899,7 +902,7 @@ def verify_pull_coverage(
                 detail=f"row-set grouping {extra!r} appears in the pull but is not declared by the plan",
                 expected="",
                 observed=extra,
-            )
+            ),
         )
 
     return tuple(discrepancies)
@@ -952,11 +955,15 @@ def compute_from_pull(
 def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> None:
     """Refuse to compute when the workbook metadata doesn't bind to the snapshot."""
     metadata = pull.metadata
+    try:
+        workbook_period = Period.from_year_and_code(metadata.filing_year, metadata.period)
+    except ValueError:
+        workbook_period = None
     metadata_matches_snapshot = (
         metadata.modelo_id == snapshot.modelo.id
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
-        and metadata.period == snapshot.period
+        and workbook_period == Period.from_year_and_code(snapshot.filing_year, snapshot.period)
         and metadata.registry_sha == registry_sha(snapshot)
     )
     if pull.metadata_match is MetadataMatchState.MATCHES and metadata_matches_snapshot:

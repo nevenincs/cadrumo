@@ -26,6 +26,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.categories import SpendingCategory
 from ....domain.renta import (
@@ -36,7 +37,6 @@ from ....domain.renta import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
 )
-from .._models import Period
 from .._renta_ledger import _casilla_aggregation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -66,7 +66,11 @@ def _observation(
     return build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
 
-_PERIOD_2025 = Period.model_validate("2025")
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
+
+
+_PERIOD_2025 = _period(2025, "0A")
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +99,7 @@ def test_casilla_aggregation_modelo_propagates_to_output() -> None:
 def test_casilla_aggregation_preserves_period_argument() -> None:
     obs = _observation("tx-1", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
 
-    other_period = Period.model_validate("2024")
+    other_period = _period(2024, "0A")
     result = _casilla_aggregation(other_period, [obs], modelo="100")
 
     assert result.period == other_period
@@ -137,7 +141,7 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
     The total under 0199 sums BOTH categories, but provenance has TWO
     rows so the audit trail preserves per-category attribution."""
     obs_contable = _observation(
-        "tx-contable", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00")
+        "tx-contable", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00"),
     )
     obs_fiscal = _observation("tx-fiscal", category=SpendingCategory.ASESORIA_FISCAL, gross_amount=Decimal("79.00"))
 
@@ -214,7 +218,7 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
     casilla, regardless of category. Asserts the aggregator's
     casilla_values entry matches Python's sum() over the same inputs."""
     obs_contable = _observation(
-        "tx-contable", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00")
+        "tx-contable", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00"),
     )
     obs_fiscal = _observation("tx-fiscal", category=SpendingCategory.ASESORIA_FISCAL, gross_amount=Decimal("79.00"))
 

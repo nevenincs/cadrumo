@@ -60,7 +60,7 @@ _SHAPE_KEYWORDS: frozenset[str] = frozenset(
         "count",
         "size",
         "contains",
-    }
+    },
 )
 
 # Keywords that signal the test asserts domain behaviour (not just shape).
@@ -95,7 +95,7 @@ _BEHAVIOUR_KEYWORDS: frozenset[str] = frozenset(
         "propagat",
         "level",
         "configure",
-    }
+    },
 )
 
 

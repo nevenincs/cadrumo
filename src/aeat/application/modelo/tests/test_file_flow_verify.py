@@ -220,7 +220,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: _Repos)
             _canonical_work_unit_period(work_unit),
             today=_T2.date(),
             purpose=WorkflowPurpose.VERIFY,
-        )
+        ),
     )
 
     assert result.final_stage is WorkflowStage.DONE

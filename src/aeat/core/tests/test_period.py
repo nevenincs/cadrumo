@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .._period import (
+from .. import (
     Period,
     PeriodError,
     PeriodKind,

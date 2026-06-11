@@ -173,7 +173,7 @@ def resolve_attachment_evidence_input(attachment_id: str, *, store: AttachmentSt
 
 
 def resolve_purchase_invoice_evidence_input(
-    evidence: PurchaseInvoiceEvidence, *, store: AttachmentStore
+    evidence: PurchaseInvoiceEvidence, *, store: AttachmentStore,
 ) -> EvidenceInput:
     """Read a purchase-invoice evidence record's bytes from secure storage.
 

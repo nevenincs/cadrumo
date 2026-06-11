@@ -13,10 +13,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core import Period
 from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._period_offset_math import apply_period_offset
-from ._schema import ModeloRevision, RelationDefinition
+from ._schema import ModeloRevision, RelationDefinition, filing_period_from_scope
 
 __all__ = [
     "RegistryRelationSourceRequirement",
@@ -34,6 +35,7 @@ class RegistryRelationSourceRequirement(BaseModel):
 
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
+    filing_periods: tuple[Period, ...] = ()
     periods: tuple[str, ...] = Field(min_length=1)
     source_output: str = Field(min_length=1)
     relation_ids: tuple[str, ...] = Field(min_length=1)
@@ -68,7 +70,7 @@ def relation_source_requirements(
         classification = classifications_by_source.get(relation.source_modelo)
         if classification is None:
             raise RegistryValidationError(
-                f"relation {relation.id!r} source modelo {relation.source_modelo!r} has no dependency classification"
+                f"relation {relation.id!r} source modelo {relation.source_modelo!r} has no dependency classification",
             )
         if relation.source_period_offset_from_target is not None:
             derived = _derive_offset_source_anchor(relation, target_period=period)
@@ -96,6 +98,11 @@ def relation_source_requirements(
         RegistryRelationSourceRequirement(
             source_modelo=source_modelo,
             filing_year=source_year,
+            filing_periods=tuple(
+                filing_period
+                for source_period in source_periods
+                if (filing_period := filing_period_from_scope(source_year, source_period)) is not None
+            ),
             periods=source_periods,
             source_output=source_output,
             relation_ids=tuple(sorted(values["relation_ids"])),
@@ -186,7 +193,7 @@ def resolve_relation_values_from_observations(
         if requirement.aggregation_op == "copy":
             if len(values) != 1:
                 raise RegistryValidationError(
-                    f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation"
+                    f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation",
                 )
             raw_value = values[0]
         else:
@@ -226,7 +233,7 @@ def materialize_relation_binding_values(
         existing = values.get(relation.target_binding)
         if existing is not None and existing != value:
             raise RegistryValidationError(
-                f"target binding {relation.target_binding!r} receives conflicting relation values"
+                f"target binding {relation.target_binding!r} receives conflicting relation values",
             )
         values[relation.target_binding] = value
     return values
@@ -274,7 +281,7 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
     except RegistryValidationError as exc:
         raise RegistryValidationError(
             f"relation {relation.id!r} source_period_offset_from_target "
-            f"cannot interpret target period {target_period!r}"
+            f"cannot interpret target period {target_period!r}",
         ) from exc
 
 
@@ -294,14 +301,14 @@ def _observed_requirement_values(
         if len(matches) != 1:
             raise RegistryValidationError(
                 f"relation requirement {requirement.relation_ids!r} expected one observed filing "
-                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}"
+                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
         value = matches[0].casilla_values.get(requirement.source_output)
         if value is None:
             raise RegistryValidationError(
                 f"relation requirement {requirement.relation_ids!r} requires observed output "
                 f"{requirement.source_output!r} from "
-                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}"
+                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
             )
         values.append(value)
     return tuple(values)

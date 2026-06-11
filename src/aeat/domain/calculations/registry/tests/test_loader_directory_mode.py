@@ -109,7 +109,7 @@ def test_directory_mode_round_trip_matches_every_single_file_modelo(tmp_path: Pa
         checked.append(source.modelo_id)
         expected = load_modelo_source(source)
         manifest_text, revision_text, _revision_text_by_id = _split_single_file_modelo_text(
-            source.path.read_text(encoding="utf-8")
+            source.path.read_text(encoding="utf-8"),
         )
 
         target = tmp_path / f"modelo_dir_{source.modelo_id}"
@@ -136,7 +136,7 @@ def test_fragment_directory_round_trip_matches_every_single_file_modelo(tmp_path
         checked.append(source.modelo_id)
         expected = load_modelo_source(source)
         manifest_text, _revision_text, revision_text_by_id = _split_single_file_modelo_text(
-            source.path.read_text(encoding="utf-8")
+            source.path.read_text(encoding="utf-8"),
         )
 
         target = tmp_path / f"fragmented_modelo_{source.modelo_id}"
@@ -1130,7 +1130,7 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
                         path.resolve()
                         for path in revision_source.path.rglob("*.toml")
                         if not any(part == "locales" for part in path.parts)
-                    )
+                    ),
                 )
                 assert tuple(sorted(revision_source.fragment_paths)) == expected_revision_paths
             discovered_paths.update(path.resolve() for path in revision_source.fragment_paths)
@@ -1172,7 +1172,7 @@ def test_committed_registry_toml_files_stay_reviewable() -> None:
         lines = path.read_text(encoding="utf-8").splitlines()
         if path.parent == modelos_dir and len(lines) > _MAX_SINGLE_FILE_MODELO_LINES:
             oversized_single_file_modelos.append(
-                f"{relative_path}: {len(lines)} lines > {_MAX_SINGLE_FILE_MODELO_LINES}"
+                f"{relative_path}: {len(lines)} lines > {_MAX_SINGLE_FILE_MODELO_LINES}",
             )
         if len(lines) > _MAX_TOML_FRAGMENT_LINES:
             oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {_MAX_TOML_FRAGMENT_LINES}")

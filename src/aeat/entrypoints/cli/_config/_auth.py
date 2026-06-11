@@ -24,7 +24,7 @@ auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_
 # typer._click.types.ParamType. They are the same object at runtime (the vendored
 # click), so the cast only bridges the static type duality — no Any escape.
 _AUTH_PROVIDER_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType, click.Choice(_known_auth_provider_ids())
+    typer_click_types.ParamType, click.Choice(_known_auth_provider_ids()),
 )
 
 
@@ -120,7 +120,7 @@ def auth_configure(
                 f"profile_tax_id\t{'present' if configure_result.profile_tax_id_present else 'missing'}",
                 f"clave_identity\t{'present' if configure_result.provider_identity_present else 'missing'}",
                 f"identity_alignment\t{configure_result.identity_alignment}",
-            )
+            ),
         )
         if configure_result.identity_alignment_detail:
             lines.append(f"identity_alignment_detail\t{configure_result.identity_alignment_detail}")

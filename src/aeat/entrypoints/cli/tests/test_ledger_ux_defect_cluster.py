@@ -8,7 +8,7 @@ persona testimonials and pins the corrected behaviour:
 - an explained zero-import result;
 - a specific cause behind the previously opaque
   "command input failed validation" refusal on ``ledger add`` and
-  ``ledger review --id``.
+  ``ledger review`` (positional id).
 
 The tests drive the real Typer app end to end against an isolated
 ``AEAT_LOCAL_STORAGE_ROOT`` — no mocks, no patched validators.
@@ -114,7 +114,6 @@ def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
             "app",
             "ledger",
             "classify",
-            "--id",
             txn,
             "--classification",
             "BUSINESS",
@@ -139,7 +138,6 @@ def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
             "app",
             "ledger",
             "classify",
-            "--id",
             txn,
             "--classification",
             "BUSINESS",
@@ -162,7 +160,6 @@ def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> N
             "app",
             "ledger",
             "classify",
-            "--id",
             txn,
             "--classification",
             "BUSINESS",
@@ -178,7 +175,6 @@ def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> N
             "app",
             "ledger",
             "classify",
-            "--id",
             txn,
             "--classification",
             "BUSINESS",
@@ -364,16 +360,16 @@ def test_add_business_row_without_business_pct_succeeds(tmp_path: Path) -> None:
     assert transaction["business_classification"] == "BUSINESS"
 
 
-# --- M10: review --id resolves a short prefix -------------------------------
+# --- M10: review positional id resolves a short prefix -------------------------------
 
 
 def test_review_by_short_id_prefix_resolves_the_transaction(
     tmp_path: Path,
 ) -> None:
-    """`review --id <prefix>` resolves the prefix instead of refusing."""
+    """`review <prefix>` resolves the prefix instead of refusing."""
     _create_profile()
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--id", txn[:8]])
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", txn[:8]])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["id"] == txn
@@ -383,10 +379,10 @@ def test_review_by_short_id_prefix_resolves_the_transaction(
 def test_review_by_full_id_still_resolves_the_transaction(
     tmp_path: Path,
 ) -> None:
-    """`review --id <full>` keeps working after the prefix-resolution fix."""
+    """`review <full>` keeps working after the prefix-resolution fix."""
     _create_profile()
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--id", txn])
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", txn])
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["id"] == txn
 
@@ -606,7 +602,7 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
 
     edited = _RUNNER.invoke(
         app,
-        ["app", "ledger", "update", "--id", target, "--description", "Invoice 1 - corrected narrative"],
+        ["app", "ledger", "update", target, "--description", "Invoice 1 - corrected narrative"],
     )
     assert edited.exit_code == 0, edited.output
 
@@ -705,7 +701,7 @@ def test_classify_with_negative_taxable_base_names_the_real_cause(
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", txn, "--classification", "BUSINESS", "--taxable-base", "-397.11"],
+        ["app", "ledger", "classify", txn, "--classification", "BUSINESS", "--taxable-base", "-397.11"],
     )
     assert result.exit_code != 0
     assert "taxable_base" in result.output
@@ -724,7 +720,6 @@ def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None
             "app",
             "ledger",
             "classify",
-            "--id",
             txn,
             "--classification",
             "BUSINESS",
@@ -766,7 +761,6 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
             "app",
             "ledger",
             "classify",
-            "--id",
             txn,
             "--classification",
             "BUSINESS",
@@ -798,7 +792,6 @@ def test_classify_accepts_business_pct_for_a_mixed_row(tmp_path: Path) -> None:
             "app",
             "ledger",
             "classify",
-            "--id",
             txn,
             "--classification",
             "MIXED",
@@ -818,7 +811,7 @@ def test_classify_mixed_without_business_pct_names_the_flag(tmp_path: Path) -> N
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", txn, "--classification", "MIXED"],
+        ["app", "ledger", "classify", txn, "--classification", "MIXED"],
     )
     assert result.exit_code != 0
     assert "--business-pct" in result.output
@@ -831,7 +824,7 @@ def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> No
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", txn, "--classification", "BUSINESS", "--business-pct", "0.5"],
+        ["app", "ledger", "classify", txn, "--classification", "BUSINESS", "--business-pct", "0.5"],
     )
     assert result.exit_code != 0
     assert "--business-pct" in result.output

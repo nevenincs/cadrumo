@@ -183,7 +183,7 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=typed.tax_id,
         iva_regime=IVARegime(
-            values.get("iva.regime", IVARegime.GENERAL.value)
+            values.get("iva.regime", IVARegime.GENERAL.value),
         ),  # iva.regime path unchanged in canonical schema
         has_employees=typed.has_employees,
         pays_professionals_with_retencion=typed.pays_professionals_with_retencion,

@@ -156,7 +156,7 @@ def test_read_active_profile_returns_record(schema: ProfileSchemaDefinition) -> 
 
 
 def test_read_active_profile_logs_missing_selected_record(
-    caplog: pytest.LogCaptureFixture, schema: ProfileSchemaDefinition
+    caplog: pytest.LogCaptureFixture, schema: ProfileSchemaDefinition,
 ) -> None:
     """A torn active pointer degrades to no record with debug evidence."""
 

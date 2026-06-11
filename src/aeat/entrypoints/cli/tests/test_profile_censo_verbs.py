@@ -167,6 +167,8 @@ def test_apply_writes_censo_facts_onto_profile(cli_runner: CliRunner) -> None:
     assert "written\tvivienda_office.office_m2" in result.output
     assert "derived\ttaxpayer_type.entity_type" in result.output
     assert "derived\ttaxpayer_type.irpf_income_categories" in result.output
+    assert "taxpayer_model_declared\ttrue" in result.output
+    assert "calendar_obligations\t" in result.output
 
 
 def test_compare_matches_after_apply(cli_runner: CliRunner) -> None:
@@ -274,3 +276,7 @@ def test_apply_emits_json_payload_with_written_paths() -> None:
     assert "censo.establecimiento_type" in payload["written_paths"]
     assert "vivienda_office.office_m2" in payload["written_paths"]
     assert payload["derived_paths"] == ["taxpayer_type.entity_type", "taxpayer_type.irpf_income_categories"]
+    assert payload["taxpayer_model_declared"] is True
+    assert payload["calendar_range_from"]
+    assert payload["calendar_range_to"]
+    assert isinstance(payload["calendar_obligation_modelos"], list)

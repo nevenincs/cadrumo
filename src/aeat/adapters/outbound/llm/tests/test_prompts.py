@@ -23,7 +23,7 @@ def test_prompt_registry_returns_latest_version_by_default() -> None:
             template="new template {text}",
             expected_output_schema=None,
             description="newer version",
-        )
+        ),
     )
     assert registry.get("translation_v1").version == 2
     assert registry.get("translation_v1", version=1).version == 1

@@ -22,7 +22,7 @@ from .....application.repair_integrity import (
     repair_remediation_decision_id,
 )
 from .....application.workflow import DeclaracionPointer, WorkflowResult, WorkflowStage, WorkflowState, WorkflowStep
-from .....core._period import Period as _Period
+from .....core import Period as _Period
 from .....core.config import override_settings
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....domain._identifiers import ModeloIdentifier
@@ -151,11 +151,12 @@ def _session(bucket_id: str) -> BucketSession:
 
 def _workflow_state(label: str) -> WorkflowState:
     now = datetime.now(UTC).replace(microsecond=0)
+    period = _Period.from_year_and_code(2026, "1T")
     return WorkflowState(
         declarations={
-            f"303:{label}": DeclaracionPointer(
+            f"303:{period.filing_year}:{period.registry_token}": DeclaracionPointer(
                 modelo="303",
-                period=label,
+                period=period,
                 draft_id="d" * 64,
                 status="BORRADOR",
                 updated_at=now,
@@ -345,7 +346,7 @@ def _modelo_amendment(label: str) -> ModeloComplementaria:
         submission_id=submission_id,
         original_csv="ABCD12345678EFGH",
         original_model="303",
-        original_period="2026Q1",
+        original_period=draft.period,
         delta=delta,
         amended_draft=draft,
         created_at=datetime.now(UTC).replace(microsecond=0),
@@ -360,7 +361,7 @@ def _submission(label: str) -> ModeloPresentado:
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="303",
-        period="2026Q1",
+        period=_Period.from_year_and_code(2026, "1T"),
         profile_tax_id="00000000T",
         status=SubmissionStatus.PRESENTADA,
         submitted_at=submitted_at,
@@ -496,12 +497,13 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
 
 def _history(label: str) -> ModeloHistory:
     submitted_at = datetime(2026, 5, 26, 13, 0, tzinfo=UTC)
+    period = "1T" if label.endswith("a") else "2T"
     return ModeloHistory(
         modelo=ModeloIdentifier("303"),
         entries=(
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period=f"2026Q1-{label}",
+                period=_Period.from_year_and_code(2026, period),
                 submitted_at=submitted_at,
                 status="presentada",
             ),
@@ -510,11 +512,11 @@ def _history(label: str) -> ModeloHistory:
 
 
 def _iva_state(label: str) -> IvaCompensationPeriodState:
-    period = "1TA" if label.endswith("a") else "1TB"
+    period = "1T" if label.endswith("a") else "2T"
     return IvaCompensationPeriodState(
         taxpayer_nif="00000000T",
         filing_year=2026,
-        period=period,
+        period=_Period.from_year_and_code(2026, period),
         expediente_id="202610013522456T",
         status="presentada",
         presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),
@@ -665,7 +667,7 @@ def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompens
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=f"ES{label.upper()}",
         target_year=2026,
-        target_period=target_period,
+        target_period=_Period.from_year_and_code(2026, target_period),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),

@@ -49,7 +49,7 @@ class HttpxFallbackBackend(_CertBackend):
         """
         raise AuthConfigurationError(
             "HTTPX_FALLBACK has no browser path; use PLAYWRIGHT_CONTEXT "
-            "for interactive sessions. HTTPX_FALLBACK is verify-only."
+            "for interactive sessions. HTTPX_FALLBACK is verify-only.",
         )
 
     @override

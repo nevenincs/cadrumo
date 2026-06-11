@@ -556,7 +556,7 @@
       "targets": [
         {
           "record_id": "concept:prorrata-especial",
-          "target": "glossary.html#term-prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.90715

@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -42,7 +43,12 @@ from .._iva_ledger import casilla_59_base_imponible, casilla_60_base_imponible
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = "2026Q2"
+
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
+
+
+_PERIOD = _period(2026, "2T")
 _DE = EUMemberState.DE
 _ES = EUMemberState.ES
 
@@ -90,7 +96,7 @@ def _inbound_tx(
             "iva_category": iva_category,
             "counterparty_eu_member_state": counterparty_eu_member_state,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-        }
+        },
     )
 
 

@@ -1,10 +1,8 @@
 """Shared support for modelo file-flow application tests."""
 
-# ruff: noqa: F401
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
@@ -13,12 +11,11 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.buckets import (
     BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
 )
 from ....domain.calculations.registry import (
     CasillaObservation,
@@ -29,20 +26,14 @@ from ....domain.calculations.registry import (
 )
 from ....domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from ....domain.modelos._filing_record import ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus
+from ....domain.modelos._calculation_revision import CalculationRevision
+from ....domain.modelos._filing_record import ExternalEvidenceKind, ModeloRecord
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from ....domain.modelos._verification_report import (
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-)
+from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 from ....domain.modelos._work_unit import WorkUnit
-from ....domain.period import parse_canonical_period
 from ....domain.submission import SubmissionEngine
 from ....domain.transactions import TransactionCatalogue
 from ....tests.secure_sql import isolated_runtime_profile
@@ -57,29 +48,12 @@ from ...filing import (
 from ...workflow import (
     DeadlineEngineAdapter,
     ModeloInputs,
-    WorkflowAbortReason,
     WorkflowEngine,
-    WorkflowPurpose,
-    WorkflowStage,
 )
 from .. import (
-    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
-    ModeloRecordNotFoundError,
-    ModeloWorkflowGateError,
-    VerificationReportNotFoundError,
-    calculate_modelo_revision,
     create_work_unit,
     file_modelo_revision,
-    get_calculation_revision,
-    get_filing_record,
-    get_verification_report,
-    get_work_unit,
     import_external_filing_evidence,
-    list_calculation_revisions,
-    list_filing_records,
-    list_verification_reports,
-    mark_revision_verificado_completo,
     verify_modelo_revision,
 )
 from .._actions import workflow_period_for_work_unit
@@ -291,6 +265,7 @@ def _seed_clean_cross_period_sources(
                 calculation_repository=calculation_repository,
                 filing_repository=filing_repository,
                 bucket_event_repository=bucket_event_repository,
+                expected_tax_id="X1234567L",
                 clock=_T0,
             )
             filing_catalogue = filing_repository.load()
@@ -319,7 +294,7 @@ def _target_filing_records(
     return tuple(result)
 
 
-def _canonical_work_unit_period(work_unit: WorkUnit) -> str:
+def _canonical_work_unit_period(work_unit: WorkUnit) -> Period:
     return workflow_period_for_work_unit(work_unit)
 
 
@@ -333,7 +308,7 @@ class _RevisionInputsProvider:
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
     ) -> ModeloInputs:
         del profile
@@ -360,7 +335,7 @@ class _RevisionDraftBuilder:
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
         inputs: ModeloInputs,
         fail_on_warning: bool = False,
@@ -388,9 +363,8 @@ class _DeadlineWindowChecker:
         self._profile = profile
         self._engine = engine
 
-    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
-        year, _ = parse_canonical_period(period)
-        schedule = self._engine.compute(self._profile, year, today=today)
+    def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
+        schedule = self._engine.compute(self._profile, period.year, today=today)
         return any(
             obligation.modelo == modelo
             and obligation.period == period

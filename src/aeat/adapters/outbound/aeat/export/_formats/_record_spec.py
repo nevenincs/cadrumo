@@ -197,13 +197,13 @@ class RecordFieldSpec(BaseModel):
             raise AeatExportFormatError(f"RESERVED fields must carry a literal_value; got None for {self.field_id!r}")
         if self.kind is not FieldKind.RESERVED and self.literal_value is not None:
             raise AeatExportFormatError(
-                f"literal_value is only valid when kind=RESERVED; got {self.kind!r} for {self.field_id!r}"
+                f"literal_value is only valid when kind=RESERVED; got {self.kind!r} for {self.field_id!r}",
             )
         if self.kind is FieldKind.DATE and self.date_fmt is None:
             raise AeatExportFormatError(f"DATE fields must carry a date_fmt; got None for {self.field_id!r}")
         if self.signed_mode is SignedMode.INLINE_SIGN and self.kind is not FieldKind.CURRENCY:
             raise AeatExportFormatError(
-                f"signed_mode=INLINE_SIGN is only valid on CURRENCY fields; got {self.kind!r} for {self.field_id!r}"
+                f"signed_mode=INLINE_SIGN is only valid on CURRENCY fields; got {self.kind!r} for {self.field_id!r}",
             )
         return self
 
@@ -310,7 +310,7 @@ def encode_currency(
             f"encode_currency received negative {value!r} without "
             f"signed=True or inline_sign=True. Pass signed=True after "
             f"wiring a separate sign field, or inline_sign=True for an "
-            f"'N'-prefix field."
+            f"'N'-prefix field.",
         )
     quantised = _round_to_cents(abs(value))
     cents = int(quantised * 100)
@@ -318,7 +318,7 @@ def encode_currency(
     if inline_sign:
         if length < 2:
             raise AeatExportFormatError(
-                f"inline_sign=True requires length >= 2 (1 sign byte + ≥1 magnitude byte); got length={length}"
+                f"inline_sign=True requires length >= 2 (1 sign byte + ≥1 magnitude byte); got length={length}",
             )
         magnitude_width = length - 1
         s_magnitude = str(cents).rjust(magnitude_width, "0")
@@ -326,7 +326,7 @@ def encode_currency(
             raise AeatExportFormatError(
                 f"currency value {value} overflows inline-sign length-"
                 f"{length} field (magnitude needs {len(s_magnitude)} "
-                f"bytes, {magnitude_width} available)"
+                f"bytes, {magnitude_width} available)",
             )
         prefix = "N" if negative else " "
         return (prefix + s_magnitude).encode(encoding)
@@ -334,7 +334,7 @@ def encode_currency(
     s = str(cents).rjust(length, "0")
     if len(s) > length:
         raise AeatExportFormatError(
-            f"currency value {value} overflows length-{length} field (would need {len(s)} bytes)"
+            f"currency value {value} overflows length-{length} field (would need {len(s)} bytes)",
         )
     return s.encode(encoding)
 
@@ -375,7 +375,7 @@ def encode_text(
         raise AeatExportFormatError(
             f"text value {value!r} overflows length-{length} field "
             f"(would need {len(value)} bytes); set truncate=True to "
-            f"allow silent clipping."
+            f"allow silent clipping.",
         )
     s = value[:length] if len(value) > length else value
     s = s.ljust(length, pad_char) if justification is Justification.LEFT else s.rjust(length, pad_char)
@@ -493,7 +493,7 @@ def validate_record_specs(
     if specs[0].offset != 1:
         raise AeatExportFormatError(
             f"first spec must start at offset=1 (BOE 1-based); "
-            f"got offset={specs[0].offset} for field_id={specs[0].field_id!r}"
+            f"got offset={specs[0].offset} for field_id={specs[0].field_id!r}",
         )
     seen_field_ids: set[str] = set()
     seen_casilla_ids: set[str] = set()
@@ -504,7 +504,7 @@ def validate_record_specs(
             prev_hint = f"(prev {prev.field_id!r} ends at {prev.offset + prev.length - 1})" if prev is not None else ""
             raise AeatExportFormatError(
                 f"spec #{i} {spec.field_id!r} offset={spec.offset} "
-                f"breaks monotonic contiguity; expected offset={expected} {prev_hint}"
+                f"breaks monotonic contiguity; expected offset={expected} {prev_hint}",
             )
         if spec.field_id in seen_field_ids:
             raise AeatExportFormatError(f"duplicate field_id={spec.field_id!r} at spec #{i}")
@@ -512,7 +512,7 @@ def validate_record_specs(
         if spec.casilla_id is not None:
             if spec.casilla_id in seen_casilla_ids:
                 raise AeatExportFormatError(
-                    f"duplicate casilla_id={spec.casilla_id!r} at spec #{i} (field_id={spec.field_id!r})"
+                    f"duplicate casilla_id={spec.casilla_id!r} at spec #{i} (field_id={spec.field_id!r})",
                 )
             seen_casilla_ids.add(spec.casilla_id)
         expected = spec.offset + spec.length
@@ -520,5 +520,5 @@ def validate_record_specs(
     if terminal_end != total_length:
         raise AeatExportFormatError(
             f"record specs fill {terminal_end} bytes but total_length={total_length} "
-            f"was declared; adjust the final field or the declared length."
+            f"was declared; adjust the final field or the declared length.",
         )

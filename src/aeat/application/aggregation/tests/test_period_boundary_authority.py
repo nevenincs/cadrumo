@@ -21,12 +21,12 @@ import inspect
 
 import pytest
 
-from ....core import StandardPeriodCode
+from ....core import Period, StandardPeriodCode
 from ....entrypoints.cli._common import (
     _canonical_period,
     _filter_canonical_period,
 )
-from .. import Period, aggregation_period_for_modelo
+from .. import aggregation_period_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -59,8 +59,7 @@ def _cli_period_via_filter_transport(token: str, *, year: int) -> Period:
 
 def _calc_engine_period(token: str, *, year: int) -> Period:
     """Resolve the same (year, token) to a Period the calc-engine way."""
-    internal = aggregation_period_for_modelo(filing_year=year, period=token)
-    return Period.model_validate(internal)
+    return aggregation_period_for_modelo(filing_year=year, code=token)
 
 
 @pytest.mark.parametrize("year", _YEARS)
@@ -80,10 +79,10 @@ def test_cli_and_calc_engine_produce_an_identical_period(token: str, year: int) 
     assert command_period == filter_period == engine_period
 
     # And to the same fully-closed [start, end] span (the boundary authority).
-    assert command_period.start == engine_period.start
-    assert command_period.end == engine_period.end
-    assert command_period.contains(command_period.start)
-    assert command_period.contains(command_period.end)
+    assert command_period.start_date == engine_period.start_date
+    assert command_period.end_date == engine_period.end_date
+    assert command_period.contains(command_period.start_date)
+    assert command_period.contains(command_period.end_date)
 
 
 def test_both_transports_route_through_one_period_boundary() -> None:
@@ -98,7 +97,7 @@ def test_both_transports_route_through_one_period_boundary() -> None:
     for year in _YEARS:
         for token in _LEDGER_SPAN_TOKENS:
             cli_period = _canonical_period(token, year=year)
-            engine_period = Period.model_validate(aggregation_period_for_modelo(filing_year=year, period=token))
+            engine_period = aggregation_period_for_modelo(filing_year=year, code=token)
             assert cli_period == engine_period, (year, token)
 
 
@@ -139,6 +138,6 @@ def test_period_filter_adds_no_plaintext_persistence_surface() -> None:
     # outside is not — proving it is a live boundary, not a no-op pass-through.
     from datetime import date
 
-    q1_2025 = Period.model_validate(aggregation_period_for_modelo(filing_year=2025, period="1T"))
+    q1_2025 = aggregation_period_for_modelo(filing_year=2025, code="1T")
     assert q1_2025.contains(date(2025, 2, 14))
     assert not q1_2025.contains(date(2025, 4, 1))

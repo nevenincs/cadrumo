@@ -42,8 +42,8 @@ class TestEnvelopeDocumentValidation:
                 "facts": [
                     {"path": "identity.tax_id", "value": "12345678Z"},
                     {"path": "identity.name", "value": "Ana García"},
-                ]
-            }
+                ],
+            },
         )
         doc = EnvelopeDocument.model_validate_json(raw)
         assert doc.payload is not None
@@ -94,8 +94,8 @@ class TestExtractProfileTaxIds:
                 "facts": [
                     {"path": "identity.tax_id", "value": "12345678Z"},
                     {"path": "identity.name", "value": "Pedro"},
-                ]
-            }
+                ],
+            },
         )
         result = _extract_profile_tax_ids(raw)
         assert result == ("12345678Z",)
@@ -106,8 +106,8 @@ class TestExtractProfileTaxIds:
                 "facts": [
                     {"path": "identity.tax_id", "value": "12345678Z"},
                     {"path": "identity.tax_id", "value": "87654321X"},
-                ]
-            }
+                ],
+            },
         )
         result = _extract_profile_tax_ids(raw)
         assert result == ("12345678Z", "87654321X")
@@ -141,8 +141,8 @@ class TestExtractProfileTaxIds:
                 "facts": [
                     {"path": "identity.tax_id", "value": 12345},
                     {"path": "identity.tax_id", "value": "12345678Z"},
-                ]
-            }
+                ],
+            },
         )
         result = _extract_profile_tax_ids(raw)
         assert result == ("12345678Z",)

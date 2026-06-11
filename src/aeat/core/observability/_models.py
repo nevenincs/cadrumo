@@ -43,7 +43,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..time._utc import validate_utc_aware
 
 

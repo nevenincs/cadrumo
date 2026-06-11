@@ -9,7 +9,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 
 DEFAULT_WRITE_PROVENANCE = "secure-object-repository"

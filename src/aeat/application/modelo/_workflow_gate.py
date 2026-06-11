@@ -15,12 +15,12 @@ from functools import lru_cache
 from pathlib import Path
 
 from ...application.auth import AuthProviderKind, select_provider
+from ...core import Period
 from ...core.config import Settings, load_settings
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._work_unit import WorkUnit
-from ...domain.period import PeriodValidationError, parse_canonical_period
 from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue
 from ..filing import (
@@ -49,8 +49,12 @@ def _deadline_window_period_for_registry_period(
     modelo: str,
     filing_year: int,
     registry_period: str,
-) -> str | None:
-    """Return the exact deadline-window period token declared by the registry."""
+) -> Period | None:
+    """Return the typed :class:`~aeat.core.Period` declared by the registry deadline window.
+
+    Uses :class:`~aeat.domain.calculations.registry.RegistrySnapshotError` for
+    snapshot lookup; :class:`~aeat.core.Period` for the returned value.
+    """
     from ...core.resources import resources
 
     try:
@@ -62,29 +66,17 @@ def _deadline_window_period_for_registry_period(
     except RegistrySnapshotError:
         return None
 
+    target = Period.from_year_and_code(filing_year, registry_period)
     for window in snapshot.revision.deadline_windows:
-        try:
-            window_year, window_registry_period = parse_canonical_period(window.period)
-        except PeriodValidationError:
-            continue
-        if window_year == filing_year and window_registry_period == registry_period:
-            return str(window.period)
+        if window.period == target:
+            return window.period
     return None
 
 
-def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
-    """Return the canonical period token consumed by WorkflowEngine."""
-    if work_unit.period.endswith("T") and len(work_unit.period) == 2:
-        declared = _deadline_window_period_for_registry_period(
-            modelo=work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            registry_period=work_unit.period,
-        )
-        if declared is not None:
-            return declared
-        return f"{work_unit.filing_year}-{work_unit.period}"
-    if len(work_unit.period) == 2 and work_unit.period.startswith("Q") and work_unit.period[1] in "1234":
-        registry_period = f"{work_unit.period[1]}T"
+def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
+    """Return the canonical :class:`~aeat.core.Period` consumed by the workflow engine."""
+    registry_period = work_unit.period.registry_token
+    if registry_period.endswith("T") and len(registry_period) == 2:
         declared = _deadline_window_period_for_registry_period(
             modelo=work_unit.modelo,
             filing_year=work_unit.filing_year,
@@ -92,14 +84,7 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
         )
         if declared is not None:
             return declared
-        return f"{work_unit.filing_year}Q{work_unit.period[1]}"
-    if work_unit.period == "0A":
-        return str(work_unit.filing_year)
-    if len(work_unit.period) == 2 and work_unit.period.isdigit():
-        return f"{work_unit.filing_year}-{work_unit.period}"
-    if len(work_unit.period) == 2 and work_unit.period.endswith("P") and work_unit.period[0] in ("1", "2", "3"):
-        return f"{work_unit.filing_year}P{work_unit.period[0]}"
-    parse_canonical_period(work_unit.period)
+        return work_unit.period
     return work_unit.period
 
 
@@ -115,7 +100,7 @@ class _RevisionInputsProvider:
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
     ) -> ModeloInputs:
         """Return the revision inputs when the workflow request matches it.
@@ -129,9 +114,9 @@ class _RevisionInputsProvider:
                 translated_message="application.modelo.errors.workflow_input_mismatch",
                 context={
                     "expected_modelo": self._modelo,
-                    "expected_period": self._period,
+                    "expected_period": str(self._period),
                     "requested_modelo": modelo,
-                    "requested_period": period,
+                    "requested_period": str(period),
                 },
             )
         return {
@@ -157,7 +142,7 @@ class _RevisionDraftBuilder:
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
         inputs: ModeloInputs,
         fail_on_warning: bool = False,
@@ -193,10 +178,9 @@ class _RevisionDeadlineWindowChecker:
         self._profile = profile
         self._engine = engine
 
-    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+    def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         """Return whether the taxpayer has an open filing window."""
-        year, _ = parse_canonical_period(period)
-        schedule = self._engine.compute(self._profile, year, today=today)
+        schedule = self._engine.compute(self._profile, period.year, today=today)
         return any(
             obligation.modelo == modelo
             and obligation.period == period
@@ -267,7 +251,7 @@ def run_revision_workflow_gate(
             today=today,
             resumed_from=resumed_from,
             purpose=purpose,
-        )
+        ),
     )
     run_repository.save(result, runs_dir=runs_dir)
     if result.final_stage is WorkflowStage.ABORTED:

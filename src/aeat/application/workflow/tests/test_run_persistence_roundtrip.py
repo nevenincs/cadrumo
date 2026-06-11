@@ -59,10 +59,10 @@ def _populated_run() -> WorkflowResult:
                 ended_at=now,
                 success=False,
                 summary="deadline passed for current obligation",
-                details={"modelo": "303", "period": "2025Q1", "closes_on": "2025-04-20"},
+                details={"modelo": "303", "period": "2025 1T", "closes_on": "2025-04-20"},
             ),
         ),
-        summary="run aborted: deadline for 303/2025Q1 passed",
+        summary="run aborted: deadline for 303/2025 1T passed",
         resumed_from="p" * 16,
     )
 
@@ -94,7 +94,7 @@ def test_workflow_run_survives_encrypted_storage_roundtrip(
         details = loaded.steps[1].details
         assert details is not None
         assert details.get("modelo") == "303"
-        assert details.get("period") == "2025Q1"
+        assert details.get("period") == "2025 1T"
         assert details.get("closes_on") == "2025-04-20"
 
 

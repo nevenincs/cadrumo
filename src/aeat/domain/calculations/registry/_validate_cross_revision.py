@@ -50,7 +50,7 @@ def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefiniti
     failures = _validate_cross_revision_casilla_consistency(modelos)
     if failures:
         raise RegistryValidationError(
-            "cross-revision casilla drift detected:\n" + "\n".join(f" - {failure}" for failure in failures)
+            "cross-revision casilla drift detected:\n" + "\n".join(f" - {failure}" for failure in failures),
         )
 
 
@@ -149,7 +149,7 @@ def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -
                     declaring_revision_id,
                     evolution,
                     "no matching casilla continuity id in either revision",
-                )
+                ),
             )
             continue
 
@@ -162,7 +162,7 @@ def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -
                     declaring_revision_id,
                     evolution,
                     "retired evolution has no source casilla continuity id",
-                )
+                ),
             )
         if evolution.continuidad_id in right_ids:
             failures.append(
@@ -171,7 +171,7 @@ def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -
                     declaring_revision_id,
                     evolution,
                     "retired evolution target revision still declares the continuity id",
-                )
+                ),
             )
     return tuple(failures)
 
@@ -192,7 +192,7 @@ def _validate_strict_retired_continuity_surfaces(modelo: ModeloDefinition) -> tu
                 f"modelo {modelo.id} continuidad_id {continuidad_id!r} "
                 f"revisions {left_revision.id!r}->{right_revision.id!r} "
                 "has a source casilla continuity surface but no target casilla "
-                "and no retired evolution declaration"
+                "and no retired evolution declaration",
             )
     return tuple(failures)
 
@@ -230,7 +230,7 @@ def _adjacent_revisions(modelo: ModeloDefinition) -> tuple[tuple[ModeloRevision,
         sorted(
             modelo.revisions.values(),
             key=lambda revision: (revision.valid_from, revision.id),
-        )
+        ),
     )
     return tuple(pairwise(ordered_revisions))
 

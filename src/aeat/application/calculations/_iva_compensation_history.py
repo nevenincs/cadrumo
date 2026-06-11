@@ -23,7 +23,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.time import now
 from ...domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardReport,
@@ -39,6 +39,7 @@ from ._errors import IvaCompensationModeloError
 from ._ports import FiledDeclaracionObservationProtocol
 
 _ZERO = Decimal("0")
+_FINAL_QUARTER = "4T"
 
 
 class IvaCompensationAnnualSummary(BaseModel):
@@ -77,15 +78,16 @@ class IvaCompensationAnnualCrossCheck(BaseModel):
     summary_source_observation_key: str = Field(min_length=1, max_length=96)
 
 
-def iva_compensation_period_key(filing_year: int, period: str) -> str:
+def iva_compensation_period_key(period: Period) -> str:
     """Return the latest-state key for one Modelo 303 period."""
-    safe_repository_id(period, context="period")
+    safe_repository_id(period.registry_token, context="period")
+    filing_year = period.filing_year
     if not 2000 <= filing_year <= 2099:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
             context={"filing_year": filing_year, "min_year": 2000, "max_year": 2099},
         )
-    return f"303:{filing_year}:{period}"
+    return f"303:{filing_year}:{period.registry_token}"
 
 
 class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeriodState]):
@@ -98,15 +100,15 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
 
     @override
     def extract_identifier(self, payload: IvaCompensationPeriodState) -> str:
-        return iva_compensation_period_key(payload.filing_year, payload.period)
+        return iva_compensation_period_key(payload.period)
 
-    def load_period(self, filing_year: int, period: str) -> IvaCompensationPeriodState | None:
+    def load_period(self, period: Period) -> IvaCompensationPeriodState | None:
         """Return latest stored state for one period.
 
         Returns an :class:`IvaCompensationPeriodState` when a record exists,
         or ``None`` when none has been persisted for the given period.
         """
-        return self.load(iva_compensation_period_key(filing_year, period))
+        return self.load(iva_compensation_period_key(period))
 
     def save_period(self, state: IvaCompensationPeriodState) -> None:
         """Persist latest stored state for one period."""
@@ -127,8 +129,7 @@ _CORRECTED_SOURCE_OBS_PREFIX = "303:correction"
 def seed_iva_compensation_period(
     *,
     taxpayer_nif: str,
-    filing_year: int,
-    period: str,
+    period: Period,
     amount: Decimal,
     repository: IvaCompensationHistoryRepository | None = None,
     seeded_at: datetime | None = None,
@@ -146,16 +147,20 @@ def seed_iva_compensation_period(
     the specified period — seeding must not overwrite an existing record.
     """
     repo = repository if repository is not None else IvaCompensationHistoryRepository()
-    existing = repo.load_period(filing_year, period)
+    existing = repo.load_period(period)
     if existing is not None:
         raise IvaCompensationSeedConflictError(
             translated_message="application.calculations.iva_compensation.errors.seed_conflict",
-            context={"filing_year": filing_year, "period": period, "existing_status": existing.status},
+            context={
+                "filing_year": period.filing_year,
+                "period": period.registry_token,
+                "existing_status": existing.status,
+            },
         )
     when = seeded_at if seeded_at is not None else now()
     state = IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
-        filing_year=filing_year,
+        filing_year=period.filing_year,
         period=period,
         expediente_id=_SEED_EXPEDIENTE_ID,
         status=_SEED_STATUS,
@@ -167,7 +172,7 @@ def seed_iva_compensation_period(
         final_result_amount=None,
         generated_amount=_ZERO,
         available_end_amount=amount,
-        source_observation_key=f"{_SEED_SOURCE_OBS_PREFIX}:{filing_year}:{period}",
+        source_observation_key=f"{_SEED_SOURCE_OBS_PREFIX}:{period.filing_year}:{period.registry_token}",
         source_artefact_sha256=None,
     )
     repo.save_period(state)
@@ -177,8 +182,7 @@ def seed_iva_compensation_period(
 def correct_iva_compensation_period(
     *,
     taxpayer_nif: str,
-    filing_year: int,
-    period: str,
+    period: Period,
     amount: Decimal,
     repository: IvaCompensationHistoryRepository | None = None,
     corrected_at: datetime | None = None,
@@ -204,16 +208,16 @@ def correct_iva_compensation_period(
     guidance.
     """
     repo = repository if repository is not None else IvaCompensationHistoryRepository()
-    existing = repo.load_period(filing_year, period)
+    existing = repo.load_period(period)
     if existing is None:
         raise IvaCompensationSeedConflictError(
             translated_message="application.calculations.iva_compensation.errors.correction_missing",
-            context={"filing_year": filing_year, "period": period, "existing_status": "absent"},
+            context={"filing_year": period.filing_year, "period": period.registry_token, "existing_status": "absent"},
         )
     when = corrected_at if corrected_at is not None else now()
     state = IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
-        filing_year=filing_year,
+        filing_year=period.filing_year,
         period=period,
         expediente_id=_CORRECTED_EXPEDIENTE_ID,
         status=_SEED_STATUS,
@@ -225,7 +229,7 @@ def correct_iva_compensation_period(
         final_result_amount=None,
         generated_amount=_ZERO,
         available_end_amount=amount,
-        source_observation_key=f"{_CORRECTED_SOURCE_OBS_PREFIX}:{filing_year}:{period}",
+        source_observation_key=f"{_CORRECTED_SOURCE_OBS_PREFIX}:{period.filing_year}:{period.registry_token}",
         source_artefact_sha256=None,
     )
     repo.save_period(state)
@@ -266,7 +270,9 @@ def iva_compensation_state_from_filed_observation(
         final_result_amount=_casilla_value(values, "71"),
         generated_amount=generated,
         available_end_amount=available,
-        source_observation_key=f"303:{observation.ejercicio}:{observation.period}:{observation.expediente_id}",
+        source_observation_key=(
+            f"303:{observation.ejercicio}:{observation.period.registry_token}:{observation.expediente_id}"
+        ),
         source_artefact_sha256=source_artefact_sha256,
     )
 
@@ -316,7 +322,7 @@ def cross_check_iva_compensation_annual_summary(
         (
             lot.generated_amount
             for lot in report.lots
-            if lot.source_filing_year == summary.filing_year and lot.source_period.upper() == "4T"
+            if lot.source_filing_year == summary.filing_year and lot.source_period.registry_token == _FINAL_QUARTER
         ),
         _ZERO,
     )
@@ -324,7 +330,7 @@ def cross_check_iva_compensation_annual_summary(
         (
             lot.remaining_amount
             for lot in report.lots
-            if lot.source_filing_year == summary.filing_year and lot.source_period.upper() != "4T"
+            if lot.source_filing_year == summary.filing_year and lot.source_period.registry_token != _FINAL_QUARTER
         ),
         _ZERO,
     )

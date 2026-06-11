@@ -19,6 +19,7 @@ def persist_justificante_metadata(
     filing_year: int,
     period: str,
     captured_at: datetime,
+    tax_id: str = "X1234567L",
 ) -> None:
     """Persist a real justificante metadata record for evidence-backed tests."""
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
@@ -30,12 +31,12 @@ def persist_justificante_metadata(
             ejercicio=str(filing_year),
             presentation_id=None,
             presented_at=captured_at,
-            tax_id="X1234567L",
+            tax_id=tax_id,
             total_a_ingresar=None,
             total_a_devolver=None,
             verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
             source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
             source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
             parsed_at=captured_at,
-        )
+        ),
     )

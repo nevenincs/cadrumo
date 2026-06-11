@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, InputKind, RegistryModeloObservation
@@ -108,7 +109,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, p
             source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
             source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
             parsed_at=_T0,
-        )
+        ),
     )
 
 
@@ -136,7 +137,7 @@ def _seed_clean_cross_period_sources_for_m130(
     snapshot = resources().modelos.authority.snapshot(
         work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     )
     observation_repository = CalculationObservationRepository()
     for requirement in cross_period_dependency_requirements(snapshot):
@@ -150,7 +151,7 @@ def _seed_clean_cross_period_sources_for_m130(
             bucket_id=work_unit.bucket_id,
             modelo=requirement.source_modelo,
             filing_year=requirement.filing_year,
-            period=requirement.period,
+            period=Period.from_year_and_code(requirement.filing_year, requirement.period),
             revision_id=source_snapshot.revision.id,
             repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
@@ -173,6 +174,7 @@ def _seed_clean_cross_period_sources_for_m130(
             calculation_repository=calculation_repository,
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
+            expected_tax_id="X1234567L",
             clock=_T0,
         )
         observation_repository.save_observation(
@@ -208,7 +210,7 @@ def test_verify_refuses_when_required_casillas_absent_m130(repos: _Repos) -> Non
         bucket_id="default",
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
-        period=_M130_PERIOD,
+        period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
@@ -279,7 +281,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
         bucket_id="default",
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
-        period=_M130_PERIOD,
+        period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
@@ -367,7 +369,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
         bucket_id="default",
         modelo=_M130_MODELO,
         filing_year=_M130_FILING_YEAR,
-        period=_M130_PERIOD,
+        period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,

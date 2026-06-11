@@ -157,7 +157,7 @@ def test_authorization_coverage_report_and_validity(capsys: pytest.CaptureFixtur
         f"\nauthorized {len(authorized)}/{FLEET_SIZE}"
         f" | unauthorized: {','.join(unauthorized) or '-'}"
         f" | engine-build-blocked ({len(engine_build_blocked)}): "
-        f"{','.join(engine_build_blocked) or '-'}"
+        f"{','.join(engine_build_blocked) or '-'}",
     )
     captured = capsys.readouterr()
     assert f"authorized {len(authorized)}/{FLEET_SIZE}" in captured.out

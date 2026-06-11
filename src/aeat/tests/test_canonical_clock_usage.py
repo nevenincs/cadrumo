@@ -40,7 +40,7 @@ _TEST_INFRA_MODULES: frozenset[pathlib.Path] = frozenset(
     {
         _SRC_ROOT / "adapters" / "persistence" / "storage" / "envelope" / "_repository_test_suite.py",
         _SRC_ROOT / "tests" / "secure_sql.py",
-    }
+    },
 )
 _ESCAPE_HATCH_PATTERN = re.compile(
     r"if\s+now\s+is\s+not\s+None\s+else\s+datetime\.now\s*\(",
@@ -105,5 +105,5 @@ def test_no_inline_datetime_now_utc() -> None:
             "Replace each call with now() from aeat.core.time. The only permitted\n"
             "inline pattern is the documented escape hatch:\n"
             "    timestamp = now if now is not None else datetime.now(UTC)\n"
-            "on signatures that already accept an injectable ``now`` argument."
+            "on signatures that already accept an injectable ``now`` argument.",
         )

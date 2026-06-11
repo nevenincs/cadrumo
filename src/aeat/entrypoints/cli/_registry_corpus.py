@@ -216,7 +216,7 @@ def _citation_show_lines(report: RegistryCitationShowReport) -> list[str]:
                 f"articulo.titulo\t{report.articulo.titulo}",
                 f"articulo.permalink\t{report.articulo.permalink}",
                 f"articulo.cite\t{report.articulo.cite}",
-            ]
+            ],
         )
     lines.append(f"related_topic_count\t{len(report.related_topics)}")
     return lines
@@ -244,7 +244,7 @@ def _citation_reference_line(reference: RegistryCitationReferenceProjection) -> 
             reference.number,
             reference.boe_id,
             reference.short_title,
-        )
+        ),
     )
 
 
@@ -281,7 +281,7 @@ def _manual_show_lines(report: RegistryManualShowReport) -> list[str]:
                 f"section.title\t{report.section.title}",
                 f"section.rule_count\t{report.section.rule_count}",
                 f"section.paragraph_count\t{report.section.paragraph_count}",
-            ]
+            ],
         )
     return lines
 

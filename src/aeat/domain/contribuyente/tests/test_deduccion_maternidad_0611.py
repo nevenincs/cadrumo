@@ -66,7 +66,7 @@ class TestDeduccionMaternidad0611Oracle:
             descendientes=(
                 _hijo_menor_3(12),
                 _hijo_menor_3(12),
-            )
+            ),
         )
         assert profile.deduccion_maternidad_0611(2024) == 2400
 
@@ -76,7 +76,7 @@ class TestDeduccionMaternidad0611Oracle:
             descendientes=(
                 _hijo_menor_3(6),
                 _hijo_menor_3(12),
-            )
+            ),
         )
         assert profile.deduccion_maternidad_0611(2024) == 1800
 

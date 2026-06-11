@@ -21,7 +21,6 @@ class AuthValidationError(AuthError, ValueError):
     remaining catchable under the package's unified error hierarchy.
     """
 
-    pass
 
 
 class AeatLoginAssertionError(AuthError):

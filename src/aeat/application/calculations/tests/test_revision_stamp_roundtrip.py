@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -46,6 +47,10 @@ _PERIOD = "1T"
 _SOURCE_KIND = "aeat_sede_justificante"
 _CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _FAKE_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
+
+
+def _filing_period(year: int = _YEAR, period: str = _PERIOD) -> Period:
+    return Period.from_year_and_code(year, period)
 
 
 def _minimal_observation(modelo: str = _MODELO, year: int = _YEAR, period: str = _PERIOD) -> RegistryModeloObservation:
@@ -87,7 +92,7 @@ def test_stamped_revision_id_survives_encrypted_storage_roundtrip(tmp_path: Path
             captured_at=_CLOCK,
             stamped_revision_id=revision_id,
         )
-        loaded = repo.load_observation(_MODELO, _YEAR, _PERIOD)
+        loaded = repo.load_observation(_MODELO, _filing_period())
 
         assert loaded is not None
         assert loaded.stamped_revision_id == revision_id, (
@@ -107,7 +112,7 @@ def test_stamped_revision_id_none_survives_encrypted_storage_roundtrip(tmp_path:
             captured_at=_CLOCK,
             stamped_revision_id=None,
         )
-        loaded = repo.load_observation(_MODELO, _YEAR, _PERIOD)
+        loaded = repo.load_observation(_MODELO, _filing_period())
 
         assert loaded is not None
         assert loaded.stamped_revision_id is None
@@ -162,7 +167,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
             stamped_revision_id=revision_id,
         )
 
-        object_key = observation_key(_MODELO, _YEAR, _PERIOD)
+        object_key = observation_key(_MODELO, _filing_period())
         with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == namespace,
@@ -178,7 +183,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
             envelope["payload"]["stamped_revision_id"] = None
             row.payload = _json.dumps(envelope).encode("utf-8")
 
-        loaded = repo.load_observation(_MODELO, _YEAR, _PERIOD)
+        loaded = repo.load_observation(_MODELO, _filing_period())
         assert loaded is not None
         assert loaded.stamped_revision_id != revision_id, (
             "anti-tautology proof failed: clearing stamped_revision_id from on-disk JSON "
@@ -268,7 +273,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
@@ -304,7 +309,7 @@ def test_carry_missing_stamp_advises_and_carries(tmp_path: Path) -> None:
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
@@ -336,7 +341,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
@@ -381,7 +386,7 @@ def test_multiyear_resolver_divergent_stamp_drops_observation(tmp_path: Path) ->
                 current_year=2025,
                 years_back=2,
                 periods=("4T",),
-            )
+            ),
         )
 
         # 2024 (correct stamp) must be in found_years; 2023 (divergent stamp) must be dropped.
@@ -412,7 +417,7 @@ def test_multiyear_resolver_missing_stamp_carries(tmp_path: Path) -> None:
                 current_year=2025,
                 years_back=2,
                 periods=("4T",),
-            )
+            ),
         )
 
         # Legacy (unstamped) records carry through — advisory is the mechanism, not blocking.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -15,6 +16,7 @@ from ....adapters.inbound.declaracion import (
 )
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
 from ....core import Period
+from ....core.errors import render_error_json, render_error_text
 from .. import (
     VerificationError,
     VerificationStatus,
@@ -30,7 +32,7 @@ def _build_filing(
     values: tuple[tuple[str, Decimal], ...],
     warnings: tuple[ExtractionWarning, ...] = (),
     modelo: str = "130",
-    period: str = "2025Q1",
+    period: str = "1T",
     ejercicio: str = "2025",
 ) -> DeclaracionObservation:
     """Build a parsed declaration boundary object for verification."""
@@ -130,7 +132,7 @@ def test_verify_declaracion_classifies_registry_divergence() -> None:
 def test_verify_declaracion_uses_modelo_115_registry_snapshot() -> None:
     filing = _build_filing(
         modelo="115",
-        period="2026Q1",
+        period="1T",
         ejercicio="2026",
         values=(
             ("01", Decimal("1")),
@@ -153,7 +155,7 @@ def test_verify_declaracion_uses_modelo_115_registry_snapshot() -> None:
 def test_verify_declaracion_uses_modelo_123_current_registry_snapshot() -> None:
     filing = _build_filing(
         modelo="123",
-        period="2026Q1",
+        period="1T",
         ejercicio="2026",
         values=(
             ("01", Decimal("2")),
@@ -185,7 +187,7 @@ def test_verify_declaracion_uses_modelo_123_current_registry_snapshot() -> None:
 def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> None:
     filing = _build_filing(
         modelo="123",
-        period="2023Q1",
+        period="1T",
         ejercicio="2023",
         values=(
             ("01-legacy", Decimal("2")),
@@ -218,7 +220,7 @@ def test_verify_declaracion_fails_without_registry_snapshot() -> None:
     assert error.translated_message == "application.verification.errors.registry_snapshot_invalid"
     assert error.context == {
         "modelo": "999",
-        "period": "2025Q1",
+        "period": "2025 1T",
         "ejercicio": "2025",
         "error_type": "RegistrySnapshotError",
     }
@@ -246,8 +248,26 @@ def test_verify_declaracion_reports_missing_registry_bindings_as_locale_error() 
         ),
         "count": 3,
         "modelo": "130",
-        "period": "2025Q1",
+        "period": "2025 1T",
     }
+    rendered_text = render_error_text(error)
+    rendered_json = json.loads(render_error_json(error))
+    assert "<Period>" not in rendered_text
+    assert "period: 2025 1T" in rendered_text
+    assert rendered_json["error"]["context"]["period"] == "2025 1T"
+
+
+def test_verify_declaracion_reports_period_year_mismatch_as_verification_error() -> None:
+    filing = _build_filing(values=(("01", Decimal("0")),)).model_copy(
+        update={"period": Period.from_year_and_code(2024, "1T")}
+    )
+
+    with pytest.raises(VerificationError) as raised:
+        verify_declaracion(filing)
+
+    error = raised.value
+    assert error.translated_message == "application.verification.errors.period_mapping_failed"
+    assert error.context == {"period": "2024 1T", "ejercicio": "2025"}
 
 
 class TestVerdictJsonRoundTrip:

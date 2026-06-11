@@ -299,7 +299,7 @@ def test_iva_operation_is_frozen_and_forbids_extras() -> None:
                 "kind": IvaOperationKind.GRANTS_DEDUCTION,
                 "classification_source": "test",
                 **extra,
-            }
+            },
         )
 
 

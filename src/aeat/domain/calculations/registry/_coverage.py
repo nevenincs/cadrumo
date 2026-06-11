@@ -117,7 +117,7 @@ def audit_registry_model_law_coverage(
             parity_gate = gates["executable_parity_evidence"]
             if parity_gate.status == "gap" and (revision.formulas or revision.algorithm_bindings):
                 executable_parity_gaps.append(
-                    f"modelo {modelo.id} revision {revision.id}: executable_parity_evidence coverage gap"
+                    f"modelo {modelo.id} revision {revision.id}: executable_parity_evidence coverage gap",
                 )
 
     return RegistryCoverageAudit(
@@ -225,7 +225,7 @@ def _workbook_refs_for_tier(
             ref.id
             for ref in snapshot.workbook_parity_refs.values()
             if ref.formula_coverage in coverage_kinds and snapshot.sources[ref.workbook_source].evidence_tier == tier
-        )
+        ),
     )
 
 

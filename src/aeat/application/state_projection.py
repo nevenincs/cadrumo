@@ -34,9 +34,8 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
-from ..core import resolve_active_bucket_id
-from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core._period import Period
+from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core import Period, resolve_active_bucket_id
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -53,7 +52,6 @@ from ..domain.invoices import InvoiceCatalogueRepository
 from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ..domain.modelos._repository import WorkUnitCatalogueRepository
 from ..domain.modelos._work_unit import WorkUnitState
-from ..domain.period import parse_canonical_period as _parse_canonical_period
 from ..domain.transactions import TransactionCatalogueRepository
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
@@ -499,19 +497,10 @@ def _build_pending_obligations(
         return ()
     obligations: list[ProjectionObligation] = []
     for obligation in schedule.obligations:
-        try:
-            year, token = _parse_canonical_period(obligation.period)
-            period_obj = Period.from_year_and_code(year, token)
-        except (ValueError, LookupError):
-            _log.debug(
-                "state projection: skipping obligation with unparseable period",
-                extra={"modelo": obligation.modelo, "period": obligation.period},
-            )
-            continue
         obligations.append(
             ProjectionObligation(
                 modelo=obligation.modelo,
-                period=period_obj,
+                period=obligation.period,
                 opens_on=obligation.opens_on,
                 closes_on=obligation.closes_on,
                 status=obligation.status,
@@ -593,45 +582,32 @@ def _build_modelo_readiness(
     service = ProfilePreflightService(schema=_shared_schema())
     reports: list[ProjectionModeloReadiness] = []
     for request in requests:
-        period_token = request.period.registry_token if request.period is not None else ""
+        readiness_period = _ledger_period_for_modelo_readiness(request)
         profile_report = service.report(
             record=record,
             modelo=request.modelo,
             revision_id=request.revision_id,
-            filing_year=request.filing_year,
-            period=period_token,
+            period=readiness_period,
         )
         ledger_report = None
         if _modelo_requires_ledger_preflight(request):
             ledger_report = preflight_ledger_tax_readiness(
                 bucket_id=pointer.bucket_id,
-                period=_ledger_period_for_modelo_readiness(request),
+                period=readiness_period,
             )
-        # Bridge profile_report.period (bare registry token str) back to a
-        # typed Period using the report's own filing_year.
-        try:
-            report_period = Period.from_year_and_code(profile_report.filing_year, profile_report.period)
-        except ValueError:
-            # Graceful degradation: if the preflight report carries an
-            # unrecognised period token, fall back to the request period or
-            # the annual token so the projection is never None.
-            report_period = request.period or Period.from_year_and_code(profile_report.filing_year, "0A")
         reports.append(
             ProjectionModeloReadiness(
                 profile_id=profile_report.profile_id,
                 modelo=profile_report.modelo,
                 revision_id=profile_report.revision_id,
                 filing_year=profile_report.filing_year,
-                period=report_period,
+                period=profile_report.period,
                 missing=profile_report.missing,
                 profile_ready=profile_report.ready,
                 ledger_preflight_required=ledger_report is not None,
                 ledger_ready=ledger_report.ready if ledger_report is not None else None,
                 ledger_period=(
-                    # LedgerPreflightReport.period is the aggregation Period;
-                    # project it to a core.Period via its _as_core_period()
-                    # helper so the typed field is homogeneous.
-                    ledger_report.period._as_core_period()
+                    ledger_report.period
                     if ledger_report is not None
                     else None
                 ),
@@ -654,7 +630,7 @@ def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
     from ..core.resources import resources
     from ..domain.calculations.registry import RegistrySnapshotError
 
-    period_token = request.period.registry_token if request.period is not None else ""
+    period_token = _ledger_period_for_modelo_readiness(request).registry_token
     try:
         snapshot = resources().modelos.authority.snapshot(
             request.modelo,
@@ -671,36 +647,15 @@ def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
     return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
 
 
-_QUARTERLY_TOKEN_TO_AGG: dict[str, str] = {
-    "1T": "Q1",
-    "2T": "Q2",
-    "3T": "Q3",
-    "4T": "Q4",
-}
+def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Period:
+    """Return the typed ledger period for the ledger preflight.
 
-
-def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> str:
-    """Return the aggregation-parseable period string for the ledger preflight.
-
-    Converts the typed :class:`~aeat.core.Period` on the request to the
-    ``YYYY[Qn|-MM]`` form that :func:`preflight_ledger_tax_readiness` /
-    the aggregation :class:`~aeat.application.aggregation.Period` parser
-    accepts.  When the request carries no period the filing year alone
-    (annual ``0A`` fallback) is returned.
+    Returns the typed :class:`~aeat.core.Period` on the request directly.
+    When the request carries no period the annual ``0A`` fallback is returned.
     """
     if request.period is None:
-        return str(request.filing_year)
-    code = request.period.registry_token
-    year = request.period.year
-    if code in _QUARTERLY_TOKEN_TO_AGG:
-        return f"{year}{_QUARTERLY_TOKEN_TO_AGG[code]}"
-    if code == "0A":
-        return str(year)
-    # Monthly: "03" → "2026-03"
-    if len(code) == 2 and code.isdigit():
-        return f"{year}-{code}"
-    # Fallback for instalment/extended: bare code only (preflight will reject)
-    return code
+        return Period.from_year_and_code(request.filing_year, "0A")
+    return request.period
 
 
 def build_operator_state_projection(

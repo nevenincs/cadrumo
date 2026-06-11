@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from ...core import Period
 from ...core.identity import TransactionId
 from ...core.logging import get_logger
 from ...core.time import now
@@ -51,10 +52,6 @@ PARTICIPATION_INDEX_NAMESPACE = "aeat.domain.modelos.participation_index"
 PARTICIPATION_INDEX_SCHEMA_VERSION = 1
 _PARTICIPATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
-_Period = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
-]
 _JustificanteReference = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -96,7 +93,7 @@ class TransactionRevisionParticipation(BaseModel):
     work_unit_id: WorkUnitId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
-    period: _Period
+    period: Period
     revision_state: _RevisionState
     filing_record_id: FilingRecordId | None = None
     justificante_reference: _JustificanteReference | None = None
@@ -111,6 +108,14 @@ class TransactionRevisionParticipation(BaseModel):
                 mutable["modelo"] = ModeloCode(value)
                 return mutable
         return data
+
+    @model_validator(mode="after")
+    def _enforce_period_year(self) -> TransactionRevisionParticipation:
+        if self.period.filing_year != self.filing_year:
+            raise ModeloValidationError(
+                f"filing_year {self.filing_year!r} does not match period year {self.period.filing_year!r}",
+            )
+        return self
 
 
 class TransactionRevisionParticipationIndex(BaseModel):

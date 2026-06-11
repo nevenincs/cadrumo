@@ -78,7 +78,16 @@ def test_ratios_set_refuses_non_decimal_with_localized_message(cli_runner: CliRu
     result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "not-decimal"])
 
     assert result.exit_code != 0
-    assert tr("cli.ledger.errors.invalid_decimal", label="ratio", raw="not-decimal") in result.output
+    # Click renders the refusal inside a wrapped error box, so the long message
+    # (which now carries the expected-format hint) is split across box lines with
+    # vertical-border glyphs inserted at the wrap points. Strip the box-drawing
+    # glyphs and collapse whitespace on both sides before matching so the
+    # localized label/raw/hint payload is asserted without depending on the wrap
+    # column or the box rendering.
+    box_glyphs = "│┌┐└┘─╔╗╚╝║═"
+    expected = " ".join(tr("cli.ledger.errors.invalid_decimal", label="ratio", raw="not-decimal").split())
+    rendered = " ".join(result.output.translate({ord(g): " " for g in box_glyphs}).split())
+    assert expected in rendered
 
 
 def test_ratios_eligible_lists_categories(cli_runner: CliRunner) -> None:

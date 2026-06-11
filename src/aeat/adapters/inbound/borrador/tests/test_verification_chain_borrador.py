@@ -190,7 +190,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             f"RegistryValidationError — a required binding is missing.\n"
             f"  error: {exc}\n"
             f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(_binding_values_for_year(year))}"
+            f"  binding_values supplied: {sorted(_binding_values_for_year(year))}",
         )
 
     engine_values = dict(result.values)
@@ -200,7 +200,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
         if closure_id not in extracted:
             pytest.fail(
                 f"PARSER-GAP [M100-borrador/{year}]: closure casilla {closure_id!r} "
-                f"not extracted from fixture.\n  got: {sorted(extracted)}"
+                f"not extracted from fixture.\n  got: {sorted(extracted)}",
             )
 
         extracted_val = extracted[closure_id]

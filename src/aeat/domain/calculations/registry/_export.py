@@ -114,7 +114,7 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
                 sorted(
                     _export_fields_from_record_bindings(record, bindings_by_record.get(record.binding_record, [])),
                     key=lambda field: (field.offset, field.id),
-                )
+                ),
             )
             base_fields = tuple(
                 field
@@ -164,7 +164,7 @@ def _export_field_from_row_binding(
     if casilla is None:
         raise RegistryValidationError(
             f"export record {record.id!r} binding {binding.id!r} row_field {row_field!r}"
-            " has no casilla mapping in row_field_casillas"
+            " has no casilla mapping in row_field_casillas",
         )
     # Pattern A: the record already hand-authors a kind="binding" field pinned
     # to this binding id — trust the operator-pinned offset/length and skip
@@ -180,7 +180,7 @@ def _export_field_from_row_binding(
     if template is None:
         raise RegistryValidationError(
             f"export record {record.id!r} binding {binding.id!r} casilla {casilla!r}"
-            " has no matching template field in the record"
+            " has no matching template field in the record",
         )
     return template.model_copy(
         update={
@@ -190,7 +190,7 @@ def _export_field_from_row_binding(
             "binding": binding.id,
             "legal_refs": binding.legal_refs,
             "source_refs": binding.source_refs,
-        }
+        },
     )
 
 
@@ -295,7 +295,7 @@ def _index_fields_by_casilla(
         if field.id not in casilla.export_refs:
             raise RegistryValidationError(
                 f"export field {field.id!r} points to casilla {field.casilla!r}, "
-                "but the casilla does not declare the export ref"
+                "but the casilla does not declare the export ref",
             )
         grouped.setdefault(field.casilla, []).append(field)
     return {casilla_id: tuple(casilla_fields) for casilla_id, casilla_fields in grouped.items()}
@@ -321,7 +321,7 @@ def _record_field_ranges(record: ExportRecordDefinition) -> list[tuple[int, int,
             continue
         if field.offset is None or field.length is None:
             raise RegistryValidationError(
-                f"export field {field.id!r} must declare both offset and length for fixed-width layouts"
+                f"export field {field.id!r} must declare both offset and length for fixed-width layouts",
             )
         ranges.append((field.offset, field.offset + field.length, field.id))
     return ranges

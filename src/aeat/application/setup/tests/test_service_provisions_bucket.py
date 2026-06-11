@@ -53,7 +53,7 @@ def test_initialize_workspace_provisions_bucket_directory_and_manifest(
             activity="catering",
             iva_regime=IVARegime.GENERAL,
             auth_provider="none",
-        )
+        ),
     )
 
     # The profile identity is a generated UUID, distinct from the name.
@@ -81,7 +81,7 @@ def test_initialize_workspace_writes_manifest_with_uuid_id_and_name_label(
             activity="catering",
             iva_regime=IVARegime.GENERAL,
             auth_provider="none",
-        )
+        ),
     )
 
     settings = load_settings()
@@ -138,7 +138,7 @@ def test_initialize_workspace_logs_reserved_auth_provider_refusal(
                 activity="catering",
                 iva_regime=IVARegime.GENERAL,
                 auth_provider="clave_pin",
-            )
+            ),
         )
 
     assert result.auth_configured is False
@@ -162,7 +162,7 @@ def test_initialize_workspace_two_distinct_names_get_distinct_uuids(
             activity="catering",
             iva_regime=IVARegime.GENERAL,
             auth_provider="none",
-        )
+        ),
     )
     second = initialize_workspace(
         InitializeWorkspaceCommand(
@@ -171,7 +171,7 @@ def test_initialize_workspace_two_distinct_names_get_distinct_uuids(
             activity="consulting",
             iva_regime=IVARegime.GENERAL,
             auth_provider="none",
-        )
+        ),
     )
 
     assert first.profile_id != second.profile_id

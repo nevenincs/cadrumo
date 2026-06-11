@@ -76,7 +76,7 @@ _SUPPORTED_OPS: Final[frozenset[str]] = frozenset(
         "greater_than",
         "greater_equal",
         "equal",
-    }
+    },
 )
 
 

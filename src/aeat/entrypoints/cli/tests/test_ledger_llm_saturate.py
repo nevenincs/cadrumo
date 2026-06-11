@@ -135,7 +135,7 @@ def test_saturate_preview_derives_substrate_and_persists_nothing(tmp_path: Path,
 
     result = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "classify", "--id", tx, "--llm", "claude", "--saturate"],
+        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--saturate"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -152,19 +152,22 @@ def test_saturate_preview_derives_substrate_and_persists_nothing(tmp_path: Path,
 
 
 def test_saturate_apply_persists_derived_substrate_with_llm_provenance(
-    tmp_path: Path, _saturating_claude: None
+    tmp_path: Path, _saturating_claude: None,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
     result = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "classify", "--id", tx, "--llm", "claude", "--saturate", "--apply"],
+        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--saturate", "--apply"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
-    assert payload["persisted"] is True
-    # The apply result surfaces the model-selected IVA category.
-    assert payload["iva_category"] == IvaCategory.DOMESTIC_GENERAL_21.value
+    # D1: --saturate --apply is a single-transaction mutation and emits the
+    # canonical quintet; llm provenance rides on transaction.classified_by, not a
+    # top-level `persisted`/`iva_category` flag. The model-selected IVA category's
+    # effect is verified through the persisted substrate (row checks below).
+    assert payload["transaction"]["classified_by"] == "llm:claude:sat-1"
+    assert payload["review_status"]
 
     row = _row_by_id(tx)
     assert row["business_classification"] == "BUSINESS"
@@ -179,7 +182,7 @@ def test_saturate_non_derivable_category_surfaces_note_no_numbers(tmp_path: Path
 
     result = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "classify", "--id", tx, "--llm", "claude", "--saturate"],
+        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--saturate"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -194,7 +197,7 @@ def test_saturate_apply_then_manual_override_wins(tmp_path: Path, _saturating_cl
     tx = _import_one_transaction(tmp_path)
     applied = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx, "--llm", "claude", "--saturate", "--apply"],
+        ["app", "ledger", "classify", tx, "--llm", "claude", "--saturate", "--apply"],
     )
     assert applied.exit_code == 0, applied.output
     assert _row_by_id(tx)["classified_by"] == "llm:claude:sat-1"
@@ -206,7 +209,6 @@ def test_saturate_apply_then_manual_override_wins(tmp_path: Path, _saturating_cl
             "app",
             "ledger",
             "classify",
-            "--id",
             tx,
             "--classification",
             "BUSINESS",
@@ -232,7 +234,7 @@ def test_saturate_without_llm_is_refused(tmp_path: Path) -> None:
     tx = _import_one_transaction(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--saturate"],
+        ["app", "ledger", "classify", tx, "--classification", "BUSINESS", "--saturate"],
     )
     assert result.exit_code != 0
     assert "saturate" in result.output.lower()

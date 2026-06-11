@@ -67,7 +67,7 @@ def validate_source_year_coverage(
         if source_period_set and not period_matching_revisions:
             return [
                 f"{scope} previous-filing source declares periods {sorted(source_period_set)!r} "
-                f"that no source revision covers"
+                f"that no source revision covers",
             ]
         return []
     if fixed_source_year is None:

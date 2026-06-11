@@ -27,7 +27,7 @@ def test_external_evidence_accepts_every_declared_kind() -> None:
 def test_external_evidence_rejects_unknown_kind() -> None:
     with pytest.raises(ValidationError, match="kind"):
         ExternalEvidence.model_validate(
-            {"kind": "aeat_unknown_kind", "reference_id": "JUST-001", "imported_at": _IMPORTED_AT}
+            {"kind": "aeat_unknown_kind", "reference_id": "JUST-001", "imported_at": _IMPORTED_AT},
         )
 
 
@@ -66,7 +66,7 @@ def test_external_evidence_is_frozen_and_forbids_extra_fields() -> None:
                 "reference_id": "JUST-001",
                 "imported_at": _IMPORTED_AT,
                 "extra": "not allowed",
-            }
+            },
         )
 
     evidence = ExternalEvidence(

@@ -27,13 +27,13 @@ def _emit_completeness_gate_failures(
             if segmento is None:
                 failures.append(
                     f"{prefix}: calculation-completeness manifest requires casilla number "
-                    f"{number!r} but the revision does not declare it"
+                    f"{number!r} but the revision does not declare it",
                 )
             else:
                 failures.append(
                     f"{prefix}: calculation-completeness manifest requires casilla number "
                     f"{number!r} within segmento {segmento!r} but the revision does not "
-                    "declare it at that identity"
+                    "declare it at that identity",
                 )
             continue
         identity_label = (
@@ -43,10 +43,11 @@ def _emit_completeness_gate_failures(
         )
         if not declared.legal_refs:
             failures.append(
-                f"{prefix}: calculation-completeness manifest {identity_label} is declared without legal_refs grounding"
+                f"{prefix}: calculation-completeness manifest {identity_label} "
+                "is declared without legal_refs grounding",
             )
         if not declared.source_refs:
             failures.append(
                 f"{prefix}: calculation-completeness manifest {identity_label} "
-                "is declared without source_refs grounding"
+                "is declared without source_refs grounding",
             )

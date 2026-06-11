@@ -17,6 +17,7 @@ from ....adapters.persistence.storage.runtime_repository import secure_object_re
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
@@ -65,6 +66,8 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_PERIOD = Period.from_year_and_code(2026, "1T")
+
 
 # ── shared helpers ────────────────────────────────────────────────
 
@@ -88,7 +91,7 @@ def _seed_active_profile(bucket_id: str = "test") -> None:
             state,
             profile_id=bucket_id,
             overrides={"identity.tax_id": "00000000T"},
-        )
+        ),
     )
 
 
@@ -135,7 +138,7 @@ def _transaction(
             "raw": _raw(source_row_index=source_row_index, description=description),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": classification,
-        }
+        },
     )
 
 
@@ -151,7 +154,7 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
         (
             _transaction(source_row_index=1),  # NOT_YET_PROCESSED
             _transaction(source_row_index=2, classification=BusinessClassification.BUSINESS),
-        )
+        ),
     )
     with profile_create_storage_span("test"):
         TransactionCatalogueRepository(bucket_id="test").save(catalogue)
@@ -172,7 +175,7 @@ def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: 
         items = transactions_pending(settings, bucket_id="test")
 
     assert len(items) == 1
-    assert items[0].drill_command == f"aeat app ledger review --id {items[0].source.transaction_id}"
+    assert items[0].drill_command == f"aeat app ledger review {items[0].source.transaction_id}"
     assert " edit " not in items[0].drill_command
     assert "--set" not in items[0].drill_command
 
@@ -224,7 +227,7 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
                 source_row_index=2,
                 classification=BusinessClassification.BUSINESS,
             ),
-        )
+        ),
     )
     with profile_create_storage_span("test"):
         TransactionCatalogueRepository(bucket_id="test").save(catalogue)
@@ -267,7 +270,7 @@ def _invoice(
             "lines": (line,),
             "payment_status": payment_status,
             "linked_transaction_ids": linked_transaction_ids,
-        }
+        },
     )
 
 
@@ -294,7 +297,7 @@ def test_invoices_pending_severity_mapping(
 ) -> None:
     settings = _build_settings(tmp_path)
     catalogue = InvoiceCatalogue.from_invoices(
-        (_invoice(payment_status=payment_status, linked_transaction_ids=linked),)
+        (_invoice(payment_status=payment_status, linked_transaction_ids=linked),),
     )
     with profile_create_storage_span("test"):
         InvoiceCatalogueRepository(bucket_id="test").save(catalogue)
@@ -317,7 +320,7 @@ def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
                 payment_status=PaymentStatus.CANCELLED,
                 linked_transaction_ids=("b" * 64,),
             ),
-        )
+        ),
     )
     with profile_create_storage_span("test"):
         InvoiceCatalogueRepository(bucket_id="test").save(catalogue)
@@ -372,7 +375,7 @@ def _draft(
     *,
     draft_id: str,
     modelo: str = "130",
-    period: str = "2026Q1",
+    period: Period = _PERIOD,
     status: ModeloDraftStatus = ModeloDraftStatus.LISTO_PARA_PRESENTAR,
     findings: tuple[ModeloValidationFinding, ...] = (),
 ) -> ModeloDraft:

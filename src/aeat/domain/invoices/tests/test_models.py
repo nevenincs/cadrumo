@@ -69,7 +69,7 @@ def _valid_invoice(
             "lines": chosen_lines,
             "payment_status": payment_status,
             "linked_transaction_ids": linked_transaction_ids,
-        }
+        },
     )
 
 
@@ -99,7 +99,7 @@ def test_invoice_line_accepts_one_cent_rounding() -> None:
             "subtotal": Decimal("1.00"),
             "iva_rate": IvaRate.RATE_21,
             "iva_amount": Decimal("0.21"),
-        }
+        },
     )
     assert line.subtotal == Decimal("1.00")
 
@@ -115,7 +115,7 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
                 "subtotal": Decimal("50.00"),
                 "iva_rate": IvaRate.RATE_21,
                 "iva_amount": Decimal("10.50"),
-            }
+            },
         )
 
 
@@ -233,7 +233,7 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
             "lines": (_valid_line(),),
             "payment_status": PaymentStatus.PAID,
             "iva_category": "domestic_general_21",  # string input
-        }
+        },
     )
     assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL_21
     # JSON round-trip preserves the enum value as its string form
@@ -260,7 +260,7 @@ def test_invoice_iva_category_rejects_unknown_string() -> None:
                 "lines": (_valid_line(),),
                 "payment_status": PaymentStatus.PAID,
                 "iva_category": "bogus-category",
-            }
+            },
         )
 
 
@@ -281,7 +281,7 @@ def test_invoice_rejects_invalid_issued_at_without_typeerror_escape() -> None:
                 "currency": "EUR",
                 "lines": (_valid_line(),),
                 "payment_status": PaymentStatus.PAID,
-            }
+            },
         )
 
 
@@ -302,7 +302,7 @@ def test_invoice_rejects_unknown_kind_with_domain_validation_message() -> None:
                 "currency": "EUR",
                 "lines": (_valid_line(),),
                 "payment_status": PaymentStatus.PAID,
-            }
+            },
         )
 
 
@@ -343,7 +343,7 @@ def test_invoice_exempt_lines_require_zero_iva() -> None:
                 "subtotal": Decimal("10"),
                 "iva_rate": IvaRate.EXEMPT,
                 "iva_amount": Decimal("0.01"),
-            }
+            },
         )
 
 
@@ -365,7 +365,7 @@ def test_invoice_requires_exact_invoice_level_totals() -> None:
                 "currency": "EUR",
                 "lines": (line,),
                 "payment_status": PaymentStatus.PAID,
-            }
+            },
         )
 
 
@@ -379,7 +379,7 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
             "subtotal": Decimal("100.01"),
             "iva_rate": IvaRate.RATE_21,
             "iva_amount": Decimal("21.00"),
-        }
+        },
     )
     line_b = InvoiceLine.model_validate(
         {
@@ -389,7 +389,7 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
             "subtotal": Decimal("100.01"),
             "iva_rate": IvaRate.RATE_21,
             "iva_amount": Decimal("21.00"),
-        }
+        },
     )
     # line subtotal sum is 200.02 but we declare base_total as 200.00 → >1-cent drift.
     with pytest.raises(ValidationError, match=r"base_total must equal the exact sum of line subtotals"):
@@ -407,7 +407,7 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
                 "currency": "EUR",
                 "lines": (line_a, line_b),
                 "payment_status": PaymentStatus.PAID,
-            }
+            },
         )
 
 
@@ -421,7 +421,7 @@ def test_invoice_exempt_invoice_enforces_zero_iva_total() -> None:
             "subtotal": Decimal("50"),
             "iva_rate": IvaRate.EXEMPT,
             "iva_amount": Decimal("0"),
-        }
+        },
     )
     invoice = _valid_invoice(lines=(exempt_line,))
     assert invoice.iva_total == Decimal("0")
@@ -454,7 +454,7 @@ def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> 
     invoice = _valid_invoice(linked_transaction_ids=(hex_a, hex_b, hex_a))
     assert invoice.linked_transaction_ids == (hex_a, hex_b)
     with pytest.raises(
-        ValidationError, match=r"each linked_transaction_id must be a 64-character lowercase hex digest"
+        ValidationError, match=r"each linked_transaction_id must be a 64-character lowercase hex digest",
     ):
         _valid_invoice(linked_transaction_ids=("not-hex",))
 
@@ -467,7 +467,7 @@ def test_invoice_rejects_caller_supplied_invoice_id_mismatch() -> None:
             {
                 "invoice_id": "0" * 64,
                 **{key: value for key, value in invoice.model_dump(mode="python").items() if key != "invoice_id"},
-            }
+            },
         )
 
 

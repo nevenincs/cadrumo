@@ -14,7 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
@@ -484,6 +484,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
+    taxpayer_tax_id: str | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -491,7 +492,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
         snapshot = _authority_via_resources().snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except (FileNotFoundError, RegistrySnapshotError):
         return None
@@ -503,6 +504,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         expected_member_sets=expected_member_sets,
+        taxpayer_tax_id=taxpayer_tax_id,
     )
 
 
@@ -531,6 +533,7 @@ def _cross_period_clean_state_findings(
                 pass
             else:
                 requirement = evidence.requirement
+                requirement_period = requirement.period.registry_token
                 blocker_text = _summarize_cross_period_ids(tuple(blocker.value for blocker in evidence.blockers))
                 origin_text = _summarize_cross_period_ids(requirement.origin_ids)
                 findings.append(
@@ -540,7 +543,7 @@ def _cross_period_clean_state_findings(
                         message=(
                             "cross-period dependency is not clean: "
                             f"modelo={requirement.source_modelo} year={requirement.filing_year} "
-                            f"period={requirement.period} origin={requirement.origin.value} "
+                            f"period={requirement_period} origin={requirement.origin.value} "
                             f"origin_ids={origin_text} blockers={blocker_text}"
                         ),
                         next_action=_cross_period_clean_state_next_action(verdict, evidence),
@@ -565,11 +568,12 @@ def _cross_period_unstamped_revision_advisory_finding(
     stamped observation is captured.
     """
     requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
     re_file_capture = (
         "aeat app live filed pull-sources "
         f"--modelo {requirement.source_modelo} "
         f"--year {requirement.filing_year} "
-        f"--period {requirement.period}"
+        f"--period {requirement_period}"
     )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
@@ -577,7 +581,7 @@ def _cross_period_unstamped_revision_advisory_finding(
         message=(
             "cross-period carry used a prior filing with no re-confirmable registry "
             f"revision stamp: modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement.period} origin={requirement.origin.value}. The carried value "
+            f"period={requirement_period} origin={requirement.origin.value}. The carried value "
             "was accepted but its source revision could not be re-confirmed against the "
             "law-determined revision (legacy or indeterminate record)."
         ),
@@ -606,21 +610,23 @@ def _cross_period_clean_state_next_action(
     evidence: CrossPeriodDependencyEvidence,
 ) -> str:
     requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
+    target_period = verdict.target_period.registry_token
     blockers = set(evidence.blockers)
     target_capture = (
         "aeat app live filed pull-sources "
         f"--modelo {verdict.target_modelo} "
         f"--year {verdict.target_filing_year} "
-        f"--period {verdict.target_period}"
+        f"--period {target_period}"
     )
     source_hint = (
-        f"source modelo={requirement.source_modelo} year={requirement.filing_year} period={requirement.period}"
+        f"source modelo={requirement.source_modelo} year={requirement.filing_year} period={requirement_period}"
     )
     source_capture = (
         "aeat app live filed pull-sources "
         f"--modelo {requirement.source_modelo} "
         f"--year {requirement.filing_year} "
-        f"--period {requirement.period}"
+        f"--period {requirement_period}"
     )
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
         # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: the prior
@@ -664,6 +670,7 @@ def _cross_period_clean_state_next_action(
         CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
         CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
         CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD,
+        CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,
         CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,
         CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
     }:
@@ -696,6 +703,7 @@ def _require_cross_period_clean_state(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     iva_compensation_decision: object | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
+    taxpayer_tax_id: str | None = None,
 ) -> None:
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
@@ -704,6 +712,7 @@ def _require_cross_period_clean_state(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         expected_member_sets=expected_member_sets,
+        taxpayer_tax_id=taxpayer_tax_id,
     )
     findings = _cross_period_clean_state_findings(
         verdict,
@@ -723,7 +732,7 @@ def _require_cross_period_clean_state(
         context={
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
+            "period": work_unit.period.registry_token,
             "finding_count": str(len(blocking_findings)),
         },
         suggestion=first.next_action,
@@ -809,7 +818,7 @@ def _missing_evidence_advisory_findings(
             message=diagnostic.message,
             next_action=(
                 "Attach the supporting invoice with "
-                f"`aeat app ledger attach --id {diagnostic.binding_id} --attachment-id ATTACHMENT_ID` "
+                f"`aeat app ledger attach {diagnostic.binding_id} --attachment-id ATTACHMENT_ID` "
                 "(or --purchase-invoice-evidence-id), then rerun verification."
             ),
             legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
@@ -900,6 +909,7 @@ def verify_modelo_revision(
                     workflow_profile,
                     cross_period_expected_member_sets,
                 ),
+                taxpayer_tax_id=workflow_profile.tax_id,
             ),
             iva_compensation_decision=iva_compensation_decision,
         ),
@@ -1098,7 +1108,7 @@ def _emit_verification_bucket_event(
             "work_unit_id": target.work_unit_id,
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
+            "period": work_unit.period.registry_token,
             "completeness_status": completeness.value,
             "finding_count": str(finding_count),
             "missing_required_count": str(missing_required_count),
@@ -1138,7 +1148,7 @@ def _collect_revision_verification_findings(
         snapshot = authority.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except (FileNotFoundError, RegistrySnapshotError):
         findings.append(
@@ -1149,7 +1159,7 @@ def _collect_revision_verification_findings(
                     "application.modelo.findings.registry_snapshot_unresolved",
                     modelo=str(work_unit.modelo),
                     filing_year=str(work_unit.filing_year),
-                    period=str(work_unit.period),
+                    period=work_unit.period.registry_token,
                 ),
                 next_action="aeat app registry verify",
             ),

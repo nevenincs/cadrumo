@@ -86,7 +86,7 @@ def test_expression_parameter_refs_walks_dispatch_table_values() -> None:
             dispatch_table={
                 "madrid": "renta-2025-escala-autonomica-madrid-base-general",
                 "cataluna": "renta-2025-escala-autonomica-cataluna-base-general",
-            }
+            },
         ),
     )
 

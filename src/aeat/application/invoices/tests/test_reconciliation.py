@@ -84,7 +84,7 @@ def test_reconcile_invoice_repositories_binds_both_catalogues_to_requested_bucke
         transaction = _transaction()
         InvoiceCatalogueRepository(bucket_id=profile.bucket_id).save(InvoiceCatalogue.from_invoices([invoice]))
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
-            TransactionCatalogue.from_transactions([transaction])
+            TransactionCatalogue.from_transactions([transaction]),
         )
 
         result = reconcile_invoice_repositories(bucket_id=profile.bucket_id, apply=True)
@@ -123,10 +123,10 @@ def _invoice() -> Invoice:
                         "subtotal": Decimal("100.00"),
                         "iva_rate": IvaRate.RATE_21,
                         "iva_amount": Decimal("21.00"),
-                    }
+                    },
                 ),
             ),
-        }
+        },
     )
 
 

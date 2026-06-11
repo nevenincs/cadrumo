@@ -97,7 +97,7 @@ CUOTA_LESS_M303_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
         IvaCategory.REGIMEN_SIMPLIFICADO,
-    }
+    },
 )
 
 
@@ -303,7 +303,7 @@ class IvaRateRecord(_IvaStrictFrozen):
         if self.effective_until is not None and self.effective_from > self.effective_until:
             raise IvaValidationError(
                 f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
-                f"effective_from {self.effective_from} is after effective_until {self.effective_until}"
+                f"effective_from {self.effective_from} is after effective_until {self.effective_until}",
             )
         return self
 
@@ -431,7 +431,7 @@ class IvaCatalogue(_IvaStrictMutable):
         for key, regulation in self.regulations.items():
             if key != regulation.category:
                 raise IvaValidationError(
-                    f"IvaCatalogue: key {key!r} does not match regulation.category {regulation.category!r}"
+                    f"IvaCatalogue: key {key!r} does not match regulation.category {regulation.category!r}",
                 )
         return self
 

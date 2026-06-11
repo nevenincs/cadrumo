@@ -87,7 +87,7 @@ def _load_catalogue_cached(
                 path,
             )
             raise NormativeParseError(
-                f"{path}: duplicate normative id {reference.id!r} (already loaded from a previous file)"
+                f"{path}: duplicate normative id {reference.id!r} (already loaded from a previous file)",
             )
         references[reference.id] = reference
 

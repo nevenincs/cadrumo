@@ -23,6 +23,7 @@ from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from .....core import Period
 from .....core.config import Settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
@@ -48,7 +49,7 @@ def parse_iva_compensation_wallet_html(
     taxpayer_nif: str,
     authenticated_identity: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     source_url: str,
     captured_at: datetime,
     allow_empty_wallet_shell: bool = False,
@@ -76,7 +77,7 @@ def parse_iva_compensation_wallet_html(
         if allow_empty_wallet_shell and _looks_like_executed_empty_wallet_page(soup):
             raise SedeParseError(
                 "executed IVA wallet shell does not contain AEAT's explicit zero aggregate; "
-                "refusing to persist a synthetic zero wallet observation"
+                "refusing to persist a synthetic zero wallet observation",
             )
         raise SedeParseError("captured page does not contain a recognizable IVA compensation wallet table")
 
@@ -84,7 +85,7 @@ def parse_iva_compensation_wallet_html(
     if summary_total is not None and rows and summary_total != row_sum:
         raise SedeParseError(
             f"IVA wallet summary total {summary_total} does not equal the sum of Cuota Disponible rows {row_sum}; "
-            "refusing to persist an inconsistent wallet observation"
+            "refusing to persist an inconsistent wallet observation",
         )
     total_pending = summary_total if summary_total is not None else row_sum
     return IvaCompensationWalletObservation(
@@ -151,16 +152,16 @@ def _parse_wallet_summary_total(soup: BeautifulSoup) -> Decimal | None:
     return None
 
 
-def _assert_wallet_result_target_matches(soup: BeautifulSoup, *, target_year: int, target_period: str) -> None:
+def _assert_wallet_result_target_matches(soup: BeautifulSoup, *, target_year: int, target_period: Period) -> None:
     """Fail closed when AEAT renders result target labels that do not match the requested query."""
     rendered_year, rendered_period = _parse_wallet_result_target(soup)
     if rendered_year is not None and rendered_year != target_year:
         raise SedeParseError(
-            f"IVA wallet result exercise {rendered_year} does not match requested exercise {target_year}"
+            f"IVA wallet result exercise {rendered_year} does not match requested exercise {target_year}",
         )
-    if rendered_period is not None and rendered_period != target_period.strip().upper():
+    if rendered_period is not None and rendered_period != target_period.registry_token:
         raise SedeParseError(
-            f"IVA wallet result period {rendered_period!r} does not match requested period {target_period!r}"
+            f"IVA wallet result period {rendered_period!r} does not match requested period {target_period!r}",
         )
 
 
@@ -348,7 +349,7 @@ def _wallet_execute_gate_status(html: str, *, expected_path: str) -> str:
     if action_path != expected_path:
         return "unexpected-wallet-form"
     submit = form.select_one(_PRE303.wallet_execute_submit_selector) or soup.select_one(
-        _PRE303.wallet_execute_submit_selector
+        _PRE303.wallet_execute_submit_selector,
     )
     if submit is None:
         return "no-wallet-execute-submit"
@@ -508,15 +509,15 @@ def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     cell and the generated/applied movement columns stay ``None``.
     """
     year = _parse_year(cells[0])
-    period = cells[1].strip().upper()
-    if not period:
+    period_token = cells[1].strip().upper()
+    if not period_token:
         raise SedeParseError(
             "IVA wallet period cell is empty",
             translated_message=tr("adapters.sede.errors.iva_wallet_empty_period_cell"),
         )
     return IvaCompensationWalletRow(
         generation_year=year,
-        generation_period=period,
+        generation_period=Period.from_year_and_code(year, period_token),
         pending_amount=_parse_spanish_decimal(cells[2]),
         raw_label=" | ".join(cells[:3]),
     )
@@ -569,7 +570,7 @@ def _normalised_display_text(value: str) -> str:
 
 def _looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:
     title_and_heading = _normalised_text(
-        f"{_normalised_title(soup)} {' '.join(node.get_text(' ') for node in soup.find_all(['h1', 'h2']))}"
+        f"{_normalised_title(soup)} {' '.join(node.get_text(' ') for node in soup.find_all(['h1', 'h2']))}",
     )
     if not all(token in title_and_heading for token in _PRE303.iva_wallet_empty_page_tokens):
         return False

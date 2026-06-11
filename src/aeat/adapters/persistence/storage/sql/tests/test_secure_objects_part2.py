@@ -72,7 +72,7 @@ def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path)
                     namespace,
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=2,
-                )
+                ),
             )
 
             assert len(outcomes) == 1
@@ -98,7 +98,7 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
                     "aeat.test.empty",
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
-                )
+                ),
             )
             assert items == []
         finally:
@@ -148,7 +148,7 @@ def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Pa
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
                     batch_size=2,
-                )
+                ),
             )
 
             assert len(outcomes) == 5
@@ -179,7 +179,7 @@ def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -
                         expected_class=SensitivityClass.FINANCIAL,
                         max_supported_version=1,
                         batch_size=0,
-                    )
+                    ),
                 )
             assert raised.value.translated_message == "errors.integrity.integrity_storage_secure_object_batch_size"
             assert raised.value.context == {"batch_size": 0}
@@ -215,7 +215,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
                         namespace,
                         expected_class=SensitivityClass.FINANCIAL,
                         max_supported_version=1,
-                    )
+                    ),
                 )
 
             assert len(yielded) == 1
@@ -392,7 +392,7 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
                 archived = con.execute(
                     "SELECT revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
                     "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
-                    "conflict_policy FROM secure_objects_quarantine"
+                    "conflict_policy FROM secure_objects_quarantine",
                 ).fetchone()
                 (remaining,) = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()
             assert archived == tuple(metadata_values.values())
@@ -426,7 +426,7 @@ def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -
                 row = con.execute(
                     "SELECT revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
                     "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
-                    "conflict_policy, payload FROM secure_objects"
+                    "conflict_policy, payload FROM secure_objects",
                 ).fetchone()
 
             assert len(row[0]) == 64
@@ -522,7 +522,7 @@ def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> Non
                         write_provenance="test:batch",
                         source_event_id="batch-event-b",
                     ),
-                )
+                ),
             )
 
             with sqlite3.connect(db_path) as con:
@@ -598,7 +598,7 @@ def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists()
                     "payload": b"policy-payload",
                     "conflict_policy": "compare-and-swap",
                 },
-            )
+            ),
         )
 
 

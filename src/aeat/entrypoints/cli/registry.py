@@ -301,7 +301,7 @@ def verify_filed_state_cmd(
             _metric_line(
                 "drift",
                 f"{drift.casilla_id}\tlocal={drift.local_value}\tfiled={drift.filed_value}\tdelta={drift.delta}",
-            )
+            ),
         )
     _emit_envelope(
         ctx,

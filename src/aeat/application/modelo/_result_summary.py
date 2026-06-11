@@ -21,7 +21,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
@@ -56,7 +57,7 @@ class CalculationResultSummary(BaseModel):
 
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     rows: tuple[ResultSummaryRow, ...] = Field(default_factory=tuple)
 
 
@@ -116,7 +117,7 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
                 label=casilla_labels.get(casilla_id, casilla_id),
                 value=value,
                 role=role,
-            )
+            ),
         )
         seen.add(casilla_id)
     # The verification expectation's computed casillas follow as key figures.
@@ -130,7 +131,7 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
                 label=casilla_labels.get(casilla_id, casilla_id),
                 value=value,
                 role="key_figure",
-            )
+            ),
         )
         seen.add(casilla_id)
 

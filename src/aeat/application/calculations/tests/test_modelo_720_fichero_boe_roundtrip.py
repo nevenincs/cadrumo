@@ -288,7 +288,7 @@ def test_modelo_720_golden_sha_fichero_boe(tmp_path: Path) -> None:
             f"Golden SHA not yet recorded. Run this test once, observe the output below,\n"
             f"then replace _M720_GOLDEN_SHA256 with the real hash:\n\n"
             f"  _M720_GOLDEN_SHA256 = {digest!r}\n\n"
-            f"Verify the per-offset assertions above pass first."
+            f"Verify the per-offset assertions above pass first.",
         )
     assert digest == _M720_GOLDEN_SHA256, (
         f"Modelo 720 fichero-BOE SHA mismatch.\n"

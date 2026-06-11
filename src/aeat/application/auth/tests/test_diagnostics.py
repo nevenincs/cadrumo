@@ -29,7 +29,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
 ) -> None:
     external = load_external_constants().aeat
     selector_url = external.clave_movil.selector_access_url_template.format(
-        target=f"{external.domains.sede}{external.sede_paths.expedientes_resumen}"
+        target=f"{external.domains.sede}{external.sede_paths.expedientes_resumen}",
     )
     contrast_url = (
         f"{external.domains.www12}{external.clave_movil.autentica_dni_nie_contraste_path}"
@@ -53,7 +53,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                     "captured_at": older.isoformat(),
                     "html": "<html><body>older captured page</body></html>",
                     "screenshot_png_base64": "aW1hZ2U=",
-                }
+                },
             ).encode(UTF_8_ENCODING),
         )
         repo.save(
@@ -95,7 +95,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                         "certificate_path_fingerprint": "sha256:certpath",
                     },
                     "html": "<html><body>newer captured page with sensitive form fields</body></html>",
-                }
+                },
             ).encode(UTF_8_ENCODING),
         )
 
@@ -124,7 +124,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert listed.rows[0].certificate_path_configured is True
         assert listed.rows[0].certificate_backend == "playwright_context"
         assert listed.rows[0].url.startswith(
-            f"{external.domains.www12.removeprefix('https://')}{external.clave_movil.autentica_dni_nie_contraste_path}"
+            f"{external.domains.www12.removeprefix('https://')}{external.clave_movil.autentica_dni_nie_contraste_path}",
         )
         assert listed.rows[0].url.endswith("?keys=qAA,ref,storksp,from,ts")
         assert "%2Fprivate-target" not in listed.rows[0].url

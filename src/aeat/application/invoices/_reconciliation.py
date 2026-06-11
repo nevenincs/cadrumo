@@ -100,7 +100,7 @@ def reconcile_invoice_catalogues(
                     invoice_id=suggestion.invoice_id,
                     transaction_id=suggestion.transaction_id,
                     reason=str(exc),
-                )
+                ),
             )
             continue
         pending_invoices = updated_invoices

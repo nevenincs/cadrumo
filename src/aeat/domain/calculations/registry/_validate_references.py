@@ -78,7 +78,7 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
 
     if checker.failures:
         raise RegistryValidationError(
-            "referential integrity check failed:\n" + "\n".join(f" - {f}" for f in sorted(checker.failures))
+            "referential integrity check failed:\n" + "\n".join(f" - {f}" for f in sorted(checker.failures)),
         )
 
 
@@ -94,14 +94,14 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
         checker.chk_legal_source_refs(cp, casilla.legal_refs, casilla.source_refs)
         if casilla.constraints is not None:
             checker.chk_legal_source_refs(
-                f"{cp}.constraints", casilla.constraints.legal_refs, casilla.constraints.source_refs
+                f"{cp}.constraints", casilla.constraints.legal_refs, casilla.constraints.source_refs,
             )
 
 
 def _check_bound_casilla_binding_coverage(checker: _IdReferenceChecker, field_path: str, binding: str | None) -> None:
     if binding is None:
         checker.failures.append(
-            f"{checker.prefix}: {field_path}.binding has no binding definition for input_kind='bound'"
+            f"{checker.prefix}: {field_path}.binding has no binding definition for input_kind='bound'",
         )
         return
     checker.chk(f"{field_path}.binding", binding, checker.binding_ids)
@@ -169,7 +169,7 @@ def _check_text_casilla_strategy(
             checker.failures.append(
                 f"{checker.prefix}: {ep} targets casilla {target.casilla_id!r} "
                 f"(data_type='text') but uses match_strategy={target.match_strategy!r}; "
-                f"text-typed casilla targets must use match_strategy='named_label'"
+                f"text-typed casilla targets must use match_strategy='named_label'",
             )
 
 
@@ -179,7 +179,7 @@ def _check_cross_reference_refs(checker: _IdReferenceChecker, revision: ModeloRe
         checker.chk_legal_source_refs(crp, cross_ref.legal_refs, cross_ref.source_refs)
         for pred in cross_ref.applicability_predicates:
             checker.chk_legal_source_refs(
-                f"{crp}.applicability_predicates.{pred.field}", pred.legal_refs, pred.source_refs
+                f"{crp}.applicability_predicates.{pred.field}", pred.legal_refs, pred.source_refs,
             )
 
 
@@ -223,7 +223,7 @@ def _check_filing_schedule_refs(checker: _IdReferenceChecker, revision: ModeloRe
         checker.chk_legal_source_refs(fsp, schedule.legal_refs, schedule.source_refs)
         for condition in schedule.profile_conditions:
             checker.chk_legal_source_refs(
-                f"{fsp}.profile_conditions.{condition.field}", condition.legal_refs, condition.source_refs
+                f"{fsp}.profile_conditions.{condition.field}", condition.legal_refs, condition.source_refs,
             )
 
 

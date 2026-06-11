@@ -24,7 +24,7 @@ from ...application.ledger import (
     summarize_manual_transactions,
 )
 from ...application.review import FilterParseError
-from ...core import LedgerSortField, LedgerSortOrder, resolve_active_bucket_id
+from ...core import LedgerSortField, LedgerSortOrder, Period, resolve_active_bucket_id
 from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEvent,
@@ -214,7 +214,7 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
         for year in years:
             report = preflight_transaction_catalogue(
                 bucket_id=bucket_id,
-                period=str(year),
+                period=Period.from_year_and_code(year, "0A"),
                 transactions=catalogue,
             )
             checked_total += report.checked_transaction_count
@@ -593,7 +593,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
                         "ledger_filing_stale",
                         f"modelo={work_unit.modelo}",
                         f"year={work_unit.filing_year}",
-                        f"period={work_unit.period}",
+                        f"period={work_unit.period.registry_token}",
                         f"revision={revision.calculation_revision_id}",
                         f"changed={len(verdict.changed)}",
                         f"removed={len(verdict.removed)}",

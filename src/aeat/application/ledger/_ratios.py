@@ -38,7 +38,7 @@ _HOME_OFFICE_FAMILIES = frozenset(
     {
         SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
         SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
-    }
+    },
 )
 
 
@@ -221,7 +221,7 @@ def unset_usage_ratio(*, bucket_id: str, category: SpendingCategory) -> Decimal 
     prior = profile.ratios.get(category)
     if prior is None:
         raise UsageRatioValidationError(
-            f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}"
+            f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
         )
     save_usage_ratios(profile.without_ratio(category), bucket_id=bucket_id)
     return prior

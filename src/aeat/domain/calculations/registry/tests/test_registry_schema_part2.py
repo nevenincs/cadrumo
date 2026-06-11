@@ -2,19 +2,26 @@
 
 from __future__ import annotations
 
-import pytest
+from datetime import date
+from decimal import Decimal
 
-from ._registry_schema_support import (
+import pytest
+from pydantic import ValidationError
+
+from .....core import Period
+from .....core.resources import bundled_path
+from .._errors import RegistryValidationError
+from .._schema import (
     ConvenioRateRow,
-    Decimal,
+    DeadlineWindowDefinition,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
     ModeloRevision,
     ParameterDefinition,
-    RegistryValidationError,
-    RegistryValidator,
-    ValidationError,
     VerificationPredicateDefinition,
+)
+from .._validate import RegistryValidator
+from ._registry_schema_support import (
     _as_communication_revision,
     _committed_modelo,
     _committed_registry,
@@ -22,8 +29,6 @@ from ._registry_schema_support import (
     _keyed_bracket,
     _revision,
     _with_revision,
-    bundled_path,
-    date,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -49,7 +54,7 @@ def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() 
                     "source_refs": ("aeat-manual",),
                 },
             ),
-        }
+        },
     )
 
     assert revision.continuidad_validation == "strict"
@@ -132,7 +137,7 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
                 "application_links": tuple(
                     link_id for link_id in construct.application_links if link_id not in extractor_link_ids
                 ),
-            }
+            },
         )
         for construct in communication.constructs
     )
@@ -141,7 +146,7 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
             "constructs": constructs_without_extractor,
             "extraction_profiles": (),
             "application_links": tuple(link for link in communication.application_links if link.surface != "extractor"),
-        }
+        },
     )
     modelo_145 = modelo.model_copy(update={"id": "145"})
 
@@ -174,7 +179,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
         finding_kind="BLOCKING_RULE",
     )
     mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, typo_predicate)}
+        update={"verification_predicates": (*revision.verification_predicates, typo_predicate)},
     )
 
     with pytest.raises(RegistryValidationError, match="unknown operator 'cap_lt_when_positive'"):
@@ -193,7 +198,7 @@ def test_validator_rejects_verification_predicate_with_malformed_expression() ->
         finding_kind="BLOCKING_RULE",
     )
     mutated = revision.model_copy(
-        update={"verification_predicates": (*revision.verification_predicates, malformed_predicate)}
+        update={"verification_predicates": (*revision.verification_predicates, malformed_predicate)},
     )
 
     with pytest.raises(RegistryValidationError, match="not a recognised DSL call"):
@@ -228,7 +233,7 @@ def test_validator_rejects_communication_link_combined_with_filing() -> None:
     revision = next(iter(modelo.revisions.values()))
     filing_link = next(link for link in revision.application_links if link.surface == "filing")
     communication_link = filing_link.model_copy(
-        update={"id": f"{filing_link.id}-communication", "surface": "communication"}
+        update={"id": f"{filing_link.id}-communication", "surface": "communication"},
     )
     mutated = revision.model_copy(update={"application_links": (*revision.application_links, communication_link)})
 
@@ -282,7 +287,7 @@ def test_validator_rejects_communication_link_with_filing_schedule() -> None:
             "id": f"{filing_link.id}-communication",
             "surface": "communication",
             "consumer": "aeat.application.modelo",
-        }
+        },
     )
     application_links = tuple(
         communication_link if link.id == filing_link.id else link
@@ -295,8 +300,8 @@ def test_validator_rejects_communication_link_with_filing_schedule() -> None:
                 "application_links": tuple(
                     communication_link.id if link_id == filing_link.id else link_id
                     for link_id in construct.application_links
-                )
-            }
+                ),
+            },
         )
         for construct in revision.constructs
     )
@@ -364,17 +369,17 @@ def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> 
             update={
                 "records": tuple(
                     record.model_copy(
-                        update={"fields": tuple(field for field in record.fields if field.casilla != target)}
+                        update={"fields": tuple(field for field in record.fields if field.casilla != target)},
                     )
                     for record in layout.records
-                )
-            }
+                ),
+            },
         )
         for layout in revision.export_layouts
     )
     casillas = tuple(
         casilla.model_copy(
-            update={"export_refs": tuple(ref for ref in casilla.export_refs if ref not in removed_export_fields)}
+            update={"export_refs": tuple(ref for ref in casilla.export_refs if ref not in removed_export_fields)},
         )
         if casilla.id == target
         else casilla
@@ -390,7 +395,7 @@ def test_validator_rejects_reconciliation_total_unknown_casilla() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     expectation = revision.verification_expectations[0].model_copy(
-        update={"reconciliation_totals": {"ingresar": "missing"}}
+        update={"reconciliation_totals": {"ingresar": "missing"}},
     )
     mutated = revision.model_copy(update={"verification_expectations": (expectation,)})
 
@@ -434,7 +439,7 @@ def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> Non
         r"'renta-2025-not-a-declared-parameter'",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
-            _with_revision(modelo, mutated_revision)
+            _with_revision(modelo, mutated_revision),
         )
 
 
@@ -447,11 +452,48 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
         {
             "applicability_condition_mode": "any",
             "applicability_conditions": (),
-        }
+        },
     )
 
     with pytest.raises(ValueError, match="any-mode requires applicability conditions"):
         type(window).model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("authored_period", "expected_code"),
+    (
+        ("2026Q1", "1T"),
+        ("2026-1T", "1T"),
+        ("2026-0A", "0A"),
+        ("2026-03", "03"),
+        ("2026-1P", "1P"),
+        ("2026-EXT-1T", "EXT-1T"),
+        ("2026", "0A"),
+    ),
+)
+def test_deadline_window_hydrates_toml_periods_at_schema_boundary(
+    authored_period: str,
+    expected_code: str,
+) -> None:
+    window = DeadlineWindowDefinition.model_validate(
+        {
+            "id": f"test-window-{authored_period.lower()}",
+            "filing_year": 2026,
+            "period": authored_period,
+            "period_kind": "quarterly",
+            "opens_on": date(2026, 4, 1),
+            "closes_on": date(2026, 4, 20),
+            "legal_refs": ("test-law:art-1",),
+            "source_refs": ("test-source",),
+        },
+    )
+
+    expected_period = Period.from_year_and_code(2026, expected_code)
+    assert window.period == expected_period
+    assert window.model_dump()["period"] == {"filing_year": 2026, "code": expected_code}
+    assert window.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": expected_code}
+    assert '"period":"2026' not in window.model_dump_json()
+    assert DeadlineWindowDefinition.model_validate(window.model_dump()).period == expected_period
 
 
 def test_keyed_bracket_table_parses_with_distinct_keys() -> None:

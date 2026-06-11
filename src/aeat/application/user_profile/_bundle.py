@@ -122,7 +122,7 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
     if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
         raise UnsupportedBundleSchemaVersionError(
             f"bundle_schema_version {bundle.bundle_schema_version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}"
+            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
         )
 
     if bundle.bundle_schema_version == 1:

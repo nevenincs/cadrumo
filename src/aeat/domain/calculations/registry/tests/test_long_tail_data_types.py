@@ -37,7 +37,7 @@ def _casilla_with(data_type: str, label: str = "Test casilla") -> CasillaDefinit
             "data_type": data_type,
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual-modelo",),
-        }
+        },
     )
 
 
@@ -50,7 +50,7 @@ def test_semantic_role_accepts_long_cross_modelo_domain_identifier() -> None:
         {
             **casilla.model_dump(),
             "semantic_role": "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor",
-        }
+        },
     )
 
     assert rebuilt.semantic_role == "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor"

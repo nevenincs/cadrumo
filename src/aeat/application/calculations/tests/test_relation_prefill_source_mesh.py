@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -59,9 +60,9 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
                 bucket_id="operator",
                 modelo="180",
                 filing_year=2026,
-                period="0A",
+                period=Period.from_year_and_code(2026, "0A"),
                 revision=snapshot.revision,
-            )
+            ),
         )
 
         assert source_resolution.relation_values == {

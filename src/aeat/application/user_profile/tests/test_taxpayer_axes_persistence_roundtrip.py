@@ -166,7 +166,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
             IrpfIncomeCategory.TRABAJO,
             IrpfIncomeCategory.CAPITAL_INMOBILIARIO,
             IrpfIncomeCategory.PENSION,
-        }
+        },
     )
     assert profile.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_SIMPLIFICADA
     assert profile.iva_regime is IVARegime.REAGP

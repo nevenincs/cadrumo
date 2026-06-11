@@ -47,7 +47,7 @@ def verify_catalogue(
                     level="error",
                     code="parse_error",
                     message=str(exc),
-                )
+                ),
             )
             return NormativeVerificationReport(issues=tuple(issues))
 
@@ -62,7 +62,7 @@ def verify_catalogue(
                         code="permalink_mismatch",
                         message=(f"permalink {permalink!r} does not start with canonical boe_url {base_url!r}"),
                         reference_id=reference.id,
-                    )
+                    ),
                 )
             try:
                 rendered = cite(reference, articulo)
@@ -79,7 +79,7 @@ def verify_catalogue(
                         code="cite_failed",
                         message=f"cite() raised: {exc}",
                         reference_id=reference.id,
-                    )
+                    ),
                 )
                 continue
             if reference.boe_id not in rendered:
@@ -89,7 +89,7 @@ def verify_catalogue(
                         code="cite_missing_boe_id",
                         message=f"rendered citation missing boe_id: {rendered}",
                         reference_id=reference.id,
-                    )
+                    ),
                 )
 
     _logger.debug("verify_catalogue produced %d issue(s)", len(issues))

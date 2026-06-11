@@ -226,7 +226,7 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
     # The restored row is genuinely active again: it re-enters the
     # active-aggregation set that tax calculations consume.
     restored_summary = summarize_manual_transactions(
-        bucket_id="bucket-a", transaction_repository=transaction_repository
+        bucket_id="bucket-a", transaction_repository=transaction_repository,
     )
     assert restored_summary.active_count == 1
     assert restored_summary.stashed_count == 0
@@ -323,7 +323,7 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
     assert persisted is not None
     assert persisted.lifecycle_state is TransactionLifecycleState.ACTIVE
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED
+        BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
 
@@ -427,8 +427,8 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
     catalogue = fresh_repository.load()
     fresh_repository.save(
         TransactionCatalogue.model_validate(
-            {"transactions": {**dict(catalogue.transactions), corrupted.transaction_id: corrupted}}
-        )
+            {"transactions": {**dict(catalogue.transactions), corrupted.transaction_id: corrupted}},
+        ),
     )
     poisoned_repository, _ = _repositories(secure_objects)
     poisoned = poisoned_repository.load().get(created.ref.transaction_id)
@@ -511,8 +511,8 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     )
     invoice_repository.save(
         InvoiceCatalogue.from_invoices(
-            (purchase_evidence.model_copy(update={"linked_transaction_ids": (created.ref.transaction_id,)}),)
-        )
+            (purchase_evidence.model_copy(update={"linked_transaction_ids": (created.ref.transaction_id,)}),),
+        ),
     )
 
     removed = remove_manual_transaction(
@@ -572,7 +572,7 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
     assert report.removed is False
     assert transaction_repository.load().get(created.ref.transaction_id) is not None
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED
+        BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
 
@@ -651,7 +651,7 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_objects: Sec
     assert persisted is not None
     assert persisted.lifecycle_state is TransactionLifecycleState.ACTIVE
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED
+        BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
 
@@ -739,8 +739,8 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     )
     invoice_repository.save(
         InvoiceCatalogue.from_invoices(
-            (purchase_evidence.model_copy(update={"linked_transaction_ids": (first.ref.transaction_id,)}),)
-        )
+            (purchase_evidence.model_copy(update={"linked_transaction_ids": (first.ref.transaction_id,)}),),
+        ),
     )
 
     report = reset_ledger_catalogue(
@@ -814,5 +814,5 @@ def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_object
 
     assert transaction_repository.load().get(created.ref.transaction_id) is not None
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED
+        BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]

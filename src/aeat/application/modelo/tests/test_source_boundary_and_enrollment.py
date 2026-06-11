@@ -27,6 +27,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.invoices import InvoiceCatalogueRepository
@@ -78,7 +79,7 @@ def _seed(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         revision_id=revision_id,
         repository=wu_repo,
         clock=_T0,
@@ -230,6 +231,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     separate concern exercised by the carry-forward continuity tests in
     test_modelo_130_carry_forward_continuity.py.
     """
+    from ....core import Period
     from ...aggregation import (
         CalculationSourceContext,
         LedgerRentaIncomeAggregationSourceResolver,
@@ -245,7 +247,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision=revision,
         calculated_at=_T1,
     )
@@ -267,7 +269,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
             OssIossLedgerSourceResolver(candidates=()).resolve(context),
             InvoiceCatalogueSourceResolver(invoice_repository=invoice_repo).resolve(context),
             PreviousFilingSourceResolver().resolve(context),
-        ]
+        ],
     )
 
     # The merged owned_sources must include 'ledger_renta_income_aggregation'.
@@ -282,7 +284,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     _pre_mesh_handled: frozenset[str] = frozenset({"profile", "borrador", "iva_wallet_decision"})
     handled = frozenset(source_resolution.owned_sources) | _pre_mesh_handled
     unhandled = collect_unhandled_source_diagnostics(
-        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"})
+        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"}),
     )
     unrouted_income = [d for d in unhandled if d.source_kind == "ledger_renta_income_aggregation"]
     assert not unrouted_income, (
@@ -371,7 +373,7 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
 def test_s10_deferred_source_kinds_are_enumerated_and_non_empty() -> None:
     """DEFERRED_SOURCE_KINDS is non-empty and contains the five expected kinds."""
     expected = frozenset(
-        {"withholding", "atribucion_member", "related_party_operation", "foreign_asset", "refund_operation"}
+        {"withholding", "atribucion_member", "related_party_operation", "foreign_asset", "refund_operation"},
     )
     assert expected.issubset(DEFERRED_SOURCE_KINDS), f"Missing deferred kinds: {expected - DEFERRED_SOURCE_KINDS}"
 
@@ -413,7 +415,7 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
             bucket_id=_BUCKET_ID,
             modelo=modelo,
             filing_year=2026,
-            period=period,
+            period=Period.from_year_and_code(2026, period),
             revision_id=revision_id,
             repository=wu_repo,
             clock=_T0,
@@ -465,7 +467,7 @@ def test_s27_withholding_deferred_advisory_fires() -> None:
     # The live _handled set: relation_prefill is owned (enrolled resolver), withholding is not.
     handled = frozenset({"relation_prefill", "profile", "borrador", "iva_wallet_decision"})
     unhandled = collect_unhandled_source_diagnostics(
-        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"})
+        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"}),
     )
     withholding_advisories = [
         d for d in unhandled if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"

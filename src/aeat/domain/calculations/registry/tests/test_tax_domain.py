@@ -6,7 +6,7 @@ from functools import lru_cache
 
 import pytest
 
-from .....core._tax_domain import TaxDomain
+from .....core import TaxDomain
 from .....core.resources import bundled_path
 from .. import load_registry_tree
 from .._schema import ModeloDefinition

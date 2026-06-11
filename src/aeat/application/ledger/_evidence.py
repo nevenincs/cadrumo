@@ -352,7 +352,7 @@ class PurchaseInvoiceEvidenceService:
                 bucket_id=bucket_id,
                 captured_by=actor,
                 source_command="aeat app ledger evidence add",
-            )
+            ),
         )
         record = PurchaseInvoiceEvidence(
             evidence_id=uuid.uuid4().hex[:16],

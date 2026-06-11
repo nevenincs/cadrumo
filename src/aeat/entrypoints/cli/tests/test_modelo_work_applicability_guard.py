@@ -55,7 +55,7 @@ def _create_natural_person() -> None:
             "--entity-type", "natural_person",
             "--irpf-income-categories", "actividad_economica",
             "--irpf-estimation-regime", "directa_normal",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
 
@@ -72,7 +72,7 @@ def _create_legal_entity() -> None:
             "--activity", "consulting",
             "--entity-type", "legal_entity",
             "--legal-entity-form", "sl",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
 
@@ -94,7 +94,7 @@ def test_work_create_refuses_modelo_202_for_a_natural_person(
             "app", "modelo", "work", "create",
             "--modelo", "202", "--year", "2025", "--period", "1P",
             "--revision", "2025-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0, result.output
@@ -119,7 +119,7 @@ def test_work_create_refuses_modelo_100_for_a_legal_entity(
             "app", "modelo", "work", "create",
             "--modelo", "100", "--year", "2025", "--period", "0A",
             "--revision", "2023-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code != 0, result.output
@@ -142,7 +142,7 @@ def test_work_create_allow_not_applicable_bypasses_the_guard(
             "--modelo", "202", "--year", "2025", "--period", "1P",
             "--revision", "2025-y-siguientes",
             "--allow-not-applicable",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code == 0, result.output
@@ -166,7 +166,7 @@ def test_work_create_allows_an_applicable_modelo(
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
 
     assert result.exit_code == 0, result.output

@@ -435,11 +435,11 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
             errors.append(
                 f"{locale_file.name} is missing {len(missing)} f-string-registered key(s): "
                 + ", ".join(sorted(missing)[:5])
-                + (" ..." if len(missing) > 5 else "")
+                + (" ..." if len(missing) > 5 else ""),
             )
     if errors:
         pytest.fail(
-            "\n".join(errors) + "\nRun `python -m aeat.locales scaffold` to insert missing placeholder entries."
+            "\n".join(errors) + "\nRun `python -m aeat.locales scaffold` to insert missing placeholder entries.",
         )
 
 
@@ -465,5 +465,5 @@ def test_scaffold_inserts_fstring_registry_keys(tmp_path: Path) -> None:
     registered_keys = get_registered_keys()
     missing = registered_keys - yaml_keys
     assert not missing, f"scaffold failed to insert {len(missing)} f-string-registered key(s): " + ", ".join(
-        sorted(missing)[:10]
+        sorted(missing)[:10],
     )

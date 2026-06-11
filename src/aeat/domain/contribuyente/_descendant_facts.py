@@ -71,7 +71,7 @@ def descendant_facts_from_list(
 _N_RE = re.compile(
     r"^renta_family\.descendiente\.(\d+)\."
     r"(birth_date|adoption_date|discapacidad|convivencia|custodia_compartida|"
-    r"meses_madre_trabajo|gastos_guarderia|nif)$"
+    r"meses_madre_trabajo|gastos_guarderia|nif)$",
 )
 
 
@@ -141,7 +141,7 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
                 meses_madre_trabajo_2024=meses,
                 gastos_guarderia_euros=gastos,
                 nif=nif,
-            )
+            ),
         )
     return tuple(result)
 

@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from .._work_unit import (
     ModeloCode,
     WorkUnit,
@@ -14,6 +15,8 @@ from .._work_unit import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_P_2026_1T = Period.from_year_and_code(2026, "1T")
 
 
 def _build(
@@ -27,7 +30,7 @@ def _build(
         bucket_id="bucket-1",
         modelo=ModeloCode("303"),
         filing_year=2026,
-        period="Q1",
+        period=_P_2026_1T,
         revision_id="rev-v1",
     )
     return WorkUnit(
@@ -35,9 +38,9 @@ def _build(
         bucket_id="bucket-1",
         modelo=ModeloCode("303"),
         filing_year=2026,
-        period="Q1",
+        period=_P_2026_1T,
         revision_id="rev-v1",
-        name="303-2026-Q1",
+        name="303-2026-1T",
         created_at=created,
         updated_at=created,
         censo_stamped_stale_at=censo_stamped_stale_at,

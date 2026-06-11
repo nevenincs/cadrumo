@@ -232,7 +232,7 @@ def _validate_revision_closure_sections(
             filing_schedule_ids=context.filing_schedule_ids,
             legal_refs=legal_refs,
             source_refs=source_refs,
-        )
+        ),
     )
     failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo_id))
     failures.extend(validate_reconciliation_total_closure(prefix, revision))
@@ -246,7 +246,7 @@ def _validate_revision_closure_sections(
             member_objects=context.construct_member_objects,
             legal_refs=legal_refs,
             source_refs=source_refs,
-        )
+        ),
     )
     failures.extend(validate_formula_dag(prefix, revision))
 

@@ -9,7 +9,7 @@ from typing import get_args
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger

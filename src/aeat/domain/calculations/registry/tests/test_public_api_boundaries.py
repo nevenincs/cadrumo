@@ -22,7 +22,7 @@ _RAW_REGISTRY_ORCHESTRATION_MODULES = frozenset(
         "aeat.domain.calculations.registry._snapshot",
         "aeat.domain.calculations.registry",
         "aeat.domain.calculations",
-    }
+    },
 )
 _RAW_REGISTRY_ORCHESTRATION_IMPORT_ALLOWLIST = frozenset(
     {
@@ -32,7 +32,7 @@ _RAW_REGISTRY_ORCHESTRATION_IMPORT_ALLOWLIST = frozenset(
         Path("src/aeat/core/resources/_repos/legal_parameters.py"),
         Path("src/aeat/domain/fincas/_imputacion_parameters.py"),
         Path("src/aeat/domain/iva/_recargo_equivalencia.py"),
-    }
+    },
 )
 _LEDGER_BINDING_PUBLIC_NAMES = (
     "IvaLedgerObservation",

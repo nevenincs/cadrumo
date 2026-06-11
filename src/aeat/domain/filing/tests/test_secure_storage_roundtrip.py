@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core._period import Period
+from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry._schema import RegistrySnapshotRef
 from .._repository import ModeloDraftRepository

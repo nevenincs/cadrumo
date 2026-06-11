@@ -127,7 +127,7 @@ def test_no_bare_iva_rate_frozenset_literal_in_edit_module() -> None:
         if _IVA_RATE_LITERAL_STRINGS.issubset(literals):
             offenders.append(
                 f"_edit.py:{node.lineno}: bare IVA-rate frozenset literal "
-                f"{{0, 4, 10, 21}}; use numeric_iva_rate_percentages() instead"
+                f"{{0, 4, 10, 21}}; use numeric_iva_rate_percentages() instead",
             )
 
     assert offenders == [], (

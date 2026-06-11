@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._bucket_pointer import BucketPointer
+from .. import BucketPointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -46,7 +46,7 @@ def test_rejects_unknown_keys() -> None:
                 "bucket_id": "bucket-001",
                 "schema_version": 1,
                 "unexpected": "nope",
-            }
+            },
         )
 
 

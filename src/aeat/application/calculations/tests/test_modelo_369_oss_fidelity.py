@@ -121,7 +121,7 @@ def _calculate_369(
 
 
 def _registry_observation(
-    *, filing_year: int, period: str, result: RegistryCalculationResult
+    *, filing_year: int, period: str, result: RegistryCalculationResult,
 ) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo=_MODELO,
@@ -187,7 +187,7 @@ def test_both_years_independently_retrievable_no_bleed(tmp_path: Path) -> None:
         repo = CalculationObservationRepository()
         result_n, _ = _calculate_369(filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS)
         result_n1, _ = _calculate_369(
-            filing_year=_YEAR_N_PLUS_1, period=_PERIOD, destination_cuotas=_YEAR_N_PLUS_1_CUOTAS
+            filing_year=_YEAR_N_PLUS_1, period=_PERIOD, destination_cuotas=_YEAR_N_PLUS_1_CUOTAS,
         )
         obs_n = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result_n)
         obs_n1 = _registry_observation(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, result=result_n1)
@@ -243,7 +243,7 @@ def test_modelo_369_oss_calculation_enrolls_two_renta_years(tmp_path: Path) -> N
         recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         result_n1, produced_n1 = _calculate_369(
-            filing_year=_YEAR_N_PLUS_1, period=_PERIOD, destination_cuotas=_YEAR_N_PLUS_1_CUOTAS
+            filing_year=_YEAR_N_PLUS_1, period=_PERIOD, destination_cuotas=_YEAR_N_PLUS_1_CUOTAS,
         )
         recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 

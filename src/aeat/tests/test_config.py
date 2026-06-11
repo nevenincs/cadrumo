@@ -165,7 +165,7 @@ class TestStatusDetailUrlTemplate:
                 (
                     "AEAT_CERTIFICATE_PATH=",
                     "AEAT_CERTIFICATE_PASSWORD_SECRET=",
-                )
+                ),
             )
             + "\n",
             encoding="utf-8",
@@ -309,7 +309,7 @@ class TestRepoRelativePathNormalisationCoverage:
                     "AEAT_INVOICES_DIR=var/financial/invoices",
                     "AEAT_ATTACHMENTS_DIR=var/financial/attachments",
                     "AEAT_RUNS_DIR=var/runs",
-                )
+                ),
             )
             + "\n",
             encoding="utf-8",
@@ -380,7 +380,7 @@ class TestDatabaseUrlDerivation:
                 (
                     f"AEAT_LOCAL_STORAGE_ROOT={(tmp_path / 'aeat-state').as_posix()}",
                     f"AEAT_DATABASE_URL={explicit_url}",
-                )
+                ),
             )
             + "\n",
             encoding="utf-8",
@@ -401,7 +401,7 @@ class TestDatabaseUrlDerivation:
                 (
                     f"AEAT_LOCAL_STORAGE_ROOT={storage_root.as_posix()}",
                     "AEAT_ACTIVE_PROFILE=acme",
-                )
+                ),
             )
             + "\n",
             encoding="utf-8",

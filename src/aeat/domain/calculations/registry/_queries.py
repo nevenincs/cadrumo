@@ -17,6 +17,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core import Period
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, FormulaId
@@ -27,9 +28,7 @@ from ._runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from ._schema import InputKind, ModeloDefinition, ModeloRevision
-
-_PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:[-]?Q(?P<quarter>[1-4])|-(?P<month>0[1-9]|1[0-2]))?$", re.I)
+from ._schema import InputKind, ModeloDefinition, ModeloRevision, filing_period_from_scope
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
 #: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
@@ -40,8 +39,6 @@ _BARE_PERIOD_RE = re.compile(
     r"^(?:0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$",
     re.I,
 )
-
-
 class ModeloListRow(BaseModel):
     """One entry in a ``modelo`` catalogue listing.
 
@@ -145,6 +142,7 @@ class ModeloDescribeReport(BaseModel):
     discoverable up front rather than only after a failed guess.
     """
     filing_year: int | None
+    filing_period: Period | None = None
     period: str | None
     valid_from: date
     valid_to: date | None
@@ -235,6 +233,7 @@ class ModeloCasillasReport(BaseModel):
     code: str
     revision: str
     filing_year: int | None
+    filing_period: Period | None = None
     period: str | None
     rows: tuple[ModeloCasillaRow, ...]
 
@@ -322,6 +321,7 @@ class ModeloBindingsReport(BaseModel):
     code: str
     revision: str
     filing_year: int | None
+    filing_period: Period | None = None
     period: str | None
     rows: tuple[ModeloBindingRow, ...]
 
@@ -390,6 +390,7 @@ class ModeloFormulasReport(BaseModel):
     code: str
     revision: str
     filing_year: int | None
+    filing_period: Period | None = None
     period: str | None
     rows: tuple[ModeloFormulaRow, ...]
 
@@ -440,16 +441,15 @@ class RegistryQueryService:
         Resolves the revision using the same precedence logic as the other
         query methods: when ``period`` is a bare registry token (e.g. ``"1T"``,
         ``"0A"``), the revision that declares it is selected; when ``period``
-        is a year-qualified string (e.g. ``"2025Q1"``), the registry snapshot
-        for that filing year and period is resolved; when ``period`` is
-        ``None``, the latest revision by ``valid_from`` is returned.
+        is ``None``, the latest revision by ``valid_from`` is returned. Use
+        ``describe_modelo_for_scope`` when the filing year must participate in
+        revision selection.
 
         Args:
             modelo: Short numeric identifier for the modelo (e.g. ``"303"``).
-            period: Optional period narrowing. Accepted forms: bare registry
-                period tokens (``"1T"``, ``"0A"``, ``"01"``-``"12"``), or
-                year-qualified strings (``"2025"``, ``"2025Q1"``,
-                ``"2025-Q1"``, ``"2025-01"``).
+            period: Optional period narrowing. Accepted forms are bare
+                registry period tokens (``"1T"``, ``"0A"``, ``"01"``-``"12"``)
+                or declared non-date tokens such as ``"alta"``.
             as_of: Optional calendar date for validity gating. Defaults to
                 today when ``None``.
 
@@ -478,6 +478,53 @@ class RegistryQueryService:
                 )
             ),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
+            period=registry_period,
+            valid_from=revision.valid_from,
+            valid_to=revision.valid_to,
+            periods=tuple(revision.period_selector.periods),
+            casilla_count=len(revision.casillas),
+            manual_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.MANUAL),
+            bound_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.BOUND),
+            computed_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.COMPUTED),
+            binding_count=len(revision.bindings),
+            formula_count=len(revision.formulas),
+            legal_refs=tuple(str(ref) for ref in revision.legal_refs),
+            source_refs=tuple(str(ref) for ref in revision.source_refs),
+        )
+
+    def describe_modelo_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloDescribeReport:
+        """Return a describe report for an exact ``(filing_year, period)`` scope."""
+        definition, revision, registry_period = self._resolve_revision_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        )
+        return ModeloDescribeReport(
+            code=str(definition.id),
+            title=definition.title,
+            official_name=definition.official_name,
+            tax_domain=definition.tax_domain,
+            cadence=definition.cadence,
+            jurisdiction=definition.jurisdiction,
+            revision=str(revision.id),
+            revision_ids=tuple(
+                str(item.id)
+                for item in sorted(
+                    definition.revisions.values(),
+                    key=lambda candidate: (candidate.valid_from, str(candidate.id)),
+                )
+            ),
+            filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             valid_from=revision.valid_from,
             valid_to=revision.valid_to,
@@ -556,6 +603,56 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
+            period=registry_period,
+            rows=tuple(rows),
+        )
+
+    def casillas_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+        input_kind: InputKind | None = None,
+        required: bool | None = None,
+        form_number: str | None = None,
+    ) -> ModeloCasillasReport:
+        """Return casillas for an exact ``(filing_year, period)`` scope."""
+        definition, revision, registry_period = self._resolve_revision_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        )
+        rows = [
+            ModeloCasillaRow(
+                casilla_id=str(casilla.id),
+                number=casilla.number,
+                label=casilla.label,
+                section=tuple(casilla.section),
+                data_type=casilla.data_type,
+                input_kind=casilla.input_kind,
+                required=casilla.required,
+                formula=str(casilla.formula) if casilla.formula is not None else None,
+                binding=str(casilla.binding) if casilla.binding is not None else None,
+                form_number=casilla.form_number,
+                legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
+                source_refs=tuple(str(ref) for ref in casilla.source_refs),
+                localized_labels=dict(casilla.localized_labels),
+                localized_help=dict(casilla.localized_help),
+            )
+            for casilla in revision.casillas
+            if (input_kind is None or casilla.input_kind == input_kind)
+            and (required is None or casilla.required is required)
+            and (form_number is None or casilla.form_number == form_number)
+        ]
+        return ModeloCasillasReport(
+            code=str(definition.id),
+            revision=str(revision.id),
+            filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             rows=tuple(rows),
         )
@@ -589,8 +686,47 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(snapshot.revision.id),
             filing_year=filing_year,
+            filing_period=filing_period_from_scope(filing_year, period),
             period=period,
             rows=_binding_rows(snapshot.revision),
+        )
+
+    def formulas_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloFormulasReport:
+        """Return formulas for an exact ``(filing_year, period)`` scope."""
+        definition, revision, registry_period = self._resolve_revision_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            as_of=as_of,
+        )
+        rows = tuple(
+            ModeloFormulaRow(
+                formula_id=str(formula.id),
+                target=str(formula.target),
+                input_casillas=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
+                input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
+                input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
+                input_relations=tuple(dict.fromkeys(expression_relation_refs(formula.expression))),
+                expression=_public_mapping(formula.expression.model_dump(mode="json")),
+                legal_refs=tuple(str(ref) for ref in formula.legal_refs),
+                source_refs=tuple(str(ref) for ref in formula.source_refs),
+            )
+            for formula in revision.formulas
+        )
+        return ModeloFormulasReport(
+            code=str(definition.id),
+            revision=str(revision.id),
+            filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
+            period=registry_period,
+            rows=rows,
         )
 
     def bindings_for_year(
@@ -628,6 +764,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=None,
             period=None,
             rows=_binding_rows(revision),
         )
@@ -665,6 +802,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             rows=_binding_rows(revision),
         )
@@ -715,6 +853,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             rows=rows,
         )
@@ -754,37 +893,38 @@ class RegistryQueryService:
                 declared = sorted(declared_by_revision)
                 raise RegistryValidationError(
                     f"period {period!r} is not declared by any revision of modelo "
-                    f"{definition.id}; declared periods: {', '.join(declared)}"
+                    f"{definition.id}; declared periods: {', '.join(declared)}",
                 )
             revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
             # Return the registry's own casing for the period token.
             registry_token = next(token for token in revision.period_selector.periods if token.upper() == bare_upper)
             return definition, revision, None, registry_token
-        filing_year, registry_period = parse_modelo_period(period)
+        raise RegistryValidationError(
+            f"period must be a bare registry token; pass the filing year separately; got {period!r}",
+        )
+
+    def _resolve_revision_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None,
+    ) -> tuple[ModeloDefinition, ModeloRevision, str]:
+        definition = self._authority.validate_modelo(modelo.strip())
+        requested_period = period.strip()
+        declared_by_revision = {
+            token for revision in definition.revisions.values() for token in revision.period_selector.periods
+        }
+        declared_by_upper = {token.upper(): token for token in declared_by_revision}
+        registry_period = declared_by_upper.get(requested_period.upper(), requested_period.upper())
         snapshot = self._authority.snapshot(
             str(definition.id),
             filing_year=filing_year,
             period=registry_period,
             on=as_of,
         )
-        return definition, snapshot.revision, filing_year, registry_period
-
-
-def parse_modelo_period(raw: str) -> tuple[int, str]:
-    """Return ``(filing_year, registry_period)`` for a user-facing period."""
-    candidate = raw.strip()
-    match = _PERIOD_RE.fullmatch(candidate)
-    if match is None:
-        raise RegistryValidationError(f"period must be YYYY, YYYYQn, YYYY-Qn, or YYYY-MM; got {raw!r}")
-    year = int(match.group("year"))
-    quarter = match.group("quarter")
-    month = match.group("month")
-    if quarter is not None:
-        return year, f"{quarter}T"
-    if month is not None:
-        return year, month
-    return year, "0A"
-
+        return definition, snapshot.revision, registry_period
 
 def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
     """Build the typed binding rows for one revision.
@@ -815,6 +955,12 @@ def _modelo_covers_year(modelo: ModeloDefinition, year: int) -> bool:
     return any(revision.period_selector.includes_year(year) for revision in modelo.revisions.values())
 
 
+def _query_filing_period(filing_year: int | None, period: str | None) -> Period | None:
+    if filing_year is None or period is None:
+        return None
+    return filing_period_from_scope(filing_year, period)
+
+
 def _public_mapping(value: Mapping[str, object]) -> dict[str, object]:
     return {str(key): _public_value(item) for key, item in value.items()}
 
@@ -842,5 +988,4 @@ __all__ = [
     "ModeloListReport",
     "ModeloListRow",
     "RegistryQueryService",
-    "parse_modelo_period",
 ]

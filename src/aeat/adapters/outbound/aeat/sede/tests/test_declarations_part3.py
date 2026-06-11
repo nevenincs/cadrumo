@@ -7,6 +7,7 @@ import pytest
 from ._declarations_support import (
     UTC,
     Decimal,
+    Period,
     RegistryValidationError,
     SedeParseError,
     _filed_observation,
@@ -28,7 +29,7 @@ class TestFiledObservationRelations:
         snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
         observations = _renta_2025_relation_observations()
         available = {
-            (observation.modelo, observation.ejercicio, observation.period, casilla.casilla_id)
+            (observation.modelo, observation.ejercicio, observation.period.registry_token, casilla.casilla_id)
             for observation in observations
             for casilla in observation.casillas
         }
@@ -90,10 +91,11 @@ class TestFiledObservationRelations:
 
     def test_modelo_100_relation_resolution_requires_each_source_period(self) -> None:
         snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
+        missing_period = Period.from_year_and_code(2025, "4T")
         observations = tuple(
             observation
             for observation in _renta_2025_relation_observations()
-            if not (observation.modelo == "131" and observation.period == "4T")
+            if not (observation.modelo == "131" and observation.period == missing_period)
         )
 
         with pytest.raises(RegistryValidationError, match="expected one observed filing"):

@@ -65,7 +65,7 @@ def verify_legal_reference(
                     Section.model_validate_json(path.read_text(encoding="utf-8"))
                 except Exception as exc:
                     raise RegistryValidationError(
-                        f"legal reference {reference.id!r} manual section JSON validation failed: {exc}"
+                        f"legal reference {reference.id!r} manual section JSON validation failed: {exc}",
                     ) from exc
 
     if reference.article is None:
@@ -76,14 +76,14 @@ def verify_legal_reference(
     role_text = " ".join(part for part in (reference.section, reference.notes) if part)
     if role_text and (known_bad := find_known_bad(source, reference.article, role_text)):
         raise RegistryValidationError(
-            f"legal reference {reference.id!r} matches known-bad citation: {known_bad.reason}"
+            f"legal reference {reference.id!r} matches known-bad citation: {known_bad.reason}",
         )
     if corpus_strict and reference.required_text and source_root is not None:
         corpus_text = _legal_corpus_text(source_root, reference)
         for required in reference.required_text:
             if normalise_corpus_text(required) not in corpus_text:
                 raise RegistryValidationError(
-                    f"legal reference {reference.id!r} corpus text missing required text {required!r}"
+                    f"legal reference {reference.id!r} corpus text missing required text {required!r}",
                 )
 
 

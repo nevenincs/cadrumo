@@ -55,6 +55,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaObservation,
@@ -155,7 +156,7 @@ def _calculate_annual(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=_YEAR,
-        period=_ANNUAL_PERIOD,
+        period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
         revision_id=snapshot.revision.id,
         repository=wu_repo,
         clock=_T0,

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -168,7 +169,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
         relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
         relation_binding_values = materialize_relation_binding_values(
-            snapshot.revision, relation_values_map, period="0A"
+            snapshot.revision, relation_values_map, period="0A",
         )
         annual_ledger_values = resolve_ledger_iva_aggregation_binding_values(
             snapshot.revision,
@@ -203,7 +204,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
             IvaCompensationPeriodState(
                 taxpayer_nif="12345678Z",
                 filing_year=2025,
-                period="4T",
+                period=Period.from_year_and_code(2025, "4T"),
                 expediente_id="30320254T0000000000",
                 status="presentada",
                 presented_at=datetime(2026, 1, 20, 10, 0, tzinfo=UTC),
@@ -215,7 +216,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
                 generated_amount=Decimal("0.00"),
                 available_end_amount=Decimal("75.00"),
                 source_observation_key="303:2025:4T:history-source",
-            )
+            ),
         )
         snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
 
@@ -231,7 +232,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
     assert recurrence.source_kind == "aeat_sede_iva_compensation_history"
     assert recurrence.source_modelo == "303"
     assert recurrence.source_filing_year == 2025
-    assert recurrence.source_periods == ("4T",)
+    assert recurrence.source_periods == (Period.from_year_and_code(2025, "4T"),)
     assert report.prefilled
     assert {item.source_kind for item in report.prefilled} == {"aeat_sede_iva_compensation_history"}
 

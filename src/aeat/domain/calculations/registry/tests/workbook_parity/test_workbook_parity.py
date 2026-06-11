@@ -351,7 +351,7 @@ def test_inventory_workbook_coverage_can_report_scan_errors_for_audit(tmp_path: 
             verify_workbook_backend(
                 tmp_path,
                 fail_on_scan_error=False,
-            )
+            ),
         )
 
 

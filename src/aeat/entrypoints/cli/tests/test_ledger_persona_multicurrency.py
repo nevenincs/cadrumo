@@ -182,7 +182,6 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
                 "app",
                 "ledger",
                 "classify",
-                "--id",
                 tx_id,
                 "--classification",
                 "BUSINESS",

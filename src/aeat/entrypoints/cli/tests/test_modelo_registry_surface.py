@@ -104,6 +104,73 @@ def test_invalid_modelo_period_surfaces_accepted_set() -> None:
     assert "1T" in result.output and "4T" in result.output
 
 
+def test_describe_accepts_explicit_year_period_scope() -> None:
+    result = invoke_cached_cli(["app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"])
+
+    assert result.exit_code == 0, result.output
+    assert "303" in result.output
+    assert "2009-y-siguientes" in result.output
+
+
+def test_casillas_accepts_explicit_year_period_scope() -> None:
+    result = invoke_cached_cli(
+        ["app", "modelo", "casillas", "303", "--year", "2026", "--period", "1T", "--input-kind", "computed"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "iva.resultado-regimen-general" in result.output
+
+
+def test_formulas_accepts_explicit_year_period_scope() -> None:
+    result = invoke_cached_cli(["app", "modelo", "formulas", "303", "--year", "2026", "--period", "1T"])
+
+    assert result.exit_code == 0, result.output
+    assert "formula_id" in result.output
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        ["app", "modelo", "describe", "303", "--period", "2026Q1"],
+        ["app", "modelo", "casillas", "303", "--period", "2026Q1"],
+        ["app", "modelo", "formulas", "303", "--period", "2026Q1"],
+    ],
+)
+def test_registry_discovery_rejects_combined_period_scope(command: list[str]) -> None:
+    result = invoke_cached_cli(command)
+
+    assert result.exit_code != 0
+    assert "bare registry token" in result.output or "1T" in result.output
+
+
+@pytest.mark.parametrize(
+    ("modelo", "alias", "expected_token"),
+    [
+        ("303", "Q1", "1T"),
+        ("100", "annual", "0A"),
+    ],
+)
+@pytest.mark.parametrize(
+    "command_prefix",
+    [
+        ["app", "modelo", "describe"],
+        ["app", "modelo", "casillas"],
+        ["app", "modelo", "formulas"],
+    ],
+)
+def test_registry_discovery_rejects_aliases_for_explicit_scope(
+    command_prefix: list[str],
+    modelo: str,
+    alias: str,
+    expected_token: str,
+) -> None:
+    result = invoke_cached_cli([*command_prefix, modelo, "--year", "2026", "--period", alias])
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert expected_token in result.output
+
+
 def test_modelo_bad_parameter_helper_renders_registered_errors() -> None:
     error = _bad_parameter_from_error(WorkUnitNotFoundError())
 
@@ -131,6 +198,23 @@ def test_malformed_period_surfaces_as_bad_parameter(command: list[str]) -> None:
 
 def test_unknown_modelo_surfaces_as_bad_parameter() -> None:
     result = invoke_cached_cli(["app", "modelo", "describe", "999"])
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    output_lower = result.output.lower()
+    assert "999" in output_lower or "not present" in output_lower
+
+
+@pytest.mark.parametrize(
+    "command_prefix",
+    [
+        ["app", "modelo", "describe"],
+        ["app", "modelo", "casillas"],
+        ["app", "modelo", "formulas"],
+    ],
+)
+def test_unknown_modelo_with_explicit_period_scope_surfaces_as_bad_parameter(command_prefix: list[str]) -> None:
+    result = invoke_cached_cli([*command_prefix, "999", "--year", "2026", "--period", "1T"])
+
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     output_lower = result.output.lower()
@@ -212,7 +296,7 @@ def test_work_calculate_enters_bucket_source_mesh_calculation_boundary() -> None
     from ....application.modelo import calculate_modelo_work_revision
 
     source = inspect.getsource(calculate_modelo_work_revision)
-    assert "calculate_modelo_revision_from_bucket_aggregation(" in source
+    assert "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(" in source
     assert "calculate_modelo_revision(" not in source
 
 
@@ -290,7 +374,7 @@ def test_bindings_list_emits_readiness_category_for_every_row() -> None:
     blocking finding / casilla)."""
 
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
     assert "operation\tregistry.modelo.bindings.list" in result.output
@@ -307,7 +391,7 @@ def test_bindings_list_emits_borrador_capable_column_per_row() -> None:
     borrador prefills versus those the operator must supply."""
 
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
     # The text-mode header carries the new column.
@@ -328,7 +412,7 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
     available so they drop out of the missing-bindings view."""
 
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1", "--missing"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T", "--missing"],
     )
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
@@ -349,7 +433,7 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--binding",
             "modelo-303-iva-repercutido-general-cuota=1234.56",
         ],
@@ -376,7 +460,7 @@ def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--binding",
             "no-such-binding=42",
         ],
@@ -403,7 +487,7 @@ def test_bindings_preview_rejects_malformed_override_syntax() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
             "--binding",
             "missing-equals-sign",
         ],

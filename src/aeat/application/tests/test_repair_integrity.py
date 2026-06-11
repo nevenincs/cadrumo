@@ -183,7 +183,7 @@ class TestBuildListReport:
         assert {row.readable for row in unreadable.rows} == {False}
         assert all(row.reason for row in unreadable.rows)
         assert set(row.object_key_digest for row in unreadable.rows).issubset(
-            {row.object_key_digest for row in default.rows}
+            {row.object_key_digest for row in default.rows},
         )
 
     def test_list_opens_active_bucket_session_for_bootstrap_exempt_repair(self, tmp_path: Path) -> None:

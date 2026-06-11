@@ -33,7 +33,7 @@ from typing import TypedDict
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import CoreValidationError as _CoreValidationError
 from ..logging import get_logger as _get_logger
 from ..time._utc import validate_utc_aware
@@ -275,7 +275,7 @@ def build_corpus_manifest(
                 relative_path=relative,
                 sha256=sha256_hex,
                 content_length=length,
-            )
+            ),
         )
     raw_entries.sort(key=lambda entry: entry.relative_path)
     entries = tuple(raw_entries)

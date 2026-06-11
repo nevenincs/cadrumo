@@ -135,7 +135,7 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
             "--year", year,
             "--period", period,
             "--revision", revision,
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -158,7 +158,7 @@ def _calculate_m130(work_unit_id: str, ingresos: str, gastos: str) -> dict[str, 
             "--casilla", "06=0.00",
             "--binding", f"irpf.previous_year_economic_activity_net_income={_PREV_YEAR_INCOME}",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -234,7 +234,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
             "--year", "2025",
             "--year", "2026",
             "--modelo", "130",
-        ]
+        ],
     )  # fmt: skip
     assert compare_result.exit_code == 0, compare_result.output
     assert "Traceback" not in compare_result.output

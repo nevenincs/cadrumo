@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 import time_machine as tm
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.filing import ModeloBuilderError
 from ..runtime import RegistryCasillaSchema, _value_type, build_runtime_schema_provider
@@ -23,18 +24,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TEST_MODELO = "130"
 _TEST_YEAR = 2026
-_TEST_PERIOD = "1T"
+_TEST_PERIOD = Period.from_year_and_code(_TEST_YEAR, "1T")
 
 
 def _source_casilla_refs() -> dict[str, tuple[str, ...]]:
     """Return {casilla_id: legal_refs} from the authoritative CasillaDefinition."""
-    snapshot = resources().modelos.authority.snapshot(_TEST_MODELO, filing_year=_TEST_YEAR, period=_TEST_PERIOD)
+    snapshot = resources().modelos.authority.snapshot(
+        _TEST_MODELO,
+        filing_year=_TEST_YEAR,
+        period=_TEST_PERIOD.registry_token,
+    )
     return {casilla.id: casilla.legal_refs for casilla in snapshot.revision.casillas}
 
 
 def _source_casilla_source_refs() -> dict[str, tuple[str, ...]]:
     """Return {casilla_id: source_refs} from the authoritative CasillaDefinition."""
-    snapshot = resources().modelos.authority.snapshot(_TEST_MODELO, filing_year=_TEST_YEAR, period=_TEST_PERIOD)
+    snapshot = resources().modelos.authority.snapshot(
+        _TEST_MODELO,
+        filing_year=_TEST_YEAR,
+        period=_TEST_PERIOD.registry_token,
+    )
     return {casilla.id: casilla.source_refs for casilla in snapshot.revision.casillas}
 
 
@@ -116,6 +125,18 @@ def test_filing_year_period_pair_error_is_localized() -> None:
         build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR)
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.filing_year_period_pair"
+
+
+def test_runtime_schema_provider_rejects_raw_period_string() -> None:
+    with pytest.raises(ModeloBuilderError) as exc_info:
+        build_runtime_schema_provider(
+            modelos=[_TEST_MODELO],
+            filing_year=_TEST_YEAR,
+            period=_TEST_PERIOD.registry_token,
+        )
+
+    assert exc_info.value.translated_message == "application.filing.runtime.errors.period_type"
+    assert exc_info.value.context == {"period_type": "str"}
 
 
 def test_unsupported_casilla_data_type_error_is_localized() -> None:

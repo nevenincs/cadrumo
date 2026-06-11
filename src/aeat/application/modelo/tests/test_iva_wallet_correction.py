@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -60,6 +61,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "operator"
 _SEED_YEAR = 2024
 _SEED_PERIOD = "4T"
+_SEED_FILING_PERIOD = Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD)
 
 
 @pytest.fixture(autouse=True)
@@ -83,8 +85,7 @@ def _taxpayer_nif() -> str:
 def _seed(amount: Decimal) -> None:
     seed_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
-        filing_year=_SEED_YEAR,
-        period=_SEED_PERIOD,
+        period=_SEED_FILING_PERIOD,
         amount=amount,
     )
 
@@ -93,12 +94,13 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
     from datetime import UTC, datetime
 
     when = datetime(2026, 1, 2, tzinfo=UTC)
+    typed_period = Period.from_year_and_code(filing_year, period)
     work_unit_revision_marker = f"sealed-{filing_year}-{period}"
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=work_unit_revision_marker,
     )
     casilla_values = {"iva.compensacion-pendiente-periodos-anteriores": Decimal("1000.00")}
@@ -113,7 +115,7 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=work_unit_revision_marker,
         name=f"303-{filing_year}-{period}",
         created_at=when,
@@ -158,14 +160,13 @@ def test_correction_overwrites_balance_and_emits_audit_event() -> None:
 
     state = correct_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
-        filing_year=_SEED_YEAR,
-        period=_SEED_PERIOD,
+        period=_SEED_FILING_PERIOD,
         amount=Decimal("1200.50"),
         reason="typo in opening balance",
     )
 
     assert state.available_end_amount == Decimal("1200.50")
-    persisted = IvaCompensationHistoryRepository().load_period(_SEED_YEAR, _SEED_PERIOD)
+    persisted = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD))
     assert persisted is not None
     assert persisted.available_end_amount == Decimal("1200.50")
     assert persisted.taxpayer_nif == _taxpayer_nif()
@@ -188,8 +189,7 @@ def test_correction_refuses_when_no_record_exists() -> None:
     with pytest.raises(ModeloIvaWalletCorrectionNoRecordError):
         correct_iva_compensation_period_for_bucket(
             bucket_id=_BUCKET_ID,
-            filing_year=_SEED_YEAR,
-            period=_SEED_PERIOD,
+            period=_SEED_FILING_PERIOD,
             amount=Decimal("100.00"),
             reason="no record yet",
         )
@@ -201,8 +201,7 @@ def test_correction_refuses_negative_amount() -> None:
     with pytest.raises(ModeloIvaWalletSeedNegativeAmountError):
         correct_iva_compensation_period_for_bucket(
             bucket_id=_BUCKET_ID,
-            filing_year=_SEED_YEAR,
-            period=_SEED_PERIOD,
+            period=_SEED_FILING_PERIOD,
             amount=Decimal("-1.00"),
             reason="negative",
         )
@@ -232,8 +231,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
     with pytest.raises(ModeloIvaWalletCorrectionSealedError) as excinfo:
         correct_iva_compensation_period_for_bucket(
             bucket_id=_BUCKET_ID,
-            filing_year=_SEED_YEAR,
-            period=_SEED_PERIOD,
+            period=_SEED_FILING_PERIOD,
             amount=Decimal("1200.50"),
             reason="should be blocked",
         )
@@ -242,7 +240,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
     assert context["blocking_filing_year"] == 2025
     assert context["blocking_period"] == "1T"
     # The stored balance is unchanged: the guard fired before any write.
-    persisted = IvaCompensationHistoryRepository().load_period(_SEED_YEAR, _SEED_PERIOD)
+    persisted = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD))
     assert persisted is not None
     assert persisted.available_end_amount == Decimal("500.00")
     # No audit event was emitted for the refused correction.
@@ -266,8 +264,7 @@ def test_correction_allowed_when_only_a_draft_303_exists() -> None:
 
     state = correct_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
-        filing_year=_SEED_YEAR,
-        period=_SEED_PERIOD,
+        period=_SEED_FILING_PERIOD,
         amount=Decimal("1200.50"),
         reason="draft does not block",
     )

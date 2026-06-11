@@ -80,8 +80,8 @@ Find the transaction IDs in the first column of the output from `aeat app ledger
 Classify these transactions as business activity (replace `5caeee4b` and `4b101fb8` with the actual IDs from your list output):
 
 ```bash
-aeat app ledger classify --id 5caeee4b --classification BUSINESS
-aeat app ledger classify --id 4b101fb8 --classification BUSINESS
+aeat app ledger classify 5caeee4b --classification BUSINESS
+aeat app ledger classify 4b101fb8 --classification BUSINESS
 ```
 
 To confirm the review status changed to `reviewed`, run:

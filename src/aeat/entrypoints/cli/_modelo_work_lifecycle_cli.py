@@ -25,7 +25,7 @@ from ...application.modelo import (
     rename_work_unit,
     resolve_registry_revision_for_work_target,
 )
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
@@ -50,7 +50,7 @@ class _LifecycleDeps:
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
     require_active_profile: Callable[[], None]
     guard_foral_profile_ccaa: Callable[[], None]
-    resolve_year_period: Callable[..., tuple[int, str]]
+    resolve_year_period: Callable[..., Period]
     resolve_work_unit_for_cli: Callable[..., Any]
     resolve_default_actor: Callable[[], str]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
@@ -63,7 +63,7 @@ def register_work_lifecycle_commands(
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
     require_active_profile: Callable[[], None],
     guard_foral_profile_ccaa: Callable[[], None],
-    resolve_year_period: Callable[..., tuple[int, str]],
+    resolve_year_period: Callable[..., Period],
     resolve_work_unit_for_cli: Callable[..., Any],
     resolve_default_actor: Callable[[], str],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
@@ -104,7 +104,7 @@ def _validate_filing_year(year: int) -> None:
                 year=year,
                 minimum=_FILING_YEAR_MIN,
                 maximum=_FILING_YEAR_MAX,
-            )
+            ),
         )
 
 
@@ -203,7 +203,8 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         requested_revision = revision.strip() if revision is not None else None
         causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
         _guard_stub_modelo(modelo)
-        resolved_year, resolved_period = deps.resolve_year_period(year, period, modelo=modelo)
+        resolved_period = deps.resolve_year_period(year, period, modelo=modelo)
+        resolved_year = resolved_period.year
         _validate_registry_target_before_profile_if_needed(
             modelo=modelo,
             filing_year=resolved_year,
@@ -251,7 +252,7 @@ def _validate_registry_target_before_profile_if_needed(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     registry_revision_id: str | None,
 ) -> None:
     from ...core import resolve_active_bucket_id
@@ -293,7 +294,7 @@ def _emit_work_create_result(
             "name_applied": name_applied,
             "applicability_guard_bypassed": allow_not_applicable,
             **work_unit_payload(unit).model_dump(mode="python"),
-        }
+        },
     )
     lines = [
         f"operation\t{operation}",
@@ -398,7 +399,7 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
                 "include_discarded": include_discarded,
                 "work_unit_count": len(units),
                 "work_units": [work_unit_payload(unit) for unit in units],
-            }
+            },
         )
         lines = work_unit_list_lines(units, bucket_id=bucket_id, include_discarded=include_discarded)
         _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines)
@@ -561,7 +562,7 @@ def _register_work_discard_command(work_app: typer.Typer, deps: _LifecycleDeps) 
                 tr(
                     "cli.app.modelo.work.discard_requires_yes",
                     work_unit_id=target_label,
-                )
+                ),
             )
         deps.require_active_profile()
         unit = deps.resolve_work_unit_for_cli(

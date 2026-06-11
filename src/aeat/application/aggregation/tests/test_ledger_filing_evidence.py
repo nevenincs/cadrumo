@@ -83,7 +83,7 @@ def _txn() -> Transaction:
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -91,7 +91,7 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
     txn = _txn()
     catalogue = TransactionCatalogue.from_transactions((txn,))
     snapshot = compute_ledger_filing_snapshot(
-        source_transaction_ids=(txn.transaction_id,), catalogue=catalogue, captured_at=_NOW
+        source_transaction_ids=(txn.transaction_id,), catalogue=catalogue, captured_at=_NOW,
     )
     evidence = compute_ledger_filing_evidence(
         source_transaction_ids=(txn.transaction_id,),
@@ -122,7 +122,7 @@ def _objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
-        bucket_id="bucket-a", modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes"
+        bucket_id="bucket-a", modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -151,7 +151,7 @@ def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRe
     txn = _txn()
     catalogue = TransactionCatalogue.from_transactions((txn,))
     snapshot = compute_ledger_filing_snapshot(
-        source_transaction_ids=(txn.transaction_id,), catalogue=catalogue, captured_at=_NOW
+        source_transaction_ids=(txn.transaction_id,), catalogue=catalogue, captured_at=_NOW,
     )
     evidence = compute_ledger_filing_evidence(
         source_transaction_ids=(txn.transaction_id,),
@@ -185,11 +185,11 @@ def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:
     txn = _txn()
     catalogue = TransactionCatalogue.from_transactions((txn,))
     snapshot = compute_ledger_filing_snapshot(
-        source_transaction_ids=(txn.transaction_id,), catalogue=catalogue, captured_at=_NOW
+        source_transaction_ids=(txn.transaction_id,), catalogue=catalogue, captured_at=_NOW,
     )
     # Evidence that drops the contributor the snapshot fingerprints.
     empty_evidence = LedgerFilingEvidence(
-        snapshot_fingerprint=snapshot.snapshot_fingerprint, rows=(), manual_entries=(), captured_at=_NOW
+        snapshot_fingerprint=snapshot.snapshot_fingerprint, rows=(), manual_entries=(), captured_at=_NOW,
     )
     with pytest.raises(ModeloError, match="does not cover"):
         _assert_evidence_covers_snapshot(snapshot, empty_evidence)

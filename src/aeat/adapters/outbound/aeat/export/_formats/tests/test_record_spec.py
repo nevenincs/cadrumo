@@ -80,7 +80,7 @@ class TestRecordFieldSpec:
                     "justification": Justification.LEFT,
                     "pad_char": " ",
                     "unexpected_kwarg": "boom",
-                }
+                },
             )
 
 

@@ -132,7 +132,7 @@ def test_visibility_disjunction_is_satisfied_when_any_clause_holds() -> None:
             any_of=(
                 WizardCondition(question_id="entity", equals="legal_entity"),
                 WizardCondition(question_id="income", contains="actividad_economica"),
-            )
+            ),
         ),
     )
 

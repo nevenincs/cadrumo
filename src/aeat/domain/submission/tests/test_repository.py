@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy import select
 
 from ....adapters.persistence.storage import (
@@ -16,6 +17,7 @@ from ....adapters.persistence.storage import (
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
+from ....core import Period
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     ModeloPresentado,
@@ -29,12 +31,15 @@ from .._repository import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_PERIOD = Period.from_year_and_code(2026, "1T")
+
 
 def _make_filing(
     *,
     draft_id: str = "draft-abc123",
     attempt_ordinal: int = 1,
     status: SubmissionStatus = SubmissionStatus.PRESENTADA,
+    period: Period | dict[str, object] = _PERIOD,
 ) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     submission_id = make_submission_id(draft_id, attempt_ordinal)
@@ -48,7 +53,7 @@ def _make_filing(
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="130",
-        period="2026Q1",
+        period=period,
         profile_tax_id="00000000T",
         status=status,
         submitted_at=submitted_at,
@@ -96,6 +101,15 @@ class TestSaveLoad:
         repo.save(filing)
         repo.save(filing)
         assert repo.list_submission_ids() == (filing.submission_id,)
+
+    def test_period_dict_round_trips_through_model_boundary(self) -> None:
+        filing = _make_filing(period={"filing_year": 2026, "code": "1T"})
+
+        assert filing.period == _PERIOD
+
+    def test_combined_period_string_rejected_at_model_boundary(self) -> None:
+        with pytest.raises(ValidationError, match="period"):
+            _make_filing(period="2026Q1")
 
 
 class TestListAndIter:

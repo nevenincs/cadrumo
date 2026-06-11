@@ -36,7 +36,7 @@ from typing import Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -620,7 +620,6 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     except (ValidationError, ValueError) as exc:
         _log.debug("envelope reencrypt source is not cipher JSON error_type=%s", type(exc).__name__)
         # Any parse failure (bad JSON, schema mismatch) means "not yet ciphertext".
-        pass
     else:
         return False
     plaintext_envelope = _parse_model_json(envelope_type, raw, label="plaintext")

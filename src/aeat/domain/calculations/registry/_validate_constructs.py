@@ -59,14 +59,14 @@ def validate_construct_closure(
                 if missing_legal:
                     failures.append(
                         f"{scope}: construct {construct.id!r} does not include legal refs "
-                        f"{missing_legal!r} required by {kind} {member_id!r}"
+                        f"{missing_legal!r} required by {kind} {member_id!r}",
                     )
                 member_source_refs = set(getattr(member, "source_refs", ()))
                 missing_sources = sorted(member_source_refs.difference(construct_source_refs))
                 if missing_sources:
                     failures.append(
                         f"{scope}: construct {construct.id!r} does not include source refs "
-                        f"{missing_sources!r} required by {kind} {member_id!r}"
+                        f"{missing_sources!r} required by {kind} {member_id!r}",
                     )
     return failures
 
@@ -99,15 +99,21 @@ def validate_support_removal_decisions(
     }
     for decision in revision.support_removal_decisions:
         failures.extend(
-            _missing_refs(scope, f"support removal decision {decision.id}", decision.legal_refs, legal_refs, "legal")
+            _missing_refs(scope, f"support removal decision {decision.id}", decision.legal_refs, legal_refs, "legal"),
         )
         failures.extend(
-            _missing_refs(scope, f"support removal decision {decision.id}", decision.source_refs, source_refs, "source")
+            _missing_refs(
+                scope,
+                f"support removal decision {decision.id}",
+                decision.source_refs,
+                source_refs,
+                "source",
+            ),
         )
         active_ids = active_subjects.get(decision.subject_type)
         if active_ids is not None and decision.subject_id in active_ids:
             failures.append(
                 f"{scope}: support removal decision {decision.id!r} removes "
-                f"{decision.subject_type} {decision.subject_id!r} but it is still present"
+                f"{decision.subject_type} {decision.subject_id!r} but it is still present",
             )
     return failures

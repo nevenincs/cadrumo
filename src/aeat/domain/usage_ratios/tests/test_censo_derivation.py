@@ -41,7 +41,7 @@ def test_derivation_covers_every_home_office_category() -> None:
     profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025)
 
     expected = set(categories_for_family(SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS)) | set(
-        categories_for_family(SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP)
+        categories_for_family(SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP),
     )
     assert set(profile.ratios) == expected
 

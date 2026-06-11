@@ -48,7 +48,7 @@ def _seed_profile_language(language: str) -> None:
     repository = workflow_state_repository()
     repository.update(lambda state: register_minimal_profile(state, profile_id="default"))
     repository.update(
-        lambda state: set_active_field(state, UserProfileFact(path="preferences.output_language", value=language))
+        lambda state: set_active_field(state, UserProfileFact(path="preferences.output_language", value=language)),
     )
 
 

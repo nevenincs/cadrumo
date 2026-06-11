@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import Period
 from .....tests.aeat_literal_fixtures import justificante_cotejo_url
 from .._extract import extract_justificante
 
@@ -149,7 +150,7 @@ class TestPeriodPositionalQuarterly:
         """Modelo 130 binds period via the positional ``<NIF> <year> <token>`` line."""
         record = extract_justificante(_SHAPE_M130_QUARTERLY, _pdf_path(tmp_path, "130"))
         assert record.modelo == "130"
-        assert record.period == "1T"
+        assert record.period == Period.from_year_and_code(2024, "1T")
         assert record.tax_id == "Y0000001S"
         assert record.csv == "SANITIZED1302024"
 
@@ -157,14 +158,14 @@ class TestPeriodPositionalQuarterly:
         """Modelo 303 binds period via the labelled ``Periodo`` shape."""
         record = extract_justificante(_SHAPE_M303_QUARTERLY, _pdf_path(tmp_path, "303"))
         assert record.modelo == "303"
-        assert record.period == "1T"
+        assert record.period == Period.from_year_and_code(2024, "1T")
         assert record.ejercicio == "2024"
 
     def test_modelo_111_period_positional(self, tmp_path: Path) -> None:
         """Modelo 111 also relies on the positional period shape."""
         record = extract_justificante(_SHAPE_M111_QUARTERLY, _pdf_path(tmp_path, "111"))
         assert record.modelo == "111"
-        assert record.period == "1T"
+        assert record.period == Period.from_year_and_code(2024, "1T")
 
 
 class TestPeriodPositionalRejectsMonthlyNoise:
@@ -193,7 +194,7 @@ class TestPeriodPositionalRejectsMonthlyNoise:
             f"{justificante_cotejo_url('SANITIZED1902024')}\n"
         )
         record = extract_justificante(text, _pdf_path(tmp_path, "190"))
-        assert record.period == "2024"
+        assert record.period == Period.from_year_and_code(2024, "0A")
         assert record.ejercicio == "2024"
 
     def test_quarterly_modelos_still_match(self, tmp_path: Path) -> None:
@@ -208,7 +209,7 @@ class TestPeriodPositionalRejectsMonthlyNoise:
             f"{justificante_cotejo_url('SANITIZED1302024')}\n"
         )
         record = extract_justificante(text, _pdf_path(tmp_path, "130"))
-        assert record.period == "1T"
+        assert record.period == Period.from_year_and_code(2024, "1T")
 
 
 class TestEjercicioLooseShape:
@@ -219,14 +220,14 @@ class TestEjercicioLooseShape:
         record = extract_justificante(_SHAPE_M190_RESUMEN_ANUAL, _pdf_path(tmp_path, "190"))
         assert record.modelo == "190"
         assert record.ejercicio == "2024"
-        assert record.period == "2024"
+        assert record.period == Period.from_year_and_code(2024, "0A")
 
-    def test_modelo_390_period_preserves_observed_year(self, tmp_path: Path) -> None:
-        """Receipts with no period token preserve the printed ejercicio."""
+    def test_modelo_390_period_resolves_observed_year_to_annual_period(self, tmp_path: Path) -> None:
+        """Receipts with no period token resolve the printed ejercicio to 0A."""
         record = extract_justificante(_SHAPE_M390_ANUAL, _pdf_path(tmp_path, "390"))
         assert record.modelo == "390"
         assert record.ejercicio == "2023"
-        assert record.period == "2023"
+        assert record.period == Period.from_year_and_code(2023, "0A")
 
 
 class TestEnglishLayout:
@@ -257,4 +258,4 @@ class TestEnglishLayout:
         assert record.csv == "SANITIZED3902021"
         # ejercicio captured from "Financial year 2021"
         assert record.ejercicio == "2021"
-        assert record.period == "2021"
+        assert record.period == Period.from_year_and_code(2021, "0A")

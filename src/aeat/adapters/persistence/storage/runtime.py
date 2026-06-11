@@ -33,7 +33,7 @@ from .master_key._active_session import _active_session
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
 _STORAGE_VALIDATION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_validation"
@@ -237,7 +237,7 @@ def inspect_storage_runtime(
                     "no active bucket session; run `aeat config switch NAME` "
                     "to unlock a profile before invoking profile-bound storage."
                 ),
-            )
+            ),
         )
     else:
         expired = active.is_expired(checked_at)
@@ -256,7 +256,7 @@ def inspect_storage_runtime(
                     message=(
                         "the active bucket session is sealed; run `aeat config switch NAME` to re-activate the profile."
                     ),
-                )
+                ),
             )
         elif expired:
             issues.append(
@@ -267,7 +267,7 @@ def inspect_storage_runtime(
                         "the active bucket session has expired; run `aeat config switch NAME` "
                         "to re-activate the profile."
                     ),
-                )
+                ),
             )
         elif active.unsecured_backend:
             issues.append(
@@ -278,7 +278,7 @@ def inspect_storage_runtime(
                         "the active bucket session uses the unsecured backend; "
                         "production profile-bound storage requires file or keyring custody."
                     ),
-                )
+                ),
             )
 
     if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
@@ -287,7 +287,7 @@ def inspect_storage_runtime(
                 code=StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,
                 message_key="errors.storage.runtime.route_not_active_bucket",
                 message="the primary database route is not attached to an active profile bucket.",
-            )
+            ),
         )
     elif (
         active is not None
@@ -299,7 +299,7 @@ def inspect_storage_runtime(
                 code=StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,
                 message_key="errors.storage.runtime.route_bucket_mismatch",
                 message="the primary database route does not match the active bucket session.",
-            )
+            ),
         )
 
     ready = not issues

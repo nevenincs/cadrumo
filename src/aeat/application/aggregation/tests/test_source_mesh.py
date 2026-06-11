@@ -194,7 +194,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
                 enum_binding_values={"profile-ccaa": "madrid"},
                 diagnostics=(diagnostic,),
             ),
-        )
+        ),
     )
 
     assert merged.resolver_id == "source_mesh"

@@ -15,7 +15,7 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 @pytest.fixture(scope="module")
 def _registry_relation_cases() -> tuple[
-    tuple[ModeloDefinition, ModeloRevision, RelationDefinition, dict[str, ModeloDefinition]], ...
+    tuple[ModeloDefinition, ModeloRevision, RelationDefinition, dict[str, ModeloDefinition]], ...,
 ]:
     """Pre-load the committed registry once and expose every (modelo, revision, relation) triple.
 
@@ -81,7 +81,7 @@ def _source_revision_consistency_errors(
     if relation.source_output not in source_outputs:
         errors.append(
             f"{modelo.id}/{revision.id}/{relation.id}: source output {relation.source_output} "
-            f"not defined by {source_modelo.id}/{source_revision.id}"
+            f"not defined by {source_modelo.id}/{source_revision.id}",
         )
     revision_periods = set(source_revision.period_selector.periods)
     relation_periods = set(relation.source_periods)
@@ -89,12 +89,12 @@ def _source_revision_consistency_errors(
         unknown_periods = sorted(relation_periods - revision_periods)
         errors.append(
             f"{modelo.id}/{revision.id}/{relation.id}: source periods {unknown_periods} "
-            f"not accepted by {source_modelo.id}/{source_revision.id}"
+            f"not accepted by {source_modelo.id}/{source_revision.id}",
         )
     errors.extend(
         _offset_derived_period_errors(
-            modelo, revision, relation, source_modelo, source_revision, revision_periods=revision_periods
-        )
+            modelo, revision, relation, source_modelo, source_revision, revision_periods=revision_periods,
+        ),
     )
     return errors
 
@@ -123,13 +123,13 @@ def _offset_derived_period_errors(
         return []
     return [
         f"{modelo.id}/{revision.id}/{relation.id}: offset-derived source periods "
-        f"{unknown_derived} not accepted by {source_modelo.id}/{source_revision.id}"
+        f"{unknown_derived} not accepted by {source_modelo.id}/{source_revision.id}",
     ]
 
 
 def test_registry_relations_reference_existing_modelo_outputs_and_target_bindings(
     _registry_relation_cases: tuple[
-        tuple[ModeloDefinition, ModeloRevision, RelationDefinition, Mapping[str, ModeloDefinition]], ...
+        tuple[ModeloDefinition, ModeloRevision, RelationDefinition, Mapping[str, ModeloDefinition]], ...,
     ],
 ) -> None:
     """Every relation in the committed registry must point at real source/target rows.
@@ -174,7 +174,7 @@ def test_previous_filing_bindings_reference_existing_source_modelo_outputs_and_p
         if not matching_revisions:
             errors.append(
                 f"{modelo.id}/{revision.id}/{binding.id}: no {source_modelo.id} revision accepts "
-                f"source periods {source_periods}"
+                f"source periods {source_periods}",
             )
             continue
 
@@ -190,7 +190,7 @@ def test_previous_filing_bindings_reference_existing_source_modelo_outputs_and_p
             if not any(source_output in outputs for outputs in source_outputs_by_revision.values()):
                 errors.append(
                     f"{modelo.id}/{revision.id}/{binding.id}: source output {source_output} "
-                    f"not defined by any period-compatible {source_modelo.id} revision"
+                    f"not defined by any period-compatible {source_modelo.id} revision",
                 )
 
     assert not errors

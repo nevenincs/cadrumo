@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -102,7 +103,7 @@ def _transaction(
             "iva_amount": iva_amount,
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -111,11 +112,12 @@ def _seed_303_work_unit(
     *,
     period: str = "1T",
 ):
+    typed_period = Period.from_year_and_code(2026, period)
     return create_work_unit(
         bucket_id="bucket-a",
         modelo="303",
         filing_year=2026,
-        period=period,
+        period=typed_period,
         # The law-determined M303 revision for filing_year 2026 is
         # ``2023-y-siguientes`` (``2009-y-siguientes`` covers only 2009-2022).
         # The calc-time assertion (snapshot.revision.id ==
@@ -134,7 +136,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_T0,
             updated_at=_T0,
-        )
+        ),
     )
 
 
@@ -142,7 +144,7 @@ def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensatio
     return IvaCompensationReconciliationDecision(
         taxpayer_nif="12345678Z",
         target_year=2026,
-        target_period=period,
+        target_period=Period.from_year_and_code(2026, period),
         selected_authority="aeat_wallet",
         selected_amount=selected_amount,
         wallet_amount=selected_amount,
@@ -463,8 +465,8 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
                     taxable_base=Decimal("100.00"),
                     iva_amount=Decimal("21.00"),
                 ),
-            )
-        )
+            ),
+        ),
     )
 
     with pytest.raises(ModeloAggregationBindingError) as excinfo:

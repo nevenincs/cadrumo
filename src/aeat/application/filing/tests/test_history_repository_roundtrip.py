@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain._identifiers import ModeloIdentifier
 from ....tests.secure_sql import isolated_runtime_profile
 from .._history_models import ModeloHistory, ModeloHistoryEntry
@@ -31,19 +32,19 @@ def _populated_history() -> ModeloHistory:
         entries=(
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period="2025Q1",
+                period=Period.from_year_and_code(2025, "1T"),
                 submitted_at=now - timedelta(days=90),
                 status="ACEPTADA",
             ),
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period="2025Q2",
+                period=Period.from_year_and_code(2025, "2T"),
                 submitted_at=now - timedelta(days=30),
                 status="ACEPTADA",
             ),
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period="2025Q3",
+                period=Period.from_year_and_code(2025, "3T"),
                 submitted_at=now,
                 status="RECHAZADA",
             ),
@@ -68,7 +69,11 @@ def test_filing_history_survives_encrypted_storage_roundtrip(
     # insertion order on the wire - drop-and-reload would otherwise
     # stay invisible).
     assert len(loaded.entries) == 3
-    assert tuple(e.period for e in loaded.entries) == ("2025Q1", "2025Q2", "2025Q3")
+    assert tuple(e.period for e in loaded.entries) == (
+        Period.from_year_and_code(2025, "1T"),
+        Period.from_year_and_code(2025, "2T"),
+        Period.from_year_and_code(2025, "3T"),
+    )
     assert tuple(e.status for e in loaded.entries) == (
         "ACEPTADA",
         "ACEPTADA",

@@ -98,7 +98,7 @@ class Modelo100ObservedV2025Extractor:
                     source_page=1,
                     source_bbox=None,
                     extraction_confidence=1.0,
-                )
+                ),
             )
 
         coverage: Decimal | None = None

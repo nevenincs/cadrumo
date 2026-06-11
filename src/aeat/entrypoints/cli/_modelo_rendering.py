@@ -81,7 +81,7 @@ def work_unit_lines(unit) -> list[str]:
         f"bucket_id\t{unit.bucket_id}",
         f"modelo\t{unit.modelo}",
         f"filing_year\t{unit.filing_year}",
-        f"period\t{unit.period}",
+        f"period\t{unit.period.registry_token}",
         f"revision_id\t{unit.revision_id}",
         f"name\t{unit.name}",
         f"state\t{unit.state.value}",
@@ -121,13 +121,13 @@ def work_unit_list_lines(units, *, bucket_id: str | None, include_discarded: boo
                 unit.bucket_id,
                 str(unit.modelo),
                 str(unit.filing_year),
-                unit.period,
+                unit.period.registry_token,
                 unit.revision_id,
                 unit.state.value,
                 short_id(unit.current_calculation_revision_id) or "",
                 short_id(unit.filed_calculation_revision_id) or "",
                 unit.name,
-            )
+            ),
         )
         for unit in units
     )
@@ -147,7 +147,7 @@ def work_unit_plazo_lines(unit) -> list[str]:
                 "cli.app.modelo.work.plazo_days_remaining",
                 default="days_remaining\t{days_remaining}",
                 days_remaining=summary.days_remaining,
-            )
+            ),
         )
         return out
 
@@ -163,7 +163,7 @@ def work_unit_plazo_lines(unit) -> list[str]:
                     "AVISO: plazo voluntario vencido. Presenta con recargo "
                     "Art. 27 LGT antes de recibir requerimiento de la AEAT."
                 ),
-            )
+            ),
         )
         return out
 
@@ -180,7 +180,7 @@ def work_unit_plazo_lines(unit) -> list[str]:
                     "Art. 27 LGT antes de recibir requerimiento de la AEAT."
                 ),
             ),
-        ]
+        ],
     )
     return out
 
@@ -227,7 +227,7 @@ def result_summary_lines(rev) -> list[str]:
         default="result summary  %{modelo} %{year} %{period}",
         modelo=summary.modelo,
         year=summary.filing_year,
-        period=summary.period,
+        period=summary.period.registry_token,
     )
     lines = [header, "role\tcasilla\tvalue\tlabel"]
     for row in summary.rows:
@@ -317,7 +317,7 @@ def filing_record_lines(record) -> list[str]:
         f"bucket_id\t{record.bucket_id}",
         f"modelo\t{record.modelo}",
         f"filing_year\t{record.filing_year}",
-        f"period\t{record.period}",
+        f"period\t{record.period.registry_token}",
         f"filed_at\t{record.filed_at.isoformat()}",
         f"filed_by\t{record.filed_by}",
         f"status\t{record.status.value}",
@@ -392,8 +392,8 @@ def verification_report_lines(report) -> list[str]:
                     casilla,
                     finding.message,
                     next_action,
-                )
-            )
+                ),
+            ),
         )
         if finding.legal_refs:
             lines.append(f"finding_legal_refs\t{casilla}\t{', '.join(finding.legal_refs)}")
@@ -402,6 +402,6 @@ def verification_report_lines(report) -> list[str]:
     if not report.granted_verificado_completo:
         lines.append(
             "next_action\taeat app modelo verification-report list "
-            f"--calculation-revision-id {report.calculation_revision_id}"
+            f"--calculation-revision-id {report.calculation_revision_id}",
         )
     return lines

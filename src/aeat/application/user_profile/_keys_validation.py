@@ -23,7 +23,7 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.contribuyente import (
     ProfileKey,
     ProfileKeyRequirement,
@@ -131,7 +131,7 @@ def list_profile_value_rows(
                 is_set=is_set,
                 requirement=entry.requirement,
                 description=str(entry.description),
-            )
+            ),
         )
     return tuple(rows)
 

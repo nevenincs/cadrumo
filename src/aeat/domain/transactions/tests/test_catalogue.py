@@ -59,7 +59,7 @@ def _sample_transaction(
             "raw": _sample_raw(provider_id=provider_id, amount=amount, description=description),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": classification,
-        }
+        },
     )
 
 
@@ -161,7 +161,7 @@ def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
                 description="Client payment",
                 classification=BusinessClassification.BUSINESS,
             ),
-        ]
+        ],
     )
 
     restored = TransactionCatalogue.model_validate_json(catalogue.model_dump_json())
@@ -297,7 +297,7 @@ def _bare_transaction() -> Transaction:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
-        }
+        },
     )
 
 

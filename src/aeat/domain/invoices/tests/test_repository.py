@@ -50,7 +50,7 @@ def _invoice(invoice_number: str = "INV-001") -> Invoice:
             "subtotal": Decimal("100.00"),
             "iva_rate": IvaRate.RATE_21,
             "iva_amount": Decimal("21.00"),
-        }
+        },
     )
     return Invoice.model_validate(
         {
@@ -67,7 +67,7 @@ def _invoice(invoice_number: str = "INV-001") -> Invoice:
             "lines": (line,),
             "payment_status": PaymentStatus.PENDING,
             "linked_transaction_ids": (),
-        }
+        },
     )
 
 

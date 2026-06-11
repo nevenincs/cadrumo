@@ -101,7 +101,7 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
         if not text:
             raise AeatExportFormatError(
                 "INLINE_SIGN CURRENCY magnitude is blank; expected zero-padded digits "
-                "(use 0000000000 for an explicit zero, not whitespace)"
+                "(use 0000000000 for an explicit zero, not whitespace)",
             )
         cents = int(text)
         result = _round_to_cents(Decimal(cents) / Decimal(100))
@@ -110,7 +110,8 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     text = raw.decode("ascii").strip()
     if not text:
         raise AeatExportFormatError(
-            "CURRENCY field is blank; expected zero-padded digits (use 0000000000 for an explicit zero, not whitespace)"
+            "CURRENCY field is blank; expected zero-padded digits "
+            "(use 0000000000 for an explicit zero, not whitespace)",
         )
     cents = int(text)
     return _round_to_cents(Decimal(cents) / Decimal(100))
@@ -127,7 +128,7 @@ def _decode_date(raw: bytes, fmt: DateFmt) -> date:
     if decode_failure is not None:
         raise AeatExportFormatError(
             f"DATE field contains non-ASCII wire bytes; length={len(raw)} "
-            f"digest={_wire_digest(raw)} failure={decode_failure}"
+            f"digest={_wire_digest(raw)} failure={decode_failure}",
         )
     parse_failure: str | None = None
     try:
@@ -141,7 +142,7 @@ def _decode_date(raw: bytes, fmt: DateFmt) -> date:
     except ValueError as exc:
         parse_failure = type(exc).__name__
     raise AeatExportFormatError(
-        f"DATE field does not match {fmt.value}; length={len(raw)} digest={_wire_digest(raw)} failure={parse_failure}"
+        f"DATE field does not match {fmt.value}; length={len(raw)} digest={_wire_digest(raw)} failure={parse_failure}",
     )
 
 
@@ -174,7 +175,7 @@ def deserialise(
     if len(body) != total_length:
         raise AeatExportFormatError(
             f"payload content is {len(body)} bytes but total_length={total_length} "
-            f"was declared; likely wrong record spec or corrupted stream."
+            f"was declared; likely wrong record spec or corrupted stream.",
         )
 
     field_values: dict[str, str | Decimal | date] = {}
@@ -205,7 +206,7 @@ def _slice_field_bytes(body: bytes, spec: RecordFieldSpec) -> bytes:
     if len(raw) != spec.length:
         raise AeatExportFormatError(
             f"field {spec.field_id!r} expects {spec.length} bytes "
-            f"at offset {spec.offset}; got {len(raw)} — payload too short?"
+            f"at offset {spec.offset}; got {len(raw)} — payload too short?",
         )
     return raw
 
@@ -273,7 +274,7 @@ def _decode_currency_field(
     if currency_failure is not None:
         raise AeatExportFormatError(
             f"CURRENCY field {spec.field_id!r} has invalid wire bytes; "
-            f"length={len(raw)} digest={_wire_digest(raw)} failure={currency_failure}"
+            f"length={len(raw)} digest={_wire_digest(raw)} failure={currency_failure}",
         )
     field_values[spec.field_id] = value
     if spec.casilla_id is not None:
@@ -298,7 +299,7 @@ def _decode_text_field(spec: RecordFieldSpec, raw: bytes, encoding: FicheroBoeEn
     if text_failure is not None:
         raise AeatExportFormatError(
             f"{spec.kind.value} field {spec.field_id!r} cannot be decoded with {encoding}; "
-            f"length={len(raw)} digest={_wire_digest(raw)} failure={text_failure}"
+            f"length={len(raw)} digest={_wire_digest(raw)} failure={text_failure}",
         )
     if spec.pad_char == " ":
         return text.rstrip(" ") if spec.justification.value == "left" else text.lstrip(" ")
@@ -380,7 +381,7 @@ def deserialise_envelope(
     if len(body) != expected_total:
         raise AeatExportFormatError(
             f"envelope payload is {len(body)} bytes but segments sum to "
-            f"{expected_total}; wrong envelope composition or corrupted stream."
+            f"{expected_total}; wrong envelope composition or corrupted stream.",
         )
 
     parsed: dict[str, ParsedRecord] = {}
@@ -401,7 +402,7 @@ def deserialise_envelope(
             if cid in merged and merged[cid] != value:
                 raise AeatExportFormatError(
                     f"casilla {cid!r} appears with divergent values across "
-                    f"segments; record spec must not duplicate casilla_id across pages."
+                    f"segments; record spec must not duplicate casilla_id across pages.",
                 )
             merged[cid] = value
         for fid, fvalue in record.field_values.items():
@@ -409,7 +410,7 @@ def deserialise_envelope(
                 raise AeatExportFormatError(
                     f"field {fid!r} appears with divergent values across "
                     f"segments; record spec must not duplicate field_id across pages "
-                    f"unless the fields carry identical values."
+                    f"unless the fields carry identical values.",
                 )
             merged_fields[fid] = fvalue
         cursor = slice_end

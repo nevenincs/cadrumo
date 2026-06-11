@@ -22,8 +22,8 @@ from datetime import date
 
 from ...adapters.persistence.storage.bucket import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...core._bucket_pointer import BucketPointer
-from ...core._bucket_pointer_io import write_pointer
+from ...core import BucketPointer
+from ...core import write_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -170,7 +170,7 @@ def _clear_active_profile_pointer() -> None:
     the next CLI invocation reports no active profile rather than
     pointing at a tombstoned record.
     """
-    from ...core._bucket_pointer_io import pointer_path
+    from ...core import pointer_path
     from ...core.config import load_settings
 
     settings = load_settings()
@@ -250,7 +250,7 @@ def register_active_profile(
         keys_id = "keys:" + ",".join(sorted(f.path for f in facts if f.value is not None))
         if keys_id != "keys:":
             updated = _append_workflow_event(
-                updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id
+                updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id,
             )
     return updated
 
@@ -297,7 +297,7 @@ def _append_profile_activated_event(*, profile_id: str, active_profile: str | No
                 payload_version=1,
                 payload=payload,
             ),
-        )
+        ),
     )
 
 
@@ -343,7 +343,7 @@ def capture_active_profile_pointer() -> str | None:
     master-key activation) would otherwise strand the pointer at a
     profile whose record was never persisted.
     """
-    from ...core._bucket_pointer_io import pointer_path
+    from ...core import pointer_path
 
     target = pointer_path(load_settings().aeat_local_storage_root)
     if not target.is_file():
@@ -360,7 +360,7 @@ def restore_active_profile_pointer(prior_text: str | None) -> None:
     captured bytes are written back, so a failed create leaves the
     pointer exactly as it was found.
     """
-    from ...core._bucket_pointer_io import pointer_path
+    from ...core import pointer_path
 
     target = pointer_path(load_settings().aeat_local_storage_root)
     if prior_text is None:
@@ -500,7 +500,7 @@ def set_active_field(
             valid_from=fact.valid_from,
             valid_to=fact.valid_to,
             source=fact.source,
-        )
+        ),
     )
     action = "profile.values.cleared" if fact.value is None else "profile.values.updated"
     return _append_workflow_event(state, action=action, bucket_id=profile_id, object_id=fact.path)

@@ -318,7 +318,7 @@ def test_split_then_merge_chain_is_addressable_via_event_for_object(secure_objec
         catalogue.for_object(
             object_type=BucketEventObjectType.LEDGER_TRANSACTION,
             object_id=parent_result.ref.transaction_id,
-        )
+        ),
     )
     types = tuple(event.event_type for event in chain)
     assert BucketEventType.LEDGER_TRANSACTION_SPLIT in types

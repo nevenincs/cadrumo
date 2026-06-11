@@ -19,7 +19,7 @@ import pytest
 
 from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core._period import Period
+from ....core import Period
 from ....core.config import Settings, override_settings
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
@@ -77,6 +77,7 @@ from .._export import (
     export_modelo_revision,
 )
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
+from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -136,16 +137,17 @@ def _seed_revision(
     state: CalculationRevisionState,
     modelo: str = "130",
     filing_year: int = 2026,
-    period: str = "Q1",
+    period: str = "1T",
 ) -> tuple[str, str]:
     revision_id_suffix = state.value.lower()[:3]
     base = revision_id_suffix + "0" * (63 - len(revision_id_suffix))
     revision_id = "r" + base
+    typed_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=revision_id,
     )
     now = datetime.now(UTC)
@@ -154,9 +156,9 @@ def _seed_revision(
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
+        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=now,
         updated_at=now,
     )
@@ -188,7 +190,7 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
-        target_period=period,
+        target_period=Period.from_year_and_code(2026, period),
         selected_authority="missing",
         selected_amount=None,
         wallet_amount=Decimal("1200.00"),
@@ -212,7 +214,7 @@ def _filed_history_only_wallet_decision(
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
-        target_period=period,
+        target_period=Period.from_year_and_code(2026, period),
         selected_authority="filed_history",
         selected_amount=Decimal("800.00"),
         wallet_amount=None,
@@ -235,7 +237,7 @@ def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompen
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
-        target_period=period,
+        target_period=Period.from_year_and_code(2026, period),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),
@@ -272,6 +274,7 @@ def _modelo_303_engine_inputs() -> dict[str, Decimal]:
 def _seed_modelo_303_1t_clean_state(
     *,
     bucket_id: str,
+    taxpayer_tax_id: str = "taxpayerdefault",
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -281,18 +284,28 @@ def _seed_modelo_303_1t_clean_state(
         {
             casilla_id
             for requirement in cross_period_dependency_requirements(snapshot)
-            if requirement.source_modelo == "303" and requirement.filing_year == 2026 and requirement.period == "1T"
+            if requirement.source_modelo == "303"
+            and requirement.filing_year == 2026
+            and requirement.period == Period.from_year_and_code(2026, "1T")
             for casilla_id in requirement.source_casillas
         },
     )
     assert source_casillas, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
     source_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    persist_justificante_metadata(
+        "JUST-303-2026-1T",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        captured_at=datetime(2026, 5, 21, 11, 0, tzinfo=UTC),
+        tax_id=taxpayer_tax_id,
+    )
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id=source_snapshot.revision.id,
         repository=work_unit_repository,
         bucket_event_repository=bucket_event_repository,
@@ -308,6 +321,7 @@ def _seed_modelo_303_1t_clean_state(
         calculation_repository=calculation_repository,
         filing_repository=ModeloRecordCatalogueRepository(),
         bucket_event_repository=bucket_event_repository,
+        expected_tax_id=taxpayer_tax_id,
         clock=datetime(2026, 5, 21, 11, 1, tzinfo=UTC),
     )
     CalculationObservationRepository().save_observation(
@@ -360,6 +374,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
 
     payload = result.model_dump(mode="json")
 
+    assert payload["period"] == {"filing_year": 2026, "code": "1T"}
     assert payload["casilla_provenance"] == [
         {
             "casilla_id": "03",
@@ -398,6 +413,7 @@ def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp
 
     payload = result.model_dump(mode="json")
 
+    assert payload["period"] == {"filing_year": 2026, "code": "2T"}
     assert payload["iva_wallet_decision_provenance"] == {
         "decision_ref": "sha256:" + "1" * 64,
         "selected_authority": "aeat_wallet",
@@ -414,7 +430,7 @@ def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locato
     decision = IvaCompensationReconciliationDecision(
         taxpayer_nif="synthetic-sensitive-marker",
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),
@@ -622,7 +638,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
@@ -660,7 +676,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="2T",
+        period=Period.from_year_and_code(2026, "2T"),
         revision_id=snapshot.revision.id,
         repository=work_repo,
         bucket_event_repository=event_repo,
@@ -689,6 +705,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     )
     _seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
+        taxpayer_tax_id=taxpayer_nif,
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
@@ -724,8 +741,10 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     assert provenance.authority_source_refs[0].startswith("sha256:")
 
     event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
+    assert event.payload["period"] == "2T"
     assert event.payload["iva_wallet_selected_authority"] == "aeat_wallet"
     assert event.payload["iva_wallet_divergence"] == "wallet_only"
+    assert event.payload["iva_wallet_target_period"] == "2T"
     result_json = result.model_dump_json()
     event_json = event.model_dump_json()
     exported_text = output_path.read_text(encoding="utf-8")
@@ -783,7 +802,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         report = verify_modelo_revision(
@@ -820,7 +839,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-file.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
@@ -842,7 +861,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     assert (
         ModeloRecordCatalogueRepository()
         .load()
-        .current_for(bucket_id=bucket_id, modelo="303", filing_year=2026, period="2T")
+        .current_for(bucket_id=bucket_id, modelo="303", filing_year=2026, period=Period.from_year_and_code(2026, "2T"))
         is None
     )
     work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
@@ -860,7 +879,7 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
         bucket_id=bucket_id,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         repository=work_repo,
         clock=datetime(2026, 6, 4, 10, 0, tzinfo=UTC),

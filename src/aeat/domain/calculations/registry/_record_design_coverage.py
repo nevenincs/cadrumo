@@ -383,7 +383,7 @@ def derive_calculation_completeness_casillas(
             raise RegistryValidationError(
                 f"calculation-completeness derivation: casilla {number!r} is "
                 f"declared under segmento {segmento!r} but the AEAT Diseño de "
-                "Registros does not carry it under that segment"
+                "Registros does not carry it under that segment",
             )
         ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number))
     return tuple(ordered)

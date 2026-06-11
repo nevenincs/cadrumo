@@ -31,7 +31,7 @@ def _coerce_input_kind(value: object) -> object:
         except ValueError:
             raise RegistryValidationError(
                 f"input_kind {value!r} is not a recognised InputKind member; "
-                f"expected one of {[member.value for member in InputKind]}"
+                f"expected one of {[member.value for member in InputKind]}",
             ) from None
     raise RegistryValidationError(f"input_kind must be a string, got {type(value).__name__!r}")
 

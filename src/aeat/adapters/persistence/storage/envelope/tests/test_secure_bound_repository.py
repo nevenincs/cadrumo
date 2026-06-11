@@ -188,7 +188,7 @@ def test_secure_bound_repository_iter_ids_fails_closed_on_unreadable_row(
                         "UPDATE secure_objects SET payload = X'00' "
                         "WHERE id = ("
                         "SELECT MIN(id) FROM secure_objects WHERE namespace = :namespace"
-                        ")"
+                        ")",
                     ),
                     {"namespace": _DummyRepository.namespace},
                 )
@@ -216,7 +216,7 @@ def test_secure_bound_repository_underlying_iterator_still_reports_partial_failu
                         "UPDATE secure_objects SET payload = X'00' "
                         "WHERE id = ("
                         "SELECT MIN(id) FROM secure_objects WHERE namespace = :namespace"
-                        ")"
+                        ")",
                     ),
                     {"namespace": _DummyRepository.namespace},
                 )
@@ -226,7 +226,7 @@ def test_secure_bound_repository_underlying_iterator_still_reports_partial_failu
                     _DummyRepository.namespace,
                     expected_class=_DummyRepository.sensitivity,
                     max_supported_version=_DummyRepository.schema_version,
-                )
+                ),
             )
 
             assert len([item for item in outcomes if isinstance(item, SecureObjectRecord)]) == 1
@@ -300,7 +300,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
             "classification": SensitivityClass.AUDIT.value,
             "payload": {"id": "x", "value": 3},
             "encryption": None,
-        }
+        },
     )
     loaded = env_cls.model_validate_json(valid_json)
     assert isinstance(loaded.payload, _DummyPayload)
@@ -314,7 +314,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
             "classification": SensitivityClass.AUDIT.value,
             "payload": {"id": "x", "value": "not-an-int"},
             "encryption": None,
-        }
+        },
     )
     with pytest.raises(ValidationError):
         env_cls.model_validate_json(bad_json)

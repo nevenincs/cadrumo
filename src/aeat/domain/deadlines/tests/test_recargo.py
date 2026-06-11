@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from .._errors import DeadlineValidationError
 from .._recargo import build_recovery_for_overdue, load_recargo_bands, resolve_recargo_band
 
@@ -80,7 +81,7 @@ def test_resolve_recargo_band_rejects_zero_days_late() -> None:
 
 def test_build_recovery_carries_runnable_next_command() -> None:
     """Recovery's next_command must point at the accepted modelo work surface."""
-    recovery = build_recovery_for_overdue(days_late=18, modelo="130", period="2026Q1")
+    recovery = build_recovery_for_overdue(days_late=18, modelo="130", period=Period.from_year_and_code(2026, "1T"))
     assert recovery.still_filable is True
     assert recovery.recargo_band.id == "within_30_days"
     assert "ley-58-2003" in recovery.legal_ref

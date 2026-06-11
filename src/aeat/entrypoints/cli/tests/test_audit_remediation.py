@@ -110,7 +110,7 @@ class TestOverviewCalendarRequiresProfileCreate:
                 "software development",
                 "--iva-regime",
                 "GENERAL",
-            ]
+            ],
         )
         assert init.exit_code == 0, init.output
 
@@ -128,7 +128,7 @@ class TestOverviewCalendarRequiresProfileCreate:
                 "natural_person",
                 "--irpf-income-categories",
                 "actividad_economica",
-            ]
+            ],
         )
         assert declared.exit_code == 0, declared.output
 
@@ -144,7 +144,7 @@ class TestOverviewCalendarRequiresProfileCreate:
                 "--to",
                 "2026-12-31",
                 "--allow-incomplete",
-            ]
+            ],
         )
 
         assert result.exit_code == 0, _combined_output(result)

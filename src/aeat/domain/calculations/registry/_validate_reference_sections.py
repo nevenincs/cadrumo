@@ -67,7 +67,7 @@ def check_algorithm_binding_refs(checker: IdReferenceChecker, revision: ModeloRe
         for input_name, input_id in alg_binding.inputs.items():
             if input_id not in resolvable_ids:
                 checker.failures.append(
-                    f"{checker.prefix}: {abp}.inputs.{input_name} references unknown id {input_id!r}"
+                    f"{checker.prefix}: {abp}.inputs.{input_name} references unknown id {input_id!r}",
                 )
         for output_name, output_id in alg_binding.outputs.items():
             checker.chk(f"{abp}.outputs.{output_name}", output_id, checker.casilla_ids)

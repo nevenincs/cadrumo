@@ -52,7 +52,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _register(name: str) -> None:
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=name, enforce_unique_tax_id=False)
+        lambda state: register_minimal_profile(state, profile_id=name, enforce_unique_tax_id=False),
     )
 
 

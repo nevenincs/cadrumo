@@ -140,14 +140,14 @@ def test_aggregation_source_kind_has_a_single_canonical_import_path() -> None:
                     if alias.name == _GUARDED_NAME:
                         offenders.append(
                             f"{py_file.relative_to(repo_root)}:{node.lineno}: "
-                            f"absolute import from private path '{_FORBIDDEN_ABSOLUTE_PATH}'"
+                            f"absolute import from private path '{_FORBIDDEN_ABSOLUTE_PATH}'",
                         )
             if node.module == _FORBIDDEN_RELATIVE_MODULE and node.level and node.level >= 1:
                 for alias in node.names:
                     if alias.name == _GUARDED_NAME:
                         offenders.append(
                             f"{py_file.relative_to(repo_root)}:{node.lineno}: "
-                            f"relative import from private module '{_FORBIDDEN_RELATIVE_MODULE}'"
+                            f"relative import from private module '{_FORBIDDEN_RELATIVE_MODULE}'",
                         )
 
     assert offenders == [], (

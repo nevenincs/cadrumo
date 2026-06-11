@@ -66,7 +66,7 @@ def test_config_profile_create_writes_profile_output_language(
             "Servicios",
             "--output-language",
             "en",
-        ]
+        ],
     )
     show_result = _invoke(["--format", "json", "config", "profile", "show", "default"])
 
@@ -119,7 +119,7 @@ def test_config_profile_create_validates_profile_output_language(
             "Servicios",
             "--output-language",
             "ca",
-        ]
+        ],
     )
     show_result = _invoke(["--format", "json", "config", "profile", "show", "default"])
     invalid_result = _invoke(
@@ -135,7 +135,7 @@ def test_config_profile_create_validates_profile_output_language(
             "Servicios",
             "--output-language",
             "zz",
-        ]
+        ],
     )
 
     assert valid_result.exit_code == 0, valid_result.output
@@ -193,7 +193,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
             "08001",
             "--iva-regime",
             "EXENTO",
-        ]
+        ],
     )
     assert create_result.exit_code == 0, create_result.output
 
@@ -207,7 +207,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
             "--quiet",
             "--address-postcode",
             "28010",
-        ]
+        ],
     )
     assert edit_result.exit_code == 0, edit_result.output
 
@@ -243,7 +243,7 @@ def test_global_language_flag_overrides_profile_for_invocation(
             "Servicios",
             "--output-language",
             "ca",
-        ]
+        ],
     )
     assert create_result.exit_code == 0, create_result.output
 
@@ -290,7 +290,7 @@ def test_create_error_renders_in_command_line_output_language(
             "--quiet",
             "--output-language",
             "en",
-        ]
+        ],
     )
     spanish = _invoke(
         [
@@ -301,7 +301,7 @@ def test_create_error_renders_in_command_line_output_language(
             "--quiet",
             "--output-language",
             "es",
-        ]
+        ],
     )
 
     assert english.exit_code != 0, english.output
@@ -413,7 +413,7 @@ def test_config_repair_labels_render_in_profile_output_language(
             "Servicios",
             "--output-language",
             "en",
-        ]
+        ],
     )
     assert create_result.exit_code == 0, create_result.output
 

@@ -197,7 +197,7 @@ def test_no_orphan_placeholder_tokens(
         formatted = "\n  ".join(findings)
         pytest.fail(
             f"{len(findings)} ORPHAN placeholder(s) detected — "
-            f"locale tokens never supplied by any tr() call site:\n  {formatted}"
+            f"locale tokens never supplied by any tr() call site:\n  {formatted}",
         )
 
 
@@ -227,7 +227,7 @@ def test_no_surplus_kwargs(
         formatted = "\n  ".join(findings)
         pytest.fail(
             f"{len(findings)} SURPLUS kwarg(s) detected — "
-            f"call site kwargs not matched by any locale placeholder:\n  {formatted}"
+            f"call site kwargs not matched by any locale placeholder:\n  {formatted}",
         )
 
 
@@ -256,5 +256,5 @@ def test_no_shadow_kwarg_variants(
         formatted = "\n  ".join(findings)
         pytest.fail(
             f"{len(findings)} SHADOW kwarg variant(s) detected — "
-            f"inconsistent kwarg sets across call sites for the same key:\n  {formatted}"
+            f"inconsistent kwarg sets across call sites for the same key:\n  {formatted}",
         )

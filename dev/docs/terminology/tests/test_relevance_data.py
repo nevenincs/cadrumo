@@ -99,8 +99,10 @@ def _target_resolves(target: str, surfaces: dict[str, object]) -> bool:
     assert isinstance(casilla_modelos, set)
     assert isinstance(permalinks, set)
 
-    # Concept card anchor: glossary.html#term-<concept_id>
-    concept_match = re.fullmatch(r"glossary\.html#term-(?P<id>[a-z0-9-]+)", target)
+    # Concept card anchor: _generated/glossary.html#term-<concept_id>
+    concept_match = re.fullmatch(
+        r"_generated/glossary\.html#term-(?P<id>[a-z0-9-]+)", target
+    )
     if concept_match:
         return concept_match.group("id") in concept_ids
 
@@ -174,12 +176,16 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: dict[str, ob
     concept / casilla / module is reported as unresolved, so the gate cannot
     pass on stale data.
     """
-    assert not _target_resolves("glossary.html#term-this-concept-does-not-exist", build_surfaces)
+    assert not _target_resolves(
+        "_generated/glossary.html#term-this-concept-does-not-exist", build_surfaces
+    )
     assert not _target_resolves("search.html?q=000+99999", build_surfaces)
     assert not _target_resolves("api/aeat.module.that.is.not.real.html", build_surfaces)
     # A real one resolves (sanity: the check is not refusing everything).
     real_concept = next(iter(build_surfaces["concept_ids"]))  # type: ignore[arg-type]
-    assert _target_resolves(f"glossary.html#term-{real_concept}", build_surfaces)
+    assert _target_resolves(
+        f"_generated/glossary.html#term-{real_concept}", build_surfaces
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -230,6 +236,8 @@ def test_prorrata_maps_to_grounding_targets(relevance: SweepResult) -> None:
     if not prorrata:
         pytest.skip("no prorrata targets in this sweep (service was busy at sweep time)")
     all_targets = [t.target for m in prorrata for t in m.targets]
-    assert any("glossary.html#term-prorrata" in t for t in all_targets) or any("boe.es" in t for t in all_targets), (
+    assert any("_generated/glossary.html#term-prorrata" in t for t in all_targets) or any(
+        "boe.es" in t for t in all_targets
+    ), (
         "prorrata maps to neither its concept card nor a BOE article"
     )

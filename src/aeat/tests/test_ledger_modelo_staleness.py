@@ -91,13 +91,13 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
-        }
+        },
     )
 
 
 def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
-        bucket_id="bucket-a", modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes"
+        bucket_id="bucket-a", modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -181,7 +181,7 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(_profile: SecureObjectR
     objects = _profile
     tx = _txn(taxable_base=Decimal("100.00"))
     TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects).save(
-        TransactionCatalogue.from_transactions((tx,))
+        TransactionCatalogue.from_transactions((tx,)),
     )
     snapshot = compute_ledger_filing_snapshot(
         source_transaction_ids=(tx.transaction_id,),
@@ -203,7 +203,7 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(_profile: SecureObjectR
     )
     WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
     CalculationRevisionCatalogueRepository(objects=objects).save(
-        CalculationRevisionCatalogue(revisions={revision.calculation_revision_id: revision})
+        CalculationRevisionCatalogue(revisions={revision.calculation_revision_id: revision}),
     )
 
     # The row now feeds a VERIFICADO_COMPLETO revision: editing it is refused.

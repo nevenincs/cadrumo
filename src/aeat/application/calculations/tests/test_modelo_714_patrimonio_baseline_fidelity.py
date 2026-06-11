@@ -87,7 +87,7 @@ def _find_observation(repo: CalculationObservationRepository, *, filing_year: in
 
 
 def _observation(
-    *, filing_year: int, base_imponible: Decimal, base_liquidable: Decimal, cuota: Decimal
+    *, filing_year: int, base_imponible: Decimal, base_liquidable: Decimal, cuota: Decimal,
 ) -> RegistryModeloObservation:
     """Build a 714 observation with non-default values on every casilla.
 

@@ -20,7 +20,8 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period, PeriodError
 from ...domain.calculations.registry import (
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
@@ -68,7 +69,7 @@ class ModeloLedgerBindingAggregation(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2100)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     iva_issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
@@ -155,7 +156,10 @@ class LedgerIvaAggregationSourceResolver:
         try:
             aggregation = aggregate_iva_ledger_observations_from_repositories(
                 bucket_id=context.bucket_id,
-                period=aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period),
+                period=aggregation_period_for_modelo(
+                    filing_year=context.filing_year,
+                    code=context.period.registry_token,
+                ),
                 transaction_repository=self._transaction_repository,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
@@ -248,7 +252,10 @@ class LedgerRentaExpenseAggregationSourceResolver:
         try:
             aggregation = aggregate_renta_ledger_expenses_from_repositories(
                 bucket_id=context.bucket_id,
-                period=aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period),
+                period=aggregation_period_for_modelo(
+                    filing_year=context.filing_year,
+                    code=context.period.registry_token,
+                ),
                 transaction_repository=self._transaction_repository,
                 invoice_repository=self._invoice_repository,
                 profile_year=context.filing_year,
@@ -269,7 +276,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
                 aggregation.observations,
             ),
             source_transaction_ids=tuple(
-                sorted(observation.transaction_id for observation in aggregation.observations)
+                sorted(observation.transaction_id for observation in aggregation.observations),
             ),
             diagnostics=tuple(
                 CalculationSourceDiagnostic(
@@ -301,7 +308,10 @@ class LedgerRentaIncomeAggregationSourceResolver:
         if not _revision_has_binding_source(context.revision, "ledger_renta_income_aggregation"):
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
 
-        aggregation_period = aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period)
+        aggregation_period = aggregation_period_for_modelo(
+            filing_year=context.filing_year,
+            code=context.period.registry_token,
+        )
         try:
             aggregation = aggregate_renta_income_ledger_from_repositories(
                 bucket_id=context.bucket_id,
@@ -323,7 +333,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 aggregation.observations,
             ),
             source_transaction_ids=tuple(
-                sorted(observation.transaction_id for observation in aggregation.observations)
+                sorted(observation.transaction_id for observation in aggregation.observations),
             ),
             diagnostics=tuple(
                 CalculationSourceDiagnostic(
@@ -344,124 +354,29 @@ class LedgerRentaIncomeAggregationSourceResolver:
         )
 
 
-def resolve_modelo_ledger_binding_values_from_repositories(
-    *,
-    bucket_id: str,
-    modelo: str,
-    revision: ModeloRevision,
-    filing_year: int,
-    period: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-) -> ModeloLedgerBindingAggregation:
-    """Resolve ledger-backed registry bindings from the active bucket.
-
-    Args:
-        bucket_id: Active bucket identifier; carried through to provenance and
-            audit records so the resolved bindings cannot be misattributed.
-        modelo: Modelo identifier (e.g. ``"303"``) selecting the per-modelo
-            aggregation paths.
-        revision: The :class:`ModeloRevision` used to drive ledger aggregation
-            binding resolution.
-        filing_year: AEAT filing year; combines with ``period`` to derive the
-            aggregation window.
-        period: Period token (e.g. ``"1T"``, ``"0A"``) bounding the ledger
-            window.
-        transaction_repository: Optional :class:`TransactionCatalogueRepositoryProtocol`;
-            defaults to the active-bucket repository when ``None``.
-        invoice_repository: Optional :class:`InvoiceCatalogueRepositoryProtocol`;
-            defaults to the active-bucket repository when ``None``.
-
-    Returns a :class:`ModeloLedgerBindingAggregation` containing all
-    resolved binding values and per-source issue lists.
-    """
-    binding_values: dict[str, Decimal] = {}
-    source_transaction_ids: set[str] = set()
-    iva_issues: tuple[IvaLedgerAggregationIssue, ...] = ()
-    renta_issues: tuple[RentaLedgerAggregationIssue, ...] = ()
-    renta_income_issues: tuple[RentaIncomeLedgerAggregationIssue, ...] = ()
-    aggregation_period = aggregation_period_for_modelo(filing_year=filing_year, period=period)
-
-    if _revision_has_binding_source(revision, "ledger_iva_aggregation"):
-        iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=bucket_id,
-            period=aggregation_period,
-            transaction_repository=transaction_repository,
-        )
-        binding_values.update(resolve_ledger_iva_aggregation_binding_values(revision, iva_aggregation.observations))
-        source_transaction_ids.update(observation.ledger_id for observation in iva_aggregation.observations)
-        source_transaction_ids.update(reference.transaction_id for reference in iva_aggregation.prorrata_references)
-        iva_issues = tuple(iva_aggregation.issues)
-
-    if _revision_has_binding_source(revision, "ledger_renta_expense_aggregation"):
-        renta_aggregation = aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id=bucket_id,
-            period=aggregation_period,
-            transaction_repository=transaction_repository,
-            invoice_repository=invoice_repository,
-            profile_year=filing_year,
-        )
-        binding_values.update(
-            resolve_ledger_renta_expense_aggregation_binding_values(
-                revision,
-                renta_aggregation.observations,
-            )
-        )
-        source_transaction_ids.update(observation.transaction_id for observation in renta_aggregation.observations)
-        renta_issues = tuple(renta_aggregation.issues)
-
-    if _revision_has_binding_source(revision, "ledger_renta_income_aggregation"):
-        renta_income_aggregation = aggregate_renta_income_ledger_from_repositories(
-            bucket_id=bucket_id,
-            period=aggregation_period,
-            transaction_repository=transaction_repository,
-        )
-        binding_values.update(
-            resolve_ledger_renta_income_aggregation_binding_values(
-                revision,
-                renta_income_aggregation.observations,
-            )
-        )
-        source_transaction_ids.update(
-            observation.transaction_id for observation in renta_income_aggregation.observations
-        )
-        renta_income_issues = tuple(renta_income_aggregation.issues)
-
-    return ModeloLedgerBindingAggregation(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        binding_values=binding_values,
-        source_transaction_ids=tuple(sorted(source_transaction_ids)),
-        iva_issues=iva_issues,
-        renta_issues=renta_issues,
-        renta_income_issues=renta_income_issues,
-    )
-
-
-def aggregation_period_for_modelo(*, filing_year: int, period: str) -> str:
-    """Translate a canonical ``StandardPeriodCode`` token to an aggregation period token.
+def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
+    """Translate a canonical ``StandardPeriodCode`` token to a core period.
 
     Accepts only the span-shaped canonical AEAT tokens the calc engine and the
-    CLI ledger filter share: quarters (``1T``-``4T`` -> ``YYYYQn``), the annual
-    period (``0A`` -> bare ``YYYY``), and months (``01``-``12`` -> ``YYYY-MM``).
-    The result is the internal calendar string consumed by
-    :meth:`Period.model_validate`, whose :meth:`Period.contains` boundary is the
-    single shared filter authority. Any other token raises
+    CLI ledger filter share: quarters (``1T``-``4T``), the annual period
+    (``0A``), and months (``01``-``12``). The result is the typed core
+    :class:`Period` consumed by ledger filters. Any other token raises
     :class:`AggregationValidationError`.
     """
-    normalized = period.strip().upper()
-    quarter_map = {"1T": "Q1", "2T": "Q2", "3T": "Q3", "4T": "Q4"}
-    if normalized in quarter_map:
-        return f"{filing_year}{quarter_map[normalized]}"
-    if normalized == "0A":
-        return str(filing_year)
-    if len(normalized) == 2 and normalized.isdigit():
-        return f"{filing_year}-{normalized}"
-    raise AggregationValidationError(
-        t("aggregation.modelo_bindings.errors.unsupported_period"),
-        context={"filing_year": str(filing_year), "period": period},
-    )
+    normalized = code.strip().upper()
+    try:
+        resolved = Period.from_year_and_code(filing_year, normalized)
+    except PeriodError as exc:
+        raise AggregationValidationError(
+            t("aggregation.modelo_bindings.errors.unsupported_period"),
+            context={"filing_year": str(filing_year), "period": code},
+        ) from exc
+    if not resolved.has_date_span():
+        raise AggregationValidationError(
+            t("aggregation.modelo_bindings.errors.unsupported_period"),
+            context={"filing_year": str(filing_year), "period": code},
+        )
+    return resolved
 
 
 def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
@@ -479,14 +394,14 @@ def _renta_observation_provenance(
         CalculationSourceProvenance(
             source_kind="ledger_renta_expense_aggregation",
             source_ref=f"transaction:{observation.transaction_id}",
-        )
+        ),
     ]
     if observation.invoice_id is not None:
         provenance.append(
             CalculationSourceProvenance(
                 source_kind="ledger_renta_expense_aggregation",
                 source_ref=f"purchase-invoice-evidence:{observation.invoice_id}",
-            )
+            ),
         )
     return tuple(provenance)
 
@@ -497,5 +412,4 @@ __all__ = [
     "LedgerRentaIncomeAggregationSourceResolver",
     "ModeloLedgerBindingAggregation",
     "aggregation_period_for_modelo",
-    "resolve_modelo_ledger_binding_values_from_repositories",
 ]

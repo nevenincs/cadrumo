@@ -54,7 +54,7 @@ _TOP_LEVEL_CHAIN_TARGETS: frozenset[str] = frozenset(
         "0571",
         "0585",
         "0586",
-    }
+    },
 )
 
 _SUPPORTED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -230,7 +230,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2025-estimacion-objetiva-reduccion-general-rate",
         "renta-2025-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate",
         "renta-2025-atribucion-rentas-rate-pass-through",
-    }
+    },
 )
 
 
@@ -244,7 +244,7 @@ def test_every_relation_references_an_existing_target_binding() -> None:
             target_binding = getattr(relation, "target_binding", None)
             if target_binding and target_binding not in declared_bindings:
                 offences.append(
-                    f"{revision_id}: relation {relation.id!r} target_binding {target_binding!r} not declared"
+                    f"{revision_id}: relation {relation.id!r} target_binding {target_binding!r} not declared",
                 )
     assert not offences, "relations with undeclared target_bindings:\n  " + "\n  ".join(offences)
 

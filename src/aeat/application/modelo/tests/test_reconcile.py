@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
@@ -49,11 +50,12 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     revision_id = "r" + "0" * 63
+    typed_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=revision_id,
     )
     work_unit = WorkUnit(
@@ -61,9 +63,9 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
+        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
     )
@@ -76,7 +78,7 @@ def test_modelo_reconcile_matches_when_modelo_and_year_align() -> None:
     """The modelo_130 fixture is modelo=130, ejercicio=2026, period=1T.
     A work unit with matching modelo+filing_year yields MATCHES."""
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
     report = modelo_reconcile(
         ModeloReconciliationCommand(
@@ -95,7 +97,7 @@ def test_modelo_reconcile_mismatches_when_modelo_differs() -> None:
     """A modelo=303 work unit reconciled against the modelo_130
     fixture produces a MISMATCHES verdict with the modelo diff."""
 
-    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
 
     report = modelo_reconcile(
         ModeloReconciliationCommand(
@@ -118,7 +120,7 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
     verdict so downstream auditors can replay the reconciliation
     timeline without re-parsing the evidence."""
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
     modelo_reconcile(
         ModeloReconciliationCommand(
@@ -144,7 +146,7 @@ def test_modelo_reconcile_refuses_declaration_source_until_parser_lands() -> Non
     cleanly per the app-modelo-shape contract's two-source requirement so
     operators get a typed error rather than a silent-degraded path."""
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError) as excinfo:
         modelo_reconcile(
@@ -180,11 +182,12 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
 
     foreign_bucket_id = "other-bucket-7" * 4
     revision_id = "r" + "1" * 63
+    foreign_period = Period.from_year_and_code(2026, "1T")
     foreign_unit_id = derive_work_unit_id(
         bucket_id=foreign_bucket_id,
         modelo="130",
         filing_year=2026,
-        period="Q1",
+        period=foreign_period,
         revision_id=revision_id,
     )
     foreign_unit = WorkUnit(
@@ -192,7 +195,7 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
         bucket_id=foreign_bucket_id,
         modelo=ModeloCode("130"),
         filing_year=2026,
-        period="Q1",
+        period=foreign_period,
         revision_id=revision_id,
         name="foreign-130",
         created_at=datetime.now(UTC),
@@ -216,7 +219,7 @@ def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
     ``ReconciliationEvidenceInvalidError``. Locks the contract from
     the complementaria-external-filing-path contract amendment."""
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     not_a_justificante = tmp_path / "garbage.pdf"
     not_a_justificante.write_bytes(b"%PDF-1.4\n%not a real justificante\n")
 

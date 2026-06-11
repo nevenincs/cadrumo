@@ -67,7 +67,7 @@ def register_m036_commands(
                     "cli.app.modelo.m036.errors.bad_declared_on",
                     value=declared_on,
                     default=f"--declared-on must be an ISO date (YYYY-MM-DD); got {declared_on!r}.",
-                )
+                ),
             ) from exc
 
         bucket_id = active_bucket_id()
@@ -247,7 +247,7 @@ def _register_m036_readback_commands(
                         declaration.declared_on.isoformat(),
                         declaration.recorded_at.isoformat(),
                         "yes" if declaration.sede_justificante is not None else "no",
-                    )
+                    ),
                 )
                 for declaration in declarations
             )
@@ -256,7 +256,7 @@ def _register_m036_readback_commands(
                 tr(
                     "cli.app.modelo.m036.list_empty",
                     default="No M036 declarations recorded yet.",
-                )
+                ),
             )
         _emit_envelope(ctx, command="modelo.m036.list", result=result, lines=lines)
 
@@ -293,7 +293,7 @@ def _register_m036_readback_commands(
                         f"No M036 declaration matches {declaration_id!r}. "
                         "Run 'aeat app modelo m036 list' to see recorded declarations."
                     ),
-                )
+                ),
             ) from exc
 
         result = M036DeclarationShowResult(

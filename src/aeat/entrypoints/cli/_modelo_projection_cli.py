@@ -159,7 +159,7 @@ def _register_modelo_project_command(
                 tr(
                     "cli.app.modelo.project.m100_calculation_error",
                     default=f"M100 projection calculation failed: {exc}",
-                )
+                ),
             ) from exc
 
         project_result = ModeloProjectResult(
@@ -309,7 +309,7 @@ def _register_modelo_compare_command(
             pct = row.pct_change if row.pct_change is not None else "n/a"
             lines.append(
                 f"{row.casilla_id}\t{row.label}\t{row.section}"
-                f"\t{row.year_a_value}\t{row.year_b_value}\t{row.delta}\t{pct}"
+                f"\t{row.year_a_value}\t{row.year_b_value}\t{row.delta}\t{pct}",
             )
         _emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)
 

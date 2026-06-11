@@ -165,8 +165,8 @@ def register_maritime_commands(
                         f"value={obs.value}",
                         f"legal_refs={'; '.join(obs.legal_refs)}",
                         f"source_refs={','.join(obs.source_refs)}",
-                    )
-                )
+                    ),
+                ),
             )
         for key, value in casilla_values.items():
             lines.append(f"casilla_value\t{key}\t{value}")
@@ -197,5 +197,5 @@ def _optional_decimal(
                 translation_key,
                 value=value,
                 default=default,
-            )
+            ),
         ) from exc

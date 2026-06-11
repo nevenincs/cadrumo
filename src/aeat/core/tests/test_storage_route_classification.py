@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .._bucket_pointer import BucketPointer
-from .._bucket_pointer_io import write_pointer
+from .. import BucketPointer, write_pointer
 from ..config import (
     Settings,
     StorageRouteKind,

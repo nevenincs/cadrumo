@@ -73,7 +73,7 @@ _CLICK_ONLY_FORBIDDEN_TOKENS: frozenset[str] = frozenset(
         "validar",
         "validacion",
         "validación",
-    }
+    },
 )
 
 # Forbidden Spanish-language click targets. Any locator whose visible text
@@ -92,7 +92,7 @@ FORBIDDEN_URL_FRAGMENTS: frozenset[str] = frozenset(
         "/submit",
         "/transmitir",
         "/tgvi",
-    }
+    },
 )
 
 # Buttons we ALLOW even though their text contains a forbidden substring.

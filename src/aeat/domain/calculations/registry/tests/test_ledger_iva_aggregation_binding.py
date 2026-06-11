@@ -134,7 +134,7 @@ def _calculate_390_from_observations_and_303_filings(
         for period, result in quarterly_results.items()
     )
     relation_values = resolve_relation_values_from_observations(
-        snapshot.revision, m303_observations, filing_year=filing_year, period="0A"
+        snapshot.revision, m303_observations, filing_year=filing_year, period="0A",
     )
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**ledger_binding_values, **relation_binding_values}
@@ -191,7 +191,7 @@ def test_validate_rejects_unknown_fact() -> None:
 
 
 def test_validate_rejects_wrong_source_kind() -> None:
-    binding = _binding().model_copy(update={"source": "invoice"})
+    binding = _binding().model_copy(update={"source": "manual_input"})
     with pytest.raises(RegistryValidationError, match="not a ledger_iva_aggregation"):
         validate_ledger_iva_aggregation_binding_definition(binding)
 
@@ -388,7 +388,7 @@ def test_resolve_filters_by_category_set() -> None:
         _revision_with_bindings(
             _binding(
                 "modelo-303-iva-soportado-interiores-cuota",
-            )
+            ),
         ),
         observations,
     )

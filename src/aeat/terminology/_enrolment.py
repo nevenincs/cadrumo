@@ -142,7 +142,7 @@ def _walk_iva_categories() -> Iterator[EnrolmentCandidate]:
 
 
 def _walk_periods() -> Iterator[EnrolmentCandidate]:
-    from ..core._period import StandardPeriodCode
+    from ..core import StandardPeriodCode
 
     for period in sorted(StandardPeriodCode, key=lambda member: member.value):
         yield EnrolmentCandidate(

@@ -8,14 +8,83 @@ stateless input-coercion and error-shaping utilities consumed by the
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Protocol
 
 import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
+from ...application.ledger import list_manual_transactions, resolve_transaction_id
 from ...core.i18n import tr
 from ...domain.categories import SpendingCategory
+from ...domain.transactions import TransactionCatalogueRepository, TransactionIdPrefixError
 from ._common import _bad, parse_decimal_amount, parse_optional_decimal_amount
+
+
+class _TransactionRepo(Protocol):
+    """Structural interface consumed by :func:`_bucket_transaction_ids` and :func:`_resolve_id`."""
+
+    @property
+    def bucket_id(self) -> str: ...
+
+
+def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[str, ...]:
+    """Return the full transaction ids known to the active bucket."""
+    bucket_id = transaction_repository.bucket_id
+    results = list_manual_transactions(
+        bucket_id=bucket_id,
+        transaction_repository=transaction_repository
+        if isinstance(transaction_repository, TransactionCatalogueRepository)
+        else None,
+    )
+    return tuple(result.transaction.transaction_id for result in results)
+
+
+def _prefix_error_bad(exc: TransactionIdPrefixError, prefix: str) -> typer.BadParameter:
+    """Translate a :exc:`TransactionIdPrefixError` into a localized ``_bad``.
+
+    Wraps the domain-layer exception into ``tr()``-rendered messages so the
+    operator sees a locale-translated explanation rather than a raw Python
+    exception string. Five distinct refusal keys are emitted depending on
+    which invariant was violated.
+    """
+    raw_message = str(exc)
+    if "is empty" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_empty"))
+    if "non-hex" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix))
+    if "longer than" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix))
+    if "no transaction" in raw_message:
+        return _bad(tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix))
+    if "matches" in raw_message:
+        # collision — surface the candidate ids inline so the
+        # operator can lengthen the prefix.
+        _, _, candidates = raw_message.partition(":")
+        return _bad(
+            tr(
+                "cli.ledger.errors.id_prefix_collision",
+                prefix=prefix,
+                candidates=candidates.strip() or "?",
+            ),
+        )
+    return _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message))
+
+
+def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
+    """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
+
+    The single shared CLI-boundary wrapper over the canonical
+    :func:`aeat.application.ledger.resolve_transaction_id`. Used by the *mutation*
+    verbs (update, classify, allocate, link, attach, doclink, archive, stash,
+    restore, remove, split, merge). It matches only ids of rows still in the
+    catalogue, because a mutation always targets a live row. Read verbs use the
+    lineage-following ``_resolve_read_id`` in :mod:`_ledger` instead.
+    """
+    try:
+        return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
+    except TransactionIdPrefixError as exc:
+        raise _prefix_error_bad(exc, prefix) from exc
 
 
 def _invoice_link_error_bad_parameter() -> typer.BadParameter:

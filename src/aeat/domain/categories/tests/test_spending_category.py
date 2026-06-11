@@ -28,7 +28,7 @@ def test_spending_category_catalogue_is_large_enough() -> None:
 def test_every_category_belongs_to_exactly_one_family() -> None:
     """Each category must be assigned to one and only one coarse family."""
 
-    memberships = {category: 0 for category in SpendingCategory}
+    memberships = dict.fromkeys(SpendingCategory, 0)
     for family in SpendingCategoryFamily:
         for category in CATEGORY_FAMILY_MEMBERS[family]:
             memberships[category] += 1

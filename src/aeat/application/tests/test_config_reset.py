@@ -51,7 +51,7 @@ def _register_profile(profile_id: str, *, overrides: Mapping[str, object] | None
             profile_id=profile_id,
             display_name=profile_id,
             facts=_profile_facts(overrides),
-        )
+        ),
     )
 
 

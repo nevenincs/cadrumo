@@ -91,7 +91,7 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
         ("entrypoints/cli/_modelo_work_verification_cli.py", 31),
         ("entrypoints/cli/_modelo_work_verification_cli.py", 62),
         ("entrypoints/cli/_modelo_work_verification_cli.py", 160),
-    }
+    },
 )
 
 
@@ -199,5 +199,5 @@ def test_no_new_any_param_without_rationale(
             "  # ADAPTER-INTERNAL-ALIAS-RATIONALE-<LABEL>: <reason>\n"
             "Or replace Any with the concrete type if it is now known.\n"
             f"Ratchet holds {len(_KNOWN_VIOLATING_LINES)} pre-existing sites; "
-            "do NOT add new sites to the ratchet — add a marker instead."
+            "do NOT add new sites to the ratchet — add a marker instead.",
         )

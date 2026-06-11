@@ -29,7 +29,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from .._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import AeatError as _AeatError
 from ..external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..paths import file_stat_fingerprint as _file_stat_fingerprint
@@ -129,7 +129,7 @@ def _load_topic_catalogue_cached(
                 body_key=str(raw.get("body_key") or f"topic.{slug}.body"),
                 see_also=tuple(str(item) for item in raw.get("see_also", ())),
                 legal_refs=tuple(str(item) for item in raw.get("legal_refs", ())),
-            )
+            ),
         )
     if not topics:
         raise TopicNotFoundError(f"topic catalogue at {target} is empty")

@@ -51,7 +51,7 @@ _FORBIDDEN_VERBS: tuple[str, ...] = (
 _WHITELIST: frozenset[str] = frozenset(
     {
         "commit_id",  # git commit hashes are read-only identifiers
-    }
+    },
 )
 
 

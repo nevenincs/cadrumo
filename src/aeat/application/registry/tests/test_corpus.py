@@ -57,12 +57,12 @@ def _write_valid_normative(root: Path) -> None:
                         "titulo": {"es": "Reducciones"},
                         "summary": {"es": "Resumen."},
                         "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
-                    }
+                    },
                 ],
                 "tags": ["irpf"],
                 "last_reviewed_at": "2026-04-12",
                 "reviewed_by": "wgergely",
-            }
+            },
         ),
         encoding="utf-8",
     )
@@ -88,7 +88,7 @@ def _topic_catalogue_for_normative() -> TopicCatalogue:
                 body_key="topic.irpf-regime.body",
                 legal_refs=("ley-35-2006:art-32",),
             ),
-        )
+        ),
     )
 
 
@@ -211,7 +211,7 @@ def test_manual_rule_kind_refusal_uses_structured_registry_logging(caplog: pytes
                 manual=RegistryManualId.RENTA,
                 year=2025,
                 kind="not-a-kind",
-            )
+            ),
         )
 
     assert exc_info.value.translated_message == "application.registry.errors.invalid_manual_rule_kind"
@@ -242,7 +242,7 @@ def test_citation_missing_article_uses_structured_registry_logging(
             RegistryCitationShowCommand(
                 normative_id="ley-35-2006",
                 articulo="999",
-            )
+            ),
         )
 
     records = [
@@ -282,7 +282,7 @@ def test_manuals_list_report_rows_verify_against_canonical_corpus() -> None:
             manual=RegistryManualId(listed_part.manual_id),
             year=listed_part.year,
             part=ManualPart(listed_part.part),
-        )
+        ),
     )
 
     assert verification.manual_id == listed_part.manual_id
@@ -312,7 +312,7 @@ def _write_unextracted_renta_part1(root: Path) -> None:
                 "source_pdf_url": "https://example.invalid/synthetic/renta-2025-part1.pdf",
                 "synthetic": True,
                 "year": 2025,
-            }
+            },
         ),
         encoding="utf-8",
     )
@@ -329,7 +329,7 @@ def test_manuals_list_report_rows_show_manifest_metadata_without_structure(tmp_p
                 manual=RegistryManualId(listed_part.manual_id),
                 year=listed_part.year,
                 part=ManualPart(listed_part.part),
-            )
+            ),
         )
 
     assert manual.manual_id == listed_part.manual_id
@@ -354,7 +354,7 @@ def test_manuals_view_refuses_section_when_structure_is_not_extracted_with_local
                     year=listed_part.year,
                     part=ManualPart(listed_part.part),
                     section="missing-section",
-                )
+                ),
             )
 
     assert exc_info.value.translated_message == "application.registry.errors.manual_section_requires_structure"
@@ -380,7 +380,7 @@ def test_manuals_list_report_rows_rules_returns_extracted_rule_report(tmp_path: 
                 manual=RegistryManualId(listed_part.manual_id),
                 year=listed_part.year,
                 part=ManualPart(listed_part.part),
-            )
+            ),
         )
 
     assert rules.manual_id == listed_part.manual_id
@@ -410,7 +410,7 @@ def test_manual_rule_kind_validation_uses_application_error() -> None:
                 manual=RegistryManualId.RENTA,
                 year=2025,
                 kind="not-a-kind",
-            )
+            ),
         )
 
     assert exc_info.value.translated_message == "application.registry.errors.invalid_manual_rule_kind"
@@ -433,5 +433,5 @@ def test_registry_topic_projection_is_strict_and_frozen() -> None:
                 "title": "IVA",
                 "body": "IVA regime",
                 "extra": "rejected",
-            }
+            },
         )

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevisionState
 from ...domain.modelos._filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue

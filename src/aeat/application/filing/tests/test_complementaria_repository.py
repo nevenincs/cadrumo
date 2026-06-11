@@ -16,7 +16,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core._period import Period
+from ....core import Period
 from ....domain.filing._amendment import CasillaChange, ModeloComplementaria
 from ....domain.filing._complementaria_repository import (
     ModeloAmendmentRepository,
@@ -65,7 +65,7 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
         submission_id="sub-abc",
         original_csv="CSV-ORIG-001",
         original_model="130",
-        original_period="2026Q1",
+        original_period=_period,
         delta=(
             CasillaChange(
                 casilla_code="01",

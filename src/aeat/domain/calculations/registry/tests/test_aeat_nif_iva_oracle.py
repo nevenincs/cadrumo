@@ -208,7 +208,7 @@ def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
         {
             "observed": {"DE111222333": "valid", "FR12345678901": "invalid"},
             "raw_evidence_locator": "corpus/aeat_official/nif_iva/sample.json",
-        }
+        },
     ).encode()
 
     # Direct schema validation — strict, frozen, extra=forbid.

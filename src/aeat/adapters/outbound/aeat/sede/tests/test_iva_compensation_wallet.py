@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ......core import Period
 from ......core.config import Settings
 from ......core.external_constants import UTF_8_ENCODING
 from ......domain.calculations.registry import RegistryValidationError
@@ -38,6 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _EXTERNAL = Settings.external_constants()
 _AEAT_AUTH_GATE_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.auth_gate_4033}"
 _SYNTHETIC_TAXPAYER_REF = "synthetic-taxpayer"
+_TARGET_PERIOD = Period.from_year_and_code(2026, "2T")
 
 
 def _cartera_results_html(*, total: str, rows: str) -> str:
@@ -91,7 +93,7 @@ def test_parse_iva_compensation_wallet_html_extracts_disponible_rows_and_total()
         taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=_TARGET_PERIOD,
         source_url=IVA_COMPENSATION_WALLET_URL,
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
@@ -100,13 +102,13 @@ def test_parse_iva_compensation_wallet_html_extracts_disponible_rows_and_total()
     assert observation.total_pending == Decimal("1900.50")
     assert len(observation.rows) == 2
     assert observation.rows[0].generation_year == 2024
-    assert observation.rows[0].generation_period == "4T"
+    assert observation.rows[0].generation_period == Period.from_year_and_code(2024, "4T")
     assert observation.rows[0].pending_amount == Decimal("1500.00")
     # AEAT's cartera consultation surface does not break out generated/applied.
     assert observation.rows[0].generated_amount is None
     assert observation.rows[0].applied_amount is None
     assert observation.rows[1].generation_year == 2025
-    assert observation.rows[1].generation_period == "1T"
+    assert observation.rows[1].generation_period == Period.from_year_and_code(2025, "1T")
     assert observation.rows[1].pending_amount == Decimal("400.50")
     assert observation.raw_sha256 is not None
 
@@ -127,7 +129,7 @@ def test_parse_iva_compensation_wallet_html_does_not_under_declare_a_populated_c
         taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=_TARGET_PERIOD,
         source_url=IVA_COMPENSATION_WALLET_URL,
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         allow_empty_wallet_shell=True,
@@ -152,7 +154,7 @@ def test_parse_iva_compensation_wallet_html_accepts_zero_aggregate_empty_cartera
         taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=_TARGET_PERIOD,
         source_url=IVA_COMPENSATION_WALLET_URL,
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
@@ -174,7 +176,7 @@ def test_parse_iva_compensation_wallet_html_rejects_summary_row_mismatch() -> No
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=_TARGET_PERIOD,
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
@@ -196,7 +198,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unrecognized_page() -> None:
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=_TARGET_PERIOD,
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
@@ -221,7 +223,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unexecuted_empty_wallet_surf
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=_TARGET_PERIOD,
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
@@ -245,7 +247,7 @@ def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_walle
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=_TARGET_PERIOD,
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
@@ -270,7 +272,7 @@ def test_parse_iva_compensation_wallet_html_refuses_executed_empty_wallet_shell_
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=_TARGET_PERIOD,
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
             allow_empty_wallet_shell=True,
@@ -289,7 +291,7 @@ def test_parse_iva_compensation_wallet_html_refuses_wrong_rendered_target_period
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
-            target_period="1T",
+            target_period=Period.from_year_and_code(2026, "1T"),
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
@@ -314,7 +316,7 @@ def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shel
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=_TARGET_PERIOD,
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
             allow_empty_wallet_shell=True,

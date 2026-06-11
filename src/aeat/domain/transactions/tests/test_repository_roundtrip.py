@@ -562,18 +562,16 @@ def test_transaction_catalogue_preserves_created_modified_at_through_encrypted_s
     assert loaded_txn.created_at != loaded_txn.modified_at
 
 
-def test_transaction_catalogue_grandfathers_missing_created_at_key(
+def test_transaction_catalogue_rejects_missing_created_at_key(
     tmp_path: Path,
 ) -> None:
-    """A persisted envelope lacking created_at must load with None.
+    """A persisted envelope lacking created_at must fail the storage boundary.
 
     Anti-tautology proof for the D6 lifecycle-timestamp axis: surgically
     delete the ``created_at`` key from a previously-persisted envelope and
-    reload. The load must succeed with ``loaded.created_at is None`` (None
-    default), and the stamped catalogue must NOT equal the deleted-key version,
-    locking the field's identity contribution at the model boundary. If the
-    catalogues compared equal with the key removed, the roundtrip would be
-    tautological and every timestamp roundtrip in the suite suspect.
+    reload. The repository must surface a validation drift instead of
+    defaulting the field during deserialisation; otherwise legacy rows would be
+    silently repaired and the timestamp roundtrip test would be tautological.
     """
 
     import json as _json
@@ -619,10 +617,11 @@ def test_transaction_catalogue_grandfathers_missing_created_at_key(
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
-        loaded_txn = loaded.transactions[stamped.transaction_id]
-        assert loaded_txn.created_at is None
-        assert loaded != original
+        with pytest.raises(StoredTransactionDriftError) as exc_info:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+        assert isinstance(exc_info.value.original_exception, ValidationError)
+        assert exc_info.value.translated_message == "errors.storage.stored_data_validation_boundary"
 
 
 def test_transaction_catalogue_negative_amount_payload_rejected_at_load(

@@ -103,7 +103,7 @@ def classify_identity(raw: str) -> str:
     raise ClaveMovilConfigurationError(
         f"The value you entered (length {len(value)}) is not a valid DNI "
         "(8 digits + letter) or NIE (X/Y/Z + 7 digits + letter). "
-        "Check the identity on your document and try again."
+        "Check the identity on your document and try again.",
     )
 
 
@@ -157,7 +157,7 @@ def render_progress_banner(
                 " - AEAT is showing the Cl@ve Movil non-QR confirmation flow.",
                 " - Open the Cl@ve app; a push notification may not appear.",
                 " - Approve only if the app request matches the AEAT verification code below.",
-            )
+            ),
         )
     else:
         lines.extend(
@@ -165,7 +165,7 @@ def render_progress_banner(
                 " - A browser window just opened showing a QR code.",
                 " - Scan the QR with the Cl@ve app if it is available to you.",
                 " - This is the QR branch, not the configured non-QR fallback.",
-            )
+            ),
         )
     if verification_code:
         lines.extend(("", f" AEAT page verification code: {verification_code}"))
@@ -175,7 +175,7 @@ def render_progress_banner(
             f" Waiting up to {timeout_seconds // 60}m {timeout_seconds % 60:02d}s for AEAT to complete auth...",
             "-------------------------------------------------------------",
             "",
-        )
+        ),
     )
     banner = "\n".join(lines)
     log.info("auth.waiting_banner banner=%r", banner)

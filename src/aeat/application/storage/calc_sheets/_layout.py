@@ -42,7 +42,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....domain.calculations.registry import (
     BindingId,
     BracketEntry,
@@ -381,7 +381,7 @@ def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _Casilla
                     tab=TabName.CALCULOS,
                     row=calculos_row,
                     section_path=casilla.section,
-                )
+                ),
             )
             calculos_row += 1
             continue
@@ -396,7 +396,7 @@ def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _Casilla
                 tab=TabName.ENTRADAS,
                 row=entradas_row,
                 section_path=casilla.section,
-            )
+            ),
         )
         entradas_row += 1
     return _CasillaPlan(

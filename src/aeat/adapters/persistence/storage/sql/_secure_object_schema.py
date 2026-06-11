@@ -41,8 +41,8 @@ def ensure_quarantine_table(engine: Engine) -> None:
                 "  conflict_policy VARCHAR(32),"
                 "  payload BLOB NOT NULL,"
                 "  quarantined_at DATETIME NOT NULL"
-                ")"
-            )
+                ")",
+            ),
         )
 
 

@@ -149,7 +149,7 @@ def clear_auth_acquisition_lock(
             update={
                 "reason": reason if status.reason is None else f"{status.reason}; reset={reason}",
                 "recoverable": True,
-            }
+            },
         )
     return status
 
@@ -249,7 +249,7 @@ def _status_context(status: AuthAcquisitionLockStatus) -> Mapping[str, object]:
                 "created_at": status.record.created_at.isoformat(),
                 "expires_at": status.record.expires_at.isoformat(),
                 "operation": status.record.operation,
-            }
+            },
         )
     return context
 

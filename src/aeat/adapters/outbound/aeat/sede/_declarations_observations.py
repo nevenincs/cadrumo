@@ -19,7 +19,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import Modelo
+from .....core import Modelo, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.i18n import tr
@@ -75,7 +75,7 @@ _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
 
 type FiledDeclaracionArtefactSink = Callable[
-    [tuple[str, int, str, str], FiledDeclaracionArtefact, bytes],
+    [tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes],
     FiledDeclaracionArtefact,
 ]
 
@@ -149,10 +149,10 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
         decision_ids = ", ".join(sorted(decision.id for decision in matching_decisions)) or "none"
         raise RegistryValidationError(
             f"expected exactly one authenticated declarations read surface for modelo "
-            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}"
+            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}",
         )
     return remote_state_policy_from_cross_reference(matching_decisions[0]).model_copy(
-        update={"allowed_browser_action_patterns": _EXTERNAL.aeat.live_safety.declarations_browser_action_patterns}
+        update={"allowed_browser_action_patterns": _EXTERNAL.aeat.live_safety.declarations_browser_action_patterns},
     )
 
 
@@ -192,7 +192,7 @@ def _observed_casillas_from_submitted_file(
                 source_artefact_kind="submitted_file",
                 source_locator=casilla.source_locator,
                 confidence=1.0,
-            )
+            ),
         )
     if not observations:
         raise SedeParseError(f"submitted-file artefact {artefact.sha256[:16]} did not yield casilla observations")
@@ -300,7 +300,7 @@ def _observed_modelo_303_casillas_from_submitted_file(
         raw = page[position - 1 : position - 1 + width]
         if len(raw) != width:
             raise SedeParseError(
-                f"submitted Modelo 303 file for {declaration.expediente_id!r} has truncated casilla {casilla_id}"
+                f"submitted Modelo 303 file for {declaration.expediente_id!r} has truncated casilla {casilla_id}",
             )
         value = _parse_modelo_303_money(raw, casilla_id=casilla_id)
         observations.append(
@@ -310,7 +310,7 @@ def _observed_modelo_303_casillas_from_submitted_file(
                 source_artefact_kind="submitted_file",
                 source_locator=f"record:T30303:pos:{position}:width:{width}",
                 confidence=1.0,
-            )
+            ),
         )
     return tuple(observations)
 
@@ -454,7 +454,7 @@ def _observed_casillas_from_declaration_pdf(
                 source_artefact_kind="declaration_pdf",
                 source_locator=f"page:{casilla.source_page}:casilla:{casilla.casilla_id}",
                 confidence=casilla.extraction_confidence,
-            )
+            ),
         )
     if not observations:
         raise SedeParseError(
@@ -488,7 +488,7 @@ def _verify_submitted_file_context(
         observed = "" if parsed.value is None else str(parsed.value)
         if observed != expected[field.draft_attribute]:
             raise SedeParseError(
-                f"submitted-file field {parsed.field_id!r} does not match declaration {declaration.expediente_id!r}"
+                f"submitted-file field {parsed.field_id!r} does not match declaration {declaration.expediente_id!r}",
             )
 
 
@@ -496,18 +496,19 @@ def registry_observation_from_filed_declaration(
     observation: FiledDeclaracionObservation,
 ) -> RegistryModeloObservation:
     """Convert a filed-declaration observation into a :class:`RegistryModeloObservation`."""
+    period_token = observation.period.registry_token
     if not observation.extraction_coverage:
         raise SedeParseError(
-            f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
-            "has no extraction coverage"
+            f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{period_token!r} "
+            "has no extraction coverage",
         )
     incomplete = {
         artefact_kind: coverage for artefact_kind, coverage in observation.extraction_coverage.items() if coverage < 1.0
     }
     if incomplete:
         raise SedeParseError(
-            f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
-            "has incomplete extraction coverage"
+            f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{period_token!r} "
+            "has incomplete extraction coverage",
         )
     casilla_values: dict[str, Decimal] = {}
     for casilla in observation.casillas:
@@ -523,13 +524,13 @@ def registry_observation_from_filed_declaration(
         casilla_values[casilla.casilla_id] = value
     if not casilla_values:
         raise SedeParseError(
-            f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
-            "has no registry casilla observations"
+            f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{period_token!r} "
+            "has no registry casilla observations",
         )
     return RegistryModeloObservation(
         modelo=observation.modelo,
         filing_year=observation.ejercicio,
-        period=observation.period,
+        period=period_token,
         observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
     )
 
@@ -590,7 +591,7 @@ def resolve_previous_filing_bindings_from_filed_declarations(
     observations: tuple[FiledDeclaracionObservation, ...],
     *,
     filing_year: int,
-    period: str,
+    period: Period,
 ) -> dict[str, Decimal]:
     """Resolve registry previous-filing bindings from filed AEAT observations.
 
@@ -600,7 +601,7 @@ def resolve_previous_filing_bindings_from_filed_declarations(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),
         filing_year=filing_year,
-        period=period,
+        period=period.registry_token,
     )
 
 
@@ -609,7 +610,7 @@ def resolve_relation_values_from_filed_declarations(
     observations: tuple[FiledDeclaracionObservation, ...],
     *,
     filing_year: int,
-    period: str,
+    period: Period,
 ) -> dict[str, Decimal]:
     """Resolve registry cross-model relation values from filed AEAT observations.
 
@@ -619,5 +620,5 @@ def resolve_relation_values_from_filed_declarations(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),
         filing_year=filing_year,
-        period=period,
+        period=period.registry_token,
     )

@@ -12,18 +12,21 @@ from __future__ import annotations
 from datetime import date
 from functools import lru_cache
 
+from ...core import Period
 
-def resolve_filing_closes_on(modelo: str, filing_year: int, period: str) -> date | None:
+_ANNUAL_REGISTRY_CODE = Period.from_year_and_code(2000, "0A").registry_token
+
+
+def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> date | None:
     """Return the close date of the plazo voluntario for a modelo+year+period.
 
     Queries the validated registry authority for ``filing_year`` and
     returns the ``closes_on`` of the first matching
     :class:`~aeat.domain.calculations.registry.DeadlineWindowDefinition`.
 
-    Matching rule: the registry window ``period`` must start with
-    ``str(filing_year)`` and end with ``period`` (e.g. WorkUnit
-    period ``"Q1"`` matches registry ``"2026Q1"``; ``"0A"`` matches
-    ``"2024-0A"``; ``"01"`` matches ``"2025-01"``).
+    Matching rule: the registry window period must carry the same
+    filing year and bare registry period token as the supplied WorkUnit
+    period (e.g. ``"1T"``, ``"0A"``, ``"01"``).
 
     Returns ``None`` when the registry carries no window for the
     combination — either the modelo has no deadline windows registered
@@ -34,7 +37,7 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: str) -> date
     Args:
         modelo: AEAT modelo code (e.g. ``"130"``, ``"303"``).
         filing_year: Tax year for which the work unit was created.
-        period: WorkUnit period token (e.g. ``"Q1"``, ``"0A"``, ``"01"``).
+        period: WorkUnit bare registry period token (e.g. ``"1T"``, ``"0A"``, ``"01"``).
 
     Returns:
         The :class:`~datetime.date` on which the filing window closes,
@@ -44,12 +47,11 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: str) -> date
 
 
 @lru_cache(maxsize=256)
-def _resolve_closes_on_cached(modelo: str, filing_year: int, period: str) -> date | None:
+def _resolve_closes_on_cached(modelo: str, filing_year: int, period: Period) -> date | None:
     from ...core.resources import resources
     from ..calculations.registry import RegistryError
 
     authority = resources().modelos.authority
-    year_prefix = str(filing_year)
 
     # Annual-period modelos (e.g. M100) are registered under the calendar year
     # in which the return is actually filed (filing_year + 1 in the TOML), while
@@ -64,8 +66,14 @@ def _resolve_closes_on_cached(modelo: str, filing_year: int, period: str) -> dat
         for window_modelo, _revision, window in windows:
             if window_modelo != modelo:
                 continue
+            # window.period is now a typed Period; match on filing_year + registry_token.
+            # Annual windows may be registered under filing_year + 1 (tax year
+            # == filing_year, registry year == filing_year + 1 for annual modelos).
             wp = window.period
-            if wp.startswith(year_prefix) and wp.endswith(period):
+            year_matches = wp.filing_year == filing_year or (
+                wp.registry_token == _ANNUAL_REGISTRY_CODE and wp.filing_year == filing_year + 1
+            )
+            if year_matches and wp.registry_token == period.registry_token:
                 return window.closes_on
     return None
 

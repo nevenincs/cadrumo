@@ -37,7 +37,7 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
             "profile_tax_id": "X1234567L",
             "callback": "https://example.test/private/path?token=secret",
             "session_detail": f"bearer {jwt}",
-        }
+        },
     )
 
     rendered_json = render_error_json(error)
@@ -118,7 +118,7 @@ def test_scrub_error_context_strips_internal_keys_from_rendered_output() -> None
             "question_id": "tax-id",
             "raw": "INVALID_NIF",
             "detail": "not a valid NIF shape",
-        }
+        },
     )
 
     rendered_json = render_error_json(error)

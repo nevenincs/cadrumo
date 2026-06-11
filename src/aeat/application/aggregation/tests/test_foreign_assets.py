@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 from .._foreign_assets import (
     ForeignAssetClass,
@@ -17,6 +18,8 @@ from .._foreign_assets import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
 
 
 def _obs(
@@ -58,7 +61,7 @@ class TestObservationContract:
 
 class TestAggregateBasic:
     def test_empty_observations_produce_zero_totals(self) -> None:
-        result = aggregate_foreign_assets_720((), period="2025")
+        result = aggregate_foreign_assets_720((), period=_P_2025_ANNUAL)
         assert result.modelo == "720"
         assert result.rollups == ()
         assert result.total_assets == 0
@@ -66,7 +69,7 @@ class TestAggregateBasic:
 
     def test_single_observation_creates_one_rollup(self) -> None:
         obs = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="12345.67", country="AD")
-        result = aggregate_foreign_assets_720((obs,), period="2025")
+        result = aggregate_foreign_assets_720((obs,), period=_P_2025_ANNUAL)
         assert len(result.rollups) == 1
         row = result.rollups[0]
         assert row.asset_class is ForeignAssetClass.ACCOUNT
@@ -81,7 +84,7 @@ class TestAggregateBasic:
             _obs(asset_class=ForeignAssetClass.SECURITY, valuation="20000", asset_external_id="S1"),
             _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="30000", asset_external_id="R1"),
         )
-        result = aggregate_foreign_assets_720(observations, period="2025")
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert len(result.rollups) == 3
         classes = {row.asset_class for row in result.rollups}
         assert classes == {
@@ -97,7 +100,7 @@ class TestAggregateBasic:
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="20000", asset_external_id="A1", country="AD"),
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="30000", asset_external_id="A2", country="CH"),
         )
-        result = aggregate_foreign_assets_720(observations, period="2025")
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert len(result.rollups) == 1
         row = result.rollups[0]
         assert row.assets_count == 2
@@ -110,7 +113,7 @@ class TestAggregateBasic:
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="2000", asset_external_id="A1"),
             _obs(asset_class=ForeignAssetClass.SECURITY, valuation="3000", asset_external_id="S1"),
         )
-        result = aggregate_foreign_assets_720(observations, period="2025")
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         values = [row.asset_class.value for row in result.rollups]
         assert values == sorted(values)
 
@@ -120,7 +123,7 @@ class TestAggregateBasic:
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="10000", asset_external_id="A2", held=False),
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="10000", asset_external_id="A3", held=True),
         )
-        result = aggregate_foreign_assets_720(observations, period="2025")
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         row = result.rollups[0]
         assert row.assets_count == 3
         assert row.held_at_year_end_count == 2
@@ -132,17 +135,17 @@ class TestThreshold720:
 
     def test_declarable_strict_above_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),)
-        result = aggregate_foreign_assets_720(observations, period="2025")
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is True
 
     def test_not_declarable_at_exactly_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.00", asset_external_id="A1"),)
-        result = aggregate_foreign_assets_720(observations, period="2025")
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
 
     def test_not_declarable_below_threshold(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="49999.99", asset_external_id="A1"),)
-        result = aggregate_foreign_assets_720(observations, period="2025")
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
 
 
@@ -152,8 +155,8 @@ class TestInvariants:
             _obs(asset_class=ForeignAssetClass.SECURITY, valuation="5000", asset_external_id="S1"),
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="3000", asset_external_id="A1"),
         )
-        forward = aggregate_foreign_assets_720(observations, period="2025")
-        reverse = aggregate_foreign_assets_720(tuple(reversed(observations)), period="2025")
+        forward = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+        reverse = aggregate_foreign_assets_720(tuple(reversed(observations)), period=_P_2025_ANNUAL)
         assert forward.model_dump_json() == reverse.model_dump_json()
 
     def test_rollup_held_count_cannot_exceed_total(self) -> None:
@@ -183,8 +186,32 @@ class TestInvariants:
         with pytest.raises(ValidationError, match="may appear at most once"):
             ForeignAssetsAggregation(
                 modelo="720",
-                period="2025",
+                period=_P_2025_ANNUAL,
                 rollups=(row, row),
                 total_assets=2,
                 total_valuation_eur=Decimal("2000"),
+            )
+
+    def test_combined_period_string_is_not_coerced(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Period"):
+            ForeignAssetsAggregation(
+                modelo="720",
+                period="2025",
+                rollups=(),
+                total_assets=0,
+                total_valuation_eur=Decimal("0"),
+            )
+
+    def test_period_dict_is_not_coerced(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Period"):
+            ForeignAssetsAggregation(
+                modelo="720",
+                period={"filing_year": 2025, "code": "0A"},
+                rollups=(),
+                total_assets=0,
+                total_valuation_eur=Decimal("0"),
             )

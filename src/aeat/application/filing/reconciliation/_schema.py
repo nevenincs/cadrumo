@@ -22,6 +22,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core import Period
 from ._kind import ModeloDivergenceKind
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
@@ -63,7 +64,7 @@ class ModeloDraftRef(BaseModel):
 
     draft_id: str = Field(min_length=1, max_length=128)
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     profile_tax_id: str = Field(min_length=4, max_length=32)
     mode: Literal["read"] = "read"
 
@@ -78,7 +79,7 @@ class JustificanteRefSummary(BaseModel):
     Attributes:
         csv: Código Seguro de Verificación assigned by AEAT.
         modelo: Modelo code printed on the justificante PDF.
-        period: Period label printed on the justificante PDF.
+        period: Filing period resolved from the justificante PDF.
         ejercicio: Four-digit fiscal year, when present.
         tax_id: NIF / NIE printed on the justificante PDF.
         presented_at: Timestamp at which AEAT recorded the presentation.
@@ -92,7 +93,7 @@ class JustificanteRefSummary(BaseModel):
 
     csv: str = Field(min_length=8, max_length=32)
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     ejercicio: str | None = Field(default=None, min_length=4, max_length=4)
     tax_id: str = Field(min_length=4, max_length=32)
     presented_at: datetime

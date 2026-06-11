@@ -106,7 +106,7 @@ def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> Non
             "type": "string",
             "sensitivity": "identity",
             "description": "Tax identifier.",
-        }
+        },
     )
 
     assert field.type is ProfileFieldType.STRING
@@ -123,7 +123,7 @@ def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> Non
                 "sensitivity": "identity",
                 "description": "Tax identifier.",
                 "unexpected": "not allowed",
-            }
+            },
         )
 
 
@@ -135,7 +135,7 @@ def test_enum_fields_require_declared_values() -> None:
                 "type": "enum",
                 "sensitivity": "identity",
                 "description": "Tax residence.",
-            }
+            },
         )
 
 
@@ -152,5 +152,5 @@ def test_schema_rejects_duplicate_section_keys() -> None:
                 "snapshot_policy": schema.snapshot_policy.value,
                 "remove_policy": schema.remove_policy.value,
                 "sections": (*schema.sections, duplicate),
-            }
+            },
         )

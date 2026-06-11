@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
@@ -67,7 +68,7 @@ def _persist_390_draft(
         bucket_id=_BUCKET_ID,
         modelo="390",
         filing_year=2025,
-        period="0A",
+        period=Period.from_year_and_code(2025, "0A"),
         revision_id="2025-clean-state-test",
     )
     work_unit = WorkUnit(
@@ -75,7 +76,7 @@ def _persist_390_draft(
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("390"),
         filing_year=2025,
-        period="0A",
+        period=Period.from_year_and_code(2025, "0A"),
         revision_id="2025-clean-state-test",
         name="390-2025-0A",
         created_at=_CLOCK,
@@ -139,7 +140,10 @@ def _seed_303_cross_period_sources(
     snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
     source_casillas_by_period: dict[str, set[str]] = {}
     for requirement in cross_period_dependency_requirements(snapshot):
-        source_casillas_by_period.setdefault(requirement.period, set()).update(requirement.source_casillas)
+        source_casillas_by_period.setdefault(
+            requirement.period.registry_token,
+            set(),
+        ).update(requirement.source_casillas)
 
     for period, source_casillas in sorted(source_casillas_by_period.items()):
         evidence_kind = (
@@ -154,7 +158,7 @@ def _seed_303_cross_period_sources(
             bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2025,
-            period=period,
+            period=Period.from_year_and_code(2025, period),
             revision_id=_M303_REVISION,
             repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
@@ -170,6 +174,7 @@ def _seed_303_cross_period_sources(
             calculation_repository=calculation_repository,
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
+            expected_tax_id="X1234567L",
             clock=_CLOCK,
         )
         observation_repository.save_observation(
@@ -196,7 +201,7 @@ def _clean_state_repair_evidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="303",
             filing_year=2025,
-            period="1T",
+            period=Period.from_year_and_code(2025, "1T"),
             source_casillas=("01",),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("binding-303-casilla-01",),
@@ -214,7 +219,7 @@ def _clean_state_repair_verdict(
         bucket_id=_BUCKET_ID,
         target_modelo="390",
         target_filing_year=2025,
-        target_period="0A",
+        target_period=Period.from_year_and_code(2025, "0A"),
         dependencies=(evidence,),
     )
 
@@ -263,6 +268,12 @@ def _clean_state_repair_verdict(
         ),
         (
             (CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,),
+            ("aeat app modelo reconcile file WORK_UNIT_ID --file PATH",),
+            (),
+            (),
+        ),
+        (
+            (CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,),
             ("aeat app modelo reconcile file WORK_UNIT_ID --file PATH",),
             (),
             (),

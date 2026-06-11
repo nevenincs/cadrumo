@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
@@ -61,7 +62,7 @@ class TestS01CreationGate:
         result = resolve_registry_revision_for_work_target(
             modelo="130",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             registry_revision_id=None,
         )
         assert result == "2019-y-siguientes"
@@ -71,7 +72,7 @@ class TestS01CreationGate:
         result = resolve_registry_revision_for_work_target(
             modelo="130",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             registry_revision_id="2019-y-siguientes",
         )
         assert result == "2019-y-siguientes"
@@ -91,7 +92,7 @@ class TestS01CreationGate:
             resolve_registry_revision_for_work_target(
                 modelo="303",
                 filing_year=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
                 registry_revision_id="2009-y-siguientes",
             )
         msg = str(exc_info.value)
@@ -112,7 +113,7 @@ class TestS01CreationGate:
             resolve_registry_revision_for_work_target(
                 modelo="303",
                 filing_year=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
                 registry_revision_id="2009-y-siguientes",
             )
         msg = str(exc_info.value)
@@ -126,7 +127,7 @@ class TestS01CreationGate:
         result = resolve_registry_revision_for_work_target(
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             registry_revision_id=None,
         )
         assert result == "2023-y-siguientes"
@@ -161,7 +162,7 @@ class TestS01CreationGate:
         law_determined = resolve_registry_revision_for_work_target(
             modelo="369",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             registry_revision_id=None,
         )
         assert law_determined == "esquema-union"
@@ -171,7 +172,7 @@ class TestS01CreationGate:
             resolve_registry_revision_for_work_target(
                 modelo="369",
                 filing_year=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
                 registry_revision_id="esquema-importacion",
             )
         msg = str(exc_info.value)
@@ -212,7 +213,7 @@ class TestS02CalcTimeAssertion:
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id=stale_revision_id,
         )
         return WorkUnit(
@@ -220,7 +221,7 @@ class TestS02CalcTimeAssertion:
             bucket_id=bucket_id,
             modelo=ModeloCode("303"),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id=stale_revision_id,
             name="303-2026-1T",
             created_at=_T0,
@@ -272,7 +273,7 @@ class TestS02CalcTimeAssertion:
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id=correct_revision_id,
         )
         correct_unit = WorkUnit(
@@ -280,7 +281,7 @@ class TestS02CalcTimeAssertion:
             bucket_id=bucket_id,
             modelo=ModeloCode("303"),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id=correct_revision_id,
             name="303-2026-1T",
             created_at=_T0,
@@ -328,7 +329,7 @@ class TestS02RevisionForWorkUnitAssertion:
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id=stale_revision_id,
         )
         stale_unit = WorkUnit(
@@ -336,7 +337,7 @@ class TestS02RevisionForWorkUnitAssertion:
             bucket_id=bucket_id,
             modelo=ModeloCode("303"),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id=stale_revision_id,
             name="303-2026-1T",
             created_at=_T0,
@@ -367,7 +368,7 @@ class TestS02RevisionForWorkUnitAssertion:
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id=correct_revision_id,
         )
         correct_unit = WorkUnit(
@@ -375,7 +376,7 @@ class TestS02RevisionForWorkUnitAssertion:
             bucket_id=bucket_id,
             modelo=ModeloCode("303"),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id=correct_revision_id,
             name="303-2026-1T",
             created_at=_T0,

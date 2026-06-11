@@ -45,7 +45,7 @@ def validate_declaracion_pdf_specimen_gate(
         f"{scope}: extraction profile {profile.id!r} is surface='declaracion_pdf' but no corpus "
         f"fixture PDF exists at '{fixture_dir}' and provisional_pending_specimen is not set; "
         f"either add a specimen PDF or set provisional_pending_specimen = true to acknowledge "
-        f"that label_patterns are unverified against a real printed form"
+        f"that label_patterns are unverified against a real printed form",
     ]
 
 
@@ -82,7 +82,7 @@ def validate_declaracion_pdf_round_trip_gate(
                 f"{scope}: extraction profile {profile.id!r} sets corpus_round_trip_verified = true "
                 f"but verification_source is not set; set verification_source to one of "
                 f"'real_aeat_corpus_pdf', 'synthetic_from_aeat_published_text', "
-                f"'historical_suppression', or 'not_applicable' to document provenance explicitly"
+                f"'historical_suppression', or 'not_applicable' to document provenance explicitly",
             ]
         return []
     fixture_dir = corpus_root / modelo_id
@@ -93,7 +93,7 @@ def validate_declaracion_pdf_round_trip_gate(
         f"but corpus_round_trip_verified is False and provisional_pending_specimen is False; "
         f"either set corpus_round_trip_verified = true once a parametrized real-corpus "
         f"round-trip test exists, or set provisional_pending_specimen = true to acknowledge "
-        f"unverified status"
+        f"unverified status",
     ]
 
 
@@ -111,12 +111,12 @@ def validate_bbox_anchor_consistency(
     if target.match_strategy == "bbox_anchored" and target.bbox_anchor is None:
         return [
             f"{scope}: target {target.casilla_id!r} uses match_strategy='bbox_anchored' "
-            f"but bbox_anchor is None; bbox_anchor is required for bbox_anchored targets"
+            f"but bbox_anchor is None; bbox_anchor is required for bbox_anchored targets",
         ]
     if target.match_strategy != "bbox_anchored" and target.bbox_anchor is not None:
         return [
             f"{scope}: target {target.casilla_id!r} uses match_strategy={target.match_strategy!r} "
-            f"but bbox_anchor is set; bbox_anchor must be None for non-bbox_anchored strategies"
+            f"but bbox_anchor is set; bbox_anchor must be None for non-bbox_anchored strategies",
         ]
     return []
 
@@ -138,7 +138,7 @@ def validate_extraction_profile_artefacts(
     if accepted != expected:
         failures.append(
             f"{scope}: extraction profile {profile.id!r} accepts {sorted(accepted)!r}, "
-            f"but surface {profile.surface!r} requires {sorted(expected)!r}"
+            f"but surface {profile.surface!r} requires {sorted(expected)!r}",
         )
     if profile.surface == "justificante_pdf" and profile.target_casillas:
         failures.append(f"{scope}: extraction profile {profile.id!r} cannot use justificante PDFs as casilla data")
@@ -152,7 +152,7 @@ def validate_dotted_callable(scope: str, owner: str, dotted_path: str) -> list[s
     if not module_name.startswith(_ALLOWED_EXTRACTION_PARSER_MODULE_PREFIXES):
         return [
             f"{scope}: {owner} parser {dotted_path!r} must resolve under one of "
-            f"{sorted(_ALLOWED_EXTRACTION_PARSER_MODULE_PREFIXES)!r}"
+            f"{sorted(_ALLOWED_EXTRACTION_PARSER_MODULE_PREFIXES)!r}",
         ]
     try:
         # Module names are constrained to the parser authority prefixes above.

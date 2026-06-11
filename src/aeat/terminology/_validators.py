@@ -104,7 +104,7 @@ def relation_integrity_validator() -> HandbookValidator:
                         failures.append(f"concept {concept.concept_id!r}: {axis_name} target {target!r} does not exist")
             if concept.replaced_by is not None and concept.replaced_by not in known:
                 failures.append(
-                    f"concept {concept.concept_id!r}: replaced_by target {concept.replaced_by!r} does not exist"
+                    f"concept {concept.concept_id!r}: replaced_by target {concept.replaced_by!r} does not exist",
                 )
         if failures:
             raise TerminologyValidationError("dangling relation targets:\n" + "\n".join(f" - {f}" for f in failures))
@@ -146,7 +146,7 @@ def lifecycle_replaced_by_validator() -> HandbookValidator:
             failures.append("replaced_by cycle: " + " -> ".join(cycle))
         if failures:
             raise TerminologyValidationError(
-                "lifecycle/replaced_by integrity:\n" + "\n".join(f" - {f}" for f in failures)
+                "lifecycle/replaced_by integrity:\n" + "\n".join(f" - {f}" for f in failures),
             )
 
     return _validate
@@ -187,7 +187,7 @@ def approved_completeness_validator() -> HandbookValidator:
                     failures.append(f"concept {concept.concept_id!r}: {lang!r} section has empty short_description")
         if failures:
             raise TerminologyValidationError(
-                "approved-concept completeness:\n" + "\n".join(f" - {f}" for f in failures)
+                "approved-concept completeness:\n" + "\n".join(f" - {f}" for f in failures),
             )
 
     return _validate

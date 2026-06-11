@@ -58,7 +58,7 @@ def _invoice(
             "subtotal": subtotal,
             "iva_rate": IvaRate.RATE_21,
             "iva_amount": iva_amount,
-        }
+        },
     )
     return Invoice.model_validate(
         {
@@ -75,7 +75,7 @@ def _invoice(
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
             "linked_transaction_ids": linked_transaction_ids,
-        }
+        },
     )
 
 

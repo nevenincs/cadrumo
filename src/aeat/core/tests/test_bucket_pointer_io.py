@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .._bucket_pointer import BucketPointer
-from .._bucket_pointer_io import (
+from .. import (
+    BucketPointer,
     pointer_path,
     read_pointer,
     write_pointer,

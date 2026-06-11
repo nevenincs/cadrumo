@@ -83,7 +83,7 @@ def _seed_iva(tmp_path: Path) -> Settings:
                 },
                 "definition_reviewed_by": "gw",
                 "definition_reviewed_at": "2026-04-12",
-            }
+            },
         ],
         "references_sections": [],
         "references_legal_acts": [],
@@ -105,9 +105,9 @@ def _seed_iva(tmp_path: Path) -> Settings:
                 {
                     "section_id": "sec1",
                     "relative_path": "structure/sections/cap1/sec1.json",
-                }
+                },
             ],
-        }
+        },
     ]
     _write_json(structure / "chapters.json", chapters_payload)
 

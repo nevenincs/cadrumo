@@ -93,7 +93,7 @@ def assert_eu_member_state_code(value: str) -> str:
     if normalized not in EU_MEMBER_STATE_CODES:
         raise InvoiceValidationError(
             f"country code {normalized!r} is not one of the 27 EU Member States; "
-            "use validate_country_code if a non-EU counterparty is acceptable"
+            "use validate_country_code if a non-EU counterparty is acceptable",
         )
     return normalized
 

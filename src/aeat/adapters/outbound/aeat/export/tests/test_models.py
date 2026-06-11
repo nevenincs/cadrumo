@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ......core import Period
 from ......domain.submission import (
     ModeloPresentado,
     SubmissionAttempt,
@@ -50,7 +51,7 @@ class TestSubmissionAttempt:
                     "ended_at": datetime(2026, 4, 12, 10, 0, 1, tzinfo=UTC),
                     "status": "SUBMITTED",
                     "extra": "nope",
-                }
+                },
             )
 
     def test_frozen(self) -> None:
@@ -78,7 +79,7 @@ class TestSubmissionAttempt:
                     "started_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "ended_at": datetime(2026, 4, 12, 10, 0, 1, tzinfo=UTC),
                     "status": "WHATEVER",
-                }
+                },
             )
 
 
@@ -91,7 +92,7 @@ class TestModeloPresentado:
             submission_id=make_submission_id("draft-1", 1),
             draft_id="draft-1",
             modelo="130",
-            period="2026Q1",
+            period=Period.from_year_and_code(2026, "1T"),
             profile_tax_id="X1234567L",
             status=SubmissionStatus.PRESENTADA,
             submitted_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
@@ -114,13 +115,13 @@ class TestModeloPresentado:
                     "submission_id": "x",
                     "draft_id": "draft-1",
                     "modelo": "130",
-                    "period": "2026Q1",
+                    "period": Period.from_year_and_code(2026, "1T"),
                     "profile_tax_id": "X1",
                     "status": "SUBMITTED",
                     "submitted_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "attempts": [_attempt().model_dump()],
                     "extra": "nope",
-                }
+                },
             )
 
     def test_attempts_must_be_nonempty(self) -> None:

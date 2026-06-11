@@ -75,7 +75,7 @@ def test_one_profile_key_per_distinct_question() -> None:
         (
             _question("tax-id", profile_key="tax.id"),
             _question("activity", profile_key="activity"),
-        )
+        ),
     )
     keys = compile_profile_keys((flow,))
     assert {entry.key for entry in keys} == {"tax.id", "activity"}
@@ -86,7 +86,7 @@ def test_none_bound_questions_are_skipped() -> None:
         (
             _question("taxation-type", profile_key=None),
             _question("tax-id", profile_key="tax.id"),
-        )
+        ),
     )
     keys = compile_profile_keys((flow,))
     assert {entry.key for entry in keys} == {"tax.id"}
@@ -110,7 +110,7 @@ def test_conditional_question_is_optional() -> None:
         (
             _question("taxation-type", profile_key="declaration.type"),
             _question("spouse-name", profile_key="spouse.name", visible_when=condition),
-        )
+        ),
     )
     keys = {entry.key: entry for entry in compile_profile_keys((flow,))}
     spouse = keys["spouse.name"]
@@ -125,7 +125,7 @@ def test_conditional_with_transient_parent_leaves_pair_empty() -> None:
         (
             _question("toggle", profile_key=None),
             _question("spouse-name", profile_key="spouse.name", visible_when=condition),
-        )
+        ),
     )
     (entry,) = compile_profile_keys((flow,))
     assert entry.required_when_key is None

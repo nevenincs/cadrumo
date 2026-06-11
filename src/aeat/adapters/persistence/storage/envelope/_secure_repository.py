@@ -250,7 +250,7 @@ class SecureBoundRepository[T: BaseModel]:
             # Future improvement: eliminate via generic ClassVar alias
             # (see: CAST-RATIONALE-SECURE-REPOSITORY-ITER).
             identifiers.append(
-                self.extract_identifier(cast(T, envelope.payload))  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+                self.extract_identifier(cast(T, envelope.payload)),  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
             )
         yield from sorted(identifiers)
 

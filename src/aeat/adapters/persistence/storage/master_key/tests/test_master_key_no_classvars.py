@@ -26,7 +26,7 @@ _GUARDED_PROVIDERS = frozenset(
     {
         "KeyringMasterKeyProvider",
         "FileFallbackMasterKeyProvider",
-    }
+    },
 )
 
 

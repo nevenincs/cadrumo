@@ -62,7 +62,7 @@ _NON_AEAT_EXCEPTION_CLASSES = frozenset(
         "ClickException",
         "Exit",
         "Abort",
-    }
+    },
 )
 
 # Factory function names that return non-AeatError exceptions (e.g. typer.BadParameter
@@ -72,7 +72,7 @@ _NON_AEAT_FACTORY_FUNCTIONS = frozenset(
     {
         "_bad",  # cli/_common.py factory for typer.BadParameter
         "_google_refusal",  # cli/_config/_google.py factory for CliRefusedBoundaryError — has its own correct pattern
-    }
+    },
 )
 
 
@@ -191,5 +191,5 @@ def test_no_aeat_error_raise_with_positional_tr(
         raise AssertionError(
             f"{len(violations)} raise(s) pass tr() as a positional AeatError arg:\n"
             f"  {joined}\n\n"
-            "Convert to: raise SomeError(translated_message='key', context={{...}})"
+            "Convert to: raise SomeError(translated_message='key', context={{...}})",
         )

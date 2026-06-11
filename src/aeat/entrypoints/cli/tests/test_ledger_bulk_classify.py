@@ -117,7 +117,7 @@ def test_classify_from_csv_exclusive_with_id(tmp_path: Path) -> None:
 
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--from-csv", str(csv_file), "--id", tx1, "--classification", "BUSINESS"],
+        ["app", "ledger", "classify", "--from-csv", str(csv_file), tx1, "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0
 
@@ -216,7 +216,7 @@ def test_rule_apply_skips_already_classified_without_reaffirm(tmp_path: Path) ->
     tx1, _tx2 = _import_two_transactions(tmp_path)
 
     # Manually classify tx1
-    _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx1, "--classification", "PERSONAL"])
+    _RUNNER.invoke(app, ["app", "ledger", "classify", tx1, "--classification", "PERSONAL"])
 
     _RUNNER.invoke(
         app,
@@ -349,9 +349,9 @@ def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
 
 
 def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> None:
-    """Bulk and --id mode persist the supplied IVA facts via the same write path.
+    """Bulk and single-id mode persist the supplied IVA facts via the same write path.
 
-    tx1 (gross 100.00) is classified through the single ``--id`` surface and
+    tx1 (gross 100.00) is classified through the single positional-id surface and
     tx2 (gross 200.00) through the bulk ``--from-csv`` surface; each row's
     ``taxable_base + iva_amount`` equals its own gross (the shared domain
     invariant). Both surfaces must persist exactly the supplied values,
@@ -360,14 +360,13 @@ def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> No
     """
     tx1, tx2 = _import_two_transactions(tmp_path)
 
-    # Single-classify tx1 (gross 100.00) with IVA facts via --id mode.
+    # Single-classify tx1 (gross 100.00) with IVA facts via positional-id mode.
     single = _RUNNER.invoke(
         app,
         [
             "app",
             "ledger",
             "classify",
-            "--id",
             tx1,
             "--classification",
             "BUSINESS",

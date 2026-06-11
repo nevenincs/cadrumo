@@ -210,7 +210,7 @@ def test_aeat_cross_module_imports_resolve_against_baseline() -> None:
     if regressions:
         failure_lines.append(
             "New broken cross-module imports detected (regression — fix the import "
-            "or update the target package's __init__.py + __all__):"
+            "or update the target package's __init__.py + __all__):",
         )
         failure_lines.extend(f"  + {entry}" for entry in sorted(regressions))
     if silent_fixes:
@@ -355,16 +355,16 @@ def test_init_public_imports_appear_in_all_against_baseline() -> None:
         cap = _INIT_MISSING_FROM_ALL_BASELINE.get(path)
         if cap is None:
             failure_lines.append(
-                f"  + {path!r}: new __init__.py with {live_count} public sibling import(s) missing from __all__"
+                f"  + {path!r}: new __init__.py with {live_count} public sibling import(s) missing from __all__",
             )
         elif live_count > cap:
             failure_lines.append(
-                f"  + {path!r}: grew from {cap} to {live_count} public-import-without-__all__ findings"
+                f"  + {path!r}: grew from {cap} to {live_count} public-import-without-__all__ findings",
             )
         elif live_count < cap:
             failure_lines.append(
                 f"  - {path!r}: cap is {cap} but only {live_count} "
-                f"finding(s) remain — trim _INIT_MISSING_FROM_ALL_BASELINE"
+                f"finding(s) remain — trim _INIT_MISSING_FROM_ALL_BASELINE",
             )
 
     # Files in the baseline but absent from live findings are silent
@@ -372,7 +372,7 @@ def test_init_public_imports_appear_in_all_against_baseline() -> None:
     for path, cap in sorted(_INIT_MISSING_FROM_ALL_BASELINE.items()):
         if path not in live_counts and cap > 0:
             failure_lines.append(
-                f"  - {path!r}: all {cap} finding(s) resolved — remove the entry from _INIT_MISSING_FROM_ALL_BASELINE"
+                f"  - {path!r}: all {cap} finding(s) resolved — remove the entry from _INIT_MISSING_FROM_ALL_BASELINE",
             )
 
     if failure_lines:

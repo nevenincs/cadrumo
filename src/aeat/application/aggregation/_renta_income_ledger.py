@@ -34,8 +34,8 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import Modelo
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo, Period, PeriodKind
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -49,7 +49,7 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
+from ._models import CasillaAggregation, CasillaProvenance
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
 _TARGET_CASILLA_INGRESOS = "01"
@@ -165,7 +165,7 @@ class RentaIncomeLedgerAggregation(BaseModel):
 def aggregate_renta_income_ledger_from_repositories(
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate cumulative M130 income.
@@ -186,7 +186,7 @@ def aggregate_renta_income_ledger(
     transactions: TransactionCatalogue,
     *,
     bucket_id: str,
-    period: Period | str,
+    period: Period,
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate INCOMING professional-income transactions into M130 casilla 01.
 
@@ -194,12 +194,12 @@ def aggregate_renta_income_ledger(
         transactions: The :class:`TransactionCatalogue` of ledger transactions to aggregate.
         bucket_id: Bucket identifier carried through to provenance and audit
             records so the resulting aggregation cannot be silently misattributed.
-        period: The quarterly :class:`Period` (or canonical string token) whose
-            year anchors the cumulative window.
+        period: The quarterly :class:`Period` whose year anchors the cumulative
+            window.
 
     Returns a :class:`RentaIncomeLedgerAggregation` covering the
-    cumulative fiscal window. ``period`` must be a quarterly period token
-    (``{year}Q{n}``). The cumulative window extends from Jan 1 of the
+    cumulative fiscal window. ``period`` must be quarterly. The cumulative
+    window extends from Jan 1 of the
     period's year through the last day of the declared quarter,
     implementing the year-to-date accumulation rule for IRPF pagos
     fraccionados (RD 439/2007 art. 110.2).
@@ -208,7 +208,7 @@ def aggregate_renta_income_ledger(
     # Cumulative start: Jan 1 of the fiscal year.
     cumulative_start = date(resolved_period.year, 1, 1)
     # Cumulative end: last day of the declared quarter.
-    cumulative_end = resolved_period.end
+    cumulative_end = resolved_period.end_date
 
     observations: list[RentaIncomeObservation] = []
     issues: list[RentaIncomeLedgerAggregationIssue] = []
@@ -236,8 +236,8 @@ def aggregate_renta_income_ledger(
     )
 
 
-def _resolve_quarterly_period(period: Period | str) -> Period:
-    resolved = period if isinstance(period, Period) else Period.model_validate(period)
+def _resolve_quarterly_period(period: Period) -> Period:
+    resolved = period
     if resolved.kind is not PeriodKind.QUARTERLY:
         raise AggregationPeriodError(
             t("aggregation.renta_ledger.errors.quarterly_period_required"),

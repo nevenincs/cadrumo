@@ -15,11 +15,15 @@ from ...application.modelo import (
     registry_bindings_for_scope,
     registry_bindings_for_year,
     registry_casillas,
+    registry_casillas_for_scope,
     registry_describe_modelo,
+    registry_describe_modelo_for_scope,
     registry_formulas,
+    registry_formulas_for_scope,
     registry_list_modelos,
     registry_modelo_codes,
 )
+from ...core import Period
 from ...core.i18n import output_language, tr
 from ...domain.calculations.registry import (
     InputKind,
@@ -44,7 +48,7 @@ from ._modelo_payloads import (
 
 @dataclass(frozen=True, slots=True)
 class _DiscoveryDeps:
-    resolve_year_period: Callable[..., tuple[int, str]]
+    resolve_year_period: Callable[..., Period]
     bare_period_error: Callable[..., str]
     parse_binding_override: Callable[[str], tuple[str, str]]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
@@ -53,7 +57,7 @@ class _DiscoveryDeps:
 def register_discovery_commands(
     app: typer.Typer,
     *,
-    resolve_year_period: Callable[..., tuple[int, str]],
+    resolve_year_period: Callable[..., Period],
     bare_period_error: Callable[..., str],
     parse_binding_override: Callable[[str], tuple[str, str]],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
@@ -91,6 +95,32 @@ def _run_query(call, *, bad_parameter_from_error: Callable[[BaseException], type
         return call()
     except (ValueError, RegistrySnapshotError) as exc:
         raise bad_parameter_from_error(exc) from exc
+
+
+def _require_period_with_year(*, year: int | None, period: str | None) -> None:
+    if year is not None and (period is None or not period.strip()):
+        raise typer.BadParameter("--year requires --period")
+
+
+def _resolve_discovery_year_period(
+    deps: _DiscoveryDeps,
+    *,
+    modelo: str,
+    year: int | None,
+    period: str | None,
+) -> Period | None:
+    _require_period_with_year(year=year, period=period)
+    if year is None:
+        return None
+    assert period is not None
+    try:
+        typed_period = deps.resolve_year_period(year, period, modelo=modelo)
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
+        fallback = f"period must be a bare registry token; got {period!r}"
+        raise typer.BadParameter(deps.bare_period_error(modelo, period, fallback=fallback)) from exc
+    return typed_period
 
 
 def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
@@ -132,11 +162,20 @@ def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
     def describe_modelo(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.describe.modelo_help"))],
+        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
         period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.describe.period_help"))] = None,
         as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.describe.as_of_help"))] = None,
     ) -> None:
         try:
-            report = registry_describe_modelo(modelo, period=period, as_of=_as_of(as_of))
+            resolved_scope = _resolve_discovery_year_period(deps, modelo=modelo, year=year, period=period)
+            if resolved_scope is not None:
+                report = registry_describe_modelo_for_scope(
+                    modelo,
+                    period=resolved_scope,
+                    as_of=_as_of(as_of),
+                )
+            else:
+                report = registry_describe_modelo(modelo, period=period, as_of=_as_of(as_of))
         except (ValueError, RegistrySnapshotError) as exc:
             message = str(exc)
             if period is not None and "period" in message.lower():
@@ -179,6 +218,7 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
     def casillas(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.casillas.modelo_help"))],
+        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
         period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.casillas.period_help"))] = None,
         as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.casillas.as_of_help"))] = None,
         input_kind: Annotated[
@@ -198,20 +238,33 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             typer.Option(
                 "--explain",
                 help=tr(
-                    "cli.app.modelo.casillas.explain_help", default="Include localized help text in the text output."
+                    "cli.app.modelo.casillas.explain_help", default="Include localized help text in the text output.",
                 ),
             ),
         ] = False,
     ) -> None:
-        report = _run_query(
-            lambda: registry_casillas(
+        def _query():
+            resolved_scope = _resolve_discovery_year_period(deps, modelo=modelo, year=year, period=period)
+            if resolved_scope is not None:
+                return registry_casillas_for_scope(
+                    modelo,
+                    period=resolved_scope,
+                    as_of=_as_of(as_of),
+                    input_kind=input_kind,
+                    required=True if required else None,
+                    form_number=form_number,
+                )
+            return registry_casillas(
                 modelo,
                 period=period,
                 as_of=_as_of(as_of),
                 input_kind=input_kind,
                 required=True if required else None,
                 form_number=form_number,
-            ),
+            )
+
+        report = _run_query(
+            _query,
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
         lang = output_language()
@@ -299,7 +352,7 @@ def _profile_resolved_binding_ids(report) -> frozenset[str]:
             modelo=str(report.code),
             bucket_id=bucket_id,
             filing_year=int(filing_year),
-            period=getattr(report, "period", None),
+            period=getattr(report, "filing_period", None),
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset()
@@ -314,12 +367,11 @@ def _bindings_report_for_target(
     deps: _DiscoveryDeps,
 ):
     if year is not None and period is not None:
-        resolved_year, resolved_period = deps.resolve_year_period(year, period, modelo=target)
+        typed_period = deps.resolve_year_period(year, period, modelo=target)
         return _run_query(
             lambda: registry_bindings_for_scope(
                 target,
-                filing_year=resolved_year,
-                period=resolved_period,
+                period=typed_period,
                 as_of=_as_of(as_of),
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
@@ -361,12 +413,12 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[dict[s
                 "typed_enum": row.typed_enum,
                 "input_channel": row.input_channel,
                 "borrador_capable": row.borrador_capable,
-            }
+            },
         )
         text_rows.append(
             f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
             f"{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t"
-            f"{row.input_channel}\t{row.borrador_capable}"
+            f"{row.input_channel}\t{row.borrador_capable}",
         )
     return merged_rows, text_rows
 
@@ -478,12 +530,11 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
         assert year is not None
         assert period is not None
         overrides = dict(deps.parse_binding_override(spec) for spec in (binding or ()))
-        resolved_year, resolved_period = deps.resolve_year_period(year, period, modelo=modelo)
+        typed_period = deps.resolve_year_period(year, period, modelo=modelo)
         report = _run_query(
             lambda: registry_bindings_for_scope(
                 modelo,
-                filing_year=resolved_year,
-                period=resolved_period,
+                period=typed_period,
                 as_of=_as_of(as_of),
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
@@ -500,7 +551,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
                     revision=report.revision,
                     period=report.period,
                     suggestion=suggestion,
-                )
+                ),
             )
         result = ModeloBindingsPreviewResult(
             modelo=report.code,
@@ -537,7 +588,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
                     row.source,
                     _readiness_for_source(row.source),
                     overrides.get(row.binding_id) or "-",
-                )
+                ),
             )
             for row in report.rows
         )
@@ -549,6 +600,7 @@ def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
     def formulas(
         ctx: typer.Context,
         modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.formulas.modelo_help"))],
+        year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
         period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.formulas.period_help"))] = None,
         as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.formulas.as_of_help"))] = None,
         explain: Annotated[
@@ -565,8 +617,18 @@ def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             ),
         ] = False,
     ) -> None:
+        def _query():
+            resolved_scope = _resolve_discovery_year_period(deps, modelo=modelo, year=year, period=period)
+            if resolved_scope is not None:
+                return registry_formulas_for_scope(
+                    modelo,
+                    period=resolved_scope,
+                    as_of=_as_of(as_of),
+                )
+            return registry_formulas(modelo, period=period, as_of=_as_of(as_of))
+
         report = _run_query(
-            lambda: registry_formulas(modelo, period=period, as_of=_as_of(as_of)),
+            _query,
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
         lines = _formula_lines(report, explain=explain)

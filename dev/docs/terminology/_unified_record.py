@@ -41,6 +41,12 @@ __all__ = [
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+#: Built path of the generated glossary page. The glossary is generated into
+#: ``docs/_generated/glossary.rst`` (the cutover moved it off the hand-written
+#: ``docs/glossary.md``), so a concept card's deep link must target the built
+#: ``_generated/glossary.html`` - a bare ``glossary.html`` no longer resolves.
+GLOSSARY_PAGE = "_generated/glossary.html"
+
 
 class RankingTier(StrEnum):
     """The three palette ranking tiers (ADR D5).
@@ -155,6 +161,13 @@ class SearchRecord(BaseModel):
     target: str = Field(min_length=1, max_length=512)
     ranking_weight: float = Field(ge=0.0, le=1.0)
     metadata: SearchRecordMetadata = Field(default_factory=SearchRecordMetadata)
+    #: Extra searchable surface forms - every declared term label (preferred +
+    #: admitted, all languages) and hidden search form for a concept. The
+    #: Pagefind injection folds these into the record content so a query for any
+    #: declared alias (the English "pro rata", the Catalan/Hungarian form, an
+    #: unaccented variant) finds the card, delivering the cross-lingual matching
+    #: the four declared translations were meant to provide.
+    search_aliases: tuple[str, ...] = ()
 
     @property
     def description_es(self) -> str:
@@ -194,14 +207,22 @@ def to_search_record(record: KindRecord, *, sweep_score: float | None = None) ->
 
 def _from_concept(record: ConceptCardRecord, sweep_score: float | None) -> SearchRecord:
     title = _preferred_label(record) or record.concept_id
+    aliases: list[str] = []
+    seen: set[str] = set()
+    for alias in record.aliases:
+        for form in (alias.label, *alias.hidden_search_forms):
+            if form and form != title and form not in seen:
+                seen.add(form)
+                aliases.append(form)
     return SearchRecord(
         id=f"concept:{record.concept_id}",
         kind=SearchRecordKind.CONCEPT,
         tier=RankingTier.TERM,
         title=title,
         descriptions=dict(record.descriptions),
-        target=f"glossary.html#term-{record.concept_id}",
+        target=f"{GLOSSARY_PAGE}#term-{record.concept_id}",
         ranking_weight=normalise_ranking_weight(SearchRecordKind.CONCEPT, sweep_score),
+        search_aliases=tuple(aliases),
         metadata=SearchRecordMetadata(
             concept_id=record.concept_id,
             domain=record.domain.value,

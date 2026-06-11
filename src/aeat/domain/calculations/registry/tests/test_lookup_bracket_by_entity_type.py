@@ -62,7 +62,7 @@ def _pyme_bracket_param() -> ParameterDefinition:
                     valid_to=date(2025, 12, 31),
                 ),
             ),
-        }
+        },
     )
 
 
@@ -86,7 +86,7 @@ def _alt_bracket_param() -> ParameterDefinition:
                     valid_to=date(2025, 12, 31),
                 ),
             ),
-        }
+        },
     )
 
 
@@ -101,10 +101,10 @@ def _dispatch_expression(base: Decimal) -> FormulaExpression:
                     "dispatch_table": {
                         "pyme": "test-tipo-gravamen-pyme",
                         "other": "test-tipo-gravamen-alt",
-                    }
+                    },
                 },
             ),
-        }
+        },
     )
 
 
@@ -173,7 +173,7 @@ def test_lookup_bracket_by_entity_type_rejects_a_scalar_parameter() -> None:
                 {"binding": "test-legal-entity-form"},
                 {"dispatch_table": {"sl": "test-scalar-rate"}},
             ),
-        }
+        },
     )
     parameters = {
         "test-scalar-rate": ParameterDefinition.model_validate(
@@ -190,7 +190,7 @@ def test_lookup_bracket_by_entity_type_rejects_a_scalar_parameter() -> None:
                         "valid_from": date(2025, 1, 1),
                     },
                 ),
-            }
+            },
         ),
     }
     with pytest.raises(RegistryValidationError, match="must declare data_type='bracket_table'"):
@@ -228,7 +228,7 @@ def test_lookup_bracket_by_entity_type_requires_three_args() -> None:
                 {"literal": Decimal("100000")},
                 {"binding": "test-legal-entity-form"},
             ),
-        }
+        },
     )
     with pytest.raises(RegistryValidationError, match="expects 3 args"):
         _evaluate(
@@ -248,7 +248,7 @@ def test_lookup_bracket_by_entity_type_requires_binding_at_args_1() -> None:
                 {"literal": Decimal("0")},
                 {"dispatch_table": {"pyme": "test-tipo-gravamen-pyme"}},
             ),
-        }
+        },
     )
     with pytest.raises(RegistryValidationError, match="requires args\\[1\\] to be a binding"):
         _evaluate(
@@ -268,7 +268,7 @@ def test_lookup_bracket_by_entity_type_requires_dispatch_table_at_args_2() -> No
                 {"binding": "test-legal-entity-form"},
                 {"literal": Decimal("0")},
             ),
-        }
+        },
     )
     with pytest.raises(RegistryValidationError, match="requires args\\[2\\] to be a dispatch_table"):
         _evaluate(

@@ -278,7 +278,7 @@ def calculate_modelo_revision(
 
     period_date = filing_period_date or period_end_date(
         filing_year=work_unit.filing_year,
-        registry_period=work_unit.period,
+        registry_period=work_unit.period.registry_token,
     )
     caller_binding_values = dict(binding_values or {})
     caller_enum_binding_values = dict(enum_binding_values or {})
@@ -403,7 +403,6 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
 # clients supply régimen-simplificado casillas (47-58) directly as manual
 # inputs rather than deriving them from the transaction ledger.
 _IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
-_ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
 
 
 def _raise_if_ledger_preflight_blocks_calculation(
@@ -423,7 +422,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
 
     report = preflight_ledger_tax_readiness(
         bucket_id=work_unit.bucket_id,
-        period=_ledger_preflight_period_for_work_unit(work_unit),
+        period=work_unit.period,
         transaction_repository=transaction_repository,
     )
     if report.ready:
@@ -438,20 +437,6 @@ def _raise_if_ledger_preflight_blocks_calculation(
         },
         suggestion=f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.year}",
     )
-
-
-def _ledger_preflight_period_for_work_unit(work_unit: WorkUnit) -> str:
-    token = work_unit.period.strip().upper()
-    if token in {"1T", "2T", "3T", "4T"}:
-        return f"{work_unit.filing_year}Q{token[0]}"
-    if token in {"Q1", "Q2", "Q3", "Q4"}:
-        return f"{work_unit.filing_year}{token}"
-    if token in _ANNUAL_REGISTRY_PERIODS:
-        return str(work_unit.filing_year)
-    if len(token) == 2 and token.isdigit():
-        return f"{work_unit.filing_year}-{token}"
-    return token
-
 
 def calculate_modelo_revision_from_bucket_aggregation(
     work_unit_id: str,
@@ -666,7 +651,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         snapshot = authority.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
@@ -676,7 +661,11 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(
             translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
-            context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
+            context={
+                "modelo": work_unit.modelo,
+                "filing_year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+            },
         ) from exc
     # D1 calc-time assertion: the law-determined revision must equal the
     # revision the work unit was created against.  The work unit's revision_id
@@ -686,7 +675,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         raise WorkUnitRevisionDivergenceError(
             f"work unit {work_unit.work_unit_id!r} was created against registry revision "
             f"{work_unit.revision_id!r}, but the law-determined revision for "
-            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period!r} "
+            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period.registry_token!r} "
             f"is now {snapshot.revision.id!r}. "
             f"The registry's law-mapping was corrected after this work unit was created. "
             f"Re-create the work unit (discard this one and run `aeat app modelo work ensure`) "

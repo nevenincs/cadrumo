@@ -7,7 +7,6 @@ calendar reflects which obligations already carry a justificante.
 
 from __future__ import annotations
 
-import re as _re
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from enum import StrEnum
@@ -16,8 +15,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_serializer, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core._period import Period as _Period
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period as _Period
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
@@ -40,7 +39,6 @@ from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
 from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
-from ...domain.period import parse_canonical_period as _parse_canonical_period
 
 if TYPE_CHECKING:
     from ...domain.modelos import ModeloRecord
@@ -48,38 +46,6 @@ if TYPE_CHECKING:
     from ..live._notifications import PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
-
-_DASHED_SUFFIX_RE = _re.compile(r"^(\d{4})-(.+)$")
-_YEAR_ONLY_RE = _re.compile(r"^(\d{4})$")
-
-
-def _obligation_period_to_core(period_str: str) -> _Period:
-    """Convert a :class:`ModeloDeadline` period string to a typed :class:`_Period`.
-
-    Handles the extended set of period formats the deadline-engine registry uses:
-    ``YYYY-0A``, ``YYYY-[1-4]T``, ``YYYY-MM``, ``YYYY-[1-3]P``,
-    ``YYYY-EXT-[1-4]T``, ``YYYY-AD-HOC``, ``YYYYQ[1-4]``, bare ``YYYY``.
-    """
-    # Try the standard parse_canonical_period bridge first (handles YYYYQ,
-    # YYYY-nT, YYYY-MM, YYYYA, bare YYYY, YYYYPn).
-    from ...domain.period import PeriodValidationError as _PeriodValidationError
-
-    try:
-        _year, _code = _parse_canonical_period(period_str)
-        return _Period.from_year_and_code(_year, _code)
-    except _PeriodValidationError:
-        pass
-    # Handle YYYY-<suffix> forms not in the base bridge.
-    if m := _DASHED_SUFFIX_RE.fullmatch(period_str):
-        _year_int = int(m.group(1))
-        _suffix = m.group(2)
-        # YYYY-0A, YYYY-1T..4T, YYYY-01..12, YYYY-1P..3P, YYYY-EXT-1T..4T, YYYY-AD-HOC
-        return _Period.from_year_and_code(_year_int, _suffix)
-    # bare YYYY fallback
-    if m := _YEAR_ONLY_RE.fullmatch(period_str):
-        return _Period.from_year_and_code(int(m.group(1)), "0A")
-    raise ValueError(f"Cannot convert deadline period {period_str!r} to core Period")
-
 
 class OverviewPeriodState(StrEnum):
     """Closed 4-state user-facing period state for the calendar view.
@@ -149,6 +115,9 @@ _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = Mapp
     },
 )
 """Merge priority for multiple AEAT evidence sources about the same period."""
+
+_JUSTIFICANTE_BACKED_EVIDENCE_KINDS = frozenset({"aeat_justificante_pdf", "aeat_live_capture"})
+"""External evidence kinds that require persisted justificante metadata before verification."""
 
 
 def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
@@ -239,7 +208,7 @@ class OverviewCalendarEntry(BaseModel):
 
     Attributes:
         modelo: Modelo identifier.
-        period: Canonical period string (e.g. ``"2026Q1"``).
+        period: Filing period as a typed :class:`~aeat.core.Period` value.
         opens_on: First day the filing window accepts submissions.
         closes_on: Last day the filing window accepts submissions.
         payment_cutoff_on: Direct-debit payment cutoff. ``None`` when
@@ -408,7 +377,7 @@ class SuppressedCalendarEntry(BaseModel):
 
     Attributes:
         modelo: Modelo identifier.
-        period: Canonical period string (e.g. ``"2026Q1"``).
+        period: Suppressed filing period as a typed :class:`~aeat.core.Period` value.
         verdict: The :class:`ApplicabilityVerdict` that caused the entry
             to be suppressed (``NOT_APPLICABLE``, ``ATTRIBUTION_PASS_THROUGH``,
             or ``INCOMPLETE``).
@@ -575,10 +544,7 @@ def calendar_events_from_expedientes_snapshots(
             event_date = declaration.presented_at.date()
             if not calendar_range.covers(event_date):
                 continue
-            _year, _code = _parse_canonical_period(
-                declaration.period, ejercicio=str(declaration.ejercicio)
-            )
-            _period = _Period.from_year_and_code(_year, _code)
+            _period = _Period.from_year_and_code(declaration.ejercicio, declaration.period)
             summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {_period.registry_token} filed at AEAT"
             events.append(
                 OverviewCalendarEvent(
@@ -649,21 +615,30 @@ def calendar_filing_evidence_from_sources(
     observed_events: tuple[OverviewCalendarEvent, ...] = (),
     filed_declaration_observations: tuple[object, ...] = (),
     calculation_observations: tuple[object, ...] = (),
+    justificantes: tuple[object, ...] = (),
+    expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarFilingEvidence, ...]:
     """Build :class:`OverviewCalendarFilingEvidence` tuples from local records and AEAT observations.
 
     The function is pure and intentionally accepts already-loaded
     records. CLI/storage code owns I/O; this projection only reconciles
     the existing local Modelo filing catalogue, calendar-visible AEAT
-    register events, and persisted calculation observations from
-    justificante capture. The ``filing_records`` are filed
-    :class:`ModeloRecord` rows whose justificante evidence is projected
-    onto the calendar.
+    register events, persisted calculation observations from
+    justificante capture, and already-loaded justificante metadata. The
+    ``filing_records`` are filed :class:`ModeloRecord` rows whose
+    external justificante references are only promoted to
+    ``justificante_verified`` when matching persisted metadata exists
+    for the same CSV/model/year/period/taxpayer.
     """
     by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}  # (modelo, year, registry_token)
     event_specific: list[OverviewCalendarFilingEvidence] = []
+    justificantes_by_csv = _justificantes_by_csv(justificantes)
     for record in filing_records:
-        evidence = _filing_evidence_from_modelo_record(record)
+        evidence = _filing_evidence_from_modelo_record(
+            record,
+            justificantes_by_csv=justificantes_by_csv,
+            expected_tax_id=expected_tax_id,
+        )
         if evidence is not None:
             _merge_filing_evidence(by_key, evidence)
     for event in observed_events:
@@ -671,7 +646,10 @@ def calendar_filing_evidence_from_sources(
         if evidence is not None:
             _merge_filing_evidence(by_key, evidence)
     for observation in filed_declaration_observations:
-        evidence = _filing_evidence_from_filed_declaration_observation(observation)
+        evidence = _filing_evidence_from_filed_declaration_observation(
+            observation,
+            expected_tax_id=expected_tax_id,
+        )
         if evidence is not None:
             event_specific.append(evidence)
             _merge_filing_evidence(by_key, evidence)
@@ -691,7 +669,22 @@ def calendar_filing_evidence_from_sources(
     return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))
 
 
-def _filing_evidence_from_modelo_record(record: ModeloRecord) -> OverviewCalendarFilingEvidence | None:
+def _justificantes_by_csv(justificantes: tuple[object, ...]) -> dict[str, object]:
+    """Index loaded justificante metadata by CSV/reference identifier."""
+    by_csv: dict[str, object] = {}
+    for justificante in justificantes:
+        csv = str(getattr(justificante, "csv", "") or "").strip()
+        if csv:
+            by_csv[csv] = justificante
+    return by_csv
+
+
+def _filing_evidence_from_modelo_record(
+    record: ModeloRecord,
+    *,
+    justificantes_by_csv: Mapping[str, object],
+    expected_tax_id: str | None,
+) -> OverviewCalendarFilingEvidence | None:
     """Project one local Modelo filing record into calendar evidence."""
     if record.status.value.lower() != "vigente":
         return None
@@ -714,7 +707,14 @@ def _filing_evidence_from_modelo_record(record: ModeloRecord) -> OverviewCalenda
         kind = getattr(external_evidence, "kind", None)
         aeat_evidence_kind = str(getattr(kind, "value", kind))
         aeat_reference_id = str(external_evidence.reference_id)
-        if aeat_evidence_kind == "aeat_justificante_pdf":
+        if aeat_evidence_kind in _JUSTIFICANTE_BACKED_EVIDENCE_KINDS and _modelo_record_has_verified_justificante(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            reference_id=aeat_reference_id,
+            justificantes_by_csv=justificantes_by_csv,
+            expected_tax_id=expected_tax_id,
+        ):
             aeat_state = OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
             justificante_verified = True
         elif aeat_state is OverviewAeatSubmissionState.NOT_OBSERVED:
@@ -733,6 +733,38 @@ def _filing_evidence_from_modelo_record(record: ModeloRecord) -> OverviewCalenda
         justificante_verified=justificante_verified,
         evidence_source="modelo_filing_record",
     )
+
+
+def _modelo_record_has_verified_justificante(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: _Period,
+    reference_id: str,
+    justificantes_by_csv: Mapping[str, object],
+    expected_tax_id: str | None,
+) -> bool:
+    """Return whether a Modelo record's external reference resolves to matching justificante metadata."""
+    expected = (expected_tax_id or "").strip()
+    if not expected:
+        return False
+    justificante = justificantes_by_csv.get(reference_id.strip())
+    if justificante is None:
+        return False
+    if str(getattr(justificante, "tax_id", "") or "").strip() != expected:
+        return False
+    if str(getattr(justificante, "modelo", "") or "").strip() != modelo:
+        return False
+    if str(getattr(justificante, "ejercicio", "") or "").strip() != str(filing_year):
+        return False
+    observed_period = str(getattr(justificante, "period", "") or "").strip().upper()
+    expected_periods = {
+        period.registry_token.upper(),
+        str(period).upper(),
+    }
+    if period.registry_token.upper() == "0A":
+        expected_periods.add(str(filing_year))
+    return observed_period in expected_periods
 
 
 def _filing_evidence_from_observed_event(
@@ -757,13 +789,20 @@ def _filing_evidence_from_observed_event(
     )
 
 
-def _filing_evidence_from_filed_declaration_observation(observation: object) -> OverviewCalendarFilingEvidence | None:
+def _filing_evidence_from_filed_declaration_observation(
+    observation: object,
+    *,
+    expected_tax_id: str | None,
+) -> OverviewCalendarFilingEvidence | None:
     """Project a captured AEAT filed-declaration observation into calendar evidence."""
     modelo = getattr(observation, "modelo", None)
     filing_year = getattr(observation, "ejercicio", None)
     period = getattr(observation, "period", None)
     expediente_id = getattr(observation, "expediente_id", None)
     if modelo is None or filing_year is None or period is None or expediente_id is None:
+        return None
+    expected = (expected_tax_id or "").strip()
+    if expected and str(getattr(observation, "authenticated_identity", "") or "").strip() != expected:
         return None
     _year_int = int(filing_year)
     _period_obj = _Period.from_year_and_code(_year_int, str(period))
@@ -1101,7 +1140,7 @@ def _calendar_entry_from_obligation(
         reason = "calendar_unavailable"
         holiday_refs = ()
         jurisdictions = ()
-    period = _obligation_period_to_core(obligation.period)
+    period = obligation.period
     return OverviewCalendarEntry(
         modelo=obligation.modelo,
         period=period,
@@ -1240,11 +1279,10 @@ def build_overview_calendar(
             applicability = derive_modelo_applicability(profile, obligation.modelo)
             if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
                 if show_suppressed:
-                    _s_period = _obligation_period_to_core(obligation.period)
                     suppressed.append(
                         SuppressedCalendarEntry(
                             modelo=obligation.modelo,
-                            period=_s_period,
+                            period=obligation.period,
                             verdict=applicability.verdict,
                             reason=applicability.reason,
                         ),

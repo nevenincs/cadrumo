@@ -58,8 +58,8 @@ def test_url_scheme_must_be_https() -> None:
     with pytest.raises(ValidationError, match=r"url scheme must be https"):
         PortalMetadata.model_validate(
             _base_kwargs(
-                url=_sede_url(portal_path("portal_m303_iva_autoliquidacion")).replace("https://", "http://", 1)
-            )
+                url=_sede_url(portal_path("portal_m303_iva_autoliquidacion")).replace("https://", "http://", 1),
+            ),
         )
 
 
@@ -83,7 +83,7 @@ def test_censo_url_must_match_gcode_pattern() -> None:
                 portal=Portal.PORTAL_M036_CENSAL,
                 category=PortalCategory.CENSO,
                 url=_sede_url(PORTAL_CENSO_NON_GCODE_PATH_CANARY),
-            )
+            ),
         )
 
 
@@ -98,7 +98,7 @@ def test_retired_filing_skips_gcode_check() -> None:
             url_stability=UrlStability.RETIRED,
             active=False,
             replaced_by=Portal.PORTAL_M036_CENSAL,
-        )
+        ),
     )
     assert metadata.url_stability == UrlStability.RETIRED
     assert metadata.active is False
@@ -109,7 +109,7 @@ def test_anonymous_is_exclusive() -> None:
     """AuthMethod.ANONYMOUS cannot coexist with any other method."""
     with pytest.raises(ValidationError, match=r"AuthMethod.ANONYMOUS must be the sole method"):
         PortalMetadata.model_validate(
-            _base_kwargs(auth_methods=frozenset({AuthMethod.ANONYMOUS, AuthMethod.CERTIFICATE}))
+            _base_kwargs(auth_methods=frozenset({AuthMethod.ANONYMOUS, AuthMethod.CERTIFICATE})),
         )
 
 
@@ -125,7 +125,7 @@ def test_external_binding_fields_are_rejected() -> None:
         PortalMetadata.model_validate(
             _base_kwargs(
                 modelo="303",
-            )
+            ),
         )
 
 
@@ -164,7 +164,7 @@ def test_retired_without_replacement_requires_notes() -> None:
                 active=False,
                 replaced_by=None,
                 notes=(),
-            )
+            ),
         )
 
 
@@ -179,7 +179,7 @@ def test_retired_without_replacement_with_notes_is_valid() -> None:
             active=False,
             replaced_by=None,
             notes=("Discontinued procedure.",),
-        )
+        ),
     )
     assert metadata.active is False
 

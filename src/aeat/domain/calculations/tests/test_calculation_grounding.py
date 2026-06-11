@@ -114,9 +114,9 @@ def test_tautology_gate_waiver_set_is_empty() -> None:
             pytest.fail(
                 "_TAUTOLOGY_WAIVERS is not an empty frozenset(); "
                 "a chain-behaviour waiver was added. "
-                "Confirm it names an external authority before accepting."
+                "Confirm it names an external authority before accepting.",
             )
     pytest.fail(
         "_TAUTOLOGY_WAIVERS assignment not found in tautology gate file; "
-        "the gate structure has changed — update this audit test."
+        "the gate structure has changed — update this audit test.",
     )

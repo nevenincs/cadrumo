@@ -58,7 +58,7 @@ def test_all_none_tax_substrate_validates() -> None:
         {
             "raw": _raw(amount=Decimal("121.00")),
             "direction": TransactionDirection.OUTGOING,
-        }
+        },
     )
     assert tx.taxable_base is None
     assert tx.iva_amount is None
@@ -74,7 +74,7 @@ def test_consistent_triple_validates_against_magnitude_gross() -> None:
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
-        }
+        },
     )
     assert tx.taxable_base == Decimal("100.00")
     assert tx.iva_amount == Decimal("21.00")
@@ -91,7 +91,7 @@ def test_drifted_triple_is_rejected() -> None:
                 "taxable_base": Decimal("100.00"),
                 "iva_rate": Decimal("0.21"),
                 "iva_amount": Decimal("25.00"),
-            }
+            },
         )
 
 
@@ -103,7 +103,7 @@ def test_base_present_but_iva_absent_validates() -> None:
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": Decimal("100.00"),
-        }
+        },
     )
     assert tx.taxable_base == Decimal("100.00")
     assert tx.iva_amount is None
@@ -130,7 +130,7 @@ def test_invariant_uses_native_raw_amount_not_value_in_eur() -> None:
             "taxable_base": Decimal("82.64"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("17.36"),
-        }
+        },
     )
     assert tx.value_in_eur == Decimal("110.00")
     assert tx.taxable_base is not None
@@ -154,5 +154,5 @@ def test_invariant_against_native_amount_rejects_eur_split() -> None:
                 "taxable_base": Decimal("90.91"),
                 "iva_rate": Decimal("0.21"),
                 "iva_amount": Decimal("19.09"),
-            }
+            },
         )

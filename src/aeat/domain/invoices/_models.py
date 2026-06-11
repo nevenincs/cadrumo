@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Self, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.parsing._dates import _parse_iso8601_date
@@ -189,7 +189,7 @@ _INVOICE_ID_REQUIRED_FIELDS = frozenset(
         "counterparty_tax_id",
         "currency",
         "grand_total",
-    }
+    },
 )
 
 
@@ -407,7 +407,7 @@ class Invoice(BaseModel):
                 raise InvoiceValidationError("iva_total must be zero when every line is EXEMPT or NOT_SUBJECT")
             if self.grand_total != self.base_total:
                 raise InvoiceValidationError(
-                    "grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT"
+                    "grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT",
                 )
         return self
 

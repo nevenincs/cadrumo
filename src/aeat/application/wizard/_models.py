@@ -61,7 +61,7 @@ class WizardCondition(BaseModel):
         if len(declared) != 1:
             raise ValueError(
                 f"WizardCondition on {self.question_id!r} must declare exactly one of "
-                f"'equals' / 'contains'; got {declared or ['none']}"
+                f"'equals' / 'contains'; got {declared or ['none']}",
             )
         return self
 
@@ -140,7 +140,7 @@ class WizardFlow(BaseModel):
         if offenders:
             raise ValueError(
                 f"WizardFlow {self.id!r} carries Translatable values that do not start with "
-                f"{expected!r}: {', '.join(offenders)}"
+                f"{expected!r}: {', '.join(offenders)}",
             )
         return self
 
@@ -186,7 +186,7 @@ class WizardFlow(BaseModel):
         if bad:
             raise ValueError(
                 f"WizardFlow {self.id!r} has visible_when references that do not resolve "
-                f"to earlier questions: {', '.join(bad)}"
+                f"to earlier questions: {', '.join(bad)}",
             )
         return self
 
@@ -226,6 +226,6 @@ def _walk_translatables(flow: WizardFlow) -> list[tuple[tr, str]]:
                         (
                             choice.description,
                             f"{flow.id}.{section.id}.{question.id}.choices.{choice.value}.description",
-                        )
+                        ),
                     )
     return result

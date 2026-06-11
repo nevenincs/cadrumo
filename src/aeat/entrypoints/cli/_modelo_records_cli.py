@@ -22,7 +22,7 @@ from ...application.modelo import (
     list_verification_reports,
 )
 from ...core.i18n import tr
-from ._common import _emit_envelope
+from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     FilingRecordImportResult,
     ModeloRecordListResult,
@@ -145,7 +145,7 @@ def filing_record_list(
                 record.status.value,
                 record.filed_at.isoformat(),
                 record.filed_by,
-            )
+            ),
         )
         for record in records
     )
@@ -215,7 +215,7 @@ def filing_record_import(
                 "cli.app.modelo.filing_record.invalid_evidence_kind",
                 canonical=canonical,
                 kind=evidence_kind,
-            )
+            ),
         ) from exc
 
     casilla_values: dict[str, Decimal] = {}
@@ -226,12 +226,16 @@ def filing_record_import(
         raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
 
     try:
+        from ...application.workflow import workflow_state_repository
+
+        expected_tax_id = _profile_to_taxpayer(workflow_state_repository().load()).tax_id
         record = import_external_filing_evidence(
             work_unit_id=validated_work_unit_id,
             casilla_values=casilla_values,
             evidence_kind=kind,
             evidence_reference_id=evidence_reference_id,
             actor=actor or _actor(),
+            expected_tax_id=expected_tax_id,
         )
     except (
         WorkUnitNotFoundError,
@@ -245,7 +249,7 @@ def filing_record_import(
             "evidence_kind": kind.value,
             "evidence_reference_id": evidence_reference_id,
             **filing_record_payload(record).model_dump(mode="python"),
-        }
+        },
     )
     lines = [
         "operation\tmodelo.filing_record.import",
@@ -290,7 +294,7 @@ def verification_report_list(
                 str(r.granted_verificado_completo).lower(),
                 r.run_at.isoformat(),
                 r.verified_by,
-            )
+            ),
         )
         for r in reports
     )

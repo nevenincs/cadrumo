@@ -134,7 +134,7 @@ def _calculate_322_member(*, member_nif: str, filing_year: int, period: str) -> 
     """Run the REAL 322 monthly calculation for one grupo member."""
     snapshot = resources().modelos.authority.snapshot("322", filing_year=filing_year, period=period)
     binding_values = resolve_ledger_iva_aggregation_binding_values(
-        snapshot.revision, _member_ledger(member_nif=member_nif, filing_year=filing_year, period=period)
+        snapshot.revision, _member_ledger(member_nif=member_nif, filing_year=filing_year, period=period),
     )
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
@@ -146,7 +146,7 @@ def _calculate_322_member(*, member_nif: str, filing_year: int, period: str) -> 
 
 
 def _member_322_observation(
-    *, filing_year: int, period: str, result: RegistryCalculationResult
+    *, filing_year: int, period: str, result: RegistryCalculationResult,
 ) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="322",
@@ -179,7 +179,7 @@ def _save_member_322_observation(
 
 
 def _resolve_353_aggregate(
-    *, filing_year: int, period: str, repository: CalculationObservationRepository
+    *, filing_year: int, period: str, repository: CalculationObservationRepository,
 ) -> RegistryCalculationResult:
     """Run the REAL 353 monthly aggregate, summing members' 322 via per_grupo_member.
 
@@ -204,7 +204,7 @@ def _resolve_353_aggregate(
 
 
 def _file_members_and_aggregate(
-    *, filing_year: int, period: str, repository: CalculationObservationRepository
+    *, filing_year: int, period: str, repository: CalculationObservationRepository,
 ) -> tuple[RegistryCalculationResult, dict[str, dict[str, Decimal]]]:
     """File both members' 322 for one month, then compute the 353 aggregate.
 
@@ -236,7 +236,7 @@ def test_353_aggregate_equals_cross_member_sum_of_322(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         aggregate, member_results = _file_members_and_aggregate(
-            filing_year=_RENTA_YEARS[0], period="12", repository=repository
+            filing_year=_RENTA_YEARS[0], period="12", repository=repository,
         )
 
     assert len(member_results) == len(_MEMBER_NIFS)
@@ -259,10 +259,10 @@ def test_353_reconciliation_isolates_renta_periods(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         agg_2025, members_2025 = _file_members_and_aggregate(
-            filing_year=_RENTA_YEARS[0], period="12", repository=repository
+            filing_year=_RENTA_YEARS[0], period="12", repository=repository,
         )
         agg_2026, members_2026 = _file_members_and_aggregate(
-            filing_year=_RENTA_YEARS[1], period="12", repository=repository
+            filing_year=_RENTA_YEARS[1], period="12", repository=repository,
         )
 
     for source_casilla, reconciliation_casilla in _RECONCILIATION_BY_322_CASILLA.items():
@@ -287,7 +287,7 @@ def test_modelo_353_grupo_aggregation_enrolls_two_renta_years(tmp_path: Path) ->
         for filing_year in _RENTA_YEARS:
             repository = CalculationObservationRepository()
             aggregate, member_results = _file_members_and_aggregate(
-                filing_year=filing_year, period="12", repository=repository
+                filing_year=filing_year, period="12", repository=repository,
             )
             for source_casilla, reconciliation_casilla in _RECONCILIATION_BY_322_CASILLA.items():
                 expected = sum((member_results[nif][source_casilla] for nif in _MEMBER_NIFS), Decimal("0"))

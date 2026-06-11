@@ -108,7 +108,7 @@ _ENUM_DISPATCH_OPS: frozenset[str] = frozenset(
         "lookup_bracket_by_ccaa",
         "lookup_parameter_by_entity_type",
         "lookup_bracket_by_entity_type",
-    }
+    },
 )
 
 #: Map of op name -> arg index that carries the string-valued enum binding

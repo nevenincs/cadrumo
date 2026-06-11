@@ -88,5 +88,5 @@ def test_no_bare_kind_strings_survive_in_affected_files() -> None:
         joined = "\n  ".join(failures)
         raise AssertionError(
             f"Bare CasillaFieldKind string(s) still present in affected files:\n  {joined}\n"
-            "Replace each with the corresponding CasillaFieldKind.<MEMBER> enum value."
+            "Replace each with the corresponding CasillaFieldKind.<MEMBER> enum value.",
         )

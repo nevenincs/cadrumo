@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -39,6 +40,15 @@ from .._renta_income_ledger import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
+
+
+_ANNUAL_2024 = _period(2024, "0A")
+_Q1_2024 = _period(2024, "1T")
+_Q2_2024 = _period(2024, "2T")
 
 
 @pytest.fixture
@@ -105,7 +115,7 @@ def _income_transaction(
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -122,7 +132,7 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
     apr = _income_transaction("apr", value_date=date(2024, 4, 1), amount=Decimal("800.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, feb, mar, apr))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     observation_ids = {o.transaction_id for o in result.observations}
     # Transaction.transaction_id is a content hash; compare against the created objects.
@@ -131,7 +141,7 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
     issue_ids = {i.transaction_id for i in result.issues}
     assert apr.transaction_id in issue_ids
     assert result.casilla_aggregation.casilla_values["01"] == sum(
-        (tx.raw.amount for tx in (jan, feb, mar)), Decimal("0")
+        (tx.raw.amount for tx in (jan, feb, mar)), Decimal("0"),
     )
 
 
@@ -142,7 +152,7 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
     jul = _income_transaction("jul", value_date=date(2024, 7, 1), amount=Decimal("3000.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, may, jul))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q2")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q2_2024)
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
@@ -160,7 +170,7 @@ def test_mixed_classification_applies_business_pct() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert len(result.observations) == 1
     assert result.observations[0].gross_amount == Decimal("600.00")
@@ -175,7 +185,7 @@ def test_personal_transaction_excluded_with_reason() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert result.observations == ()
     assert len(result.issues) == 1
@@ -186,7 +196,7 @@ def test_non_eur_transaction_excluded_with_reason() -> None:
     tx = _income_transaction("usd", value_date=date(2024, 3, 1), currency="USD")
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert result.observations == ()
     assert len(result.issues) == 1
@@ -208,11 +218,11 @@ def test_outgoing_transaction_excluded_with_reason() -> None:
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert result.observations == ()
     assert result.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION
@@ -227,7 +237,7 @@ def test_inactive_transaction_skipped_silently() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert result.observations == ()
     assert result.issues == ()
@@ -238,7 +248,7 @@ def test_non_quarterly_period_raises() -> None:
 
     catalogue = TransactionCatalogue.from_transactions(())
     with pytest.raises(AggregationPeriodError):
-        aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024")
+        aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +270,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
 
     result_q1 = aggregate_renta_income_ledger_from_repositories(
         bucket_id="test",
-        period="2024Q1",
+        period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
 
@@ -268,21 +278,21 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     assert len(result_q1.issues) == 1
     assert result_q1.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
     assert result_q1.casilla_aggregation.casilla_values["01"] == sum(
-        (tx.raw.amount for tx in (q1_tx1, q1_tx2)), Decimal("0")
+        (tx.raw.amount for tx in (q1_tx1, q1_tx2)), Decimal("0"),
     )
     observation_ids_q1 = {o.transaction_id for o in result_q1.observations}
     assert observation_ids_q1 == {q1_tx1.transaction_id, q1_tx2.transaction_id}
 
     result_q2 = aggregate_renta_income_ledger_from_repositories(
         bucket_id="test",
-        period="2024Q2",
+        period=_Q2_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
 
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
     assert result_q2.issues == ()
     assert result_q2.casilla_aggregation.casilla_values["01"] == sum(
-        (tx.raw.amount for tx in (q1_tx1, q1_tx2, q2_only)), Decimal("0")
+        (tx.raw.amount for tx in (q1_tx1, q1_tx2, q2_only)), Decimal("0"),
     )
     observation_ids_q2 = {o.transaction_id for o in result_q2.observations}
     assert observation_ids_q2 == {q1_tx1.transaction_id, q1_tx2.transaction_id, q2_only.transaction_id}
@@ -295,7 +305,7 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
     ]
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert all(o.target_casilla == "01" for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
@@ -342,7 +352,7 @@ def _actividad_transaction(
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -369,7 +379,7 @@ def test_irpf_actividad_economica_flows_despite_unclassified_business() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert len(result.observations) == 1, result
     assert result.observations[0].gross_amount == amount
@@ -399,7 +409,7 @@ def test_trabajo_income_excluded_from_m130() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((nomina, actividad))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert len(result.observations) == 1
     assert result.observations[0].transaction_id == actividad.transaction_id
@@ -429,7 +439,7 @@ def test_taxable_base_amount_populated_when_set() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert len(result.observations) == 1
     obs = result.observations[0]
@@ -448,7 +458,7 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
 
     # Scenario A: one actividad + one trabajo — only actividad should flow
     actividad = _actividad_transaction(
-        "ae-a", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+        "ae-a", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica",
     )
     trabajo = _actividad_transaction(
         "trab-a",
@@ -458,17 +468,17 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
         business_classification=BusinessClassification.BUSINESS,
     )
     catalogue_a = TransactionCatalogue.from_transactions((actividad, trabajo))
-    result_a = aggregate_renta_income_ledger(catalogue_a, bucket_id="test", period="2024Q1")
+    result_a = aggregate_renta_income_ledger(catalogue_a, bucket_id="test", period=_Q1_2024)
 
     # Scenario B: both transactions as actividad — both should flow
     actividad_b1 = _actividad_transaction(
-        "ae-b1", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+        "ae-b1", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica",
     )
     actividad_b2 = _actividad_transaction(
-        "ae-b2", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+        "ae-b2", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica",
     )
     catalogue_b = TransactionCatalogue.from_transactions((actividad_b1, actividad_b2))
-    result_b = aggregate_renta_income_ledger(catalogue_b, bucket_id="test", period="2024Q1")
+    result_b = aggregate_renta_income_ledger(catalogue_b, bucket_id="test", period=_Q1_2024)
 
     casilla_a = result_a.casilla_aggregation.casilla_values.get("01", Decimal("0"))
     casilla_b = result_b.casilla_aggregation.casilla_values.get("01", Decimal("0"))
@@ -517,7 +527,7 @@ def _actividad_transaction_with_source(
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
             "source_jurisdiction": source_jurisdiction,
-        }
+        },
     )
 
 
@@ -539,7 +549,7 @@ def test_renta_income_observation_preserves_es_source_jurisdiction() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert len(result.observations) == 1
     assert result.observations[0].source_jurisdiction == "ES"
@@ -576,7 +586,7 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((es_row, fr_row))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     # Art. 8 universal-base: both rows enter the casilla aggregation.
     assert len(result.observations) == 2

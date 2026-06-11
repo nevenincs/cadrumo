@@ -137,7 +137,7 @@ def _load_active_taxpayer_profile():
     from ....application.user_profile._orchestration import profile_storage_session
     from ....application.user_profile._projections import record_to_path_values
     from ....application.workflow._persistence import workflow_state_repository
-    from ....core._bucket_pointer_io import read_pointer
+    from ....core import read_pointer
     from ....core.config import load_settings
     from ....domain.deadlines._profiles import taxpayer_profile_from_mapping
 

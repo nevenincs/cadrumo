@@ -323,7 +323,7 @@ def _rewrite_string_operand(
                         real_sha256=sha,
                         synthetic=synthetic,
                         encoding=encoding,
-                    )
+                    ),
                 )
     if not edits:
         return operand, edits

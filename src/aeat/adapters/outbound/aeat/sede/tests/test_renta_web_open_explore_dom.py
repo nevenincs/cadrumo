@@ -106,7 +106,7 @@ async def _snapshot_zk_layer(page: Page, label: str) -> str:
             _log.debug("explore DOM input metadata lookup failed index=%d", idx, exc_info=True)
             title = placeholder = input_type = name = value = "?"
         lines.append(
-            f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"
+            f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}",
         )
     lines.append("\n--- frames present at snapshot time ---")
     try:
@@ -391,7 +391,7 @@ async def _capture_input_inventory(page: Page) -> list[str]:
             _log.debug("explore DOM input inventory metadata unreadable index=%d", idx, exc_info=True)
             title = placeholder = input_type = name = value = "?"
         lines.append(
-            f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"
+            f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}",
         )
     return lines
 
@@ -487,7 +487,7 @@ async def _capture_a11y_tree(page: Page) -> str:
             f"<{entry['tag']}> "
             f"role={entry['role']!r} aria={entry['aria']!r} "
             f"title={entry['title']!r} cls={entry['cls']!r} "
-            f"text={entry['text']!r}"
+            f"text={entry['text']!r}",
         )
     return "\n".join(lines)
 

@@ -38,7 +38,7 @@ def _valid_payload(ref_id: str = "ley-35-2006") -> dict[str, object]:
                 "titulo": {"es": "Reducciones"},
                 "summary": {"es": "Resumen."},
                 "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
-            }
+            },
         ],
         "tags": ["irpf"],
         "last_reviewed_at": "2026-04-12",

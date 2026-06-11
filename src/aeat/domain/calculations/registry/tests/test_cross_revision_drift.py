@@ -84,7 +84,7 @@ def _modelo(
                     else continuidad_validation.get(revision_id, "advisory")
                 ),
                 "casilla_continuidad_evolutions": () if evolutions is None else evolutions.get(revision_id, ()),
-            }
+            },
         )
     return ModeloDefinition.model_validate(
         {
@@ -97,7 +97,7 @@ def _modelo(
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "revisions": revision_payloads,
-        }
+        },
     )
 
 
@@ -330,7 +330,7 @@ class TestCrossRevisionConsistency:
                         "legal_refs": ("ley-58-2003:art-29",),
                         "source_refs": ("aeat-manual",),
                     },
-                )
+                ),
             },
         )
 
@@ -365,7 +365,7 @@ class TestCrossRevisionConsistency:
                         "legal_refs": ("ley-58-2003:art-29",),
                         "source_refs": ("aeat-manual",),
                     },
-                )
+                ),
             },
         )
 
@@ -463,7 +463,7 @@ class TestCrossRevisionConsistency:
                         "legal_refs": ("ley-58-2003:art-29",),
                         "source_refs": ("aeat-manual",),
                     },
-                )
+                ),
             },
             continuidad_validation={"2025": "strict"},
         )
@@ -507,7 +507,7 @@ class TestCrossRevisionConsistency:
                         "legal_refs": ("ley-58-2003:art-29",),
                         "source_refs": ("aeat-manual",),
                     },
-                )
+                ),
             },
             continuidad_validation={"2025": "strict"},
         )
@@ -556,7 +556,7 @@ class TestCrossRevisionConsistency:
                         "legal_refs": ("ley-58-2003:art-29",),
                         "source_refs": ("aeat-manual",),
                     },
-                )
+                ),
             },
             continuidad_validation={"2025": "strict"},
         )
@@ -584,7 +584,7 @@ class TestCrossRevisionConsistency:
                         "legal_refs": ("ley-58-2003:art-29",),
                         "source_refs": ("aeat-manual",),
                     },
-                )
+                ),
             },
             continuidad_validation={"2025": "strict"},
         )
@@ -619,7 +619,7 @@ class TestCrossRevisionConsistency:
                         "legal_refs": ("ley-58-2003:art-29",),
                         "source_refs": ("aeat-manual",),
                     },
-                )
+                ),
             },
             continuidad_validation={"2025": "strict"},
         )
@@ -632,7 +632,7 @@ class TestCrossRevisionConsistency:
 
     def test_directory_loaded_advisory_continuity_inventory_reports_evolution(self, tmp_path: Path) -> None:
         modelo = load_modelo_directory(
-            _write_continuity_modelo_directory(tmp_path, strict=False, include_evolution=True)
+            _write_continuity_modelo_directory(tmp_path, strict=False, include_evolution=True),
         )
 
         summaries = summarize_non_overlapping_cross_revision_casilla_drift([modelo])
@@ -647,7 +647,7 @@ class TestCrossRevisionConsistency:
 
     def test_directory_loaded_strict_continuity_hard_fails_uncovered_drift(self, tmp_path: Path) -> None:
         modelo = load_modelo_directory(
-            _write_continuity_modelo_directory(tmp_path, strict=True, include_evolution=False)
+            _write_continuity_modelo_directory(tmp_path, strict=True, include_evolution=False),
         )
 
         failures = validate_registry_scope([modelo])

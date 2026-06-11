@@ -190,7 +190,7 @@ def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) ->
 
 
 def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
-    """``ledger update`` called with only ``--id`` and no mutable options must
+    """``ledger update`` called with only the positional id and no mutable options must
     surface the patch validator message "manual ledger patch must carry at
     least one field".
 
@@ -201,7 +201,7 @@ def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
 
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "update", "--id", txn_id],
+        ["app", "ledger", "update", txn_id],
     )
 
     assert result.exit_code != 0, result.output
@@ -230,7 +230,6 @@ def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> No
             "app",
             "ledger",
             "allocate",
-            "--id",
             txn_id,
             "--business-pct",
             "1.5",
@@ -266,7 +265,6 @@ def test_ledger_split_rejects_blank_child_description(tmp_path: Path) -> None:
             "app",
             "ledger",
             "split",
-            "--id",
             txn_id,
             "--yes",
             "--child-amount",
@@ -309,7 +307,6 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
             "app",
             "ledger",
             "classify",
-            "--id",
             txn_id,
             "--classification",
             "BUSINESS",
@@ -343,7 +340,7 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
 def _set_profile_axis(key: str, value: str) -> None:
     """Set one profile axis through the canonical profile orchestration service."""
     workflow_state_repository().update(
-        lambda state: set_active_fields(state, (UserProfileFact(path=key, value=value),))
+        lambda state: set_active_fields(state, (UserProfileFact(path=key, value=value),)),
     )
 
 

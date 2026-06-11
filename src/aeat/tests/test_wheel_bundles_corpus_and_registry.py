@@ -48,7 +48,7 @@ def _git_ls_files_data() -> list[str]:
     if not tracked:
         raise AssertionError(
             "git ls-files reported no tracked files under src/aeat/_data/{corpus,registry}; "
-            "the corpus-registry-packaging move has regressed or the worktree is detached"
+            "the corpus-registry-packaging move has regressed or the worktree is detached",
         )
     return tracked
 
@@ -71,7 +71,8 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
     if shutil.which("uv") is None:
         raise AssertionError(
-            "uv binary not found on PATH; corpus-registry packaging guard cannot run without the project's build driver"
+            "uv binary not found on PATH; corpus-registry packaging guard "
+            "cannot run without the project's build driver",
         )
     out_dir = tmp_path_factory.mktemp("wheel-out")
     subprocess.run(

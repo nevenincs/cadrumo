@@ -72,7 +72,7 @@ _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
         CalculationRevisionState.VERIFICADO_COMPLETO,
         CalculationRevisionState.PRESENTADO,
         CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }
+    },
 )
 
 
@@ -221,8 +221,8 @@ def _blocking_modelo_references(
                 revision_state=revision.state.value,
                 modelo=work_unit.modelo,
                 filing_year=work_unit.filing_year,
-                period=work_unit.period,
-            )
+                period=work_unit.period.registry_token,
+            ),
         )
     return tuple(
         sorted(
@@ -233,7 +233,7 @@ def _blocking_modelo_references(
                 blocker.period,
                 blocker.calculation_revision_id,
             ),
-        )
+        ),
     )
 
 
@@ -264,7 +264,7 @@ def _blockers_by_source_transaction_id(
             revision_state=revision.state.value,
             modelo=work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
         for txid in revision.source_transaction_ids:
             out.setdefault(txid, []).append(blocker)
@@ -273,7 +273,7 @@ def _blockers_by_source_transaction_id(
 
 def _transaction_modelo_source_ids(transaction: Transaction) -> tuple[str, ...]:
     return tuple(
-        sorted({transaction.transaction_id, *(entry.previous_transaction_id for entry in transaction.edit_lineage)})
+        sorted({transaction.transaction_id, *(entry.previous_transaction_id for entry in transaction.edit_lineage)}),
     )
 
 
@@ -284,8 +284,8 @@ def _catalogue_modelo_source_ids(catalogue: TransactionCatalogue) -> tuple[str, 
                 source_id
                 for transaction in catalogue.values()
                 for source_id in _transaction_modelo_source_ids(transaction)
-            }
-        )
+            },
+        ),
     )
 
 

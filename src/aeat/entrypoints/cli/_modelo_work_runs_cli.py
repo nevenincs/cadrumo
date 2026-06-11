@@ -16,6 +16,7 @@ from ...application.workflow import (
     resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
 )
+from ...core import Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ._common import _emit_envelope
@@ -33,6 +34,7 @@ def register_work_run_commands(
     *,
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
+    resolve_optional_cli_period: Callable[..., Period | None],
 ) -> None:
     """Register workflow-run discovery and resume commands."""
 
@@ -61,7 +63,7 @@ def register_work_run_commands(
                 WorkflowRunPayload(
                     run_id=run.run_id,
                     modelo=run.obligation.modelo if run.obligation is not None else None,
-                    period=run.obligation.period if run.obligation is not None else None,
+                    period=str(run.obligation.period) if run.obligation is not None else None,
                     final_stage=run.final_stage.value,
                     aborted_reason=(run.aborted_reason.value if run.aborted_reason is not None else None),
                     started_at=run.started_at.isoformat(),
@@ -79,11 +81,11 @@ def register_work_run_commands(
                 (
                     run.run_id,
                     run.obligation.modelo if run.obligation is not None else "-",
-                    run.obligation.period if run.obligation is not None else "-",
+                    str(run.obligation.period) if run.obligation is not None else "-",
                     run.final_stage.value,
                     run.aborted_reason.value if run.aborted_reason is not None else "-",
                     run.started_at.isoformat(),
-                )
+                ),
             )
             for run in runs
         )
@@ -157,6 +159,7 @@ def register_work_run_commands(
         activate_output_language(ctx, output_language)
 
         try:
+            typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
             resolution = resolve_modelo_workflow_resume_target(
                 target=target,
                 work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
@@ -167,7 +170,7 @@ def register_work_run_commands(
                 ),
                 modelo=modelo,
                 year=year,
-                period=period,
+                period=typed_period,
                 registry_revision_id=revision,
                 bucket_id=bucket_id,
                 selector=parse_revision_selector(select) if select is not None else None,
@@ -202,7 +205,7 @@ def _emit_work_resume(
         f"prior_workflow_run_id\t{result.resumed_from_run_id}",
         f"resolved_source\t{resolution.source}",
         f"modelo\t{result.modelo}",
-        f"period\t{result.period}",
+        f"period\t{result.period!s}",
         f"filing_year\t{resolution.filing_year or ''}",
         f"registry_period\t{resolution.registry_period or ''}",
         f"short_work_unit_id\t{resolution.short_work_unit_id or ''}",

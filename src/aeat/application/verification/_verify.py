@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
@@ -27,7 +28,6 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
 )
-from ...domain.period import PeriodValidationError, parse_canonical_period, period_end_date
 from ._errors import VerificationError
 from ._schema import (
     ClassifiedDiscrepancy,
@@ -107,7 +107,7 @@ def verify_declaracion(
             translated_message="application.verification.errors.registry_policy_invalid",
             context={
                 "modelo": declaracion.modelo,
-                "period": declaracion.period,
+                "period": _period_context(period),
                 "error_type": type(exc).__name__,
             },
         ) from exc
@@ -139,13 +139,13 @@ def verify_declaracion(
                 "bindings": tuple(missing_bindings),
                 "count": len(missing_bindings),
                 "modelo": declaracion.modelo,
-                "period": declaracion.period,
+                "period": _period_context(period),
             },
         )
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        date_context={"filing_period": period_end_date(period.filing_year, period.registry_token)},
+        date_context={"filing_period": _period_end_date(period)},
         binding_values=supplied_bindings,
     )
     unreliable_ids = {
@@ -214,7 +214,7 @@ def _load_snapshot(
             translated_message="application.verification.errors.registry_snapshot_invalid",
             context={
                 "modelo": declaracion.modelo,
-                "period": declaracion.period,
+                "period": _period_context(period),
                 "ejercicio": declaracion.ejercicio or "",
                 "error_type": type(exc).__name__,
             },
@@ -232,22 +232,57 @@ def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[str, 
     return extracted
 
 
-def _parse_period(period: str, ejercicio: str | None) -> Period:
-    """Bridge an inbound raw period token to a typed :class:`~aeat.core.Period`.
-
-    Accepts the same forms as :func:`~aeat.domain.period.parse_canonical_period`
-    (``YYYYQ[1-4]``, ``YYYY-[1-4]T``, ``YYYY-MM``, ``YYYYA``, bare ``YYYY``,
-    ``YYYYPn``, and when ``ejercicio`` is supplied, the raw AEAT quarterly form
-    ``nT``).
-    """
+def _parse_period(period: Period, ejercicio: str | None) -> Period:
+    """Validate the typed filing period carried by the inbound declaration."""
     try:
-        filing_year, code = parse_canonical_period(period, ejercicio=ejercicio)
-    except PeriodValidationError as exc:
-        raise RegistrySnapshotError(
+        if ejercicio is None:
+            raise ValueError("ejercicio is required for verification period mapping")
+        filing_year = int(ejercicio)
+        if period.filing_year != filing_year:
+            raise ValueError("period filing year must match ejercicio")
+        return period
+    except ValueError as exc:
+        raise VerificationError(
             translated_message="application.verification.errors.period_mapping_failed",
-            context={"period": period, "ejercicio": ejercicio or ""},
+            context={"period": _period_context(period), "ejercicio": ejercicio or ""},
         ) from exc
-    return Period.from_year_and_code(filing_year, code)
+
+
+def _period_context(period: Period) -> str:
+    """Return the primitive operator-facing period label for diagnostics."""
+    return str(period)
+
+
+def _period_end_date(period: Period) -> date:
+    """Return the verification filing date while preserving legacy semantics."""
+    code = period.registry_token
+    if code in {"1T", "2T", "3T", "4T", "0A"}:
+        return period.end_date
+    if code in {
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+    }:
+        return period.start_date
+    if code == "1P":
+        return date(period.filing_year, 4, 30)
+    if code == "2P":
+        return date(period.filing_year, 10, 31)
+    if code == "3P":
+        return date(period.filing_year, 12, 31)
+    raise RegistrySnapshotError(
+        translated_message="application.verification.errors.period_mapping_failed",
+        context={"period": code, "ejercicio": str(period.filing_year)},
+    )
 
 
 def _classify_discrepancy(

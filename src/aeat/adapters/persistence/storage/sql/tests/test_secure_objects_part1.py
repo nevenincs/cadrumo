@@ -313,7 +313,7 @@ def test_secure_object_batch_size_validation_error_is_localized(tmp_path: Path) 
                         expected_class=SensitivityClass.FINANCIAL,
                         max_supported_version=1,
                         batch_size=0,
-                    )
+                    ),
                 )
             assert raised.value.translated_message == "errors.integrity.integrity_storage_secure_object_batch_size"
             assert raised.value.context == {"batch_size": 0}
@@ -370,7 +370,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
                         namespace,
                         expected_class=SensitivityClass.FINANCIAL,
                         max_supported_version=1,
-                    )
+                    ),
                 )
 
             assert raised.value.namespace == namespace
@@ -383,7 +383,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
                     namespace,
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
-                )
+                ),
             )
             assert len([item for item in explicit if isinstance(item, SecureObjectRecord)]) == 1
             assert len([item for item in explicit if isinstance(item, SecureObjectUnreadable)]) == 1
@@ -449,7 +449,7 @@ def test_list_records_yields_records_when_every_row_is_readable(tmp_path: Path) 
                     "aeat.test.readable.list",
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
-                )
+                ),
             )
 
             assert [record.payload for record in yielded] == [b"readable-list-payload"]
@@ -495,7 +495,7 @@ def test_list_records_rejects_unreadable_row_before_readable_subset(
                         namespace,
                         expected_class=SensitivityClass.FINANCIAL,
                         max_supported_version=1,
-                    )
+                    ),
                 )
 
         finally:
@@ -547,7 +547,7 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
                     namespace,
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
-                )
+                ),
             )
 
             assert len(items) == 3, f"expected one outcome per row; got {items}"
@@ -601,7 +601,7 @@ def test_iter_records_with_failures_yields_metadata_contract_failures(tmp_path: 
                     namespace,
                     expected_class=SensitivityClass.FINANCIAL,
                     max_supported_version=1,
-                )
+                ),
             )
 
             assert len(outcomes) == 2

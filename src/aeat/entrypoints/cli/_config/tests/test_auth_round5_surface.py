@@ -14,14 +14,11 @@ would otherwise refuse without an active profile.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from .....adapters.persistence.storage.master_key._active_session import activate_session
-from .....adapters.persistence.storage.master_key._bucket_session import BucketSession
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....application.auth._operator import (
     AuthLoginNotEnabledError,
@@ -31,9 +28,10 @@ from .....application.auth._operator import (
     login_operator_auth,
 )
 from .....application.auth._operator import test_operator_auth as probe_operator_auth
+from .....application.user_profile import profile_create_storage_span
 from .....application.user_profile._testing import register_minimal_profile
 from .....application.workflow._persistence import workflow_state_repository
-from .....core.config import override_settings
+from .....core.config import load_settings, override_settings
 from .. import app as config_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -41,36 +39,32 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _BUCKET_ID = "round5"
 
 
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
-        dek=b"d" * 32,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
 @pytest.fixture
 def _isolated_application_layer(tmp_path: Path) -> Iterator[None]:
-    """Open a real bucket session against an isolated storage root.
+    """Open a real bucket runtime against an isolated storage root.
 
-    Uses the same precedent set by other round-4/5 tests that drive the
-    application layer directly — the per-bucket secure-storage gate
-    refuses CLI invocation without a registered profile pointer, but
-    the orchestration accepts a real ``BucketSession`` and writes the
-    expected workflow-state records.
+    The repository create path requires both an active bucket session
+    and the wrapped DEK file that production profile creation mints.
+    ``isolated_runtime_profile`` provisions those durable surfaces
+    without weakening the storage gate.
     """
 
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(_session()),
-    ):
+    storage_root = tmp_path / "aeat-storage"
+    secret_store_dir = tmp_path / "secrets"
+    passphrase = load_settings().aeat_dev_test_database_password
+    with override_settings(
+        aeat_local_storage_root=storage_root,
+        aeat_active_profile=_BUCKET_ID,
+        aeat_secret_store_backend="file",  # noqa: S106 - backend enum, not a secret
+        aeat_secret_store_dir=secret_store_dir,
+        aeat_secret_passphrase=passphrase,
+    ) as settings:
         dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+        with profile_create_storage_span(_BUCKET_ID):
+            try:
+                yield
+            finally:
+                dispose_engine(settings)
 
 
 @pytest.fixture
@@ -82,7 +76,7 @@ def runner() -> CliRunner:
 
 
 def test_configure_then_status_agree_on_configured_with_resolvable_file(
-    _isolated_application_layer: None, tmp_path: Path
+    _isolated_application_layer: None, tmp_path: Path,
 ) -> None:
     """Round-5 B1: configure persists a resolvable cert path; status reports it.
 
@@ -294,7 +288,11 @@ def test_severity_for_clave_movil_pending_is_not_error(
     """
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID, overrides={"identity.tax_id": "12345678Z"})
+        lambda state: register_minimal_profile(
+            state,
+            profile_id=_BUCKET_ID,
+            overrides={"identity.tax_id": "12345678Z"},
+        ),
     )
     with override_settings(aeat_clave_movil_dni_nie="12345678Z"):
         configure_operator_auth("clave_movil")
@@ -326,7 +324,11 @@ def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
     """
 
     workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID, overrides={"identity.tax_id": "99999999Z"})
+        lambda state: register_minimal_profile(
+            state,
+            profile_id=_BUCKET_ID,
+            overrides={"identity.tax_id": "99999999Z"},
+        ),
     )
     with override_settings(
         aeat_clave_movil_dni_nie="00000001R",

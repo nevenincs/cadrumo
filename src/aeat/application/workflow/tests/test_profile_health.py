@@ -11,8 +11,8 @@ from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ....adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
 from ....application.user_profile import UserProfileLifecycleRepository
-from ....core._bucket_pointer import BucketPointer
-from ....core._bucket_pointer_io import read_pointer, write_pointer
+from ....core import BucketPointer
+from ....core import read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -44,7 +44,7 @@ def _seed_ready_profile_record(bucket_id: str, repository: SecureObjectRepositor
             profile_id=bucket_id,
             display_name=bucket_id,
             facts=_READY_PROFILE_FACTS,
-        )
+        ),
     )
 
 

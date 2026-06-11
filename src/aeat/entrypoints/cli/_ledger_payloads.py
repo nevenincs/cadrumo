@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ...core import Period
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
@@ -61,14 +62,14 @@ class TransactionPayload(OutputSchema):
     # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
     # EUR-equivalent and applied CCY->EUR rate the application payload now emits.
     # Declared here so the strict single-transaction read surface (ledger
-    # view/classify --id/update/archive/stash) accepts the persisted FX fields
+    # view/classify/update/archive/stash) accepts the persisted FX fields
     # rather than rejecting them as extra_forbidden. None for EUR-native rows.
     value_in_eur: str | None = None
     fx_rate: str | None = None
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
-    # rendered as ISO-8601 strings. ``None`` for rows authored before the axis.
-    created_at: str | None = None
-    modified_at: str | None = None
+    # rendered as ISO-8601 strings.
+    created_at: str
+    modified_at: str
 
 
 class BulkClassifyFailurePayload(OutputSchema):
@@ -120,7 +121,7 @@ class LedgerTransactionParticipationEntryPayload(OutputSchema):
     work_unit_id: str
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     revision_state: str
     filing_record_id: str | None = None
     justificante_reference: str | None = None
@@ -445,8 +446,8 @@ class LedgerListRowPayload(OutputSchema):
     source_jurisdiction: str | None = None
     value_in_eur: str | None = None
     fx_rate: str | None = None
-    created_at: str | None = None
-    modified_at: str | None = None
+    created_at: str
+    modified_at: str
     # List-builder extras
     group_label: str | None = None
 
@@ -502,10 +503,7 @@ class LedgerStatusResult(OutputSchema):
     pending_review_count: int
     reviewed_count: int
     skipped_count: int
-    # The filing period travels as a typed :class:`Period` date span on the
-    # backend report; the JSON envelope surfaces its serialised mapping (year,
-    # quarter/month, start/end), mirroring ``LedgerPreflightResult.period``.
-    period: dict[str, object] | None = None
+    period: Period | None = None
     checked_transaction_count: int = 0
     readiness_issue_count: int = 0
     ready: bool | None = None
@@ -556,6 +554,46 @@ class LedgerCategoriesResult(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
+class LedgerExportRowPayload(OutputSchema):
+    """One serialised ledger row nested in ``aeat app ledger export`` (D2).
+
+    Mirrors :class:`aeat.application.ledger.LedgerExportRow`'s
+    ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]``
+    export-row shape. The flow stays the non-negative ``amount`` magnitude plus
+    the ``direction`` authority (money shape fixed by C1); every other column is
+    a string the serializer already emits ("" for an absent optional column).
+    """
+
+    bucket_id: str
+    transaction_id: str
+    lifecycle_state: str
+    booked_date: str
+    value_date: str = ""
+    effective_date: str
+    amount: str
+    currency: str
+    direction: str
+    counterparty: str = ""
+    description: str
+    business_classification: str
+    business_pct: str = ""
+    category_id: str = ""
+    taxable_base: str = ""
+    iva_rate: str = ""
+    iva_amount: str = ""
+    irpf_category: str = ""
+    usage_ratio_id: str = ""
+    prorrata_reference: str = ""
+    purchase_invoice_evidence_id: str = ""
+    attachment_ids: str = ""
+    notes: str = ""
+    created_by: str = ""
+    created_source_command: str = ""
+    source_jurisdiction: str = ""
+    value_in_eur: str = ""
+    fx_rate: str = ""
+
+
 @register_schema("ledger.export")
 class LedgerExportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger export``.
@@ -576,7 +614,7 @@ class LedgerExportPayload(OutputSchema):
     byte_size: int
     sha256: str
     fieldnames: list[str]
-    rows: list[dict[str, object]]
+    rows: list[LedgerExportRowPayload]
     bucket_event_ids: list[str] = []
     output_path: str
 
@@ -612,9 +650,7 @@ class LedgerImportPayload(OutputSchema):
     likely_duplicates: int = 0
     dry_run: bool
     verify: bool
-    # The filing period travels as a typed :class:`Period` date span on the
-    # backend result; the JSON envelope surfaces its serialised mapping.
-    period: dict[str, object] | None = None
+    period: Period | None = None
     bucket_id: str | None = None
     import_batch_id: str | None = None
     bucket_event_ids: list[str] = []
@@ -681,6 +717,67 @@ class LedgerParticipationRebuildResult(OutputSchema):
     revision_count: int
 
 
+class LedgerTrackingProvenancePayload(OutputSchema):
+    """One evidence-link lineage entry nested in ``ledger track`` (D2).
+
+    Mirrors :class:`aeat.domain.transactions.TransactionEvidenceProvenanceEntry`'s
+    JSON dump; ``linked_at`` is the ISO-8601 timestamp.
+    """
+
+    evidence_id: str
+    evidence_kind: str
+    actor: str
+    source_command: str
+    linked_at: str
+    bucket_event_id: str | None = None
+
+
+class LedgerTrackingEditPayload(OutputSchema):
+    """One manual-correction lineage entry nested in ``ledger track`` (D2).
+
+    Mirrors :class:`aeat.domain.transactions.TransactionEditLineageEntry`'s JSON
+    dump; ``edited_at`` is the ISO-8601 timestamp.
+    """
+
+    previous_transaction_id: str
+    actor: str
+    source_command: str
+    edited_at: str
+    bucket_event_id: str | None = None
+
+
+class LedgerTrackingLifecyclePayload(OutputSchema):
+    """One lifecycle-transition lineage entry nested in ``ledger track`` (D2).
+
+    Mirrors :class:`aeat.domain.transactions.TransactionLifecycleLineageEntry`'s
+    JSON dump; ``changed_at`` is the ISO-8601 timestamp.
+    """
+
+    previous_state: str
+    state: str
+    actor: str
+    source_command: str
+    changed_at: str
+    reason: str = ""
+    bucket_event_id: str | None = None
+
+
+class LedgerTrackingPayload(OutputSchema):
+    """Durable event-lineage projection for one transaction (D2).
+
+    Mirrors :class:`aeat.application.ledger.LedgerTransactionTrackingPayload`'s
+    JSON dump — replaces the former bare ``dict[str, object]`` ``tracking`` field
+    on :class:`LedgerTrackResult`.
+    """
+
+    transaction_id: str
+    created_event_id: str | None = None
+    evidence_provenance: list[LedgerTrackingProvenancePayload] = []
+    edit_lineage: list[LedgerTrackingEditPayload] = []
+    lifecycle_state: str
+    lifecycle_lineage: list[LedgerTrackingLifecyclePayload] = []
+
+
 @register_schema("ledger.track")
 class LedgerTrackResult(OutputSchema):
     """JSON envelope for ``aeat app ledger track``.
@@ -692,7 +789,7 @@ class LedgerTrackResult(OutputSchema):
 
     bucket_id: str
     transaction: TransactionPayload
-    tracking: dict[str, object]
+    tracking: LedgerTrackingPayload
     participated_in: list[LedgerTransactionParticipationEntryPayload] | None = None
 
 
@@ -702,7 +799,7 @@ class LedgerReviewResult(OutputSchema):
 
     Covers three payload branches:
     - Multi-row list: ``rows`` + ``filters``
-    - Empty-result (``--id`` with no match): empty ``rows`` + ``filters``
+    - Empty-result (positional id with no match): empty ``rows`` + ``filters``
     - Single-row detail: scalar fields for the matched row
 
     All fields are optional so each discriminated path validates cleanly.
@@ -751,13 +848,13 @@ class LedgerPreflightResult(OutputSchema):
 
     Mirrors ``LedgerPreflightReport.model_dump(mode='json')`` produced
     by :func:`preflight_ledger_tax_readiness`. ``period`` is the nested
-    :class:`Period` model dump; ``ready`` is the computed-field flag.
+    :class:`aeat.core.Period` model dump; ``ready`` is the computed-field flag.
     """
 
     bucket_id: str
-    period: dict[str, object]
+    period: Period
     checked_transaction_count: int
-    issues: list[dict[str, object]]
+    issues: list[LedgerPreflightIssuePayload]
     ready: bool
 
 
@@ -809,6 +906,23 @@ class RatiosRowPayload(OutputSchema):
     ratio: str
 
 
+class RatiosEligibleRowPayload(OutputSchema):
+    """One ``ledger ratios eligible`` row (D2)."""
+
+    category: str
+    proportionality_kind: str
+    default_ratio: str | None = None
+    override_present: bool
+
+
+class RatiosValidateFindingPayload(OutputSchema):
+    """One ``ledger ratios validate`` finding row (D2)."""
+
+    category: str
+    kind: str
+    detail: str = ""
+
+
 @register_schema("ledger.ratios.list")
 class RatiosListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios list``."""
@@ -842,7 +956,7 @@ class RatiosEligibleResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios eligible``."""
 
     bucket_id: str
-    rows: list[dict[str, object]]
+    rows: list[RatiosEligibleRowPayload]
     count: int
 
 
@@ -859,7 +973,7 @@ class RatiosValidateResult(OutputSchema):
     eligible_count: int
     overrides_count: int
     missing_overrides: list[str] = []
-    findings: list[dict[str, object]] = []
+    findings: list[RatiosValidateFindingPayload] = []
 
 
 # ---------------------------------------------------------------------------
@@ -909,7 +1023,7 @@ class BusinessInvoiceListResult(OutputSchema):
     """
 
     bucket_id: str
-    rows: list[dict[str, object]]
+    rows: list[BusinessInvoiceRecordPayload]
     count: int
 
 
@@ -943,6 +1057,31 @@ class InvoiceListResult(BusinessInvoiceListResult):
 # ---------------------------------------------------------------------------
 
 
+class InventoryStockLayerPayload(OutputSchema):
+    """One opening-stock layer nested in an inventory ledger payload (D2)."""
+
+    sku: str = "default"
+    quantity: str
+    unit_cost: str
+    source_movement_id: str
+
+
+class InventoryMovementPayload(OutputSchema):
+    """One inventory movement nested in an inventory ledger payload (D2)."""
+
+    movement_id: str
+    movement_date: str
+    kind: str
+    sku: str = "default"
+    quantity: str
+    unit_cost: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str
+    iva_amount: str | None = None
+    deductible_iva_ratio: str
+    schema_version: str
+
+
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
@@ -955,9 +1094,9 @@ class InventoryLedgerPayload(OutputSchema):
     year: int
     valuation_method: str
     opening_stock: str
-    opening_layers: list[dict[str, object]] = []
+    opening_layers: list[InventoryStockLayerPayload] = []
     closing_stock: str | None = None
-    period_movements: list[dict[str, object]] = []
+    period_movements: list[InventoryMovementPayload] = []
     schema_version: str
     bucket_event_ids: list[str] = []
 
@@ -967,7 +1106,7 @@ class InventoryListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory list``."""
 
     bucket_id: str
-    rows: list[dict[str, object]]
+    rows: list[InventoryLedgerPayload]
     count: int
 
 
@@ -1068,7 +1207,7 @@ class EvidenceListResult(OutputSchema):
 
     bucket_id: str
     count: int
-    rows: list[dict[str, object]]
+    rows: list[EvidenceRecordPayload]
 
 
 # ---------------------------------------------------------------------------
@@ -1109,6 +1248,14 @@ class RuleApplyMatchPayload(OutputSchema):
     classification: str
 
 
+class RuleApplyAppliedPayload(OutputSchema):
+    """One live-applied rule row nested in ``ledger rule apply``."""
+
+    transaction_id: str
+    matched_rule_id: str
+    classification: str
+
+
 @register_schema("ledger.rule.apply")
 class RuleApplyResult(OutputSchema):
     """JSON envelope for ``aeat app ledger rule apply``.
@@ -1130,7 +1277,7 @@ class RuleApplyResult(OutputSchema):
     matched: int | None = None
     skipped_already_classified: int | None = None
     no_match: int | None = None
-    applied: list[dict[str, object]] | None = None
+    applied: list[RuleApplyAppliedPayload] | None = None
 
 
 class LLMProviderAvailabilityPayload(OutputSchema):

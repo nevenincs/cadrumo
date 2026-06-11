@@ -220,7 +220,9 @@ class NifIvaCheckSedeDriver:
         _ext = Settings.external_constants()
         operations: list[RemoteOperation] = [
             RemoteOperation(
-                kind="http", method="GET", url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}")
+                kind="http",
+                method="GET",
+                url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"),
             ),
             RemoteOperation(kind="http", method="GET", url=AnyUrl(_ext.aeat.oracles.nif_iva_verification)),
             RemoteOperation(kind="browser_action", action="open-nif-iva-form"),
@@ -371,7 +373,7 @@ async def collect_nif_iva_check_observations(
 
         # Sede entry: acquire the session cookies the form servlet requires.
         await browser_session.navigate(
-            page, f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}"
+            page, f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}",
         )
         await _playwright_stage(
             page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),

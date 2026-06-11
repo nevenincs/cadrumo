@@ -185,7 +185,7 @@ class ModeloValidator:
         if self._deadline_checker is None:
             _logger.debug("deadline check skipped: no deadline_checker provided for modelo=%s", draft.modelo)
             return []
-        status = self._deadline_checker.check(draft.modelo, draft.period.registry_token)
+        status = self._deadline_checker.check(draft.modelo, draft.period)
         if not status.is_overdue:
             return []
         return [

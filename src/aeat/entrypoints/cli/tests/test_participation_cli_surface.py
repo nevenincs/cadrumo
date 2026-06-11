@@ -15,6 +15,7 @@ import pytest
 import typer
 
 from ....application.ledger import get_transaction_participation
+from ....core import Period
 from ....domain.modelos._participation_index import (
     TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
@@ -83,7 +84,7 @@ def test_get_transaction_participation_reads_real_index(tmp_path: Path) -> None:
                     work_unit_id="c" * 64,
                     modelo="303",
                     filing_year=2024,
-                    period="2T",
+                    period=Period.from_year_and_code(2024, "2T"),
                     revision_state="presentado",
                     filing_record_id="d" * 64,
                 ),

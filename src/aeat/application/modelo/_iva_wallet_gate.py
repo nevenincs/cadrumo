@@ -10,6 +10,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from ...core import Modelo
+from ...core import Period as _Period
 from ...core.i18n import tr
 from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ...domain.modelos._calculation_revision import CalculationRevision
@@ -72,7 +73,7 @@ def resolve_iva_compensation_decision_for_calculation(
 def apply_iva_compensation_decision_binding(
     modelo: str,
     filing_year: int,
-    period: str,
+    period: _Period,
     *,
     bucket_id: str,
     revision: ModeloRevision,
@@ -115,14 +116,14 @@ def apply_iva_compensation_decision_binding(
             translated_message="application.modelo.errors.iva_wallet_unsupported_decision_type",
             context={"decision_type": type(decision).__name__},
         )
-    if decision.target_year != filing_year or decision.target_period != period:
+    if decision.target_period != period:
         raise ModeloIvaWalletReconciliationBlocked(
             translated_message="application.modelo.errors.iva_wallet_target_mismatch",
             context={
                 "target_year": decision.target_year,
-                "target_period": decision.target_period,
+                "target_period": decision.target_period.registry_token,
                 "filing_year": filing_year,
-                "period": period,
+                "period": period.registry_token,
             },
         )
     if taxpayer_nif is None:
@@ -168,7 +169,7 @@ def apply_iva_compensation_decision_binding(
             filing_year=filing_year,
             period=period,
             revision=revision,
-        )
+        ),
     )
     backend_binding_values.update(resolution.binding_values)
 
@@ -213,7 +214,6 @@ def load_persisted_iva_compensation_decision_for_work_unit(
 
     return repository.load_decision(
         taxpayer_nif,
-        work_unit.filing_year,
         work_unit.period,
     )
 
@@ -302,7 +302,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
             iva_wallet_blocked_message(decision),
             translated_message="application.modelo.errors.iva_wallet_blocked",
         )
-    if decision.target_year != work_unit.filing_year or decision.target_period != work_unit.period:
+    if decision.target_period != work_unit.period:
         raise ModeloIvaWalletReconciliationBlocked(
             translated_message="application.modelo.errors.iva_wallet_blocked",
             context={

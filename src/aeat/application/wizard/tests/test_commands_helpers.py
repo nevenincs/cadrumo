@@ -284,7 +284,7 @@ def test_canonical_from_flag_value_integer_returns_decimal_string() -> None:
 def test_canonical_from_flag_value_path_returns_str_form() -> None:
     question = _question(widget=WizardWidget.PATH, answer_type=Path)
     assert _canonical_from_flag_value(question, Path("project/data/example.txt")) == str(
-        Path("project/data/example.txt")
+        Path("project/data/example.txt"),
     )
 
 

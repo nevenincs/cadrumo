@@ -109,7 +109,7 @@ CLASSIFIED_STATES: frozenset[BusinessClassification] = frozenset(
         BusinessClassification.BUSINESS,
         BusinessClassification.PERSONAL,
         BusinessClassification.MIXED,
-    }
+    },
 )
 """Frozen set of :class:`BusinessClassification` values that count as
 classified outcomes for downstream rollups."""

@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict
 from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.time import now
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
@@ -132,7 +132,7 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
             (_summary_from_payload(_payload(record.payload)) for record in _diagnostic_records()),
             key=lambda row: row.captured_at,
             reverse=True,
-        )
+        ),
     )
     return AuthDiagnosticListReport(row_count=len(rows), rows=rows)
 
@@ -162,7 +162,7 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
             **_detail_fingerprints_from_payload(payload),
             "html_excerpt": excerpt,
             "operator_report_commands": _operator_report_commands(summary.diagnostic_id or diagnostic_id),
-        }
+        },
     )
 
 
@@ -193,8 +193,8 @@ def record_auth_diagnostic_phone_state(
             "operator_report": {
                 "phone_state": phone_state,
                 "reported_at": reported_at.isoformat(),
-            }
-        }
+            },
+        },
     )
     objects.save(
         namespace=_DIAGNOSTIC_NAMESPACE,
@@ -262,7 +262,7 @@ def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
         route_label=_diagnostic_route_label(payload.url),
         active_profile_id="",
         active_profile_ref=_redacted_ref(
-            auth_attempt.get("active_profile_ref") or auth_attempt.get("active_profile_id")
+            auth_attempt.get("active_profile_ref") or auth_attempt.get("active_profile_id"),
         ),
         active_profile_label="",
         active_profile_label_present=_optional_bool(auth_attempt.get("active_profile_label_present")),

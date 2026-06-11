@@ -46,7 +46,7 @@ def test_referenced_undeclared_layout_inputs_are_not_silently_skipped(
 ) -> None:
     revision = _modelo_130_revision()
     computed_casilla = revision.casillas[0].model_copy(
-        update={"input_kind": InputKind.COMPUTED, "formula": "missing-reference-formula"}
+        update={"input_kind": InputKind.COMPUTED, "formula": "missing-reference-formula"},
     )
     formula = FormulaDefinition.model_construct(
         id="missing-reference-formula",
@@ -62,7 +62,7 @@ def test_referenced_undeclared_layout_inputs_are_not_silently_skipped(
             "bindings": (),
             "parameters": (),
             "relations": (),
-        }
+        },
     )
 
     with pytest.raises(CalcSheetsEngineError) as raised:

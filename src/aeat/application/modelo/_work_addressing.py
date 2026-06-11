@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ...core import Period
 from ...core.resources import resources
-from ...domain.calculations.registry import RegistryValidationError, parse_modelo_period
 from ...domain.calculations.registry._errors import RegistrySnapshotError
 from ...domain.calculations.registry._temporal import select_revision
 from ...domain.contribuyente import CCAA
@@ -44,7 +44,7 @@ class ModeloVisibleFilingTarget:
 
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     registry_revision_id: str | None = None
     bucket_id: str | None = None
 
@@ -111,7 +111,7 @@ class ModeloResolvedWorkProjection:
     bucket_id: str
     modelo: str
     filing_year: int
-    period: str
+    period: Period
     registry_revision_id: str
     state: str
     current_calculation_revision_id: CalculationRevisionId | None
@@ -194,7 +194,7 @@ class ModeloWorkAddress:
     work_unit_id: WorkUnitId | None = None
     modelo: str | None = None
     filing_year: int | None = None
-    period: str | None = None
+    period: Period | None = None
     registry_revision_id: str | None = None
     bucket_id: str | None = None
 
@@ -272,42 +272,17 @@ def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddres
     raise TypeError(f"expected modelo work target, got {type(target).__name__}")
 
 
-def normalize_modelo_work_period(year: int, period: str, *, modelo: str | None = None) -> tuple[int, str]:
-    """Normalize an operator-facing period token into registry filing scope."""
-    token = period.strip()
-    if not token:
-        raise ModeloWorkPeriodTokenError(year=year, token=period, modelo=modelo, declared_tokens=())
-    lowered = token.lower()
+def _modelo_work_period_from_core(year: int, period: Period, *, modelo: str | None = None) -> Period:
+    """Resolve a modelo work period through the core ``Period`` value object only."""
     declared = declared_modelo_period_tokens(modelo)
-    declared_match = next((declared_token for declared_token in declared if declared_token.lower() == lowered), None)
-    if declared_match is not None:
-        return year, declared_match
-    if lowered in {"annual", "anual", "0a"}:
-        composed = f"{year}"
-    elif lowered in {"q1", "1t", "1"}:
-        composed = f"{year}Q1"
-    elif lowered in {"q2", "2t", "2"}:
-        composed = f"{year}Q2"
-    elif lowered in {"q3", "3t", "3"}:
-        composed = f"{year}Q3"
-    elif lowered in {"q4", "4t", "4"}:
-        composed = f"{year}Q4"
-    elif lowered.isdigit() and len(lowered) == 2:
-        composed = f"{year}-{lowered}"
-    elif lowered.isdigit() and len(lowered) == 4:
-        raise ModeloWorkPeriodTokenError(year=year, token=token, modelo=modelo, declared_tokens=declared)
-    else:
-        composed = f"{year}{token}" if token.upper().startswith("Q") else f"{year}-{token}"
-    try:
-        return parse_modelo_period(composed)
-    except RegistryValidationError as exc:
+    if period.filing_year != year:
         raise ModeloWorkPeriodTokenError(
             year=year,
-            token=token,
+            token=str(period),
             modelo=modelo,
             declared_tokens=declared,
-            fallback=str(exc),
-        ) from exc
+        )
+    return period
 
 
 def modelo_work_address_from_operator_target(
@@ -315,13 +290,14 @@ def modelo_work_address_from_operator_target(
     work_unit_id: str | None,
     modelo: str | None,
     year: int | None,
-    period: str | None,
+    period: Period | None,
     registry_revision_id: str | None,
     bucket_id: str | None = None,
 ) -> ModeloWorkAddress:
     """Build a :class:`ModeloWorkAddress` from exact or visible operator input."""
     if modelo is not None and year is not None and period is not None:
-        year, period = normalize_modelo_work_period(year, period, modelo=modelo)
+        period = _modelo_work_period_from_core(year, period, modelo=modelo)
+        year = period.year
     elif work_unit_id is None:
         raise ModeloWorkAddressNotFoundError(
             "pass an exact work-unit id, or address the filing with modelo, year, and period",
@@ -341,7 +317,7 @@ def resolve_modelo_work_unit_for_operator_target(
     work_unit_id: str | None = None,
     modelo: str | None = None,
     year: int | None = None,
-    period: str | None = None,
+    period: Period | None = None,
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
@@ -364,7 +340,7 @@ def resolve_modelo_revision_for_operator_target(
     work_unit_id: str | None,
     modelo: str | None,
     year: int | None,
-    period: str | None,
+    period: Period | None,
     registry_revision_id: str | None,
     bucket_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
@@ -446,7 +422,7 @@ def resolve_registry_revision_for_work_target(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     registry_revision_id: str | None,
 ) -> str:
     """Resolve and validate the registry revision for a visible filing target.
@@ -469,7 +445,7 @@ def resolve_registry_revision_for_work_target(
     """
     definition = resources().modelos.authority.modelo(modelo.strip())
     if registry_revision_id is None:
-        return select_revision(definition, filing_year=filing_year, period=period).id
+        return select_revision(definition, filing_year=filing_year, period=period.registry_token).id
     revision_id = registry_revision_id.strip()
     try:
         # Delegate the assertion to select_revision itself.  Within a valid
@@ -478,17 +454,17 @@ def resolve_registry_revision_for_work_target(
         # revision the unconstrained call would; narrowing by any other id raises
         # RegistrySnapshotError.  This makes the structural property do the work
         # instead of re-implementing a weaker year-only coverage check.
-        select_revision(definition, filing_year=filing_year, period=period, revision_id=revision_id)
+        select_revision(definition, filing_year=filing_year, period=period.registry_token, revision_id=revision_id)
     except RegistrySnapshotError:
         # Determine the law-determined revision for a clear instructive message.
         try:
-            law_revision = select_revision(definition, filing_year=filing_year, period=period)
+            law_revision = select_revision(definition, filing_year=filing_year, period=period.registry_token)
             law_id = law_revision.id
         except RegistrySnapshotError:
             law_id = "<no revision found for this period>"
         raise ModeloWorkRegistryYearMismatchError(
             f"registry revision {revision_id!r} is not the law-determined revision for "
-            f"modelo {modelo.strip()!r} {filing_year} {period!r}. "
+            f"modelo {modelo.strip()!r} {filing_year} {period.registry_token!r}. "
             f"The law-determined revision is {law_id!r}. "
             f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
             f"you cannot override it. Re-create the work unit without --revision to use "
@@ -502,7 +478,7 @@ def ensure_modelo_work_unit_for_visible_target(
     bucket_id: str,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     registry_revision_id: str | None,
     name: str | None = None,
     actor: str = "operator",
@@ -714,7 +690,6 @@ __all__ = [
     "ModeloWorkTarget",
     "ensure_modelo_work_unit_for_visible_target",
     "modelo_work_address_from_operator_target",
-    "normalize_modelo_work_period",
     "project_modelo_work_target",
     "project_modelo_work_unit",
     "resolve_exportable_modelo_calculation_revision_address",

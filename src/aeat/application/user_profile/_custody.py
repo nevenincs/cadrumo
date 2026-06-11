@@ -23,7 +23,7 @@ from ...adapters.persistence.storage.master_key import (
     unwrap_recovery_envelope,
     verify_recovery_mnemonic,
 )
-from ...core._models import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as utc_now

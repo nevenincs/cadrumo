@@ -25,6 +25,7 @@ from datetime import date
 from typing import Protocol, runtime_checkable
 
 from ...application.auth import AuthProviderDescription
+from ...core import Period
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases have a single canonical
@@ -71,7 +72,7 @@ class ModeloDraftBuilderProtocol(Protocol):
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
         inputs: ModeloInputs,
         fail_on_warning: bool = False,
@@ -135,7 +136,7 @@ class ModeloInputsProviderProtocol(Protocol):
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
     ) -> ModeloInputs:
         """Return the filing inputs for the draft build against the given :class:`TaxpayerProfile`."""

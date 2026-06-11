@@ -17,7 +17,6 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionNotFoundError,
 )
-from ..aggregation import Period
 from ..review import LedgerReviewStatus
 from ._models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow, LedgerTransactionPayload
 
@@ -81,11 +80,10 @@ def _filter_ledger_review_rows(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
 ) -> tuple[Transaction, ...]:
     if query.period is not None:
-        period = Period.model_validate(query.period)
         rows = tuple(
             transaction
             for transaction in rows
-            if period.contains(transaction.raw.value_date or transaction.raw.booked_date)
+            if query.period.contains(transaction.raw.value_date or transaction.raw.booked_date)
         )
     if query.status is not None:
         rows = tuple(

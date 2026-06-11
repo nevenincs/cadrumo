@@ -168,7 +168,7 @@ class Preflight:
 
         if skip_deadline_window:
             _logger.debug("preflight gate-3 skipped: verification is independent of the filing window")
-        elif not self.deadline_checker.is_window_open(draft.modelo, draft.period.registry_token, today):
+        elif not self.deadline_checker.is_window_open(draft.modelo, draft.period, today):
             _logger.debug(
                 "preflight gate-3 fail: deadline window closed for %s %s on %s",
                 draft.modelo,

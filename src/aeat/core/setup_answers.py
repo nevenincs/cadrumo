@@ -59,7 +59,7 @@ class ProjectAnswersNotRegisteredError(CoreError):
         super().__init__(
             "project_answers has not been registered. "
             "Call register_project_answers() at application startup before "
-            "any domain module invokes the projection."
+            "any domain module invokes the projection.",
         )
 
 
@@ -391,7 +391,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return irpf_estimation_regime_cls(value)
         raise ProfileAnswerTypeError(
-            "irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank"
+            "irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank",
         )
 
     @field_validator("situacion_familiar", mode="before")
@@ -415,7 +415,7 @@ class SetupAnswers(BaseModel):
     # field_validator(mode='before') requires -> Any; actual return is always
     # a typed StrEnum/enum member.
     def _parse_unidad_familiar_descendientes_exclusivos(  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
-        cls, value: object
+        cls, value: object,
     ) -> Any:
         if value == "":
             return ""
@@ -427,7 +427,7 @@ class SetupAnswers(BaseModel):
             if value.lower() == "false":
                 return False
         raise ProfileAnswerTypeError(
-            "unidad_familiar_descendientes_exclusivos must be a bool, 'true', 'false', or blank"
+            "unidad_familiar_descendientes_exclusivos must be a bool, 'true', 'false', or blank",
         )
 
     @field_validator("irpf_special_regime", mode="before")
@@ -513,7 +513,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return marital_status_cls(value)
         raise ProfileAnswerTypeError(
-            "taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank"
+            "taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank",
         )
 
     @field_validator("taxpayer_marriage_date")
@@ -567,7 +567,7 @@ class SetupAnswers(BaseModel):
     # field_validator(mode='before') requires -> Any; actual return is always
     # a typed StrEnum/enum member.
     def _parse_new_entity_first_two_profit_periods(  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
-        cls, value: object
+        cls, value: object,
     ) -> Any:
         if value == "" or value is None:
             return ""
@@ -582,7 +582,7 @@ class SetupAnswers(BaseModel):
             if token in {"false", "0", "no", "n"}:
                 return False
         raise ValueError(
-            "new_entity_first_two_profit_periods must be a boolean, blank, or a recognised canonical token"
+            "new_entity_first_two_profit_periods must be a boolean, blank, or a recognised canonical token",
         )
 
     @field_validator("activity_start_date")

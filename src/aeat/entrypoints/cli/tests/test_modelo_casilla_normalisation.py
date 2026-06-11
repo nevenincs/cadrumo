@@ -87,7 +87,7 @@ def _create_303_work_unit() -> str:
             "--year", "2025",
             "--period", "1T",
             "--revision", "2023-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -122,7 +122,7 @@ def test_bare_numeric_resolves_to_canonical_casilla_id(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "69=0",
-        ]
+        ],
     )  # fmt: skip
     # iva.resultado is computed, so the engine refuses it — but the error
     # must name the resolved id, proving normalisation ran first.
@@ -162,7 +162,7 @@ def test_bare_numeric_unknown_casilla_surfaces_helpful_message(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "99999=10.00",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
@@ -196,7 +196,7 @@ def test_qualified_casilla_key_passes_through_normaliser_unchanged(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "iva.resultado=0",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output

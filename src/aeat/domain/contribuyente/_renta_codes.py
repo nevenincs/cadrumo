@@ -81,7 +81,7 @@ UE_EEA_COUNTRY_CODES: frozenset[str] = frozenset(
         "IS",
         "LI",
         "NO",
-    }
+    },
 )
 """Closed set of EU + EEA ISO-3166-1 alpha-2 country codes (post-Brexit)."""
 

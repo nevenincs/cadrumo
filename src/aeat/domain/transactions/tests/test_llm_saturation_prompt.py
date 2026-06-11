@@ -106,7 +106,7 @@ def test_response_structurally_refuses_numeric_tax_fields(numeric_field: str) ->
                 "reason": "a business expense",
                 "iva_category": "domestic_general_21",
                 numeric_field: "21.00",
-            }
+            },
         )
 
 

@@ -53,7 +53,7 @@ def _build_pkcs12_bundle(
         [
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
             x509.NameAttribute(NameOID.COMMON_NAME, "aeat-test-subject"),
-        ]
+        ],
     )
     now = datetime.now(UTC)
     cert = (
@@ -89,7 +89,7 @@ def test_bundle_rejects_extra_fields(tmp_path: Path) -> None:
                 "password": SecretStr(SECRET_PASSPHRASE),
                 "backend": CertificateBackend.PLAYWRIGHT_CONTEXT,
                 "not_a_field": 1,
-            }
+            },
         )
 
 
@@ -354,7 +354,7 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
             "origin": _SEDE_ORIGIN,
             "pfxPath": str(p12),
             "passphrase": SECRET_PASSPHRASE,
-        }
+        },
     ]
 
 

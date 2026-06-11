@@ -19,6 +19,32 @@ Major declarations:
 
 from __future__ import annotations
 
+from ._modelo_manager import (
+    ModeloLocaleCoverageRecord,
+    ModeloLocaleDriftKind,
+    ModeloLocaleDriftRecord,
+    ModeloLocaleError,
+    ModeloLocaleFieldKind,
+    ModeloLocaleFileTarget,
+    ModeloLocaleInventoryKey,
+    ModeloLocaleManager,
+    ModeloLocaleScope,
+    ModeloLocaleTranslationFile,
+)
 from .manager import LocaleError, LocaleManager, StrictUniqueKeyLoader
 
-__all__ = ["LocaleError", "LocaleManager", "StrictUniqueKeyLoader"]
+__all__ = [
+    "LocaleError",
+    "LocaleManager",
+    "ModeloLocaleCoverageRecord",
+    "ModeloLocaleDriftKind",
+    "ModeloLocaleDriftRecord",
+    "ModeloLocaleError",
+    "ModeloLocaleFieldKind",
+    "ModeloLocaleFileTarget",
+    "ModeloLocaleInventoryKey",
+    "ModeloLocaleManager",
+    "ModeloLocaleScope",
+    "ModeloLocaleTranslationFile",
+    "StrictUniqueKeyLoader",
+]

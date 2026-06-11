@@ -11,6 +11,7 @@ from io import BytesIO
 import pytest
 from openpyxl import load_workbook
 
+from .....core import Period
 from .._records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
@@ -33,7 +34,7 @@ def _metadata() -> SheetExportMetadata:
         modelo_id="303",
         revision_id="2009-y-siguientes",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         engine_version="test",
         registry_sha="abcd1234",
         exported_at=datetime(2026, 6, 3, 15, 0, tzinfo=UTC),

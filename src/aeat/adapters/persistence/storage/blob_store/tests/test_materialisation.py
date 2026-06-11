@@ -54,7 +54,7 @@ def _put_secret(store: SecretStore, key: str, value: bytes) -> None:
             classification=SensitivityClass.SECRET,
             created_at=datetime.now(UTC),
             expires_at=_expiry(),
-        )
+        ),
     )
 
 

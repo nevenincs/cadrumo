@@ -128,7 +128,7 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
                 "invoice_reviews": {},
                 "ledger_reviews": {},
                 "updated_at": utc_now(),
-            }
+            },
         )
         _log.info("config reset PROFILE scope cleared %d profile(s)", len(removed_profile_ids))
 

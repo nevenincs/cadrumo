@@ -38,6 +38,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...core import Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation
@@ -113,21 +114,30 @@ def _decision_payload_digest(decision: IvaCompensationReconciliationDecision) ->
     return hashlib.sha256(decision.model_dump_json().encode(UTF_8_ENCODING)).hexdigest()
 
 
-def observation_key(modelo: str, filing_year: int, period: str) -> str:
-    """Stable repository key for a `(modelo, filing_year, period)` triple.
+def _require_observation_period(period: Period) -> Period:
+    if not isinstance(period, Period):
+        raise ObservationKeyError("observation period must be an aeat.core.Period")
+    return period
+
+
+def observation_key(modelo: str, period: Period) -> str:
+    """Stable repository key for a `(modelo, Period)` pair.
 
     Validated through `safe_repository_id` so each component is
     constrained to the SecureObjectRepository's id contract before
     composition.
     """
+    filing_period = _require_observation_period(period)
+    filing_year = filing_period.filing_year
+    period_token = filing_period.registry_token
     safe_repository_id(modelo, context="modelo")
-    safe_repository_id(period, context="period")
+    safe_repository_id(period_token, context="period")
     if not 2000 <= filing_year <= 2099:
         raise ObservationKeyError(f"observation filing_year {filing_year} out of supported range [2000, 2099]")
-    return f"{modelo}:{filing_year}:{period}"
+    return f"{modelo}:{filing_year}:{period_token}"
 
 
-def member_observation_key(modelo: str, filing_year: int, period: str, member_nif: str | None) -> str:
+def member_observation_key(modelo: str, period: Period, member_nif: str | None) -> str:
     """Storage key for an observation, widened by a grupo member NIF when present.
 
     When ``member_nif`` is ``None`` the key is the single-filer
@@ -137,28 +147,31 @@ def member_observation_key(modelo: str, filing_year: int, period: str, member_ni
     ``(modelo, filing_year, period)`` persist as distinct rows — the cross-member
     fan-in the 353<-322 ``per_grupo_member`` aggregation enumerates and sums.
     """
-    base = observation_key(modelo, filing_year, period)
+    base = observation_key(modelo, period)
     if member_nif is None:
         return base
     safe_repository_id(member_nif, context="member_nif")
     return f"{base}:{member_nif}"
 
 
-def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: str) -> str:
+def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
     """Opaque latest-decision key for one taxpayer and Modelo 303 target period.
 
     Secure-object payloads are encrypted, but object keys are storage metadata.
     Hash the taxpayer/period tuple so the repository does not expose NIF/NIE
     values in cleartext database rows.
     """
+    filing_period = _require_observation_period(target_period)
+    target_year = filing_period.filing_year
+    target_period_token = filing_period.registry_token
     taxpayer_token = taxpayer_nif.strip().upper()
     if not taxpayer_token:
         raise ObservationKeyError("taxpayer_nif must be non-empty")
-    safe_repository_id(target_period, context="target_period")
+    safe_repository_id(target_period_token, context="target_period")
     if not 2000 <= target_year <= 2099:
         raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
     digest = hashlib.sha256(
-        "\x1f".join((taxpayer_token, str(target_year), target_period.strip().upper())).encode(UTF_8_ENCODING)
+        "\x1f".join((taxpayer_token, str(target_year), target_period_token)).encode(UTF_8_ENCODING),
     ).hexdigest()
     return f"iva-wallet-decision:{digest}"
 
@@ -173,12 +186,12 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
             (
                 taxpayer_token,
                 str(decision.target_year),
-                decision.target_period.strip().upper(),
+                decision.target_period.registry_token,
                 decision.decided_at.isoformat(),
                 decision.wallet_captured_at.isoformat() if decision.wallet_captured_at is not None else "",
                 _decision_payload_digest(decision),
-            )
-        ).encode(UTF_8_ENCODING)
+            ),
+        ).encode(UTF_8_ENCODING),
     ).hexdigest()
     return f"iva-wallet-decision-event:{digest}"
 
@@ -194,18 +207,21 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     @override
     def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
         observation = payload.observation
+        period = Period.from_year_and_code(observation.filing_year, observation.period)
         return member_observation_key(
-            observation.modelo, observation.filing_year, observation.period, payload.member_nif
+            observation.modelo,
+            period,
+            payload.member_nif,
         )
 
     def load_observation(
         self,
         modelo: str,
-        filing_year: int,
-        period: str,
+        period: Period,
     ) -> _ObservationEnvelopePayload | None:
-        """Return the persisted observation for one (modelo, year, period) or None."""
-        return self.load(observation_key(modelo, filing_year, period))
+        """Return the persisted observation for one (modelo, year, period token) or None."""
+        filing_period = _require_observation_period(period)
+        return self.load(observation_key(modelo, filing_period))
 
     def save_observation(
         self,
@@ -245,11 +261,11 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     def delete_observation(
         self,
         modelo: str,
-        filing_year: int,
-        period: str,
+        period: Period,
     ) -> bool:
-        """Remove the observation for one (modelo, year, period); return whether a row was deleted."""
-        return self.delete(observation_key(modelo, filing_year, period))
+        """Remove the observation for one (modelo, year, period token); return whether a row was deleted."""
+        filing_period = _require_observation_period(period)
+        return self.delete(observation_key(modelo, filing_period))
 
     def iter_modelo(self, modelo: str) -> Iterator[_ObservationEnvelopePayload]:
         """Yield every persisted observation for `modelo` in unspecified order.
@@ -282,7 +298,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     @override
     def extract_identifier(self, payload: _IvaWalletDecisionEnvelopePayload) -> str:
         decision = payload.decision
-        return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period)
+        return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_period)
 
     def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:
         """Persist `decision` to latest lookup and immutable audit history."""
@@ -306,11 +322,10 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     def load_decision(
         self,
         taxpayer_nif: str,
-        target_year: int,
-        target_period: str,
+        target_period: Period,
     ) -> IvaCompensationReconciliationDecision | None:
         """Return the latest persisted :class:`IvaCompensationReconciliationDecision` for the given period."""
-        payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
+        payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_period))
         return payload.decision if payload is not None else None
 
     def list_decisions(self) -> tuple[IvaCompensationReconciliationDecision, ...]:
@@ -324,23 +339,23 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
                 (payload.decision for payload in self.iter_records()),
                 key=lambda decision: (
                     decision.target_year,
-                    decision.target_period,
+                    decision.target_period.registry_token,
                     decision.taxpayer_nif,
                     decision.decided_at,
                 ),
-            )
+            ),
         )
 
     def load_decision_history(
         self,
         taxpayer_nif: str,
-        target_year: int,
-        target_period: str,
+        target_period: Period,
     ) -> tuple[IvaCompensationReconciliationDecision, ...]:
         """Return decision history for one taxpayer and target period.
 
         Returns an immutable tuple of :class:`IvaCompensationReconciliationDecision`.
         """
+        filing_period = _require_observation_period(target_period)
         taxpayer_token = taxpayer_nif.strip().upper()
         decisions: list[IvaCompensationReconciliationDecision] = []
         for record in self._objects.list_records(
@@ -349,13 +364,12 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
             max_supported_version=self.schema_version,
         ):
             envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(
-                record.payload.decode(UTF_8_ENCODING)
+                record.payload.decode(UTF_8_ENCODING),
             )
             decision = envelope.payload.decision
             if (
                 decision.taxpayer_nif.strip().upper() == taxpayer_token
-                and decision.target_year == target_year
-                and decision.target_period == target_period
+                and decision.target_period == filing_period
             ):
                 decisions.append(decision)
         return tuple(sorted(decisions, key=lambda item: (item.decided_at, item.wallet_captured_at or item.decided_at)))

@@ -16,6 +16,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from .. import (
     CrossPeriodGroupMemberRoster,
     EntityType,
@@ -52,7 +53,7 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
                 IrpfIncomeCategory.CAPITAL_INMOBILIARIO,
                 IrpfIncomeCategory.PENSION,
                 IrpfIncomeCategory.TRABAJO,
-            }
+            },
         ),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
         iva_regime=IVARegime.REAGP,
@@ -67,7 +68,7 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
             CrossPeriodGroupMemberRoster(
                 source_modelo="322",
                 filing_year=2026,
-                period="12",
+                period=Period.from_year_and_code(2026, "12"),
                 member_nifs=("B00000001", "A00000000"),
             ),
         ),
@@ -89,7 +90,7 @@ class TestTaxpayerModelRoundTrip:
                 IrpfIncomeCategory.CAPITAL_INMOBILIARIO,
                 IrpfIncomeCategory.PENSION,
                 IrpfIncomeCategory.TRABAJO,
-            }
+            },
         )
         assert restored.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_SIMPLIFICADA
         assert restored.iva_regime is IVARegime.REAGP
@@ -99,7 +100,7 @@ class TestTaxpayerModelRoundTrip:
             CrossPeriodGroupMemberRoster(
                 source_modelo="322",
                 filing_year=2026,
-                period="12",
+                period=Period.from_year_and_code(2026, "12"),
                 member_nifs=("A00000000", "B00000001"),
             ),
         )
@@ -746,7 +747,7 @@ class TestParseDaysInSpain:
             {
                 "taxpayer_type.days_in_spain_2023": "200",
                 "taxpayer_type.days_in_spain_2024": "165",
-            }
+            },
         )
         assert result == {2023: 200, 2024: 165}
 
@@ -767,7 +768,7 @@ class TestParseDaysInSpain:
             {
                 "taxpayer_type.fiscal_residency": "RESIDENT_IRPF",
                 "taxpayer_type.days_in_spain_2024": "183",
-            }
+            },
         )
         assert result == {2024: 183}
 

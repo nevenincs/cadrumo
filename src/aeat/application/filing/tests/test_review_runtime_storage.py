@@ -11,6 +11,7 @@ import pytest
 from ....adapters.persistence.storage import EphemeralMasterKeyProvider
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....core import Period
 from ....core.config import override_settings
 from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
@@ -35,6 +36,7 @@ from ..testing import build_registry_filing_draft_from_decimals
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MASTER_KEY = b"m" * 32
+_Q1_2026 = Period.from_year_and_code(2026, "1T")
 _MODELO_130_INPUTS = {
     "01": "12500.00",
     "02": "3500.00",
@@ -60,7 +62,7 @@ def _isolated_storage(tmp_path: Path):
 
 
 def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path: Path) -> None:
-    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=2026, period="1T")
+    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026)
     draft = _ready_modelo_130_draft()
 
     with (
@@ -75,7 +77,7 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
 
 
 def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_default(tmp_path: Path) -> None:
-    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=2026, period="1T")
+    schema_provider = build_runtime_schema_provider(modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026)
     draft = _ready_modelo_130_draft()
 
     with (
@@ -107,7 +109,7 @@ def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_defau
 def _ready_modelo_130_draft() -> ModeloDraft:
     return build_registry_filing_draft_from_decimals(
         modelo="130",
-        period="1T",
+        period=_Q1_2026,
         casilla_decimals=_MODELO_130_INPUTS,
         status=ModeloDraftStatus.LISTO_PARA_PRESENTAR,
     )

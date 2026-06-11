@@ -208,7 +208,7 @@ def _decimal_field(field_id: str = "casilla.0501") -> ExportFieldDefinition:
             "signed": False,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-303-2025",),
-        }
+        },
     )
 
 

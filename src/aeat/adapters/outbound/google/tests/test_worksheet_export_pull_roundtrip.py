@@ -76,7 +76,7 @@ def _operator_edits_from_export_plan(plan, snapshot) -> tuple[OperatorEdit, ...]
                 casilla_number=casilla.number,
                 label=casilla.label,
                 value=by_casilla.get(casilla.id),
-            )
+            ),
         )
     return tuple(edits)
 

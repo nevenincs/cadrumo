@@ -30,7 +30,7 @@ def test_empty_catalogue_reports_missing_categories() -> None:
 
 def test_partial_catalogue_reports_only_the_gaps() -> None:
     reduced = IvaCatalogue(
-        regulations={cat: reg for cat, reg in _CATALOGUE.regulations.items() if cat is not IvaCategory.UNKNOWN}
+        regulations={cat: reg for cat, reg in _CATALOGUE.regulations.items() if cat is not IvaCategory.UNKNOWN},
     )
     report = verify_catalogue(reduced)
     missing = [

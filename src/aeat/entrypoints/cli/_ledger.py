@@ -12,7 +12,7 @@ Use of :class:`OutputSchema` for compliance.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Annotated, Protocol
+from typing import Annotated
 
 import typer
 from pydantic import ValidationError
@@ -29,9 +29,7 @@ from ...application.ledger import (
     ledger_transaction_payload,
     ledger_transaction_result_payload,
     ledger_transaction_review_status,
-    list_manual_transactions,
     resolve_lineage_transaction_id,
-    resolve_transaction_id,
     saturate_llm_classification,
     suggest_llm_classification,
     update_manual_transaction_fields,
@@ -91,6 +89,9 @@ from ._ledger_support import (
     _parse_amount_magnitude,
     _parse_decimal,
     _parse_required_decimal,
+    _prefix_error_bad,
+    _resolve_id,
+    _TransactionRepo,
     _validate_business_pct_range,
     _validate_category_id,
 )
@@ -119,71 +120,6 @@ app = typer.Typer(
     help=tr("cli.ledger.app_help"),
     no_args_is_help=True,
 )
-
-
-class _TransactionRepo(Protocol):
-    """Structural interface consumed by `_bucket_transaction_ids` and `_resolve_id`."""
-
-    @property
-    def bucket_id(self) -> str: ...
-
-
-def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[str, ...]:
-    """Return the full transaction ids known to the active bucket."""
-    bucket_id = transaction_repository.bucket_id
-    results = list_manual_transactions(
-        bucket_id=bucket_id,
-        transaction_repository=transaction_repository
-        if isinstance(transaction_repository, TransactionCatalogueRepository)
-        else None,
-    )
-    return tuple(result.transaction.transaction_id for result in results)
-
-
-def _prefix_error_bad(exc: TransactionIdPrefixError, prefix: str) -> typer.BadParameter:
-    """Translate a :exc:`TransactionIdPrefixError` into a localized ``_bad``.
-
-    Wraps the domain-layer exception into ``tr()``-rendered messages so the
-    operator sees a locale-translated explanation rather than a raw Python
-    exception string. Five distinct refusal keys are emitted depending on
-    which invariant was violated.
-    """
-    raw_message = str(exc)
-    if "is empty" in raw_message:
-        return _bad(tr("cli.ledger.errors.id_prefix_empty"))
-    if "non-hex" in raw_message:
-        return _bad(tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix))
-    if "longer than" in raw_message:
-        return _bad(tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix))
-    if "no transaction" in raw_message:
-        return _bad(tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix))
-    if "matches" in raw_message:
-        # collision — surface the candidate ids inline so the
-        # operator can lengthen the prefix.
-        _, _, candidates = raw_message.partition(":")
-        return _bad(
-            tr(
-                "cli.ledger.errors.id_prefix_collision",
-                prefix=prefix,
-                candidates=candidates.strip() or "?",
-            ),
-        )
-    return _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message))
-
-
-def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
-    """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
-
-    Used by the *mutation* verbs (update, classify, allocate, link,
-    archive, stash, restore, ...). It matches only ids of rows still in the
-    catalogue, because a mutation always targets a live row; an ``update``
-    additionally requires the target to be ACTIVE. Read verbs use
-    :func:`_resolve_read_id` instead, which also follows edit lineage.
-    """
-    try:
-        return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
-    except TransactionIdPrefixError as exc:
-        raise _prefix_error_bad(exc, prefix) from exc
 
 
 def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
@@ -381,7 +317,7 @@ def ledger_add(
 @app.command("update", help=tr("cli.ledger.update.help"))
 def ledger_update(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.update.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.update.id_help")),
     booked_date: str | None = typer.Option(None, "--date", help=tr("cli.ledger.update.date_help")),
     value_date: str | None = typer.Option(None, "--value-date", help=tr("cli.ledger.update.value_date_help")),
     amount: str | None = typer.Option(None, "--amount", help=tr("cli.ledger.update.amount_help")),
@@ -464,7 +400,7 @@ _FromCsvOpt = Annotated[
 @app.command("classify", help=tr("cli.ledger.classify.help"))
 def ledger_classify(
     ctx: typer.Context,
-    transaction_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.classify.id_help")),
+    transaction_id: str | None = typer.Argument(None, help=tr("cli.ledger.classify.id_help")),
     classification: BusinessClassification | None = typer.Option(
         None,
         "--classification",
@@ -505,7 +441,7 @@ def ledger_classify(
         False, "--evidence-acknowledged", help=tr("cli.ledger.classify.evidence_acknowledged_help"),
     ),
 ) -> None:
-    """Classify one ledger transaction (--id), via LLM (--llm), or in bulk (--from-csv)."""
+    """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
     if llm is not None:
         if saturate:
             _ledger_saturate_llm(
@@ -555,9 +491,14 @@ def ledger_classify(
         )
         return
 
-    # Single-transaction mode: --id and --classification are required
+    # Single-transaction mode: the positional id and --classification are required
     if transaction_id is None:
-        raise _bad(tr("cli.ledger.classify.id_required", default="--id is required when --from-csv is not provided."))
+        raise _bad(
+            tr(
+                "cli.ledger.classify.id_required",
+                default="A transaction id is required when --from-csv is not provided.",
+            ),
+        )
     if classification is None:
         raise _bad(
             tr(
@@ -582,7 +523,7 @@ def ledger_classify(
     # CLI boundary into "command input failed validation. Run config
     # repair" — a misleading hint, since `config repair` cannot fix a
     # bad CLI argument. Catch it here and surface the real validator
-    # cause, matching the `ledger add` / `ledger review --id` treatment.
+    # cause, matching the `ledger add` / `ledger review` treatment.
     try:
         patch = _patch_from_options(
             business_classification=classification,
@@ -669,7 +610,12 @@ def _ledger_classify_llm(
             ),
         )
     if transaction_id is None:
-        raise _bad(tr("cli.ledger.classify.id_required", default="--id is required when --from-csv is not provided."))
+        raise _bad(
+            tr(
+                "cli.ledger.classify.id_required",
+                default="A transaction id is required when --from-csv is not provided.",
+            ),
+        )
     if not is_llm_provider_available(provider):
         # Instructive refusal: name the provider and the CLI it needs on PATH,
         # never a crash. The subprocess backend shells to a local CLI binary.
@@ -800,7 +746,12 @@ def _ledger_saturate_llm(
             ),
         )
     if transaction_id is None:
-        raise _bad(tr("cli.ledger.classify.id_required", default="--id is required when --from-csv is not provided."))
+        raise _bad(
+            tr(
+                "cli.ledger.classify.id_required",
+                default="A transaction id is required when --from-csv is not provided.",
+            ),
+        )
     if not is_llm_provider_available(provider):
         raise _bad(
             tr(
@@ -923,7 +874,7 @@ def _ledger_saturate_llm(
 @app.command("allocate", help=tr("cli.ledger.allocate.help"))
 def ledger_allocate(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.allocate.id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.allocate.id_help")),
     business_pct: str = typer.Option(..., "--business-pct", help=tr("cli.ledger.allocate.business_pct_help")),
     category_id: str | None = typer.Option(None, "--category-id", help=tr("cli.ledger.allocate.category_help")),
     usage_ratio_id: str | None = typer.Option(
@@ -1003,9 +954,8 @@ register_lifecycle_commands(app)
 )
 def ledger_link(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(
+    transaction_id: str = typer.Argument(
         ...,
-        "--id",
         help=tr("cli.ledger.link.id_help", default="Ledger transaction id (SHA-256 or unambiguous prefix)."),
     ),
     invoice_id: str | None = typer.Option(

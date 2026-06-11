@@ -72,7 +72,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # multiplying the raw USD amount by this rate and rounding half-even to 0.01.
 _ECB_2024_01_15_USD_QUOTE = Decimal("1.0868")  # EUR/USD reference rate, i.e. 1 EUR = 1.0868 USD
 _ECB_2024_01_15_USD_RATE = (Decimal("1") / _ECB_2024_01_15_USD_QUOTE).quantize(
-    Decimal("0.000001")
+    Decimal("0.000001"),
 )  # 0.920138 — the multiplier stored by the provider
 
 # Oracle: 100.00 USD * 0.920138 = 92.0138 -> rounded half-even 0.01 = 92.01 EUR
@@ -179,7 +179,7 @@ def test_usd_transaction_with_value_in_eur_passes_non_eur_predicate() -> None:
             "direction": TransactionDirection.OUTGOING,
             "fx_rate": _ECB_2024_01_15_USD_RATE,
             "value_in_eur": _EXPECTED_EUR,
-        }
+        },
     )
 
     assert tx.value_in_eur == _EXPECTED_EUR
@@ -195,7 +195,7 @@ def test_usd_transaction_without_conversion_is_flagged() -> None:
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
-        }
+        },
     )
 
     assert tx.value_in_eur is None

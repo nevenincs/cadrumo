@@ -20,7 +20,7 @@ def test_unwrap_returns_result_mapping_when_envelope_present() -> None:
             "status": "success",
             "result": {"key": "value", "count": 3},
             "notices": [],
-        }
+        },
     )
     assert unwrap_schema_envelope(payload) == {"key": "value", "count": 3}
 

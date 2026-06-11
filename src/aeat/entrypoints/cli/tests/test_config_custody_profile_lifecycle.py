@@ -47,7 +47,7 @@ _CLI_HARNESS = dedent(
         main()
     finally:
         config_module._settings_override.reset(token)
-    """
+    """,
 )
 
 
@@ -59,7 +59,7 @@ def _env() -> dict[str, str]:
         {
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
-        }
+        },
     )
     return env
 
@@ -174,7 +174,7 @@ def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
     missing_default = _run_aeat(tmp_path, ("config", "switch"))
     assert missing_default.returncode != 0
     assert "No active profile" in _combined_output(missing_default) or "active profile" in _combined_output(
-        missing_default
+        missing_default,
     )
 
     switched_by_name = _run_aeat(tmp_path, ("config", "switch", "custody"))
@@ -370,7 +370,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
         tmp_path,
         ("--profile", "alpha", "config", "profile", "show"),
         extra_env={
-            "AEAT_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta")
+            "AEAT_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"),
         },
     )
     assert explicit_root.returncode == 0, _combined_output(explicit_root)

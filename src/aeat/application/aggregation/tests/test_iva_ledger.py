@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
@@ -38,6 +39,14 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
+
+
+_Q2_2023 = _period(2023, "2T")
+_Q2_2026 = _period(2026, "2T")
 
 
 @pytest.fixture
@@ -95,10 +104,7 @@ def _transaction(
     # pin an explicit amount and both tax fields are present, derive the
     # IVA-inclusive gross magnitude from them; flow is carried by ``direction``.
     if amount is None:
-        if taxable_base is not None and iva_amount is not None:
-            amount = taxable_base + iva_amount
-        else:
-            amount = Decimal("121.00")
+        amount = taxable_base + iva_amount if taxable_base is not None and iva_amount is not None else Decimal("121.00")
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(
@@ -118,7 +124,7 @@ def _transaction(
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -127,7 +133,7 @@ def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -159,7 +165,7 @@ def test_archived_and_stashed_transactions_do_not_feed_iva_projection() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((active, archived, stashed)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -180,7 +186,7 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -202,7 +208,7 @@ def test_mixed_business_transaction_applies_business_percentage_to_base_and_iva(
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -220,7 +226,7 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -249,7 +255,7 @@ def test_mixed_input_row_applies_business_percentage_before_carrying_prorrata_re
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.issues == ()
@@ -263,7 +269,7 @@ def test_invalid_prorrata_reference_is_reported_without_dropping_iva_observation
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert len(result.observations) == 1
@@ -282,7 +288,7 @@ def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.observations[0].flow_direction is IvaFlowDirection.REPERCUTIDO
@@ -295,7 +301,7 @@ def test_personal_transaction_is_reported_without_iva_observation() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -307,7 +313,7 @@ def test_missing_tax_fact_is_reported_before_projection() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -319,7 +325,7 @@ def test_non_canonical_iva_rate_is_reported() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -332,7 +338,7 @@ def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((old_row, usd_row)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -376,7 +382,7 @@ def test_iva_aggregation_buckets_on_value_date_caja_basis_only() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((caja_in_period, caja_out_of_period)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     # Caja basis: the row whose VALUE_DATE is in-period is the only one projected,
@@ -427,7 +433,7 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
         aggregate_iva_ledger_observations_from_repositories(
             bucket_id="bucket-a",
-            period="2026Q2",
+            period=_Q2_2026,
             transaction_repository=TransactionCatalogueRepository(
                 bucket_id="bucket-b",
                 objects=secure_objects,
@@ -445,7 +451,7 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
 
     result = aggregate_iva_ledger_observations_from_repositories(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id="bucket-a",
             objects=secure_objects,
@@ -469,7 +475,7 @@ def test_internal_transfer_is_reported_as_unsupported_direction() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert result.observations == ()
@@ -482,7 +488,7 @@ def test_missing_base_and_amount_are_reported_as_distinct_tax_fact_issues() -> N
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((missing_base, missing_amount)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert [issue.reason for issue in result.issues] == [
@@ -501,7 +507,7 @@ def test_dated_iva_registry_gap_is_reported_as_unsupported_rate() -> None:
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period="2023Q2",
+        period=_Q2_2023,
     )
 
     assert result.observations == ()
@@ -519,7 +525,7 @@ def test_zero_and_super_reduced_rates_project_to_canonical_iva_categories() -> N
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((zero, super_reduced)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
 
     assert [observation.category for observation in result.observations] == [
@@ -569,7 +575,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
         ),
     )
 
-    result = aggregate_iva_ledger_candidates(candidates, period="2026Q2")
+    result = aggregate_iva_ledger_candidates(candidates, period=_Q2_2026)
 
     assert result.issues == ()
     assert [observation.category for observation in result.observations] == [
@@ -604,7 +610,7 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
         ),
     )
 
-    binding_values = aggregate_iva_ledger_candidate_bindings(revision, candidates, period="2026Q2")
+    binding_values = aggregate_iva_ledger_candidate_bindings(revision, candidates, period=_Q2_2026)
 
     assert binding_values["modelo-309-iva-autorepercutido-intracomunitaria-cuota"] == Decimal("42.00")
     assert binding_values["modelo-309-iva-soportado-recargo-equivalencia-cuota"] == Decimal("5.20")
@@ -623,7 +629,7 @@ def test_preclassified_candidate_blocks_unsupported_modelo_390_regime() -> None:
     )
 
     with pytest.raises(AggregationValidationError, match="unsupported_iva_category") as exc_info:
-        aggregate_iva_ledger_candidate_bindings(revision, (candidate,), period="2026Q2")
+        aggregate_iva_ledger_candidate_bindings(revision, (candidate,), period=_Q2_2026)
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["ledger_id"] == "retail-recargo"
@@ -659,7 +665,7 @@ def test_preclassified_candidate_outside_period_blocks_binding_resolution() -> N
     )
 
     with pytest.raises(AggregationValidationError, match="candidate_outside_period"):
-        aggregate_iva_ledger_candidate_bindings(revision, (candidate,), period="2026Q2")
+        aggregate_iva_ledger_candidate_bindings(revision, (candidate,), period=_Q2_2026)
 
 
 def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
@@ -679,7 +685,7 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
     )
     projection = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((incoming, outgoing)),
-        period="2026Q2",
+        period=_Q2_2026,
     )
     modelos = resources().modelos.all()
     revision = next(item for item in modelos if item.id == "303").revisions["2009-y-siguientes"]

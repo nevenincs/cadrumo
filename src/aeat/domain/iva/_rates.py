@@ -10,7 +10,7 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
-from ...core._toml import read_toml
+from ...core import read_toml
 from ...core.decimal import coerce_decimal
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
@@ -91,7 +91,7 @@ def _parse_rate(raw_rate: object) -> IvaRateRecord:
             "effective_from": data.get("effective_from"),
             "effective_until": data.get("effective_until"),
             "boe_or_directive_reference": data.get("reference"),
-        }
+        },
     )
 
 
@@ -114,7 +114,7 @@ def _assert_no_overlap(
                     f"IVA rate registry has overlapping windows for "
                     f"member_state={member_state.value!r} kind={kind.value!r}: "
                     f"{previous.effective_from}/{previous.effective_until} vs. "
-                    f"{current.effective_from}/{current.effective_until}"
+                    f"{current.effective_from}/{current.effective_until}",
                 )
 
 
