@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -222,7 +223,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             captured_at=captured_at,
         )
 
-        object_key = observation_key("303", 2025, "1T")
+        object_key = observation_key("303", Period.from_year_and_code(2025, "1T"))
         with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == observation_namespace,

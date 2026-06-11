@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -46,6 +47,10 @@ _PERIOD = "1T"
 _SOURCE_KIND = "aeat_sede_justificante"
 _CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _FAKE_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
+
+
+def _filing_period(year: int = _YEAR, period: str = _PERIOD) -> Period:
+    return Period.from_year_and_code(year, period)
 
 
 def _minimal_observation(modelo: str = _MODELO, year: int = _YEAR, period: str = _PERIOD) -> RegistryModeloObservation:
@@ -162,7 +167,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
             stamped_revision_id=revision_id,
         )
 
-        object_key = observation_key(_MODELO, _YEAR, _PERIOD)
+        object_key = observation_key(_MODELO, _filing_period())
         with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == namespace,
