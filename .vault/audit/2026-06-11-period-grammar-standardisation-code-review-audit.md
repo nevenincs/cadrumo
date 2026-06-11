@@ -202,3 +202,19 @@ core `Period` and removed symbols are absent; non-span tokens (`1P`, `4P`,
 Residual note: the broader `src/aeat/application/aggregation/tests` suite had two
 failures outside the commit-touched files, both from existing tests passing raw
 strings into typed-period APIs.
+
+## PERIOD-014 | INFO | No findings in combined period string gate
+
+Review of the S30 regression gate found no issues. The test scans tracked text files
+under `src/aeat` and `docs`, excludes generated/cache/build paths and `.vault`
+history by construction, and reports unallowlisted matches with `path:line`
+diagnostics. The allowlist is path-scoped and documents registry TOML authoring
+inputs, explicit refusal/regression tests, Period docs/tests, privacy-redaction
+strings, and external/corpus fixture labels separately.
+
+The reviewer adjusted the assignment matcher during review so separated display
+strings are not flagged, while unquoted bare-year `period=` assignments followed by
+a comment or end of line are still caught.
+
+Verification reported by the reviewer: ruff passed for the new gate, the focused
+core period suite passed with `69 passed`, and CLI import smoke printed `OK`.
