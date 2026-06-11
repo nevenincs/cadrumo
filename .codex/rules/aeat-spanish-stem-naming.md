@@ -67,6 +67,13 @@ to the earlier `vat` → `iva` and `box` → `casilla` renames.
   `Registry`, `Snapshot`) stay English where the English word is the
   framework convention.
 
+- **Acceptable exception:** the operator-facing ledger invoice CLI noun is
+  the English `invoice` by direct operator directive:
+  `aeat app ledger invoice --kind issued|received`. Internal source-kind
+  taxonomy remains canonical and load-bearing as `payable_invoice` and
+  `collectible_invoice`; do not collapse those internal strings into a bare
+  `invoice` source kind.
+
 ## Status
 
 Active. Applies to every new domain symbol, locale key, CLI verb,
@@ -81,3 +88,5 @@ Operator directive recorded 2026-06-02 during the autonomous-PM
 session driving the chore/eliminate-shims branch, formalising the
 convention applied to the M036 census-sync rollout
 (sibling ADR `2026-06-02-modelo-036-census-sync-adr`).
+Invoice CLI exception recorded in
+`2026-06-10-ledger-invoice-unification-adr`.
