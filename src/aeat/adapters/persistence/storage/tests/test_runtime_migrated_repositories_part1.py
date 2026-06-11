@@ -294,13 +294,13 @@ def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -
     with _active_runtime(tmp_path, "bucket-b"):
         assert WorkflowStateRepository().load().declarations == {}
         WorkflowStateRepository().save(_workflow_state("bucket-b"))
-        assert "303:bucket-b" in WorkflowStateRepository().load().declarations
+        assert "303:2026:1T" in WorkflowStateRepository().load().declarations
 
     with _active_runtime(tmp_path, "bucket-a"):
         loaded = WorkflowStateRepository().load()
 
-    assert "303:bucket-a" in loaded.declarations
-    assert "303:bucket-b" not in loaded.declarations
+    assert "303:2026:1T" in loaded.declarations
+    assert loaded.declarations["303:2026:1T"].draft_id == "a" * 64
 
 
 def test_auth_session_store_default_isolates_active_profile_writes(tmp_path: Path) -> None:
