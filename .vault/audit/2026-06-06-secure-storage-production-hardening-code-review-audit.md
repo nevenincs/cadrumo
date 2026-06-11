@@ -57,6 +57,12 @@ Review checked the S398 plan register against the S396 reconciliation and S397 r
 
 Status: no action required.
 
+## S399-001 | INFO | Secure-storage persona retest review passed
+
+Review checked the S399 retest scope against the S398 classification register and current focused gate results. The selected tests exercise clean Modelo 111 readiness, metadata-only unreadable-row repair diagnostics, repair-profile redaction, quarantine dry-run non-mutation, and sessionless fresh-root repair behavior through existing real fixtures. The sidecar persona agents did not run because the multi-agent runtime returned usage-limit errors, but the same scoped retests were completed locally.
+
+Status: no action required for S399. S400 should not add repair rows unless a later retest contradicts these focused pass results.
+
 ## S460-002 | MEDIUM | Operator-surface contract under-declared root custody verbs
 
 The accepted operator-surface contract only declared `config unlock` while the CLI mounted first-class `config lock`, `config unlock`, `config rekey`, `config recover`, `config show-recovery`, and `config verify-recovery`. S460 now adds an explicit custody domain and mounted command-family rows for each root-level custody child.

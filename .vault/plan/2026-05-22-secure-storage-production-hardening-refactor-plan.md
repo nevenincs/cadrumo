@@ -29,6 +29,15 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 Retired steps: `S422`, `S423`.
 
@@ -962,7 +971,7 @@ S398 classifies the unresolved testimonial findings after S396 reconciliation an
 
 Run fresh persona retests only after ownership is explicit, then add or execute secure-storage-owned repair rows with isolated scratch roots and CLI-only operator paths.
 
-- [ ] `W13.P28.S399` - Dispatch fresh persona retests for secure-storage-owned workflows with isolated scratch roots; `.vault/exec`.
+- [x] `W13.P28.S399` - Dispatch fresh persona retests for secure-storage-owned workflows with isolated scratch roots; `.vault/exec`.
 - [ ] `W13.P28.S400` - Adopt secure-storage-owned testimonial repairs into plan rows before implementation; `.vault/plan`.
 - [ ] `W13.P28.S401` - Persist testimonial retest synthesis and final finding dispositions; `.vault/audit`.
 
