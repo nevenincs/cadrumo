@@ -196,7 +196,7 @@ def reconcile_pull_verb(
             modelo=str(unit.modelo),
             year=unit.filing_year,
             period=unit.period,
-        )
+        ),
     )
     report = reconcile_capture(work_unit_id=unit.work_unit_id, snapshot=snapshot, actor=resolved_actor)
     _render_reconciliation_report(ctx, report, command="modelo.reconcile")
@@ -326,7 +326,7 @@ def reconcile_history_verb(
                     entry.verdict.value,
                     str(entry.diff_count),
                     entry.actor,
-                )
+                ),
             )
             for entry in entries
         )
@@ -335,6 +335,6 @@ def reconcile_history_verb(
             tr(
                 "cli.app.modelo.reconcile.history_empty",
                 default="No reconciliations recorded yet.",
-            )
+            ),
         )
-    _emit_envelope(ctx, command="modelo.reconciliation_history", result=result, lines=lines)
+    _emit_envelope(ctx, command="modelo.reconcile.history", result=result, lines=lines)

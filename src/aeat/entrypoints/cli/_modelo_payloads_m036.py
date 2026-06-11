@@ -1,4 +1,4 @@
-"""M036 declaration, reconciliation-history, and IVA-wallet-correction payloads.
+"""M036 declaration, reconcile-history, and IVA-wallet-correction payloads.
 
 Split from :mod:`_modelo_payloads` to keep each module within the line budget.
 Each class is a strict :class:`OutputSchema` and is re-exported through
@@ -84,7 +84,7 @@ class M036DeclarationShowResult(OutputSchema):
 
 
 class ModeloReconciliationHistoryRowPayload(OutputSchema):
-    """One past reconciliation row surfaced by ``modelo reconciliation-history``.
+    """One past reconciliation row surfaced by ``modelo reconcile history``.
 
     Projects the typed ``aeat.application.modelo.ModeloReconciliationHistoryEntry``
     read back from the ``MODELO_RECONCILED`` bucket event: the event id, the
@@ -105,14 +105,14 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
 
 @register_schema("modelo.reconcile.history")
 class ModeloReconciliationHistoryResult(OutputSchema):
-    """Listing returned by ``aeat app modelo reconciliation-history``.
+    """Listing returned by ``aeat app modelo reconcile history``.
 
     Enumerates the active bucket's recorded reconciliations (optionally narrowed
     to one work unit). An empty ``reconciliations`` list is the clean "no
     reconciliations recorded yet" signal, not an error.
     """
 
-    operation: str = "modelo.reconciliation_history"
+    operation: str = "modelo.reconcile.history"
     bucket_id: BucketId
     work_unit_id: WorkUnitId | None = None
     reconciliation_count: int
