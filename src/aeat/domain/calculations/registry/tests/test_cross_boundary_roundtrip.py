@@ -20,6 +20,7 @@ from typing import TypedDict, get_type_hints
 
 import pytest
 
+from .....core import Period
 from ....filing._schema import (
     ModeloBindingValue,
     ModeloDraft,
@@ -217,7 +218,7 @@ def test_filing_draft_full_roundtrip() -> None:
     original = ModeloDraft(
         draft_id="f" * 64,
         modelo="303",
-        period="2025Q1",
+        period=Period.from_year_and_code(2025, "1T"),
         profile_tax_id="12345678Z",
         status=ModeloDraftStatus.BORRADOR,
         values=(
@@ -274,7 +275,7 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
     common_kwargs: _ModeloDraftCommonKwargs = {
         "draft_id": "f" * 64,
         "modelo": "303",
-        "period": "2025Q1",
+        "period": Period.from_year_and_code(2025, "1T"),
         "profile_tax_id": "12345678Z",
         "status": ModeloDraftStatus.BORRADOR,
         "values": (),
@@ -309,7 +310,7 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     original = ModeloDraft(
         draft_id="f" * 64,
         modelo="303",
-        period="2025Q1",
+        period=Period.from_year_and_code(2025, "1T"),
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
         snapshot_ref=ref,

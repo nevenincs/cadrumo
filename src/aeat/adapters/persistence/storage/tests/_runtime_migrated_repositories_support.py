@@ -361,7 +361,7 @@ def _submission(label: str) -> ModeloPresentado:
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="303",
-        period="2026Q1",
+        period=_Period.from_year_and_code(2026, "1T"),
         profile_tax_id="00000000T",
         status=SubmissionStatus.PRESENTADA,
         submitted_at=submitted_at,
@@ -497,12 +497,13 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
 
 def _history(label: str) -> ModeloHistory:
     submitted_at = datetime(2026, 5, 26, 13, 0, tzinfo=UTC)
+    period = "1T" if label.endswith("a") else "2T"
     return ModeloHistory(
         modelo=ModeloIdentifier("303"),
         entries=(
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period=f"2026Q1-{label}",
+                period=_Period.from_year_and_code(2026, period),
                 submitted_at=submitted_at,
                 status="presentada",
             ),
