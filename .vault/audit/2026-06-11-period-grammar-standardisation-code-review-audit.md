@@ -240,3 +240,24 @@ Verification after the fix: ruff passed for the gate; the focused Period suite
 passed with `69 passed`; CLI import smoke printed `OK`. The follow-up reviewer
 also ran the gate directly (`1 passed`), ruff, `git diff --check`, and confirmed
 the index reader matched `git ls-files` exactly with `27,766` tracked paths.
+
+## PERIOD-016 | INFO | No findings in canonical period parser removal
+
+Review of commit `8d47ac156` found no issues in the scoped cleanup. The
+reviewer confirmed that `calendar_events_from_expedientes_snapshots` constructs
+`core.Period` directly from `declaration.ejercicio` plus the bare
+`declaration.period`, and that `src/aeat/domain/period.py` no longer exports or
+defines `parse_canonical_period`. A repository search found no remaining Python
+references to the removed adapter.
+
+Verification reported by the reviewer: the domain period test module passed
+with `30 passed`; ruff passed for `src/aeat/application/overview/_calendar.py`,
+`src/aeat/domain/period.py`, and `src/aeat/domain/tests/test_period.py`; a direct
+runtime exercise of the overview expediente projection produced the expected
+typed-period filing summary; and `git diff --check` reported no whitespace
+errors on the scoped files.
+
+Residual note: the full overview calendar test file was not used as the review
+signal because it currently carries unrelated peer WIP whose helpers still pass
+raw strings into typed models. The focused projection test covering this cleanup
+passed in the coordinator verification.
