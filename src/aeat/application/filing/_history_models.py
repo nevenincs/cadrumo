@@ -7,6 +7,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...domain._identifiers import ModeloIdentifier
 
 
@@ -16,7 +17,7 @@ class ModeloHistoryEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: ModeloIdentifier
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     submitted_at: datetime
     status: str = Field(min_length=1, max_length=32)
 
