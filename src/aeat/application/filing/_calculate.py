@@ -23,8 +23,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import BaseSeverity
 from ...domain.filing import ModeloDraft
 from ...domain.submission._protocols import ModeloDraftStatus
