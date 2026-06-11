@@ -212,7 +212,7 @@ def resolve_period_expediente(
     candidates = [
         declaration
         for declaration in declarations
-        if declaration.modelo == modelo and declaration.period == target_period
+        if declaration.modelo == modelo and declaration.period == period
     ]
     if not candidates:
         raise LiveApplicationInputError(
