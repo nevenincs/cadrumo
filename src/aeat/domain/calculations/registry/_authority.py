@@ -210,10 +210,7 @@ class ValidatedRegistryAuthority:
 
 
 def _deadline_window_period_sort_key(window: DeadlineWindowDefinition) -> tuple[int, str]:
-    token = getattr(window.period, "registry_token", str(window.period)).strip().upper()
-    if token.startswith(f"{window.filing_year} "):
-        token = token.split(maxsplit=1)[1]
-    return window.filing_year, token
+    return window.filing_year, window.period.registry_token
 
 
 def bundled_authority() -> ValidatedRegistryAuthority:
