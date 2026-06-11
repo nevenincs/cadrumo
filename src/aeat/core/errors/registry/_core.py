@@ -92,6 +92,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core._period.PeriodError",
+        ErrorCode(
+            code="INTEGRITY_PERIOD",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_period",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.errors.ProfileAnswerTypeError",
         ErrorCode(
             code="INTEGRITY_PROFILE_ANSWER_TYPE",
