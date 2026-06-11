@@ -317,7 +317,7 @@ def test_transaction_catalogue_preserves_source_jurisdiction_through_encrypted_s
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "source_jurisdiction": "ES",
-            }
+            },
         )
         original = TransactionCatalogue.from_transactions([spanish_txn])
         repo.save(original)
@@ -354,7 +354,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "source_jurisdiction": "ES",
-            }
+            },
         )
         original = TransactionCatalogue.from_transactions([spanish_txn])
         repo.save(original)
@@ -412,7 +412,7 @@ def test_transaction_catalogue_preserves_group_label_through_encrypted_storage(
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "group_label": "Proyecto Acme",
-            }
+            },
         )
         original = TransactionCatalogue.from_transactions([labelled])
         repo.save(original)
@@ -447,7 +447,7 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
                 "direction": TransactionDirection.OUTGOING,
                 "business_classification": BusinessClassification.BUSINESS,
                 "group_label": "Proyecto Acme",
-            }
+            },
         )
         original = TransactionCatalogue.from_transactions([labelled])
         repo.save(original)
@@ -508,7 +508,7 @@ def test_transaction_catalogue_preserves_nonnegative_amount_and_direction(
                 "raw": _raw("provider-row-transfer", Decimal("5000.00"), "Traspaso a cuenta de ahorro"),
                 "direction": TransactionDirection.INTERNAL_TRANSFER,
                 "business_classification": BusinessClassification.PERSONAL,
-            }
+            },
         )
         original = TransactionCatalogue.from_transactions([outgoing, transfer])
         repo.save(original)
@@ -521,6 +521,108 @@ def test_transaction_catalogue_preserves_nonnegative_amount_and_direction(
     assert loaded_out.direction is TransactionDirection.OUTGOING
     assert loaded_transfer.raw.amount == Decimal("5000.00")
     assert loaded_transfer.direction is TransactionDirection.INTERNAL_TRANSFER
+
+
+def test_transaction_catalogue_preserves_created_modified_at_through_encrypted_storage(
+    tmp_path: Path,
+) -> None:
+    """created_at and modified_at must survive the encrypted-envelope roundtrip.
+
+    Anchors the ledger-interface-contract D6 lifecycle-timestamp axis at the
+    persistence boundary: a Transaction carrying non-default, distinct
+    ``created_at`` and ``modified_at`` UTC-aware timestamps saved through the
+    repository must load back strictly equal, both timestamps preserved
+    verbatim. A save-drops / load-re-defaults regression would otherwise
+    silently lose the temporal sort key for every persisted row.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+        modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
+        stamped = Transaction.model_validate(
+            {
+                "raw": _raw("provider-row-ts", Decimal("77.00"), "Compra material oficina"),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "created_at": created,
+                "modified_at": modified,
+            },
+        )
+        original = TransactionCatalogue.from_transactions([stamped])
+        repo.save(original)
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    assert loaded == original
+    loaded_txn = loaded.transactions[stamped.transaction_id]
+    # Distinct non-default witnesses: a save that collapsed the two timestamps
+    # into one (or re-defaulted either to None) would fail these.
+    assert loaded_txn.created_at == created
+    assert loaded_txn.modified_at == modified
+    assert loaded_txn.created_at != loaded_txn.modified_at
+
+
+def test_transaction_catalogue_grandfathers_missing_created_at_key(
+    tmp_path: Path,
+) -> None:
+    """A persisted envelope lacking created_at must load with None.
+
+    Anti-tautology proof for the D6 lifecycle-timestamp axis: surgically
+    delete the ``created_at`` key from a previously-persisted envelope and
+    reload. The load must succeed with ``loaded.created_at is None`` (None
+    default), and the stamped catalogue must NOT equal the deleted-key version,
+    locking the field's identity contribution at the model boundary. If the
+    catalogues compared equal with the key removed, the roundtrip would be
+    tautological and every timestamp roundtrip in the suite suspect.
+    """
+
+    import json as _json
+
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+        modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
+        stamped = Transaction.model_validate(
+            {
+                "raw": _raw("provider-row-ts", Decimal("77.00"), "Compra material oficina"),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "created_at": created,
+                "modified_at": modified,
+            },
+        )
+        original = TransactionCatalogue.from_transactions([stamped])
+        repo.save(original)
+
+        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        txn_dict = envelope["payload"]["transactions"][stamped.transaction_id]
+        assert txn_dict.get("created_at") is not None, (
+            "fixture must serialise created_at into the envelope for the grandfather proof to be meaningful"
+        )
+        del txn_dict["created_at"]
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        loaded_txn = loaded.transactions[stamped.transaction_id]
+        assert loaded_txn.created_at is None
+        assert loaded != original
 
 
 def test_transaction_catalogue_negative_amount_payload_rejected_at_load(

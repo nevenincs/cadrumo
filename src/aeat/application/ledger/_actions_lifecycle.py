@@ -360,7 +360,7 @@ def reset_ledger_catalogue(
             transaction_ids=removed_ids,
         )
     attachment_ids = tuple(
-        sorted({attachment_id for transaction in catalogue.values() for attachment_id in transaction.attachment_ids})
+        sorted({attachment_id for transaction in catalogue.values() for attachment_id in transaction.attachment_ids}),
     )
     if blockers:
         if not dry_run:
@@ -529,7 +529,9 @@ def _transition_manual_transaction_lifecycle(
         update={
             "lifecycle_state": state,
             "lifecycle_lineage": (*current.lifecycle_lineage, lifecycle_entry),
-        }
+            # D6: a lifecycle transition is a mutating edit; re-stamp modified_at.
+            "modified_at": now,
+        },
     )
     updated = _replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
     _save_transaction_catalogue_and_events(
@@ -599,7 +601,7 @@ def _removal_events(
                     "reason": reason,
                     "mutation_kind": "ledger_transaction_removed",
                 },
-            )
+            ),
         )
     for attachment_id in attachment_ids:
         events.append(
@@ -616,7 +618,7 @@ def _removal_events(
                     "reason": reason,
                     "mutation_kind": "ledger_transaction_removed",
                 },
-            )
+            ),
         )
     events.append(
         _build_bucket_event(
@@ -633,6 +635,6 @@ def _removal_events(
                 "attachment_ids": ",".join(attachment_ids),
                 "cascade_count": str(len(purchase_evidence_ids) + len(attachment_ids)),
             },
-        )
+        ),
     )
     return tuple(events)
