@@ -56,7 +56,7 @@ class FiledDeclaracionObservationStore:
 
     def persist_artefact(
         self,
-        observation_key: tuple[str, int, str, str],
+        observation_key: tuple[str, int, Period, str],
         artefact: FiledDeclaracionArtefact,
         body: bytes,
     ) -> FiledDeclaracionArtefact:

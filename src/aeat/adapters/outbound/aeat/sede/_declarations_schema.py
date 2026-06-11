@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from .....core import Period
 
 __all__ = ["Declaracion"]
 
@@ -23,7 +25,7 @@ class Declaracion(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
     expediente_id: str = Field(min_length=12, max_length=32)
     estado: str = Field(min_length=1, max_length=16)
     tipo_solicitud: str | None = Field(default=None, max_length=128)
@@ -36,3 +38,9 @@ class Declaracion(BaseModel):
     archive_cell_index: int | None = Field(default=8, ge=0)
     declaration_copy_cell_index: int | None = Field(default=None, ge=0)
     mode: Literal["read"] = "read"
+
+    @model_validator(mode="after")
+    def _period_year_matches_ejercicio(self) -> Self:
+        if self.period.filing_year != self.ejercicio:
+            raise ValueError("period.filing_year must match ejercicio")
+        return self

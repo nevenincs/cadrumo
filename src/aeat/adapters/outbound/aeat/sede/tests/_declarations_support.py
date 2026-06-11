@@ -245,7 +245,7 @@ def _declaration_row(
     return Declaracion(
         modelo="303",
         ejercicio=ejercicio,
-        period=period,
+        period=_period(ejercicio, period),
         expediente_id=expediente_id,
         estado=estado,
         presented_at=presented_at,
