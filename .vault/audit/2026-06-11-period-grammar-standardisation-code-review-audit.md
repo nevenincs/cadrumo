@@ -425,3 +425,21 @@ test files; focused resolver/binding/Modelo 202/IVA-wallet regressions passed
 with `14 passed`; the broader binding-readiness/discovery-registry CLI suite
 passed with `103 passed`; the broader modelo CLI plus registry query suites
 passed with `103 passed`; and CLI import smoke printed `OK`.
+
+## PERIOD-025 | INFO | No findings in config Period boundary cleanup
+
+Review of the config preflight and Google sync calculation cleanup found no
+issues. `config profile preflight` now constructs the `core.Period` once at the
+CLI boundary, passes that typed value to the private revision resolver, and then
+uses the same object for the profile preflight service. The direct resolver
+test now exercises the typed contract rather than rebuilding `(filing_year,
+period)` inside the helper.
+
+The Google sync calculation snapshot loader now accepts `core.Period` instead
+of raw `period` plus `year`; export, verify, and pull all hydrate the typed
+value before snapshot lookup. The review checked local call sites for the old
+three-argument `_load_snapshot` form and the old preflight resolver signature.
+
+Verification after the change: ruff passed for the touched config modules and
+tests; the config preflight plus Google sync period boundary suites passed with
+`8 passed`; and CLI import smoke printed `OK`.
