@@ -194,7 +194,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
                 preprocessor_version=PDF_EXTRACTOR_VERSION,
                 attribution=attribution,
                 units=(),
-            )
+            ),
         ]
 
     groups = stamp_part_anchors(split_units_by_budget(units))

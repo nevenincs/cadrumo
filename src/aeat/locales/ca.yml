@@ -764,11 +764,14 @@ application:
         com a mínim un valor de casella; el mapatge aportat és buit.
       external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
         already exists in the catalogue; an identical import was already recorded.
+      external_import_justificante_mismatch: application.modelo.errors.external_import_justificante_mismatch
+      external_import_justificante_missing: application.modelo.errors.external_import_justificante_missing
       external_import_registry_root_missing: Registry root %{registry_root} is missing;
         imported casilla ids cannot be validated.
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.
+      external_import_tax_id_missing: 'L''evidencia d''importacio externa %{evidence_reference_id} (%{evidence_kind}) requereix el NIF del contribuent abans de vincular-se a un artefacte de justificant.'
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
@@ -1116,10 +1119,6 @@ application:
       no_active_profile_bucket: No hi ha cap perfil actiu.
       no_run_for_period: No s'ha trobat cap execució de flux de treball per al model
         {modelo} període {period}. Executeu el flux almenys una vegada abans de reprendre.
-      period_registry_unmappable: No es pot assignar el període de flux de treball
-        {period} a un període del registre.
-      period_registry_year_unresolvable: No es pot derivar l'any del registre a partir
-        del període de flux de treball {period}.
       profile_label_ambiguous: 'L''etiqueta de perfil {label} és ambigua: {count}
         dipòsits actius la comparteixen.'
       resume_refused_no_aborted_reason: L'execució {run_id} és ABORTED sense raó registrada;
@@ -1211,21 +1210,25 @@ cli:
         valuation_preview_help: Previsualitza existències finals i cost de vendes
         year_help: Exercici fiscal
       invoice:
-        add_help: 'Registra una nova factura de negoci'
-        country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions intracomunitàries UE)'
-        eu_iva_id_help: 'NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)'
-        group_help: 'Registres de factures de negoci (emeses o rebudes)'
-        invoice_date_help: 'Data d''emissió de la factura en ISO 8601 (AAAA-MM-DD), p. ex. 2026-01-15.'
-        invoice_id_help: 'Identificador de la factura (o prefix no ambigu)'
-        kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus a un proveïdor)'
-        list_help: 'Llista les factures de negoci (ambdós tipus llevat que --kind filtri)'
-        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T triangular, R rectificació, A adquisició béns, I adquisició serveis, M miscel·lània'
+        add_help: Registra una nova factura de negoci
+        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
+          intracomunitàries UE)
+        eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
+        group_help: Registres de factures de negoci (emeses o rebudes)
+        invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
+          p. ex. 2026-01-15.
+        invoice_id_help: Identificador de la factura (o prefix no ambigu)
+        kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus
+          a un proveïdor)'
+        list_help: Llista les factures de negoci (ambdós tipus llevat que --kind filtri)
+        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T
+          triangular, R rectificació, A adquisició béns, I adquisició serveis, M miscel·lània'
         operation_type_invalid: '--operation-type ha de ser un de: {valid}'
-        remove_help: 'Elimina una factura de negoci'
-        update_help: 'Actualitza les dades d''una factura de negoci'
-        view_help: 'Mostra una factura de negoci'
-        yes_help: 'Confirma l''eliminació de la factura'
-        yes_required: 'Has de passar --yes per eliminar una factura'
+        remove_help: Elimina una factura de negoci
+        update_help: Actualitza les dades d'una factura de negoci
+        view_help: Mostra una factura de negoci
+        yes_help: Confirma l'eliminació de la factura
+        yes_required: Has de passar --yes per eliminar una factura
       ratios:
         category_help: Id de categoria de despesa (p. ex. USAGE_RATIO_VEHICLE)
         eligible_help: Llista les categories que admeten proporció específica
@@ -1749,6 +1752,7 @@ cli:
           de treball en aquest CLI. Autoritat legal: Ordre HFP/887/2023 i RD 1065/2007
           art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre.
           Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
+        dependencies_help: 'Mostra dependencies d''historial de presentacions entre models i els bloquejos clean-state actuals per a una presentacio objectiu'
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -2553,13 +2557,14 @@ cli:
         prohibit amb export_third_country_zero_rated
       evidence_acknowledged_help: Confirma que llegir l'evidencia amb un proveidor
         al nuvol la puja fora del teu equip (ho exigeix la verificacio de consentiment).
-      from_csv_exclusive: --from-csv no pot combinar-se amb --id ni --classification.
+      from_csv_exclusive: --from-csv no pot combinar-se amb un id de transacció ni
+        --classification.
       from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
-      id_required: --id és obligatori quan no s'usa --from-csv.
+      id_required: Cal un id de transacció quan no s'usa --from-csv.
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
@@ -2866,6 +2871,21 @@ cli:
       transaction_id_help: Id de la transacció (o prefix no ambigu)
   locales:
     app_help: Auditar i generar catàlegs de traducció
+    modelo:
+      app_help: Gestiona traduccions locals d'esquemes de model.
+      audit_help: Audita traduccions d'esquemes de model.
+      coverage_help: Mostra cobertura d'esquema de model.
+      field_help: Camp de traduccio.
+      key_help: Clau de l'esquema.
+      locale_help: Codi de locale.
+      modelo_help: Id del model.
+      registry_root_help: Arrel del registre AEAT alternativa.
+      remove_help: Elimina una traduccio d'esquema de model.
+      revision_help: Id de la revisio.
+      scaffold_check_help: Comprova sense escriure.
+      scaffold_help: Genera fitxers de traduccio d'esquemes de model.
+      set_help: Estableix una traduccio d'esquema de model.
+      value_help: Valor traduit.
     remove_key_help: Clau de locale amb punts que s'eliminarà.
     remove_locale_help: Codi de locale que s'ha d'actualitzar.
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
@@ -4428,6 +4448,22 @@ locales:
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
       key_missing: '  missing %{key}'
+    modelo:
+      audit:
+        missing: mancant locale=%{locale_code} model=%{modelo} revisio=%{revision}
+          ambit=%{scope} camp=%{field} clau=%{key}
+        stale: obsoleta locale=%{locale_code} model=%{modelo} revisio=%{revision}
+          ambit=%{scope} camp=%{field} clau=%{key}
+      coverage:
+        row: locale=%{locale_code} model=%{modelo} revisio=%{revision} etiquetes=%{label_translated}/%{label_required}
+          ajuda=%{help_translated}/%{help_required}
+      remove:
+        removed: Eliminat %{path} %{field} %{key}
+      scaffold:
+        no_changes: L'scaffold de locales de model ja esta alineat.
+        updated: Actualitzat %{path}
+      set:
+        updated: Actualitzat %{path} %{field} %{key}
     remove:
       removed: removed %{locale_file}:%{key}
     scaffold_updated: locale scaffold updated

@@ -55,8 +55,8 @@ def _norm(path: str) -> str:
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     """Run a checker, capturing stdout/stderr without raising."""
-    return subprocess.run(  # noqa: S603
-        ["uv", "run", "--no-sync", *cmd],  # noqa: S607
+    return subprocess.run(
+        ["uv", "run", "--no-sync", *cmd],
         capture_output=True,
         text=True,
         check=False,
@@ -87,7 +87,7 @@ def collect_ty() -> list[Diagnostic]:
                 path=_norm(location.get("path", "?")),
                 line=int(begin.get("line", 0)),
                 message=str(row.get("description", "")),
-            )
+            ),
         )
     return diagnostics
 
@@ -116,7 +116,7 @@ def collect_pyright() -> list[Diagnostic]:
                 path=_norm(row.get("file", "?")),
                 line=int(start.get("line", 0)) + 1,
                 message=str(row.get("message", "")).splitlines()[0] if row.get("message") else "",
-            )
+            ),
         )
     return diagnostics
 

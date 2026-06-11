@@ -544,7 +544,7 @@ def calendar_events_from_expedientes_snapshots(
             event_date = declaration.presented_at.date()
             if not calendar_range.covers(event_date):
                 continue
-            _period = _Period.from_year_and_code(declaration.ejercicio, declaration.period)
+            _period = declaration.period
             summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {_period.registry_token} filed at AEAT"
             events.append(
                 OverviewCalendarEvent(

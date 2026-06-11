@@ -22,6 +22,7 @@ Submodules
    aeat.domain.modelos._filing_repository
    aeat.domain.modelos._ids
    aeat.domain.modelos._ledger_filing_snapshot
+   aeat.domain.modelos._participation_index
    aeat.domain.modelos._protocols
    aeat.domain.modelos._repository
    aeat.domain.modelos._row_models

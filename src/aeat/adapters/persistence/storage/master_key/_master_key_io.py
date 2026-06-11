@@ -6,6 +6,7 @@ import base64
 import getpass
 import os
 import secrets
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Final
@@ -89,5 +90,11 @@ def _default_passphrase_callback(getpass_fn: Callable[[str], str] | None = None)
                 f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
             )
         return normalized
+    if getpass_fn is None and (not sys.stdin.isatty() or not sys.stderr.isatty()):
+        raise SecretStoreError(
+            f"{PASSPHRASE_ENV_VAR} is not set and stdin is not interactive; "
+            "run `aeat config unlock NAME` from an interactive terminal or "
+            f"provide {PASSPHRASE_ENV_VAR} through the Settings environment.",
+        )
     resolver = getpass_fn if getpass_fn is not None else getpass.getpass
     return resolver("AEAT secret-store passphrase: ")

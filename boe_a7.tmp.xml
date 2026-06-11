@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a7" tipo="precepto" titulo="Artículo 7">
+      <version id_norma="BOE-A-1992-28740" fecha_publicacion="19921229" fecha_vigencia="19930101">
+        <p class="articulo">Artículo 7. Operaciones no sujetas al impuesto.</p>
+        <p class="parrafo">No estarán sujetas al impuesto:</p>
+        <p class="parrafo_2">1.º Las siguientes transmisiones de bienes y derechos:</p>
+        <p class="parrafo_2">a) La transmisión de la totalidad del patrimonio empresarial o profesional del sujeto pasivo realizada en favor de un solo adquirente, cuando éste continúe el ejercicio de las mismas actividades empresariales o profesionales del transmitente.</p>
+        <p class="parrafo">b) La transmisión de la totalidad del patrimonio empresarial del sujeto pasivo o de los elementos patrimoniales afectos a una o varias ramas de la actividad empresarial del transmitente, en virtud de las operaciones a que se refiere el artículo 1 de la Ley 29/1991, de 16 de diciembre, de adecuación de determinados conceptos impositivos a las Directivas y Reglamentos de las Comunidades Europeas, siempre que las operaciones tengan derecho al régimen tributario regulado en el Título I de la citada Ley.</p>
+        <p class="parrafo">A los efectos previstos en esta letra, se entenderá por rama de actividad la definida en el apartado cuatro del artículo 2 de la Ley mencionada en el párrafo anterior.</p>
+        <p class="parrafo">c) La transmisión «mortis causa» de la totalidad o parte del patrimonio empresarial o profesional del sujeto pasivo, realizada en favor de aquellos adquirentes que continúen el ejercicio de las mismas actividades empresariales o profesionales del transmitente.</p>
+        <p class="parrafo_2">Cuando los bienes y derechos transmitidos se desafecten posteriormente de las actividades empresariales o profesionales que determinan la no sujeción prevista en las letras a) y c) de este número, la referida transmisión quedará sujeta al impuesto en la forma establecida para cada caso en esta Ley.</p>
+        <p class="parrafo">Los adquirentes de los bienes comprendidos en las transmisiones que se beneficien de la no sujeción establecida en este número se subrogarán, respecto de dichos bienes, en la posición del transmitente en cuanto a la aplicación de las normas contenidas en el artículo 20, apartado uno, número 22.º y en los artículos 104 a 114 de esta Ley.</p>
+        <p class="parrafo">2.º Las entregas gratuitas de muestras de mercancías sin valor comercial estimable, con fines de promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">A los efectos de esta Ley, se entenderá por muestras de mercancías los artículos representativos de una categoría de las mismas que, por su modo de presentación o cantidad, sólo puedan utilizarse en fines de promoción.</p>
+        <p class="parrafo">3.º Las prestaciones de servicios de demostración a título gratuito efectuadas para la promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">4.º Las entregas sin contraprestación de impresos u objetos de carácter publicitario.</p>
+        <p class="parrafo">Los impresos publicitarios deberán llevar de forma visible el nombre del empresario o profesional que produzca o comercialice bienes o que ofrezca determinadas prestaciones de servicios.</p>
+        <p class="parrafo">A los efectos de esta Ley, se considerarán objetos de carácter publicitario los que carezcan de valor comercial intrínseco, en los que se consigne de forma indeleble la mención publicitaria.</p>
+        <p class="parrafo">Por excepción a lo dispuesto en este número, quedarán sujetas al impuesto las entregas de objetos publicitarios cuando el coste total de los suministros a un mismo destinatario durante el año natural exceda de 15.000 pesetas, a menos que se entreguen a otros sujetos pasivos para su redistribución gratuita.</p>
+        <p class="parrafo">5.º Los servicios prestados por personas físicas en régimen de dependencia derivado de relaciones administrativas o laborales, incluidas en estas últimas las de carácter especial.</p>
+        <p class="parrafo">6.º Los servicios prestados a las cooperativas de trabajo asociado por los socios de las mismas y los prestados a las demás cooperativas por sus socios de trabajo.</p>
+        <p class="parrafo">7.º Las operaciones previstas en el artículo 9, número 1.º y en el artículo 12, números 1.º y 2.º de esta Ley, siempre que no se hubiese atribuido al sujeto pasivo el derecho a efectuar la deducción total o parcial del Impuesto sobre el Valor Añadido efectivamente soportado con ocasión de la adquisición o importación de los bienes o de sus elementos componentes que sean objeto de dichas operaciones.</p>
+        <p class="parrafo">Tampoco estarán sujetas al impuesto las operaciones a que se refiere el artículo 12, número 3.º de esta Ley cuando el sujeto pasivo se limite a prestar el mismo servicio recibido de terceros y no se le hubiera atribuido el derecho a deducir total o parcialmente el Impuesto sobre el Valor Añadido efectivamente soportado en la recepción de dicho servicio.</p>
+        <p class="parrafo">8.º Las entregas de bienes y prestaciones de servicios realizadas directamente por los entes públicos mediante contraprestación de naturaleza tributaria.</p>
+        <p class="parrafo">Tampoco estarán sujetas al impuesto las entregas de bienes y prestaciones de servicios realizadas directamente por los entes públicos cuando se efectúen en el desarrollo de una actividad empresarial o profesional cuyas operaciones principales se realicen mediante contraprestación de naturaleza tributaria.</p>
+        <p class="parrafo">A efectos de lo previsto en el párrafo anterior, se considerarán operaciones principales aquellas que representen al menos el 80 por 100 de los ingresos derivados de la actividad.</p>
+        <p class="parrafo">Los supuestos de no sujeción a que se refiere este número no se aplicarán cuando los referidos entes actúen por medio de empresa pública, privada, mixta o, en general, de empresas mercantiles.</p>
+        <p class="parrafo">No obstante lo establecido en los párrafos anteriores de este número, estarán sujetas al impuesto, en todo caso, las entregas de bienes y prestaciones de servicios que los entes públicos realicen, en el ejercicio de las actividades que a continuación se relacionan:</p>
+        <p class="parrafo_2">a) Telecomunicaciones.</p>
+        <p class="parrafo">b) Distribución de agua, gas, calor, frío, energía eléctrica y demás modalidades de energía.</p>
+        <p class="parrafo">c) Transportes de personas y bienes.</p>
+        <p class="parrafo">d) Servicios portuarios y aeroportuarios.</p>
+        <p class="parrafo">e) Obtención, fabricación o transformación de productos para su transmisión posterior.</p>
+        <p class="parrafo">f) Intervención sobre productos agropecuarios dirigida a la regulación del mercado de estos productos.</p>
+        <p class="parrafo">g) Explotación de ferias y de exposiciones de carácter comercial.</p>
+        <p class="parrafo">h) Almacenaje y depósito.</p>
+        <p class="parrafo">i) Las de oficinas comerciales de publicidad.</p>
+        <p class="parrafo">j) Explotación de cantinas y comedores de empresas, economatos, cooperativas y establecimientos similares.</p>
+        <p class="parrafo">k) Las de agencias de viajes.</p>
+        <p class="parrafo">l) Las comerciales o mercantiles de los entes públicos de radio y televisión, incluidas las relativas a la cesión del uso de sus instalaciones.</p>
+        <p class="parrafo">m) Las de matadero.</p>
+        <p class="parrafo_2">9.º Las concesiones y autorizaciones administrativas, excepto las que tengan por objeto la cesión del derecho a utilizar inmuebles o instalaciones en puertos y aeropuertos.</p>
+        <p class="parrafo">10.º Las prestaciones de servicios a título gratuito a que se refiere el artículo 12, número 3.º de esta Ley que sean obligatorias para el sujeto pasivo en virtud de normas jurídicas o convenios colectivos, incluso los servicios telegráficos y telefónicos prestados en régimen de franquicia.</p>
+        <p class="parrafo">11.º Las operaciones realizadas por las Comunidades de Regantes para la ordenación y aprovechamiento de las aguas.</p>
+        <p class="parrafo">12.º Las entregas de dinero a título de contraprestación o pago.</p>
+      </version>
+      <version id_norma="BOE-A-1997-28053" fecha_publicacion="19971231" fecha_vigencia="19980101">
+        <p class="articulo">Artículo 7. Operaciones no sujetas al impuesto.</p>
+        <p class="parrafo">No estarán sujetas al impuesto:</p>
+        <p class="parrafo_2">1.º Las siguientes transmisiones de bienes y derechos:</p>
+        <p class="parrafo_2">a) La transmisión de la totalidad del patrimonio empresarial o profesional del sujeto pasivo realizada en favor de un solo adquirente, cuando éste continúe el ejercicio de las mismas actividades empresariales o profesionales del transmitente.</p>
+        <p class="parrafo">b) La transmisión de la totalidad del patrimonio empresarial del sujeto pasivo o de los elementos patrimoniales afectos a una o varias ramas de la actividad empresarial del transmitente, en virtud de las operaciones a que se refiere el artículo 1 de la Ley 29/1991, de 16 de diciembre, de adecuación de determinados conceptos impositivos a las Directivas y Reglamentos de las Comunidades Europeas, siempre que las operaciones tengan derecho al régimen tributario regulado en el Título I de la citada Ley.</p>
+        <p class="parrafo">A los efectos previstos en esta letra, se entenderá por rama de actividad la definida en el apartado cuatro del artículo 2 de la Ley mencionada en el párrafo anterior.</p>
+        <p class="parrafo">c) La transmisión «mortis causa» de la totalidad o parte del patrimonio empresarial o profesional del sujeto pasivo, realizada en favor de aquellos adquirentes que continúen el ejercicio de las mismas actividades empresariales o profesionales del transmitente.</p>
+        <p class="parrafo_2">Cuando los bienes y derechos transmitidos se desafecten posteriormente de las actividades empresariales o profesionales que determinan la no sujeción prevista en las letras a) y c) de este número, la referida transmisión quedará sujeta al impuesto en la forma establecida para cada caso en esta Ley.</p>
+        <p class="parrafo">Los adquirentes de los bienes comprendidos en las transmisiones que se beneficien de la no sujeción establecida en este número se subrogarán, respecto de dichos bienes, en la posición del transmitente en cuanto a la aplicación de las normas contenidas en el artículo 20, apartado uno, número 22.º y en los artículos 104 a 114 de esta Ley.</p>
+        <p class="parrafo">2.º Las entregas gratuitas de muestras de mercancías sin valor comercial estimable, con fines de promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">A los efectos de esta Ley, se entenderá por muestras de mercancías los artículos representativos de una categoría de las mismas que, por su modo de presentación o cantidad, sólo puedan utilizarse en fines de promoción.</p>
+        <p class="parrafo">3.º Las prestaciones de servicios de demostración a título gratuito efectuadas para la promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">4.º Las entregas sin contraprestación de impresos u objetos de carácter publicitario.</p>
+        <p class="parrafo">Los impresos publicitarios deberán llevar de forma visible el nombre del empresario o profesional que produzca o comercialice bienes o que ofrezca determinadas prestaciones de servicios.</p>
+        <p class="parrafo">A los efectos de esta Ley, se considerarán objetos de carácter publicitario los que carezcan de valor comercial intrínseco, en los que se consigne de forma indeleble la mención publicitaria.</p>
+        <p class="parrafo">Por excepción a lo dispuesto en este número, quedarán sujetas al impuesto las entregas de objetos publicitarios cuando el coste total de los suministros a un mismo destinatario durante el año natural exceda de 15.000 pesetas, a menos que se entreguen a otros sujetos pasivos para su redistribución gratuita.</p>
+        <p class="parrafo">5.º Los servicios prestados por personas físicas en régimen de dependencia derivado de relaciones administrativas o laborales, incluidas en estas últimas las de carácter especial.</p>
+        <p class="parrafo">6.º Los servicios prestados a las cooperativas de trabajo asociado por los socios de las mismas y los prestados a las demás cooperativas por sus socios de trabajo.</p>
+        <p class="parrafo">7.º Las operaciones previstas en el artículo 9, número 1.º y en el artículo 12, números 1.º y 2.º de esta Ley, siempre que no se hubiese atribuido al sujeto pasivo el derecho a efectuar la deducción total o parcial del Impuesto sobre el Valor Añadido efectivamente soportado con ocasión de la adquisición o importación de los bienes o de sus elementos componentes que sean objeto de dichas operaciones.</p>
+        <p class="parrafo">Tampoco estarán sujetas al impuesto las operaciones a que se refiere el artículo 12, número 3.º de esta Ley cuando el sujeto pasivo se limite a prestar el mismo servicio recibido de terceros y no se le hubiera atribuido el derecho a deducir total o parcialmente el Impuesto sobre el Valor Añadido efectivamente soportado en la recepción de dicho servicio.</p>
+        <p class="parrafo">8.º Las entregas de bienes y prestaciones de servicios realizadas directamente por los entes públicos sin contraprestación o mediante contraprestación de naturaleza tributaria.</p>
+        <p class="parrafo">Lo dispuesto en el párrafo anterior no se aplicará cuando los referidos entes actúen por medio de empresa pública, privada, mixta o, en general, de empresas mercantiles.</p>
+        <p class="parrafo">En todo caso, estarán sujetas al impuesto las entregas de bienes y prestaciones de servicios que los entes públicos realicen en el ejercicio de las actividades que a continuación se relacionan:</p>
+        <p class="parrafo">a) Telecomunicaciones.</p>
+        <p class="parrafo">b) Distribución de agua, gas, calor, frío, energía eléctrica y demás modalidades de energía.</p>
+        <p class="parrafo">c) Transportes de personas y bienes.</p>
+        <p class="parrafo">d) Servicios portuarios y aeroportuarios.</p>
+        <p class="parrafo">e) Obtención, fabricación o transformación de productos para su transmisión posterior.</p>
+        <p class="parrafo">f) Intervención sobre productos agropecuarios dirigida a la regulación del mercado de estos productos.</p>
+        <p class="parrafo">g) Explotación de ferias y de exposiciones de carácter comercial.</p>
+        <p class="parrafo">h) Almacenaje y depósito.</p>
+        <p class="parrafo">i) Las de oficinas comerciales de publicidad.</p>
+        <p class="parrafo">j) Explotación de cantinas y comedores de empresas, economatos, cooperativas y establecimientos similares.</p>
+        <p class="parrafo">k) Las de agencias de viajes.</p>
+        <p class="parrafo">l) Las comerciales o mercantiles de los entes públicos de radio y televisión, incluidas las relativas a la cesión del uso de sus instalaciones.</p>
+        <p class="parrafo">m) Las de matadero.</p>
+        <p class="parrafo_2">9.º Las concesiones y autorizaciones administrativas, excepto las que tengan por objeto la cesión del derecho a utilizar inmuebles o instalaciones en puertos y aeropuertos.</p>
+        <p class="parrafo">10.º Las prestaciones de servicios a título gratuito a que se refiere el artículo 12, número 3.º de esta Ley que sean obligatorias para el sujeto pasivo en virtud de normas jurídicas o convenios colectivos, incluso los servicios telegráficos y telefónicos prestados en régimen de franquicia.</p>
+        <p class="parrafo">11.º Las operaciones realizadas por las Comunidades de Regantes para la ordenación y aprovechamiento de las aguas.</p>
+        <p class="parrafo">12.º Las entregas de dinero a título de contraprestación o pago.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 8º por el art. 6.1 de la Ley 66/1997, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1997-28053</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-1998-30155" fecha_publicacion="19981231" fecha_vigencia="19990101">
+        <p class="articulo">Artículo 7. Operaciones no sujetas al impuesto.</p>
+        <p class="parrafo">No estarán sujetas al impuesto:</p>
+        <p class="parrafo_2">1.º Las siguientes transmisiones de bienes y derechos:</p>
+        <p class="parrafo_2">a) La transmisión de la totalidad del patrimonio empresarial o profesional del sujeto pasivo realizada en favor de un solo adquirente, cuando éste continúe el ejercicio de las mismas actividades empresariales o profesionales del transmitente.</p>
+        <p class="parrafo">b) La transmisión de la totalidad del patrimonio empresarial del sujeto pasivo o de los elementos patrimoniales afectos a una o varias ramas de la actividad empresarial del transmitente, en virtud de las operaciones a que se refiere el artículo 1 de la Ley 29/1991, de 16 de diciembre, de adecuación de determinados conceptos impositivos a las Directivas y Reglamentos de las Comunidades Europeas, siempre que las operaciones tengan derecho al régimen tributario regulado en el Título I de la citada Ley.</p>
+        <p class="parrafo">A los efectos previstos en esta letra, se entenderá por rama de actividad la definida en el apartado cuatro del artículo 2 de la Ley mencionada en el párrafo anterior.</p>
+        <p class="parrafo">c) La transmisión «mortis causa» de la totalidad o parte del patrimonio empresarial o profesional del sujeto pasivo, realizada en favor de aquellos adquirentes que continúen el ejercicio de las mismas actividades empresariales o profesionales del transmitente.</p>
+        <p class="parrafo_2">Cuando los bienes y derechos transmitidos se desafecten posteriormente de las actividades empresariales o profesionales que determinan la no sujeción prevista en las letras a) y c) de este número, la referida transmisión quedará sujeta al impuesto en la forma establecida para cada caso en esta Ley.</p>
+        <p class="parrafo">Los adquirentes de los bienes comprendidos en las transmisiones que se beneficien de la no sujeción establecida en este número se subrogarán, respecto de dichos bienes, en la posición del transmitente en cuanto a la aplicación de las normas contenidas en el artículo 20, apartado uno, número 22.º y en los artículos 104 a 114 de esta Ley.</p>
+        <p class="parrafo">2.º Las entregas gratuitas de muestras de mercancías sin valor comercial estimable, con fines de promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">A los efectos de esta Ley, se entenderá por muestras de mercancías los artículos representativos de una categoría de las mismas que, por su modo de presentación o cantidad, sólo puedan utilizarse en fines de promoción.</p>
+        <p class="parrafo">3.º Las prestaciones de servicios de demostración a título gratuito efectuadas para la promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">4.º Las entregas sin contraprestación de impresos u objetos de carácter publicitario.</p>
+        <p class="parrafo">Los impresos publicitarios deberán llevar de forma visible el nombre del empresario o profesional que produzca o comercialice bienes o que ofrezca determinadas prestaciones de servicios.</p>
+        <p class="parrafo">A los efectos de esta Ley, se considerarán objetos de carácter publicitario los que carezcan de valor comercial intrínseco, en los que se consigne de forma indeleble la mención publicitaria.</p>
+        <p class="parrafo">Por excepción a lo dispuesto en este número, quedarán sujetas al impuesto las entregas de objetos publicitarios cuando el coste total de los suministros a un mismo destinatario durante el año natural exceda de 15.000 pesetas, a menos que se entreguen a otros sujetos pasivos para su redistribución gratuita.</p>
+        <p class="parrafo">5.º Los servicios prestados por personas físicas en régimen de dependencia derivado de relaciones administrativas o laborales, incluidas en estas últimas las de carácter especial.</p>
+        <p class="parrafo">6.º Los servicios prestados a las cooperativas de trabajo asociado por los socios de las mismas y los prestados a las demás cooperativas por sus socios de trabajo.</p>
+        <p class="parrafo">7.º Las operaciones previstas en el artículo 9, número 1.º y en el artículo 12, números 1.º y 2.º de esta Ley, siempre que no se hubiese atribuido al sujeto pasivo el derecho a efectuar la deducción total o parcial del Impuesto sobre el Valor Añadido efectivamente soportado con ocasión de la adquisición o importación de los bienes o de sus elementos componentes que sean objeto de dichas operaciones.</p>
+        <p class="parrafo">Tampoco estarán sujetas al impuesto las operaciones a que se refiere el artículo 12, número 3.º de esta Ley cuando el sujeto pasivo se limite a prestar el mismo servicio recibido de terceros y no se le hubiera atribuido el derecho a deducir total o parcialmente el Impuesto sobre el Valor Añadido efectivamente soportado en la recepción de dicho servicio.</p>
+        <p class="parrafo">8.º Las entregas de bienes y prestaciones de servicios realizadas directamente por los entes públicos sin contraprestación o mediante contraprestación de naturaleza tributaria.</p>
+        <p class="parrafo">Lo dispuesto en el párrafo anterior no se aplicará cuando los referidos entes actúen por medio de empresa pública, privada, mixta o, en general, de empresas mercantiles.</p>
+        <p class="parrafo">En todo caso, estarán sujetas al impuesto las entregas de bienes y prestaciones de servicios que los entes públicos realicen en el ejercicio de las actividades que a continuación se relacionan:</p>
+        <p class="parrafo">a) Telecomunicaciones.</p>
+        <p class="parrafo">b) Distribución de agua, gas, calor, frío, energía eléctrica y demás modalidades de energía.</p>
+        <p class="parrafo">c) Transportes de personas y bienes.</p>
+        <p class="parrafo">d) Servicios portuarios y aeroportuarios y explotación de infraestructuras ferroviarias incluyendo, a estos efectos, las concesiones y autorizaciones exceptuadas de la no sujeción del Impuesto por el número 9.º siguiente.</p>
+        <p class="parrafo">e) Obtención, fabricación o transformación de productos para su transmisión posterior.</p>
+        <p class="parrafo">f) Intervención sobre productos agropecuarios dirigida a la regulación del mercado de estos productos.</p>
+        <p class="parrafo">g) Explotación de ferias y de exposiciones de carácter comercial.</p>
+        <p class="parrafo">h) Almacenaje y depósito.</p>
+        <p class="parrafo">i) Las de oficinas comerciales de publicidad.</p>
+        <p class="parrafo">j) Explotación de cantinas y comedores de empresas, economatos, cooperativas y establecimientos similares.</p>
+        <p class="parrafo">k) Las de agencias de viajes.</p>
+        <p class="parrafo">l) Las comerciales o mercantiles de los entes públicos de radio y televisión, incluidas las relativas a la cesión del uso de sus instalaciones.</p>
+        <p class="parrafo">m) Las de matadero.</p>
+        <p class="parrafo">9.º Las concesiones y autorizaciones administrativas, con excepción de las siguientes:</p>
+        <p class="parrafo">a) Las que tengan por objeto la cesión del derecho a utilizar el dominio público portuario.</p>
+        <p class="parrafo">b) Las que tengan por objeto la cesión de los inmuebles e instalaciones en aeropuertos.</p>
+        <p class="parrafo">c) Las que tengan por objeto la cesión del derecho a utilizar infraestructuras ferroviarias.</p>
+        <p class="parrafo">d) Las autorizaciones para la prestación de servicios al público y para el desarrollo de actividades comerciales o industriales en el ámbito portuario.</p>
+        <p class="parrafo">10.º Las prestaciones de servicios a título gratuito a que se refiere el artículo 12, número 3.º de esta Ley que sean obligatorias para el sujeto pasivo en virtud de normas jurídicas o convenios colectivos, incluso los servicios telegráficos y telefónicos prestados en régimen de franquicia.</p>
+        <p class="parrafo">11.º Las operaciones realizadas por las Comunidades de Regantes para la ordenación y aprovechamiento de las aguas.</p>
+        <p class="parrafo">12.º Las entregas de dinero a título de contraprestación o pago.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifican los apartados 8º d) y 9º por el art. 4.1 de la Ley 50/1998, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1998-30155</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 8º por el art. 6.1 de la Ley 66/1997, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1997-28053</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2008-20802" fecha_publicacion="20081225" fecha_vigencia="20081226">
+        <p class="articulo">Artículo 7. Operaciones no sujetas al impuesto.</p>
+        <p class="parrafo">No estarán sujetas al impuesto:</p>
+        <p class="parrafo_2">1.º La transmisión de un conjunto de elementos corporales y, en su caso, incorporales que, formando parte del patrimonio empresarial o profesional del sujeto pasivo, constituyan una unidad económica autónoma capaz de desarrollar una actividad empresarial o profesional por sus propios medios, con independencia del régimen fiscal que a dicha transmisión le resulte de aplicación en el ámbito de otros tributos y del procedente conforme a lo dispuesto en el artículo 4, apartado cuatro, de esta Ley.</p>
+        <p class="parrafo">Quedarán excluidas de la no sujeción a que se refiere el párrafo anterior las siguientes transmisiones:</p>
+        <p class="parrafo_2">a)<strong> (Suprimida)</strong></p>
+        <p class="parrafo">b) Las realizadas por quienes tengan la condición de empresario o profesional exclusivamente conforme a lo dispuesto por el artículo 5, apartado uno, letra c) de esta Ley, cuando dichas transmisiones tengan por objeto la mera cesión de bienes.</p>
+        <p class="parrafo">A estos efectos, se considerará como mera cesión de bienes la transmisión de bienes arrendados cuando no se acompañe de una estructura organizativa de factores de producción materiales y humanos, o de uno de ellos, que permita considerar a la misma constitutiva de una unidad económica autónoma.</p>
+        <p class="parrafo">c) Las efectuadas por quienes tengan la condición de empresario o profesional exclusivamente por la realización ocasional de las operaciones a que se refiere el artículo 5, apartado uno, letra d) de esta Ley.</p>
+        <p class="parrafo_2">A los efectos de lo dispuesto en este número, resultará irrelevante que el adquirente desarrolle la misma actividad a la que estaban afectos los elementos adquiridos u otra diferente, siempre que se acredite por el adquirente la intención de mantener dicha afectación al desarrollo de una actividad empresarial o profesional.</p>
+        <p class="parrafo">En caso de que los bienes y derechos transmitidos, o parte de ellos, se desafecten posteriormente de las actividades empresariales o profesionales que determinan la no sujeción prevista en este número, la referida desafectación quedará sujeta al Impuesto en la forma establecida para cada caso en esta Ley.</p>
+        <p class="parrafo">Los adquirentes de los bienes y derechos comprendidos en las transmisiones que se beneficien de la no sujeción establecida en este número se subrogarán, respecto de dichos bienes y derechos, en la posición del transmitente en cuanto a la aplicación de las normas contenidas en el artículo 20, apartado uno, número 22.º y en los artículos 92 a 114 de esta Ley.</p>
+        <p class="parrafo">2.º Las entregas gratuitas de muestras de mercancías sin valor comercial estimable, con fines de promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">A los efectos de esta Ley, se entenderá por muestras de mercancías los artículos representativos de una categoría de las mismas que, por su modo de presentación o cantidad, sólo puedan utilizarse en fines de promoción.</p>
+        <p class="parrafo">3.º Las prestaciones de servicios de demostración a título gratuito efectuadas para la promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">4.º Las entregas sin contraprestación de impresos u objetos de carácter publicitario.</p>
+        <p class="parrafo">Los impresos publicitarios deberán llevar de forma visible el nombre del empresario o profesional que produzca o comercialice bienes o que ofrezca determinadas prestaciones de servicios.</p>
+        <p class="parrafo">A los efectos de esta Ley, se considerarán objetos de carácter publicitario los que carezcan de valor comercial intrínseco, en los que se consigne de forma indeleble la mención publicitaria.</p>
+        <p class="parrafo">Por excepción a lo dispuesto en este número, quedarán sujetas al impuesto las entregas de objetos publicitarios cuando el coste total de los suministros a un mismo destinatario durante el año natural exceda de 15.000 pesetas, a menos que se entreguen a otros sujetos pasivos para su redistribución gratuita.</p>
+        <p class="parrafo">5.º Los servicios prestados por personas físicas en régimen de dependencia derivado de relaciones administrativas o laborales, incluidas en estas últimas las de carácter especial.</p>
+        <p class="parrafo">6.º Los servicios prestados a las cooperativas de trabajo asociado por los socios de las mismas y los prestados a las demás cooperativas por sus socios de trabajo.</p>
+        <p class="parrafo">7.º Las operaciones previstas en el artículo 9, número 1.º y en el artículo 12, números 1.º y 2.º de esta Ley, siempre que no se hubiese atribuido al sujeto pasivo el derecho a efectuar la deducción total o parcial del Impuesto sobre el Valor Añadido efectivamente soportado con ocasión de la adquisición o importación de los bienes o de sus elementos componentes que sean objeto de dichas operaciones.</p>
+        <p class="parrafo">Tampoco estarán sujetas al impuesto las operaciones a que se refiere el artículo 12, número 3.º de esta Ley cuando el sujeto pasivo se limite a prestar el mismo servicio recibido de terceros y no se le hubiera atribuido el derecho a deducir total o parcialmente el Impuesto sobre el Valor Añadido efectivamente soportado en la recepción de dicho servicio.</p>
+        <p class="parrafo">8.º Las entregas de bienes y prestaciones de servicios realizadas directamente por los entes públicos sin contraprestación o mediante contraprestación de naturaleza tributaria.</p>
+        <p class="parrafo_2">Lo dispuesto en el párrafo anterior no se aplicará cuando los referidos entes actúen por medio de empresa pública, privada, mixta o, en general, de empresas mercantiles.</p>
+        <p class="parrafo">En todo caso, estarán sujetas al impuesto las entregas de bienes y prestaciones de servicios que los entes públicos realicen en el ejercicio de las actividades que a continuación se relacionan:</p>
+        <p class="parrafo_2">a) Telecomunicaciones.</p>
+        <p class="parrafo">b) Distribución de agua, gas, calor, frío, energía eléctrica y demás modalidades de energía.</p>
+        <p class="parrafo">c) Transportes de personas y bienes.</p>
+        <p class="parrafo">d) Servicios portuarios y aeroportuarios y explotación de infraestructuras ferroviarias incluyendo, a estos efectos, las concesiones y autorizaciones exceptuadas de la no sujeción del Impuesto por el número 9.º siguiente.</p>
+        <p class="parrafo">e) Obtención, fabricación o transformación de productos para su transmisión posterior.</p>
+        <p class="parrafo">f) Intervención sobre productos agropecuarios dirigida a la regulación del mercado de estos productos.</p>
+        <p class="parrafo">g) Explotación de ferias y de exposiciones de carácter comercial.</p>
+        <p class="parrafo">h) Almacenaje y depósito.</p>
+        <p class="parrafo">i) Las de oficinas comerciales de publicidad.</p>
+        <p class="parrafo">j) Explotación de cantinas y comedores de empresas, economatos, cooperativas y establecimientos similares.</p>
+        <p class="parrafo">k) Las de agencias de viajes.</p>
+        <p class="parrafo">l) Las comerciales o mercantiles de los entes públicos de radio y televisión, incluidas las relativas a la cesión del uso de sus instalaciones.</p>
+        <p class="parrafo">m) Las de matadero.</p>
+        <p class="parrafo_2">9.º Las concesiones y autorizaciones administrativas, con excepción de las siguientes:</p>
+        <p class="parrafo_2">a) Las que tengan por objeto la cesión del derecho a utilizar el dominio público portuario.</p>
+        <p class="parrafo">b) Las que tengan por objeto la cesión de los inmuebles e instalaciones en aeropuertos.</p>
+        <p class="parrafo">c) Las que tengan por objeto la cesión del derecho a utilizar infraestructuras ferroviarias.</p>
+        <p class="parrafo">d) Las autorizaciones para la prestación de servicios al público y para el desarrollo de actividades comerciales o industriales en el ámbito portuario.</p>
+        <p class="parrafo_2">10.º Las prestaciones de servicios a título gratuito a que se refiere el artículo 12, número 3.º de esta Ley que sean obligatorias para el sujeto pasivo en virtud de normas jurídicas o convenios colectivos, incluso los servicios telegráficos y telefónicos prestados en régimen de franquicia.</p>
+        <p class="parrafo">11.º Las operaciones realizadas por las Comunidades de Regantes para la ordenación y aprovechamiento de las aguas.</p>
+        <p class="parrafo">12.º Las entregas de dinero a título de contraprestación o pago.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 1º por el art. 5.3 de la Ley 4/2008, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2008-20802</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 8º d) y 9º por el art. 4.1 de la Ley 50/1998, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1998-30155</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 8º por el art. 6.1 de la Ley 66/1997, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1997-28053</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2014-12329" fecha_publicacion="20141128" fecha_vigencia="20150101">
+        <p class="articulo">Artículo 7. Operaciones no sujetas al impuesto.</p>
+        <p class="parrafo">No estarán sujetas al impuesto:</p>
+        <p class="parrafo_2">1.º La transmisión de un conjunto de elementos corporales y, en su caso, incorporales que, formando parte del patrimonio empresarial o profesional del sujeto pasivo, constituyan o sean susceptibles de constituir una unidad económica autónoma en el transmitente, capaz de desarrollar una actividad empresarial o profesional por sus propios medios, con independencia del régimen fiscal que a dicha transmisión le resulte de aplicación en el ámbito de otros tributos y del procedente conforme a lo dispuesto en el artículo 4, apartado cuatro, de esta Ley.</p>
+        <p class="parrafo">Quedarán excluidas de la no sujeción a que se refiere el párrafo anterior las siguientes transmisiones:</p>
+        <p class="parrafo_2">a) La mera cesión de bienes o de derechos.</p>
+        <p class="parrafo">b) Las realizadas por quienes tengan la condición de empresario o profesional exclusivamente conforme a lo dispuesto por el artículo 5, apartado uno, letra c) de esta Ley, cuando dichas transmisiones tengan por objeto la mera cesión de bienes.</p>
+        <p class="parrafo">c) Las efectuadas por quienes tengan la condición de empresario o profesional exclusivamente por la realización ocasional de las operaciones a que se refiere el artículo 5, apartado uno, letra d) de esta Ley.</p>
+        <p class="parrafo_2">A los efectos de lo dispuesto en este número, resultará irrelevante que el adquirente desarrolle la misma actividad a la que estaban afectos los elementos adquiridos u otra diferente, siempre que se acredite por el adquirente la intención de mantener dicha afectación al desarrollo de una actividad empresarial o profesional.</p>
+        <p class="parrafo">En relación con lo dispuesto en este número, se considerará como mera cesión de bienes o de derechos, la transmisión de éstos cuando no se acompañe de una estructura organizativa de factores de producción materiales y humanos, o de uno de ellos, que permita considerar a la misma constitutiva de una unidad económica autónoma.</p>
+        <p class="parrafo">En caso de que los bienes y derechos transmitidos, o parte de ellos, se desafecten posteriormente de las actividades empresariales o profesionales que determinan la no sujeción prevista en este número, la referida desafectación quedará sujeta al Impuesto en la forma establecida para cada caso en esta Ley.</p>
+        <p class="parrafo">Los adquirentes de los bienes y derechos comprendidos en las transmisiones que se beneficien de la no sujeción establecida en este número se subrogarán, respecto de dichos bienes y derechos, en la posición del transmitente en cuanto a la aplicación de las normas contenidas en el artículo 20, apartado uno, número 22.º y en los artículos 92 a 114 de esta Ley.</p>
+        <p class="parrafo">2.º Las entregas gratuitas de muestras de mercancías sin valor comercial estimable, con fines de promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">A los efectos de esta Ley, se entenderá por muestras de mercancías los artículos representativos de una categoría de las mismas que, por su modo de presentación o cantidad, sólo puedan utilizarse en fines de promoción.</p>
+        <p class="parrafo">3.º Las prestaciones de servicios de demostración a título gratuito efectuadas para la promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">4.º Las entregas sin contraprestación de impresos u objetos de carácter publicitario.</p>
+        <p class="parrafo_2">Los impresos publicitarios deberán llevar de forma visible el nombre del empresario o profesional que produzca o comercialice bienes o que ofrezca determinadas prestaciones de servicios.</p>
+        <p class="parrafo">A los efectos de esta Ley, se considerarán objetos de carácter publicitario los que carezcan de valor comercial intrínseco, en los que se consigne de forma indeleble la mención publicitaria.</p>
+        <p class="parrafo_2">Por excepción a lo dispuesto en este número, quedarán sujetas al Impuesto las entregas de objetos publicitarios cuando el coste total de los suministros a un mismo destinatario durante el año natural exceda de 200 euros, a menos que se entreguen a otros sujetos pasivos para su redistribución gratuita.</p>
+        <p class="parrafo">5.º Los servicios prestados por personas físicas en régimen de dependencia derivado de relaciones administrativas o laborales, incluidas en estas últimas las de carácter especial.</p>
+        <p class="parrafo">6.º Los servicios prestados a las cooperativas de trabajo asociado por los socios de las mismas y los prestados a las demás cooperativas por sus socios de trabajo.</p>
+        <p class="parrafo">7.º Las operaciones previstas en el artículo 9, número 1.º y en el artículo 12, números 1.º y 2.º de esta Ley, siempre que no se hubiese atribuido al sujeto pasivo el derecho a efectuar la deducción total o parcial del Impuesto sobre el Valor Añadido efectivamente soportado con ocasión de la adquisición o importación de los bienes o de sus elementos componentes que sean objeto de dichas operaciones.</p>
+        <p class="parrafo">Tampoco estarán sujetas al impuesto las operaciones a que se refiere el artículo 12, número 3.º de esta Ley cuando el sujeto pasivo se limite a prestar el mismo servicio recibido de terceros y no se le hubiera atribuido el derecho a deducir total o parcialmente el Impuesto sobre el Valor Añadido efectivamente soportado en la recepción de dicho servicio.</p>
+        <p class="parrafo">8.º Las entregas de bienes y prestaciones de servicios realizadas directamente por las Administraciones Públicas sin contraprestación o mediante contraprestación de naturaleza tributaria.</p>
+        <p class="parrafo">A estos efectos se considerarán Administraciones Públicas:</p>
+        <p class="parrafo_2">a) La Administración General del Estado, las Administraciones de las Comunidades Autónomas y las Entidades que integran la Administración Local.</p>
+        <p class="parrafo">b) Las entidades gestoras y los servicios comunes de la Seguridad Social.</p>
+        <p class="parrafo">c) Los organismos autónomos, las Universidades Públicas y las Agencias Estatales.</p>
+        <p class="parrafo">d) Cualesquiera entidad de derecho público con personalidad jurídica propia, dependiente de las anteriores que, con independencia funcional o con una especial autonomía reconocida por la Ley tengan atribuidas funciones de regulación o control de carácter externo sobre un determinado sector o actividad.</p>
+        <p class="parrafo_2">No tendrán la consideración de Administraciones Públicas las entidades públicas empresariales estatales y los organismos asimilados dependientes de las Comunidades Autónomas y Entidades locales.</p>
+        <p class="parrafo">No estarán sujetos al Impuesto los servicios prestados en virtud de encomiendas de gestión por los entes, organismos y entidades del sector público que ostenten, de conformidad con lo establecido en los artículos 4.1.n) y 24.6 del Texto Refundido de la Ley de Contratos del Sector Público, aprobado por el Real Decreto Legislativo 3/2011, de 14 de noviembre, la condición de medio propio instrumental y servicio técnico de la Administración Pública encomendante y de los poderes adjudicadores dependientes del mismo.</p>
+        <p class="parrafo">Asimismo, no estarán sujetos al Impuesto los servicios prestados por cualesquiera entes, organismos o entidades del sector público, en los términos a que se refiere el artículo 3.1 del Texto Refundido de la Ley de Contratos del Sector Público, a favor de las Administraciones Públicas de la que dependan o de otra íntegramente dependiente de estas, cuando dichas Administraciones Públicas ostenten la titularidad íntegra de los mismos.</p>
+        <p class="parrafo">En todo caso, estarán sujetas al Impuesto las entregas de bienes y prestaciones de servicios que las Administraciones, entes, organismos y entidades del sector público realicen en el ejercicio de las actividades que a continuación se relacionan:</p>
+        <p class="parrafo_2">a´) Telecomunicaciones.</p>
+        <p class="parrafo">b´) Distribución de agua, gas, calor, frío, energía eléctrica y demás modalidades de energía.</p>
+        <p class="parrafo">c´) Transportes de personas y bienes.</p>
+        <p class="parrafo">d´) Servicios portuarios y aeroportuarios y explotación de infraestructuras ferroviarias incluyendo, a estos efectos, las concesiones y autorizaciones exceptuadas de la no sujeción del Impuesto por el número 9.º siguiente.</p>
+        <p class="parrafo">e´) Obtención, fabricación o transformación de productos para su transmisión posterior.</p>
+        <p class="parrafo">f´) Intervención sobre productos agropecuarios dirigida a la regulación del mercado de estos productos.</p>
+        <p class="parrafo">g´) Explotación de ferias y de exposiciones de carácter comercial.</p>
+        <p class="parrafo">h´) Almacenaje y depósito.</p>
+        <p class="parrafo">i´) Las de oficinas comerciales de publicidad.</p>
+        <p class="parrafo">j´) Explotación de cantinas y comedores de empresas, economatos, cooperativas y establecimientos similares.</p>
+        <p class="parrafo">k´) Las de agencias de viajes.</p>
+        <p class="parrafo">l´) Las comerciales o mercantiles de los Entes públicos de radio y televisión, incluidas las relativas a la cesión del uso de sus instalaciones. A estos efectos se considerarán comerciales o mercantiles en todo caso aquellas que generen o sean susceptibles de generar ingresos de publicidad no provenientes del sector público.</p>
+        <p class="parrafo">m´) Las de matadero.</p>
+        <p class="parrafo_2">9.º Las concesiones y autorizaciones administrativas, con excepción de las siguientes:</p>
+        <p class="parrafo_2">a) Las que tengan por objeto la cesión del derecho a utilizar el dominio público portuario.</p>
+        <p class="parrafo">b) Las que tengan por objeto la cesión de los inmuebles e instalaciones en aeropuertos.</p>
+        <p class="parrafo">c) Las que tengan por objeto la cesión del derecho a utilizar infraestructuras ferroviarias.</p>
+        <p class="parrafo">d) Las autorizaciones para la prestación de servicios al público y para el desarrollo de actividades comerciales o industriales en el ámbito portuario.</p>
+        <p class="parrafo_2">10.º Las prestaciones de servicios a título gratuito a que se refiere el artículo 12, número 3.º de esta Ley que sean obligatorias para el sujeto pasivo en virtud de normas jurídicas o convenios colectivos, incluso los servicios telegráficos y telefónicos prestados en régimen de franquicia.</p>
+        <p class="parrafo">11.º Las operaciones realizadas por las Comunidades de Regantes para la ordenación y aprovechamiento de las aguas.</p>
+        <p class="parrafo">12.º Las entregas de dinero a título de contraprestación o pago.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifican los apartados 1º, 4º y 8º por el art. 1.2 de la Ley 28/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12329</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 1º por el art. 5.3 de la Ley 4/2008, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2008-20802</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 8º d) y 9º por el art. 4.1 de la Ley 50/1998, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1998-30155</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 8º por el art. 6.1 de la Ley 66/1997, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1997-28053</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2017-12902" fecha_publicacion="20171109" fecha_vigencia="20171110">
+        <p class="articulo">Artículo 7. Operaciones no sujetas al impuesto.</p>
+        <p class="parrafo">No estarán sujetas al impuesto:</p>
+        <p class="parrafo_2">1.º La transmisión de un conjunto de elementos corporales y, en su caso, incorporales que, formando parte del patrimonio empresarial o profesional del sujeto pasivo, constituyan o sean susceptibles de constituir una unidad económica autónoma en el transmitente, capaz de desarrollar una actividad empresarial o profesional por sus propios medios, con independencia del régimen fiscal que a dicha transmisión le resulte de aplicación en el ámbito de otros tributos y del procedente conforme a lo dispuesto en el artículo 4, apartado cuatro, de esta Ley.</p>
+        <p class="parrafo">Quedarán excluidas de la no sujeción a que se refiere el párrafo anterior las siguientes transmisiones:</p>
+        <p class="parrafo_2">a) La mera cesión de bienes o de derechos.</p>
+        <p class="parrafo">b) Las realizadas por quienes tengan la condición de empresario o profesional exclusivamente conforme a lo dispuesto por el artículo 5, apartado uno, letra c) de esta Ley, cuando dichas transmisiones tengan por objeto la mera cesión de bienes.</p>
+        <p class="parrafo">c) Las efectuadas por quienes tengan la condición de empresario o profesional exclusivamente por la realización ocasional de las operaciones a que se refiere el artículo 5, apartado uno, letra d) de esta Ley.</p>
+        <p class="parrafo_2">A los efectos de lo dispuesto en este número, resultará irrelevante que el adquirente desarrolle la misma actividad a la que estaban afectos los elementos adquiridos u otra diferente, siempre que se acredite por el adquirente la intención de mantener dicha afectación al desarrollo de una actividad empresarial o profesional.</p>
+        <p class="parrafo">En relación con lo dispuesto en este número, se considerará como mera cesión de bienes o de derechos, la transmisión de éstos cuando no se acompañe de una estructura organizativa de factores de producción materiales y humanos, o de uno de ellos, que permita considerar a la misma constitutiva de una unidad económica autónoma.</p>
+        <p class="parrafo">En caso de que los bienes y derechos transmitidos, o parte de ellos, se desafecten posteriormente de las actividades empresariales o profesionales que determinan la no sujeción prevista en este número, la referida desafectación quedará sujeta al Impuesto en la forma establecida para cada caso en esta Ley.</p>
+        <p class="parrafo">Los adquirentes de los bienes y derechos comprendidos en las transmisiones que se beneficien de la no sujeción establecida en este número se subrogarán, respecto de dichos bienes y derechos, en la posición del transmitente en cuanto a la aplicación de las normas contenidas en el artículo 20, apartado uno, número 22.º y en los artículos 92 a 114 de esta Ley.</p>
+        <p class="parrafo">2.º Las entregas gratuitas de muestras de mercancías sin valor comercial estimable, con fines de promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">A los efectos de esta Ley, se entenderá por muestras de mercancías los artículos representativos de una categoría de las mismas que, por su modo de presentación o cantidad, sólo puedan utilizarse en fines de promoción.</p>
+        <p class="parrafo">3.º Las prestaciones de servicios de demostración a título gratuito efectuadas para la promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">4.º Las entregas sin contraprestación de impresos u objetos de carácter publicitario.</p>
+        <p class="parrafo_2">Los impresos publicitarios deberán llevar de forma visible el nombre del empresario o profesional que produzca o comercialice bienes o que ofrezca determinadas prestaciones de servicios.</p>
+        <p class="parrafo">A los efectos de esta Ley, se considerarán objetos de carácter publicitario los que carezcan de valor comercial intrínseco, en los que se consigne de forma indeleble la mención publicitaria.</p>
+        <p class="parrafo_2">Por excepción a lo dispuesto en este número, quedarán sujetas al Impuesto las entregas de objetos publicitarios cuando el coste total de los suministros a un mismo destinatario durante el año natural exceda de 200 euros, a menos que se entreguen a otros sujetos pasivos para su redistribución gratuita.</p>
+        <p class="parrafo">5.º Los servicios prestados por personas físicas en régimen de dependencia derivado de relaciones administrativas o laborales, incluidas en estas últimas las de carácter especial.</p>
+        <p class="parrafo">6.º Los servicios prestados a las cooperativas de trabajo asociado por los socios de las mismas y los prestados a las demás cooperativas por sus socios de trabajo.</p>
+        <p class="parrafo">7.º Las operaciones previstas en el artículo 9, número 1.º y en el artículo 12, números 1.º y 2.º de esta Ley, siempre que no se hubiese atribuido al sujeto pasivo el derecho a efectuar la deducción total o parcial del Impuesto sobre el Valor Añadido efectivamente soportado con ocasión de la adquisición o importación de los bienes o de sus elementos componentes que sean objeto de dichas operaciones.</p>
+        <p class="parrafo">Tampoco estarán sujetas al impuesto las operaciones a que se refiere el artículo 12, número 3.º de esta Ley cuando el sujeto pasivo se limite a prestar el mismo servicio recibido de terceros y no se le hubiera atribuido el derecho a deducir total o parcialmente el Impuesto sobre el Valor Añadido efectivamente soportado en la recepción de dicho servicio.</p>
+        <p class="parrafo">8.º A) Las entregas de bienes y prestaciones de servicios realizadas directamente por las Administraciones Públicas, así como las entidades a las que se refieren los apartados C) y D) de este número, sin contraprestación o mediante contraprestación de naturaleza tributaria.</p>
+        <p class="parrafo">B) A estos efectos se considerarán Administraciones Públicas:</p>
+        <p class="parrafo_2">a) La Administración General del Estado, las Administraciones de las Comunidades Autónomas y las Entidades que integran la Administración Local.</p>
+        <p class="parrafo">b) Las Entidades Gestoras y los Servicios Comunes de la Seguridad Social.</p>
+        <p class="parrafo">c) Los Organismos Autónomos, las Universidades Públicas y las Agencias Estatales.</p>
+        <p class="parrafo">d) Cualesquiera entidad de derecho público con personalidad jurídica propia, dependiente de las anteriores que, con independencia funcional o con una especial autonomía reconocida por la Ley tengan atribuidas funciones de regulación o control de carácter externo sobre un determinado sector o actividad.</p>
+        <p class="parrafo_2">No tendrán la consideración de Administraciones Públicas las entidades públicas empresariales estatales y los organismos asimilados dependientes de las Comunidades Autónomas y Entidades locales.</p>
+        <p class="parrafo">C) No estarán sujetos al Impuesto los servicios prestados en virtud de los encargos ejecutados por los entes, organismos y entidades del sector público que ostenten, de conformidad con lo establecido en el artículo 32 de la Ley de Contratos del Sector Público, la condición de medio propio personificado del poder adjudicador que haya ordenado el encargo, en los términos establecidos en el referido artículo 32.</p>
+        <p class="parrafo">D) Asimismo, no estarán sujetos al Impuesto los servicios prestados por cualesquiera entes, organismos o entidades del sector público, en los términos a que se refiere el artículo 3.1 de la Ley de Contratos del Sector Público, a favor de las Administraciones Públicas de la que dependan o de otra íntegramente dependiente de estas, cuando dichas Administraciones Públicas ostenten la titularidad íntegra de los mismos.</p>
+        <p class="parrafo">E) La no consideración como operaciones sujetas al impuesto que establecen los dos apartados C) y D) anteriores será igualmente aplicable a los servicios prestados entre las entidades a las que se refieren los mismos, íntegramente dependientes de la misma Administración Pública.</p>
+        <p class="parrafo">F) En todo caso, estarán sujetas al Impuesto las entregas de bienes y prestaciones de servicios que las Administraciones, entes, organismos y entidades del sector público realicen en el ejercicio de las actividades que a continuación se relacionan:</p>
+        <p class="parrafo_2">a´) Telecomunicaciones.</p>
+        <p class="parrafo">b´) Distribución de agua, gas, calor, frío, energía eléctrica y demás modalidades de energía.</p>
+        <p class="parrafo">c´) Transportes de personas y bienes.</p>
+        <p class="parrafo">d´) Servicios portuarios y aeroportuarios y explotación de infraestructuras ferroviarias incluyendo, a estos efectos, las concesiones y autorizaciones exceptuadas de la no sujeción del Impuesto por el número 9.º siguiente.</p>
+        <p class="parrafo">e´) Obtención, fabricación o transformación de productos para su transmisión posterior.</p>
+        <p class="parrafo">f´) Intervención sobre productos agropecuarios dirigida a la regulación del mercado de estos productos.</p>
+        <p class="parrafo">g´) Explotación de ferias y de exposiciones de carácter comercial.</p>
+        <p class="parrafo">h´) Almacenaje y depósito.</p>
+        <p class="parrafo">i´) Las de oficinas comerciales de publicidad.</p>
+        <p class="parrafo">j´) Explotación de cantinas y comedores de empresas, economatos, cooperativas y establecimientos similares.</p>
+        <p class="parrafo">k´) Las de agencias de viajes.</p>
+        <p class="parrafo">l´) Las comerciales o mercantiles de los Entes públicos de radio y televisión, incluidas las relativas a la cesión del uso de sus instalaciones.</p>
+        <p class="parrafo">m´) Las de matadero.</p>
+        <p class="parrafo_2">9.º Las concesiones y autorizaciones administrativas, con excepción de las siguientes:</p>
+        <p class="parrafo_2">a) Las que tengan por objeto la cesión del derecho a utilizar el dominio público portuario.</p>
+        <p class="parrafo">b) Las que tengan por objeto la cesión de los inmuebles e instalaciones en aeropuertos.</p>
+        <p class="parrafo">c) Las que tengan por objeto la cesión del derecho a utilizar infraestructuras ferroviarias.</p>
+        <p class="parrafo">d) Las autorizaciones para la prestación de servicios al público y para el desarrollo de actividades comerciales o industriales en el ámbito portuario.</p>
+        <p class="parrafo_2">10.º Las prestaciones de servicios a título gratuito a que se refiere el artículo 12, número 3.º de esta Ley que sean obligatorias para el sujeto pasivo en virtud de normas jurídicas o convenios colectivos, incluso los servicios telegráficos y telefónicos prestados en régimen de franquicia.</p>
+        <p class="parrafo">11.º Las operaciones realizadas por las Comunidades de Regantes para la ordenación y aprovechamiento de las aguas.</p>
+        <p class="parrafo">12.º Las entregas de dinero a título de contraprestación o pago.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 8 por la disposición final 10.1 de la Ley 9/2017, de 8 de noviembre. <a class="refPost">Ref. BOE-A-2017-12902#df-10</a></p>
+          <p class="nota_pie">Se modifican los apartados 1º, 4º y 8º por el art. 1.2 de la Ley 28/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12329</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 1º por el art. 5.3 de la Ley 4/2008, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2008-20802</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 8º d) y 9º por el art. 4.1 de la Ley 50/1998, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1998-30155</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 8º por el art. 6.1 de la Ley 66/1997, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1997-28053</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2022-21574" fecha_publicacion="20221220" fecha_vigencia="20221221">
+        <p class="articulo">Artículo 7. Operaciones no sujetas al impuesto.</p>
+        <p class="parrafo">No estarán sujetas al impuesto:</p>
+        <p class="parrafo_2">1.º La transmisión de un conjunto de elementos corporales y, en su caso, incorporales que, formando parte del patrimonio empresarial o profesional del sujeto pasivo, constituyan o sean susceptibles de constituir una unidad económica autónoma en el transmitente, capaz de desarrollar una actividad empresarial o profesional por sus propios medios, con independencia del régimen fiscal que a dicha transmisión le resulte de aplicación en el ámbito de otros tributos y del procedente conforme a lo dispuesto en el artículo 4, apartado cuatro, de esta Ley.</p>
+        <p class="parrafo">Quedarán excluidas de la no sujeción a que se refiere el párrafo anterior las siguientes transmisiones:</p>
+        <p class="parrafo_2">a) La mera cesión de bienes o de derechos.</p>
+        <p class="parrafo">b) Las realizadas por quienes tengan la condición de empresario o profesional exclusivamente conforme a lo dispuesto por el artículo 5, apartado uno, letra c) de esta Ley, cuando dichas transmisiones tengan por objeto la mera cesión de bienes.</p>
+        <p class="parrafo">c) Las efectuadas por quienes tengan la condición de empresario o profesional exclusivamente por la realización ocasional de las operaciones a que se refiere el artículo 5, apartado uno, letra d) de esta Ley.</p>
+        <p class="parrafo_2">A los efectos de lo dispuesto en este número, resultará irrelevante que el adquirente desarrolle la misma actividad a la que estaban afectos los elementos adquiridos u otra diferente, siempre que se acredite por el adquirente la intención de mantener dicha afectación al desarrollo de una actividad empresarial o profesional.</p>
+        <p class="parrafo">En relación con lo dispuesto en este número, se considerará como mera cesión de bienes o de derechos, la transmisión de éstos cuando no se acompañe de una estructura organizativa de factores de producción materiales y humanos, o de uno de ellos, que permita considerar a la misma constitutiva de una unidad económica autónoma.</p>
+        <p class="parrafo">En caso de que los bienes y derechos transmitidos, o parte de ellos, se desafecten posteriormente de las actividades empresariales o profesionales que determinan la no sujeción prevista en este número, la referida desafectación quedará sujeta al Impuesto en la forma establecida para cada caso en esta Ley.</p>
+        <p class="parrafo">Los adquirentes de los bienes y derechos comprendidos en las transmisiones que se beneficien de la no sujeción establecida en este número se subrogarán, respecto de dichos bienes y derechos, en la posición del transmitente en cuanto a la aplicación de las normas contenidas en el artículo 20, apartado uno, número 22.º y en los artículos 92 a 114 de esta Ley.</p>
+        <p class="parrafo">2.º Las entregas gratuitas de muestras de mercancías sin valor comercial estimable, con fines de promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">A los efectos de esta Ley, se entenderá por muestras de mercancías los artículos representativos de una categoría de las mismas que, por su modo de presentación o cantidad, sólo puedan utilizarse en fines de promoción.</p>
+        <p class="parrafo">3.º Las prestaciones de servicios de demostración a título gratuito efectuadas para la promoción de las actividades empresariales o profesionales.</p>
+        <p class="parrafo">4.º Las entregas sin contraprestación de impresos u objetos de carácter publicitario.</p>
+        <p class="parrafo_2">Los impresos publicitarios deberán llevar de forma visible el nombre del empresario o profesional que produzca o comercialice bienes o que ofrezca determinadas prestaciones de servicios.</p>
+        <p class="parrafo">A los efectos de esta Ley, se considerarán objetos de carácter publicitario los que carezcan de valor comercial intrínseco, en los que se consigne de forma indeleble la mención publicitaria.</p>
+        <p class="parrafo_2">Por excepción a lo dispuesto en este número, quedarán sujetas al Impuesto las entregas de objetos publicitarios cuando el coste total de los suministros a un mismo destinatario durante el año natural exceda de 200 euros, a menos que se entreguen a otros sujetos pasivos para su redistribución gratuita.</p>
+        <p class="parrafo">5.º Los servicios prestados por personas físicas en régimen de dependencia derivado de relaciones administrativas o laborales, incluidas en estas últimas las de carácter especial.</p>
+        <p class="parrafo">6.º Los servicios prestados a las cooperativas de trabajo asociado por los socios de las mismas y los prestados a las demás cooperativas por sus socios de trabajo.</p>
+        <p class="parrafo">7.º Las operaciones previstas en el artículo 9, número 1.º y en el artículo 12, números 1.º y 2.º de esta Ley, siempre que no se hubiese atribuido al sujeto pasivo el derecho a efectuar la deducción total o parcial del Impuesto sobre el Valor Añadido efectivamente soportado con ocasión de la adquisición o importación de los bienes o de sus elementos componentes que sean objeto de dichas operaciones.</p>
+        <p class="parrafo">Tampoco estarán sujetas al impuesto las operaciones a que se refiere el artículo 12, número 3.º de esta Ley cuando el sujeto pasivo se limite a prestar el mismo servicio recibido de terceros y no se le hubiera atribuido el derecho a deducir total o parcialmente el Impuesto sobre el Valor Añadido efectivamente soportado en la recepción de dicho servicio.</p>
+        <p class="parrafo">8.º A) Las entregas de bienes y prestaciones de servicios realizadas directamente por las Administraciones Públicas, así como las entidades a las que se refieren los apartados C) y D) de este número, sin contraprestación o mediante contraprestación de naturaleza tributaria.</p>
+        <p class="parrafo">B) A estos efectos se considerarán Administraciones Públicas:</p>
+        <p class="parrafo_2">a) La Administración General del Estado, las Administraciones de las Comunidades Autónomas y las Entidades que integran la Administración Local.</p>
+        <p class="parrafo">b) Las Entidades Gestoras y los Servicios Comunes de la Seguridad Social.</p>
+        <p class="parrafo">c) Los Organismos Autónomos, las Universidades Públicas y las Agencias Estatales.</p>
+        <p class="parrafo">d) Cualesquiera entidad de derecho público con personalidad jurídica propia, dependiente de las anteriores que, con independencia funcional o con una especial autonomía reconocida por la Ley tengan atribuidas funciones de regulación o control de carácter externo sobre un determinado sector o actividad.</p>
+        <p class="parrafo_2">No tendrán la consideración de Administraciones Públicas las entidades públicas empresariales estatales y los organismos asimilados dependientes de las Comunidades Autónomas y Entidades locales.</p>
+        <p class="parrafo">C) No estarán sujetos al Impuesto los servicios prestados en virtud de los encargos ejecutados por los entes, organismos y entidades del sector público que ostenten, de conformidad con lo establecido en el artículo 32 de la Ley de Contratos del Sector Público, la condición de medio propio personificado del poder adjudicador que haya ordenado el encargo, en los términos establecidos en el referido artículo 32.</p>
+        <p class="parrafo">D) Asimismo, no estarán sujetos al Impuesto los servicios prestados por cualesquiera entes, organismos o entidades del sector público, en los términos a que se refiere el artículo 3.1 de la Ley de Contratos del Sector Público, a favor de las Administraciones Públicas de la que dependan o de otra íntegramente dependiente de estas, cuando dichas Administraciones Públicas ostenten la titularidad íntegra de los mismos.</p>
+        <p class="parrafo">E) La no consideración como operaciones sujetas al impuesto que establecen los dos apartados C) y D) anteriores será igualmente aplicable a los servicios prestados entre las entidades a las que se refieren los mismos, íntegramente dependientes de la misma Administración Pública.</p>
+        <p class="parrafo">F) En todo caso, estarán sujetas al Impuesto las entregas de bienes y prestaciones de servicios que las Administraciones, entes, organismos y entidades del sector público realicen en el ejercicio de las actividades que a continuación se relacionan:</p>
+        <p class="parrafo_2">a´) Telecomunicaciones.</p>
+        <p class="parrafo">b´) Distribución de agua, gas, calor, frío, energía eléctrica y demás modalidades de energía.</p>
+        <p class="parrafo">c´) Transportes de personas y bienes.</p>
+        <p class="parrafo">d´) Servicios portuarios y aeroportuarios y servicios de administración de infraestructuras ferroviarias incluyendo, a estos efectos, las concesiones y autorizaciones exceptuadas de la no sujeción del Impuesto por el número 9.º siguiente.</p>
+        <p class="parrafo">e´) Obtención, fabricación o transformación de productos para su transmisión posterior.</p>
+        <p class="parrafo">f´) Intervención sobre productos agropecuarios dirigida a la regulación del mercado de estos productos.</p>
+        <p class="parrafo">g´) Explotación de ferias y de exposiciones de carácter comercial.</p>
+        <p class="parrafo">h´) Almacenaje y depósito.</p>
+        <p class="parrafo">i´) Las de oficinas comerciales de publicidad.</p>
+        <p class="parrafo">j´) Explotación de cantinas y comedores de empresas, economatos, cooperativas y establecimientos similares.</p>
+        <p class="parrafo">k´) Las de agencias de viajes.</p>
+        <p class="parrafo">l´) Las comerciales o mercantiles de los Entes públicos de radio y televisión, incluidas las relativas a la cesión del uso de sus instalaciones.</p>
+        <p class="parrafo">m´) Las de matadero.</p>
+        <p class="parrafo_2">9.º Las concesiones y autorizaciones administrativas, con excepción de las siguientes:</p>
+        <p class="parrafo_2">a) Las que tengan por objeto la cesión del derecho a utilizar el dominio público portuario.</p>
+        <p class="parrafo">b) Las que tengan por objeto la cesión de los inmuebles e instalaciones en aeropuertos.</p>
+        <p class="parrafo">c) Las que tengan por objeto la cesión del derecho a utilizar infraestructuras ferroviarias.</p>
+        <p class="parrafo">d) Las autorizaciones para la prestación de servicios al público y para el desarrollo de actividades comerciales o industriales en el ámbito portuario.</p>
+        <p class="parrafo_2">10.º Las prestaciones de servicios a título gratuito a que se refiere el artículo 12, número 3.º de esta Ley que sean obligatorias para el sujeto pasivo en virtud de normas jurídicas o convenios colectivos, incluso los servicios telegráficos y telefónicos prestados en régimen de franquicia.</p>
+        <p class="parrafo">11.º Las operaciones realizadas por las Comunidades de Regantes para la ordenación y aprovechamiento de las aguas.</p>
+        <p class="parrafo">12.º Las entregas de dinero a título de contraprestación o pago.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado d´) de la letra F) del número 8º por el art. 2 de la Ley 26/2022, de 19 de diciembre. <a class="refPost">Ref. BOE-A-2022-21574#as</a></p>
+          <p class="nota_pie">Se modifica el apartado 8 por la disposición final 10.1 de la Ley 9/2017, de 8 de noviembre. <a class="refPost">Ref. BOE-A-2017-12902#df-10</a></p>
+          <p class="nota_pie">Se modifican los apartados 1º, 4º y 8º por el art. 1.2 de la Ley 28/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12329</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 1º por el art. 5.3 de la Ley 4/2008, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2008-20802</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 8º d) y 9º por el art. 4.1 de la Ley 50/1998, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1998-30155</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 8º por el art. 6.1 de la Ley 66/1997, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1997-28053</a></p>
+        </blockquote>
+      </version>
+    </bloque>
+  </data>
+</response>

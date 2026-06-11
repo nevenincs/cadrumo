@@ -55,7 +55,7 @@ def _run_git(args: list[str], repo_root: Path) -> list[Path]:
     Returns:
         Unique paths listed by git, in output order.
     """
-    result = subprocess.run(  # noqa: S603
+    result = subprocess.run(
         [_executable("git"), *args],
         cwd=repo_root,
         capture_output=True,
@@ -326,9 +326,9 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
             [
                 str(docs_root),
                 str(out_dir),
-            ]
+            ],
         )
-        result = subprocess.run(command, cwd=repo_root, env=env, check=False)  # noqa: S603
+        result = subprocess.run(command, cwd=repo_root, env=env, check=False)
     elif single_page:
         remove_noncanonical_build_entries(docs_root)
         with tempfile.TemporaryDirectory(prefix="aeat-docs-doctrees-") as tmp:
@@ -340,9 +340,9 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
                     str(docs_root),
                     str(out_dir),
                     *(target.relative_to(repo_root).as_posix() for target in targets),
-                ]
+                ],
             )
-            result = subprocess.run(command, cwd=repo_root, env=env, check=False)  # noqa: S603
+            result = subprocess.run(command, cwd=repo_root, env=env, check=False)
     else:
         with tempfile.TemporaryDirectory(prefix="aeat-docs-changed-") as tmp:
             temp_root = Path(tmp)
@@ -358,7 +358,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
                 return
             out_dir = temp_root / "html"
             specific_command = [*command, str(temp_docs_root), str(out_dir), *(str(target) for target in temp_targets)]
-            result = subprocess.run(specific_command, cwd=repo_root, env=env, check=False)  # noqa: S603
+            result = subprocess.run(specific_command, cwd=repo_root, env=env, check=False)
     if result.returncode != 0:
         raise SystemExit(result.returncode)
 
@@ -366,7 +366,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
 def update_rag_index(repo_root: Path) -> None:
     """Refresh the resident vaultspec-rag service index after docs changes."""
     rag = _executable("vaultspec-rag")
-    status = subprocess.run(  # noqa: S603
+    status = subprocess.run(
         [rag, "server", "service", "status"],
         cwd=repo_root,
         capture_output=True,
@@ -374,10 +374,10 @@ def update_rag_index(repo_root: Path) -> None:
         check=False,
     )
     if status.returncode != 0 or "stopped" in (status.stdout + status.stderr).lower():
-        start = subprocess.run([rag, "server", "service", "start"], cwd=repo_root, check=False)  # noqa: S603
+        start = subprocess.run([rag, "server", "service", "start"], cwd=repo_root, check=False)
         if start.returncode != 0:
             raise SystemExit(start.returncode)
-    indexed = subprocess.run([rag, "index", "--type", "all", "--port", "8766"], cwd=repo_root, check=False)  # noqa: S603
+    indexed = subprocess.run([rag, "index", "--type", "all", "--port", "8766"], cwd=repo_root, check=False)
     if indexed.returncode != 0:
         raise SystemExit(indexed.returncode)
 
@@ -393,7 +393,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--base", default="HEAD", help="Git revision used for committed branch changes.")
     parser.add_argument("--strict", action="store_true", help="Use nitpicky warnings-as-errors mode.")
     parser.add_argument(
-        "--rag-index", action="store_true", help="Refresh the service-backed RAG index after a clean build."
+        "--rag-index", action="store_true", help="Refresh the service-backed RAG index after a clean build.",
     )
     parser.add_argument(
         "--single-page",
@@ -415,7 +415,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"--single-page requires one existing docs source file: {args.single_page}")
     if args.single_page and _is_generated_doc(repo_root / "docs", plan.targets[0]):
         raise SystemExit(
-            "--single-page does not support generated API/CLI pages; use the explicit generator or full docs build."
+            "--single-page does not support generated API/CLI pages; use the explicit generator or full docs build.",
         )
     if not plan.full_build_required and not plan.targets:
         print("No changed documentation targets detected.", flush=True)

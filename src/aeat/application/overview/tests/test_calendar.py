@@ -604,6 +604,7 @@ def test_sede_calculation_observation_is_not_justificante_verification() -> None
 def test_filed_declaration_observation_with_stored_justificante_marks_verified() -> None:
     evidence = calendar_filing_evidence_from_sources(
         filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
+        expected_tax_id="X1234567L",
     )
 
     assert len(evidence) == 1
@@ -612,6 +613,19 @@ def test_filed_declaration_observation_with_stored_justificante_marks_verified()
     assert row.aeat_evidence_kind == "aeat_justificante_pdf"
     assert row.aeat_reference_id == "12345678901234567890"
     assert row.justificante_verified is True
+
+
+def test_filed_declaration_observation_for_wrong_taxpayer_is_ignored() -> None:
+    evidence = calendar_filing_evidence_from_sources(
+        filed_declaration_observations=(
+            _filed_declaration_observation(
+                artefacts=(_filed_declaration_artefact(),),
+            ).model_copy(update={"authenticated_identity": "Y7654321Z"}),
+        ),
+        expected_tax_id="X1234567L",
+    )
+
+    assert evidence == ()
 
 
 def test_filed_declaration_observation_without_stored_justificante_is_observed_only() -> None:

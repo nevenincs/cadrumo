@@ -127,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Serving documentation on http://{args.host}:{args.port} (Ctrl-C to stop).", flush=True)
     print("Watching docs/ and src/aeat/; rebuilding on change.", flush=True)
     try:
-        result = subprocess.run(command, cwd=repo_root, env=env, check=False)  # noqa: S603
+        result = subprocess.run(command, cwd=repo_root, env=env, check=False)
     except KeyboardInterrupt:
         return 0
     return result.returncode

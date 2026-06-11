@@ -41,7 +41,7 @@ def run_search(query: str) -> list[dict]:
         "--json",
     ]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if result.returncode != 0:
             return []
         data = json.loads(result.stdout)

@@ -126,7 +126,7 @@ def persist_iva_compensation_history_observations_strict(
 
 def latest_declarations_by_period(declarations: tuple[Declaracion, ...]) -> tuple[Declaracion, ...]:
     """Return the latest :class:`Declaracion` per period from register rows."""
-    latest: dict[str, Declaracion] = {}
+    latest: dict[Period, Declaracion] = {}
     for declaration in declarations:
         current = latest.get(declaration.period)
         if current is None:
@@ -139,8 +139,8 @@ def latest_declarations_by_period(declarations: tuple[Declaracion, ...]) -> tupl
     return tuple(latest[key] for key in sorted(latest, key=_history_period_sort_key))
 
 
-def _history_period_sort_key(period: str) -> tuple[int, str]:
-    upper = period.upper()
+def _history_period_sort_key(period: Period) -> tuple[int, str]:
+    upper = period.registry_token.upper()
     if upper.endswith("T") and upper[:-1].isdigit():
         return (int(upper[:-1]), upper)
     if upper.isdigit():

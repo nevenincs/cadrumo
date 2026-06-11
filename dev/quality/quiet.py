@@ -28,7 +28,7 @@ def main() -> int:
         sys.stderr.write("quiet_ok.py: no command given\n")
         return 2
 
-    result = subprocess.run(command, capture_output=True, text=True, check=False)  # noqa: S603
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
 
     if result.returncode != 0:
         sys.stdout.write(result.stdout)

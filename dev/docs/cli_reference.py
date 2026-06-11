@@ -127,7 +127,7 @@ def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[n
         # diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(
             f"Import-failure fallback detected in CLI subtree(s): {paths}. "
-            "Ensure all optional dependencies are installed before generating the reference."
+            "Ensure all optional dependencies are installed before generating the reference.",
         )
 
 
@@ -339,13 +339,13 @@ def _render_command_section(
         parts.append("**Output schema**\n\n")
         parts.append(
             f"This command emits a ``SchemaEnvelope`` whose ``result`` field is"
-            f" validated against ``{schema_name}``.\n\n"
+            f" validated against ``{schema_name}``.\n\n",
         )
     else:
         parts.append("**Output schema**\n\n")
         parts.append(
             "This command emits a bare payload (not yet envelope-wrapped)."
-            " Output structure is command-specific; consult ``--help`` for details.\n\n"
+            " Output structure is command-specific; consult ``--help`` for details.\n\n",
         )
 
     return "".join(parts)
@@ -385,7 +385,7 @@ def _render_family_page(
     parts.append(
         f"This page documents every leaf command under ``aeat {family_name}``."
         f" Help strings are rendered in English; the CLI respects the active"
-        f" output-language setting at runtime.\n\n"
+        f" output-language setting at runtime.\n\n",
     )
 
     for path in leaf_paths:
@@ -422,16 +422,16 @@ def _render_index_page(
     parts.append(
         "The ``aeat`` CLI exposes two top-level command families: ``config`` (local"
         " configuration, profile lifecycle, diagnostics) and ``app`` (operational tax"
-        f" workflow). This reference documents all {total_leaf_count} leaf commands.\n\n"
+        f" workflow). This reference documents all {total_leaf_count} leaf commands.\n\n",
     )
     parts.append(
         "Help strings are rendered in English. At runtime the CLI respects the active"
-        " output-language setting (``--language`` / ``AEAT_OUTPUT_LANGUAGE``).\n\n"
+        " output-language setting (``--language`` / ``AEAT_OUTPUT_LANGUAGE``).\n\n",
     )
     parts.append(
         "Start with the family links below. Use the generated command-family pages"
         " for exact flags, arguments, registry keys, and output schemas; use this"
-        " page for root-level behavior that applies across commands.\n\n"
+        " page for root-level behavior that applies across commands.\n\n",
     )
 
     parts.append(_rst_heading("Choose a command family", "-"))
@@ -516,7 +516,7 @@ def _render_automation_page() -> str:
     parts.append(
         "Use this page when scripting ``aeat`` invocations: it documents the"
         " process exit codes and the TTY/JSON output behavior shared by every"
-        " command.\n\n"
+        " command.\n\n",
     )
 
     # Exit codes
@@ -556,7 +556,7 @@ def _render_automation_page() -> str:
         " emits a single JSON document per invocation. Commands that have adopted the"
         " ``SchemaEnvelope`` wrap their result as"
         " ``{schema_version, command, result, warnings}``."
-        " Commands not yet migrated emit their payload directly.\n\n"
+        " Commands not yet migrated emit their payload directly.\n\n",
     )
 
     return "".join(parts)
@@ -584,13 +584,13 @@ def _render_schemas_page(schema_registry: Mapping[str, object]) -> str:
     parts.append(
         "This page is mainly for tooling authors. If you are running commands"
         " manually, the :doc:`family pages <index>` are usually the better entry"
-        " point.\n\n"
+        " point.\n\n",
     )
     parts.append(
         f"The following {len(envelope_keys)} command paths have a registered"
         f" ``OutputSchema``.  Group-callback surfaces"
         f" ({len(group_keys)} entries: {', '.join(f'``{k}``' for k in group_keys)})"
-        f" are listed separately.\n\n"
+        f" are listed separately.\n\n",
     )
     for key in envelope_keys:
         schema_cls = schema_registry[key]
@@ -788,7 +788,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
         from dev.docs.cli_reference import generate_cli_reference
         docs_root = Path({str(docs_root)!r})
         generate_cli_reference(docs_root)
-        """
+        """,
     )
 
     result = subprocess.run(
@@ -849,7 +849,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
         leaves = _collect_leaf_paths(root)
         for path in sorted(set(_normalise_command_path(p) for p in leaves)):
             print(path)
-        """
+        """,
     )
 
     result = subprocess.run(

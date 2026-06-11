@@ -3,8 +3,8 @@
 The passphrase resolver is part of the live-write security perimeter.
 The Settings DI migration MUST preserve the existing failure modes:
 
-- ``aeat_secret_passphrase=None`` falls through to the interactive
-  prompt (the historic "env var unset" path).
+- ``aeat_secret_passphrase=None`` refuses in non-interactive sessions
+  instead of hanging on the interactive prompt.
 - A SecretStr containing only trailing CRLF strips to empty and
   raises ``SecretStoreError``, matching the historic "env-var set to
   raw newline" failure mode.
@@ -39,10 +39,10 @@ def test_crlf_only_passphrase_raises_secret_store_error() -> None:
         _default_passphrase_callback()
 
 
-def test_unset_passphrase_falls_through_to_real_prompt_and_fails_closed() -> None:
-    """Unset settings use the real prompt path and fail closed under pytest stdin capture."""
+def test_unset_passphrase_refuses_noninteractive_prompt() -> None:
+    """Unset settings fail closed under pytest's non-interactive stdin capture."""
     with (
         override_settings(aeat_secret_passphrase=None),
-        pytest.raises((EOFError, OSError)),
+        pytest.raises(SecretStoreError, match="AEAT_SECRET_PASSPHRASE"),
     ):
         _default_passphrase_callback()

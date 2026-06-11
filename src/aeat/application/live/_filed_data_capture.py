@@ -45,9 +45,7 @@ def filed_data_capture_failure_row(
     declaration: Declaracion | None = None,
 ) -> FiledDataCaptureFailureRow:
     """Map one failed capture into a :class:`FiledDataCaptureFailureRow`."""
-    failed_period = (
-        Period.from_year_and_code(declaration.ejercicio, declaration.period) if declaration is not None else None
-    )
+    failed_period = declaration.period if declaration is not None else None
     return FiledDataCaptureFailureRow(
         modelo=declaration.modelo if declaration is not None else modelo,
         year=declaration.ejercicio if declaration is not None else year,

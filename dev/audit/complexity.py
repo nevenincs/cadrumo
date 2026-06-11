@@ -69,7 +69,7 @@ def _radon(args: list[str], exclude: str) -> list[str]:
     cmd = ["uv", "run", "--no-sync", "radon", *args]
     if exclude:
         cmd.extend(["-e", exclude])
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     return result.stdout.splitlines()
 
 
@@ -92,7 +92,7 @@ def collect_cc(exclude: str) -> list[CcHit]:
                     name=match["name"],
                     grade=match["grade"],
                     score=int(match["score"]),
-                )
+                ),
             )
     return hits
 
@@ -108,7 +108,7 @@ def collect_mi(exclude: str) -> list[MiHit]:
                     path=match["path"].replace("\\", "/"),
                     grade=match["grade"],
                     score=float(match["score"]),
-                )
+                ),
             )
     return hits
 
@@ -198,7 +198,7 @@ def main() -> int:
 
     print(
         f"complexity ({scope}): {len(cc)} cyclomatic grade C+, "
-        f"{len(mi)} maintainability < A, {len(cog)} cognitive > {args.threshold}."
+        f"{len(mi)} maintainability < A, {len(cog)} cognitive > {args.threshold}.",
     )
     if cc:
         _emit_cc(cc, args.full)
