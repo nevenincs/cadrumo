@@ -2820,6 +2820,11 @@ cli:
       id_help: Id de la transacción que quieres dividir
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la división de la transacción
+      llm_help: 'Propon una division en N partes basada en evidencia con el proveedor LLM indicado.'
+      apply_help: 'Persiste la division --llm propuesta (requiere --yes); sin ella la propuesta solo se previsualiza.'
+      read_evidence_help: 'Lee la factura adjunta de la transaccion en local y alimentala al proponente de division --llm.'
+      evidence_acknowledged_help: 'Reconoce que --read-evidence envia la evidencia a un modelo en la nube (desactivado por defecto, vetado para gestores).'
+      llm_exclusive: '--llm no puede combinarse con --child-amount/--child-description; la via manual es la anulacion explicita del operador.'
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el perfil activo

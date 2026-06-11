@@ -2650,6 +2650,11 @@ cli:
       reason_help: Reason recorded in the bucket-event payload and lifecycle history
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
+      llm_help: 'Propose an evidence-driven N-way split with the given LLM provider.'
+      apply_help: 'Persist the proposed --llm split (requires --yes); without it the proposal is previewed only.'
+      read_evidence_help: 'Read the transaction''s attached invoice on-host and feed it to the --llm split proposer.'
+      evidence_acknowledged_help: 'Acknowledge --read-evidence sends the evidence to a cloud model (off by default, gestor-barred).'
+      llm_exclusive: '--llm cannot be combined with --child-amount/--child-description; the manual path is the explicit operator override.'
     stash:
       actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile

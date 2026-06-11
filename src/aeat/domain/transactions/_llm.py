@@ -36,7 +36,7 @@ import subprocess
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -184,6 +184,7 @@ class LLMClassifier(Protocol):
         ...
 
 
+@runtime_checkable
 class LLMSplitProposer(Protocol):
     """Propose an evidence-driven N-way split for one transaction."""
 
@@ -1090,7 +1091,7 @@ def resolve_split_proposer(provider: str, *, spec: PromptSpec | None = None) -> 
             not support evidence-driven splitting.
     """
     classifier = resolve_classifier(provider, spec=spec)
-    if not isinstance(classifier, SubprocessLLMClassifier):
+    if not isinstance(classifier, LLMSplitProposer):
         raise LLMClassifierError(f"provider {provider!r} does not support evidence-driven splitting")
     return classifier
 
