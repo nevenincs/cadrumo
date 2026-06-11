@@ -60,3 +60,15 @@ boundary support module; that failure was outside this slice.
 Review of commit `1f2c3e68d` found no issues. The commit only changed one docstring
 example in `src/aeat/application/review/_errors.py` from a year-qualified hybrid period
 to a bare token example, with no behavior path touched.
+
+## PERIOD-005 | INFO | No findings in stale combined fixture cleanup
+
+Review of commit `142889811` found no issues. The changed fixtures moved typed model
+fields to `Period.from_year_and_code(2026, "1T")`, and review filter tests now use
+bare `period=1T` with separate `year=2026` where applicable.
+
+Verification reported by the reviewer: focused tests for the touched files plus ledger
+period grammar produced `136 passed, 22 failed`. The failures were isolated to
+`src/aeat/application/auth/tests/test_operator.py` with the known shared-worktree
+`ProfileKeysRegistrationError` registration issue; the reviewed period, review, and
+submission coverage passed.
