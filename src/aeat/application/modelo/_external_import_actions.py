@@ -75,7 +75,7 @@ def _load_external_import_target(
     snapshot = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        period=work_unit.period,
         casilla_values=casilla_values,
     )
     return work_units, work_unit, snapshot, cleaned_reference

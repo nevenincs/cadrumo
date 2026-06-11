@@ -95,7 +95,7 @@ def _load_amendment_baseline(
     _reject_unknown_override_casillas(
         modelo=baseline.modelo,
         filing_year=baseline.filing_year,
-        period=baseline.period.registry_token,
+        period=baseline.period,
         overrides=overrides,
     )
     return filing_catalogue, baseline, work_units, work_unit, revisions, baseline_revision
@@ -189,7 +189,7 @@ def amend_modelo_revision(
     _reject_incomplete_amendment_casillas(
         modelo=baseline.modelo,
         filing_year=baseline.filing_year,
-        period=baseline.period.registry_token,
+        period=baseline.period,
         casilla_values=corrected_values,
     )
 
