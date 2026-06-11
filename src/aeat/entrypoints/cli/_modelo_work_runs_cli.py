@@ -16,6 +16,7 @@ from ...application.workflow import (
     resolve_modelo_workflow_resume_target,
     resume_modelo_workflow,
 )
+from ...core import Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ._common import _emit_envelope
@@ -33,6 +34,7 @@ def register_work_run_commands(
     *,
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
+    resolve_optional_cli_period: Callable[..., Period | None],
 ) -> None:
     """Register workflow-run discovery and resume commands."""
 
@@ -157,6 +159,7 @@ def register_work_run_commands(
         activate_output_language(ctx, output_language)
 
         try:
+            typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
             resolution = resolve_modelo_workflow_resume_target(
                 target=target,
                 work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
@@ -167,7 +170,7 @@ def register_work_run_commands(
                 ),
                 modelo=modelo,
                 year=year,
-                period=period,
+                period=typed_period,
                 registry_revision_id=revision,
                 bucket_id=bucket_id,
                 selector=parse_revision_selector(select) if select is not None else None,

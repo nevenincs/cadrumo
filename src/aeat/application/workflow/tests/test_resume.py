@@ -582,7 +582,7 @@ def test_unified_resume_target_routes_revision_selector_through_modelo_addressin
     resolved = resolve_modelo_workflow_resume_target(
         modelo="130",
         year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         bucket_id=_BUCKET_ID,
         selector=ModeloCalculationRevisionSelector.CURRENT,
     )
@@ -619,7 +619,7 @@ def test_unified_resume_target_refuses_ambiguous_visible_modelo_runs_with_work_g
         resolve_modelo_workflow_resume_target(
             modelo="130",
             year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             bucket_id=_BUCKET_ID,
         )
 

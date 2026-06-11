@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core import Period, PeriodError
+from ...core import Period
 from ...core.resources import resources
 from ...domain.calculations.registry._errors import RegistrySnapshotError
 from ...domain.calculations.registry._temporal import select_revision
@@ -272,31 +272,17 @@ def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddres
     raise TypeError(f"expected modelo work target, got {type(target).__name__}")
 
 
-def _modelo_work_period_from_core(year: int, period: Period | str, *, modelo: str | None = None) -> Period:
+def _modelo_work_period_from_core(year: int, period: Period, *, modelo: str | None = None) -> Period:
     """Resolve a modelo work period through the core ``Period`` value object only."""
     declared = declared_modelo_period_tokens(modelo)
-    if isinstance(period, Period):
-        if period.filing_year != year:
-            raise ModeloWorkPeriodTokenError(
-                year=year,
-                token=str(period),
-                modelo=modelo,
-                declared_tokens=declared,
-            )
-        return period
-
-    period_text = period.strip()
-    if not period_text:
-        raise ModeloWorkPeriodTokenError(year=year, token=period, modelo=modelo, declared_tokens=declared)
-    try:
-        return Period.from_year_and_code(year, period_text)
-    except PeriodError as exc:
+    if period.filing_year != year:
         raise ModeloWorkPeriodTokenError(
             year=year,
-            token=period_text,
+            token=str(period),
             modelo=modelo,
             declared_tokens=declared,
-        ) from exc
+        )
+    return period
 
 
 def modelo_work_address_from_operator_target(
@@ -304,7 +290,7 @@ def modelo_work_address_from_operator_target(
     work_unit_id: str | None,
     modelo: str | None,
     year: int | None,
-    period: Period | str | None,
+    period: Period | None,
     registry_revision_id: str | None,
     bucket_id: str | None = None,
 ) -> ModeloWorkAddress:
@@ -331,7 +317,7 @@ def resolve_modelo_work_unit_for_operator_target(
     work_unit_id: str | None = None,
     modelo: str | None = None,
     year: int | None = None,
-    period: Period | str | None = None,
+    period: Period | None = None,
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
@@ -354,7 +340,7 @@ def resolve_modelo_revision_for_operator_target(
     work_unit_id: str | None,
     modelo: str | None,
     year: int | None,
-    period: Period | str | None,
+    period: Period | None,
     registry_revision_id: str | None,
     bucket_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
