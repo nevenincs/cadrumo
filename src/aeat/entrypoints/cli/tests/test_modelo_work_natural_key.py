@@ -42,7 +42,7 @@ def _create_profile() -> None:
             "--name", "Operator",
             "--surnames", "Natural Key",
             "--activity", "design",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
 
@@ -56,7 +56,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
@@ -66,7 +66,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
             "--format", "json",
             "app", "modelo", "work", "calculate",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
     calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
@@ -77,7 +77,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
             "--format", "json",
             "app", "modelo", "work", "verify",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
     assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
@@ -90,7 +90,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
             "app", "modelo", "export",
             "--modelo", "111", "--year", "2025", "--period", "1T",
             "--output", str(out),
-        ]
+        ],
     )  # fmt: skip
     assert exported.exit_code == 0, exported.output
     payload = _payload(exported.output)
@@ -109,7 +109,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
@@ -123,7 +123,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
             "--casilla", "02=3000.00",
             "--binding", "irpf.previous_year_economic_activity_net_income=13000",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
-        ]
+        ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
     calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
@@ -134,7 +134,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
             "--format", "json",
             "app", "modelo", "work", "verify",
             "--modelo", "130", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert verified.exit_code == 1, verified.output
     payload = _payload(verified.output)
@@ -158,7 +158,7 @@ def test_work_create_refuses_conflicting_registry_revision_for_visible_target() 
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
 
@@ -167,7 +167,7 @@ def test_work_create_refuses_conflicting_registry_revision_for_visible_target() 
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "conflicting-registry-revision",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0
     assert "2019-y-siguientes" in result.output
@@ -188,7 +188,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
@@ -199,7 +199,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
             "app", "modelo", "work", "rename",
             "--modelo", "111", "--year", "2025", "--period", "1T",
             "--name", "Natural Target",
-        ]
+        ],
     )  # fmt: skip
     assert renamed.exit_code == 0, renamed.output
     assert _payload(renamed.output)["work_unit_id"] == work_unit_id
@@ -210,7 +210,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
             "--format", "json",
             "app", "modelo", "work", "calculate",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
     calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
@@ -221,7 +221,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
             "app", "modelo", "work", "revision",
             "--modelo", "111", "--year", "2025", "--period", "1T",
             "--select", "current",
-        ]
+        ],
     )  # fmt: skip
     assert shown_revision.exit_code == 0, shown_revision.output
     assert _payload(shown_revision.output)["calculation_revision_id"] == calculation_revision_id
@@ -231,7 +231,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
             "--format", "json",
             "app", "modelo", "work", "history",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert history.exit_code == 0, history.output
     assert _payload(history.output)["work_unit_id"] == work_unit_id
@@ -244,7 +244,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
             "--modelo", "111", "--year", "2025", "--period", "1T",
             "--reason", "natural-key test",
             "--yes",
-        ]
+        ],
     )  # fmt: skip
     assert discarded.exit_code == 0, discarded.output
     assert _payload(discarded.output)["work_unit_id"] == work_unit_id

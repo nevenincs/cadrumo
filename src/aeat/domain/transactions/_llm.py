@@ -184,6 +184,28 @@ class LLMClassifier(Protocol):
         ...
 
 
+class LLMSplitProposer(Protocol):
+    """Propose an evidence-driven N-way split for one transaction."""
+
+    @property
+    def decided_by(self) -> str:
+        """Return the ``classified_by`` identifier this proposer emits."""
+        ...
+
+    def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
+        """Return an N-way split proposal for ``transaction``.
+
+        Args:
+            transaction: The transaction to split.
+            evidence_text: Optional on-host-extracted attached-evidence text to
+                inject into the prompt.
+
+        Returns:
+            A validated :class:`LLMSplitResponse`.
+        """
+        ...
+
+
 # ── parametric prompt builder ─────────────────────────────────────
 
 
@@ -759,7 +781,39 @@ class SubprocessLLMClassifier:
         Returns:
             A :class:`LLMClassificationResponse` with the parsed classification result.
         """
-        prompt = self.spec.render(transaction, evidence_text=evidence_text)
+        stdout = self._run_cli(
+            self.spec.render(transaction, evidence_text=evidence_text),
+            transaction_id=transaction.transaction_id,
+        )
+        response = parse_response(stdout, spec=self.spec)
+        _logger.debug(
+            "llm classify: %s returned classification=%s confidence=%s for transaction %s",
+            self.name,
+            response.classification.value,
+            response.confidence,
+            transaction.transaction_id,
+        )
+        return response
+
+    def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
+        """Shell out with a split-proposal prompt, parse and validate the split.
+
+        Args:
+            transaction: The transaction to split.
+            evidence_text: Optional on-host-extracted attached-evidence text injected
+                into the prompt (sent via stdin, never a file).
+
+        Returns:
+            A validated :class:`LLMSplitResponse`.
+        """
+        stdout = self._run_cli(
+            build_split_prompt(transaction, spec=self.spec, evidence_text=evidence_text),
+            transaction_id=transaction.transaction_id,
+        )
+        return parse_split_response(stdout, spec=self.spec)
+
+    def _run_cli(self, prompt: str, *, transaction_id: str) -> str:
+        """Shell out to the CLI with ``prompt`` via stdin (never a file) and return stdout."""
         resolved_binary = shutil.which(self.command[0])
         if resolved_binary is None:
             _logger.warning("llm classifier %s not found on PATH: %s", self.name, self.command[0])
@@ -772,12 +826,7 @@ class SubprocessLLMClassifier:
         else:
             stdin_input = prompt
 
-        _logger.debug(
-            "llm classify: spawning %s argv=%s transaction_id=%s",
-            self.name,
-            argv[0],
-            transaction.transaction_id,
-        )
+        _logger.debug("llm classify: spawning %s argv=%s transaction_id=%s", self.name, argv[0], transaction_id)
         try:
             completed = subprocess.run(
                 argv,
@@ -793,7 +842,7 @@ class SubprocessLLMClassifier:
                 "llm classify: %s timed out after %ss for transaction %s",
                 self.name,
                 self.timeout_seconds,
-                transaction.transaction_id,
+                transaction_id,
                 exc_info=True,
             )
             raise LLMClassifierError(f"{self.name} CLI timed out after {self.timeout_seconds}s") from exc
@@ -808,20 +857,12 @@ class SubprocessLLMClassifier:
                 "llm classify: %s exited with returncode=%d for transaction %s",
                 self.name,
                 completed.returncode,
-                transaction.transaction_id,
+                transaction_id,
             )
             raise LLMClassifierError(
                 f"{self.name} CLI exited with {completed.returncode}: {(completed.stderr or completed.stdout)[:400]!r}",
             )
-        response = parse_response(completed.stdout, spec=self.spec)
-        _logger.debug(
-            "llm classify: %s returned classification=%s confidence=%s for transaction %s",
-            self.name,
-            response.classification.value,
-            response.confidence,
-            transaction.transaction_id,
-        )
-        return response
+        return completed.stdout
 
 
 # ── builders + registry ───────────────────────────────────────────

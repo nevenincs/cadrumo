@@ -96,7 +96,7 @@ The record is a local note for your own audit trail. It does not change your fil
 calendar, your obligations, or your profile facts.
 
 After AEAT processes your declaration, bring your registered census facts into your
-profile with the censo refresh, compare, and apply commands - see
+profile with the censo pull, compare, and apply commands - see
 [update your profile from AEAT census data](censo-update.md).
 
 ## Where to get help

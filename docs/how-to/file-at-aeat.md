@@ -101,7 +101,7 @@ Read the cause shown in the error message before retrying.
 Compare AEAT's receipt against the figures you recorded locally:
 
 ```bash
-aeat app modelo reconcile --modelo 303 --year 2026 --period 1T --from-justificante ./justificante.pdf
+aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
 ```
 
 Run reconciliation after step 5 so the comparison is against your filed

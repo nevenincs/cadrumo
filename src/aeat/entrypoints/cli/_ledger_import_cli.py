@@ -40,7 +40,7 @@ def _validate_import_provider(provider: str) -> str:
                 "cli.ledger.errors.unknown_provider",
                 provider=provider,
                 providers=_provider_catalogue_text(),
-            )
+            ),
         )
     return normalised
 
@@ -59,7 +59,7 @@ def register_import_commands(app: typer.Typer) -> None:
         ),
         dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.import.dry_run_help")),
         verify: bool = typer.Option(False, "--verify", help=tr("cli.ledger.import.verify_help")),
-        source: Path | None = typer.Option(None, "--source", help=tr("cli.ledger.import.source_help")),
+        file: Path | None = typer.Option(None, "--file", help=tr("cli.ledger.import.file_help")),
         verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.import.verbose_help")),
         period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.import.period_help")),
         year: int | None = typer.Option(
@@ -100,7 +100,7 @@ def register_import_commands(app: typer.Typer) -> None:
                     provider=normalised_provider,
                     dry_run=dry_run,
                     verify=verify,
-                    source=source,
+                    source=file,
                     period=canonical_period,
                     actor=actor,
                     source_command="aeat app ledger import",
@@ -164,7 +164,7 @@ def _resolve_import_paths(path: Path) -> list[Path]:
                 "cli.ledger.import.empty_directory",
                 path=str(path),
                 default=f"No importable statement files found in directory: {path}",
-            )
+            ),
         )
     return files
 

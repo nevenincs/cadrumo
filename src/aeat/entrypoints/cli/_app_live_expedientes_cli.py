@@ -78,19 +78,19 @@ def _expedientes_row(snapshot: _SnapshotWithCapturedAt) -> _ExpedientesRowDict:
 
 
 @expedientes_app.command(
-    "capture",
+    "pull",
     help=tr(
-        "cli.app.live.expedientes.capture_help",
-        default="Live-walk the AEAT declaration register and persist a bucket-scoped snapshot.",
+        "cli.app.live.expedientes.pull_help",
+        default="Pull the AEAT declaration register and persist a bucket-scoped snapshot.",
     ),
 )
-def expedientes_capture(
+def expedientes_pull(
     ctx: typer.Context,
     modelo: Annotated[
-        str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help", default="Modelo code (e.g. 100)."))
+        str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help", default="Modelo code (e.g. 100).")),
     ],
     year: Annotated[
-        int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year."))
+        int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year.")),
     ],
 ) -> None:
     """Live-walk the AEAT declaration register and persist a bucket-scoped expedientes snapshot."""
@@ -119,16 +119,16 @@ def expedientes_capture(
 
 
 @expedientes_app.command(
-    "capture-all",
+    "pull-all",
     help=tr(
-        "cli.app.live.expedientes.capture_all_help",
+        "cli.app.live.expedientes.pull_all_help",
         default=(
-            "Live-walk the AEAT declaration register for every requested registry modelo across a year range "
+            "Pull the AEAT declaration register for every requested registry modelo across a year range "
             "and persist bucket-scoped snapshots."
         ),
     ),
 )
-def expedientes_capture_all(
+def expedientes_pull_all(
     ctx: typer.Context,
     year_from: Annotated[
         int,
@@ -158,7 +158,7 @@ def expedientes_capture_all(
             year_from=year_from,
             year_to=year_to,
             modelos=tuple(modelos) if modelos else None,
-        )
+        ),
     )
     from ._app_live_payloads import (
         ExpedientesCaptureAllResult,
@@ -291,7 +291,7 @@ def expedientes_show(
     for declaration in record.declarations:
         lines.append(
             f"{declaration.expediente_id}\t{declaration.modelo}\t{declaration.ejercicio}\t"
-            f"{declaration.period}\t{declaration.estado}\t{declaration.presented_at.isoformat()}"
+            f"{declaration.period}\t{declaration.estado}\t{declaration.presented_at.isoformat()}",
         )
     _emit_envelope(ctx, command="app.live.expedientes.view", result=result, lines=lines)
 

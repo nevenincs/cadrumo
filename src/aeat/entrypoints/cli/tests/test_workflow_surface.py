@@ -135,7 +135,7 @@ def _seed_profile(
                 profile_id="default",
                 display_name=name,
                 overrides=values,
-            )
+            ),
         )
 
 
@@ -164,7 +164,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
             "GENERAL",
             "--tax-residence-ccaa",
             "madrid",
-        ]
+        ],
     )
     assert create_result.exit_code == 0, create_result.output
 
@@ -183,7 +183,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
             "natural_person",
             "--irpf-income-categories",
             "actividad_economica",
-        ]
+        ],
     )
     assert declare_result.exit_code == 0, declare_result.output
 
@@ -203,7 +203,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     provider = get_master_key_provider()
     with activate_master_key_provider(provider):
         workflow_state_repository().update(
-            lambda current: set_active_field(current, UserProfileFact(path="preferences.output_language", value="en"))
+            lambda current: set_active_field(current, UserProfileFact(path="preferences.output_language", value="en")),
         )
 
         refreshed = UserProfileLifecycleRepository(bucket_id=operator_profile_id).load(operator_profile_id)
@@ -246,7 +246,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
                 "--to",
                 "2026-03-31",
                 "--allow-incomplete",
-            ]
+            ],
         )
     assert calendar_result.exit_code == 0, calendar_result.output
     calendar_envelope = json.loads(_json_output(calendar_result))
@@ -411,7 +411,7 @@ def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
     listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", "2026"])
     described = _invoke(["--format", "json", "app", "modelo", "describe", "303", "--period", "2026Q1"])
     casillas = _invoke(
-        ["--format", "json", "app", "modelo", "casillas", "303", "--period", "2026Q1", "--input-kind", "computed"]
+        ["--format", "json", "app", "modelo", "casillas", "303", "--period", "2026Q1", "--input-kind", "computed"],
     )
     bindings = _invoke(
         [
@@ -427,7 +427,7 @@ def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
             "2026",
             "--period",
             "Q1",
-        ]
+        ],
     )
     formulas = _invoke(["--format", "json", "app", "modelo", "formulas", "303", "--period", "2026Q1"])
 
@@ -540,7 +540,7 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
             "00000000T",
             "--activity",
             "Servicios",
-        ]
+        ],
     )
     assert created.exit_code == 0, created.output
 
@@ -580,13 +580,13 @@ def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:
             [
                 "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
                 "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
-            ]
+            ],
         ),
         encoding="utf-8",
     )
 
     imported = _invoke(
-        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "n26", "--dry-run"]
+        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "n26", "--dry-run"],
     )
     overview = _invoke(["--format", "json", "app", "overview", "status"])
 
@@ -616,7 +616,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
             [
                 "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
                 f"2026-01-05,{canary},Invoice 2026-SEC,121.00,EUR,{transaction_ref}",
-            ]
+            ],
         ),
         encoding="utf-8",
     )
@@ -669,7 +669,7 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
             [
                 "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
                 "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
-            ]
+            ],
         ),
         encoding="utf-8",
     )
@@ -689,10 +689,10 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
             "n26",
             "--dry-run",
             "--verify",
-            "--source",
+            "--file",
             str(source),
             "--verbose",
-        ]
+        ],
     )
 
     assert imported.exit_code == 0, imported.output
@@ -722,7 +722,7 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
             [
                 "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
                 "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
-            ]
+            ],
         ),
         encoding="utf-8",
     )
@@ -739,9 +739,9 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
                 "n26",
                 "--dry-run",
                 "--verify",
-                "--source",
+                "--file",
                 str(missing_source),
-            ]
+            ],
         )
 
     assert imported.exit_code != 0
@@ -815,7 +815,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
             "Servicios",
             "--iva-regime",
             "GENERAL",
-        ]
+        ],
     )
     assert created.exit_code == 0, created.output
 
@@ -848,7 +848,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
             "--activity",
             "Servicios",
             "--does-intracomunitario",
-        ]
+        ],
     )
     assert created.exit_code == 0, created.output
 

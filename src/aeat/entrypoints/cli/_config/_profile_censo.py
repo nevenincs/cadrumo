@@ -65,13 +65,13 @@ def _register_censo_refresh(censo_app: typer.Typer) -> None:
     """Register the censo refresh transport command."""
 
     @censo_app.command(
-        "refresh",
+        "pull",
         help=tr(
-            "cli.config.profile.censo.refresh_help",
+            "cli.config.profile.censo.pull_help",
             default="Pull your latest censo from AEAT into this profile's snapshot store.",
         ),
     )
-    def censo_refresh(ctx: typer.Context) -> None:
+    def censo_pull(ctx: typer.Context) -> None:
         import asyncio
 
         from ....application.user_profile import CensoNotAvailableError
@@ -184,7 +184,7 @@ def _register_censo_compare(censo_app: typer.Typer) -> None:
                 "diverging": [row.model_dump(mode="json") for row in comparison.diverging],
                 "censo_only": [row.model_dump(mode="json") for row in comparison.censo_only],
                 "profile_only": [row.model_dump(mode="json") for row in comparison.profile_only],
-            }
+            },
         )
         typed_compare = CensoCompareResult.model_validate(comparison_payload)
         lines = [
@@ -195,7 +195,7 @@ def _register_censo_compare(censo_app: typer.Typer) -> None:
         ]
         for row in comparison.rows:
             lines.append(
-                f"{row.status.value}\t{row.path}\tcenso={row.censo_value or ''}\tprofile={row.profile_value or ''}"
+                f"{row.status.value}\t{row.path}\tcenso={row.censo_value or ''}\tprofile={row.profile_value or ''}",
             )
         _emit_envelope(ctx, command="config.profile.censo.compare", result=typed_compare, lines=lines)
 

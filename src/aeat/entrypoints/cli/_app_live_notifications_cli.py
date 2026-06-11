@@ -58,13 +58,13 @@ notifications_app = typer.Typer(
 
 
 @notifications_app.command(
-    "capture",
+    "pull",
     help=tr(
-        "cli.app.live.notifications.capture_help",
-        default="Live-fetch DEHu notifications and persist a bucket-scoped snapshot.",
+        "cli.app.live.notifications.pull_help",
+        default="Pull DEHu notifications and persist a bucket-scoped snapshot.",
     ),
 )
-def notifications_capture(ctx: typer.Context) -> None:
+def notifications_pull(ctx: typer.Context) -> None:
     """Drive the live DEHu fetch and persist flow."""
     bucket_id = _bucket_id()
     _run_auth_preflight()
@@ -117,14 +117,14 @@ def notifications_list(ctx: typer.Context) -> None:
 
 
 @notifications_app.command(
-    "view", help=tr("cli.app.live.notifications.view_help", default="View one DEHu notification snapshot.")
+    "view", help=tr("cli.app.live.notifications.view_help", default="View one DEHu notification snapshot."),
 )
 def notifications_show(
     ctx: typer.Context,
     snapshot_id: Annotated[
         str,
         typer.Argument(
-            help=tr("cli.app.live.notifications.snapshot_id_help", default="Snapshot id (or unambiguous prefix).")
+            help=tr("cli.app.live.notifications.snapshot_id_help", default="Snapshot id (or unambiguous prefix)."),
         ),
     ],
 ) -> None:

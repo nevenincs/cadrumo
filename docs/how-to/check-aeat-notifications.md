@@ -19,7 +19,7 @@ You need:
 DEHu is the official AEAT electronic inbox for notifications (comunicaciones
 and notificaciones). Download your notifications and save them locally:
 ```bash
-aeat app live notifications capture
+aeat app live notifications pull
 ```
 Download your current DEHu notifications:
 ```bash
@@ -45,13 +45,13 @@ filed return for each modelo and year, with its status and filing date.
 
 Download the declaration history for a specific form and year:
 ```bash
-aeat app live expedientes capture --modelo 100 --year 2026
+aeat app live expedientes pull --modelo 100 --year 2026
 ```
 
 Download history for a range of years:
 
 ```bash
-aeat app live expedientes capture-all --from-year 2020 --to-year 2026 --modelo 303
+aeat app live expedientes pull-all --from-year 2020 --to-year 2026 --modelo 303
 ```
 
 Leave out `--modelo` to download history for all your registered forms.
@@ -84,18 +84,18 @@ aeat app live filed list --modelo 303 --from-year 2020 --to-year 2026
 
 Download and save the full box values from a specific filed return:
 ```bash
-aeat app live filed capture --modelo 303 --year 2026 --period 1T
+aeat app live filed pull --modelo 303 --year 2026 --period 1T
 ```
 
 Download all filed returns across a year range:
 ```bash
-aeat app live filed capture-all --from-year 2020 --to-year 2026
+aeat app live filed pull-all --from-year 2020 --to-year 2026
 ```
 
 Download the source declarations that a target filing depends on (for example,
 download the Modelo 303 returns that a Modelo 390 annual summary needs):
 ```bash
-aeat app live filed capture-sources --modelo 303 --year 2026 --period 1T
+aeat app live filed pull-sources --modelo 303 --year 2026 --period 1T
 ```
 
 ---
@@ -182,12 +182,12 @@ aeat app live iva-wallet pull --year 2026 --period 4T
 Reconstruct the history of past IVA compensation decisions from prior Modelo
 303 filings:
 ```bash
-aeat app live iva-wallet capture-history --from-year 2020 --to-year 2026
+aeat app live iva-wallet pull-history --from-year 2020 --to-year 2026
 ```
 
 Capture past returns and pull the current remote state in a single run:
 ```bash
-aeat app live iva-wallet capture-remote-state --from-year 2020 --to-year 2026 --target-year 2026 --target-period 4T
+aeat app live iva-wallet pull-remote-state --from-year 2020 --to-year 2026 --target-year 2026 --target-period 4T
 ```
 
 ### View local history

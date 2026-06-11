@@ -1092,7 +1092,7 @@ cli:
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
           műveletekhez.
         group_help: Vevők által tartozó számlák.
-        invoice_date_help: Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).
+        invoice_date_help: 'A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN), pl. 2026-01-15.'
         invoice_id_help: Számla azonosítója (vagy egyértelmű előtag).
         list_help: Regisztrált behajtatható számlák listázása.
         operation_type_help: 'M349 művelettípus: E áruszállítás, S szolgáltatás, T
@@ -1109,7 +1109,7 @@ cli:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         group_help: Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.
-        invoice_date_help: Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).
+        invoice_date_help: 'A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN), pl. 2026-01-15.'
         invoice_number_help: Szállítói számlaszám.
         iva_amount_help: Számla IVA-összege.
         iva_rate_help: Alkalmazott IVA-kulcs tizedes törtként.
@@ -1151,7 +1151,7 @@ cli:
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
           műveletekhez.
         group_help: Szállítóknak fizetendő számlák.
-        invoice_date_help: Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).
+        invoice_date_help: 'A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN), pl. 2026-01-15.'
         invoice_id_help: Számla azonosítója (vagy egyértelmű előtag).
         list_help: Regisztrált fizetendő számlák listázása.
         operation_type_help: 'M349 művelettípus: E áruszállítás, S szolgáltatás, T
@@ -1216,16 +1216,16 @@ cli:
         capture_all_modelo_help: A capture-all muvelet korlatozasa erre a modellora.
         latest_help: A legfrissebb expediente pillanatkép megjelenítése.
         list_help: Mentett expediente pillanatképek listázása.
-        pull_all_help: cli.app.live.expedientes.pull_all_help
-        pull_help: cli.app.live.expedientes.pull_help
+        pull_all_help: 'Letolti az AEAT nyilatkozat-nyilvantartast minden kert nyilvantartasi modelora egy evtartomanyban, es bucket-szintu pillanatkepeket ment.'
+        pull_help: 'Letolti az AEAT nyilatkozat-nyilvantartast es bucket-szintu pillanatkepet ment.'
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
       filed:
         capture_all_modelo_help: A capture-all korlátozása erre a nyomtatványra.
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
-        pull_all_help: cli.app.live.filed.pull_all_help
-        pull_help: cli.app.live.filed.pull_help
-        pull_sources_help: cli.app.live.filed.pull_sources_help
+        pull_all_help: 'Letolti a benyujtott nyilatkozatokat es igazolasokat minden kert nyilvantartasi modelora egy evtartomanyban. Csak olvasas; modellenkent jelenti a hibakat.'
+        pull_help: 'Letolti a benyujtott nyilatkozatok adatait a hitelesitett AEAT nyilvantartasbol.'
+        pull_sources_help: 'Letolti egy cel-nyilatkozat fuggosegeihez szukseges benyujtott megfigyeleseket.'
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:
@@ -1251,14 +1251,14 @@ cli:
         pull_help: Az AEAT IVA-kompenzációs pénztárcájának élő lekérése és megőrzése.
           Az egyetlen engedélyezett AEAT-formanyomtatvány-művelet a védett pénztárca-lekérdezés;
           képviseleti kapuk csak saját nevű módban folytatódnak.
-        pull_history_help: cli.app.live.iva_wallet.pull_history_help
-        pull_remote_state_help: cli.app.live.iva_wallet.pull_remote_state_help
+        pull_history_help: 'Letolti a benyujtott Modelo 303 elozmenyeket es biztonsagos IVA-kompenzacios allapotot ment. Nem kuld be AEAT nyilatkozatot vagy tarca-urlap valasztast.'
+        pull_remote_state_help: 'Letolti a benyujtott Modelo 303 elozmenyeket es megkiserli az AEAT tarca/IVA olvasast egy tipizalt, csak olvashato lekereskent.'
         taxpayer_nif_help: 'Az adóalany NIF-je; alapértelmezés: a hitelesített azonosság.'
       justificante:
         app_help: 'AEAT igazolás-rögzítések (csak olvasható): tölts le egy benyújtott
           igazolást és egyeztess vele.'
         list_help: Listázza az aktív profil mentett igazolás-rögzítéseit.
-        pull_help: cli.app.live.justificante.pull_help
+        pull_help: 'Letolti az AEAT igazolast egy benyujtott idoszakra es hivatalos bizonyitekkent menti.'
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Megjelenít egy igazolás-rögzítést.
       limit_help: Rögzítendő sorok maximális száma.
@@ -1267,7 +1267,7 @@ cli:
         app_help: Csak olvasható DEHú értesítés-pillanatképek.
         latest_help: A legutobbi DEHU ertesitesi pillanatkep megjelenitese.
         list_help: Mentett DEHú értesítés-pillanatképek listázása.
-        pull_help: cli.app.live.notifications.pull_help
+        pull_help: 'Letolti a DEHu ertesiteseket es bucket-szintu pillanatkepet ment.'
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: DEHú értesítés-pillanatkép megjelenítése.
       output_root_help: Könyvtár a rögzített benyújtott bevallás-megfigyelésekhez.
@@ -1870,12 +1870,9 @@ cli:
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
-      invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.
+      invalid_iso_date: 'Érvénytelen dátumformátum a(z) %{label} mezőhöz: %{raw}. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.'
       no_active_profile_error_value: nincs-aktiv-profil
       period_empty: Az adóidőszak nem lehet üres.
-      period_filter_unrecognised: 'Ismeretlen szűrőidőszak: ''{raw}''. Használjon
-        évvel megadott AEAT tokent a szűrőzáradékban: period=2024-1T (negyedévek),
-        period=2024-0A (éves), period=2024-03 (hónapok).'
       period_missing_year: A(z) '{token}' --period értékhez év szükséges ennél a parancsnál.
         Adja meg a --year kapcsolót (pl. --period {token} --year 2024).
       period_unrecognised: 'Ismeretlen időszak: ''{raw}''. Használjon AEAT tokent:
@@ -2115,7 +2112,7 @@ cli:
           profilt.
         compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
         help: Az AEAT 036-os nyilvántartási adatok szinkronizálása ezzel a profillal.
-        pull_help: cli.config.profile.censo.pull_help
+        pull_help: 'Letolti a legfrissebb censo-t az AEAT-tol e profil pillanatkep-tarolojaba.'
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
           mentése.
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
@@ -2405,7 +2402,7 @@ cli:
   ledger:
     add:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
-      amount_help: Előjeles tranzakciós összeg a tranzakció pénznemében.
+      amount_help: 'Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).'
       attachment_help: Kiegészítő mellékletek azonosítója (ismételhető).
       business_pct_help: Üzleti célú arány 0 és 1 között (csak MIXED besorolásnál).
       category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
@@ -2570,7 +2567,7 @@ cli:
       invalid_category: 'Ismeretlen koltsegkategoria: ''{category}''. Ismert kategoriak:
         {known}. Futtasd: ''aeat app ledger categories'' az ervenyes --category-id
         ertekekhez.'
-      invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}'
+      invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}. Használjon tizedespontot ezreselválasztó nélkül, pl. 1234.56.'
       negative_amount: Az --amount %{raw} értéknek nem negatív összegnek kell lennie.
         Add meg az összeget előjel nélkül, és a folyást a --direction kapcsolóval
         állítsd be (OUTGOING kimenő, INCOMING bejövő, INTERNAL_TRANSFER saját számlák
@@ -2603,7 +2600,7 @@ cli:
       dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
-      file_help: cli.ledger.import.file_help
+      file_help: 'Az importalt sorok ellenorzesere hasznalt eredeti fajl.'
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
         a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
@@ -2688,10 +2685,7 @@ cli:
       invoice_id_help: A tranzakcióhoz kétirányúan kötendő számla azonosítója.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.
-      filter_help: Sorok szűrése állapot, időszak (évvel megadott AEAT token, pl.
-        period=2024-1T), besorolás, probléma, importálás, irány (bevétel/kiadás) vagy
-        szöveg szerint. Szervezeti csoportcímke szerinti szűréshez használja a külön
-        --group kapcsolót.
+      filter_help: 'Sorok szűrése állapot, időszak (egyszerű AEAT token, pl. period=1T) és év (pl. year=2026), besorolás, eltérés, import, irány (bevétel/kiadás) vagy szöveg szerint. Csoportcímke szerinti szűréshez használja a külön --group kapcsolót.'
       footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas
         {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
       group_filter_help: Csak az adott csoportcimkehez tartozo sorok megjelenitese.
@@ -2744,8 +2738,7 @@ cli:
       reason_help: Az életciklus-előzményekben rögzített ok
       yes_help: A főkönyvi tranzakció aktívra állításának megerősítése
     review:
-      filter_help: Sorok szűrése status, period, issue, import, classification, text
-        vagy direction alapján.
+      filter_help: 'Sorok szűrése status, period (egyszerű AEAT token, pl. period=1T) és year (pl. year=2026), issue, import, classification, text vagy direction szerint'
       header: KÖNYVELÉSI FŐKÖNYVI FELÜLVIZSGÁLATI MUNKAMENET
       help: Főkönyvi bejegyzések interaktív felülvizsgálata és érvényesítése.
       id_help: A felülvizsgálandó bejegyzés azonosítója.

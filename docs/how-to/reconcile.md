@@ -23,7 +23,7 @@ the filing workflow, see the [quickstart](quickstart.md).
 Compare your local filing record against the justificante:
 
 ```bash
-aeat app modelo reconcile --modelo 303 --year 2026 --period 1T --from-justificante ./justificante.pdf
+aeat app modelo reconcile file --modelo 303 --year 2026 --period 1T --file ./justificante.pdf
 ```
 
 Replace `303`, `2026`, and `1T` with the modelo, year, and period of your
@@ -52,16 +52,6 @@ If the verdict is `mismatches`:
    amendment workflow. See
    [Review and supply calculation inputs](review-calculation-values.md).
 3. If the PDF appears wrong, contact your asesor or AEAT directly.
-
-## Shortcut: start from the PDF file path
-
-If you prefer to pass the PDF first and the filing target second:
-
-```bash
-aeat app modelo reconcile-from-justificante ./justificante.pdf --modelo 303 --year 2026 --period 1T
-```
-
-Both commands produce the same result.
 
 ## Review past reconciliations
 

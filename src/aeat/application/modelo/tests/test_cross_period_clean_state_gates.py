@@ -123,7 +123,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing
             source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
             source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
             parsed_at=_CLOCK,
-        )
+        ),
     )
 
 

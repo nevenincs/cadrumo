@@ -57,7 +57,7 @@ If the diagnostic source should point at a different original file, pass it
 with `--source`:
 
 ```bash
-aeat app ledger import ./processed.csv --provider csv --verify --source ./statement.csv
+aeat app ledger import ./processed.csv --provider csv --verify --file ./statement.csv
 ```
 
 Use `--period` only when you intentionally want to label the import with a
@@ -110,7 +110,7 @@ aeat app ledger list
 Narrow the list with filters:
 
 ```bash
-aeat app ledger list --filter period=2026-03
+aeat app ledger list --filter period=03 --filter year=2026
 aeat app ledger list --filter classification=NOT_YET_PROCESSED
 aeat app ledger list --limit 20 --offset 20
 ```
@@ -131,7 +131,7 @@ aeat app ledger track <transaction-id>
 For a broader review queue, use:
 
 ```bash
-aeat app ledger review --filter period=2026-1T
+aeat app ledger review --filter period=1T --filter year=2026
 aeat app ledger check
 ```
 
@@ -300,7 +300,7 @@ classification update. The implemented batch path is `ledger classify
 1. Filter and export the rows you want to review:
 
    ```bash
-   aeat app ledger list --filter period=2026-1T --filter classification=NOT_YET_PROCESSED
+   aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
    aeat app ledger export --output ./ledger-2026-q1-review.csv --year 2026 --period 1T
    ```
 
@@ -321,7 +321,7 @@ classification update. The implemented batch path is `ledger classify
 4. Review afterwards:
 
    ```bash
-   aeat app ledger list --filter period=2026-1T
+   aeat app ledger list --filter period=1T --filter year=2026
    aeat app ledger preflight --year 2026 --period 1T
    ```
 

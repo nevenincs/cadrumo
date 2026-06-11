@@ -7,6 +7,7 @@ You MUST respect these rules at all times:
 @.agents/rules/aeat-architecture-boundaries.md
 @.agents/rules/aeat-calculation-grounding.md
 @.agents/rules/aeat-campaign-close-honesty-review.md
+@.agents/rules/aeat-cli-pull-and-file-standard.md
 @.agents/rules/aeat-docs-scaffolding-cli.md
 @.agents/rules/aeat-documentation-workflow.md
 @.agents/rules/aeat-git-worktree-safety.md
@@ -27,9 +28,11 @@ You MUST respect these rules at all times:
 @.agents/rules/aeat-vaultspec-centralisation.md
 @.agents/rules/calculation-source-canonical-mechanism.md
 @.agents/rules/carried-observations-stamp-their-revision.md
+@.agents/rules/cli-notices-are-the-only-diagnostic-channel.md
 @.agents/rules/composition-service-no-parallel-write-path.md
 @.agents/rules/core-struct-docstring-links.md
 @.agents/rules/fixture-provenance-declared-in-sidecar.md
+@.agents/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.agents/rules/ledger-derived-revisions-bundle-evidence.md
 @.agents/rules/ledger-iva-advisory-only-on-cuota-bearing-categories.md
 @.agents/rules/local-filed-observations-are-non-official-evidence.md

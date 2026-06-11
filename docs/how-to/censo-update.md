@@ -63,7 +63,7 @@ and ledger are ready.
 Pull the latest AEAT censo facts into the local snapshot store:
 
 ```bash
-aeat config profile censo refresh
+aeat config profile censo pull
 ```
 
 This uses the active profile and the configured AEAT authentication. It saves a

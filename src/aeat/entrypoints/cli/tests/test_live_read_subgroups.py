@@ -298,7 +298,7 @@ class TestIvaRemoteStateCliSurface:
                 "-c",
                 "import time; time.sleep(60)",
                 f"--user-data-dir={profile_canary}",
-            ]
+            ],
         )
         try:
             deadline = datetime.now(UTC).timestamp() + 10
@@ -330,7 +330,7 @@ class TestIvaRemoteStateCliSurface:
     def test_iva_wallet_remote_state_command_is_registered_as_read_capture(self) -> None:
         registered = {info.name for info in iva_wallet_app.registered_commands}
 
-        assert "capture-remote-state" in registered
+        assert "pull-remote-state" in registered
         assert registered.isdisjoint({"submit", "send", "present", "sign", "pay", "modify"})
 
     def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels(self) -> None:
@@ -360,7 +360,7 @@ class TestIvaRemoteStateCliSurface:
                             "stage": "walk_declarations_register",
                             "modelo": "303",
                             "ejercicio": 2026,
-                        }
+                        },
                     },
                 ),
                 LiveIvaReadOutcome(
@@ -398,7 +398,7 @@ def _live_process_command_lines() -> str:
         powershell = shutil.which("powershell") or shutil.which("pwsh")
         if powershell is None:
             raise RuntimeError(
-                "PowerShell (powershell or pwsh) is required for Windows process inventory but was not found on PATH"
+                "PowerShell (powershell or pwsh) is required for Windows process inventory but was not found on PATH",
             )
         script = "Get-CimInstance Win32_Process | Select-Object -ExpandProperty CommandLine | ConvertTo-Json -Compress"
         completed = subprocess.run(
