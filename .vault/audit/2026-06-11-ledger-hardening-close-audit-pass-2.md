@@ -44,3 +44,17 @@ Tracking: C4 remains open only because `P04.S24` is a full-tree verification gat
 ## Codification candidates
 
 - **Source:** HIGH finding above. **Rule slug:** `full-tree-gate-must-distinguish-owner`. **Rule:** When a required full-tree gate is red, record the exact current failure signatures and distinguish owner-surface failures from unrelated factory churn before marking a feature step complete.
+
+## Pass 3 Update
+
+### RESOLVED - Full-tree collection is green
+
+The exact C4 full collect-only gate now exits 0: `uv run --no-sync pytest --collect-only -q src/aeat` collected `15101/16882` tests with `1781` deselected. The previous support-module split blockers have settled or been reconciled, and `P04.S24` is now checked closed in the ledger invoice unification plan.
+
+### VERIFIED - CLI conformance and period grammar sweeps are green
+
+The documented-command conformance gate passed `41/41` under both `-m integration` and `-m "integration or not integration"`. The JSON schema conformance gate passed `92/92` under `-m "integration or not integration"`. The period/fx/list-filter reconciliation sweep passed `62/62` under `-m "integration or not integration"`, covering the remaining `fx_import` and period grammar surfaces named in the handover.
+
+### INFO - Residual factory churn remains unrelated
+
+After the closeout commits, the worktree still carries unrelated peer edits in source files outside the ledger invoice closeout path. These were not staged or committed by this pass.
