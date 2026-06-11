@@ -232,18 +232,15 @@ def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[str, 
     return extracted
 
 
-def _parse_period(period: str, ejercicio: str | None) -> Period:
-    """Bridge an inbound raw period token to a typed :class:`~aeat.core.Period`.
-
-    Verification receives AEAT's bare period token separately from
-    ``ejercicio``. Combined calendar strings such as ``2026Q1`` are intentionally
-    rejected here so the deleted compatibility parser cannot grow back.
-    """
+def _parse_period(period: Period, ejercicio: str | None) -> Period:
+    """Validate the typed filing period carried by the inbound declaration."""
     try:
         if ejercicio is None:
             raise ValueError("ejercicio is required for verification period mapping")
         filing_year = int(ejercicio)
-        return Period.from_year_and_code(filing_year, period)
+        if period.filing_year != filing_year:
+            raise ValueError("period filing year must match ejercicio")
+        return period
     except ValueError as exc:
         raise RegistrySnapshotError(
             translated_message="application.verification.errors.period_mapping_failed",

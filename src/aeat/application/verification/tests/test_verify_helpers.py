@@ -45,6 +45,7 @@ from ....adapters.inbound.declaracion._schema import (
     TemplateRevision,
 )
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
+from ....core import Period
 from .._schema import DiscrepancyCause, VerificationStatus
 from .._verify import (
     _classify_discrepancy,
@@ -204,7 +205,7 @@ def _declaracion(casilla_ids: tuple[str, ...]) -> DeclaracionObservation:
     )
     return DeclaracionObservation(
         modelo="100",
-        period="2025A",
+        period=Period.from_year_and_code(2025, "0A"),
         ejercicio="2025",
         tax_id="12345678Z",
         template_revision=TemplateRevision(

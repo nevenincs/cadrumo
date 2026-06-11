@@ -218,7 +218,7 @@ def test_verify_declaracion_fails_without_registry_snapshot() -> None:
     assert error.translated_message == "application.verification.errors.registry_snapshot_invalid"
     assert error.context == {
         "modelo": "999",
-        "period": "1T",
+        "period": Period.from_year_and_code(2025, "1T"),
         "ejercicio": "2025",
         "error_type": "RegistrySnapshotError",
     }
@@ -246,7 +246,7 @@ def test_verify_declaracion_reports_missing_registry_bindings_as_locale_error() 
         ),
         "count": 3,
         "modelo": "130",
-        "period": "1T",
+        "period": Period.from_year_and_code(2025, "1T"),
     }
 
 
