@@ -793,10 +793,23 @@ def _justificante_matches_filing(
 ) -> bool:
     modelo = str(getattr(justificante, "modelo", "")).strip()
     ejercicio = str(getattr(justificante, "ejercicio", "") or "").strip()
-    period = str(getattr(justificante, "period", "")).strip().upper()
+    observed_period = getattr(justificante, "period", "")
     tax_id = str(getattr(justificante, "tax_id", "") or "").strip()
-    filing_period = str(getattr(filing.period, "code", filing.period)).strip().upper()
-    period_matches = period == filing_period or (filing_period == "0A" and period == str(filing.filing_year))
+    filing_period = filing.period if isinstance(filing.period, Period) else None
+    if isinstance(observed_period, Period) and filing_period is not None:
+        period_matches = observed_period == filing_period
+    else:
+        period = (
+            observed_period.registry_token
+            if isinstance(observed_period, Period)
+            else str(observed_period).strip().upper()
+        )
+        filing_period_token = (
+            filing_period.registry_token
+            if filing_period is not None
+            else str(getattr(filing.period, "code", filing.period)).strip().upper()
+        )
+        period_matches = period == filing_period_token
     expected_tax_id = filing.member_nif or taxpayer_tax_id
     tax_id_matches = expected_tax_id is None or tax_id == expected_tax_id.strip()
     return modelo == str(filing.modelo) and ejercicio == str(filing.filing_year) and period_matches and tax_id_matches

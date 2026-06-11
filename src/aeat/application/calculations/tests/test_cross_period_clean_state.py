@@ -317,6 +317,43 @@ def test_live_capture_evidence_clears_justificante_verification(tmp_path: Path) 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
 
 
+def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_path: Path) -> None:
+    """A matching ejercicio label cannot override a mismatched typed Period value."""
+    from ....domain.justificante import JustificanteRepository
+    from .._cross_period_clean_state import _filing_external_evidence_blockers
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        csv = "LIVECAP130MISMATCH"
+        pdf_bytes = b"%PDF-1.4\n% mismatched period justificante\n%%EOF\n"
+        JustificanteRepository().save(
+            Justificante(
+                csv=csv,
+                modelo="130",
+                period=Period.from_year_and_code(2025, "1T"),
+                ejercicio="2026",
+                presentation_id=None,
+                presented_at=_CLOCK,
+                tax_id="X1234567L",
+                total_a_ingresar=None,
+                total_a_devolver=None,
+                verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+                source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
+                source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+                parsed_at=_CLOCK,
+            ),
+        )
+        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
+
+        blockers = _filing_external_evidence_blockers(
+            filing,
+            "app_filing",
+            JustificanteRepository(),
+            "X1234567L",
+        )
+
+        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
+
+
 def test_csv_register_evidence_still_requires_justificante_verification(tmp_path: Path) -> None:
     """A non-justificante evidence kind (CSV register) still trips the justificante gate."""
     from ....domain.justificante import JustificanteRepository
