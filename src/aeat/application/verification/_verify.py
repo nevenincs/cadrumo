@@ -107,7 +107,7 @@ def verify_declaracion(
             translated_message="application.verification.errors.registry_policy_invalid",
             context={
                 "modelo": declaracion.modelo,
-                "period": declaracion.period,
+                "period": _period_context(period),
                 "error_type": type(exc).__name__,
             },
         ) from exc
@@ -139,7 +139,7 @@ def verify_declaracion(
                 "bindings": tuple(missing_bindings),
                 "count": len(missing_bindings),
                 "modelo": declaracion.modelo,
-                "period": declaracion.period,
+                "period": _period_context(period),
             },
         )
     result = calculate_registry_snapshot(
@@ -214,7 +214,7 @@ def _load_snapshot(
             translated_message="application.verification.errors.registry_snapshot_invalid",
             context={
                 "modelo": declaracion.modelo,
-                "period": declaracion.period,
+                "period": _period_context(period),
                 "ejercicio": declaracion.ejercicio or "",
                 "error_type": type(exc).__name__,
             },
@@ -242,10 +242,15 @@ def _parse_period(period: Period, ejercicio: str | None) -> Period:
             raise ValueError("period filing year must match ejercicio")
         return period
     except ValueError as exc:
-        raise RegistrySnapshotError(
+        raise VerificationError(
             translated_message="application.verification.errors.period_mapping_failed",
-            context={"period": period, "ejercicio": ejercicio or ""},
+            context={"period": _period_context(period), "ejercicio": ejercicio or ""},
         ) from exc
+
+
+def _period_context(period: Period) -> str:
+    """Return the primitive operator-facing period label for diagnostics."""
+    return str(period)
 
 
 def _period_end_date(period: Period) -> date:
