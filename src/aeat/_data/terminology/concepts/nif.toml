@@ -1,0 +1,50 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "nif"
+domain = "concepto"
+lifecycle = "approved"
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El Numero de Identificacion Fiscal, el identificador tributario de toda persona o entidad ante la AEAT."
+definition = "Codigo que identifica de forma unica a cada obligado tributario ante la AEAT. Para las personas fisicas espanolas el NIF coincide con el numero del Documento Nacional de Identidad (DNI); para las personas fisicas extranjeras es el Numero de Identidad de Extranjero (NIE). Las personas juridicas y demas entidades disponen igualmente de un NIF; en registros antiguos el identificador de empresa podia denominarse Codigo de Identificacion Fiscal (CIF). El DNI y el NIE por si solos son documentos de identidad."
+
+[language.es.source]
+citation = "Real Decreto 1065/2007, Reglamento General de las actuaciones y los procedimientos de gestion e inspeccion tributaria, Titulo II (numero de identificacion fiscal)."
+authority = "boe"
+
+[[language.es.term]]
+label = "NIF"
+term_status = "preferred"
+part_of_speech = "abbreviation"
+
+[[language.es.term]]
+label = "Numero de Identificacion Fiscal"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "CIF"
+term_status = "admitted"
+part_of_speech = "abbreviation"
+
+[[language.es.term]]
+label = "NIE"
+term_status = "admitted"
+part_of_speech = "abbreviation"
+
+[language.en]
+short_description = "The Spanish tax identification number for every person or entity dealing with the AEAT."
+
+[language.ca]
+short_description = "El Numero d'Identificacio Fiscal, l'identificador tributari de tota persona o entitat davant l'AEAT."
+
+[language.hu]
+short_description = "A spanyol adoazonosito szam minden szemely vagy szervezet szamara az AEAT-nal."

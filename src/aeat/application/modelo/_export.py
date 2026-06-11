@@ -24,6 +24,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._period import Period, PeriodError
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.time import now as _utc_now
@@ -54,8 +55,6 @@ from ...domain.modelos._protocols import CalculationRevisionCatalogueRepositoryP
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.period import (
-    PeriodValidationError,
-    parse_canonical_period,
     period_end_date,
     period_start_date,
 )
@@ -117,7 +116,7 @@ class ModeloIvaWalletDecisionProvenance(BaseModel):
     selected_authority: str = Field(min_length=1, max_length=64)
     divergence: str = Field(min_length=1, max_length=64)
     target_year: int = Field(ge=2000, le=2099)
-    target_period: str = Field(min_length=1, max_length=8)
+    target_period: Period
     authority_source_kinds: tuple[str, ...] = Field(default_factory=tuple)
     authority_source_refs: tuple[str, ...] = Field(default_factory=tuple)
 
@@ -181,7 +180,7 @@ class ModeloExportResult(BaseModel):
             the active profile bucket at export time).
         modelo: AEAT modelo identifier.
         filing_year: AEAT filing year.
-        period: Canonical period string (e.g. ``"2026Q1"``).
+        period: Filing period as a typed :class:`~aeat.core.Period` value.
         output_path: Absolute path the file was written to.
         byte_size: Size of the written file in bytes.
         file_sha256: Hex-encoded SHA-256 of the written bytes.
@@ -201,7 +200,7 @@ class ModeloExportResult(BaseModel):
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=1990, le=2200)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     output_path: Path
     byte_size: int = Field(ge=0)
     file_sha256: str = Field(min_length=64, max_length=64)
@@ -242,7 +241,7 @@ def _iva_wallet_decision_export_provenance(
         selected_authority=str(decision.selected_authority),
         divergence=str(decision.divergence),
         target_year=decision.target_year,
-        target_period=decision.target_period,
+        target_period=Period.from_year_and_code(decision.target_year, decision.target_period),
         authority_source_kinds=tuple(str(source.source_kind) for source in decision.authority_sources),
         authority_source_refs=tuple(_sha256_ref(source.source_locator) for source in decision.authority_sources),
     )
@@ -391,44 +390,47 @@ def _compose_export_headers(
     return headers
 
 
-def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
-    """Return ``(filing_year, registry_period, canonical_period)`` for export.
+def _to_canonical_period(period: Period) -> str:
+    """Map a :class:`~aeat.core.Period` to the canonical period string.
 
-    Work units persist either the registry-native period token
-    (``"4T"``, ``"0A"``, ``"03"``) or an already-canonical token
-    (``"2026Q1"``, ``"2026-03"``, ``"2026A"``). The two downstream
-    consumers want different shapes: ``build_runtime_schema_provider``
-    resolves the registry snapshot by the registry-native period,
-    while ``build_draft`` parses a canonical token. This helper
-    normalises whichever shape the work unit carries into both.
+    ``build_draft`` accepts a canonical period string that
+    :func:`~aeat.domain.period.parse_canonical_period` can map (e.g.
+    ``"2026Q1"``, ``"2026A"``, ``"2026-03"``). This helper produces
+    that string from a typed :class:`~aeat.core.Period` so the export
+    path never constructs a combined-string intermediate from raw token
+    branches.
+    """
+    year = period.filing_year
+    code = period.registry_token
+    if code.endswith("T"):
+        return f"{year}Q{code[0]}"
+    if code == "0A":
+        return f"{year}A"
+    if code.endswith("P"):
+        return f"{year}P{code[0]}"
+    # Monthly tokens "01"–"12"
+    return f"{year}-{code}"
 
-    Args:
-        work_unit: The work unit whose period token is to be normalised.
 
-    Returns:
-        A ``(filing_year, registry_period, canonical_period)`` tuple.
+def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
+    """Return a typed :class:`~aeat.core.Period` built directly from the work unit's bare registry token.
+
+    ``WorkUnit.period`` is always stored as a bare registry token
+    (``"1T"``, ``"0A"``, ``"03"``); ``WorkUnit.filing_year`` is the
+    four-digit year. :meth:`~aeat.core.Period.from_year_and_code`
+    validates and wraps them without constructing a combined string.
 
     Raises:
-        ModeloExportError: When the work unit's period token cannot
-            be mapped to a registry period.
+        ModeloExportError: When the token is not a recognised registry
+            period code.
     """
-    period = work_unit.period
-    if len(period) == 2 and period.endswith("T") and period[0].isdigit():
-        canonical = f"{work_unit.filing_year}Q{period[0]}"
-    elif period == "0A":
-        canonical = f"{work_unit.filing_year}A"
-    elif len(period) == 2 and period.isdigit():
-        canonical = f"{work_unit.filing_year}-{period}"
-    else:
-        canonical = period
     try:
-        filing_year, registry_period = parse_canonical_period(canonical)
-    except PeriodValidationError as exc:
+        return Period.from_year_and_code(work_unit.filing_year, work_unit.period)
+    except PeriodError as exc:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_period_unmappable",
-            context={"work_unit_id": work_unit.work_unit_id, "period": period},
+            context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period},
         ) from exc
-    return filing_year, registry_period, canonical
 
 
 def _approve_export_draft(
@@ -438,11 +440,11 @@ def _approve_export_draft(
     workflow_profile: TaxpayerProfile,
     actor: str,
     approved_at: datetime,
-):
-    filing_year, registry_period, canonical_period = _resolve_export_period(work_unit)
+) -> tuple[Period, object]:
+    period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
-        filing_year=filing_year,
-        period=registry_period,
+        filing_year=period.filing_year,
+        period=period.registry_token,
         modelos=(work_unit.modelo,),
     )
     inputs: filing_domain.ModeloInputs = {
@@ -452,7 +454,7 @@ def _approve_export_draft(
     try:
         draft = build_draft(
             modelo=work_unit.modelo,
-            period=canonical_period,
+            period=_to_canonical_period(period),
             profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
@@ -469,7 +471,7 @@ def _approve_export_draft(
             translated_message="application.modelo.errors.export_draft_approval_failed",
             context={"calculation_revision_id": revision.calculation_revision_id},
         ) from exc
-    return filing_year, registry_period, approved
+    return period, approved
 
 
 def export_modelo_revision(
@@ -551,7 +553,7 @@ def export_modelo_revision(
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 
     now = clock or _utc_now()
-    filing_year, registry_period, approved = _approve_export_draft(
+    export_period, approved = _approve_export_draft(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
@@ -568,8 +570,8 @@ def export_modelo_revision(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
-        filing_year=filing_year,
-        registry_period=registry_period,
+        filing_year=export_period.filing_year,
+        registry_period=export_period.registry_token,
     )
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
@@ -609,10 +611,10 @@ def export_modelo_revision(
                 "iva_wallet_selected_authority": iva_wallet_provenance.selected_authority,
                 "iva_wallet_divergence": iva_wallet_provenance.divergence,
                 "iva_wallet_target_year": str(iva_wallet_provenance.target_year),
-                "iva_wallet_target_period": iva_wallet_provenance.target_period,
+                "iva_wallet_target_period": iva_wallet_provenance.target_period.registry_token,
                 "iva_wallet_authority_source_kinds": ",".join(iva_wallet_provenance.authority_source_kinds),
                 "iva_wallet_authority_source_refs": ",".join(iva_wallet_provenance.authority_source_refs),
-            }
+            },
         )
     try:
         event = _emit_bucket_event(
@@ -636,7 +638,7 @@ def export_modelo_revision(
         bucket_id=work_unit.bucket_id,
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=export_period,
         output_path=command.output_path,
         byte_size=receipt.byte_size,
         file_sha256=receipt.file_sha256,

@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....core.aggregation import AggregationSourceKind
 from ....core.resources import resources
 from .. import (
@@ -18,6 +19,8 @@ from .. import (
 from .._counterpart import CounterpartSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_P_2026_Q1 = Period.from_year_and_code(2026, "1T")
 
 
 def _modelo_349_revision():
@@ -55,7 +58,7 @@ def _counterpart_obs(
 def test_per_modelo_counterpart_provider_resolves_committed_349_registry_bindings() -> None:
     command = PerModeloAggregationCommand(
         modelo="349",
-        period="2026-Q1",
+        period=_P_2026_Q1,
         counterpart_observations=(
             _counterpart_obs(
                 source_id="ledger-de-1",
@@ -104,7 +107,7 @@ def test_per_modelo_counterpart_provider_resolves_committed_349_registry_binding
 def test_per_modelo_registry_provider_uses_committed_source_kind_filters() -> None:
     command = PerModeloAggregationCommand(
         modelo="349",
-        period="2026-Q1",
+        period=_P_2026_Q1,
         counterpart_observations=(
             _counterpart_obs(
                 source_id="payable-de-1",
@@ -143,7 +146,7 @@ def test_per_modelo_registry_provider_excludes_349_rollups_without_readiness(
 ) -> None:
     command = PerModeloAggregationCommand(
         modelo="349",
-        period="2026-Q1",
+        period=_P_2026_Q1,
         counterpart_observations=(
             _counterpart_obs(
                 source_id=f"ledger-{country.lower()}-1",

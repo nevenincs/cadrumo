@@ -7,6 +7,10 @@ Defines the closed schema returned by
 :class:`VerificationVerdict`. Every model is frozen, strict, and rejects
 extra keys so that the operator's UI and any persisted verdict survive an
 end-to-end JSON round trip without drift.
+
+The :attr:`VerificationVerdict.period` field is typed as the canonical
+:class:`~aeat.core.Period` value object (``filing_year`` + ``code``),
+serialising to ``{"filing_year": YYYY, "code": "1T"}`` in JSON.
 """
 
 from __future__ import annotations
@@ -17,6 +21,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from ...core import Period
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry import CasillaId
 
@@ -87,7 +92,7 @@ class VerificationVerdict(BaseModel):
 
     Attributes:
         modelo: AEAT modelo identifier.
-        period: Period identifier (e.g. ``"2025Q1"``).
+        period: The filing :class:`~aeat.core.Period` (year + registry code).
         registry_snapshot_id: Identifier of the registry snapshot used for the audit,
         verification_expectation_ids: Registry expectation ids that governed the verdict.
         status: The :class:`VerificationStatus` summarising the verdict.
@@ -102,7 +107,7 @@ class VerificationVerdict(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     registry_snapshot_id: str
     verification_expectation_ids: tuple[str, ...]
     status: VerificationStatus

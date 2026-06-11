@@ -9,12 +9,12 @@ from __future__ import annotations
 
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
 from ...adapters.inbound.declaracion import DeclaracionObservation
+from ...core import Period
 from ...core.decimal import coerce_decimal
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
@@ -44,7 +44,7 @@ _UNRELIABLE_WARNING_CODES: frozenset[str] = frozenset(
         "ambiguous-label",
         "value-unparseable",
         "casilla-not-found",
-    }
+    },
 )
 """Extractor warning codes that mark a casilla extraction as low-confidence."""
 
@@ -98,7 +98,8 @@ def verify_declaracion(
         VerificationError: When the registry snapshot cannot be loaded for
             the declaracion's modelo and period.
     """
-    snapshot = _load_snapshot(declaracion, registry_root=registry_root)
+    period = _parse_period(declaracion.period, declaracion.ejercicio)
+    snapshot = _load_snapshot(declaracion, period=period, registry_root=registry_root)
     try:
         policy = snapshot.verification_policy()
     except RegistryValidationError as exc:
@@ -144,7 +145,7 @@ def verify_declaracion(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        date_context={"filing_period": _filing_period_date(declaracion.period, declaracion.ejercicio)},
+        date_context={"filing_period": period_end_date(period.filing_year, period.registry_token)},
         binding_values=supplied_bindings,
     )
     unreliable_ids = {
@@ -172,14 +173,14 @@ def verify_declaracion(
                 unreliable_ids=unreliable_ids,
                 registry_casillas=registry_casillas,
                 tolerance=policy.tolerance,
-            )
+            ),
         )
     classified = tuple(discrepancies)
     coverage = _compute_coverage(declaracion, policy.computed_casillas)
     status = _derive_status(classified, coverage, min_coverage=policy.min_coverage)
     return VerificationVerdict(
         modelo=declaracion.modelo,
-        period=declaracion.period,
+        period=period,
         registry_snapshot_id=f"registry:{snapshot.modelo.id}:{snapshot.revision.id}",
         verification_expectation_ids=policy.expectation_ids,
         status=status,
@@ -190,19 +191,23 @@ def verify_declaracion(
     )
 
 
-def _load_snapshot(declaracion: DeclaracionObservation, *, registry_root: Path | None) -> RegistrySnapshot:
+def _load_snapshot(
+    declaracion: DeclaracionObservation,
+    *,
+    period: Period,
+    registry_root: Path | None,
+) -> RegistrySnapshot:
     try:
         from ...core.resources import resources
 
-        filing_year, registry_period = _registry_period(declaracion.period, declaracion.ejercicio)
         if registry_root is None:
             authority = resources().modelos.authority
         else:
             authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
         return authority.snapshot(
             declaracion.modelo,
-            filing_year=filing_year,
-            period=registry_period,
+            filing_year=period.filing_year,
+            period=period.registry_token,
         )
     except RegistrySnapshotError as exc:
         raise VerificationError(
@@ -227,19 +232,22 @@ def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[str, 
     return extracted
 
 
-def _registry_period(period: str, ejercicio: str | None) -> tuple[int, str]:
+def _parse_period(period: str, ejercicio: str | None) -> Period:
+    """Bridge an inbound raw period token to a typed :class:`~aeat.core.Period`.
+
+    Accepts the same forms as :func:`~aeat.domain.period.parse_canonical_period`
+    (``YYYYQ[1-4]``, ``YYYY-[1-4]T``, ``YYYY-MM``, ``YYYYA``, bare ``YYYY``,
+    ``YYYYPn``, and when ``ejercicio`` is supplied, the raw AEAT quarterly form
+    ``nT``).
+    """
     try:
-        return parse_canonical_period(period, ejercicio=ejercicio)
+        filing_year, code = parse_canonical_period(period, ejercicio=ejercicio)
     except PeriodValidationError as exc:
         raise RegistrySnapshotError(
             translated_message="application.verification.errors.period_mapping_failed",
             context={"period": period, "ejercicio": ejercicio or ""},
         ) from exc
-
-
-def _filing_period_date(period: str, ejercicio: str | None) -> date:
-    filing_year, registry_period = _registry_period(period, ejercicio)
-    return period_end_date(filing_year, registry_period)
+    return Period.from_year_and_code(filing_year, code)
 
 
 def _classify_discrepancy(

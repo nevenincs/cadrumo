@@ -19,6 +19,7 @@ import pytest
 
 from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....core._period import Period
 from ....core.config import Settings, override_settings
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
@@ -282,7 +283,7 @@ def _seed_modelo_303_1t_clean_state(
             for requirement in cross_period_dependency_requirements(snapshot)
             if requirement.source_modelo == "303" and requirement.filing_year == 2026 and requirement.period == "1T"
             for casilla_id in requirement.source_casillas
-        }
+        },
     )
     assert source_casillas, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
@@ -340,7 +341,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
         bucket_id="bucket-operator",
         modelo="130",
         filing_year=2026,
-        period="Q1",
+        period=Period.from_year_and_code(2026, "1T"),
         output_path=tmp_path / "modelo-130.txt",
         byte_size=128,
         file_sha256="a" * 64,
@@ -365,7 +366,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
             "formula_id": None,
             "legal_refs": ["ley-35-2006:art-101"],
             "source_refs": ["aeat-modelo-130-manual-2026"],
-        }
+        },
     ]
 
 
@@ -376,7 +377,7 @@ def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp
         bucket_id="bucket-operator",
         modelo="303",
         filing_year=2026,
-        period="2T",
+        period=Period.from_year_and_code(2026, "2T"),
         output_path=tmp_path / "modelo-303.txt",
         byte_size=128,
         file_sha256="a" * 64,
@@ -389,7 +390,7 @@ def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp
             selected_authority="aeat_wallet",
             divergence="wallet_only",
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             authority_source_kinds=("aeat_wallet",),
             authority_source_refs=("sha256:" + "2" * 64,),
         ),
@@ -402,7 +403,7 @@ def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp
         "selected_authority": "aeat_wallet",
         "divergence": "wallet_only",
         "target_year": 2026,
-        "target_period": "2T",
+        "target_period": {"filing_year": 2026, "code": "2T"},
         "authority_source_kinds": ["aeat_wallet"],
         "authority_source_refs": ["sha256:" + "2" * 64],
     }
@@ -717,7 +718,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     assert provenance.selected_authority == "aeat_wallet"
     assert provenance.divergence == "wallet_only"
     assert provenance.target_year == 2026
-    assert provenance.target_period == "2T"
+    assert provenance.target_period == Period.from_year_and_code(2026, "2T")
     assert provenance.decision_ref.startswith("sha256:")
     assert provenance.authority_source_kinds == ("aeat_wallet",)
     assert provenance.authority_source_refs[0].startswith("sha256:")

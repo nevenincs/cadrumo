@@ -15,6 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core._period import Period
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
@@ -148,7 +149,7 @@ class ModeloDraft(BaseModel):
 
     draft_id: str
     modelo: str
-    period: str
+    period: Period
     profile_tax_id: str
     # Typed Spanish NIF/NIE/CIF of the filing subject. Defaults to
     # ``None`` so historical records that predate the field remain
@@ -181,7 +182,7 @@ class ModeloDraft(BaseModel):
 def compute_modelo_draft_id(
     *,
     modelo: str,
-    period: str,
+    period: Period,
     profile_tax_id: str,
     schema_version: str,
     values: tuple[ModeloValue, ...],
@@ -189,9 +190,13 @@ def compute_modelo_draft_id(
 ) -> str:
     """Compute the stable, content-addressed ``draft_id``.
 
+    The period is serialised as ``{"filing_year": <int>, "code": "<token>"}``
+    so the hash is deterministic and self-consistent regardless of the
+    human-readable ``str(period)`` form.
+
     Args:
         modelo: Modelo string ID.
-        period: Period string (e.g. ``"2026Q1"``).
+        period: Typed :class:`~aeat.core.Period` for the filing period.
         profile_tax_id: Taxpayer tax ID.
         schema_version: The casilla DB version this draft was
             built against.
@@ -206,7 +211,7 @@ def compute_modelo_draft_id(
     sorted_binding_values = sorted(binding_values, key=lambda v: (v.binding_id, v.row_index or 0))
     payload = {
         "modelo": modelo,
-        "period": period,
+        "period": {"filing_year": period.filing_year, "code": period.registry_token},
         "profile_tax_id": profile_tax_id,
         "schema_version": schema_version,
         "values": [v.model_dump(mode="json") for v in sorted_values],

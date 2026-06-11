@@ -11,11 +11,31 @@ import hashlib
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._period import Period
+from ...domain.period import parse_canonical_period as _parse_canonical_period
 from ._errors import SubmissionValidationError
+
+
+def _coerce_period(v: object) -> object:
+    """Accept a canonical combined string (e.g. ``"2026Q1"``) or a :class:`Period` dict/instance.
+
+    Inbound combined strings arrive from legacy construction sites (e.g. when
+    :class:`aeat.domain.filing.ModeloDraft` still carries a ``str`` period field
+    before that cluster is migrated).  The coercion is transparent to pydantic's
+    normal ``Period`` dict/instance validation path.
+    """
+    if isinstance(v, str):
+        year, code = _parse_canonical_period(v)
+        return Period.from_year_and_code(year, code)
+    return v
+
+
+_PeriodField = Annotated[Period, BeforeValidator(_coerce_period)]
 
 
 class SubmissionStatus(StrEnum):
@@ -85,7 +105,10 @@ class ModeloPresentado(BaseModel):
             :func:`make_submission_id`.
         draft_id: The upstream draft identifier.
         modelo: The AEAT modelo identifier.
-        period: The period covered (e.g. ``"2026Q1"``).
+        period: The :class:`~aeat.core.Period` covered, serialised as
+            ``{"filing_year": int, "code": str}`` across the persistence
+            boundary.  Accepts a canonical combined string (e.g.
+            ``"2026Q1"``) at construction time via a coercing validator.
         profile_tax_id: The autónomo NIF / NIE verbatim.
         status: The overall :class:`SubmissionStatus` for the filing.
         justificante_csv: The AEAT-issued CSV, when present.
@@ -103,7 +126,7 @@ class ModeloPresentado(BaseModel):
     submission_id: str = Field(min_length=1)
     draft_id: str = Field(min_length=1)
     modelo: str = Field(min_length=1)
-    period: str = Field(min_length=1)
+    period: _PeriodField
     profile_tax_id: str = Field(min_length=1)
     status: SubmissionStatus
     justificante_csv: str | None = None
@@ -118,13 +141,13 @@ class ModeloPresentado(BaseModel):
         if self.status is SubmissionStatus.ACEPTADA:
             if not self.justificante_csv or not self.justificante_pdf_path:
                 raise SubmissionValidationError(
-                    "status ACEPTADA requires both justificante_csv and justificante_pdf_path"
+                    "status ACEPTADA requires both justificante_csv and justificante_pdf_path",
                 )
             if not self.acknowledged_at:
                 raise SubmissionValidationError("status ACEPTADA requires acknowledged_at")
         if self.acknowledged_at and self.acknowledged_at < self.submitted_at:
             raise SubmissionValidationError(
-                f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})"
+                f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})",
             )
         return self
 

@@ -1,0 +1,46 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "irpf"
+domain = "concepto"
+lifecycle = "approved"
+related = ["tema-irpf-regime", "renta", "modelo-100", "modelo-130"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El Impuesto sobre la Renta de las Personas Fisicas, el impuesto espanol sobre la renta de los particulares."
+definition = "Impuesto directo y personal que grava la renta de las personas fisicas residentes en territorio espanol, incluyendo los rendimientos del trabajo, del capital mobiliario e inmobiliario, de actividades economicas, las ganancias y perdidas patrimoniales y las imputaciones de renta. Se declara en el Modelo 100 anual, con pagos fraccionados y retenciones en los Modelos 111, 115, 130, 131, 180 y 190. No abarca el Impuesto sobre la Renta de no Residentes ni el Impuesto sobre Sociedades."
+
+[language.es.source]
+citation = "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Fisicas (BOE-A-2006-20764)."
+authority = "boe"
+
+[[language.es.term]]
+label = "IRPF"
+term_status = "preferred"
+part_of_speech = "abbreviation"
+
+[[language.es.term]]
+label = "Impuesto sobre la Renta de las Personas Fisicas"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "Spanish personal income tax on resident natural persons."
+
+[[language.en.term]]
+label = "personal income tax"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "L'Impost sobre la Renda de les Persones Fisiques, l'impost espanyol sobre la renda dels particulars."
+
+[language.hu]
+short_description = "A spanyol szemelyi jovedelemado, a belfoldi maganszemelyek jovedelmet terhelo ado."

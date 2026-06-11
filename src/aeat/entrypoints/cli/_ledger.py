@@ -64,8 +64,7 @@ from ._common import (
     _tx_repo,
 )
 from ._ledger_business_invoice_cli import (
-    collectible_invoice_app,
-    payable_invoice_app,
+    invoice_app,
     register_business_invoice_commands,
 )
 from ._ledger_classify_cli import ledger_classify_bulk_csv
@@ -101,8 +100,8 @@ _log = get_logger(__name__)
 
 __all__ = [
     "app",
-    "collectible_invoice_app",
     "inventory_app",
+    "invoice_app",
     "ledger_archive",
     "ledger_attach",
     "ledger_doclink",
@@ -111,7 +110,6 @@ __all__ = [
     "ledger_reset",
     "ledger_split",
     "ledger_stash",
-    "payable_invoice_app",
     "ratios_app",
     "rule_app",
 ]
@@ -168,7 +166,7 @@ def _prefix_error_bad(exc: TransactionIdPrefixError, prefix: str) -> typer.BadPa
                 "cli.ledger.errors.id_prefix_collision",
                 prefix=prefix,
                 candidates=candidates.strip() or "?",
-            )
+            ),
         )
     return _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message))
 
@@ -216,7 +214,7 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
     return ManualLedgerTransactionPatch.model_validate(
-        {key: value for key, value in values.items() if value is not None}
+        {key: value for key, value in values.items() if value is not None},
     )
 
 
@@ -238,7 +236,7 @@ def _emit_update_result(
             "bucket_event_ids": list(events),
             "review_status": review_status,
             "transaction": transaction_payload.model_dump(mode="json"),
-        }
+        },
     )
     _emit_envelope(
         ctx,
@@ -356,13 +354,15 @@ def ledger_add(
     from ._ledger_payloads import LedgerAddResult
 
     transaction_payload = ledger_transaction_payload(result.transaction)
+    review_status = ledger_transaction_review_status(result.transaction)
     add_result = LedgerAddResult.model_validate(
         {
             "bucket_id": result.ref.bucket_id,
             "transaction_id": result.ref.transaction_id,
             "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
             "transaction": transaction_payload.model_dump(mode="json"),
-        }
+        },
     )
     _emit_envelope(
         ctx,
@@ -373,6 +373,7 @@ def ledger_add(
             f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
             f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
         ],
     )
 
@@ -501,7 +502,7 @@ def ledger_classify(
     saturate: bool = typer.Option(False, "--saturate", help=tr("cli.ledger.classify.saturate_help")),
     read_evidence: bool = typer.Option(False, "--read-evidence", help=tr("cli.ledger.classify.read_evidence_help")),
     evidence_acknowledged: bool = typer.Option(
-        False, "--evidence-acknowledged", help=tr("cli.ledger.classify.evidence_acknowledged_help")
+        False, "--evidence-acknowledged", help=tr("cli.ledger.classify.evidence_acknowledged_help"),
     ),
 ) -> None:
     """Classify one ledger transaction (--id), via LLM (--llm), or in bulk (--from-csv)."""
@@ -538,7 +539,7 @@ def ledger_classify(
             tr(
                 "cli.ledger.classify.saturate_requires_llm",
                 default="--saturate only applies to the --llm path; supply --llm <provider>.",
-            )
+            ),
         )
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -562,7 +563,7 @@ def ledger_classify(
             tr(
                 "cli.ledger.classify.classification_required",
                 default="--classification is required when --from-csv is not provided.",
-            )
+            ),
         )
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
@@ -605,18 +606,18 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
-    from ._ledger_payloads import LedgerClassifyResult
+    from ._ledger_payloads import LedgerClassifySingleResult
 
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
-    classify_result = LedgerClassifyResult.model_validate(
+    classify_result = LedgerClassifySingleResult.model_validate(
         {
             "bucket_id": result.ref.bucket_id,
             "transaction_id": result.transaction.transaction_id,
             "bucket_event_ids": list(result.bucket_event_ids),
             "review_status": review_status,
             "transaction": transaction_payload.model_dump(mode="json"),
-        }
+        },
     )
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
@@ -657,7 +658,7 @@ def _ledger_classify_llm(
     is mutually exclusive with the manual ``--classification`` / ``--from-csv``
     paths (manual classification is always the explicit override).
     """
-    from ._ledger_payloads import LedgerClassifyResult
+    from ._ledger_payloads import LedgerClassifyLlmSuggestResult, LedgerClassifySingleResult
 
     if classification is not None or from_csv is not None:
         raise _bad(
@@ -665,7 +666,7 @@ def _ledger_classify_llm(
                 "cli.ledger.classify.llm_exclusive",
                 default="--llm cannot be combined with --classification or --from-csv; "
                 "the manual path is the explicit operator override.",
-            )
+            ),
         )
     if transaction_id is None:
         raise _bad(tr("cli.ledger.classify.id_required", default="--id is required when --from-csv is not provided."))
@@ -681,7 +682,7 @@ def _ledger_classify_llm(
                     f"Install the {provider.value!r} CLI and ensure it is on PATH, "
                     "or run 'aeat app ledger providers' to list usable providers."
                 ),
-            )
+            ),
         )
 
     state = _state()
@@ -702,12 +703,12 @@ def _ledger_classify_llm(
                 "cli.ledger.classify.llm_failed",
                 reason=str(exc),
                 default=f"LLM classification failed: {exc}",
-            )
+            ),
         ) from exc
 
     if not apply:
         # Suggest (preview) — persist nothing. Rejecting = not applying.
-        classify_result = LedgerClassifyResult.model_validate(
+        suggest_result = LedgerClassifyLlmSuggestResult.model_validate(
             {
                 "llm": True,
                 "persisted": False,
@@ -718,7 +719,7 @@ def _ledger_classify_llm(
                 "confidence": format(suggestion.confidence, "f"),
                 "reason": suggestion.reason,
                 "provenance": suggestion.provenance,
-            }
+            },
         )
         lines = [
             f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
@@ -728,7 +729,7 @@ def _ledger_classify_llm(
             f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
             tr("cli.ledger.classify.llm_review_hint"),
         ]
-        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines)
         return
 
     try:
@@ -745,20 +746,17 @@ def _ledger_classify_llm(
 
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
-    classify_result = LedgerClassifyResult.model_validate(
+    # D1: the --llm --apply path is a single-transaction mutation, so it emits the
+    # canonical mutation quintet (LedgerClassifySingleResult); the llm provenance
+    # is surfaced in the operator-facing text lines below.
+    classify_result = LedgerClassifySingleResult.model_validate(
         {
-            "llm": True,
-            "persisted": True,
-            "provider": suggestion.provider.value,
-            "provenance": suggestion.provenance,
-            "confidence": format(suggestion.confidence, "f"),
-            "reason": suggestion.reason,
             "bucket_id": result.ref.bucket_id,
             "transaction_id": result.transaction.transaction_id,
             "bucket_event_ids": list(result.bucket_event_ids),
             "review_status": review_status,
             "transaction": transaction_payload.model_dump(mode="json"),
-        }
+        },
     )
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
@@ -791,7 +789,7 @@ def _ledger_saturate_llm(
     provenance. Manual ``classify`` flags remain the explicit per-field
     override; rejecting is simply not applying.
     """
-    from ._ledger_payloads import LedgerClassifyResult
+    from ._ledger_payloads import LedgerClassifyLlmSaturateResult, LedgerClassifySingleResult
 
     if classification is not None or from_csv is not None:
         raise _bad(
@@ -799,7 +797,7 @@ def _ledger_saturate_llm(
                 "cli.ledger.classify.llm_exclusive",
                 default="--llm cannot be combined with --classification or --from-csv; "
                 "the manual path is the explicit operator override.",
-            )
+            ),
         )
     if transaction_id is None:
         raise _bad(tr("cli.ledger.classify.id_required", default="--id is required when --from-csv is not provided."))
@@ -813,7 +811,7 @@ def _ledger_saturate_llm(
                     f"Install the {provider.value!r} CLI and ensure it is on PATH, "
                     "or run 'aeat app ledger providers' to list usable providers."
                 ),
-            )
+            ),
         )
 
     state = _state()
@@ -834,7 +832,7 @@ def _ledger_saturate_llm(
                 "cli.ledger.classify.llm_failed",
                 reason=str(exc),
                 default=f"LLM classification failed: {exc}",
-            )
+            ),
         ) from exc
 
     iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
@@ -851,7 +849,7 @@ def _ledger_saturate_llm(
     }
 
     if not apply:
-        classify_result = LedgerClassifyResult.model_validate(
+        classify_result = LedgerClassifyLlmSaturateResult.model_validate(
             {
                 "llm": True,
                 "persisted": False,
@@ -863,7 +861,7 @@ def _ledger_saturate_llm(
                 "reason": suggestion.reason,
                 "provenance": suggestion.provenance,
                 **derived_fields,
-            }
+            },
         )
         lines = [
             f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
@@ -877,7 +875,7 @@ def _ledger_saturate_llm(
                     f"{tr('cli.ledger.labels.taxable_base')}\t{taxable_base_value}",
                     f"{tr('cli.ledger.labels.iva_rate')}\t{iva_rate_value}",
                     f"{tr('cli.ledger.labels.iva_amount')}\t{iva_amount_value}",
-                ]
+                ],
             )
         elif suggestion.iva_category is not None:
             lines.append(f"{tr('cli.ledger.classify.saturate_non_derivable')}\t{suggestion.derivation_note}")
@@ -901,21 +899,17 @@ def _ledger_saturate_llm(
 
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
-    classify_result = LedgerClassifyResult.model_validate(
+    # D1: the --llm --saturate --apply path is a single-transaction mutation; it
+    # emits the canonical mutation quintet (the saturated substrate is already
+    # persisted on `transaction`), with the substrate surfaced in the text lines.
+    classify_result = LedgerClassifySingleResult.model_validate(
         {
-            "llm": True,
-            "persisted": True,
-            "provider": suggestion.provider.value,
-            "provenance": suggestion.provenance,
-            "confidence": format(suggestion.confidence, "f"),
-            "reason": suggestion.reason,
             "bucket_id": result.ref.bucket_id,
             "transaction_id": result.transaction.transaction_id,
             "bucket_event_ids": list(result.bucket_event_ids),
             "review_status": review_status,
             "transaction": transaction_payload.model_dump(mode="json"),
-            **derived_fields,
-        }
+        },
     )
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
@@ -1110,7 +1104,11 @@ def ledger_link(
         "actor": actor_label,
     }
     if evidence_result_payload is not None:
-        payload["evidence_update"] = evidence_result_payload.model_dump(mode="python")
+        # D1/D2: project the mutated transaction onto the result's `transaction`
+        # slot and carry the evidence update as a typed payload (mode="json" so
+        # the nested TransactionPayload's str fields validate cleanly).
+        payload["evidence_update"] = evidence_result_payload.model_dump(mode="json")
+        payload["transaction"] = evidence_result_payload.transaction.model_dump(mode="json")
     lines = [
         "operation\tledger.link",
         f"bucket\t{bucket_id}",

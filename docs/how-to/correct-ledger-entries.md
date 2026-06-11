@@ -135,7 +135,7 @@ Reset clears the whole ledger for the active profile. Use the [transactions guid
 
 ## Where to get help
 
-If a command refuses or fails, check the [troubleshooting guide](troubleshooting.md). Unfamiliar terms are explained in the [glossary](../glossary.md). Before sharing command output with anyone, strip tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
+If a command refuses or fails, check the [troubleshooting guide](troubleshooting.md). Unfamiliar terms are explained in the {doc}`glossary </_generated/glossary>`. Before sharing command output with anyone, strip tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
 
 ## Next steps
 

@@ -1,0 +1,729 @@
+{
+  "mappings": [
+    {
+      "query": "AEAT",
+      "concept_id": "aeat",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "Agencia Tributaria",
+      "concept_id": "aeat",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "autoliquidacion",
+      "concept_id": "autoliquidacion",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "self-assessment",
+      "concept_id": "autoliquidacion",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "binding",
+      "concept_id": "binding",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "borrador",
+      "concept_id": "borrador",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "draft",
+      "concept_id": "borrador",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "presentado",
+      "concept_id": "borrador-vs-presentado",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "box",
+      "concept_id": "casilla",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "casella",
+      "concept_id": "casilla",
+      "language": "ca",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "casilla",
+      "concept_id": "casilla",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "recuadro",
+      "concept_id": "casilla",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "rovat",
+      "concept_id": "casilla",
+      "language": "hu",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "censo",
+      "concept_id": "censo",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "census",
+      "concept_id": "censo",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "datos censales",
+      "concept_id": "censo",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "declaracion",
+      "concept_id": "declaracion",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "declaracion tributaria",
+      "concept_id": "declaracion",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "declaration",
+      "concept_id": "declaracion",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "tax return",
+      "concept_id": "declaracion",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "case file",
+      "concept_id": "expediente",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "expediente",
+      "concept_id": "expediente",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "fichero-BOE",
+      "concept_id": "fichero-boe",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "IRPF",
+      "concept_id": "irpf",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "Impuesto sobre la Renta de las Personas Fisicas",
+      "concept_id": "irpf",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "personal income tax",
+      "concept_id": "irpf",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "IVA",
+      "concept_id": "iva",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "Impuesto sobre el Valor Anadido",
+      "concept_id": "iva",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "impuesto sobre el valor anyadido",
+      "concept_id": "iva",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "value-added tax",
+      "concept_id": "iva",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "ISP",
+      "concept_id": "iva-domestic-reverse-charge",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "inversion del sujeto pasivo",
+      "concept_id": "iva-domestic-reverse-charge",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "RE",
+      "concept_id": "iva-recargo-equivalencia",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "regimen del recargo de equivalencia",
+      "concept_id": "iva-recargo-equivalencia",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "modulos",
+      "concept_id": "iva-regimen-simplificado",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "regimen simplificado",
+      "concept_id": "iva-regimen-simplificado",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "filing receipt",
+      "concept_id": "justificante",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "justificante",
+      "concept_id": "justificante",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "justificante de presentacion",
+      "concept_id": "justificante",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "ledger",
+      "concept_id": "ledger",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "modelo",
+      "concept_id": "modelo",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "tax form",
+      "concept_id": "modelo",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "declaracion de la renta",
+      "concept_id": "modelo-100",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "modelo 100",
+      "concept_id": "modelo-100",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "modelo 130",
+      "concept_id": "modelo-130",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "pago fraccionado",
+      "concept_id": "modelo-130",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "autoliquidacion de IVA",
+      "concept_id": "modelo-303",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "modelo 303",
+      "concept_id": "modelo-303",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "modelo 390",
+      "concept_id": "modelo-390",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "resumen anual de IVA",
+      "concept_id": "modelo-390",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "CIF",
+      "concept_id": "nif",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "NIE",
+      "concept_id": "nif",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "NIF",
+      "concept_id": "nif",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "Numero de Identificacion Fiscal",
+      "concept_id": "nif",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "preflight",
+      "concept_id": "preflight",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "aranyositas",
+      "concept_id": "prorrata",
+      "language": "hu",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "deductible proportion",
+      "concept_id": "prorrata",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "pro rata",
+      "concept_id": "prorrata",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "prorateo",
+      "concept_id": "prorrata",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "prorrata",
+      "concept_id": "prorrata",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "prorrateo",
+      "concept_id": "prorrata",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "regla de prorrata",
+      "concept_id": "prorrata",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:prorrata-especial",
+          "target": "glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.90715
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-102",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a102",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498621
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-9",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.498621
+        },
+        {
+          "record_id": "legal:orden-eha-789-2010:art-1",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.497554
+        },
+        {
+          "record_id": "legal:ley-37-1992:art-104",
+          "target": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a104",
+          "kind": "page",
+          "surface": "legal",
+          "ranking_weight": 0.474249
+        }
+      ],
+      "dropped_count": 11,
+      "collapsed_count": 4,
+      "dominant_cluster": "legal:src/aeat"
+    },
+    {
+      "query": "kulonleges aranyositas",
+      "concept_id": "prorrata-especial",
+      "language": "hu",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "prorrata especial",
+      "concept_id": "prorrata-especial",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "special pro rata",
+      "concept_id": "prorrata-especial",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "equivalence surcharge",
+      "concept_id": "recargo-equivalencia",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "recargo de equivalencia",
+      "concept_id": "recargo-equivalencia",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "renta",
+      "concept_id": "renta",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "revision",
+      "concept_id": "revision",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "electronic office",
+      "concept_id": "sede-electronica",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "sede",
+      "concept_id": "sede-electronica",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "sede electronica",
+      "concept_id": "sede-electronica",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "verificado completo",
+      "concept_id": "verificado-completo",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "VAT Information Exchange System",
+      "concept_id": "vies",
+      "language": "en",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "VIES",
+      "concept_id": "vies",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "work unit",
+      "concept_id": "work-unit",
+      "language": "es",
+      "targets": [],
+      "dropped_count": 0,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    }
+  ],
+  "query_count": 76,
+  "concept_count": 33,
+  "failed_query_count": 76,
+  "reindex_note": "PARTIAL: RAG service saturated by a peer index-rebuild at sweep time; live queries used a short timeout and recorded honest empties. The prorrata entry is seeded from a real captured service response. Refresh to full coverage with: python -m dev.docs.terminology.sweep run --out src/aeat/_data/terminology/relevance/relevance.json once the service frees.",
+  "score_floor": 0.5
+}

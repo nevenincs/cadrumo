@@ -135,7 +135,7 @@ class TestListAndIter:
                 select(SecureObjectRow).where(
                     SecureObjectRow.namespace == SubmissionRepository.namespace,
                     SecureObjectRow.object_key == future.submission_id,
-                )
+                ),
             ).scalar_one()
             row.schema_version = SubmissionRepository.schema_version + 1
 

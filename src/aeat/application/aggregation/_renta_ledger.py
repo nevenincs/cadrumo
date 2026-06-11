@@ -422,7 +422,7 @@ def _classify_renta_transaction(
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            detail=f"filing date {fact.filing_date.isoformat()} is outside {resolved_period.raw}",
+            detail=f"filing date {fact.filing_date.isoformat()} is outside {resolved_period}",
         )
     result = evaluate_renta_deductibility(fact, profile, context)
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
@@ -454,7 +454,7 @@ def _resolve_annual_period(period: Period | str) -> Period:
     if resolved.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(
             t("aggregation.renta_ledger.errors.annual_period_required"),
-            context={"period": resolved.raw},
+            context={"period": str(resolved)},
         )
     return resolved
 
@@ -582,7 +582,7 @@ def _casilla_aggregation(
                 category_id=category,
                 transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
                 subtotal=sum((row.deductible_amount for row in rows), start=Decimal("0")),
-            )
+            ),
         )
     return CasillaAggregation(
         modelo=modelo,

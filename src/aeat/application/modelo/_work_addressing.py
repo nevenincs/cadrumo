@@ -34,6 +34,10 @@ from ._selectors import (
 from ._work_lifecycle import create_work_unit, rename_work_unit
 
 
+class ModeloRevisionPickError(ModeloError, ValueError):
+    """Raised when a calculation-revision selector is internally inconsistent."""
+
+
 @dataclass(frozen=True, slots=True)
 class ModeloVisibleFilingTarget:
     """Operator-visible modelo filing target under one bucket/profile."""
@@ -78,10 +82,16 @@ class ModeloRevisionPick:
     def __post_init__(self) -> None:
         if self.selector is ModeloCalculationRevisionSelector.EXPLICIT:
             if self.calculation_revision_id is None:
-                raise ValueError("explicit revision picks require calculation_revision_id")
+                raise ModeloRevisionPickError(
+                    "explicit revision picks require calculation_revision_id",
+                    translated_message="application.modelo.errors.revision_pick_explicit_id_required",
+                )
             return
         if self.calculation_revision_id is not None:
-            raise ValueError("calculation_revision_id is only valid with the explicit revision selector")
+            raise ModeloRevisionPickError(
+                "calculation_revision_id is only valid with the explicit revision selector",
+                translated_message="application.modelo.errors.revision_pick_id_requires_explicit_selector",
+            )
 
     @classmethod
     def explicit(cls, calculation_revision_id: CalculationRevisionId) -> ModeloRevisionPick:
@@ -314,7 +324,7 @@ def modelo_work_address_from_operator_target(
         year, period = normalize_modelo_work_period(year, period, modelo=modelo)
     elif work_unit_id is None:
         raise ModeloWorkAddressNotFoundError(
-            "pass an exact work-unit id, or address the filing with modelo, year, and period"
+            "pass an exact work-unit id, or address the filing with modelo, year, and period",
         )
     return ModeloWorkAddress(
         work_unit_id=work_unit_id,
@@ -344,7 +354,7 @@ def resolve_modelo_work_unit_for_operator_target(
             period=period,
             registry_revision_id=registry_revision_id,
             bucket_id=bucket_id,
-        )
+        ),
     )
 
 
@@ -482,7 +492,7 @@ def resolve_registry_revision_for_work_target(
             f"The law-determined revision is {law_id!r}. "
             f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
             f"you cannot override it. Re-create the work unit without --revision to use "
-            f"the correct revision, or omit --revision to accept the law-determined default."
+            f"the correct revision, or omit --revision to accept the law-determined default.",
         ) from None
     return revision_id
 
@@ -510,7 +520,7 @@ def ensure_modelo_work_unit_for_visible_target(
             filing_year=filing_year,
             period=period,
             registry_revision_id=requested_revision,
-        )
+        ),
     )
     if resolution.work_unit is not None:
         unit = resolution.work_unit
@@ -557,7 +567,7 @@ def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWo
             period=address.period,
             revision_id=address.registry_revision_id,
             bucket_id=address.bucket_id,
-        )
+        ),
     )
     return resolution
 
@@ -617,7 +627,7 @@ def _require_revision_state(
         allowed_values = ", ".join(state.value for state in allowed)
         raise ModeloCalculationRevisionSelectorStateError(
             f"selected revision {revision.calculation_revision_id!r} is in state "
-            f"{revision.state.value!r}; {purpose} requires {allowed_values}"
+            f"{revision.state.value!r}; {purpose} requires {allowed_values}",
         )
     return revision
 
@@ -694,6 +704,7 @@ __all__ = [
     "ModeloResolvedRevisionProjection",
     "ModeloResolvedWorkProjection",
     "ModeloRevisionPick",
+    "ModeloRevisionPickError",
     "ModeloVisibleFilingTarget",
     "ModeloWorkAddress",
     "ModeloWorkAddressNotFoundError",

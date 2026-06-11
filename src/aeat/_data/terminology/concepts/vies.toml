@@ -1,0 +1,41 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "vies"
+domain = "concepto"
+lifecycle = "approved"
+related = ["iva"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El sistema europeo de intercambio de informacion sobre el IVA para validar numeros de operador intracomunitario."
+definition = "Sistema de Intercambio de Informacion sobre el IVA de la Union Europea (VAT Information Exchange System) que permite comprobar si un numero de identificacion a efectos del IVA esta registrado como operador intracomunitario en otro Estado miembro. La aplicacion puede consultarlo en modo de solo lectura para validar un numero de IVA antes de declarar una operacion intracomunitaria."
+
+[language.es.source]
+citation = "Reglamento (UE) n. 904/2010 del Consejo, sobre cooperacion administrativa y lucha contra el fraude en el ambito del IVA; Comision Europea, sistema VIES."
+authority = "eu"
+
+[[language.es.term]]
+label = "VIES"
+term_status = "preferred"
+part_of_speech = "abbreviation"
+
+[language.en]
+short_description = "The EU VAT Information Exchange System for validating intra-Community VAT numbers."
+
+[[language.en.term]]
+label = "VAT Information Exchange System"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "El sistema europeu d'intercanvi d'informacio sobre l'IVA per validar numeros d'operador intracomunitari."
+
+[language.hu]
+short_description = "Az EU hozzaadottertekado-informaciocsere-rendszere a kozossegen beluli afaszamok ellenorzesere."

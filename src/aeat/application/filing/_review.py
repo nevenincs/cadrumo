@@ -42,7 +42,7 @@ _REVIEW_STATUSES = frozenset(
     {
         ModeloDraftStatus.APROBADO,
         ModeloDraftStatus.APROBACION_CADUCADA,
-    }
+    },
 )
 _DOWNSTREAM_STATUSES = frozenset(
     {
@@ -51,7 +51,7 @@ _DOWNSTREAM_STATUSES = frozenset(
         ModeloDraftStatus.RECHAZADA,
         ModeloDraftStatus.ENMENDADO,
         ModeloDraftStatus.ANULADO,
-    }
+    },
 )
 
 
@@ -251,7 +251,7 @@ def approve_draft(
             "approval_basis": approval_basis,
             "review_checksum": compute_review_checksum(approval_basis),
             "updated_at": timestamp,
-        }
+        },
     )
     _logger.info(
         "draft approved draft_id=%s modelo=%s period=%s approved_by=%s",
@@ -289,7 +289,7 @@ def unapprove_draft(
             "approval_basis": None,
             "review_checksum": None,
             "updated_at": timestamp,
-        }
+        },
     )
     _logger.info("draft unapproved draft_id=%s modelo=%s period=%s", draft.draft_id, draft.modelo, draft.period)
     return updated
@@ -390,7 +390,7 @@ def refresh_review_status(
         update={
             "status": next_status,
             "updated_at": timestamp,
-        }
+        },
     )
 
 

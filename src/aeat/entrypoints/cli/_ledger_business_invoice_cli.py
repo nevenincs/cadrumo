@@ -1,12 +1,23 @@
-"""Typer registration for ledger business invoice commands."""
+"""Typer registration for the unified ledger business invoice command.
+
+One ``aeat app ledger invoice`` noun-group gated by ``--kind issued|received``
+replaces the prior payable-invoice / collectible-invoice split. The operator's
+``--kind`` is routed through :func:`invoice_direction_to_source_kind` (the single
+contractual direction->settlement mapping) to select the matching slim CRUD
+service over the encrypted :class:`BusinessOperationInvoice` catalogue.
+"""
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 import typer
 
+from ...application.invoices import invoice_direction_to_source_kind
 from ...application.ledger import (
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoicePatch,
+    BusinessOperationInvoiceSourceKind,
     CollectibleInvoiceService,
     IntracomOperationType,
     PayableInvoiceService,
@@ -16,6 +27,7 @@ from ...core import require_active_bucket_id
 from ...core.errors import NoActiveProfileError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...domain.iva import InvoiceKind
 from ._common import (
     _bad,
     _emit_envelope,
@@ -26,23 +38,30 @@ from ._common import (
     parse_optional_decimal_amount,
 )
 from ._ledger_payloads import (
-    CollectibleInvoiceAddResult,
-    CollectibleInvoiceListResult,
-    CollectibleInvoiceRemoveResult,
-    CollectibleInvoiceUpdateResult,
-    CollectibleInvoiceViewResult,
-    PayableInvoiceAddResult,
-    PayableInvoiceListResult,
-    PayableInvoiceRemoveResult,
-    PayableInvoiceUpdateResult,
-    PayableInvoiceViewResult,
+    InvoiceAddResult,
+    InvoiceListResult,
+    InvoiceRemoveResult,
+    InvoiceUpdateResult,
+    InvoiceViewResult,
 )
 
 
+class InvoiceKindOption(StrEnum):
+    """Operator-facing ``--kind`` axis for the unified invoice command.
+
+    Mirrors :class:`InvoiceKind`; declared as the Typer option type so click
+    renders ``Choice([issued, received])`` and instructs the operator on parse
+    failure. ``issued`` settles to ``collectible_invoice``; ``received`` settles
+    to ``payable_invoice`` via :func:`invoice_direction_to_source_kind`.
+    """
+
+    ISSUED = "issued"
+    RECEIVED = "received"
+
+
 def register_business_invoice_commands(app: typer.Typer) -> None:
-    """Mount business invoice command groups on the ledger app."""
-    app.add_typer(payable_invoice_app, name="payable-invoice")
-    app.add_typer(collectible_invoice_app, name="collectible-invoice")
+    """Mount the unified invoice command group on the ledger app."""
+    app.add_typer(invoice_app, name="invoice")
 
 
 def _business_invoice_bucket_id() -> str:
@@ -51,6 +70,16 @@ def _business_invoice_bucket_id() -> str:
         return require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
+
+
+def _service_for_kind(
+    kind: InvoiceKindOption,
+) -> PayableInvoiceService | CollectibleInvoiceService:
+    """Select the slim CRUD service for ``kind`` via the contractual mapping."""
+    source_kind = invoice_direction_to_source_kind(InvoiceKind(kind.value))
+    if source_kind is BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE:
+        return CollectibleInvoiceService()
+    return PayableInvoiceService()
 
 
 def _validated_eu_iva_id(raw: str | None) -> str | None:
@@ -100,32 +129,35 @@ def _business_invoice_text_lines(record) -> list[str]:
     ]
 
 
-def _payable_invoice_service() -> PayableInvoiceService:
-    return PayableInvoiceService()
-
-
-def _collectible_invoice_service() -> CollectibleInvoiceService:
-    return CollectibleInvoiceService()
-
-
-payable_invoice_app = typer.Typer(
-    name="payable-invoice",
-    help=tr("cli.app.ledger.payable_invoice.group_help", default="Payable invoice records (we owe a vendor)."),
+invoice_app = typer.Typer(
+    name="invoice",
+    help=tr(
+        "cli.app.ledger.invoice.group_help",
+        default="Business invoice records (issued or received).",
+    ),
     no_args_is_help=True,
 )
 
 
-@payable_invoice_app.command(
-    "add", help=tr("cli.app.ledger.payable_invoice.add_help", default="Register a new payable invoice record."),
+@invoice_app.command(
+    "add", help=tr("cli.app.ledger.invoice.add_help", default="Register a new business invoice."),
 )
-def payable_invoice_add(
+def invoice_add(
     ctx: typer.Context,
+    kind: InvoiceKindOption = typer.Option(
+        ...,
+        "--kind",
+        help=tr(
+            "cli.app.ledger.invoice.kind_help",
+            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
+        ),
+    ),
     counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
     invoice_number: str = typer.Option(..., "--invoice-number"),
     invoice_date: str = typer.Option(
         ...,
         "--invoice-date",
-        help=tr("cli.app.ledger.payable_invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
+        help=tr("cli.app.ledger.invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
     ),
     counterparty_name: str = typer.Option("", "--counterparty-name"),
     currency: str = typer.Option(DEFAULT_CURRENCY, "--currency"),
@@ -138,7 +170,7 @@ def payable_invoice_add(
         None,
         "--country-code",
         help=tr(
-            "cli.app.ledger.payable_invoice.country_code_help",
+            "cli.app.ledger.invoice.country_code_help",
             default="Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations).",
         ),
     ),
@@ -146,7 +178,7 @@ def payable_invoice_add(
         None,
         "--eu-iva-id",
         help=tr(
-            "cli.app.ledger.payable_invoice.eu_iva_id_help",
+            "cli.app.ledger.invoice.eu_iva_id_help",
             default="Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations.",
         ),
     ),
@@ -154,7 +186,7 @@ def payable_invoice_add(
         None,
         "--operation-type",
         help=tr(
-            "cli.app.ledger.payable_invoice.operation_type_help",
+            "cli.app.ledger.invoice.operation_type_help",
             default=(
                 "M349 operation type: E entrega, S servicios, T triangular,"
                 " R rectificacion, A adquisicion bienes, I adquisicion servicios, M miscelanea."
@@ -162,9 +194,9 @@ def payable_invoice_add(
         ),
     ),
 ) -> None:
-    """Register a new payable invoice record on the active bucket."""
+    """Register a new business invoice record on the active bucket."""
     bucket_id = _business_invoice_bucket_id()
-    result = _payable_invoice_service().add(
+    result = _service_for_kind(kind).add(
         bucket_id=bucket_id,
         counterparty_nif=counterparty_nif,
         invoice_number=invoice_number,
@@ -180,7 +212,7 @@ def payable_invoice_add(
         eu_iva_id=_validated_eu_iva_id(eu_iva_id),
         operation_type=_parse_intracom_operation_type(
             operation_type,
-            translation_key="cli.app.ledger.payable_invoice.operation_type_invalid",
+            translation_key="cli.app.ledger.invoice.operation_type_invalid",
         ),
     )
     payload = _business_invoice_payload(result.record)
@@ -189,42 +221,72 @@ def payable_invoice_add(
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
     _emit_envelope(
         ctx,
-        command="ledger.payable_invoice.add",
-        result=PayableInvoiceAddResult.model_validate(payload),
+        command="ledger.invoice.add",
+        result=InvoiceAddResult.model_validate(payload),
         lines=lines,
     )
 
 
-@payable_invoice_app.command(
-    "view", help=tr("cli.app.ledger.payable_invoice.view_help", default="Show one payable invoice record."),
+@invoice_app.command(
+    "view", help=tr("cli.app.ledger.invoice.view_help", default="Show one business invoice."),
 )
-def payable_invoice_view(
+def invoice_view(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.payable_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+        ..., help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+    ),
+    kind: InvoiceKindOption = typer.Option(
+        ...,
+        "--kind",
+        help=tr(
+            "cli.app.ledger.invoice.kind_help",
+            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
+        ),
     ),
 ) -> None:
-    """Show one payable invoice record by id or unambiguous prefix."""
+    """Show one business invoice record by id or unambiguous prefix."""
     bucket_id = _business_invoice_bucket_id()
-    record = _payable_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
+    record = _service_for_kind(kind).view(bucket_id=bucket_id, invoice_id=invoice_id)
     _emit_envelope(
         ctx,
-        command="ledger.payable_invoice.view",
-        result=PayableInvoiceViewResult.model_validate(_business_invoice_payload(record)),
+        command="ledger.invoice.view",
+        result=InvoiceViewResult.model_validate(_business_invoice_payload(record)),
         lines=_business_invoice_text_lines(record),
     )
 
 
-@payable_invoice_app.command(
+@invoice_app.command(
     "list",
     help=tr(
-        "cli.app.ledger.payable_invoice.list_help", default="List every payable invoice record on the active profile.",
+        "cli.app.ledger.invoice.list_help",
+        default="List business invoices (both kinds unless --kind filters).",
     ),
 )
-def payable_invoice_list(ctx: typer.Context) -> None:
-    """List every payable invoice record on the active bucket."""
+def invoice_list(
+    ctx: typer.Context,
+    kind: InvoiceKindOption | None = typer.Option(
+        None,
+        "--kind",
+        help=tr(
+            "cli.app.ledger.invoice.kind_help",
+            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
+        ),
+    ),
+) -> None:
+    """List business invoices; without ``--kind`` both kinds are returned.
+
+    Defaulting to both kinds prevents a bare ``invoice list`` from silently
+    dropping half the operator's records (no-silent-under-declaration).
+    """
     bucket_id = _business_invoice_bucket_id()
-    rows = _payable_invoice_service().list_all(bucket_id=bucket_id)
+    if kind is None:
+        services: tuple[PayableInvoiceService | CollectibleInvoiceService, ...] = (
+            PayableInvoiceService(),
+            CollectibleInvoiceService(),
+        )
+    else:
+        services = (_service_for_kind(kind),)
+    rows = tuple(record for service in services for record in service.list_all(bucket_id=bucket_id))
     payload = {
         "bucket_id": bucket_id,
         "rows": [r.model_dump(mode="json") for r in rows],
@@ -232,25 +294,36 @@ def payable_invoice_list(ctx: typer.Context) -> None:
     }
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
-        lines.append(f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}")
+        lines.append(
+            f"{r.invoice_id}\t{r.source_kind.value}\t{r.counterparty_nif}\t"
+            f"{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}",
+        )
     _emit_envelope(
         ctx,
-        command="ledger.payable_invoice.list",
-        result=PayableInvoiceListResult.model_validate(payload),
+        command="ledger.invoice.list",
+        result=InvoiceListResult.model_validate(payload),
         lines=lines,
     )
 
 
-@payable_invoice_app.command(
+@invoice_app.command(
     "update",
     help=tr(
-        "cli.app.ledger.payable_invoice.update_help", default="Update mutable fields on one payable invoice record.",
+        "cli.app.ledger.invoice.update_help", default="Update mutable fields on one business invoice.",
     ),
 )
-def payable_invoice_update(
+def invoice_update(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.payable_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+        ..., help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+    ),
+    kind: InvoiceKindOption = typer.Option(
+        ...,
+        "--kind",
+        help=tr(
+            "cli.app.ledger.invoice.kind_help",
+            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
+        ),
     ),
     counterparty_nif: str | None = typer.Option(None, "--counterparty-nif"),
     counterparty_name: str | None = typer.Option(None, "--counterparty-name"),
@@ -263,7 +336,7 @@ def payable_invoice_update(
     total_amount: str | None = typer.Option(None, "--total-amount"),
     notes: str | None = typer.Option(None, "--notes"),
 ) -> None:
-    """Update mutable fields on one payable invoice record."""
+    """Update mutable fields on one business invoice record."""
     bucket_id = _business_invoice_bucket_id()
     patch = BusinessOperationInvoicePatch(
         counterparty_nif=counterparty_nif,
@@ -277,272 +350,56 @@ def payable_invoice_update(
         total_amount=parse_optional_decimal_amount(total_amount, label="total-amount"),
         notes=notes,
     )
-    result = _payable_invoice_service().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
+    result = _service_for_kind(kind).update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
     payload = _business_invoice_payload(result.record)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
     _emit_envelope(
         ctx,
-        command="ledger.payable_invoice.update",
-        result=PayableInvoiceUpdateResult.model_validate(payload),
+        command="ledger.invoice.update",
+        result=InvoiceUpdateResult.model_validate(payload),
         lines=lines,
     )
 
 
-@payable_invoice_app.command(
-    "remove", help=tr("cli.app.ledger.payable_invoice.remove_help", default="Delete one payable invoice record."),
+@invoice_app.command(
+    "remove", help=tr("cli.app.ledger.invoice.remove_help", default="Delete one business invoice."),
 )
-def payable_invoice_remove(
+def invoice_remove(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.payable_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+        ..., help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+    ),
+    kind: InvoiceKindOption = typer.Option(
+        ...,
+        "--kind",
+        help=tr(
+            "cli.app.ledger.invoice.kind_help",
+            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
+        ),
     ),
     yes: bool = typer.Option(
-        False, "--yes", help=tr("cli.app.ledger.payable_invoice.yes_help", default="Confirm removal."),
+        False, "--yes", help=tr("cli.app.ledger.invoice.yes_help", default="Confirm removal."),
     ),
 ) -> None:
-    """Delete one payable invoice record."""
+    """Delete one business invoice record."""
     if not yes:
         raise _bad(
             tr(
-                "cli.app.ledger.payable_invoice.yes_required",
-                default="--yes is required to remove a payable invoice record",
+                "cli.app.ledger.invoice.yes_required",
+                default="--yes is required to remove an invoice record",
             ),
         )
     bucket_id = _business_invoice_bucket_id()
-    result = _payable_invoice_service().remove(bucket_id=bucket_id, invoice_id=invoice_id)
+    result = _service_for_kind(kind).remove(bucket_id=bucket_id, invoice_id=invoice_id)
     payload = _business_invoice_payload(result.record)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
     _emit_envelope(
         ctx,
-        command="ledger.payable_invoice.remove",
-        result=PayableInvoiceRemoveResult.model_validate(payload),
-        lines=lines,
-    )
-
-
-collectible_invoice_app = typer.Typer(
-    name="collectible-invoice",
-    help=tr(
-        "cli.app.ledger.collectible_invoice.group_help", default="Collectible invoice records (a customer owes us).",
-    ),
-    no_args_is_help=True,
-)
-
-
-@collectible_invoice_app.command(
-    "add", help=tr("cli.app.ledger.collectible_invoice.add_help", default="Register a new collectible invoice record."),
-)
-def collectible_invoice_add(
-    ctx: typer.Context,
-    counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
-    invoice_number: str = typer.Option(..., "--invoice-number"),
-    invoice_date: str = typer.Option(
-        ...,
-        "--invoice-date",
-        help=tr("cli.app.ledger.collectible_invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
-    ),
-    counterparty_name: str = typer.Option("", "--counterparty-name"),
-    currency: str = typer.Option(DEFAULT_CURRENCY, "--currency"),
-    taxable_base: str = typer.Option("0", "--taxable-base"),
-    iva_rate: str | None = typer.Option(None, "--iva-rate"),
-    iva_amount: str = typer.Option("0", "--iva-amount"),
-    total_amount: str = typer.Option("0", "--total-amount"),
-    notes: str = typer.Option("", "--notes"),
-    country_code: str | None = typer.Option(
-        None,
-        "--country-code",
-        help=tr(
-            "cli.app.ledger.collectible_invoice.country_code_help",
-            default="Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations).",
-        ),
-    ),
-    eu_iva_id: str | None = typer.Option(
-        None,
-        "--eu-iva-id",
-        help=tr(
-            "cli.app.ledger.collectible_invoice.eu_iva_id_help",
-            default="Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations.",
-        ),
-    ),
-    operation_type: str | None = typer.Option(
-        None,
-        "--operation-type",
-        help=tr(
-            "cli.app.ledger.collectible_invoice.operation_type_help",
-            default=(
-                "M349 operation type: E entrega, S servicios, T triangular,"
-                " R rectificacion, A adquisicion bienes, I adquisicion servicios, M miscelanea."
-            ),
-        ),
-    ),
-) -> None:
-    """Register a new collectible invoice record on the active bucket."""
-    bucket_id = _business_invoice_bucket_id()
-    result = _collectible_invoice_service().add(
-        bucket_id=bucket_id,
-        counterparty_nif=counterparty_nif,
-        invoice_number=invoice_number,
-        invoice_date=_parse_iso_date_str(invoice_date, label="invoice-date"),
-        counterparty_name=counterparty_name,
-        currency=currency,
-        taxable_base=parse_decimal_amount(taxable_base, label="taxable-base"),
-        iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
-        iva_amount=parse_decimal_amount(iva_amount, label="iva-amount"),
-        total_amount=parse_decimal_amount(total_amount, label="total-amount"),
-        notes=notes,
-        country_code=country_code,
-        eu_iva_id=_validated_eu_iva_id(eu_iva_id),
-        operation_type=_parse_intracom_operation_type(
-            operation_type,
-            translation_key="cli.app.ledger.collectible_invoice.operation_type_invalid",
-        ),
-    )
-    payload = _business_invoice_payload(result.record)
-    payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    lines = _business_invoice_text_lines(result.record)
-    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit_envelope(
-        ctx,
-        command="ledger.collectible_invoice.add",
-        result=CollectibleInvoiceAddResult.model_validate(payload),
-        lines=lines,
-    )
-
-
-@collectible_invoice_app.command(
-    "view", help=tr("cli.app.ledger.collectible_invoice.view_help", default="Show one collectible invoice record."),
-)
-def collectible_invoice_view(
-    ctx: typer.Context,
-    invoice_id: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.collectible_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
-    ),
-) -> None:
-    """Show one collectible invoice record by id or unambiguous prefix."""
-    bucket_id = _business_invoice_bucket_id()
-    record = _collectible_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit_envelope(
-        ctx,
-        command="ledger.collectible_invoice.view",
-        result=CollectibleInvoiceViewResult.model_validate(_business_invoice_payload(record)),
-        lines=_business_invoice_text_lines(record),
-    )
-
-
-@collectible_invoice_app.command(
-    "list",
-    help=tr(
-        "cli.app.ledger.collectible_invoice.list_help",
-        default="List every collectible invoice record on the active profile.",
-    ),
-)
-def collectible_invoice_list(ctx: typer.Context) -> None:
-    """List every collectible invoice record on the active bucket."""
-    bucket_id = _business_invoice_bucket_id()
-    rows = _collectible_invoice_service().list_all(bucket_id=bucket_id)
-    payload = {
-        "bucket_id": bucket_id,
-        "rows": [r.model_dump(mode="json") for r in rows],
-        "count": len(rows),
-    }
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    for r in rows:
-        lines.append(f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}")
-    _emit_envelope(
-        ctx,
-        command="ledger.collectible_invoice.list",
-        result=CollectibleInvoiceListResult.model_validate(payload),
-        lines=lines,
-    )
-
-
-@collectible_invoice_app.command(
-    "update",
-    help=tr(
-        "cli.app.ledger.collectible_invoice.update_help",
-        default="Update mutable fields on one collectible invoice record.",
-    ),
-)
-def collectible_invoice_update(
-    ctx: typer.Context,
-    invoice_id: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.collectible_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
-    ),
-    counterparty_nif: str | None = typer.Option(None, "--counterparty-nif"),
-    counterparty_name: str | None = typer.Option(None, "--counterparty-name"),
-    invoice_number: str | None = typer.Option(None, "--invoice-number"),
-    invoice_date: str | None = typer.Option(None, "--invoice-date"),
-    currency: str | None = typer.Option(None, "--currency"),
-    taxable_base: str | None = typer.Option(None, "--taxable-base"),
-    iva_rate: str | None = typer.Option(None, "--iva-rate"),
-    iva_amount: str | None = typer.Option(None, "--iva-amount"),
-    total_amount: str | None = typer.Option(None, "--total-amount"),
-    notes: str | None = typer.Option(None, "--notes"),
-) -> None:
-    """Update mutable fields on one collectible invoice record."""
-    bucket_id = _business_invoice_bucket_id()
-    patch = BusinessOperationInvoicePatch(
-        counterparty_nif=counterparty_nif,
-        counterparty_name=counterparty_name,
-        invoice_number=invoice_number,
-        invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
-        currency=currency,
-        taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
-        iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
-        iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
-        total_amount=parse_optional_decimal_amount(total_amount, label="total-amount"),
-        notes=notes,
-    )
-    result = _collectible_invoice_service().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
-    payload = _business_invoice_payload(result.record)
-    payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    lines = _business_invoice_text_lines(result.record)
-    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit_envelope(
-        ctx,
-        command="ledger.collectible_invoice.update",
-        result=CollectibleInvoiceUpdateResult.model_validate(payload),
-        lines=lines,
-    )
-
-
-@collectible_invoice_app.command(
-    "remove",
-    help=tr("cli.app.ledger.collectible_invoice.remove_help", default="Delete one collectible invoice record."),
-)
-def collectible_invoice_remove(
-    ctx: typer.Context,
-    invoice_id: str = typer.Argument(
-        ...,
-        help=tr("cli.app.ledger.collectible_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
-    ),
-    yes: bool = typer.Option(
-        False, "--yes", help=tr("cli.app.ledger.collectible_invoice.yes_help", default="Confirm removal."),
-    ),
-) -> None:
-    """Delete one collectible invoice record."""
-    if not yes:
-        raise _bad(
-            tr(
-                "cli.app.ledger.collectible_invoice.yes_required",
-                default="--yes is required to remove a collectible invoice record",
-            ),
-        )
-    bucket_id = _business_invoice_bucket_id()
-    result = _collectible_invoice_service().remove(bucket_id=bucket_id, invoice_id=invoice_id)
-    payload = _business_invoice_payload(result.record)
-    payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    lines = _business_invoice_text_lines(result.record)
-    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit_envelope(
-        ctx,
-        command="ledger.collectible_invoice.remove",
-        result=CollectibleInvoiceRemoveResult.model_validate(payload),
+        command="ledger.invoice.remove",
+        result=InvoiceRemoveResult.model_validate(payload),
         lines=lines,
     )

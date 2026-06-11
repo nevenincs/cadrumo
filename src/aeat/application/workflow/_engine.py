@@ -381,7 +381,7 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=True,
                 summary=_summary_text(f"Loaded profile tax_id={profile.tax_id}"),
-            )
+            ),
         )
 
     def _stage_computing_deadlines(
@@ -459,7 +459,7 @@ class WorkflowEngine:
                 "(the AEAT filing-obligation window is not open). Filing-to-fichero does "
                 "not require this step: export the verified-complete revision with "
                 "'aeat app modelo export' — that is the local finish line. 'work file' "
-                "is the optional internal mark-as-filed step for when the obligation window is open."
+                "is the optional internal mark-as-filed step for when the obligation window is open.",
             )
             steps.append(
                 WorkflowStep(
@@ -468,7 +468,7 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary=no_summary,
-                )
+                ),
             )
             raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.NO_PENDING_OBLIGATION,
@@ -478,7 +478,7 @@ class WorkflowEngine:
         if obligation.closes_on < today:
             closed_summary = _summary_text(
                 f"Deadline for modelo={obligation.modelo} "
-                f"period={obligation.period} closed on {obligation.closes_on.isoformat()}"
+                f"period={obligation.period} closed on {obligation.closes_on.isoformat()}",
             )
             steps.append(
                 WorkflowStep(
@@ -492,7 +492,7 @@ class WorkflowEngine:
                         "period": obligation.period,
                         "closes_on": obligation.closes_on.isoformat(),
                     },
-                )
+                ),
             )
             raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.DEADLINE_PASSED,
@@ -507,14 +507,14 @@ class WorkflowEngine:
                 success=True,
                 summary=_summary_text(
                     f"Next obligation modelo={obligation.modelo} "
-                    f"period={obligation.period} closes_on={obligation.closes_on.isoformat()}"
+                    f"period={obligation.period} closes_on={obligation.closes_on.isoformat()}",
                 ),
                 details={
                     "modelo": obligation.modelo,
                     "period": obligation.period,
                     "closes_on": obligation.closes_on.isoformat(),
                 },
-            )
+            ),
         )
         return obligation
 
@@ -556,7 +556,7 @@ class WorkflowEngine:
                         f"Filing window for modelo={obligation.modelo} "
                         f"period={obligation.period} {window_state} "
                         f"(closes_on={obligation.closes_on.isoformat()}); "
-                        "informational only — verification does not depend on it"
+                        "informational only — verification does not depend on it",
                     ),
                     details={
                         "modelo": obligation.modelo,
@@ -566,7 +566,7 @@ class WorkflowEngine:
                         "filing_window": window_state,
                         "deadline_role": DeadlineRole.INFORMATIONAL,
                     },
-                )
+                ),
             )
             return obligation
 
@@ -595,7 +595,7 @@ class WorkflowEngine:
                 summary=_summary_text(
                     f"No open filing window for modelo={target_modelo} "
                     f"period={target_period}; informational only — "
-                    "verification does not depend on it"
+                    "verification does not depend on it",
                 ),
                 details={
                     "modelo": target_modelo,
@@ -603,7 +603,7 @@ class WorkflowEngine:
                     "filing_window": FilingWindowState.ABSENT,
                     "deadline_role": "informational",
                 },
-            )
+            ),
         )
         return synthetic
 
@@ -632,7 +632,7 @@ class WorkflowEngine:
                     success=True,
                     summary=_summary_text("Inbox skipped (not wired)"),
                     details={"skipped": "not_wired"},
-                )
+                ),
             )
             return
         try:
@@ -654,7 +654,7 @@ class WorkflowEngine:
         blockers = tuple(n for n in snapshot.rows if n.tipo == "notificacion" and n.leida is not True)
         if blockers:
             blocked_summary = _summary_text(
-                f"Inbox has {len(blockers)} blocking requerimiento(s) for modelo={obligation.modelo}"
+                f"Inbox has {len(blockers)} blocking requerimiento(s) for modelo={obligation.modelo}",
             )
             steps.append(
                 WorkflowStep(
@@ -668,7 +668,7 @@ class WorkflowEngine:
                         "first_notificacion_id": blockers[0].certificado_id,
                         "first_concepto": blockers[0].concepto,
                     },
-                )
+                ),
             )
             raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO,
@@ -681,7 +681,7 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=True,
                 summary=_summary_text("Inbox clear"),
-            )
+            ),
         )
 
     async def _stage_building_draft(
@@ -741,7 +741,7 @@ class WorkflowEngine:
                             "period": obligation.period,
                             "expediente_count": str(len(already)),
                         },
-                    )
+                    ),
                 )
                 raise WorkflowAbortSignalError(
                     reason=WorkflowAbortReason.ALREADY_FILED,
@@ -812,7 +812,7 @@ class WorkflowEngine:
                     success=False,
                     summary=status_summary,
                     details={"draft_id": draft.draft_id, "status": status_value},
-                )
+                ),
             )
             raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
@@ -827,7 +827,7 @@ class WorkflowEngine:
                 success=True,
                 summary=_summary_text(f"Draft built draft_id={draft.draft_id}"),
                 details={"draft_id": draft.draft_id},
-            )
+            ),
         )
         return draft
 
@@ -843,7 +843,7 @@ class WorkflowEngine:
         mismatches: dict[str, str] = {}
         if draft.modelo != obligation.modelo:
             mismatches["modelo"] = f"{draft.modelo} != {obligation.modelo}"
-        if draft.period != obligation.period:
+        if str(draft.period) != obligation.period:
             mismatches["period"] = f"{draft.period} != {obligation.period}"
         if draft.profile_tax_id != profile.tax_id:
             mismatches["profile_tax_id"] = f"{draft.profile_tax_id} != {profile.tax_id}"
@@ -866,7 +866,7 @@ class WorkflowEngine:
                 success=False,
                 summary=summary,
                 details={"draft_id": draft.draft_id, **mismatches},
-            )
+            ),
         )
         raise WorkflowAbortSignalError(
             reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
@@ -909,7 +909,7 @@ class WorkflowEngine:
                             " --calculation-revision-id <calculation_revision_id>"
                         ),
                     },
-                )
+                ),
             )
             raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
@@ -922,7 +922,7 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=True,
                 summary=_summary_text("Draft validation clean"),
-            )
+            ),
         )
 
     def _stage_running_preflight(
@@ -964,7 +964,7 @@ class WorkflowEngine:
                             "error_type": type(exc).__name__,
                             "error_message": str(exc),
                         },
-                    )
+                    ),
                 )
                 raise WorkflowAbortSignalError(
                     reason=WorkflowAbortReason.CERT_INVALID,
@@ -978,7 +978,7 @@ class WorkflowEngine:
                 provider_summary = _summary_text(
                     f"Auth provider unavailable: kind={certificate.kind.value} "
                     f"configured={certificate.configured} available={certificate.available}. "
-                    f"{describe_provider_operator_impact(certificate)}"
+                    f"{describe_provider_operator_impact(certificate)}",
                 )
                 steps.append(
                     WorkflowStep(
@@ -988,7 +988,7 @@ class WorkflowEngine:
                         success=False,
                         summary=provider_summary,
                         details=cert_details,
-                    )
+                    ),
                 )
                 raise WorkflowAbortSignalError(
                     reason=WorkflowAbortReason.CERT_INVALID,
@@ -1018,7 +1018,7 @@ class WorkflowEngine:
                 expiry_summary = _summary_text(
                     f"Certificate pre-expiry gate: severity={cert_severity} "
                     f"days_until_expiry={days_until_expiry} "
-                    f"kind={certificate.kind.value}"
+                    f"kind={certificate.kind.value}",
                 )
                 steps.append(
                     WorkflowStep(
@@ -1028,7 +1028,7 @@ class WorkflowEngine:
                         success=False,
                         summary=expiry_summary,
                         details=cert_details,
-                    )
+                    ),
                 )
                 raise WorkflowAbortSignalError(
                     reason=WorkflowAbortReason.CERT_INVALID,
@@ -1066,7 +1066,7 @@ class WorkflowEngine:
                     success=False,
                     summary=preflight_summary,
                     details={**cert_details, "error_message": str(exc)},
-                )
+                ),
             )
             raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.PREFLIGHT_FAILED,
@@ -1088,7 +1088,7 @@ class WorkflowEngine:
                 success=True,
                 summary=_summary_text("Preflight OK"),
                 details=cert_details,
-            )
+            ),
         )
 
     # ---------------------------------------------------------------- helpers

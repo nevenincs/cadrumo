@@ -37,13 +37,13 @@ _EXPECTED_REASON_KEYS = {
 
 def test_describe_stale_reason_renders_approval_basis_version_changed() -> None:
     assert describe_stale_reason(ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED]
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED],
     )
 
 
 def test_describe_stale_reason_renders_draft_payload_changed() -> None:
     assert describe_stale_reason(ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED]
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED],
     )
 
 
@@ -52,19 +52,19 @@ def test_describe_stale_reason_renders_draft_review_changed() -> None:
     changed' so the operator phrase matches the human-readable concept
     (validation surface), not the raw enum identifier."""
     assert describe_stale_reason(ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED]
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED],
     )
 
 
 def test_describe_stale_reason_renders_transaction_catalogue_changed() -> None:
     assert describe_stale_reason(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED]
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED],
     )
 
 
 def test_describe_stale_reason_renders_category_profiles_changed() -> None:
     assert describe_stale_reason(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED]
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED],
     )
 
 
@@ -73,7 +73,7 @@ def test_describe_stale_reason_renders_schema_formula_changed() -> None:
     provenance changed' to communicate the broader concept (provenance
     invalidation, not just the schema or formula bytes themselves)."""
     assert describe_stale_reason(ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED) == tr(
-        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED]
+        _EXPECTED_REASON_KEYS[ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED],
     )
 
 

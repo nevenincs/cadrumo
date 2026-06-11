@@ -14,6 +14,7 @@ from ....adapters.inbound.declaracion import (
     TemplateRevision,
 )
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
+from ....core import Period
 from .. import (
     VerificationError,
     VerificationStatus,
@@ -83,7 +84,7 @@ def test_verify_declaracion_uses_modelo_130_registry_snapshot() -> None:
             ("17", Decimal("880.00")),
             ("18", Decimal("0")),
             ("19", Decimal("880.00")),
-        )
+        ),
     )
 
     verdict = verify_declaracion(
@@ -109,7 +110,7 @@ def test_verify_declaracion_classifies_registry_divergence() -> None:
             ("01", Decimal("10000")),
             ("02", Decimal("4000")),
             ("19", Decimal("999.00")),
-        )
+        ),
     )
 
     verdict = verify_declaracion(
@@ -229,7 +230,7 @@ def test_verify_declaracion_reports_missing_registry_bindings_as_locale_error() 
             ("01", Decimal("10000")),
             ("02", Decimal("4000")),
             ("19", Decimal("880.00")),
-        )
+        ),
     )
 
     with pytest.raises(VerificationError) as raised:
@@ -255,10 +256,15 @@ class TestVerdictJsonRoundTrip:
     """
 
     def test_verdict_is_json_serialisable(self) -> None:
-        """Verify a verdict survives ``model_dump_json`` round-trip."""
+        """Verify a verdict survives ``model_dump_json`` round-trip.
+
+        The ``period`` field serialises as ``{"filing_year": 2025, "code": "1T"}``
+        (the canonical :class:`~aeat.core.Period` JSON shape) and is
+        reconstituted to the same :class:`~aeat.core.Period` on reload.
+        """
         verdict = VerificationVerdict(
             modelo="130",
-            period="2025Q1",
+            period=Period.from_year_and_code(2025, "1T"),
             registry_snapshot_id="registry:130:2019-y-siguientes",
             verification_expectation_ids=("modelo-130-calculation-verification",),
             status=VerificationStatus.VERIFIED,
@@ -270,3 +276,4 @@ class TestVerdictJsonRoundTrip:
         serialised = verdict.model_dump_json()
         reloaded = VerificationVerdict.model_validate_json(serialised)
         assert reloaded == verdict
+        assert reloaded.period == Period.from_year_and_code(2025, "1T")

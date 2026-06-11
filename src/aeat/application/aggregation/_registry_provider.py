@@ -14,7 +14,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import COUNTERPART_SOURCE_KINDS, CounterpartSourceKind, counterpart_source_kind
 from ...core.parsing._dates import _parse_iso8601_date
@@ -52,7 +52,7 @@ class PerModeloRegistryBindingResolution(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=16)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     provider: PerModeloAggregationProvider
     binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
     row_values: Mapping[tuple[str, int], Decimal | str] = Field(default_factory=dict)
@@ -191,7 +191,7 @@ def _counterpart_registry_observations(
                 base_amount=observation.taxable_base,
                 intracommunity_clave=clave,
                 party_legal_name=observation.counterparty_name or None,
-            )
+            ),
         )
     return tuple(observations)
 

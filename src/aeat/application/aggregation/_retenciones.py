@@ -14,12 +14,32 @@ Modelos: 111, 115, 123, 180, 190, 193.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.aggregation import AggregationSourceKind, RetencionScheme
+from ...domain.period import parse_canonical_period
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
+
+
+def _coerce_period(value: Any) -> Any:
+    """Accept a combined period string (e.g. ``"2025-Q1"``) and return a :class:`Period`.
+
+    Passes :class:`Period` instances through unchanged. Inbound combined strings are
+    parsed via :func:`~aeat.domain.period.parse_canonical_period` at the pydantic
+    boundary so the aggregation models always carry a typed ``Period``.
+    """
+    if isinstance(value, Period):
+        return value
+    if isinstance(value, str):
+        year, token = parse_canonical_period(value)
+        return Period.from_year_and_code(year, token)
+    return value
+
+
+_PeriodField = Annotated[Period, BeforeValidator(_coerce_period)]
 
 _CANONICAL_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
     AggregationSourceKind.LEDGER_TRANSACTION,
@@ -89,7 +109,7 @@ class RetencionesAggregation(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str = Field(min_length=1)
-    period: str = Field(min_length=1)
+    period: _PeriodField
     rollups: tuple[RetencionPerceptorRollup, ...] = Field(default_factory=tuple)
     total_perceptors: int = Field(ge=0)
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
@@ -122,13 +142,13 @@ _MODELO_111_SCHEMES: frozenset[RetencionScheme] = frozenset(
         RetencionScheme.ECONOMIC_ACTIVITY,
         RetencionScheme.PROFESSIONAL,
         RetencionScheme.PRIZE,
-    }
+    },
 )
 
 _MODELO_115_SCHEMES: frozenset[RetencionScheme] = frozenset(
     {
         RetencionScheme.URBAN_RENTAL,
-    }
+    },
 )
 
 _MODELO_123_SCHEMES: frozenset[RetencionScheme] = frozenset(
@@ -136,7 +156,7 @@ _MODELO_123_SCHEMES: frozenset[RetencionScheme] = frozenset(
         RetencionScheme.CAPITAL_INTEREST,
         RetencionScheme.CAPITAL_DIVIDEND,
         RetencionScheme.CAPITAL_OTHER,
-    }
+    },
 )
 
 # Modelo 180/190/193 are annual summaries of 115/111/123 respectively;
@@ -155,7 +175,7 @@ def _aggregate_for_modelo(
     observations: tuple[RetencionObservation, ...],
     *,
     modelo: str,
-    period: str,
+    period: Period,
 ) -> RetencionesAggregation:
     """Shared per-modelo aggregation. Filters by scheme catalogue + rolls up.
 
@@ -179,7 +199,7 @@ def _aggregate_for_modelo(
     )
     rollups: list[RetencionPerceptorRollup] = []
     for (source_kind, nif, scheme), group in sorted(
-        grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value)
+        grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value),
     ):
         total_base = sum((g.taxable_base for g in group), Decimal("0"))
         total_ret = sum((g.retencion_amount for g in group), Decimal("0"))
@@ -208,7 +228,7 @@ def _aggregate_for_modelo(
 def aggregate_retenciones_111(
     observations: tuple[RetencionObservation, ...],
     *,
-    period: str,
+    period: Period,
 ) -> RetencionesAggregation:
     """Aggregate per (perceptor_nif, scheme) into a Modelo 111 payload.
 
@@ -224,7 +244,7 @@ def aggregate_retenciones_111(
 def aggregate_retenciones_115(
     observations: tuple[RetencionObservation, ...],
     *,
-    period: str,
+    period: Period,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 115 (retenciones sobre arrendamiento urbano).
 
@@ -239,7 +259,7 @@ def aggregate_retenciones_115(
 def aggregate_retenciones_123(
     observations: tuple[RetencionObservation, ...],
     *,
-    period: str,
+    period: Period,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 123 retenciones into a :class:`RetencionesAggregation`.
 
@@ -252,7 +272,7 @@ def aggregate_retenciones_123(
 def aggregate_retenciones_180(
     observations: tuple[RetencionObservation, ...],
     *,
-    period: str,
+    period: Period,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 180 (resumen anual de retenciones sobre arrendamiento urbano).
 
@@ -270,7 +290,7 @@ def aggregate_retenciones_180(
 def aggregate_retenciones_190(
     observations: tuple[RetencionObservation, ...],
     *,
-    period: str,
+    period: Period,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 190 (resumen anual de retenciones IRPF de Modelo 111).
 
@@ -286,7 +306,7 @@ def aggregate_retenciones_190(
 def aggregate_retenciones_193(
     observations: tuple[RetencionObservation, ...],
     *,
-    period: str,
+    period: Period,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 193 retenciones into a :class:`RetencionesAggregation`.
 

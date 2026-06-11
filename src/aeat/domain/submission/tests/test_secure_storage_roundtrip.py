@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core._period import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._models import (
     ModeloPresentado,
@@ -31,6 +32,8 @@ from .._repository import SubmissionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_PERIOD = Period.from_year_and_code(2025, "1T")
+
 
 def _populated_filing() -> ModeloPresentado:
     """Build a ModeloPresentado with every defaultable field non-default.
@@ -38,7 +41,9 @@ def _populated_filing() -> ModeloPresentado:
     Anti-tautology: status=ACEPTADA forces justificante_csv +
     justificante_pdf_path to be populated; acknowledged_at also set.
     Two attempts so the tuple-of-attempts surface is exercised, with
-    distinct status / error fields per attempt.
+    distinct status / error fields per attempt.  ``period`` is a typed
+    :class:`~aeat.core.Period` (non-default) so the persistence boundary
+    is proven to carry the structured value end-to-end.
     """
 
     now = datetime.now(UTC).replace(microsecond=0)
@@ -48,7 +53,7 @@ def _populated_filing() -> ModeloPresentado:
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="303",
-        period="2025Q1",
+        period=_PERIOD,
         profile_tax_id="12345678Z",
         status=SubmissionStatus.ACEPTADA,
         justificante_csv="ABCD12345678EFGH",
@@ -87,6 +92,9 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(tmp_path: Path) -
         assert loaded is not None
         assert loaded == original
         assert loaded.status is SubmissionStatus.ACEPTADA
+        assert loaded.period == _PERIOD
+        assert loaded.period.filing_year == 2025
+        assert loaded.period.registry_token == "1T"  # noqa: S105 - period token, not credential
         assert loaded.justificante_csv == "ABCD12345678EFGH"
         assert loaded.justificante_pdf_path == Path("justificantes/303-2025Q1-ABCD.pdf")
         assert len(loaded.attempts) == 2
@@ -152,4 +160,61 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
             "from an ACEPTADA submission did NOT surface on load. "
             "The submission boundary is tautological and every "
             "submission roundtrip in the suite is suspect."
+        )
+
+
+def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
+    """Anti-tautology proof: corrupting the ``period`` payload must surface.
+
+    :class:`ModeloPresentado` now stores ``period`` as a typed
+    :class:`~aeat.core.Period` serialised to ``{"filing_year": int,
+    "code": str}``.  Surgically replace the persisted ``code`` with an
+    invalid value; the load path must either raise :class:`ValidationError`
+    or produce a record that differs from the original — proving that the
+    period field is actually read and validated on deserialisation, not
+    silently ignored or defaulted.
+
+    If this test passes without raising or detecting inequality, the period
+    sub-field is not enforced on the persistence boundary and every period
+    roundtrip assertion in the suite is tautological.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ....adapters.persistence.storage.sql.session import session_scope
+
+    submission_namespace = SubmissionRepository.namespace
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        original = _populated_filing()
+        repo = SubmissionRepository()
+        repo.save(original)
+
+        with session_scope(profile.repository._engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == submission_namespace,
+                SecureObjectRow.object_key == original.submission_id,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            payload = envelope["payload"]
+            assert isinstance(payload.get("period"), dict), (
+                "fixture must serialise period as a dict for this proof test to be meaningful"
+            )
+            # Corrupt the period code to an invalid value that will fail Period validation.
+            payload["period"]["code"] = "INVALID_CODE_XYZ"
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        try:
+            mutated = repo.load(original.submission_id)
+        except ValidationError:
+            return
+        assert mutated != original, (
+            "anti-tautology proof failed: corrupting the period code "
+            "did NOT surface on load.  The period field is not enforced "
+            "at the persistence boundary; every period roundtrip assertion "
+            "in the suite is suspect."
         )

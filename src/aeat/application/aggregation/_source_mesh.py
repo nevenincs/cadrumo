@@ -49,6 +49,7 @@ CalculationSourceDiagnosticReason = Literal[
     "storage_degraded",
     "unhandled_binding_source",
     "oss_no_live_source",
+    "missing_transaction_evidence",
 ]
 
 # Source kinds that are explicitly deferred — no mesh resolver is built yet, but
@@ -64,7 +65,7 @@ DEFERRED_SOURCE_KINDS: frozenset[str] = frozenset(
         "related_party_operation",  # M232 — Sheets-pull-only
         "foreign_asset",  # M720 — Sheets-pull-only
         "refund_operation",  # M360 — Sheets-pull-only
-    }
+    },
 )
 
 
@@ -280,7 +281,7 @@ def collect_unhandled_source_diagnostics(
                 source_kind=source,
                 binding_id=binding.id,
                 message=f"binding {binding.id!r} declares source {source!r} with no enrolled resolver",
-            )
+            ),
         )
     return tuple(diagnostics)
 

@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import BaseModel, ValidationError
 
 from .._period import (
+    Period,
+    PeriodError,
+    PeriodKind,
     RegistryPeriodCode,
     StandardPeriodCode,
     accepted_period_codes,
@@ -199,3 +204,127 @@ def _validate_test_model(period: str) -> str:
 
     model = TestModel(period=period)
     return model.period
+
+
+class TestPeriodConstruction:
+    """Verify Period construction, refusal, and token coverage."""
+
+    @pytest.mark.parametrize(
+        ("code", "kind"),
+        [
+            ("1T", PeriodKind.QUARTERLY),
+            ("4T", PeriodKind.QUARTERLY),
+            ("0A", PeriodKind.ANNUAL),
+            ("01", PeriodKind.MONTHLY),
+            ("12", PeriodKind.MONTHLY),
+            ("1P", PeriodKind.INSTALMENT),
+            ("4P", PeriodKind.INSTALMENT),
+            ("EXT-1T", PeriodKind.EXTENDED),
+            ("AD-HOC", PeriodKind.EXTENDED),
+            ("EVENT-3", PeriodKind.EXTENDED),
+        ],
+    )
+    def test_from_year_and_code_covers_every_token_kind(self, code: str, kind: PeriodKind) -> None:
+        period = Period.from_year_and_code(2026, code)
+        assert period.filing_year == 2026
+        assert period.registry_token == code
+        assert period.kind is kind
+
+    @pytest.mark.parametrize("combined", ["2026Q1", "2026-1T", "2026", "2026-03", "2026A"])
+    def test_combined_calendar_strings_refuse(self, combined: str) -> None:
+        with pytest.raises(PeriodError):
+            Period.from_year_and_code(2026, combined)
+
+    @pytest.mark.parametrize("bad", ["13", "00", "5T", "0T", "5P", "not-a-period", ""])
+    def test_malformed_codes_refuse(self, bad: str) -> None:
+        with pytest.raises(PeriodError):
+            Period.from_year_and_code(2026, bad)
+
+    @pytest.mark.parametrize("year", [1979, 2201])
+    def test_out_of_range_year_refuses(self, year: int) -> None:
+        with pytest.raises(PeriodError):
+            Period.from_year_and_code(year, "1T")
+
+    def test_lowercase_token_normalises(self) -> None:
+        assert str(Period.from_year_and_code(2026, "ext-2t")) == "2026 EXT-2T"
+
+
+class TestPeriodAccessors:
+    """Verify the read-only accessors and the date-span semantics."""
+
+    def test_quarterly_span(self) -> None:
+        period = Period.from_year_and_code(2026, "1T")
+        assert period.has_date_span() is True
+        assert period.start_date == date(2026, 1, 1)
+        assert period.end_date == date(2026, 3, 31)
+        assert period.contains(date(2026, 2, 15)) is True
+        assert period.contains(date(2026, 4, 1)) is False
+
+    def test_annual_span(self) -> None:
+        period = Period.from_year_and_code(2026, "0A")
+        assert period.start_date == date(2026, 1, 1)
+        assert period.end_date == date(2026, 12, 31)
+
+    def test_monthly_span_february_leap_year(self) -> None:
+        period = Period.from_year_and_code(2024, "02")
+        assert period.start_date == date(2024, 2, 1)
+        assert period.end_date == date(2024, 2, 29)
+
+    def test_year_alias(self) -> None:
+        assert Period.from_year_and_code(2026, "1T").year == 2026
+
+    def test_standard_code_for_standard_token(self) -> None:
+        assert Period.from_year_and_code(2026, "3T").standard_code is StandardPeriodCode.Q3
+
+    def test_standard_code_none_for_extended(self) -> None:
+        assert Period.from_year_and_code(2026, "EXT-1T").standard_code is None
+
+    @pytest.mark.parametrize("code", ["1P", "EXT-1T", "AD-HOC", "EVENT-1"])
+    def test_non_span_periods_refuse_date_access(self, code: str) -> None:
+        period = Period.from_year_and_code(2026, code)
+        assert period.has_date_span() is False
+        with pytest.raises(PeriodError):
+            _ = period.start_date
+        with pytest.raises(PeriodError):
+            _ = period.end_date
+
+
+class TestPeriodValueSemantics:
+    """Verify equality, hashing, string projection, and serialisation."""
+
+    def test_equality_by_year_and_code(self) -> None:
+        assert Period.from_year_and_code(2026, "1T") == Period.from_year_and_code(2026, "1T")
+        assert Period.from_year_and_code(2026, "1T") != Period.from_year_and_code(2026, "2T")
+        assert Period.from_year_and_code(2026, "1T") != Period.from_year_and_code(2025, "1T")
+
+    def test_hashable_as_dict_key_and_set_member(self) -> None:
+        a = Period.from_year_and_code(2026, "1T")
+        b = Period.from_year_and_code(2026, "1T")
+        assert len({a, b}) == 1
+        mapping = {a: "value"}
+        assert mapping[b] == "value"
+
+    def test_frozen(self) -> None:
+        period = Period.from_year_and_code(2026, "1T")
+        with pytest.raises(ValidationError):
+            period.filing_year = 2025  # type: ignore[misc]
+
+    def test_str_is_the_separated_form_not_combined(self) -> None:
+        assert str(Period.from_year_and_code(2026, "1T")) == "2026 1T"
+        assert str(Period.from_year_and_code(2026, "0A")) == "2026 0A"
+        # The killed combined form must never be the display projection.
+        assert "Q" not in str(Period.from_year_and_code(2026, "1T"))
+
+    def test_repr_round_trips_through_constructor(self) -> None:
+        period = Period.from_year_and_code(2026, "03")
+        assert repr(period) == "Period(filing_year=2026, code='03')"
+
+    def test_json_serialises_to_structured_pair_not_combined_string(self) -> None:
+        period = Period.from_year_and_code(2026, "1T")
+        assert period.model_dump() == {"filing_year": 2026, "code": "1T"}
+        assert period.model_dump_json() == '{"filing_year":2026,"code":"1T"}'
+
+    def test_json_round_trip_equality(self) -> None:
+        period = Period.from_year_and_code(2026, "2T")
+        restored = Period.model_validate_json(period.model_dump_json())
+        assert restored == period

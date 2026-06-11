@@ -20,6 +20,7 @@ from ...domain.calculations.registry import ModeloRevision
 from ...domain.contribuyente._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
+from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._row_models import (
     Modelo184MemberRow,
@@ -41,6 +42,30 @@ _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
 _NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
 _BARE_NUMERIC_RE = re.compile(r"^\d+$")
+
+
+class ModeloCalculateInputError(ModeloError, ValueError):
+    """Raised when operator-supplied modelo calculation inputs are invalid."""
+
+
+class ModeloCalculateDetailRowsError(ModeloCalculateInputError):
+    """Raised when detail rows violate modelo calculation preconditions."""
+
+
+class ModeloCalculateDecimalInputError(ModeloCalculateInputError):
+    """Raised when a calculation override value is not decimal-shaped."""
+
+
+class ModeloCalculateCasillaInputError(ModeloCalculateInputError):
+    """Raised when a casilla override cannot be resolved for the active revision."""
+
+
+class ModeloCalculateShortcutInputError(ModeloCalculateInputError):
+    """Raised when grouped calculation shortcut inputs are incomplete."""
+
+
+class ModeloCalculateSemanticRoleError(ModeloCalculateInputError):
+    """Raised when a registry revision lacks a semantic-role target required by a shortcut."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -227,17 +252,21 @@ def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
     try:
         validate_m184_member_share_sum(member_rows)
     except Modelo184ShareSumError as exc:
-        raise ValueError(
-            f"M184 miembro rows: share percentages must sum to exactly 100%; got {exc.total} across {exc.count} rows"
+        raise ModeloCalculateDetailRowsError(
+            f"M184 miembro rows: share percentages must sum to exactly 100%; got {exc.total} across {exc.count} rows",
+            context={"total": str(exc.total), "count": str(exc.count)},
+            translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
         ) from exc
 
     contraparte_rows = [row for row in rows if isinstance(row, Modelo347ContraparteRow)]
     try:
         validate_m347_threshold(contraparte_rows)
     except Modelo347ThresholdError as exc:
-        raise ValueError(
+        raise ModeloCalculateDetailRowsError(
             f"M347 contraparte row (nif={exc.nif!r}): importe total {exc.total} "
-            f"does not exceed the EUR {M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 31.1"
+            f"does not exceed the EUR {M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 31.1",
+            context={"nif": exc.nif, "total": str(exc.total), "threshold": str(M347_THRESHOLD_EUR)},
+            translated_message="application.modelo.errors.calculate_m347_threshold_not_met",
         ) from exc
 
 
@@ -245,7 +274,11 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
     try:
         return Decimal(raw_value)
     except (InvalidOperation, ValueError) as exc:
-        raise ValueError(f"{flag} value for {key!r} is not a decimal: {raw_value!r}") from exc
+        raise ModeloCalculateDecimalInputError(
+            f"{flag} value for {key!r} is not a decimal: {raw_value!r}",
+            context={"flag": flag, "key": key, "value": raw_value},
+            translated_message="application.modelo.errors.calculate_decimal_input_invalid",
+        ) from exc
 
 
 def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
@@ -280,9 +313,15 @@ def _guard_casilla_data_type(casilla_id: str, revision: ModeloRevision) -> None:
     if casilla_def is None:
         return
     if casilla_def.data_type not in _NUMERIC_CASILLA_DATA_TYPES:
-        raise ValueError(
+        raise ModeloCalculateCasillaInputError(
             f"--casilla {casilla_id!r} targets non-numeric data_type={casilla_def.data_type!r} "
-            f"({casilla_def.label}); use --binding or profile sources instead"
+            f"({casilla_def.label}); use --binding or profile sources instead",
+            context={
+                "casilla_id": casilla_id,
+                "data_type": str(casilla_def.data_type),
+                "label": str(casilla_def.label),
+            },
+            translated_message="application.modelo.errors.calculate_casilla_non_numeric",
         )
 
 
@@ -304,15 +343,19 @@ def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
         return str(matches[0].id)
     if len(matches) > 1:
         candidates = ", ".join(str(casilla.id) for casilla in sorted(matches, key=lambda casilla: str(casilla.id)))
-        raise ValueError(
+        raise ModeloCalculateCasillaInputError(
             f"--casilla {key!r} matches multiple casillas in this revision: {candidates}. "
-            "Supply the qualified PREFIX:NNNNN form to disambiguate."
+            "Supply the qualified PREFIX:NNNNN form to disambiguate.",
+            context={"key": key, "candidates": candidates},
+            translated_message="application.modelo.errors.calculate_casilla_ambiguous",
         )
     prefixes = sorted({str(casilla.id).split(":")[0] for casilla in revision.casillas if ":" in str(casilla.id)})
     prefix_hint = f" Available prefixes for this revision: {', '.join(prefixes)}." if prefixes else ""
-    raise ValueError(
+    raise ModeloCalculateCasillaInputError(
         f"--casilla {key!r} does not match any casilla number in this revision."
-        f"{prefix_hint} Use `aeat app modelo casillas <MODELO>` to list valid casilla IDs."
+        f"{prefix_hint} Use `aeat app modelo casillas <MODELO>` to list valid casilla IDs.",
+        context={"key": key, "prefix_hint": prefix_hint},
+        translated_message="application.modelo.errors.calculate_casilla_unknown",
     )
 
 
@@ -377,7 +420,7 @@ def apply_calculation_shortcut_inputs(
     if meses_trabajo_con_hijo_menor_3:
         deduccion = compute_deduccion_maternidad_0611(list(meses_trabajo_con_hijo_menor_3))
         resolved_casillas[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = Decimal(
-            deduccion
+            deduccion,
         )
 
     pension_values = (
@@ -387,9 +430,10 @@ def apply_calculation_shortcut_inputs(
     )
     if any(value is not None for value in pension_values):
         if not all(value is not None for value in pension_values):
-            raise ValueError(
+            raise ModeloCalculateShortcutInputError(
                 "--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007, "
-                "and --rescate-plan-pensiones-aportaciones-totales must all be supplied together."
+                "and --rescate-plan-pensiones-aportaciones-totales must all be supplied together.",
+                translated_message="application.modelo.errors.calculate_pension_inputs_incomplete",
             )
         assert rescate_plan_pensiones_capital is not None
         assert rescate_plan_pensiones_aportaciones_pre_2007 is not None
@@ -405,8 +449,9 @@ def apply_calculation_shortcut_inputs(
     sal_values = (sal_beneficio_neto, sal_reserva_dotada, sal_capital_social)
     if any(value is not None for value in sal_values):
         if not all(value is not None for value in sal_values):
-            raise ValueError(
-                "--sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social must all be supplied together."
+            raise ModeloCalculateShortcutInputError(
+                "--sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social must all be supplied together.",
+                translated_message="application.modelo.errors.calculate_sal_inputs_incomplete",
             )
         assert sal_beneficio_neto is not None
         assert sal_reserva_dotada is not None
@@ -438,12 +483,22 @@ def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> str:
     for casilla in snapshot.revision.casillas:
         if getattr(casilla, "semantic_role", None) == semantic_role:
             return str(casilla.id)
-    raise ValueError(f"modelo revision has no casilla with semantic_role={semantic_role!r}")
+    raise ModeloCalculateSemanticRoleError(
+        f"modelo revision has no casilla with semantic_role={semantic_role!r}",
+        context={"semantic_role": semantic_role},
+        translated_message="application.modelo.errors.calculate_semantic_role_missing",
+    )
 
 
 __all__ = [
     "Modelo202ModalitySummary",
     "ModeloAuthorizationAdvisorySummary",
+    "ModeloCalculateCasillaInputError",
+    "ModeloCalculateDecimalInputError",
+    "ModeloCalculateDetailRowsError",
+    "ModeloCalculateInputError",
+    "ModeloCalculateSemanticRoleError",
+    "ModeloCalculateShortcutInputError",
     "ModeloWorkCalculationServiceResult",
     "WorkCalculateInputBundle",
     "apply_calculation_shortcut_inputs",

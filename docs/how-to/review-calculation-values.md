@@ -182,8 +182,7 @@ correct complementaria (supplementary return) record:
 aeat app modelo work amend --from-filing-record <filing-record-id> --kind complementaria --reason "corrected value" --set <casilla>=<decimal>
 ```
 
-Before using this command, you must have imported the justificante (the receipt
-from AEAT) for the filing you are correcting. The amendment command does not
+Before using this command, you must have imported the {term}`justificante` for the filing you are correcting. The amendment command does not
 submit anything to AEAT.
 
 ## Where to go next

@@ -172,7 +172,9 @@ def split_transaction(
             "lifecycle_state": TransactionLifecycleState.SPLIT,
             "lifecycle_lineage": (*parent.lifecycle_lineage, parent_transition),
             "split_lineage": parent_lineage,
-        }
+            # D6: splitting the parent is a mutating edit; re-stamp modified_at.
+            "modified_at": now,
+        },
     )
 
     final_children = tuple(
@@ -186,7 +188,7 @@ def split_transaction(
                         *(other for other in child_ids if other != transaction.transaction_id),
                     ),
                 ),
-            }
+            },
         )
         for transaction in child_transactions_initial
     )
@@ -369,7 +371,10 @@ def _build_split_child_transaction(
             "source_command": source_command,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "notes": "",
-        }
+            # D6: a split child is a freshly-created row.
+            "created_at": occurred_at,
+            "modified_at": occurred_at,
+        },
     )
 
 
@@ -593,7 +598,10 @@ def _build_merged_transaction(
                 sibling_transaction_ids=sorted_child_ids,
             ),
             "notes": "",
-        }
+            # D6: the merged transaction is a freshly-created row.
+            "created_at": occurred_at,
+            "modified_at": occurred_at,
+        },
     )
 
 
@@ -622,8 +630,10 @@ def _archive_merge_members(
                 update={
                     "lifecycle_state": TransactionLifecycleState.ARCHIVED,
                     "lifecycle_lineage": (*child.lifecycle_lineage, transition),
-                }
-            )
+                    # D6: archiving a child on merge is a mutating edit.
+                    "modified_at": changed_at,
+                },
+            ),
         )
 
     parent_transition = TransactionLifecycleLineageEntry(
@@ -638,7 +648,9 @@ def _archive_merge_members(
         update={
             "lifecycle_state": TransactionLifecycleState.ARCHIVED,
             "lifecycle_lineage": (*parent.lifecycle_lineage, parent_transition),
-        }
+            # D6: archiving the parent on merge is a mutating edit.
+            "modified_at": changed_at,
+        },
     )
     return parent_after, tuple(archived_children)
 

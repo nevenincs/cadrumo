@@ -3,11 +3,16 @@
 Carries the :class:`Period` parser, the per-casilla
 :class:`CasillaProvenance` trace, and the aggregated
 :class:`CasillaAggregation` ledger shape.
+
+:class:`Period` is re-seated on :class:`aeat.core.Period` as its canonical
+date-span authority: construction, date-span bounds, and registry-token
+projection all delegate to the core type.  The aggregation-specific
+``quarter``, ``month``, and ``period_type`` projections remain as thin
+adapters.
 """
 
 from __future__ import annotations
 
-import calendar
 import re
 from collections.abc import Mapping, Sequence
 from datetime import date
@@ -27,6 +32,8 @@ from pydantic import (
 )
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._period import Period as _CorePeriod
+from ...core._period import PeriodError as _CorePeriodError
 from ...core.aggregation import PeriodKind
 from ...core.i18n import Translatable as tr
 from ...domain.categories import SpendingCategory
@@ -69,13 +76,6 @@ class PeriodType(StrEnum):
     ANNUAL = "annual"
 
 
-_QUARTER_MONTHS: dict[Quarter, tuple[int, int]] = {
-    Quarter.Q1: (1, 3),
-    Quarter.Q2: (4, 6),
-    Quarter.Q3: (7, 9),
-    Quarter.Q4: (10, 12),
-}
-
 
 class Period(BaseModel):
     """Inclusive fiscal period used by transaction aggregation.
@@ -84,8 +84,11 @@ class Period(BaseModel):
     via the :meth:`_parse_raw_period` validator and exposes derived
     bounds via :attr:`start`, :attr:`end`, and :attr:`period_type`.
 
+    Date-span bounds and registry-token projection delegate to
+    :class:`aeat.core.Period`; ``quarter``, ``month``, and
+    ``period_type`` are thin aggregation-specific adapters.
+
     Attributes:
-        raw: Original string token after normalisation.
         year: Calendar year, inclusive [1990, 2100].
         quarter: Optional quarter for quarterly periods.
         month: Optional 1-based month for monthly periods.
@@ -94,7 +97,6 @@ class Period(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    raw: str = Field(min_length=4, max_length=16)
     year: int = Field(ge=1990, le=2100)
     quarter: Quarter | None = None
     month: int | None = Field(default=None, ge=1, le=12)
@@ -118,7 +120,6 @@ class Period(BaseModel):
             month_raw = match.group("month")
             if quarter_raw is not None:
                 return {
-                    "raw": f"{year}Q{quarter_raw}",
                     "year": year,
                     "quarter": Quarter(f"Q{quarter_raw}"),
                     "month": None,
@@ -126,14 +127,12 @@ class Period(BaseModel):
                 }
             if month_raw is not None:
                 return {
-                    "raw": f"{year}-{month_raw}",
                     "year": year,
                     "quarter": None,
                     "month": int(month_raw),
                     "kind": PeriodKind.MONTHLY,
                 }
             return {
-                "raw": str(year),
                 "year": year,
                 "quarter": None,
                 "month": None,
@@ -141,6 +140,7 @@ class Period(BaseModel):
             }
         if isinstance(data, Mapping):
             payload = dict(data)
+            payload.pop("raw", None)
             payload.pop("start", None)
             payload.pop("end", None)
             payload.pop("period_type", None)
@@ -171,31 +171,38 @@ class Period(BaseModel):
             )
         return self
 
+    def _as_core_period(self) -> _CorePeriod:
+        """Return a :class:`aeat.core.Period` for this aggregation period.
+
+        Constructs the core value object from the canonical ``(year, token)``
+        pair so all date-span and registry-token logic delegates to one
+        authority.
+        """
+        try:
+            return _CorePeriod.from_year_and_code(self.year, self.registry_token)
+        except _CorePeriodError as exc:
+            raise AggregationPeriodError(
+                message=tr("aggregation.period.parse_error"),
+                context={"period": f"{self.year} {self.registry_token}"},
+            ) from exc
+
     @computed_field
     @property
     def start(self) -> date:
-        """Return the first :class:`~datetime.date` included in the period."""
-        if self.kind is PeriodKind.QUARTERLY:
-            assert self.quarter is not None
-            month, _ = _QUARTER_MONTHS[self.quarter]
-            return date(self.year, month, 1)
-        if self.kind is PeriodKind.MONTHLY:
-            assert self.month is not None
-            return date(self.year, self.month, 1)
-        return date(self.year, 1, 1)
+        """Return the first :class:`~datetime.date` included in the period.
+
+        Delegates to :class:`aeat.core.Period` as the single date-span authority.
+        """
+        return self._as_core_period().start_date
 
     @computed_field
     @property
     def end(self) -> date:
-        """Return the last :class:`~datetime.date` included in the period."""
-        if self.kind is PeriodKind.QUARTERLY:
-            assert self.quarter is not None
-            _, month = _QUARTER_MONTHS[self.quarter]
-            return date(self.year, month, calendar.monthrange(self.year, month)[1])
-        if self.kind is PeriodKind.MONTHLY:
-            assert self.month is not None
-            return date(self.year, self.month, calendar.monthrange(self.year, self.month)[1])
-        return date(self.year, 12, 31)
+        """Return the last :class:`~datetime.date` included in the period.
+
+        Delegates to :class:`aeat.core.Period` as the single date-span authority.
+        """
+        return self._as_core_period().end_date
 
     @computed_field
     @property
@@ -212,9 +219,10 @@ class Period(BaseModel):
             value: A calendar date to test.
 
         Returns:
-            ``True`` if :attr:`start` <= ``value`` <= :attr:`end`.
+            ``True`` if :attr:`start` <= ``value`` <= :attr:`end`; delegates
+            to :class:`aeat.core.Period` as the single boundary authority.
         """
-        return self.start <= value <= self.end
+        return self._as_core_period().contains(value)
 
     @classmethod
     def from_year_and_token(cls, *, year: int, token: str) -> Period:
@@ -229,6 +237,10 @@ class Period(BaseModel):
         - ``0A`` (annual)
         - ``01``-``12`` (months)
 
+        Delegates span-token validation to :class:`aeat.core.Period` via
+        :meth:`aeat.core.Period.from_year_and_code`, then wraps the result
+        as an aggregation :class:`Period`.
+
         Args:
             year: Filing year (e.g. ``2024``).
             token: A bare span-shaped AEAT period token.
@@ -240,10 +252,23 @@ class Period(BaseModel):
                 no ledger date span).
         """
         normalised = token.strip().upper()
+        # Validate via core.Period first — refuses non-registry tokens outright.
+        try:
+            core = _CorePeriod.from_year_and_code(year, normalised)
+        except _CorePeriodError as exc:
+            raise AggregationPeriodError(
+                message=tr("aggregation.period.parse_error"),
+                context={"period": token},
+            ) from exc
+        # Refuse non-span tokens (instalment claves, extended union members).
+        if not core.has_date_span():
+            raise AggregationPeriodError(
+                message=tr("aggregation.period.parse_error"),
+                context={"period": token},
+            )
         if len(normalised) == 2 and normalised.endswith("T") and normalised[0] in "1234":
             return cls.model_validate(
                 {
-                    "raw": f"{year}Q{normalised[0]}",
                     "year": year,
                     "quarter": Quarter(f"Q{normalised[0]}"),
                     "month": None,
@@ -252,12 +277,11 @@ class Period(BaseModel):
             )
         if normalised == "0A":
             return cls.model_validate(
-                {"raw": str(year), "year": year, "quarter": None, "month": None, "kind": PeriodKind.ANNUAL},
+                {"year": year, "quarter": None, "month": None, "kind": PeriodKind.ANNUAL},
             )
         if len(normalised) == 2 and normalised.isdigit() and 1 <= int(normalised) <= 12:
             return cls.model_validate(
                 {
-                    "raw": f"{year}-{normalised}",
                     "year": year,
                     "quarter": None,
                     "month": int(normalised),
@@ -271,7 +295,10 @@ class Period(BaseModel):
 
     @property
     def registry_token(self) -> str:
-        """Return the bare AEAT registry token (``1T``-``4T`` / ``0A`` / ``01``-``12``)."""
+        """Return the bare AEAT registry token (``1T``-``4T`` / ``0A`` / ``01``-``12``).
+
+        Delegates to :meth:`aeat.core.Period.registry_token`.
+        """
         if self.kind is PeriodKind.QUARTERLY:
             assert self.quarter is not None
             return f"{self.quarter.value[1]}T"
@@ -279,6 +306,15 @@ class Period(BaseModel):
             assert self.month is not None
             return f"{self.month:02d}"
         return "0A"
+
+    def __str__(self) -> str:
+        """Return the canonical display form: the year and registry token, space-separated.
+
+        Matches :meth:`aeat.core.Period.__str__` — ``"2026 1T"`` — so the two
+        types display identically and neither reconstructs a combined
+        ``"2026Q1"`` string.
+        """
+        return f"{self.year} {self.registry_token}"
 
 
 class CasillaProvenance(BaseModel):

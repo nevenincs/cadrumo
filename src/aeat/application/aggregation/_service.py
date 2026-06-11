@@ -14,14 +14,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
+from typing import Annotated, Any
 
-from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, computed_field, field_validator, model_validator
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import AggregationSourceKind
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import get_logger
+from ...domain.period import parse_canonical_period
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -42,6 +44,24 @@ from ._retenciones import (
 )
 
 LOGGER = get_logger(__name__)
+
+
+def _coerce_period(value: Any) -> Any:
+    """Accept a combined period string (e.g. ``"2025-Q1"``) and return a :class:`Period`.
+
+    Passes :class:`Period` instances through unchanged. Inbound combined strings are
+    parsed via :func:`~aeat.domain.period.parse_canonical_period` at the pydantic
+    boundary so the aggregation service models always carry a typed ``Period``.
+    """
+    if isinstance(value, Period):
+        return value
+    if isinstance(value, str):
+        year, token = parse_canonical_period(value)
+        return Period.from_year_and_code(year, token)
+    return value
+
+
+_PeriodField = Annotated[Period, BeforeValidator(_coerce_period)]
 
 
 class PerModeloAggregationProvider(StrEnum):
@@ -98,7 +118,7 @@ class PerModeloAggregationLogFields(BaseModel):
 
     service_name: str = "per_modelo_aggregation"
     modelo: str = Field(min_length=1)
-    period: str = Field(min_length=1)
+    period: _PeriodField
     provider: PerModeloAggregationProvider
     observation_count: int = Field(ge=0)
     source_kind_count: int = Field(ge=0)
@@ -109,7 +129,7 @@ class PerModeloAggregationLogFields(BaseModel):
         return {
             "service_name": self.service_name,
             "modelo": self.modelo,
-            "period": self.period,
+            "period": self.period.registry_token,
             "provider": self.provider.value,
             "observation_count": self.observation_count,
             "source_kind_count": self.source_kind_count,
@@ -131,7 +151,7 @@ class PerModeloAggregationContract(BaseModel):
     @field_validator("providers")
     @classmethod
     def _providers_are_unique(
-        cls, value: tuple[PerModeloAggregationProviderContract, ...]
+        cls, value: tuple[PerModeloAggregationProviderContract, ...],
     ) -> tuple[PerModeloAggregationProviderContract, ...]:
         providers = tuple(provider.provider for provider in value)
         if len(providers) != len(set(providers)):
@@ -164,7 +184,7 @@ class PerModeloAggregationCommand(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=16)
-    period: str = Field(min_length=1, max_length=16)
+    period: _PeriodField
     retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
     counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = Field(default_factory=tuple)
@@ -208,7 +228,7 @@ class PerModeloAggregationResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=16)
-    period: str = Field(min_length=1, max_length=16)
+    period: _PeriodField
     provider: PerModeloAggregationProvider
     aggregation: PerModeloAggregationPayload
     source_kinds: tuple[AggregationSourceKind, ...]
@@ -364,7 +384,7 @@ def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggre
 
 def _aggregate_retenciones(
     modelo: str,
-    period: str,
+    period: Period,
     observations: tuple[RetencionObservation, ...],
 ) -> RetencionesAggregation:
     dispatch = {
@@ -380,7 +400,7 @@ def _aggregate_retenciones(
 
 def _aggregate_counterpart(
     modelo: str,
-    period: str,
+    period: Period,
     observations: tuple[CounterpartObservation, ...],
 ) -> CounterpartAggregation:
     if modelo == Modelo.M347.value:

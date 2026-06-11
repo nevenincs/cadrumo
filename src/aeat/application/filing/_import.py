@@ -207,7 +207,7 @@ def _normalise_period(
 
     if ejercicio is None:
         raise ModeloImportError(
-            f"modelo {modelo}: justificante period {raw_period!r} requires an ejercicio to canonicalise"
+            f"modelo {modelo}: justificante period {raw_period!r} requires an ejercicio to canonicalise",
         )
     if not re.fullmatch(r"\d{4}", ejercicio):
         raise ModeloImportError(f"modelo {modelo}: unexpected ejercicio {ejercicio!r}; want four-digit year")
@@ -257,7 +257,7 @@ def _require_supported_period_token(
 ) -> str:
     if period_code not in supported_periods:
         raise ModeloImportError(
-            f"modelo {modelo}: period token {period_code!r} is not declared by the active registry revision"
+            f"modelo {modelo}: period token {period_code!r} is not declared by the active registry revision",
         )
     return canonical
 
@@ -287,7 +287,7 @@ def _build_submission_record(
         submission_id=submission_id,
         draft_id=draft.draft_id,
         modelo=draft.modelo,
-        period=draft.period,
+        period=str(draft.period),
         profile_tax_id=draft.profile_tax_id,
         status=SubmissionStatus.PRESENTADA,
         justificante_csv=justificante.csv,

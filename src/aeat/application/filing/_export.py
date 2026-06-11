@@ -196,7 +196,7 @@ class DeclaracionVerifyResult(BaseModel):
         for entry in value:
             if not entry or entry != entry.strip():
                 raise FilingExportValidationError(
-                    "mismatched_casillas entries must be non-blank, untrimmed identifiers"
+                    "mismatched_casillas entries must be non-blank, untrimmed identifiers",
                 )
         return value
 
@@ -251,7 +251,7 @@ def export_draft(
     return DeclaracionExportResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
-        period=draft.period,
+        period=str(draft.period),
         format=DeclaracionExportFormat.FICHERO_BOE,
         output_path=output_path,
         byte_size=len(payload),
@@ -395,7 +395,7 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
     amount = coerce_decimal(raw, default=Decimal("0")) or Decimal("0")
     if amount <= 0:
         raise FilingExportValidationError(
-            f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}"
+            f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}",
         )
 
 
@@ -519,8 +519,9 @@ def _header_field_value(field: ExportFieldDefinition, headers: dict[str, str]) -
 
 def _computed_field_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
     if field.computed_key == "envelope_closing_tag":
-        year, period = _period_parts(draft.period)
-        return f"</T{draft.modelo}0{year}{period}0000>"
+        year = str(draft.period.filing_year)
+        period_code = draft.period.registry_token
+        return f"</T{draft.modelo}0{year}{period_code}0000>"
     raise FilingExportError(f"unsupported export computed field {field.computed_key!r}")
 
 
@@ -528,13 +529,13 @@ def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
     if field.draft_attribute == "modelo":
         return draft.modelo
     if field.draft_attribute == "period":
-        return draft.period
+        return draft.period.registry_token
     if field.draft_attribute == "profile_tax_id":
         return draft.profile_tax_id
     if field.draft_attribute == "filing_year":
-        return _period_parts(draft.period)[0]
+        return str(draft.period.filing_year)
     if field.draft_attribute == "period_code":
-        return _period_parts(draft.period)[1]
+        return draft.period.registry_token
     raise FilingExportError(f"unsupported draft export attribute {field.draft_attribute!r}")
 
 

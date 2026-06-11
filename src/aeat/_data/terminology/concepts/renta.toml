@@ -1,0 +1,37 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "renta"
+domain = "concepto"
+lifecycle = "approved"
+related = ["irpf", "modelo-100"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "La base de renta del IRPF; coloquialmente, la declaracion anual del IRPF (Modelo 100)."
+definition = "La renta gravada por el IRPF, que agrega los rendimientos del trabajo, del capital, de actividades economicas, las ganancias y perdidas patrimoniales y las imputaciones de renta. En lenguaje corriente designa tambien la declaracion anual de la Renta, presentada en el Modelo 100 a traves de la campana de Renta Web. No significa el alquiler en sentido ingles: una finca alquilada produce rendimientos del capital inmobiliario, no renta en ese sentido."
+
+[language.es.source]
+citation = "Ley 35/2006 del IRPF, Titulo I, Capitulo I (concepto y ambito de aplicacion) (BOE-A-2006-20764)."
+authority = "boe"
+
+[[language.es.term]]
+label = "renta"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "feminine"
+
+[language.en]
+short_description = "The IRPF income base; colloquially, the annual IRPF return (Modelo 100)."
+
+[language.ca]
+short_description = "La base de renda de l'IRPF; col-loquialment, la declaracio anual de l'IRPF (Model 100)."
+
+[language.hu]
+short_description = "Az IRPF jovedelemalapja; koznyelvben az eves IRPF-bevallas (Modelo 100)."

@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
+from ...core._period import Period as _Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...core.resources import resources as _resources
@@ -138,6 +139,7 @@ def build_draft(
     """
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
+    typed_period = _Period.from_year_and_code(filing_year, registry_period)
     snapshot_ref = _RegistrySnapshotRef(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
@@ -148,7 +150,7 @@ def build_draft(
     if collection.schema_version != f"registry:{snapshot.modelo.id}:{snapshot.revision.id}":
         raise ModeloBuilderError(
             f"schema provider version {collection.schema_version!r} does not match registry snapshot "
-            f"{snapshot.revision.id!r}"
+            f"{snapshot.revision.id!r}",
         )
     casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
@@ -202,7 +204,7 @@ def build_draft(
                     kind=ModeloValueKind.COMPUTED,
                     source=f"registry formula {entry.formula_id}",
                     formula_trace=trace,
-                )
+                ),
             )
             continue
         if casilla.input_kind == _InputKind.BOUND:
@@ -214,7 +216,7 @@ def build_draft(
                         value=value,
                         kind=ModeloValueKind.INHERITED,
                         source=f"registry binding {casilla.binding}",
-                    )
+                    ),
                 )
                 continue
         if casilla.id in casilla_inputs:
@@ -224,7 +226,7 @@ def build_draft(
                     value=casilla_inputs[casilla.id],
                     kind=ModeloValueKind.LITERAL,
                     source="registry input",
-                )
+                ),
             )
             continue
         values.append(
@@ -233,7 +235,7 @@ def build_draft(
                 value=None,
                 kind=ModeloValueKind.EMPTY,
                 source="registry schema",
-            )
+            ),
         )
     created_at = _utc_now()
     value_tuple = tuple(sorted(values, key=lambda value: value.casilla_id))
@@ -255,14 +257,14 @@ def build_draft(
     draft = ModeloDraft(
         draft_id=compute_modelo_draft_id(
             modelo=modelo,
-            period=period,
+            period=typed_period,
             profile_tax_id=profile.tax_id,
             schema_version=collection.schema_version,
             values=value_tuple,
             binding_values=binding_value_tuple,
         ),
         modelo=modelo,
-        period=period,
+        period=typed_period,
         profile_tax_id=profile.tax_id,
         subject_tax_id=profile.tax_id,
         snapshot_ref=snapshot_ref,
@@ -293,7 +295,7 @@ def _load_registry_snapshot(*, modelo: str, period: str) -> _RegistrySnapshot:
         )
     except _RegistrySnapshotError as exc:
         raise ModeloBuilderError(
-            f"registry snapshot is not available for modelo={modelo} period={period}: {exc}"
+            f"registry snapshot is not available for modelo={modelo} period={period}: {exc}",
         ) from exc
 
 
@@ -452,7 +454,7 @@ def _filing_binding_values(
                 value=_binding_input(binding_id, raw_value, binding),
                 kind=ModeloValueKind.LITERAL,
                 source="registry binding input",
-            )
+            ),
         )
     return values
 

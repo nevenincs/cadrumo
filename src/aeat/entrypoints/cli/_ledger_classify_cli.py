@@ -36,12 +36,12 @@ def ledger_classify_bulk_csv(
             tr(
                 "cli.ledger.classify.from_csv_exclusive",
                 default="--from-csv cannot be combined with --id or --classification.",
-            )
+            ),
         )
     csv_path = Path(from_csv)
     if not csv_path.exists():
         raise _bad(
-            tr("cli.ledger.classify.from_csv_not_found", path=from_csv, default=f"CSV file not found: {from_csv}")
+            tr("cli.ledger.classify.from_csv_not_found", path=from_csv, default=f"CSV file not found: {from_csv}"),
         )
     csv_text = csv_path.read_text(encoding="utf-8")
     result = _bulk_classify(
@@ -64,20 +64,20 @@ def ledger_classify_bulk_csv(
                 f"bulk classify: {result.total} rows, {result.applied} applied, "
                 f"{result.skipped} skipped, {len(result.failures)} failed"
             ),
-        )
+        ),
     ]
-    from ._ledger_payloads import LedgerClassifyResult
+    from ._ledger_payloads import LedgerClassifyBulkResult
 
     for failure in result.failures:
         # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE: tab-separated machine record (id, reason).
         lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
-    classify_result = LedgerClassifyResult.model_validate(
+    classify_result = LedgerClassifyBulkResult.model_validate(
         {
             "total": result.total,
             "applied": result.applied,
             "skipped": result.skipped,
             "failures": [f.model_dump(mode="json") for f in result.failures],
-        }
+        },
     )
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 

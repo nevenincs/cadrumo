@@ -42,7 +42,7 @@ class TestImportFromJustificante:
     """End-to-end reconstruction from local fixture PDFs."""
 
     def test_modelo_130_justificante_only_import_requires_binding_data(
-        self, schema_provider: RegistrySchemaProvider
+        self, schema_provider: RegistrySchemaProvider,
     ) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
         with pytest.raises(ModeloImportError, match="previous_year_economic_activity_net_income"):

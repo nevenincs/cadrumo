@@ -1,8 +1,7 @@
 # Upload your exported modelo at the AEAT portal
 
 This guide walks you through the handoff from a verified draft to a real filing
-at AEAT, as an ordered checklist. You prepare and export a modelo (a numbered
-official AEAT tax form) with `aeat`, but the tool never submits anything to
+at AEAT, as an ordered checklist. You prepare and export a {term}`modelo` with `aeat`, but the tool never submits anything to
 AEAT. You upload the exported file at the AEAT portal yourself, signed with
 your own credentials. The `work file` command at the end records a local marker
 only; it does not and cannot file on your behalf.
@@ -67,8 +66,7 @@ the right source - the portal is theirs, not the tool's.
 
 ## Step 4: save the justificante
 
-Immediately after submitting, download the justificante (the official receipt
-AEAT issues). AEAT usually offers it as a PDF.
+Immediately after submitting, download the {term}`justificante`. AEAT usually offers it as a PDF.
 
 Keep it with your tax records. You'll use it in step 6 to reconcile AEAT's
 record against your local one.
@@ -134,7 +132,7 @@ explanation.
 
 For diagnosing problems on your machine - refused commands, export errors,
 verification failures - see [troubleshooting](troubleshooting.md). Unfamiliar
-terms are defined in the [glossary](../glossary.md). Before you share command
+terms are defined in the {doc}`glossary </_generated/glossary>`. Before you share command
 output to ask for help, remove personal tax identifiers such as your NIF, CIF,
 DNI, NIE, or NII.
 

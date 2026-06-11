@@ -7,12 +7,11 @@ tests.
 
 Registered entries:
 
-  - ``aeat app ledger evidence``             (locked CRUD reference shape)
-  - ``aeat app ledger payable-invoice``      (link-orthogonal CRUD)
-  - ``aeat app ledger collectible-invoice``  (link-orthogonal CRUD)
-  - ``aeat app ledger ratios``               (key-value-as-record exception)
-  - ``aeat app ledger inventory``            (lifecycle operations)
-  - ``aeat config auth apoderado``           (lifecycle operations)
+  - ``aeat app ledger evidence``     (locked CRUD reference shape)
+  - ``aeat app ledger invoice``      (link-orthogonal CRUD, --kind issued|received)
+  - ``aeat app ledger ratios``       (key-value-as-record exception)
+  - ``aeat app ledger inventory``    (lifecycle operations)
+  - ``aeat config auth apoderado``   (lifecycle operations)
 
 Each entry documents the noun-group's intended verb set plus its
 declared exception class. The conformance harness in
@@ -38,16 +37,14 @@ EVIDENCE = MutatingNounGroupContract(
     # Reference shape: strict 5-verb CRUD, no orthogonal axes.
 )
 
-PAYABLE_INVOICE = MutatingNounGroupContract(
-    noun="payable_invoice",
-    cli_path="aeat app ledger payable-invoice",
-    # Strict 5-verb CRUD with link-to-ledger-transaction orthogonal axis.
-    orthogonal_axes=frozenset({OrthogonalAxis.LINK}),
-)
-
-COLLECTIBLE_INVOICE = MutatingNounGroupContract(
-    noun="collectible_invoice",
-    cli_path="aeat app ledger collectible-invoice",
+INVOICE = MutatingNounGroupContract(
+    noun="invoice",
+    cli_path="aeat app ledger invoice",
+    # One unified invoice noun-group gated by ``--kind issued|received``.
+    # The persisted payable_invoice / collectible_invoice taxonomy is
+    # selected by --kind; the operator surface is a single CRUD noun-group
+    # with the link-to-ledger-transaction orthogonal axis preserved (link
+    # targets the rich InvoiceCatalogue, not this slim CRUD record).
     orthogonal_axes=frozenset({OrthogonalAxis.LINK}),
 )
 
@@ -94,8 +91,7 @@ APODERADO = MutatingNounGroupContract(
 BUILTIN_CRUD_CATALOGUE: CrudContractCatalogue = CrudContractCatalogue(
     entries=(
         EVIDENCE,
-        PAYABLE_INVOICE,
-        COLLECTIBLE_INVOICE,
+        INVOICE,
         USAGE_RATIOS,
         INVENTORY,
         APODERADO,
@@ -115,10 +111,9 @@ def get_builtin_catalogue() -> CrudContractCatalogue:
 __all__ = [
     "APODERADO",
     "BUILTIN_CRUD_CATALOGUE",
-    "COLLECTIBLE_INVOICE",
     "EVIDENCE",
     "INVENTORY",
-    "PAYABLE_INVOICE",
+    "INVOICE",
     "USAGE_RATIOS",
     "get_builtin_catalogue",
 ]

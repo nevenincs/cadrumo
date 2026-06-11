@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....core.aggregation import AggregationSourceKind
 from ....core.external_constants import M347_THRESHOLD_EUR
 from .._counterpart import (
@@ -20,6 +21,9 @@ from .._counterpart import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_P_2025_Q1 = Period.from_year_and_code(2025, "1T")
+_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
 
 
 def _obs(
@@ -81,7 +85,7 @@ class TestAggregate347:
             _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="5000", source_id="t1"),
             _obs(nif="X1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="999", source_id="t2"),
         )
-        result = aggregate_counterpart_347(observations, period="2025")
+        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         assert result.modelo == "347"
         assert len(result.rollups) == 1
         assert result.rollups[0].operation_kind == OperationKind347.DELIVERY.value
@@ -93,7 +97,7 @@ class TestAggregate347:
             _obs(nif="X1", op_kind=OperationKind347.ACQUISITION.value, base="500", source_id="t3"),
             _obs(nif="X2", op_kind=OperationKind347.DELIVERY.value, base="1000", source_id="t4"),
         )
-        result = aggregate_counterpart_347(observations, period="2025")
+        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         assert result.total_counterparties == 2
         x1_delivery = next(
             r
@@ -112,21 +116,21 @@ class TestThreshold347:
         observations = (
             _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="5000", invoice_total="6050", source_id="t1"),
         )
-        result = aggregate_counterpart_347(observations, period="2025")
+        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         assert declarable_for_347(result, counterparty_nif="X1") is True
 
     def test_not_declarable_when_at_or_below_threshold(self) -> None:
         observations = (
             _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="2500", invoice_total="3000", source_id="t1"),
         )
-        result = aggregate_counterpart_347(observations, period="2025")
+        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         assert declarable_for_347(result, counterparty_nif="X1") is False
 
     def test_threshold_excludes_exactly_at_floor(self) -> None:
         observations = (
             _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="0", invoice_total="3005.06", source_id="t1"),
         )
-        result = aggregate_counterpart_347(observations, period="2025")
+        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         assert declarable_for_347(result, counterparty_nif="X1") is False
 
 
@@ -136,7 +140,7 @@ class TestAggregate349:
             _obs(nif="DE1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="10000", country="DE", source_id="t1"),
             _obs(nif="DE1", op_kind=OperationKind347.DELIVERY.value, base="5000", country="DE", source_id="t2"),
         )
-        result = aggregate_counterpart_349(observations, period="2025-Q1")
+        result = aggregate_counterpart_349(observations, period=_P_2025_Q1)
         assert result.modelo == "349"
         assert len(result.rollups) == 1
         assert result.rollups[0].operation_kind == OperationKind349.INTRA_DELIVERY.value
@@ -146,7 +150,7 @@ class TestAggregate349:
             _obs(nif="DE1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="10000", country="DE", source_id="t1"),
             _obs(nif="FR1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="5000", country="FR", source_id="t2"),
         )
-        result = aggregate_counterpart_349(observations, period="2025-Q1")
+        result = aggregate_counterpart_349(observations, period=_P_2025_Q1)
         de1 = next(r for r in result.rollups if r.counterparty_nif == "DE1")
         fr1 = next(r for r in result.rollups if r.counterparty_nif == "FR1")
         assert de1.counterparty_country == "DE"
@@ -178,7 +182,7 @@ class TestInvariants:
         with pytest.raises(ValidationError, match="!= sum of rollups"):
             CounterpartAggregation(
                 modelo="347",
-                period="2025",
+                period=_P_2025_ANNUAL,
                 rollups=(),
                 total_counterparties=0,
                 total_taxable_base=Decimal("999"),
@@ -190,6 +194,6 @@ class TestInvariants:
             _obs(nif="Z1", op_kind=OperationKind347.RENTAL.value, base="500", source_id="t1"),
             _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="800", source_id="t2"),
         )
-        forward = aggregate_counterpart_347(observations, period="2025")
+        forward = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         reverse = aggregate_counterpart_347(tuple(reversed(observations)), period="2025")
         assert forward.model_dump_json() == reverse.model_dump_json()

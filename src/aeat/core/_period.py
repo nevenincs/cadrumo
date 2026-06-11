@@ -15,11 +15,13 @@ validated via separate regex patterns for modeller flexibility.
 
 from __future__ import annotations
 
+import calendar
 import re
+from datetime import date
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BeforeValidator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
 
 class StandardPeriodCode(StrEnum):
@@ -115,7 +117,188 @@ def _format_accepted_period_set() -> str:
 
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
 
+
+class PeriodError(ValueError):
+    """Raised when a :class:`Period` is constructed from an invalid year/code.
+
+    Subclasses :class:`ValueError` (not the registered ``AeatError`` hierarchy)
+    so the core value object stays self-contained: it carries no error-code
+    registry or locale-message dependency, and pydantic — which already raises
+    :class:`ValueError` on field validation — composes with it cleanly.
+    """
+
+
+class PeriodKind(StrEnum):
+    """Cadence class of a filing period, derived from its registry code."""
+
+    QUARTERLY = "quarterly"
+    MONTHLY = "monthly"
+    ANNUAL = "annual"
+    INSTALMENT = "instalment"
+    EXTENDED = "extended"
+
+
+# Inclusive (start_month, end_month) for each quarterly token.
+_QUARTER_SPAN_MONTHS: dict[str, tuple[int, int]] = {
+    "1T": (1, 3),
+    "2T": (4, 6),
+    "3T": (7, 9),
+    "4T": (10, 12),
+}
+
+
+class Period(BaseModel):
+    """A filing period as one typed value: a year paired with a registry code.
+
+    ``Period`` is the canonical, fundamental representation of "which filing
+    period" across the whole application. It composes exactly two authoritative
+    fields — the :attr:`filing_year` and the registry period :attr:`code`
+    (a :class:`StandardPeriodCode` member such as ``1T`` / ``0A`` / ``03``, or an
+    extended union member such as ``EXT-1T`` / ``AD-HOC`` / ``EVENT-3``) — and
+    never a combined calendar string (``2026Q1`` / ``2026-03`` / ``2026``). The
+    combined form exists only as the human-readable :meth:`__str__` projection;
+    it is an output, never a parseable input. Inbound construction is always from
+    a ``(year, code)`` pair via :meth:`from_year_and_code`, so the conversion
+    layer the period-grammar standardisation deleted cannot grow back.
+
+    The model is frozen and hashes by ``(filing_year, code)``, so a ``Period`` is
+    a drop-in dict key, set member, and equality target wherever a ``(year,
+    token)`` tuple or a combined string was used before.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    filing_year: int = Field(ge=1980, le=2200)
+    code: RegistryPeriodCode
+
+    @classmethod
+    def from_year_and_code(cls, year: int, code: str) -> Period:
+        """Build a :class:`Period` from a filing year and a bare registry code.
+
+        Args:
+            year: The filing year (e.g. ``2026``).
+            code: A bare registry period code — a :class:`StandardPeriodCode`
+                value (``1T``-``4T`` / ``1P``-``4P`` / ``0A`` / ``01``-``12``) or
+                an extended union member (``EXT-1T``-``EXT-4T`` / ``AD-HOC`` /
+                ``EVENT-N``). The code is validated against the registry union;
+                a combined calendar string is refused.
+
+        Raises:
+            PeriodError: When ``code`` is not an accepted registry period code or
+                ``year`` is outside the supported range.
+        """
+        try:
+            return cls(filing_year=year, code=code)
+        except ValueError as exc:
+            raise PeriodError(f"cannot build a period from year={year!r} code={code!r}: {exc}") from exc
+
+    @property
+    def year(self) -> int:
+        """Return the filing year (alias of :attr:`filing_year`)."""
+        return self.filing_year
+
+    @property
+    def registry_token(self) -> str:
+        """Return the bare registry period code as a string (e.g. ``"1T"``)."""
+        return str(self.code)
+
+    @property
+    def standard_code(self) -> StandardPeriodCode | None:
+        """Return the :class:`StandardPeriodCode` member, or ``None`` for extended forms."""
+        try:
+            return StandardPeriodCode(str(self.code))
+        except ValueError:
+            return None
+
+    @property
+    def kind(self) -> PeriodKind:
+        """Return the cadence class derived from the period code."""
+        code = str(self.code)
+        if code in _QUARTER_SPAN_MONTHS:
+            return PeriodKind.QUARTERLY
+        if code == "0A":
+            return PeriodKind.ANNUAL
+        if len(code) == 2 and code.isdigit():
+            return PeriodKind.MONTHLY
+        if len(code) == 2 and code.endswith("P") and code[0] in "1234":
+            return PeriodKind.INSTALMENT
+        return PeriodKind.EXTENDED
+
+    def has_date_span(self) -> bool:
+        """Return whether the period maps to an inclusive calendar date span.
+
+        Quarterly, monthly, and annual periods cover a contiguous span of
+        calendar dates. Instalment claves (``1P``-``4P``) and the extended union
+        members are filing/payment events, not calendar spans, so they return
+        ``False`` and :attr:`start_date` / :attr:`end_date` refuse for them.
+        """
+        return self.kind in (PeriodKind.QUARTERLY, PeriodKind.MONTHLY, PeriodKind.ANNUAL)
+
+    @property
+    def start_date(self) -> date:
+        """Return the inclusive first calendar date of the period.
+
+        Raises:
+            PeriodError: When the period has no calendar span
+                (:meth:`has_date_span` is ``False``).
+        """
+        code = str(self.code)
+        if code in _QUARTER_SPAN_MONTHS:
+            return date(self.filing_year, _QUARTER_SPAN_MONTHS[code][0], 1)
+        if code == "0A":
+            return date(self.filing_year, 1, 1)
+        if self.kind is PeriodKind.MONTHLY:
+            return date(self.filing_year, int(code), 1)
+        raise PeriodError(f"period {self!s} has no calendar date span; guard with has_date_span()")
+
+    @property
+    def end_date(self) -> date:
+        """Return the inclusive last calendar date of the period.
+
+        Raises:
+            PeriodError: When the period has no calendar span
+                (:meth:`has_date_span` is ``False``).
+        """
+        code = str(self.code)
+        if code in _QUARTER_SPAN_MONTHS:
+            end_month = _QUARTER_SPAN_MONTHS[code][1]
+            return date(self.filing_year, end_month, calendar.monthrange(self.filing_year, end_month)[1])
+        if code == "0A":
+            return date(self.filing_year, 12, 31)
+        if self.kind is PeriodKind.MONTHLY:
+            month = int(code)
+            return date(self.filing_year, month, calendar.monthrange(self.filing_year, month)[1])
+        raise PeriodError(f"period {self!s} has no calendar date span; guard with has_date_span()")
+
+    def contains(self, value: date) -> bool:
+        """Return whether ``value`` falls within this period's inclusive span.
+
+        Raises:
+            PeriodError: When the period has no calendar span.
+        """
+        return self.start_date <= value <= self.end_date
+
+    def __str__(self) -> str:
+        """Return the canonical display form: the year and code, space-separated.
+
+        This is the operator ``--year YYYY --period <token>`` shape rendered as
+        ``"2026 1T"`` — deliberately NOT the combined ``2026Q1`` form the
+        standardisation removed, so the display can never be mistaken for, or
+        round-tripped as, a parseable combined token.
+        """
+        return f"{self.filing_year} {self.code}"
+
+    def __repr__(self) -> str:
+        return f"Period(filing_year={self.filing_year}, code={str(self.code)!r})"
+
+    def __hash__(self) -> int:
+        return hash((self.filing_year, str(self.code)))
+
+
 __all__ = [
+    "Period",
+    "PeriodError",
+    "PeriodKind",
     "RegistryPeriodCode",
     "StandardPeriodCode",
     "accepted_period_codes",

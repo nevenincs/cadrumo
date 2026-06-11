@@ -164,7 +164,7 @@ def test_calendar_and_explain_agree_on_applicability_verdict(
     if mismatches:
         formatted = "\n".join(mismatches)
         pytest.fail(
-            f"calendar and explain disagree on applicability verdict for profile {profile.entity_type}:\n{formatted}"
+            f"calendar and explain disagree on applicability verdict for profile {profile.entity_type}:\n{formatted}",
         )
 
 

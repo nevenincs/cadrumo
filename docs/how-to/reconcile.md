@@ -1,7 +1,6 @@
 # Reconcile a filed modelo against its justificante
 
-After you file through the AEAT portal, download the justificante (the official
-receipt AEAT issues after you sign and submit). Use this guide to check that the
+After you file through the AEAT portal, download the {term}`justificante`. Use this guide to check that the
 justificante matches your local filing record.
 
 This check is local. It reads the PDF you supply and never contacts AEAT.

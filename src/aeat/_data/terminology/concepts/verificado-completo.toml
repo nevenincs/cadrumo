@@ -1,0 +1,36 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "verificado-completo"
+domain = "concepto"
+lifecycle = "approved"
+related = ["borrador-vs-presentado", "borrador"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El estado de verificado completo: el borrador ha superado el contrato de completitud de la verificacion."
+definition = "Estado del ciclo de vida de un calculo que indica que un borrador ha superado el contrato de completitud de la comprobacion de verificacion. Es un control de completitud y coherencia que se ejecuta en el ordenador de la persona; no comprueba el modelo contra el portal de la AEAT ni garantiza que la agencia lo vaya a aceptar."
+
+[language.es.source]
+citation = "Documentacion de la aplicacion aeat; estado interno del ciclo de vida del calculo."
+authority = "other"
+
+[[language.es.term]]
+label = "verificado completo"
+term_status = "preferred"
+part_of_speech = "phrase"
+
+[language.en]
+short_description = "The verified-complete lifecycle state: a draft has passed the verify gate's completeness contract."
+
+[language.ca]
+short_description = "L'estat de verificat complet: l'esborrany ha superat el contracte de completesa de la verificacio."
+
+[language.hu]
+short_description = "A teljesen ellenorzott eletciklus-allapot: a piszkozat atment az ellenorzes teljessegi szerzodesen."

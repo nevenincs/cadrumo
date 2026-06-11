@@ -4,7 +4,7 @@ This page explains where the numbers on your tax form come from. It walks throug
 
 This is background reading. When you're ready to actually do each step, follow the links to the how-to guides.
 
-The forms in question are *modelos* (numbered official tax forms) that you send to the AEAT (the Spanish tax agency, the Agencia Estatal de Administración Tributaria). Each modelo is made of *casillas* (numbered boxes). Your job, with the tool's help, is to put the right figure in each box and to keep the evidence behind it.
+The forms in question are modelos that you send to the {term}`AEAT`. Each modelo is made of {term}`casillas <casilla>`. Your job, with the tool's help, is to put the right figure in each box and to keep the evidence behind it.
 
 ## A bank movement means nothing on its own
 

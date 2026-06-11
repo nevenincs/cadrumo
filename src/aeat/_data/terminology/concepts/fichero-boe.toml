@@ -1,0 +1,36 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "fichero-boe"
+domain = "concepto"
+lifecycle = "approved"
+related = ["modelo", "sede-electronica"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El fichero de texto de ancho fijo que la AEAT admite para la presentacion de un modelo."
+definition = "Formato de fichero de texto de ancho fijo que la AEAT acepta para la presentacion electronica de un modelo. La aplicacion genera este fichero al exportar una declaracion, para que la persona lo suba ella misma a la Sede Electronica. Toma su nombre del Boletin Oficial del Estado (BOE), donde se publica el diseno de registro de cada modelo."
+
+[language.es.source]
+citation = "AEAT, Disenos de registro publicados por Orden Ministerial en el BOE para cada modelo."
+authority = "aeat"
+
+[[language.es.term]]
+label = "fichero-BOE"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The fixed-width text file format the AEAT accepts for filing a modelo."
+
+[language.ca]
+short_description = "El fitxer de text d'amplada fixa que l'AEAT admet per a la presentacio d'un model."
+
+[language.hu]
+short_description = "Az AEAT altal egy modelo benyujtasahoz elfogadott rogzitett szelessegu szovegfajl."

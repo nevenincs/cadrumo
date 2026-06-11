@@ -863,7 +863,7 @@ class ModeloExportPayload(OutputSchema):
             bucket_id=result.bucket_id,
             modelo=result.modelo,
             filing_year=result.filing_year,
-            period=result.period,
+            period=result.period.registry_token,
             output_path=str(result.output_path),
             byte_size=result.byte_size,
             file_sha256=result.file_sha256,

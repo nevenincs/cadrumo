@@ -107,7 +107,7 @@ def _transaction(
         {
             "raw": raw,
             "direction": TransactionDirection.OUTGOING,
-        }
+        },
     )
 
 
@@ -405,8 +405,8 @@ def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
                     amount=Decimal("80.00"),
                     description="First persisted catalogue row",
                 ),
-            )
-        )
+            ),
+        ),
     )
     first_basis = compute_current_approval_basis(
         draft,
@@ -422,8 +422,8 @@ def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
                     amount=Decimal("125.00"),
                     description="Second persisted catalogue row",
                 ),
-            )
-        )
+            ),
+        ),
     )
     second_basis = compute_current_approval_basis(
         draft,
@@ -615,7 +615,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
             "approved_by": "operator",
             "review_checksum": "a" * 64,
             "approval_basis": None,
-        }
+        },
     )
     refreshed = refresh_review_status(
         draft,
@@ -636,7 +636,7 @@ def test_deadline_validator_still_reports_overdue_status() -> None:
             status=ModeloTestDeadlineStatus(
                 due_date=date(2026, 4, 20),
                 is_overdue=True,
-            )
+            ),
         ),
     ).validate(_draft())
     assert any(f.code == "filing-deadline-missed" for f in findings)

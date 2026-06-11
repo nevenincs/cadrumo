@@ -42,6 +42,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_column_index_to_letters.py",
         "test_compute_from_pull.py",
         "test_document_link_resolver.py",  # follow-up contract: doclink resolver scope-refusal + parse contract
+        "test_document_link_resolve_roundtrip.py",  # contract: doclink fetch-and-encrypt-or-refuse over real storage
         "test_grid_resize.py",
         "test_oauth_flow.py",  # contract: OAuth local-server failures stay inside GoogleAuthError
         "test_oauth_live.py",
@@ -53,7 +54,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_session_store_roundtrip.py",
         "test_verify_pull_coverage.py",
         "test_worksheet_export_pull_roundtrip.py",
-    }
+    },
 )
 
 

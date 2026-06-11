@@ -138,6 +138,7 @@ def _evaluate_import_rows(
     catalogue: TransactionCatalogue,
     parsed_rows: tuple[ParsedLedgerRow, ...],
     currency_normalizer: CurrencyNormalizationService | None = None,
+    occurred_at: datetime | None = None,
 ) -> _ImportRowPlan:
     """Classify every parsed row as imported / skipped / likely-duplicate.
 
@@ -163,6 +164,7 @@ def _evaluate_import_rows(
             skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw)))
             continue
         fx_rate, value_in_eur, rate_source, rate_date = _apply_fx_conversion(raw, currency_normalizer)
+        stamped_at = occurred_at if occurred_at is not None else raw.provenance.ingested_at
         transaction = Transaction.model_validate(
             {
                 "raw": raw,
@@ -172,13 +174,16 @@ def _evaluate_import_rows(
                 "value_in_eur": value_in_eur,
                 "rate_source": rate_source,
                 "rate_date": rate_date,
-            }
+                # D6: an imported row is freshly created at import time.
+                "created_at": stamped_at,
+                "modified_at": stamped_at,
+            },
         )
         batch_fingerprints.add(fingerprint)
         imported.append(transaction)
         if derive_movement_day_key(raw) in existing_day_keys:
             likely_duplicate_refs.append(
-                BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id)
+                BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id),
             )
     return _ImportRowPlan(
         imported=tuple(imported),
@@ -218,6 +223,7 @@ def import_ledger_transactions(
         catalogue=catalogue,
         parsed_rows=rows,
         currency_normalizer=currency_normalizer,
+        occurred_at=now,
     )
     imported_transactions = list(plan.imported)
     imported_refs = [
@@ -513,7 +519,7 @@ def _diagnostic_events(
                         "diagnostic_severity": diagnostic.severity.value,
                         "message": str(diagnostic.message),
                     },
-                )
+                ),
             )
     return tuple(events)
 

@@ -24,7 +24,7 @@ import pytest
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from .._errors import AggregationPeriodError
-from .._models import Period
+from .._models import Period, PeriodKind
 from .._renta_ledger import (
     _bounded_detail,
     _business_amount,
@@ -51,7 +51,8 @@ def test_resolve_annual_period_accepts_annual_period_instance() -> None:
 def test_resolve_annual_period_coerces_annual_string_to_period() -> None:
     resolved = _resolve_annual_period("2025")
 
-    assert resolved.raw == "2025"
+    assert resolved.year == 2025
+    assert resolved.kind is PeriodKind.ANNUAL
 
 
 def test_resolve_annual_period_rejects_quarterly_period_string() -> None:

@@ -64,7 +64,7 @@ def _make_draft(
             "status": status,
             "findings": findings,
             "updated_at": datetime(2026, 5, 3, tzinfo=UTC),
-        }
+        },
     )
 
 

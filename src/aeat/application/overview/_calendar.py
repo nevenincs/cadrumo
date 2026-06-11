@@ -7,15 +7,17 @@ calendar reflects which obligations already carry a justificante.
 
 from __future__ import annotations
 
+import re as _re
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core._period import Period as _Period
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
@@ -38,6 +40,7 @@ from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
 from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
+from ...domain.period import parse_canonical_period as _parse_canonical_period
 
 if TYPE_CHECKING:
     from ...domain.modelos import ModeloRecord
@@ -45,6 +48,37 @@ if TYPE_CHECKING:
     from ..live._notifications import PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
+
+_DASHED_SUFFIX_RE = _re.compile(r"^(\d{4})-(.+)$")
+_YEAR_ONLY_RE = _re.compile(r"^(\d{4})$")
+
+
+def _obligation_period_to_core(period_str: str) -> _Period:
+    """Convert a :class:`ModeloDeadline` period string to a typed :class:`_Period`.
+
+    Handles the extended set of period formats the deadline-engine registry uses:
+    ``YYYY-0A``, ``YYYY-[1-4]T``, ``YYYY-MM``, ``YYYY-[1-3]P``,
+    ``YYYY-EXT-[1-4]T``, ``YYYY-AD-HOC``, ``YYYYQ[1-4]``, bare ``YYYY``.
+    """
+    # Try the standard parse_canonical_period bridge first (handles YYYYQ,
+    # YYYY-nT, YYYY-MM, YYYYA, bare YYYY, YYYYPn).
+    from ...domain.period import PeriodValidationError as _PeriodValidationError
+
+    try:
+        _year, _code = _parse_canonical_period(period_str)
+        return _Period.from_year_and_code(_year, _code)
+    except _PeriodValidationError:
+        pass
+    # Handle YYYY-<suffix> forms not in the base bridge.
+    if m := _DASHED_SUFFIX_RE.fullmatch(period_str):
+        _year_int = int(m.group(1))
+        _suffix = m.group(2)
+        # YYYY-0A, YYYY-1T..4T, YYYY-01..12, YYYY-1P..3P, YYYY-EXT-1T..4T, YYYY-AD-HOC
+        return _Period.from_year_and_code(_year_int, _suffix)
+    # bare YYYY fallback
+    if m := _YEAR_ONLY_RE.fullmatch(period_str):
+        return _Period.from_year_and_code(int(m.group(1)), "0A")
+    raise ValueError(f"Cannot convert deadline period {period_str!r} to core Period")
 
 
 class OverviewPeriodState(StrEnum):
@@ -102,7 +136,7 @@ _USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewP
         _ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
         _ObligationStatus.FILED: OverviewPeriodState.FILED,
         _ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
-    }
+    },
 )
 """Translates the 6-state engine status into the CLI's 4-state taxonomy."""
 
@@ -112,7 +146,7 @@ _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = Mapp
         OverviewAeatSubmissionState.SUBMITTED_OBSERVED: 1,
         OverviewAeatSubmissionState.ACCEPTED: 2,
         OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: 3,
-    }
+    },
 )
 """Merge priority for multiple AEAT evidence sources about the same period."""
 
@@ -177,7 +211,7 @@ class OverviewCalendarFilingEvidence(BaseModel):
 
     modelo: str | None = Field(default=None, min_length=1, max_length=8)
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
-    period: str | None = Field(default=None, min_length=1, max_length=16)
+    period: _Period | None = None
     local_filing_state: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE
     local_filing_record_id: str | None = Field(default=None, min_length=1, max_length=128)
     local_calculation_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
@@ -190,6 +224,10 @@ class OverviewCalendarFilingEvidence(BaseModel):
     justificante_required: bool = True
     justificante_verified: bool = False
     evidence_source: str | None = Field(default=None, min_length=1, max_length=64)
+
+    @field_serializer("period", mode="plain")
+    def _serialize_period(self, value: _Period | None) -> str | None:
+        return str(value) if value is not None else None
 
 
 class OverviewCalendarEntry(BaseModel):
@@ -221,7 +259,7 @@ class OverviewCalendarEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: _Period
     opens_on: date
     closes_on: date
     adjusted_closes_on: date
@@ -235,6 +273,10 @@ class OverviewCalendarEntry(BaseModel):
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
     filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
 
+    @field_serializer("period", mode="plain")
+    def _serialize_period(self, value: _Period) -> str:
+        return str(value)
+
     @model_validator(mode="after")
     def _enforce_window_order(self) -> OverviewCalendarEntry:
         """Reject entries whose window or payment cutoff is inverted."""
@@ -243,13 +285,13 @@ class OverviewCalendarEntry(BaseModel):
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
             raise ValueError(
                 f"OverviewCalendarEntry.payment_cutoff_on ({self.payment_cutoff_on}) "
-                f"is after closes_on ({self.closes_on})"
+                f"is after closes_on ({self.closes_on})",
             )
         if self.adjusted_closes_on < self.closes_on:
             raise ValueError(
                 f"OverviewCalendarEntry.adjusted_closes_on ({self.adjusted_closes_on}) "
                 f"precedes closes_on ({self.closes_on}); the shift rule may only move "
-                f"a deadline forward."
+                f"a deadline forward.",
             )
         return self
 
@@ -260,7 +302,7 @@ class OverviewCalendarEntry(BaseModel):
         if self.user_state is not expected:
             raise ValueError(
                 f"OverviewCalendarEntry.user_state ({self.user_state}) "
-                f"disagrees with engine status mapping ({expected})"
+                f"disagrees with engine status mapping ({expected})",
             )
         return self
 
@@ -290,11 +332,15 @@ class OverviewCalendarEvent(BaseModel):
     snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     modelo: str | None = Field(default=None, min_length=1, max_length=8)
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
-    period: str | None = Field(default=None, min_length=1, max_length=16)
+    period: _Period | None = None
     status: str | None = Field(default=None, max_length=64)
     source_url: str | None = Field(default=None, max_length=512)
     aeat_submission_state: OverviewAeatSubmissionState | None = None
     justificante_verified: bool | None = None
+
+    @field_serializer("period", mode="plain")
+    def _serialize_period(self, value: _Period | None) -> str | None:
+        return str(value) if value is not None else None
 
 
 class CalendarWarning(BaseModel):
@@ -374,9 +420,13 @@ class SuppressedCalendarEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: _Period
     verdict: ApplicabilityVerdict
     reason: str = Field(min_length=1)
+
+    @field_serializer("period", mode="plain")
+    def _serialize_period(self, value: _Period) -> str:
+        return str(value)
 
 
 class OverviewCalendar(BaseModel):
@@ -525,7 +575,11 @@ def calendar_events_from_expedientes_snapshots(
             event_date = declaration.presented_at.date()
             if not calendar_range.covers(event_date):
                 continue
-            summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {declaration.period} filed at AEAT"
+            _year, _code = _parse_canonical_period(
+                declaration.period, ejercicio=str(declaration.ejercicio)
+            )
+            _period = _Period.from_year_and_code(_year, _code)
+            summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {_period.registry_token} filed at AEAT"
             events.append(
                 OverviewCalendarEvent(
                     event_type=OverviewCalendarEventType.FILING,
@@ -536,12 +590,12 @@ def calendar_events_from_expedientes_snapshots(
                     snapshot_id=snapshot.snapshot_id,
                     modelo=declaration.modelo,
                     filing_year=declaration.ejercicio,
-                    period=declaration.period,
+                    period=_period,
                     status=declaration.estado,
                     source_url=snapshot.source_url,
                     aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
                     justificante_verified=False,
-                )
+                ),
             )
     return _dedupe_calendar_events(events)
 
@@ -570,7 +624,7 @@ def calendar_events_from_notification_snapshots(
                     snapshot_id=snapshot.snapshot_id,
                     status=status,
                     source_url=str(row.source_url),
-                )
+                ),
             )
     return _dedupe_calendar_events(events)
 
@@ -606,7 +660,7 @@ def calendar_filing_evidence_from_sources(
     :class:`ModeloRecord` rows whose justificante evidence is projected
     onto the calendar.
     """
-    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}
+    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}  # (modelo, year, registry_token)
     event_specific: list[OverviewCalendarFilingEvidence] = []
     for record in filing_records:
         evidence = _filing_evidence_from_modelo_record(record)
@@ -625,12 +679,15 @@ def calendar_filing_evidence_from_sources(
         evidence = _filing_evidence_from_calculation_observation(payload)
         if evidence is not None:
             _merge_filing_evidence(by_key, evidence)
-    unique: dict[tuple[str | None, int | None, str | None, str | None], OverviewCalendarFilingEvidence] = {}
+    unique: dict[
+        tuple[str | None, int | None, str | None, str | None], OverviewCalendarFilingEvidence
+    ] = {}
     for evidence in (*by_key.values(), *event_specific):
         key_reference = (
             evidence.aeat_reference_id if evidence.evidence_source == "filed_declaration_observation" else None
         )
-        unique[(evidence.modelo, evidence.filing_year, evidence.period, key_reference)] = evidence
+        _period_token = evidence.period.registry_token if evidence.period is not None else None
+        unique[(evidence.modelo, evidence.filing_year, _period_token, key_reference)] = evidence
     return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))
 
 
@@ -640,7 +697,7 @@ def _filing_evidence_from_modelo_record(record: ModeloRecord) -> OverviewCalenda
         return None
     modelo = str(record.modelo)
     filing_year = int(record.filing_year)
-    period = str(record.period)
+    period = _Period.from_year_and_code(filing_year, str(record.period))
     external_evidence = record.external_evidence
     local_state = (
         OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
@@ -708,6 +765,8 @@ def _filing_evidence_from_filed_declaration_observation(observation: object) -> 
     expediente_id = getattr(observation, "expediente_id", None)
     if modelo is None or filing_year is None or period is None or expediente_id is None:
         return None
+    _year_int = int(filing_year)
+    _period_obj = _Period.from_year_and_code(_year_int, str(period))
     justificante = next(
         (
             artefact
@@ -721,8 +780,8 @@ def _filing_evidence_from_filed_declaration_observation(observation: object) -> 
     verified = justificante is not None
     return OverviewCalendarFilingEvidence(
         modelo=str(modelo),
-        filing_year=int(filing_year),
-        period=str(period),
+        filing_year=_year_int,
+        period=_period_obj,
         aeat_submission_state=(
             OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
             if verified
@@ -744,10 +803,12 @@ def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCa
     observation = getattr(payload, "observation", None)
     if observation is None:
         return None
+    _obs_year = int(observation.filing_year)
+    _obs_period = _Period.from_year_and_code(_obs_year, str(observation.period))
     return OverviewCalendarFilingEvidence(
         modelo=str(observation.modelo),
-        filing_year=int(observation.filing_year),
-        period=str(observation.period),
+        filing_year=_obs_year,
+        period=_obs_period,
         aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
         aeat_submitted_at=getattr(payload, "captured_at", None),
         aeat_evidence_kind=source_kind,
@@ -760,21 +821,13 @@ def _merge_filing_evidence(
     by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence],
     candidate: OverviewCalendarFilingEvidence,
 ) -> None:
-    """Merge one evidence row into every comparable period key."""
+    """Merge one evidence row into the canonical (modelo, year, registry_token) key."""
     if candidate.modelo is None or candidate.filing_year is None or candidate.period is None:
         return
-    aliases = _period_aliases(candidate.period, candidate.filing_year)
-    existing = next(
-        (
-            by_key[(candidate.modelo, candidate.filing_year, alias)]
-            for alias in aliases
-            if (candidate.modelo, candidate.filing_year, alias) in by_key
-        ),
-        None,
-    )
+    key = (candidate.modelo, candidate.filing_year, candidate.period.registry_token)
+    existing = by_key.get(key)
     merged = candidate if existing is None else _stronger_filing_evidence(existing, candidate)
-    for period in aliases:
-        by_key[(candidate.modelo, candidate.filing_year, period)] = merged
+    by_key[key] = merged
 
 
 def _stronger_filing_evidence(
@@ -793,7 +846,7 @@ def _stronger_filing_evidence(
                 "local_filing_record_id": candidate.local_filing_record_id,
                 "local_calculation_revision_id": candidate.local_calculation_revision_id,
                 "local_filed_at": candidate.local_filed_at,
-            }
+            },
         )
     if _AEAT_SUBMISSION_RANK[candidate.aeat_submission_state] >= _AEAT_SUBMISSION_RANK[local.aeat_submission_state]:
         local = local.model_copy(
@@ -805,7 +858,7 @@ def _stronger_filing_evidence(
                 "aeat_evidence_kind": candidate.aeat_evidence_kind or local.aeat_evidence_kind,
                 "justificante_verified": candidate.justificante_verified or local.justificante_verified,
                 "evidence_source": candidate.evidence_source or local.evidence_source,
-            }
+            },
         )
     return local
 
@@ -813,58 +866,23 @@ def _stronger_filing_evidence(
 def _calendar_filing_evidence_sort_key(
     evidence: OverviewCalendarFilingEvidence,
 ) -> tuple[str, int, str]:
-    return (evidence.modelo or "", evidence.filing_year or 0, evidence.period or "")
-
-
-def _filing_evidence_key(modelo: str, filing_year: int, period: str) -> tuple[str, int, str]:
-    return (modelo, filing_year, _normalize_period_token(period))
-
-
-def _period_aliases(period: str, filing_year: int) -> tuple[str, ...]:
-    """Return comparable period aliases for deadline and AEAT period labels."""
-    token = _normalize_period_token(period)
-    aliases = {token}
-    year_prefix = str(filing_year)
-    if token.startswith(year_prefix):
-        suffix = token[len(year_prefix) :].lstrip("-_")
-        if suffix:
-            aliases.add(suffix)
-            if suffix.startswith("Q") and suffix[1:].isdigit():
-                aliases.add(f"{int(suffix[1:])}T")
-        else:
-            aliases.add("0A")
-    if token.endswith("A") and token[:-1] == "0":
-        aliases.add(year_prefix)
-    if token in {"1T", "2T", "3T", "4T"}:
-        aliases.add(f"{year_prefix}Q{token[0]}")
-    return tuple(sorted(aliases))
-
-
-def _normalize_period_token(period: str) -> str:
-    return period.strip().upper()
-
-
-def _filing_year_from_period(period: str, fallback_date: date) -> int:
-    token = _normalize_period_token(period)
-    if len(token) >= 4 and token[:4].isdigit():
-        return int(token[:4])
-    return fallback_date.year
+    _p = evidence.period
+    return (evidence.modelo or "", evidence.filing_year or 0, _p.registry_token if _p is not None else "")
 
 
 def _calendar_entry_filing_evidence(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: _Period,
     evidence: tuple[OverviewCalendarFilingEvidence, ...],
 ) -> OverviewCalendarFilingEvidence:
     by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}
     for item in evidence:
         _merge_filing_evidence(by_key, item)
-    for alias in _period_aliases(period, filing_year):
-        match = by_key.get((modelo, filing_year, alias))
-        if match is not None:
-            return match.model_copy(update={"modelo": modelo, "filing_year": filing_year, "period": period})
+    match = by_key.get((modelo, filing_year, period.registry_token))
+    if match is not None:
+        return match.model_copy(update={"modelo": modelo, "filing_year": filing_year, "period": period})
     return OverviewCalendarFilingEvidence(modelo=modelo, filing_year=filing_year, period=period)
 
 
@@ -893,8 +911,8 @@ def _calendar_events_with_filing_evidence(
                 update={
                     "aeat_submission_state": row.aeat_submission_state,
                     "justificante_verified": row.justificante_verified,
-                }
-            )
+                },
+            ),
         )
     return _dedupe_calendar_events(enriched)
 
@@ -912,7 +930,8 @@ def _calendar_event_filing_evidence(
         if item.aeat_reference_id == event.reference_id
         and item.modelo == event.modelo
         and item.filing_year == event.filing_year
-        and _normalize_period_token(event.period) in _period_aliases(item.period or "", event.filing_year)
+        and item.period is not None
+        and item.period.registry_token == event.period.registry_token
     )
     if not matching_refs:
         return None
@@ -1004,7 +1023,7 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
                 key_to_meta[profile_key][1],
             )
             for profile_key in sorted(key_to_modelos)
-        }
+        },
     )
 
 
@@ -1041,7 +1060,7 @@ def _build_completeness_and_warnings(
                 message=message_key,
                 fix_command=fix_command,
                 affected_modelos=affected_modelos,
-            )
+            ),
         )
         defaulted_modelos.update(affected_modelos)
     computable_modelos = tuple(sorted({entry.modelo for entry in entries}))
@@ -1082,10 +1101,10 @@ def _calendar_entry_from_obligation(
         reason = "calendar_unavailable"
         holiday_refs = ()
         jurisdictions = ()
-    filing_year = _filing_year_from_period(obligation.period, obligation.closes_on)
+    period = _obligation_period_to_core(obligation.period)
     return OverviewCalendarEntry(
         modelo=obligation.modelo,
-        period=obligation.period,
+        period=period,
         opens_on=obligation.opens_on,
         closes_on=obligation.closes_on,
         adjusted_closes_on=adjusted,
@@ -1096,11 +1115,11 @@ def _calendar_entry_from_obligation(
         status=obligation.status,
         user_state=user_state_for(obligation.status),
         recovery=obligation.recovery,
-        filing_year=filing_year,
+        filing_year=period.year,
         filing_evidence=_calendar_entry_filing_evidence(
             modelo=obligation.modelo,
-            filing_year=filing_year,
-            period=obligation.period,
+            filing_year=period.year,
+            period=period,
             evidence=filing_evidence,
         ),
     )
@@ -1221,19 +1240,20 @@ def build_overview_calendar(
             applicability = derive_modelo_applicability(profile, obligation.modelo)
             if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
                 if show_suppressed:
+                    _s_period = _obligation_period_to_core(obligation.period)
                     suppressed.append(
                         SuppressedCalendarEntry(
                             modelo=obligation.modelo,
-                            period=obligation.period,
+                            period=_s_period,
                             verdict=applicability.verdict,
                             reason=applicability.reason,
-                        )
+                        ),
                     )
                 continue
             entries.append(_calendar_entry_from_obligation(obligation, filing_evidence=filing_evidence))
 
-    entries.sort(key=lambda entry: (entry.closes_on, entry.modelo, entry.period))
-    suppressed.sort(key=lambda s: (s.modelo, s.period))
+    entries.sort(key=lambda entry: (entry.closes_on, entry.modelo, entry.period.year, entry.period.registry_token))
+    suppressed.sort(key=lambda s: (s.modelo, s.period.year, s.period.registry_token))
     entries_tuple = tuple(entries)
     completeness, warnings = _build_completeness_and_warnings(raw_values, entries_tuple)
     return OverviewCalendar(

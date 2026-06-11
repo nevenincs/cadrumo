@@ -13,6 +13,7 @@ from pydantic import AnyHttpUrl
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
 from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+from ....core._period import Period
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import (
     EntityType,
@@ -161,7 +162,7 @@ def test_invalid_pagadores_count_is_debug_logged_without_raw_value(
             {
                 "irpf.pagadores_count": raw_value,
                 "irpf.pagadores_secondary_income": "2000",
-            }
+            },
         )
 
     assert advisories == ()
@@ -186,7 +187,7 @@ def test_invalid_pagadores_secondary_income_is_debug_logged_without_raw_value(
             {
                 "irpf.pagadores_count": "2",
                 "irpf.pagadores_secondary_income": raw_value,
-            }
+            },
         )
 
     assert advisories == ()
@@ -297,7 +298,7 @@ def test_range_is_frozen() -> None:
 def _entry(**overrides: object) -> OverviewCalendarEntry:
     base: dict[str, object] = {
         "modelo": "130",
-        "period": "2026Q1",
+        "period": Period.from_year_and_code(2026, "1T"),
         "opens_on": date(2026, 4, 1),
         "closes_on": date(2026, 4, 20),
         "adjusted_closes_on": date(2026, 4, 20),
@@ -315,7 +316,8 @@ def _entry(**overrides: object) -> OverviewCalendarEntry:
 def test_entry_round_trips_canonical_fields() -> None:
     entry = _entry()
     assert entry.modelo == "130"
-    assert entry.period == "2026Q1"
+    assert entry.period == Period.from_year_and_code(2026, "1T")
+    assert str(entry.period) == "2026 1T"
     assert entry.user_state is OverviewPeriodState.DUE
 
 
@@ -377,7 +379,7 @@ def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
     assert event.event_date == date(2025, 4, 15)
     assert event.modelo == "303"
     assert event.filing_year == 2025
-    assert event.period == "1T"
+    assert event.period == Period.from_year_and_code(2025, "1T")
     assert event.reference_id == "12345678901234567890"
 
 
@@ -750,7 +752,10 @@ def test_build_orders_entries_by_close_then_modelo_then_period() -> None:
         OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
         today=date(2026, 4, 1),
     )
-    keys = [(entry.closes_on, entry.modelo, entry.period) for entry in calendar.entries]
+    keys = [
+        (entry.closes_on, entry.modelo, entry.period.year, entry.period.registry_token)
+        for entry in calendar.entries
+    ]
     assert keys == sorted(keys)
 
 
@@ -761,9 +766,9 @@ def test_build_tape_invocation_2025q4_through_2026q2_spans_year_boundary() -> No
         OverviewCalendarRange(from_date=date(2025, 10, 1), to_date=date(2026, 7, 20)),
         today=date(2026, 5, 3),
     )
-    years = {entry.period[:4] for entry in calendar.entries}
+    years = {entry.period.year for entry in calendar.entries}
     # The range straddles 2025 -> 2026, so both years must contribute.
-    assert "2025" in years or "2026" in years
+    assert 2025 in years or 2026 in years
 
 
 def test_build_user_state_matches_engine_status_per_entry() -> None:

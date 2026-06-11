@@ -15,6 +15,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core._period import Period
 from ....domain.filing._repository import ModeloDraftRepository
 from ....domain.filing._schema import (
     ModeloDraft,
@@ -26,8 +27,11 @@ from ....domain.filing._schema import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_P_Q1 = Period.from_year_and_code(2026, "1T")
+_P_Q2 = Period.from_year_and_code(2026, "2T")
 
-def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> ModeloDraft:
+
+def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft:
     now = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     values = (
         ModeloValue(
@@ -96,8 +100,8 @@ class TestSaveLoad:
 class TestListAndIter:
     def test_list_returns_persisted_ids_sorted(self) -> None:
         repo = ModeloDraftRepository()
-        d1 = _make_draft(period="2026Q1", ingresos=10000)
-        d2 = _make_draft(period="2026Q2", ingresos=20000)
+        d1 = _make_draft(period=_P_Q1, ingresos=10000)
+        d2 = _make_draft(period=_P_Q2, ingresos=20000)
         repo.save(d1)
         repo.save(d2)
         ids = repo.list_draft_ids()
@@ -106,8 +110,8 @@ class TestListAndIter:
 
     def test_iter_drafts_yields_payloads(self) -> None:
         repo = ModeloDraftRepository()
-        d1 = _make_draft(period="2026Q1", ingresos=10000)
-        d2 = _make_draft(period="2026Q2", ingresos=20000)
+        d1 = _make_draft(period=_P_Q1, ingresos=10000)
+        d2 = _make_draft(period=_P_Q2, ingresos=20000)
         repo.save(d1)
         repo.save(d2)
         loaded = {payload.draft_id: payload for payload in repo.iter_drafts()}

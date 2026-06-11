@@ -325,6 +325,10 @@ class LedgerTransactionPayload(BaseModel):
     # the converted value rather than only the native amount. None for EUR rows.
     value_in_eur: str | None = None
     fx_rate: str | None = None
+    # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
+    # rendered as ISO-8601 strings. ``None`` for rows authored before the axis.
+    created_at: str | None = None
+    modified_at: str | None = None
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -366,6 +370,10 @@ class LedgerTransactionReviewPayload(BaseModel):
     # CCY->EUR rate for foreign rows; None for EUR-native rows.
     value_in_eur: str | None = None
     fx_rate: str | None = None
+    # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
+    # rendered as ISO-8601 strings. ``None`` for rows authored before the axis.
+    created_at: str | None = None
+    modified_at: str | None = None
 
     @field_validator("source_jurisdiction")
     @classmethod

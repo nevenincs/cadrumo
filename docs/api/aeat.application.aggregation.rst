@@ -17,6 +17,7 @@ Submodules
    aeat.application.aggregation._counterpart
    aeat.application.aggregation._currency_predicates
    aeat.application.aggregation._errors
+   aeat.application.aggregation._evidence_advisory
    aeat.application.aggregation._foreign_assets
    aeat.application.aggregation._grouping
    aeat.application.aggregation._iva_ledger

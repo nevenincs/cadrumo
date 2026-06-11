@@ -229,7 +229,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
                 authenticated_identity="X1234567L",
                 artefacts=(artefact,),
-            )
+            ),
         )
         store.persist_observation(
             FiledDeclaracionObservation(
@@ -251,7 +251,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                         storage_ref="secure-object:financial:" + "f" * 64,
                     ),
                 ),
-            )
+            ),
         )
 
     with profile_create_storage_span("second"):
@@ -269,16 +269,22 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     with profile_storage_session("operator"):
         operator_evidence = _local_calendar_filing_evidence("operator", ())
 
+    from ....core._period import Period
+
     assert second_evidence == ()
     by_period = {row.period: row for row in operator_evidence}
-    assert sorted((row.modelo, row.filing_year, row.period) for row in operator_evidence) == [
+    assert sorted(
+        (row.modelo, row.filing_year, row.period.registry_token) for row in operator_evidence
+    ) == [
         ("303", 2025, "1T"),
         ("303", 2025, "2T"),
     ]
-    assert by_period["1T"].aeat_submission_state.value == "justificante_verified"
-    assert by_period["1T"].justificante_verified is True
-    assert by_period["2T"].aeat_submission_state.value == "submitted_observed"
-    assert by_period["2T"].justificante_verified is False
+    period_1t = Period.from_year_and_code(2025, "1T")
+    period_2t = Period.from_year_and_code(2025, "2T")
+    assert by_period[period_1t].aeat_submission_state.value == "justificante_verified"
+    assert by_period[period_1t].justificante_verified is True
+    assert by_period[period_2t].aeat_submission_state.value == "submitted_observed"
+    assert by_period[period_2t].justificante_verified is False
 
 
 def test_all_profiles_flag_iterates_every_registered_profile(cli_runner: CliRunner) -> None:

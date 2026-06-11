@@ -88,7 +88,7 @@ Ledger exports include the evidence link with each transaction. Ledger-derived c
 ## Where to get help
 
 - If a command fails or refuses, see [Troubleshooting](troubleshooting.md).
-- If a term is unfamiliar, see the [Glossary](../glossary.md).
+- If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`.
 - Before sharing command output with anyone, strip tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
 
 ## Next steps

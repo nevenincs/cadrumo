@@ -136,6 +136,83 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._work_addressing.ModeloRevisionPickError",
+        ErrorCode(
+            code="REFUSED_MODELO_REVISION_PICK",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_revision_pick",
+            default_suggestion="aeat app modelo work revisions",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._calculate_input.ModeloCalculateInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_input",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._calculate_input.ModeloCalculateDetailRowsError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_DETAIL_ROWS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_detail_rows",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._calculate_input.ModeloCalculateDecimalInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_DECIMAL_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_decimal_input",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._calculate_input.ModeloCalculateCasillaInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_CASILLA_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_casilla_input",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._calculate_input.ModeloCalculateShortcutInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_SHORTCUT_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_shortcut_input",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._calculate_input.ModeloCalculateSemanticRoleError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_SEMANTIC_ROLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_semantic_role",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._export.ModeloExportCrossBucketRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",

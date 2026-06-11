@@ -3,7 +3,7 @@
 This page explains two ideas that sit at the heart of the tool: what a saved
 calculation actually is, and what the completeness check does (and does not)
 tell you. It's written for everyday taxpayers - an autónomo working through a
-modelo (an official AEAT tax form) - rather than for accountants. AEAT is the
+{term}`modelo` - rather than for accountants. AEAT is the
 Spanish tax agency (Agencia Estatal de Administración Tributaria). If you want
 the step-by-step actions, this page links out to the how-to guides; here the
 focus is on understanding why the tool behaves the way it does.
