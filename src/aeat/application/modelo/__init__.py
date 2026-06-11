@@ -52,11 +52,16 @@ Use of :class:`CalculationRevision` for compliance.
 from __future__ import annotations
 
 from ...domain.modelos import (
+    CalculationRevisionState,
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
     Modelo349OperadorRow,
     ModeloDetailRow,
+    ModeloRecordStatus,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
     validate_m349_nif_format,
 )
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
@@ -328,6 +333,7 @@ __all__ = [
     "CalculationResultSummary",
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
+    "CalculationRevisionState",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "CasillaProvenanceMissingError",
@@ -391,10 +397,13 @@ __all__ = [
     "ModeloReconciliationSourceKind",
     "ModeloReconciliationVerdict",
     "ModeloRecordNotFoundError",
+    "ModeloRecordStatus",
     "ModeloResolvedRevisionProjection",
     "ModeloResolvedWorkProjection",
     "ModeloRevisionPick",
     "ModeloVerifySelector",
+    "ModeloVerificationFindingKind",
+    "ModeloVerificationFindingSeverity",
     "ModeloVisibleFilingTarget",
     "ModeloWorkAddress",
     "ModeloWorkAddressNotFoundError",
@@ -429,6 +438,7 @@ __all__ = [
     "TaxationComparisonResult",
     "TaxationRecommendation",
     "VerificationReportNotFoundError",
+    "VerificationCompletenessStatus",
     "WorkCalculateInputBundle",
     "WorkUnit",
     "WorkUnitAlreadyDiscardedError",

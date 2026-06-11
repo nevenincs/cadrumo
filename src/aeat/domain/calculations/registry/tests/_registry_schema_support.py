@@ -3,29 +3,52 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .. import (
-    RegistryCatalogues,
-    build_snapshot,
-)
-from .._loader import load_registry_tree
-from .._schema import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
     ConvenioRateRow,
     ExportFieldDefinition,
+    ExtractionTargetDefinition,
+    FormulaExpression,
     KeyedBracketEntry,
     ModeloDefinition,
     ModeloRevision,
+    RegistryCatalogues,
+    RegistryLoadError,
+    RegistryValidationError,
+    RegistryValidator,
+    SupportRemovalDecisionDefinition,
+    build_model_law_coverage_ledger,
+    build_snapshot,
+    load_modelo_file,
+    load_registry_tree,
 )
-from .._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+__all__ = [
+    "CasillaContinuidadEvolutionDefinition",
+    "CasillaDefinition",
+    "ExtractionTargetDefinition",
+    "FormulaExpression",
+    "RegistryLoadError",
+    "RegistryValidationError",
+    "SupportRemovalDecisionDefinition",
+    "ValidationError",
+    "build_model_law_coverage_ledger",
+    "load_modelo_file",
+    "re",
+]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 

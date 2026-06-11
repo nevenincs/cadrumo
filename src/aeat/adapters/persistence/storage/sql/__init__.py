@@ -27,6 +27,7 @@ from .repository import (
 from .secure_objects import (
     SecureObjectDecryptabilityRow,
     SecureObjectMetadata,
+    SecureObjectNamespaceIntegrity,
     SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectWrite,
@@ -43,6 +44,7 @@ __all__ = [
     "PortalRepository",
     "SecureObjectDecryptabilityRow",
     "SecureObjectMetadata",
+    "SecureObjectNamespaceIntegrity",
     "SecureObjectRecord",
     "SecureObjectRepository",
     "SecureObjectWrite",

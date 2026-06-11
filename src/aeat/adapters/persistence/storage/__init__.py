@@ -144,6 +144,7 @@ from ._namespace_registry import (
     secure_object_namespace_logical_path,
 )
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
+from .attachment import AttachmentStore
 from ._rotation import (
     RotationPlanEntry,
     RotationSummary,
@@ -268,7 +269,7 @@ from .runtime import (
     inspect_storage_runtime,
 )
 from .secret_store._secret_store import SecretRecord, SecretStore
-from .sql import SecureObjectRepository, SecureObjectWrite
+from .sql import SecureObjectNamespaceIntegrity, SecureObjectRepository, SecureObjectWrite
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
 from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, SqlRecordRepository
@@ -340,6 +341,7 @@ __all__ = [
     "WORKFLOW_STATE_NAMESPACE",
     "AeadAlgorithm",
     "AtRestTreatment",
+    "AttachmentStore",
     "BlobIntegrityError",
     "BlobManifest",
     "BlobNotFoundError",
@@ -403,6 +405,7 @@ __all__ = [
     "SecretStoreError",
     "SecureBoundRepository",
     "SecureObjectNamespaceDefinition",
+    "SecureObjectNamespaceIntegrity",
     "SecureObjectRepository",
     "SecureObjectRevisionConflictError",
     "SecureObjectWrite",

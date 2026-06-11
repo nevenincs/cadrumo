@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
@@ -17,6 +18,12 @@ from ....core.resources import resources
 from ....domain.buckets import (
     BucketEventHistoryRepository,
 )
+from ....domain.buckets import (
+    BucketEventObjectType as BucketEventObjectType,
+)
+from ....domain.buckets import (
+    BucketEventType as BucketEventType,
+)
 from ....domain.calculations.registry import (
     CasillaObservation,
     InputKind,
@@ -26,10 +33,15 @@ from ....domain.calculations.registry import (
 )
 from ....domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ....domain.modelos._calculation_revision import CalculationRevision
-from ....domain.modelos._filing_record import ExternalEvidenceKind, ModeloRecord
+from ....domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
+from ....domain.modelos._filing_record import ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ....domain.modelos._verification_report import (
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+)
 from ....domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
@@ -48,18 +60,64 @@ from ...filing import (
 from ...workflow import (
     DeadlineEngineAdapter,
     ModeloInputs,
+    WorkflowAbortReason,
     WorkflowEngine,
+    WorkflowPurpose,
+    WorkflowStage,
 )
 from .. import (
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    ModeloRecordNotFoundError,
+    ModeloWorkflowGateError,
+    VerificationReportNotFoundError,
+    calculate_modelo_revision,
     create_work_unit,
     file_modelo_revision,
+    get_calculation_revision,
+    get_filing_record,
+    get_verification_report,
+    get_work_unit,
     import_external_filing_evidence,
+    list_calculation_revisions,
+    list_filing_records,
+    list_verification_reports,
+    mark_revision_verificado_completo,
     verify_modelo_revision,
 )
 from .._actions import workflow_period_for_work_unit
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+__all__ = [
+    "BucketEventObjectType",
+    "BucketEventType",
+    "CalculationRevisionNotFoundError",
+    "CalculationRevisionState",
+    "CalculationRevisionStateError",
+    "ModeloRecordNotFoundError",
+    "ModeloRecordStatus",
+    "ModeloVerificationFindingKind",
+    "ModeloVerificationFindingSeverity",
+    "ModeloWorkflowGateError",
+    "VerificationCompletenessStatus",
+    "VerificationReportNotFoundError",
+    "WorkflowAbortReason",
+    "WorkflowPurpose",
+    "WorkflowStage",
+    "asyncio",
+    "calculate_modelo_revision",
+    "get_calculation_revision",
+    "get_filing_record",
+    "get_verification_report",
+    "get_work_unit",
+    "list_calculation_revisions",
+    "list_filing_records",
+    "list_verification_reports",
+    "mark_revision_verificado_completo",
+    "upsert_work_unit",
+]
 
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)

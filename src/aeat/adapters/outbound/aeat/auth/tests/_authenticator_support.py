@@ -10,6 +10,7 @@ import logging
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import NoReturn as NoReturn
 from typing import cast
 
 import pytest
@@ -19,7 +20,15 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from ......application.auth import AuthProviderKind
+from ......application.auth import (
+    AuthProvider as AuthProvider,
+)
+from ......application.auth import (
+    AuthProviderDescription as AuthProviderDescription,
+)
+from ......application.auth import (
+    AuthProviderKind,
+)
 from ......core.config import CertificateBackend, Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
@@ -42,7 +51,25 @@ from .. import (
     extract_nif_from_subject,
     load_certificate,
 )
+from .. import (
+    AuthValidationError as AuthValidationError,
+)
+from .. import (
+    CertificateError as CertificateError,
+)
+from .. import (
+    CertificateNifParseError as CertificateNifParseError,
+)
+from .. import (
+    ClaveMovilLoginAssertionDetail as ClaveMovilLoginAssertionDetail,
+)
+from .. import (
+    ClaveMovilSessionDetail as ClaveMovilSessionDetail,
+)
 from .. import _authenticator as authenticator_module
+from .. import (
+    select_provider as select_provider,
+)
 from .._fixtures import SECRET_PASSPHRASE
 from ..certificate import CertificateBundle
 

@@ -10,8 +10,17 @@ import pytest
 
 from .....core.resources import resources
 from .....domain.calculations.registry import (
+    CasillaObservation as CasillaObservation,
+)
+from .....domain.calculations.registry import (
+    RegistryModeloObservation as RegistryModeloObservation,
+)
+from .....domain.calculations.registry import (
     RegistryValidationError,
     calculate_registry_snapshot,
+)
+from .....domain.calculations.registry import (
+    resolve_relation_values_from_observations as resolve_relation_values_from_observations,
 )
 from .....tests import FIXTURES_DIR
 from .. import DeclaracionParseError, parse_declaracion
