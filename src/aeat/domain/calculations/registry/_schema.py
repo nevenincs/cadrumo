@@ -7,6 +7,7 @@ generated output envelopes.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -175,6 +176,10 @@ _validate_country_code = _scalars._validate_country_code
 _validate_iban_string = _scalars._validate_iban_string
 _validate_nif_string = _scalars._validate_nif_string
 _validate_period_code = _scalars._validate_period_code
+
+_DEADLINE_WINDOW_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
+_DEADLINE_WINDOW_DASHED_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$")
+_DEADLINE_WINDOW_BARE_YEAR_RE = re.compile(r"^(?P<year>\d{4})$")
 
 
 class RegistrySnapshotRef(RegistryModel):
@@ -911,7 +916,7 @@ class DependencyClassificationDefinition(RegistryModel):
 def _parse_deadline_window_period(value: object) -> Period:
     """Hydrate a free-form TOML deadline-window period string into a typed :class:`~aeat.core.Period`.
 
-    Accepts the two-plus dialects used in the registry TOML authoring tree
+    Accepts the explicit dialects used at the registry TOML authoring boundary
     (``"2026Q1"``, ``"2026-1T"``, ``"2026-0A"``, ``"2026-03"``, ``"2026-1P"``,
     ``"2026-EXT-1T"``, bare ``"2026"``). A :class:`~aeat.core.Period`
     instance is returned as-is (idempotent), and the separated model-dump
@@ -926,20 +931,20 @@ def _parse_deadline_window_period(value: object) -> Period:
             raise ValueError(f"invalid deadline window period mapping {value!r}: {exc}") from exc
     if not isinstance(value, str):
         raise ValueError(f"deadline window period must be a string or Period, got {type(value).__name__}")
-    from ....domain.period import PeriodValidationError, parse_canonical_period
+
     token = value.strip().upper()
     try:
-        year, code = parse_canonical_period(token)
-        return Period.from_year_and_code(year, code)
-    except PeriodValidationError as canonical_exc:
-        if len(token) > 5 and token[:4].isdigit() and token[4] == "-":
-            try:
-                return Period.from_year_and_code(int(token[:4]), token[5:])
-            except ValueError as exc:
-                raise ValueError(f"invalid deadline window period {value!r}: {exc}") from exc
-        raise ValueError(f"invalid deadline window period {value!r}: {canonical_exc}") from canonical_exc
+        if match := _DEADLINE_WINDOW_QUARTER_PERIOD_RE.fullmatch(token):
+            return Period.from_year_and_code(int(match.group("year")), f"{match.group('quarter')}T")
+        if match := _DEADLINE_WINDOW_DASHED_PERIOD_RE.fullmatch(token):
+            return Period.from_year_and_code(int(match.group("year")), match.group("code"))
+        if match := _DEADLINE_WINDOW_BARE_YEAR_RE.fullmatch(token):
+            return Period.from_year_and_code(int(match.group("year")), "0A")
     except ValueError as exc:
         raise ValueError(f"invalid deadline window period {value!r}: {exc}") from exc
+    raise ValueError(
+        f"invalid deadline window period {value!r}: expected YYYYQn, YYYY-<period-code>, or YYYY",
+    )
 
 
 class DeadlineWindowDefinition(RegistryModel):
