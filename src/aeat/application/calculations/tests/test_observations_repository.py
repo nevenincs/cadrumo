@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from .._errors import ObservationKeyError
@@ -58,17 +59,29 @@ def test_observation_key_error_build_error_envelope() -> None:
 
 def test_observation_key_raises_on_year_below_range() -> None:
     with pytest.raises(ObservationKeyError, match="out of supported range"):
-        observation_key("303", 1999, "1T")
+        observation_key("303", Period.from_year_and_code(1999, "1T"))
 
 
 def test_observation_key_raises_on_year_above_range() -> None:
     with pytest.raises(ObservationKeyError, match="out of supported range"):
-        observation_key("303", 2100, "1T")
+        observation_key("303", Period.from_year_and_code(2100, "1T"))
 
 
 def test_observation_key_succeeds_on_boundary_years() -> None:
-    assert observation_key("303", 2000, "1T") == "303:2000:1T"
-    assert observation_key("303", 2099, "4T") == "303:2099:4T"
+    assert observation_key("303", Period.from_year_and_code(2000, "1T")) == "303:2000:1T"
+    assert observation_key("303", Period.from_year_and_code(2099, "4T")) == "303:2099:4T"
+
+
+def test_observation_key_derives_storage_token_from_typed_period() -> None:
+    period = Period.from_year_and_code(2026, "ext-2t")
+
+    assert str(period) == "2026 EXT-2T"
+    assert observation_key("369", period) == "369:2026:EXT-2T"
+
+
+def test_observation_key_rejects_untyped_combined_period() -> None:
+    with pytest.raises(ObservationKeyError, match=r"aeat\.core\.Period"):
+        observation_key("303", "2026 1T")  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
