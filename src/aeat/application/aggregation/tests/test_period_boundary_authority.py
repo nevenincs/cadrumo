@@ -59,8 +59,7 @@ def _cli_period_via_filter_transport(token: str, *, year: int) -> Period:
 
 def _calc_engine_period(token: str, *, year: int) -> Period:
     """Resolve the same (year, token) to a Period the calc-engine way."""
-    internal = aggregation_period_for_modelo(filing_year=year, period=token)
-    return Period.model_validate(internal)
+    return aggregation_period_for_modelo(filing_year=year, period=token)
 
 
 @pytest.mark.parametrize("year", _YEARS)
@@ -98,7 +97,7 @@ def test_both_transports_route_through_one_period_boundary() -> None:
     for year in _YEARS:
         for token in _LEDGER_SPAN_TOKENS:
             cli_period = _canonical_period(token, year=year)
-            engine_period = Period.model_validate(aggregation_period_for_modelo(filing_year=year, period=token))
+            engine_period = aggregation_period_for_modelo(filing_year=year, period=token)
             assert cli_period == engine_period, (year, token)
 
 
@@ -139,6 +138,6 @@ def test_period_filter_adds_no_plaintext_persistence_surface() -> None:
     # outside is not — proving it is a live boundary, not a no-op pass-through.
     from datetime import date
 
-    q1_2025 = Period.model_validate(aggregation_period_for_modelo(filing_year=2025, period="1T"))
+    q1_2025 = aggregation_period_for_modelo(filing_year=2025, period="1T")
     assert q1_2025.contains(date(2025, 2, 14))
     assert not q1_2025.contains(date(2025, 4, 1))

@@ -5,9 +5,9 @@ decision 2), the translator accepts ONLY the canonical span-shaped
 :class:`StandardPeriodCode` tokens (``1T``-``4T``, ``0A``, ``01``-``12``) the
 calc engine and the CLI ledger filter share. The deleted calendar-shape aliases
 (``Q1``-``Q4``, ``A``, ``ANUAL``, ``ANNUAL``, ``M01``-``M12``) must now raise.
-Each canonical token must map to the internal calendar string
-:meth:`Period.model_validate` consumes — proving the translator and the shared
-:meth:`Period.contains` boundary stay in lock-step.
+Each canonical token must map to the typed :class:`Period` consumed by ledger
+filters — proving the translator and the shared :meth:`Period.contains`
+boundary stay in lock-step.
 """
 
 from __future__ import annotations
@@ -61,26 +61,27 @@ _DELETED_ALIASES = (
 )
 
 
+def _period(code: str, *, year: int = 2025) -> Period:
+    return Period.from_year_and_token(year=year, token=code)
+
+
 @pytest.mark.parametrize("token", _LEDGER_SPAN_TOKENS, ids=[c.value for c in _LEDGER_SPAN_TOKENS])
-def test_canonical_span_token_maps_to_a_validatable_internal_calendar_string(
+def test_canonical_span_token_maps_to_typed_period(
     token: StandardPeriodCode,
 ) -> None:
-    """Every canonical ledger-span token yields an internal string Period accepts."""
-    internal = aggregation_period_for_modelo(filing_year=_FILING_YEAR, period=token.value)
+    """Every canonical ledger-span token yields an aggregation Period."""
+    period = aggregation_period_for_modelo(filing_year=_FILING_YEAR, period=token.value)
 
-    # The result must be the calendar shape Period.model_validate consumes, and
-    # the resolved Period must carry the year the translator was asked for.
-    period = Period.model_validate(internal)
     assert period.year == _FILING_YEAR
 
 
-def test_canonical_tokens_map_to_expected_internal_calendar_shapes() -> None:
-    """The three canonical shapes resolve to their documented internal strings."""
-    assert aggregation_period_for_modelo(filing_year=2025, period="1T") == "2025Q1"
-    assert aggregation_period_for_modelo(filing_year=2025, period="4T") == "2025Q4"
-    assert aggregation_period_for_modelo(filing_year=2025, period="0A") == "2025"
-    assert aggregation_period_for_modelo(filing_year=2025, period="03") == "2025-03"
-    assert aggregation_period_for_modelo(filing_year=2025, period="12") == "2025-12"
+def test_canonical_tokens_map_to_expected_typed_periods() -> None:
+    """The three canonical shapes resolve to their typed aggregation periods."""
+    assert aggregation_period_for_modelo(filing_year=2025, period="1T") == _period("1T")
+    assert aggregation_period_for_modelo(filing_year=2025, period="4T") == _period("4T")
+    assert aggregation_period_for_modelo(filing_year=2025, period="0A") == _period("0A")
+    assert aggregation_period_for_modelo(filing_year=2025, period="03") == _period("03")
+    assert aggregation_period_for_modelo(filing_year=2025, period="12") == _period("12")
 
 
 @pytest.mark.parametrize("alias", _DELETED_ALIASES)
@@ -92,5 +93,5 @@ def test_deleted_alias_tokens_now_raise(alias: str) -> None:
 
 def test_lowercase_canonical_token_is_normalised_not_an_alias() -> None:
     """A lowercase canonical token still resolves (case-fold), not via an alias branch."""
-    assert aggregation_period_for_modelo(filing_year=2025, period="1t") == "2025Q1"
-    assert aggregation_period_for_modelo(filing_year=2025, period="0a") == "2025"
+    assert aggregation_period_for_modelo(filing_year=2025, period="1t") == _period("1T")
+    assert aggregation_period_for_modelo(filing_year=2025, period="0a") == _period("0A")

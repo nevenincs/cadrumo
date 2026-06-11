@@ -66,7 +66,11 @@ def _observation(
     return build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
 
-_PERIOD_2025 = Period.model_validate("2025")
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_token(year=year, token=code)
+
+
+_PERIOD_2025 = _period(2025, "0A")
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +99,7 @@ def test_casilla_aggregation_modelo_propagates_to_output() -> None:
 def test_casilla_aggregation_preserves_period_argument() -> None:
     obs = _observation("tx-1", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
 
-    other_period = Period.model_validate("2024")
+    other_period = _period(2024, "0A")
     result = _casilla_aggregation(other_period, [obs], modelo="100")
 
     assert result.period == other_period
