@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
-from ._period import StandardPeriodCode
+from ._period import Period, PeriodError, PeriodKind, StandardPeriodCode
 
 if TYPE_CHECKING:
     # Static bindings for the lazily-exposed surface below. At runtime these
@@ -43,6 +43,9 @@ __all__: list[str] = [
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
     "Modelo",
+    "Period",
+    "PeriodError",
+    "PeriodKind",
     "StandardPeriodCode",
     "require_active_bucket_id",
     "resolve_active_bucket_id",
