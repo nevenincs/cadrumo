@@ -14,16 +14,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
-from typing import Annotated, Any
 
-from pydantic import BaseModel, BeforeValidator, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
-from ...core import Modelo, Period
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo, Period
 from ...core.aggregation import AggregationSourceKind
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import get_logger
-from ...domain.period import parse_canonical_period
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -44,24 +42,6 @@ from ._retenciones import (
 )
 
 LOGGER = get_logger(__name__)
-
-
-def _coerce_period(value: Any) -> Any:
-    """Accept a combined period string (e.g. ``"2025-Q1"``) and return a :class:`Period`.
-
-    Passes :class:`Period` instances through unchanged. Inbound combined strings are
-    parsed via :func:`~aeat.domain.period.parse_canonical_period` at the pydantic
-    boundary so the aggregation service models always carry a typed ``Period``.
-    """
-    if isinstance(value, Period):
-        return value
-    if isinstance(value, str):
-        year, token = parse_canonical_period(value)
-        return Period.from_year_and_code(year, token)
-    return value
-
-
-_PeriodField = Annotated[Period, BeforeValidator(_coerce_period)]
 
 
 class PerModeloAggregationProvider(StrEnum):
@@ -118,7 +98,7 @@ class PerModeloAggregationLogFields(BaseModel):
 
     service_name: str = "per_modelo_aggregation"
     modelo: str = Field(min_length=1)
-    period: _PeriodField
+    period: Period
     provider: PerModeloAggregationProvider
     observation_count: int = Field(ge=0)
     source_kind_count: int = Field(ge=0)
@@ -184,7 +164,7 @@ class PerModeloAggregationCommand(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=16)
-    period: _PeriodField
+    period: Period
     retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
     counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = Field(default_factory=tuple)
@@ -228,7 +208,7 @@ class PerModeloAggregationResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=16)
-    period: _PeriodField
+    period: Period
     provider: PerModeloAggregationProvider
     aggregation: PerModeloAggregationPayload
     source_kinds: tuple[AggregationSourceKind, ...]
