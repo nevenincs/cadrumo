@@ -57,7 +57,7 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
         "doclink",
         help=tr(
             "cli.ledger.doclink.help",
-            default="Record a Gmail/Drive/URL document link on a ledger row (never fetched).",
+            default="Fetch a Drive document link and store its bytes as encrypted evidence on a ledger row.",
         ),
     )(ledger_doclink)
     app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
@@ -186,6 +186,26 @@ def ledger_attach(
     )
 
 
+def _sniff_document_mime_type(reference: str, data: bytes) -> str:
+    """Best-effort MIME type for fetched evidence bytes.
+
+    Sniffs the magic bytes for the document kinds operators attach (PDF,
+    PNG, JPEG), then falls back to a filename guess from the reference, then
+    to ``application/octet-stream``. The bytes are always stored regardless
+    of the guessed type; the type is provenance metadata, never a gate.
+    """
+    import mimetypes
+
+    if data.startswith(b"%PDF-"):
+        return "application/pdf"
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    guessed, _ = mimetypes.guess_type(reference)
+    return guessed or "application/octet-stream"
+
+
 def ledger_doclink(
     ctx: typer.Context,
     transaction_id: str = typer.Option(
@@ -206,10 +226,23 @@ def ledger_doclink(
         help=tr("cli.ledger.doclink.actor_help", default="Operator label."),
     ),
 ) -> None:
-    """Record a Gmail/Drive/URL document link as local evidence on a ledger row."""
+    """Fetch a document link and store its bytes as encrypted evidence on a ledger row.
+
+    The reference is resolved through
+    :func:`aeat.adapters.outbound.google.resolve_document_link`, which fetches
+    Drive files reachable under the granted ``drive.file`` scope. The fetched
+    bytes are stored through the byte-bearing
+    :func:`aeat.domain.attachments.add_attachment_bytes` path (real ``sha256``
+    and ``mime_type``), and the original link is kept as manifest provenance.
+    Gmail links, arbitrary URLs, and out-of-scope Drive files are **refused** —
+    a link is never stored as evidence.
+    """
+    from ...adapters.outbound.google import resolve_document_link
+    from ...adapters.outbound.google._profile_binding import resolve_active_profile
+    from ...adapters.outbound.storage import OutboundStorageError
+    from ...adapters.outbound.storage._factory import _build_google_credentials
     from ...adapters.persistence.storage.attachment import AttachmentStore
-    from ...domain.attachments import AttachmentKind
-    from ...domain.attachments._service import add_link_attachment
+    from ...domain.attachments import AttachmentKind, add_attachment_bytes
 
     # The advertised --source choice set (DocumentLinkSource) is exactly the
     # three link sources this map covers, so the click Choice gate rejects any
@@ -225,15 +258,48 @@ def ledger_doclink(
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
+
+    profile = resolve_active_profile()
+    try:
+        credentials = _build_google_credentials(profile=profile)
+        data = resolve_document_link(
+            source=attachment_source,
+            reference=reference,
+            credentials=credentials,
+        )
+    except OutboundStorageError as exc:
+        required_scope = ""
+        if exc.context is not None:
+            required_scope = str(exc.context.get("required_scope", ""))
+        scope_hint = f" (requires the {required_scope} scope)" if required_scope else ""
+        raise _bad(
+            tr(
+                "cli.ledger.doclink.refused",
+                source=attachment_source.value,
+                reference=reference,
+                scope_hint=scope_hint,
+                default=(
+                    f"Cannot fetch the {attachment_source.value} document for {reference!r}"
+                    f"{scope_hint}: evidence must carry the document's encrypted bytes, and a "
+                    "link is never stored on its own. Download the document and attach it with "
+                    "'aeat app ledger attach --attachment-id ...', or grant the required Google "
+                    "scope and retry."
+                ),
+            ),
+        ) from exc
+
     store = AttachmentStore()
-    attachment = add_link_attachment(
+    attachment = add_attachment_bytes(
         store,
+        data=data,
         kind=kind,
         source=attachment_source,
         source_reference=reference,
+        mime_type=_sniff_document_mime_type(reference, data),
         captured_at=now(),
         bucket_id=transaction_repository.bucket_id,
         link_transaction_ids=(resolved_id,),
+        metadata={"source": attachment_source.value, "source_reference": reference},
         notes=note,
     )
     result = attach_manual_transaction_evidence(

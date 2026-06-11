@@ -2438,11 +2438,12 @@ cli:
       taxable_base_help: Taxable base amount
     doclink:
       actor_help: Operator label.
-      help: Record a Gmail/Drive/URL document link on a ledger row (never fetched).
+      help: 'Fetch a Drive document link and store its bytes as encrypted evidence on a ledger row.'
       id_help: Ledger transaction id.
       note_help: Optional note.
       reference_help: The document link reference.
       source_help: 'Link source: gmail, google_drive, or url.'
+      refused: 'Cannot fetch the %{source} document for %{reference}%{scope_hint}: evidence must carry the document''s encrypted bytes, and a link is never stored on its own. Download the document and attach it with ''aeat app ledger attach --attachment-id ...'', or grant the required Google scope and retry.'
     errors:
       business_pct_out_of_range: Business-use share %{value} (= %{percent}) is out
         of range. Enter a share between 0 and 1, e.g. 0.5 for 50 percent.

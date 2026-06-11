@@ -2570,12 +2570,12 @@ cli:
       taxable_base_help: Import de base imposable
     doclink:
       actor_help: Etiqueta de l'operador.
-      help: Registra un enllaç a un document de Gmail/Drive/URL en una fila del llibre
-        major (mai descarregat).
+      help: 'Descarrega un enllaç de document de Drive i desa''n els bytes com a evidència xifrada en una fila del llibre.'
       id_help: Identificador de transacció del llibre major.
       note_help: Nota opcional.
       reference_help: Referència de l'enllaç al document.
       source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
+      refused: 'No es pot descarregar el document de %{source} per a %{reference}%{scope_hint}: l''evidència ha de contenir els bytes xifrats del document, i un enllaç mai no es desa tot sol. Descarrega el document i adjunta''l amb ''aeat app ledger attach --attachment-id ...'', o concedeix el permís de Google requerit i torna-ho a provar.'
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
         està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al

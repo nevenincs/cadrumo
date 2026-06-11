@@ -2537,12 +2537,12 @@ cli:
       taxable_base_help: Adóköteles alapösszeg.
     doclink:
       actor_help: Operátor címke.
-      help: Gmail/Drive/URL dokumentumhivatkozás rögzítése egy főkönyvi soron (sosem
-        tölti le).
+      help: 'Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított bizonyítékként tárolja egy főkönyvi soron.'
       id_help: Főkönyvi tranzakció azonosítója.
       note_help: Opcionális megjegyzés.
       reference_help: A dokumentumhivatkozás referenciája.
       source_help: 'Hivatkozás forrása: gmail, google_drive vagy url.'
+      refused: 'Nem tölthető le a(z) %{source} dokumentum ehhez: %{reference}%{scope_hint}: a bizonyítéknak tartalmaznia kell a dokumentum titkosított bájtjait, és egy hivatkozás önmagában soha nem kerül tárolásra. Töltsd le a dokumentumot, és csatold az ''aeat app ledger attach --attachment-id ...'' paranccsal, vagy add meg a szükséges Google hatókört, és próbáld újra.'
     errors:
       business_pct_out_of_range: A(z) %{value} (= %{percent}) üzleti használati arány
         tartományon kívül esik. Adj meg 0 és 1 közötti arányt, pl. 0.5 az 50 százalékhoz.
