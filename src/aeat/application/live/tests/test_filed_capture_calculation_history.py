@@ -77,7 +77,7 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
         assert prefill.prefilled[0].source_periods == ("1T",)
         assert recurrence is not None
         assert recurrence.amount == Decimal("1200.00")
-        assert recurrence.source_periods == ("1T",)
+        assert recurrence.source_periods == (Period.from_year_and_code(2026, "1T"),)
         assert recurrence_prefill.binding_values == prefill.binding_values
 
 

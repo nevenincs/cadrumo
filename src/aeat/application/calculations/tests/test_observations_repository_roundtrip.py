@@ -362,7 +362,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
                 captured_at=decided_at,
                 source_modelo="303",
                 source_filing_year=2025,
-                source_periods=("4T",),
+                source_periods=(Period.from_year_and_code(2025, "4T"),),
             ),
             IvaCompensationAuthoritySource(
                 source_kind="filed_history_observation",
@@ -371,7 +371,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
                 captured_at=decided_at,
                 source_modelo="303",
                 source_filing_year=2025,
-                source_periods=("4T",),
+                source_periods=(Period.from_year_and_code(2025, "4T"),),
             ),
             IvaCompensationAuthoritySource(
                 source_kind="taxpayer_override",

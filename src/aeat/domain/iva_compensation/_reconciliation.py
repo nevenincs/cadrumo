@@ -88,7 +88,17 @@ class IvaCompensationAuthoritySource(BaseModel):
     captured_at: datetime | None = None
     source_modelo: str | None = Field(default=None, min_length=1, max_length=8)
     source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
-    source_periods: tuple[str, ...] = ()
+    source_periods: tuple[Period, ...] = ()
+
+    @model_validator(mode="after")
+    def _source_period_years_match(self) -> IvaCompensationAuthoritySource:
+        if not self.source_periods:
+            return self
+        if self.source_filing_year is None:
+            raise ValueError("source_filing_year is required when source_periods are present")
+        if any(period.filing_year != self.source_filing_year for period in self.source_periods):
+            raise ValueError("source_periods filing_year values must match source_filing_year")
+        return self
 
 
 class IvaCompensationReconciliationDecision(BaseModel):
@@ -176,7 +186,7 @@ class LocalIvaCompensationRecurrenceProtocol(Protocol):
     @property
     def source_filing_year(self) -> int: ...
     @property
-    def source_periods(self) -> tuple[str, ...]: ...
+    def source_periods(self) -> tuple[Period, ...]: ...
     @property
     def resolved_at(self) -> datetime: ...
 
@@ -536,7 +546,7 @@ def local_recurrence_authority_source(
     binding_id = str(recurrence.binding_id)
     source_modelo = str(recurrence.source_modelo)
     source_filing_year = int(recurrence.source_filing_year)
-    source_periods = tuple(str(item) for item in recurrence.source_periods)
+    source_periods = tuple(recurrence.source_periods)
     resolved_at = recurrence.resolved_at
     source_kind: IvaCompensationAuthoritySourceKind = (
         _FILED_HISTORY_OBSERVATION if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS else "local_recurrence"

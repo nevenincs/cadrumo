@@ -438,7 +438,7 @@ def _authority_source_text(source: _IvaCompensationAuthoritySource) -> str:
     if source.source_filing_year is not None:
         parts.append(f"year={source.source_filing_year}")
     if source.source_periods:
-        parts.append(f"periods={','.join(source.source_periods)}")
+        parts.append(f"periods={','.join(period.registry_token for period in source.source_periods)}")
     if source.amount is not None:
         parts.append(f"amount={source.amount}")
     parts.append(f"ref={_evidence_ref(source.source_locator)}")
