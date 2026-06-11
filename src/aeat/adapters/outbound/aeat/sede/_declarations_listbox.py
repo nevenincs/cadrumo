@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 
 from bs4 import BeautifulSoup
 
+from .....core import Period
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from ._adapter_utils import normalize_response_text
@@ -96,7 +97,7 @@ def _parse_listbox(
             Declaracion(
                 modelo=modelo,
                 ejercicio=ejercicio,
-                period=cell_texts[4],
+                period=Period.from_year_and_code(ejercicio, cell_texts[4]),
                 expediente_id=cell_texts[3],
                 estado=cell_texts[5],
                 tipo_solicitud=cell_texts[1] or None,

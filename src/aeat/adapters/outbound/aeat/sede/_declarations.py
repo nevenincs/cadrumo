@@ -843,7 +843,7 @@ async def _capture_filed_declaration_observation_from_row(
         )
     snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
     read_policy = _read_guard_policy_from_snapshot(snapshot)
-    filing_period = Period.from_year_and_code(declaration.ejercicio, declaration.period)
+    filing_period = declaration.period
     observation_key = (
         declaration.modelo,
         declaration.ejercicio,
@@ -962,7 +962,10 @@ async def _capture_filed_declaration_observation_from_row(
         casillas=casillas,
         metadata=metadata,
         extraction_coverage=extraction_coverage,
-        registry_snapshot_id=f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:{declaration.period}",
+        registry_snapshot_id=(
+            f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:"
+            f"{declaration.period.registry_token}"
+        ),
     )
 
 
@@ -996,7 +999,7 @@ async def capture_previous_filing_observations(
             period=period.registry_token,
         ):
             rows = await register.walk(modelo=requirement.modelo, ejercicio=requirement.filing_year)
-            matches = tuple(row for row in rows if row.period == requirement.period)
+            matches = tuple(row for row in rows if row.period.registry_token == requirement.period)
             declaration = _select_authoritative_declaration(
                 matches,
                 modelo=requirement.modelo,
@@ -1049,7 +1052,7 @@ async def capture_relation_source_observations(
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
         for (modelo, source_year, source_period), source_outputs in sorted(required_outputs.items()):
             rows = await register.walk(modelo=modelo, ejercicio=source_year)
-            matches = tuple(row for row in rows if row.period == source_period)
+            matches = tuple(row for row in rows if row.period.registry_token == source_period)
             declaration = _select_authoritative_declaration(
                 matches,
                 modelo=modelo,

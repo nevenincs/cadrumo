@@ -108,7 +108,7 @@ def _register_row_artefact(
 def _store_artefact(
     artefact_sink: FiledDeclaracionArtefactSink | None,
     *,
-    observation_key: tuple[str, int, str, str],
+    observation_key: tuple[str, int, Period, str],
     artefact: FiledDeclaracionArtefact,
     body: bytes,
 ) -> FiledDeclaracionArtefact:
@@ -123,7 +123,7 @@ def _registry_snapshot_for_declaration(declaration: Declaracion) -> RegistrySnap
         return authority.snapshot(
             declaration.modelo,
             filing_year=declaration.ejercicio,
-            period=declaration.period,
+            period=declaration.period.registry_token,
         )
     except RegistrySnapshotError as exc:
         raise SedeParseError(f"registry has no snapshot for AEAT declaration {declaration.modelo!r}") from exc
@@ -409,13 +409,14 @@ def _observed_casillas_from_declaration_pdf(
     )
     parse_failed = False
     try:
+        declaration_period = declaration.period.registry_token
         if needs_word_positions:
             with _temporary_sensitive_pdf_path(body) as tmp_path:
                 filing = parse_declaracion(
                     tmp_path,
                     modelo_override=declaration.modelo,
                     año_override=declaration.ejercicio,
-                    period_override=declaration.period,
+                    period_override=declaration_period,
                     registry_snapshot=snapshot,
                 )
         else:
@@ -424,7 +425,7 @@ def _observed_casillas_from_declaration_pdf(
                 source_label="secure declaration PDF",
                 modelo_override=declaration.modelo,
                 año_override=declaration.ejercicio,
-                period_override=declaration.period,
+                period_override=declaration_period,
                 registry_snapshot=snapshot,
             )
     except DeclaracionParseError:
@@ -437,7 +438,7 @@ def _observed_casillas_from_declaration_pdf(
                 "operation": "declaration_pdf_parse",
                 "modelo": declaration.modelo,
                 "ejercicio": str(declaration.ejercicio),
-                "period": declaration.period,
+                "period": declaration.period.registry_token,
             },
             translated_message=tr("adapters.sede.errors.parse_failed"),
         )
@@ -463,7 +464,7 @@ def _observed_casillas_from_declaration_pdf(
                 "operation": "declaration_pdf_extract_observations",
                 "modelo": declaration.modelo,
                 "ejercicio": str(declaration.ejercicio),
-                "period": declaration.period,
+                "period": declaration.period.registry_token,
             },
             translated_message=tr("adapters.sede.errors.parse_failed"),
         )
@@ -479,7 +480,7 @@ def _verify_submitted_file_context(
     expected = {
         "modelo": declaration.modelo,
         "filing_year": str(declaration.ejercicio),
-        "period_code": declaration.period,
+        "period_code": declaration.period.registry_token,
     }
     for parsed in parsed_fields:
         field = fields_by_id.get(parsed.field_id)

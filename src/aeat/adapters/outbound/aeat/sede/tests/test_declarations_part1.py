@@ -15,6 +15,7 @@ from ._declarations_support import (
     Declaracion,
     FiledDeclaracionArtefact,
     Path,
+    Period,
     Profile,
     SedeParseError,
     Settings,
@@ -238,7 +239,7 @@ class TestParseListbox:
         assert row.modelo == "100"
         assert row.ejercicio == 2022
         assert row.expediente_id == "202210013522222A"
-        assert row.period == "0A"
+        assert row.period == Period.from_year_and_code(2022, "0A")
         assert row.estado == "ALTA"
         assert row.presented_at == datetime(
             year=2024,
@@ -253,6 +254,18 @@ class TestParseListbox:
         assert row.archive_link_text == "Ver"
         assert row.declaration_copy_link_text is None
         assert row.mode == "read"
+
+    def test_declaration_row_refuses_period_year_mismatch(self) -> None:
+        with pytest.raises(ValueError, match=r"period\.filing_year must match ejercicio"):
+            Declaracion(
+                modelo="130",
+                ejercicio=2026,
+                period=Period.from_year_and_code(2025, "1T"),
+                expediente_id="202610013522222A",
+                estado="ALTA",
+                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                justificante_link_text="Ver",
+            )
 
     def test_declaration_copy_column_is_classified_separately(self) -> None:
         html = """
@@ -463,7 +476,7 @@ class TestSubmittedFileContext:
         declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
-            period="2T",
+            period=Period.from_year_and_code(2026, "2T"),
             expediente_id="202610013522222A",
             estado="ALTA",
             presented_at=datetime(2026, 7, 1, 10, 0, 0, tzinfo=UTC),

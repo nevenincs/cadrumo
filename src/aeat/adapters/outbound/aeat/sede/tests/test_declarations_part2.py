@@ -66,7 +66,7 @@ class TestSubmittedFileObservation:
         declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             expediente_id="202610013522222A",
             estado="ALTA",
             presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
@@ -117,7 +117,7 @@ class TestSubmittedFileObservation:
         declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             expediente_id="202610013522222A",
             estado="ALTA",
             presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
@@ -203,7 +203,7 @@ class TestSubmittedFileObservation:
         declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             expediente_id="202610013522222A",
             estado="ALTA",
             presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
@@ -246,7 +246,7 @@ class TestSubmittedFileObservation:
         declaration = Declaracion(
             modelo="111",
             ejercicio=2025,
-            period="1T",
+            period=Period.from_year_and_code(2025, "1T"),
             expediente_id="202511113520436S",
             estado="ALTA",
             presented_at=datetime(2025, 7, 21, 20, 15, 9, tzinfo=UTC),
@@ -340,7 +340,7 @@ class TestSubmittedFileObservation:
         declaration = Declaracion(
             modelo="123",
             ejercicio=filing_year,
-            period=period,
+            period=Period.from_year_and_code(filing_year, period),
             expediente_id=f"{filing_year}12313520436S",
             estado="ALTA",
             presented_at=datetime(filing_year, 4, 20, 10, 0, 0, tzinfo=UTC),
@@ -365,7 +365,7 @@ class TestSubmittedFileObservation:
         observation = FiledDeclaracionObservation(
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
-            period=Period.from_year_and_code(declaration.ejercicio, declaration.period),
+            period=declaration.period,
             expediente_id=declaration.expediente_id,
             status=declaration.estado,
             presented_at=declaration.presented_at,
@@ -386,7 +386,7 @@ class TestSubmittedFileObservation:
         declaration = Declaracion(
             modelo="100",
             ejercicio=2023,
-            period="0A",
+            period=Period.from_year_and_code(2023, "0A"),
             expediente_id="202310013522222A",
             estado="ALTA",
             presented_at=datetime(2024, 2, 1, 19, 15, 34, tzinfo=UTC),
@@ -426,7 +426,7 @@ class TestSubmittedFileObservation:
         declaration = Declaracion(
             modelo="100",
             ejercicio=2023,
-            period="0A",
+            period=Period.from_year_and_code(2023, "0A"),
             expediente_id="202310013522222A",
             estado="ALTA",
             presented_at=datetime(2024, 2, 1, 19, 15, 34, tzinfo=UTC),
@@ -458,7 +458,7 @@ class TestSubmittedFileObservation:
         observation = FiledDeclaracionObservation(
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
-            period=Period.from_year_and_code(declaration.ejercicio, declaration.period),
+            period=declaration.period,
             expediente_id=declaration.expediente_id,
             status=declaration.estado,
             presented_at=declaration.presented_at,
@@ -500,7 +500,7 @@ class TestDeclaracionPdfObservation:
         declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             expediente_id="202610013522222A",
             estado="ALTA",
             presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
@@ -521,7 +521,7 @@ class TestDeclaracionPdfObservation:
         declaration = Declaracion(
             modelo="130",
             ejercicio=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             expediente_id="EXPEDIENTE-CANARY-123",
             estado="ALTA",
             presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
@@ -552,7 +552,7 @@ class TestDeclaracionPdfObservation:
         declaration = Declaracion(
             modelo="111",
             ejercicio=2025,
-            period="1T",
+            period=Period.from_year_and_code(2025, "1T"),
             expediente_id="202511113520436S",
             estado="ALTA",
             presented_at=datetime(2025, 7, 21, 20, 15, 9, tzinfo=UTC),
