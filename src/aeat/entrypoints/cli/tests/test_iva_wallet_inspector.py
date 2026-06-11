@@ -245,8 +245,7 @@ def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         state = seed_iva_compensation_period(
             taxpayer_nif=_NIF,
-            filing_year=2024,
-            period="4T",
+            period=Period.from_year_and_code(2024, "4T"),
             amount=Decimal("1200.00"),
         )
 
@@ -276,8 +275,7 @@ def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="wallet-test"):
         seed_iva_compensation_period(
             taxpayer_nif=_NIF,
-            filing_year=2025,
-            period="4T",
+            period=Period.from_year_and_code(2025, "4T"),
             amount=Decimal("1500.00"),
         )
         report = query_iva_wallet_balance(as_of_year=2025)
@@ -299,8 +297,7 @@ def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="wallet-test"):
         seed_iva_compensation_period(
             taxpayer_nif=_NIF,
-            filing_year=2025,
-            period="1T",
+            period=Period.from_year_and_code(2025, "1T"),
             amount=Decimal("0"),
         )
         report = query_iva_wallet_balance(as_of_year=2025)
@@ -318,16 +315,14 @@ def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         state_a = seed_iva_compensation_period(
             taxpayer_nif=_NIF,
-            filing_year=2024,
-            period="3T",
+            period=Period.from_year_and_code(2024, "3T"),
             amount=Decimal("500.00"),
         )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test-b"):
         state_b = seed_iva_compensation_period(
             taxpayer_nif=_NIF,
-            filing_year=2024,
-            period="3T",
+            period=Period.from_year_and_code(2024, "3T"),
             amount=Decimal("999.00"),
         )
 
@@ -341,16 +336,14 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         seed_iva_compensation_period(
             taxpayer_nif=_NIF,
-            filing_year=2024,
-            period="2T",
+            period=Period.from_year_and_code(2024, "2T"),
             amount=Decimal("800.00"),
         )
 
         with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
             seed_iva_compensation_period(
                 taxpayer_nif=_NIF,
-                filing_year=2024,
-                period="2T",
+                period=Period.from_year_and_code(2024, "2T"),
                 amount=Decimal("100.00"),
             )
 
@@ -682,7 +675,11 @@ def test_cli_correct_verb_requires_confirm(tmp_path: Path) -> None:
     """Correct verb requires --confirm; without it, exit code is non-zero."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        seed_iva_compensation_period(taxpayer_nif=_NIF, filing_year=2024, period="4T", amount=Decimal("500.00"))
+        seed_iva_compensation_period(
+            taxpayer_nif=_NIF,
+            period=Period.from_year_and_code(2024, "4T"),
+            amount=Decimal("500.00"),
+        )
         result = _RUNNER.invoke(
             app,
             [
@@ -709,7 +706,11 @@ def test_cli_correct_verb_happy_path_overwrites_seed(tmp_path: Path) -> None:
     """Correct verb with --confirm overwrites the seeded amount and reports it."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        seed_iva_compensation_period(taxpayer_nif=_NIF, filing_year=2024, period="4T", amount=Decimal("500.00"))
+        seed_iva_compensation_period(
+            taxpayer_nif=_NIF,
+            period=Period.from_year_and_code(2024, "4T"),
+            amount=Decimal("500.00"),
+        )
         result = _RUNNER.invoke(
             app,
             [

@@ -84,11 +84,11 @@ def _wallet(amount: Decimal, *, generation_year: int = 2022) -> IvaCompensationW
         taxpayer_nif=_TAXPAYER_REF,
         authenticated_identity=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         rows=(
             IvaCompensationWalletRow(
                 generation_year=generation_year,
-                generation_period="4T",
+                generation_period=Period.from_year_and_code(generation_year, "4T"),
                 generated_amount=amount,
                 applied_amount=Decimal("0"),
                 pending_amount=amount,
@@ -189,7 +189,7 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
     divergent = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=_wallet(Decimal("80.00")),
         local_recurrence_amount=source_lot.remaining_amount,
         decided_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
@@ -200,7 +200,7 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
     fallback = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=None,
         local_recurrence_amount=source_lot.remaining_amount,
         decided_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
@@ -512,7 +512,7 @@ def _filed_observation(modelo: str) -> FiledDeclaracionObservation:
     return FiledDeclaracionObservation(
         modelo=modelo,
         ejercicio=2024,
-        period="4T",
+        period=Period.from_year_and_code(2024, "4T"),
         expediente_id="202410013522456T",
         status="filed",
         presented_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
@@ -544,7 +544,7 @@ def _filed_303_compensation_observation(
     return _filed_observation(modelo="303").model_copy(
         update={
             "ejercicio": filing_year,
-            "period": period,
+            "period": Period.from_year_and_code(filing_year, period),
             "expediente_id": f"{filing_year}303{period}000001",
             "presented_at": datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
             "casillas": (
@@ -596,7 +596,7 @@ def _filed_390_observation(
     return FiledDeclaracionObservation(
         modelo="390",
         ejercicio=2026,
-        period="0A",
+        period=Period.from_year_and_code(2026, "0A"),
         expediente_id="200039000000001Z",
         status="filed",
         presented_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
@@ -689,16 +689,14 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="iva-compensation-conflict"):
         seed_iva_compensation_period(
             taxpayer_nif=_TAXPAYER_REF,
-            filing_year=2024,
-            period="2T",
+            period=Period.from_year_and_code(2024, "2T"),
             amount=Decimal("100.00"),
         )
 
         with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
             seed_iva_compensation_period(
                 taxpayer_nif=_TAXPAYER_REF,
-                filing_year=2024,
-                period="2T",
+                period=Period.from_year_and_code(2024, "2T"),
                 amount=Decimal("50.00"),
             )
 

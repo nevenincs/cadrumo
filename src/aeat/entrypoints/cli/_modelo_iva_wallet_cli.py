@@ -182,10 +182,10 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
             ) from exc
 
         try:
+            filing_period = Period.from_year_and_code(filing_year, period)
             state = seed_iva_compensation_period_for_bucket(
                 bucket_id=active_bucket_id(),
-                filing_year=filing_year,
-                period=period,
+                period=filing_period,
                 amount=seed_amount,
             )
         except ModeloIvaWalletSeedNegativeAmountError as exc:
@@ -340,13 +340,13 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                 ),
             ) from exc
 
-        previous_state = _load_existing_seeded_period(active_bucket_id(), filing_year, period)
+        filing_period = Period.from_year_and_code(filing_year, period)
+        previous_state = _load_existing_seeded_period(active_bucket_id(), filing_period)
 
         try:
             state = correct_iva_compensation_period_for_bucket(
                 bucket_id=active_bucket_id(),
-                filing_year=filing_year,
-                period=period,
+                period=filing_period,
                 amount=correct_amount,
                 reason=clean_reason,
             )
@@ -414,12 +414,12 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
         _emit_envelope(ctx, command="modelo.iva_wallet.correct", result=correct_result, lines=lines)
 
 
-def _load_existing_seeded_period(bucket_id: str, filing_year: int, period: str):
+def _load_existing_seeded_period(bucket_id: str, period: Period):
     """Return the stored period state before correction, or ``None`` when absent."""
     from ...application.calculations import IvaCompensationHistoryRepository
 
     del bucket_id  # repository is profile-active scoped; bucket binding is implicit
-    return IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(filing_year, period))
+    return IvaCompensationHistoryRepository().load_period(period)
 
 
 __all__ = ["register_iva_wallet_commands"]

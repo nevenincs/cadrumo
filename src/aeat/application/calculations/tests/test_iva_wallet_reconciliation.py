@@ -51,11 +51,11 @@ def _wallet(amount: Decimal, *, captured_at: datetime = _NOW) -> IvaCompensation
         taxpayer_nif=_TAXPAYER_REF,
         authenticated_identity=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         rows=(
             IvaCompensationWalletRow(
                 generation_year=2026,
-                generation_period="1T",
+                generation_period=Period.from_year_and_code(2026, "1T"),
                 generated_amount=amount,
                 applied_amount=Decimal("0"),
                 pending_amount=amount,
@@ -73,7 +73,7 @@ def test_wallet_match_selects_aeat_wallet_and_keeps_local_as_corroboration() -> 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("1200"),
         decided_at=_NOW,
@@ -95,7 +95,7 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("1200"),
         decided_at=_NOW,
@@ -128,7 +128,7 @@ def test_wallet_without_local_history_is_authoritative_but_not_cross_verified() 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=None,
         decided_at=_NOW,
@@ -145,7 +145,7 @@ def test_wallet_higher_than_local_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("800"),
         decided_at=_NOW,
@@ -161,7 +161,7 @@ def test_wallet_lower_than_local_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=_wallet(Decimal("400")),
         local_recurrence_amount=Decimal("800"),
         decided_at=_NOW,
@@ -176,7 +176,7 @@ def test_missing_wallet_records_local_recurrence_but_blocks_automatic_output() -
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=None,
         local_recurrence_amount=Decimal("800"),
         decided_at=_NOW,
@@ -202,7 +202,7 @@ def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_a
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=None,
         local_recurrence_amount=Decimal("800"),
         local_recurrence_source=filed_history_source,
@@ -225,7 +225,7 @@ def test_stale_wallet_records_local_recurrence_but_blocks_automatic_output() -> 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=stale,
         local_recurrence_amount=Decimal("800"),
         decided_at=_NOW,
@@ -251,7 +251,7 @@ def test_taxpayer_override_selects_override_with_wallet_and_local_context() -> N
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("800"),
         override=override,
@@ -279,7 +279,7 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_target() -> None
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             wallet=wallet,
             local_recurrence_amount=Decimal("1200"),
             decided_at=_NOW,
@@ -293,7 +293,7 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> No
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             wallet=wallet,
             local_recurrence_amount=Decimal("1200"),
             decided_at=_NOW,
@@ -329,7 +329,7 @@ def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             wallet=_wallet(Decimal("1200")),
             local_recurrence_amount=Decimal("1200"),
             decided_at=_NOW,
@@ -349,11 +349,11 @@ def _wallet_for_period(
         taxpayer_nif=_TAXPAYER_REF,
         authenticated_identity=_TAXPAYER_REF,
         target_year=2026,
-        target_period=period,
+        target_period=Period.from_year_and_code(2026, period),
         rows=(
             IvaCompensationWalletRow(
                 generation_year=2025,
-                generation_period="4T",
+                generation_period=Period.from_year_and_code(2025, "4T"),
                 generated_amount=amount,
                 applied_amount=Decimal("0"),
                 pending_amount=amount,
@@ -380,7 +380,7 @@ def test_first_period_zero_with_aeat_wallet_zero_is_non_blocking() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="1T",
+        target_period=Period.from_year_and_code(2026, "1T"),
         wallet=_wallet_for_period(Decimal("0"), "1T"),
         local_recurrence_amount=None,
         decided_at=_NOW,
@@ -406,7 +406,7 @@ def test_first_period_zero_with_seeded_zero_local_record_is_non_blocking() -> No
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="1T",
+        target_period=Period.from_year_and_code(2026, "1T"),
         wallet=None,
         local_recurrence_amount=Decimal("0"),
         decided_at=_NOW,
@@ -432,7 +432,7 @@ def test_first_period_flag_does_not_suppress_non_zero_wallet_divergence() -> Non
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="1T",
+        target_period=Period.from_year_and_code(2026, "1T"),
         wallet=_wallet_for_period(Decimal("500"), "1T"),
         local_recurrence_amount=None,
         decided_at=_NOW,
@@ -458,7 +458,7 @@ def test_first_period_flag_does_not_suppress_stale_wallet() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="1T",
+        target_period=Period.from_year_and_code(2026, "1T"),
         wallet=stale,
         local_recurrence_amount=None,
         decided_at=_NOW,
