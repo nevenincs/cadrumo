@@ -340,3 +340,26 @@ Verification for the import cleanup: ruff passed for
 parser suites passed with `90 passed`. Verification for the follow-up fixture
 alignment: ruff passed for `test_import.py`, and the focused import suite passed
 with `10 passed`.
+
+## PERIOD-021 | MEDIUM | Modelo work CLI boundary must preserve raw period presence
+
+Review of the modelo/workflow addressing cleanup initially found one medium
+issue. Moving raw `--period` parsing out of application services made the work
+resume CLI pass `None` when an operator supplied `--period` without `--year`,
+which could drop the visible-target evidence before contradiction or incomplete
+target validation.
+
+Resolution landed in commit `da6726578`: application modelo/work and workflow
+resume helpers now accept `core.Period` only for visible targets, the CLI
+resolver refuses a raw period token when `--year` is absent, and both work-run
+resume and modelo export resolve raw CLI period text before calling application
+services. The application tests now exercise typed periods only, and the CLI
+test suite includes a regression proving the optional resolver refuses a period
+without a year instead of returning `None`.
+
+Verification after the fix: ruff passed for the scoped application, workflow,
+CLI, and test files; the focused modelo/workflow/CLI suite passed with
+`114 passed`; CLI import smoke printed `OK`; the combined-string gate passed
+with `1 passed`; and the broader residual `Period | str` sweep reported only
+the external Sede register sorting boundary. The follow-up reviewer reported no
+findings.
