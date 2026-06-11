@@ -36,6 +36,7 @@ from ...adapters.persistence.storage.bucket._manifest import (
 )
 from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core._period import Period
 from ...core.config import SecretStoreBackend, override_settings
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ...tests.secure_sql import dev_test_database_password
@@ -242,7 +243,7 @@ def test_surfaces_agree_on_one_projection() -> None:
                 modelo="303",
                 revision_id="2023-y-siguientes",
                 filing_year=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
             ),
         ),
         probe_live_backend=True,
@@ -298,7 +299,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
                 modelo="303",
                 revision_id="2009-y-siguientes",
                 filing_year=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
             ),
         ),
     )
@@ -308,7 +309,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     assert readiness.ledger_preflight_required is True
     assert readiness.ledger_ready is False
     assert readiness.ready is False
-    assert readiness.ledger_period == "2026 1T"
+    assert readiness.ledger_period == Period.from_year_and_code(2026, "1T")
     assert readiness.ledger_checked_transaction_count == 1
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
 
@@ -320,7 +321,7 @@ def test_missing_registry_snapshot_ledger_preflight_skip_is_debug_logged(
         modelo="999",
         revision_id="missing-registry",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
     )
 
     with caplog.at_level(logging.DEBUG, logger="aeat.application.state_projection"):

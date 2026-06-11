@@ -10,6 +10,7 @@ from ...application.state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
 )
+from ...core._period import Period
 from ...core.i18n import tr
 from ...domain.user_profile import ProfileNotFoundError
 from ._common import _emit_envelope
@@ -70,7 +71,11 @@ def register_readiness_commands(app: typer.Typer) -> None:
             modelo=modelo,
             revision_id=revision_id,
             filing_year=filing_year,
-            period=period or "",
+            period=(
+                Period.from_year_and_code(filing_year, period)
+                if period
+                else None
+            ),
         )
         report = _readiness_report(request)
         readiness_result = _readiness_result(
@@ -104,7 +109,7 @@ def _readiness_report(request: ModeloReadinessRequest):
         projection = build_operator_state_projection(modelo_readiness_requests=(request,))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(
-            _tr("cli.config.profile.unknown_profile", name=resolve_active_bucket_id() or "")
+            _tr("cli.config.profile.unknown_profile", name=resolve_active_bucket_id() or ""),
         ) from exc
     if not projection.modelo_readiness:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
@@ -137,7 +142,7 @@ def _readiness_result(
         ],
         ledger_preflight_required=report.ledger_preflight_required,
         ledger_ready=report.ledger_ready,
-        ledger_period=report.ledger_period,
+        ledger_period=str(report.ledger_period) if report.ledger_period is not None else None,
         ledger_checked_transaction_count=report.ledger_checked_transaction_count,
         ledger_issues=[
             LedgerIssuePayload(
