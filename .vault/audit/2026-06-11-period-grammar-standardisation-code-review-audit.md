@@ -363,3 +363,20 @@ CLI, and test files; the focused modelo/workflow/CLI suite passed with
 with `1 passed`; and the broader residual `Period | str` sweep reported only
 the external Sede register sorting boundary. The follow-up reviewer reported no
 findings.
+
+## PERIOD-022 | INFO | No findings in live declaration sort-key narrowing
+
+Review of commit `fa71ab86b` found no issues. The remaining production
+`str | Period` union was narrowed to `str` in `_history_period_sort_key`, matching
+its only in-file caller: `latest_declarations_by_period` sorts keys from the
+external Sede `Declaracion.period` schema, which remains a raw AEAT register
+string boundary rather than backend Period storage.
+
+Verification before the commit: ruff passed for the live persistence file and
+focused live tests; the filed capture calculation-history and justificante
+capture-resolution suites passed with `17 passed`; CLI import smoke printed
+`OK`; the combined-string gate passed with `1 passed`; `git diff --check`
+reported no whitespace errors; and the production residual sweep for
+`Period | str`, `str | Period`, `parse_canonical_period`,
+`normalize_modelo_work_period`, `_to_canonical_period`, and
+`_period_to_canonical_str` returned no matches.
