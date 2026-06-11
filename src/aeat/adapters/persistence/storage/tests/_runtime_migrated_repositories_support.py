@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -14,39 +14,63 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from .....application.auth import ApoderadoService
+from .....application.calculations import (
+    CalculationObservationRepository,
+    IvaCompensationHistoryRepository,
+    IvaWalletDecisionRepository,
+)
+from .....application.config_reset import ConfigResetScope
 from .....application.filing import ModeloHistory, ModeloHistoryEntry
-from .....application.live._borrador_100 import Borrador100Snapshot
+from .....application.filing._history_repository import ModeloHistoryRepository
+from .....application.live._borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 from .....application.live._snapshot_base import SnapshotLifecycleState
 from .....application.repair_integrity import (
     RepairRemediationDecision,
+    RepairRemediationDecisionRepository,
     repair_remediation_decision_id,
 )
-from .....application.workflow import DeclaracionPointer, WorkflowResult, WorkflowStage, WorkflowState, WorkflowStep
+from .....application.workflow import (
+    DeclaracionPointer,
+    WorkflowResult,
+    WorkflowRunRepository,
+    WorkflowStage,
+    WorkflowState,
+    WorkflowStateRepository,
+    WorkflowStep,
+)
 from .....core import Period as _Period
 from .....core.config import override_settings
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....domain._identifiers import ModeloIdentifier
+from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
+    BucketEventHistoryCatalogue,
+    BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
 )
-from .....domain.calculations.registry import RegistrySnapshotRef
+from .....domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotRef
 from .....domain.categories import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
 from .....domain.filing import (
     AmendmentKind,
     CasillaChange,
+    ModeloAmendmentRepository,
     ModeloComplementaria,
     ModeloDraft,
+    ModeloDraftRepository,
     ModeloValue,
     ModeloValueKind,
     make_amendment_id,
 )
 from .....domain.invoices import (
     Invoice,
+    InvoiceCatalogue,
+    InvoiceCatalogueRepository,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
@@ -55,8 +79,9 @@ from .....domain.invoices import (
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from .....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from .....domain.justificante import Justificante
+from .....domain.justificante import Justificante, JustificanteRepository
 from .....domain.modelos import ModeloCode
+from .....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from .....domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -68,17 +93,21 @@ from .....domain.modelos._filing_record import (
     ModeloRecordCatalogue,
     derive_filing_record_id,
 )
+from .....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from .....domain.modelos._repository import WorkUnitCatalogueRepository
 from .....domain.modelos._verification_report import (
     VerificationCompletenessStatus,
     VerificationReport,
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from .....domain.modelos._work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from .....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from .....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from .....domain.submission import (
     ModeloDraftStatus,
     ModeloPresentado,
     SubmissionAttempt,
+    SubmissionRepository,
     SubmissionStatus,
     make_submission_id,
 )
@@ -87,6 +116,8 @@ from .....domain.transactions import (
     RawTransaction,
     SourceFormat,
     Transaction,
+    TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from .....domain.usage_ratios import UsageRatioProfile
@@ -98,16 +129,65 @@ from .....tests.aeat_literal_fixtures import (
     JUSTIFICANTE_VERIFY_PATH_FIXTURE,
     aeat_url,
 )
+from ....outbound.aeat.sede._errors import ExpedienteNotFoundError
+from ....outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
 from ....outbound.aeat.sede._schema import FiledDeclaracionArtefact
+from ....outbound.aeat.auth import _session_store as _session_store
 from ....outbound.google._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ....outbound.llm._cache import LLMCache
 from ....outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
-from .. import EphemeralMasterKeyProvider, SensitivityClass
+from ....outbound.llm._usage import UsageRecorder
+from .. import AttachmentStore, EphemeralMasterKeyProvider, SensitivityClass, StorageValidationError
 from .._namespace_registry import LLM_USAGE_NAMESPACE
 from ..master_key._bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+__all__ = [
+    "LLM_USAGE_NAMESPACE",
+    "AmortizacionLedger",
+    "ApoderadoService",
+    "AttachmentNotFoundError",
+    "AttachmentStore",
+    "Borrador100SnapshotRepository",
+    "BucketEventHistoryCatalogue",
+    "BucketEventHistoryRepository",
+    "CalculationObservationRepository",
+    "CalculationRevisionCatalogueRepository",
+    "Callable",
+    "ConfigResetScope",
+    "ExpedienteNotFoundError",
+    "FiledDeclaracionObservationStore",
+    "InvoiceCatalogue",
+    "InvoiceCatalogueRepository",
+    "IvaCompensationHistoryRepository",
+    "IvaWalletDecisionRepository",
+    "JustificanteRepository",
+    "LLMCache",
+    "LLMProvider",
+    "ModeloAmendmentRepository",
+    "ModeloDraftRepository",
+    "ModeloHistoryRepository",
+    "ModeloRecordCatalogueRepository",
+    "Path",
+    "RegistryModeloObservation",
+    "RepairRemediationDecisionRepository",
+    "SpendingCategory",
+    "StorageValidationError",
+    "SubmissionRepository",
+    "TransactionCatalogue",
+    "TransactionCatalogueRepository",
+    "UsageRatioProfile",
+    "UsageRecorder",
+    "VerificationReportCatalogueRepository",
+    "WorkUnitCatalogue",
+    "WorkUnitCatalogueRepository",
+    "WorkflowRunRepository",
+    "WorkflowStateRepository",
+    "_session_store",
+]
 
 _KEK = b"k" * 32
 

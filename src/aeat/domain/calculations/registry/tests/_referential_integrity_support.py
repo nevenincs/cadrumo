@@ -3,18 +3,19 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from decimal import Decimal
 from typing import Literal
 
 import pytest
+from pydantic import ValidationError as ValidationError
 
-from .....core import TaxDomain
+from .....core import TaxDomain, freeze_toml
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....core.resources import bundled_path
-from .. import InputKind
-from .._loader import load_registry_tree
+from .. import InputKind, RegistryValidationError, ValidatedRegistryAuthority, load_registry_tree
 from .._schema import (
     ApplicationLinkDefinition,
     CalculationCompletenessCasilla,
@@ -24,9 +25,13 @@ from .._schema import (
     DataBindingDefinition,
     DeadlineWindowDefinition,
     DependencyClassificationDefinition,
+    ExportFieldDefinition,
     ExportLayoutDefinition,
+    ExportRecordDefinition,
     ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
     FormulaDefinition,
+    FormulaExpression,
     LegalReference,
     LiveCrossReferenceDecision,
     ModeloDefinition,
@@ -40,8 +45,22 @@ from .._schema import (
     VerificationExpectationDefinition,
     WorkbookParityReference,
 )
+from .._validate_references import _check_all_id_references
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+__all__ = [
+    "ExportFieldDefinition",
+    "ExportRecordDefinition",
+    "ExtractionTargetDefinition",
+    "FormulaExpression",
+    "RegistryValidationError",
+    "ValidatedRegistryAuthority",
+    "ValidationError",
+    "_check_all_id_references",
+    "freeze_toml",
+    "logging",
+]
 
 
 def _load_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:

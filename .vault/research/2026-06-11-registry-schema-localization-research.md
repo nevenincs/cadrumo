@@ -111,11 +111,17 @@ The ascendant regularization, administrative-criteria discrepancy, return result
 
 The previous-assessment regularization, Annex A habitual-dwelling works, Asturias relocation deduction, spouse-compensation, and habitual-dwelling deduction amount slice, present casillas `0676`, `0677`, `0683`, `0684`, `0685`, `0689`, `0690`, `0691`, `0692`, `0693`, `0694`, `0695`, `0698`, and `0699`, is also complete in all three locales.
 
+The payment/refund result, correction refund, Annex A habitual-dwelling deduction amount, named investment-event application, dwelling acquisition date, and mortgage-loan identifier slice, casillas `0700` through `0709`, is also complete in all three locales.
+
+The Annex A mortgage loan percentage, new-company investment, and rental lessor identifier/payment slice, casillas `0710` through `0719`, is also complete in all three locales.
+
+The Annex A second-lessor payment, general deduction amount, patronage/donation/political contribution deduction, cultural-interest investment deduction, Ceuta/Melilla deduction, and EU-resident family-unit tax quota slice, casillas `0720` through `0729`, is also complete in all three locales.
+
 Verified commands:
 
-- `uv run --no-sync python -m aeat.locales modelo coverage en 100 2024` -> `locale=en modelo=100 revision=2024 etiquetas=668/2068 ayuda=668/2068`.
-- `uv run --no-sync python -m aeat.locales modelo coverage ca 100 2024` -> `locale=ca modelo=100 revision=2024 etiquetas=668/2068 ayuda=668/2068`.
-- `uv run --no-sync python -m aeat.locales modelo coverage hu 100 2024` -> `locale=hu modelo=100 revision=2024 etiquetas=668/2068 ayuda=668/2068`.
+- `uv run --no-sync python -m aeat.locales modelo coverage en 100 2024` -> `locale=en modelo=100 revision=2024 etiquetas=698/2068 ayuda=698/2068`.
+- `uv run --no-sync python -m aeat.locales modelo coverage ca 100 2024` -> `locale=ca modelo=100 revision=2024 etiquetas=698/2068 ayuda=698/2068`.
+- `uv run --no-sync python -m aeat.locales modelo coverage hu 100 2024` -> `locale=hu modelo=100 revision=2024 etiquetas=698/2068 ayuda=698/2068`.
 - Structured placeholder scans over casillas `0002` through `0026`, `0027` through `0036`, `0037` through `0046`, `0047` through `0057`, sparse keys `0058`, `0060`, `0062` through `0068`, `0069` through `0080`, `0081` through `0090`, present keys in `0091` through `0100`, `0101` through `0110`, `0111` through `0120`, `0121` through `0130`, `0131` through `0150`, `0151` through `0160`, present keys in `0161` through `0170`, `0171` through `0180`, `0181` through `0190`, present keys in `0191` through `0200`, `0201` through `0210`, `0211` through `0220`, `0221` through `0230`, `0231` through `0236`, `0240` through `0249`, present keys in `0250` through `0260`, `0261` through `0270`, `0271` through `0280`, `0281` through `0290`, `0291` through `0300`, `0301` through `0310`, `0311` through `0320`, `0321` through `0330`, `0331` through `0340`, `0341` through `0350`, `0351` through `0359`, `0363` through `0375`, present keys in `0376` through `0390`, `0391` through `0400`, `0401` through `0410`, present keys in `0411` through `0420`, `0421` through `0430`, `0431` through `0435`, and `0436` through `0445` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
 - A subsequent structured placeholder scan over casillas `0446` through `0455` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
 - A subsequent structured placeholder scan over casillas `0456` through `0468` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
@@ -138,6 +144,9 @@ Verified commands:
 - A subsequent structured placeholder scan over casillas `0656` through `0665` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
 - A subsequent structured placeholder scan over present casillas `0666`, `0667`, `0669`, `0670`, `0671`, `0672`, and `0675` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
 - A subsequent structured placeholder scan over present casillas `0676`, `0677`, `0683`, `0684`, `0685`, `0689`, `0690`, `0691`, `0692`, `0693`, `0694`, `0695`, `0698`, and `0699` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
+- A subsequent structured placeholder scan over casillas `0700` through `0709` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
+- A subsequent structured placeholder scan over casillas `0710` through `0719` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
+- A subsequent structured placeholder scan over casillas `0720` through `0729` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
 - `uv run --no-sync pytest src/aeat/locales/tests/test_modelo_manager.py src/aeat/locales/tests/test_modelo_cli.py src/aeat/domain/calculations/registry/tests/test_registry_locales_loader.py src/aeat/domain/calculations/registry/tests/test_registry_locales_parity.py -q -m "unit or integration"` -> `21 passed`.
 - `uv run --no-sync ruff check src/aeat/domain/calculations/registry/__init__.py src/aeat/domain/calculations/registry/_queries.py src/aeat/domain/calculations/registry/_bindings.py src/aeat/domain/calculations/registry/_validate_record_sections.py` -> `All checks passed`.
 - `uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/test_temporal.py -q -m unit` -> `9 passed`.
@@ -148,7 +157,7 @@ During the M100 CLI batch, the registry package public import contract was found
 
 Prioritize work in this order:
 
-1. M100 `2024`: continue after completed casilla `0699`, from `labels=668/2068 help=668/2068` per locale. The scaffold still exposes 1400 untranslated label/help leaves per locale, so work should continue by registry section or source grouping.
+1. M100 `2024`: continue after completed casilla `0729`, from `labels=698/2068 help=698/2068` per locale. The scaffold still exposes 1370 untranslated label/help leaves per locale, so work should continue by registry section or source grouping.
 2. M200 `2024-y-siguientes`: continue from the two translated seeded leaves per locale. The scaffold exposes 3232 label/help leaves per locale, so this should be planned as a separate large-model translation campaign.
 3. New modelo/revision enrollment: run `coverage`, then `scaffold`, then translate with `set`, and finish with `coverage` evidence. Do not create Spanish schema-local TOML as part of routine enrollment.
 

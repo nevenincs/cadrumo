@@ -9,12 +9,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl, TypeAdapter
+from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
 from ....adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
+from ....core import Period
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -73,6 +74,14 @@ class TestSaveLoad:
         repo.save(record)
         loaded = JustificanteRepository().load(record.csv)
         assert loaded == record
+
+    def test_annual_period_requires_bare_registry_token(self, tmp_path: Path) -> None:
+        record = _make_justificante(tmp_path).model_copy(update={"period": "0A"})
+        assert record.period == Period.from_year_and_code(2026, "0A")
+
+    def test_bare_year_period_is_not_accepted_as_annual_token(self, tmp_path: Path) -> None:
+        with pytest.raises(ValidationError, match="Period"):
+            _make_justificante(tmp_path).model_copy(update={"period": "2026"})
 
     def test_save_idempotent(self, tmp_path: Path) -> None:
         repo = JustificanteRepository()

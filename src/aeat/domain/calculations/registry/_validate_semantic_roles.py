@@ -16,6 +16,15 @@ from collections.abc import Iterable, Mapping
 
 from . import _validate_semantic_role_typos as _semantic_role_typos
 from ._schema import CasillaDefinition, ModeloDefinition
+from ._validate_semantic_role_required import (
+    _REQUIRED_ROLE_LABEL_PATTERNS as _REQUIRED_ROLE_LABEL_PATTERNS,
+)
+from ._validate_semantic_role_required import (
+    _validate_required_role_declarations as _validate_required_role_declarations,
+)
+from ._validate_semantic_role_required import (
+    collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
+)
 
 
 class _RoleObservation:
