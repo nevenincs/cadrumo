@@ -41,3 +41,22 @@ currently contains non-authored WIP in the shared worktree.
 
 Verification reported by the reviewer: `src/aeat/domain/tests/test_period.py` passed with
 `41 passed`, and registry schema/query tests passed with `50 passed`.
+
+## PERIOD-003 | INFO | No findings in stale guidance cleanup
+
+Review of commit `44851e0de` found no issues. The updated deadline error suggestion uses
+the separated `--year 2024 --period 1T` CLI shape, and the raw declaration/justificante
+schema docstrings no longer describe combined calendar strings as canonical backend
+periods.
+
+Local verification before commit: ruff passed for the touched files, core error-registry
+tests passed with `14 passed`, justificante secure-storage roundtrip passed with
+`1 passed`, and CLI import smoke printed `OK`. A declaration parser boundary test could
+not collect because the shared worktree currently lacks `AeatError` from the parser
+boundary support module; that failure was outside this slice.
+
+## PERIOD-004 | INFO | No findings in review-filter example cleanup
+
+Review of commit `1f2c3e68d` found no issues. The commit only changed one docstring
+example in `src/aeat/application/review/_errors.py` from a year-qualified hybrid period
+to a bare token example, with no behavior path touched.
