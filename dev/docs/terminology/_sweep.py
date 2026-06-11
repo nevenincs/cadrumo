@@ -142,6 +142,9 @@ class SweepResult(BaseModel):
     mappings: tuple[TermRelevanceMapping, ...] = Field(default=())
     query_count: int = Field(ge=0)
     concept_count: int = Field(ge=0)
+    #: How many queries failed retrieval (transient service errors) and were
+    #: recorded as honest empty mappings. A non-zero count marks a degraded run.
+    failed_query_count: int = Field(default=0, ge=0)
     #: The reindex-before-sweep outcome (the job-queued acknowledgement or a
     #: note that the index was used as-is because the service was busy).
     reindex_note: str = Field(min_length=1, max_length=1000)
@@ -426,9 +429,19 @@ def run_sweep(
 
     mappings: list[TermRelevanceMapping] = []
     concepts_seen: set[str] = set()
+    failed = 0
     for query in queries:
         concepts_seen.add(query.concept_id)
-        hits = client.search(query.query, max_results=max_results)
+        try:
+            hits = client.search(query.query, max_results=max_results)
+        except SweepError:
+            # A single query's retrieval failure (a transient service hiccup, a
+            # query the backend rejects) must not abort the whole sweep: record
+            # an honest empty mapping for it and continue. The failure count is
+            # surfaced on the result so a degraded run is visible, never silent.
+            failed += 1
+            mappings.append(_empty_mapping(query))
+            continue
         resolution = resolve_chunk_hits(hits, resolver=target_resolver)
         wrangled = wrangle(resolution, score_floor=score_floor)
         mappings.append(_mapping_from(query, wrangled))
@@ -437,9 +450,15 @@ def run_sweep(
         mappings=tuple(mappings),
         query_count=len(queries),
         concept_count=len(concepts_seen),
+        failed_query_count=failed,
         reindex_note=reindex_note,
         score_floor=score_floor,
     )
+
+
+def _empty_mapping(query: SweepQuery) -> TermRelevanceMapping:
+    """Return an empty mapping for a query whose retrieval failed."""
+    return TermRelevanceMapping(query=query.query, concept_id=query.concept_id, language=query.language)
 
 
 def _mapping_from(query: SweepQuery, wrangled: WrangledResult) -> TermRelevanceMapping:
