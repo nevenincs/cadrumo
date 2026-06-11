@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import Period
 from ....domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -45,7 +46,7 @@ def _requirement() -> CrossPeriodDependencyRequirement:
     return CrossPeriodDependencyRequirement(
         source_modelo="303",
         filing_year=2025,
-        period="1T",
+        period=Period.from_year_and_code(2025, "1T"),
         source_casillas=("01",),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=("binding-303-casilla-01",),
@@ -57,7 +58,7 @@ def _verdict(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodCleanStateVe
         bucket_id=_BUCKET_ID,
         target_modelo="390",
         target_filing_year=2025,
-        target_period="0A",
+        target_period=Period.from_year_and_code(2025, "0A"),
         dependencies=(evidence,),
     )
 

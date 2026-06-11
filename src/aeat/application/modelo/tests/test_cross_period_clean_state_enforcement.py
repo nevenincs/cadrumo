@@ -236,7 +236,7 @@ def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(
         requirements_by_source: dict[tuple[str, int, str], set[str]] = {}
         for requirement in cross_period_dependency_requirements(target_snapshot):
             requirements_by_source.setdefault(
-                (requirement.source_modelo, requirement.filing_year, requirement.period),
+                (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
                 set(),
             ).update(requirement.source_casillas)
 
@@ -343,7 +343,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
                     CrossPeriodExpectedMemberSet(
                         source_modelo="322",
                         filing_year=2026,
-                        period="12",
+                        period=Period.from_year_and_code(2026, "12"),
                         member_nifs=("A00000000", "B00000001"),
                     ),
                 ),

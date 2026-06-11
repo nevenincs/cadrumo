@@ -45,6 +45,8 @@ from ...modelo import (
 from .. import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodExpectedMemberSet,
     cross_period_dependency_inventory,
@@ -57,6 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "default"
 _M390_YEAR = 2025
 _M390_PERIOD = "0A"
+_M390_FIRST_QUARTER = Period.from_year_and_code(_M390_YEAR, "1T")
 _M390_REVISION = "2010-y-siguientes"
 _M303_REVISION = "2023-y-siguientes"
 _M353_YEAR = 2026
@@ -80,6 +83,10 @@ def _workflow_profile() -> TaxpayerProfile:
 
 def _snapshot_390():
     return resources().modelos.authority.snapshot("390", filing_year=_M390_YEAR, period=_M390_PERIOD)
+
+
+def _m390_first_quarter_evidence(verdict: CrossPeriodCleanStateVerdict) -> CrossPeriodDependencyEvidence:
+    return next(evidence for evidence in verdict.dependencies if evidence.requirement.period == _M390_FIRST_QUARTER)
 
 
 def _source_values(period: str, source_casillas: tuple[str, ...]) -> dict[str, Decimal]:
@@ -338,7 +345,10 @@ def _seed_official_303_source_filings(
     skip_justificante_metadata_periods = skip_justificante_metadata_periods or set()
     source_casillas_by_period: dict[str, set[str]] = {}
     for requirement in cross_period_dependency_requirements(_snapshot_390()):
-        source_casillas_by_period.setdefault(requirement.period, set()).update(requirement.source_casillas)
+        source_casillas_by_period.setdefault(
+            requirement.period.registry_token,
+            set(),
+        ).update(requirement.source_casillas)
 
     for period, source_casillas in sorted(source_casillas_by_period.items()):
         evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
@@ -476,7 +486,7 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
     assert any(
         requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION
         and requirement.source_modelo == "115"
-        and requirement.period == "1T"
+        and requirement.period == Period.from_year_and_code(2026, "1T")
         for requirement in requirements
     )
 
@@ -504,11 +514,15 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
     )
     assert all(item.dependencies for item in inventory.items)
     assert any(
-        item.target_modelo == "390" and item.target_period == "0A" and item.source_modelos == ("303",)
+        item.target_modelo == "390"
+        and item.target_period == Period.from_year_and_code(2026, "0A")
+        and item.source_modelos == ("303",)
         for item in inventory.items
     )
     assert any(
-        item.target_modelo == "353" and item.target_period == "12" and item.source_modelos == ("322",)
+        item.target_modelo == "353"
+        and item.target_period == Period.from_year_and_code(2026, "12")
+        and item.source_modelos == ("322",)
         for item in inventory.items
     )
 
@@ -525,7 +539,7 @@ def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
 
     assert inventory.target_modelos == ("100",)
     assert len(inventory.items) == 1
-    assert inventory.items[0].target_period == "0A"
+    assert inventory.items[0].target_period == Period.from_year_and_code(2025, "0A")
     assert set(inventory.items[0].source_modelos) >= {
         "111",
         "115",
@@ -629,7 +643,7 @@ def test_cross_period_clean_state_blocks_incomplete_expected_group_member_fan_in
                 CrossPeriodExpectedMemberSet(
                     source_modelo="322",
                     filing_year=_M353_YEAR,
-                    period=_M353_PERIOD,
+                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
                     member_nifs=(_GROUP_MEMBER_A, _GROUP_MEMBER_B),
                 ),
             ),
@@ -668,7 +682,7 @@ def test_cross_period_clean_state_blocks_unexpected_group_member_fan_in(
                 CrossPeriodExpectedMemberSet(
                     source_modelo="322",
                     filing_year=_M353_YEAR,
-                    period=_M353_PERIOD,
+                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
                     member_nifs=(_GROUP_MEMBER_A, _GROUP_MEMBER_B),
                 ),
             ),
@@ -706,7 +720,7 @@ def test_cross_period_clean_state_accepts_member_scoped_group_filing_records(
                 CrossPeriodExpectedMemberSet(
                     source_modelo="322",
                     filing_year=_M353_YEAR,
-                    period=_M353_PERIOD,
+                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
                     member_nifs=(_GROUP_MEMBER_A, _GROUP_MEMBER_B),
                 ),
             ),
@@ -746,7 +760,7 @@ def test_cross_period_clean_state_blocks_member_filing_with_wrong_tax_id_justifi
                 CrossPeriodExpectedMemberSet(
                     source_modelo="322",
                     filing_year=_M353_YEAR,
-                    period=_M353_PERIOD,
+                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
                     member_nifs=(_GROUP_MEMBER_A,),
                 ),
             ),
@@ -784,7 +798,7 @@ def test_cross_period_clean_state_blocks_taxpayer_filing_with_wrong_tax_id_justi
             taxpayer_tax_id="X1234567L",
         )
 
-    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
@@ -871,7 +885,7 @@ def test_cross_period_clean_state_blocks_dangling_justificante_evidence_referenc
             verification_repository=VerificationReportCatalogueRepository(),
         )
 
-    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.requires_clean_state is True
     assert verdict.clean is False
     assert first_quarter.external_evidence_kind == "aeat_justificante_pdf"
@@ -895,7 +909,7 @@ def test_cross_period_clean_state_blocks_csv_register_without_justificante_verif
             verification_repository=VerificationReportCatalogueRepository(),
         )
 
-    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.requires_clean_state is True
     assert verdict.clean is False
     assert first_quarter.external_evidence_kind == "aeat_csv_register"
@@ -919,7 +933,7 @@ def test_cross_period_clean_state_accepts_live_capture_with_matching_justificant
             verification_repository=VerificationReportCatalogueRepository(),
         )
 
-    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    first_quarter = _m390_first_quarter_evidence(verdict)
     assert first_quarter.external_evidence_kind == "aeat_live_capture"
     assert first_quarter.blockers == ()
     assert verdict.clean is True
@@ -943,7 +957,7 @@ def test_cross_period_clean_state_blocks_live_capture_without_justificante_verif
             verification_repository=VerificationReportCatalogueRepository(),
         )
 
-    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.requires_clean_state is True
     assert verdict.clean is False
     assert first_quarter.external_evidence_kind == "aeat_live_capture"
@@ -973,7 +987,7 @@ def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_pa
             verification_repository=VerificationReportCatalogueRepository(),
         )
 
-    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 

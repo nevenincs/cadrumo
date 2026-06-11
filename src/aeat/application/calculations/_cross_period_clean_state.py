@@ -12,9 +12,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
-from typing import Final, NamedTuple, Protocol
+from typing import Final, NamedTuple, Protocol, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import Period
 from ...core.resources import resources as _resources
@@ -60,6 +60,11 @@ _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
         "aeat_live_capture",
     },
 )
+
+
+def _require_period_year(period: Period, filing_year: int, *, field_name: str) -> None:
+    if period.filing_year != filing_year:
+        raise ValueError(f"{field_name}.filing_year must match filing_year")
 
 
 class _ObservationPayload(Protocol):
@@ -123,15 +128,20 @@ class CrossPeriodDependencyRequirement(BaseModel):
 
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
     source_casillas: tuple[str, ...] = Field(min_length=1)
     origin: CrossPeriodDependencyOrigin
     origin_ids: tuple[str, ...] = Field(min_length=1)
     requires_member_fan_in: bool = False
 
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> Self:
+        _require_period_year(self.period, self.filing_year, field_name="period")
+        return self
+
     @property
     def key(self) -> tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]]:
-        return (self.source_modelo, self.filing_year, self.period, self.origin, self.origin_ids)
+        return (self.source_modelo, self.filing_year, self.period.registry_token, self.origin, self.origin_ids)
 
 
 class CrossPeriodExpectedMemberSet(BaseModel):
@@ -141,13 +151,18 @@ class CrossPeriodExpectedMemberSet(BaseModel):
 
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
     member_nifs: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> Self:
+        _require_period_year(self.period, self.filing_year, field_name="period")
+        return self
 
     @property
     def requirement_key(self) -> tuple[str, int, str]:
         """Return the dependency key this expected member roster proves."""
-        return (self.source_modelo, self.filing_year, self.period)
+        return (self.source_modelo, self.filing_year, self.period.registry_token)
 
 
 class CrossPeriodDependencyInventoryItem(BaseModel):
@@ -158,8 +173,13 @@ class CrossPeriodDependencyInventoryItem(BaseModel):
     target_modelo: str = Field(min_length=1, max_length=8)
     target_revision_id: str = Field(min_length=1)
     target_filing_year: int = Field(ge=2000, le=2099)
-    target_period: str = Field(min_length=1, max_length=8)
+    target_period: Period
     dependencies: tuple[CrossPeriodDependencyRequirement, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> Self:
+        _require_period_year(self.target_period, self.target_filing_year, field_name="target_period")
+        return self
 
     @property
     def source_modelos(self) -> tuple[str, ...]:
@@ -229,8 +249,13 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     bucket_id: str = Field(min_length=1)
     target_modelo: str = Field(min_length=1, max_length=8)
     target_filing_year: int = Field(ge=2000, le=2099)
-    target_period: str = Field(min_length=1, max_length=8)
+    target_period: Period
     dependencies: tuple[CrossPeriodDependencyEvidence, ...] = ()
+
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> Self:
+        _require_period_year(self.target_period, self.target_filing_year, field_name="target_period")
+        return self
 
     @property
     def requires_clean_state(self) -> bool:
@@ -311,7 +336,7 @@ def cross_period_dependency_inventory(
                         target_modelo=str(snapshot.modelo.id),
                         target_revision_id=str(snapshot.revision.id),
                         target_filing_year=snapshot.filing_year,
-                        target_period=snapshot.period,
+                        target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
                         dependencies=dependencies,
                     ),
                 )
@@ -323,7 +348,7 @@ def cross_period_dependency_inventory(
                 key=lambda item: (
                     item.target_modelo,
                     item.target_revision_id,
-                    item.target_period,
+                    item.target_period.registry_token,
                 ),
             ),
         ),
@@ -362,7 +387,7 @@ def evaluate_cross_period_clean_state(
             justificante_repository=resolved_justificante_repository,
             taxpayer_tax_id=taxpayer_tax_id,
             expected_member_set=expected_member_sets_by_key.get(
-                (requirement.source_modelo, requirement.filing_year, requirement.period),
+                (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
             ),
         )
         for requirement in cross_period_dependency_requirements(snapshot)
@@ -371,7 +396,7 @@ def evaluate_cross_period_clean_state(
         bucket_id=bucket_id,
         target_modelo=str(snapshot.modelo.id),
         target_filing_year=snapshot.filing_year,
-        target_period=snapshot.period,
+        target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
         dependencies=dependencies,
     )
 
@@ -385,7 +410,7 @@ def _requirements_from_previous_filing(
     yield CrossPeriodDependencyRequirement(
         source_modelo=requirement.modelo,
         filing_year=requirement.filing_year,
-        period=requirement.period,
+        period=Period.from_year_and_code(requirement.filing_year, requirement.period),
         source_casillas=requirement.source_casillas,
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=requirement.binding_ids,
@@ -400,7 +425,7 @@ def _requirements_from_relation(
         yield CrossPeriodDependencyRequirement(
             source_modelo=requirement.source_modelo,
             filing_year=requirement.filing_year,
-            period=period,
+            period=Period.from_year_and_code(requirement.filing_year, period),
             source_casillas=(requirement.source_output,),
             origin=CrossPeriodDependencyOrigin.REGISTRY_RELATION,
             origin_ids=requirement.relation_ids,
@@ -457,7 +482,7 @@ def _revision_carry_check(
     stamped_revision_id: str | None,
     source_modelo: str,
     source_filing_year: int,
-    source_period: str,
+    source_period: Period,
 ) -> tuple[list[CrossPeriodCleanStateBlocker], bool]:
     """Return (blockers, unstamped_advisory) for a carry-read revision check.
 
@@ -478,7 +503,7 @@ def _revision_carry_check(
         snapshot = _resources().modelos.authority.snapshot(
             source_modelo,
             filing_year=source_filing_year,
-            period=source_period,
+            period=source_period.registry_token,
         )
         law_determined_id = snapshot.revision.id
     except Exception:
@@ -508,7 +533,7 @@ def _resolve_cross_period_source(
             item
             for item in observation_repository.iter_modelo(requirement.source_modelo)
             if item.observation.filing_year == requirement.filing_year
-            and item.observation.period == requirement.period
+            and item.observation.period == requirement.period.registry_token
             and item.member_nif is not None
         )
         observed_member_nifs = tuple(sorted({str(item.member_nif) for item in member_payloads}))
@@ -542,7 +567,7 @@ def _resolve_cross_period_source(
     else:
         payload = observation_repository.load_observation(
             requirement.source_modelo,
-            Period.from_year_and_code(requirement.filing_year, requirement.period),
+            requirement.period,
         )
         # R2 carry gate: re-confirm stamped revision == law-determined revision.
         if payload is not None:
@@ -849,7 +874,7 @@ def _evaluate_filing_history(
         bucket_id=bucket_id,
         modelo=requirement.source_modelo,
         filing_year=requirement.filing_year,
-        period=Period.from_year_and_code(requirement.filing_year, requirement.period),
+        period=requirement.period,
         member_nif=member_nif,
     )
     current_filings = tuple(record for record in filing_history if record.status is ModeloRecordStatus.VIGENTE)

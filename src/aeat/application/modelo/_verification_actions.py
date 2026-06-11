@@ -14,7 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
@@ -468,7 +468,7 @@ def _cross_period_expected_member_sets_from_profile(
         CrossPeriodExpectedMemberSet(
             source_modelo=roster.source_modelo,
             filing_year=roster.filing_year,
-            period=roster.period,
+            period=Period.from_year_and_code(roster.filing_year, roster.period),
             member_nifs=roster.member_nifs,
         )
         for roster in getattr(profile, "cross_period_group_member_rosters", ())
@@ -533,6 +533,7 @@ def _cross_period_clean_state_findings(
                 pass
             else:
                 requirement = evidence.requirement
+                requirement_period = requirement.period.registry_token
                 blocker_text = _summarize_cross_period_ids(tuple(blocker.value for blocker in evidence.blockers))
                 origin_text = _summarize_cross_period_ids(requirement.origin_ids)
                 findings.append(
@@ -542,7 +543,7 @@ def _cross_period_clean_state_findings(
                         message=(
                             "cross-period dependency is not clean: "
                             f"modelo={requirement.source_modelo} year={requirement.filing_year} "
-                            f"period={requirement.period} origin={requirement.origin.value} "
+                            f"period={requirement_period} origin={requirement.origin.value} "
                             f"origin_ids={origin_text} blockers={blocker_text}"
                         ),
                         next_action=_cross_period_clean_state_next_action(verdict, evidence),
@@ -567,11 +568,12 @@ def _cross_period_unstamped_revision_advisory_finding(
     stamped observation is captured.
     """
     requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
     re_file_capture = (
         "aeat app live filed pull-sources "
         f"--modelo {requirement.source_modelo} "
         f"--year {requirement.filing_year} "
-        f"--period {requirement.period}"
+        f"--period {requirement_period}"
     )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
@@ -579,7 +581,7 @@ def _cross_period_unstamped_revision_advisory_finding(
         message=(
             "cross-period carry used a prior filing with no re-confirmable registry "
             f"revision stamp: modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement.period} origin={requirement.origin.value}. The carried value "
+            f"period={requirement_period} origin={requirement.origin.value}. The carried value "
             "was accepted but its source revision could not be re-confirmed against the "
             "law-determined revision (legacy or indeterminate record)."
         ),
@@ -608,21 +610,23 @@ def _cross_period_clean_state_next_action(
     evidence: CrossPeriodDependencyEvidence,
 ) -> str:
     requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
+    target_period = verdict.target_period.registry_token
     blockers = set(evidence.blockers)
     target_capture = (
         "aeat app live filed pull-sources "
         f"--modelo {verdict.target_modelo} "
         f"--year {verdict.target_filing_year} "
-        f"--period {verdict.target_period}"
+        f"--period {target_period}"
     )
     source_hint = (
-        f"source modelo={requirement.source_modelo} year={requirement.filing_year} period={requirement.period}"
+        f"source modelo={requirement.source_modelo} year={requirement.filing_year} period={requirement_period}"
     )
     source_capture = (
         "aeat app live filed pull-sources "
         f"--modelo {requirement.source_modelo} "
         f"--year {requirement.filing_year} "
-        f"--period {requirement.period}"
+        f"--period {requirement_period}"
     )
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
         # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: the prior
@@ -760,7 +764,7 @@ def _iva_wallet_decision_covers_cross_period_dependency(
         return False
     if getattr(decision, "target_year", None) != verdict.target_filing_year:
         return False
-    if getattr(decision, "target_period", None) != verdict.target_period:
+    if getattr(decision, "target_period", None) != verdict.target_period.registry_token:
         return False
     if getattr(decision, "selected_amount", None) is None:
         return False
