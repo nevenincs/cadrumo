@@ -1,18 +1,14 @@
-"""Filing-period parsing primitives shared across the application layer.
+"""Date-boundary helpers for filing-period registry tokens.
 
-The application stores filing periods in a single canonical token shape:
+``aeat.core.Period`` is the backend filing-period authority: a filing
+year plus registry token, constructed with ``Period.from_year_and_code``.
+This module provides registry-token date-boundary helpers and one narrow
+adapter for raw AEAT declaration input where a bare quarterly token is
+paired with ``ejercicio``.
 
-- ``YYYYQ[1-4]`` or ``YYYY-[1-4]T`` — quarterly (e.g. ``2026Q1`` or ``2026-1T``)
-- ``YYYY-MM``      — monthly  (e.g. ``2026-03``)
-- ``YYYYA``        — annual   (e.g. ``2026A``)
-- bare ``YYYY``    — annual shorthand
-
-Pieces of the verification surface receive raw AEAT-scraped tokens that
-carry only ``nT`` for quarterly and rely on a separately-supplied
-``ejercicio`` (filing year). Both callers ultimately resolve to the same
-``(year, registry_period)`` shape, where ``registry_period`` is the
-registry-native period identifier (``"1T"`` … ``"4T"``, ``"01"`` … ``"12"``,
-``"0A"``, ``"1P"`` … ``"3P"``).
+Do not treat this module as canonical period storage. Prefer typed
+``aeat.core.Period`` at domain boundaries; use ``ejercicio`` here only
+when adapting raw AEAT declaration payloads.
 
 The ``nP`` tokens are the Impuesto sobre Sociedades pago-fraccionado
 instalment claves (Modelo 202). Per the AEAT Modelo 202 instructions,
@@ -20,14 +16,9 @@ instalment claves (Modelo 202). Per the AEAT Modelo 202 instructions,
 the equivalent October payment, and ``3P`` the December payment; the
 period-boundary helpers map each instalment to its payment month.
 
-This module centralises that parsing and the canonical period-end-date
-mapping each surface needs. Callers wrap :class:`ValueError` into their
-own domain error type (e.g. ``ModeloBuilderError``,
-``RegistrySnapshotError``) at the boundary they own.
-
-Registry-introspection surfaces use bare registry tokens directly, or
-an explicit ``(filing_year, registry_period)`` scope when the filing
-year must participate in revision selection.
+Callers wrap :class:`ValueError` into their own domain error type
+(e.g. ``ModeloBuilderError``, ``RegistrySnapshotError``) at the boundary
+they own.
 """
 
 from __future__ import annotations
@@ -46,48 +37,26 @@ class PeriodValidationError(PeriodError, ValueError):
     """Raised when a period token is malformed. Inherits from ValueError for Pydantic."""
 
 
-_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
-_DASHED_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<quarter>[1-4])T$")
-_MONTH_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
-_ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
-_BARE_YEAR_RE = re.compile(r"^\d{4}$")
 _RAW_QUARTER_RE = re.compile(r"^(?P<quarter>[1-4])T$")
-_PAGO_FRACCIONADO_PERIOD_RE = re.compile(r"^(?P<year>\d{4})P(?P<instalment>[1-3])$")
 
 
 def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tuple[int, str]:
-    """Return ``(filing_year, registry_period)`` for a canonical period token.
+    """Parse a bare AEAT quarterly token from raw declaration input.
 
     Args:
-        period: A canonical filing-period token (``YYYYQ[1-4]``,
-            ``YYYY-[1-4]T``, ``YYYY-MM``, ``YYYYA``, bare ``YYYY``,
-            or ``YYYYPn`` for pago-fraccionado instalments). When ``ejercicio`` is
-            supplied, the raw AEAT quarterly form (``nT``) is also
-            accepted; the year then comes from ``ejercicio``.
-        ejercicio: Optional filing year string consumed only when
-            ``period`` is a raw ``nT`` quarterly token. Pass ``None``
-            for callers that only see canonical inputs.
+        period: Raw AEAT quarterly token (``nT``).
+        ejercicio: Filing year supplied by the raw AEAT declaration row.
 
     Returns:
-        ``(filing_year, registry_period)`` where the second element is
-        the registry-native period (``"1T"`` … ``"4T"``, ``"01"`` …
-        ``"12"``, ``"0A"``, or ``"1P"`` … ``"3P"``).
+        ``(filing_year, registry_period)`` where the second element is a
+        bare registry token such as ``"1T"``.
 
     Raises:
-        PeriodValidationError: When ``period`` is none of the accepted shapes.
+        PeriodValidationError: When ``period`` is not a raw quarterly
+            token paired with ``ejercicio``. Combined year/token values,
+            year-month values, annual shorthand, bare filing years, and
+            pago-fraccionado period-number forms are refused.
     """
-    if match := _QUARTER_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), f"{match.group('quarter')}T"
-    if match := _DASHED_QUARTER_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), f"{match.group('quarter')}T"
-    if match := _MONTH_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), match.group("month")
-    if match := _ANNUAL_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), "0A"
-    if _BARE_YEAR_RE.fullmatch(period):
-        return int(period), "0A"
-    if match := _PAGO_FRACCIONADO_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), f"{match.group('instalment')}P"
     if ejercicio is not None and (match := _RAW_QUARTER_RE.fullmatch(period)):
         return int(ejercicio), f"{match.group('quarter')}T"
     raise PeriodValidationError(f"cannot map filing period {period!r} to a registry period")
@@ -97,8 +66,7 @@ def period_start_date(filing_year: int, registry_period: str) -> date:
     """Return the inclusive start-of-period date for a registry token.
 
     Args:
-        filing_year: The filing year resolved from
-            :func:`parse_canonical_period`.
+        filing_year: The filing year carried by the typed period scope.
         registry_period: One of ``"1T"`` … ``"4T"``, ``"01"`` … ``"12"``,
             ``"0A"``.
 
@@ -138,8 +106,7 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
     """Return the inclusive end-of-period date for a registry token.
 
     Args:
-        filing_year: The filing year resolved from
-            :func:`parse_canonical_period`.
+        filing_year: The filing year carried by the typed period scope.
         registry_period: One of ``"1T"`` … ``"4T"``, ``"01"`` … ``"12"``,
             ``"0A"``.
 
