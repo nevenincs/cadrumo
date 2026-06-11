@@ -218,3 +218,25 @@ a comment or end of line are still caught.
 
 Verification reported by the reviewer: ruff passed for the new gate, the focused
 core period suite passed with `69 passed`, and CLI import smoke printed `OK`.
+
+## PERIOD-015 | MEDIUM | Combined period gate initially scanned untracked files
+
+Follow-up review of the S30 regression gate found two medium issues after
+PERIOD-014 had been written prematurely. First, commit `bc0e5623d` removed the
+`# noqa` suppressions by replacing `git ls-files` with `Path.rglob`, which made
+the gate scan untracked peer files in the shared worktree and contradicted the
+S30 Step Record's tracked-file scope. Second, three allowlist entries were too
+broad: the declaracion inbound tests directory, the justificante/pdf inbound test
+directory, and the live tests directory could have hidden future combined-period
+construction in new tests.
+
+Resolution landed in commit `456af313f`: the gate now reads the Git index
+directly to preserve tracked-file semantics without subprocess calls or lint
+suppressions, and the broad allowlists are narrowed to concrete fixture/corpus
+test files. The follow-up reviewer found no remaining code issues and confirmed
+that no `# noqa`, subprocess, `Path.rglob`, or `rglob()` use remains in the gate.
+
+Verification after the fix: ruff passed for the gate; the focused Period suite
+passed with `69 passed`; CLI import smoke printed `OK`. The follow-up reviewer
+also ran the gate directly (`1 passed`), ruff, `git diff --check`, and confirmed
+the index reader matched `git ls-files` exactly with `27,766` tracked paths.
