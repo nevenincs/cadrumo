@@ -14,6 +14,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core import Period
 from ....domain._identifiers import ModeloIdentifier
 from .._history_models import ModeloHistory, ModeloHistoryEntry
 from .._history_repository import ModeloHistoryRepository
@@ -26,7 +27,7 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
     entries = tuple(
         ModeloHistoryEntry(
             modelo=ModeloIdentifier(modelo),
-            period=f"2026Q{i + 1}",
+            period=Period.from_year_and_code(2026, f"{i + 1}T"),
             submitted_at=base.replace(month=1 + 3 * i),
             status="ACCEPTED",
         )
@@ -56,6 +57,8 @@ class TestSaveLoad:
         repo.save(history)
         loaded = ModeloHistoryRepository().load("130")
         assert loaded == history
+        assert loaded is not None
+        assert loaded.entries[0].period == Period.from_year_and_code(2026, "1T")
 
     def test_save_idempotent(self) -> None:
         repo = ModeloHistoryRepository()
@@ -101,8 +104,15 @@ class TestClassificationGate:
         raw = _database_bytes(tmp_path)
         assert b"secure_objects" in raw
         assert b"2026Q1" not in raw
+        assert b"2026 1T" not in raw
         assert b"ACCEPTED" not in raw
         assert b"130" not in raw
+
+    def test_serialized_payload_stores_structured_period_not_combined_string(self) -> None:
+        history = _make_history(modelo="130")
+        dumped = history.model_dump(mode="json")
+        assert dumped["entries"][0]["period"] == {"filing_year": 2026, "code": "1T"}
+        assert "2026Q1" not in history.model_dump_json()
 
     def test_foreign_class_object_refused(self) -> None:
         from ....adapters.persistence.storage import Envelope, SensitivityClass
