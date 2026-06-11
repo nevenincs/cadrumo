@@ -703,6 +703,28 @@ application:
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: El registre no té una instantània
         per al model, any i període sol·licitats.
+      calculate_casilla_ambiguous: '--casilla %{key} coincideix amb diverses caselles
+        d''aquesta revisio: %{candidates}. Indica la forma qualificada PREFIX:NNNNN
+        per desambiguar.'
+      calculate_casilla_non_numeric: --casilla %{casilla_id} apunta a un tipus no
+        numeric %{data_type} (%{label}); usa --binding o fonts de perfil.
+      calculate_casilla_unknown: --casilla %{key} no coincideix amb cap numero de
+        casella d'aquesta revisio. Usa `aeat app modelo casillas <MODELO>` per llistar
+        els identificadors valids.
+      calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
+        %{value}'
+      calculate_m184_share_sum_invalid: Els percentatges de participacio de les files
+        de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
+        en %{count} files.
+      calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
+        que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
+        31.1.
+      calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions
+        s'han d'indicar juntes.
+      calculate_sal_inputs_incomplete: Les dades de la reserva especial SAL/SLL s'han
+        d'indicar juntes.
+      calculate_semantic_role_missing: La revisio del model no conte cap casella amb
+        el rol semantic %{semantic_role}.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -782,9 +804,15 @@ application:
         a la revisió %{revision_id}: el registre declara un origen de vinculació que
         cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com
         a ajornat abans de calcular.'
-      reconcile_declaration_unsupported: 'La reconciliació des de PDF de declaració encara no està disponible; reconcilia un justificant descarregat amb aeat app modelo reconcile file fins que el parser de declaracions estigui disponible.'
+      reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
+        encara no està disponible; reconcilia un justificant descarregat amb aeat
+        app modelo reconcile file fins que el parser de declaracions estigui disponible.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
+      revision_pick_explicit_id_required: La seleccio explicita de revisio requereix
+        calculation_revision_id.
+      revision_pick_id_requires_explicit_selector: calculation_revision_id nomes es
+        valid amb el selector de revisio explicita.
       verification_report_not_found: No s'ha trobat cap informe de verificació amb
         id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' no es un token de periode
@@ -1143,28 +1171,12 @@ categories:
 cli:
   app:
     ledger:
-      collectible_invoice:
-        add_help: Registra una nova factura cobrable
-        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
-          intracomunitàries UE)
-        eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
-        group_help: Factures que un client t'ha de pagar
-        invoice_date_help: 'Data d''emissió de la factura en ISO 8601 (AAAA-MM-DD), p. ex. 2026-01-15.'
-        invoice_id_help: Identificador de la factura (o prefix no ambigu)
-        list_help: Llista les factures cobrables registrades
-        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T
-          triangular, R rectificació, A adquisició béns, I adquisició serveis, M miscel·lània'
-        operation_type_invalid: '--operation-type ha de ser un de: {valid}'
-        remove_help: Elimina una factura cobrable registrada
-        update_help: Actualitza les dades d'una factura cobrable
-        view_help: Mostra les dades d'una factura cobrable
-        yes_help: Confirma l'eliminació de la factura cobrable
-        yes_required: Has de passar --yes per eliminar una factura cobrable
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         evidence_id_help: Identificador del justificant (coincidencia exacta)
         group_help: Justificants de factures de compra en PDF o imatge
-        invoice_date_help: 'Data d''emissió de la factura en ISO 8601 (AAAA-MM-DD), p. ex. 2026-01-15.'
+        invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
+          p. ex. 2026-01-15.
         invoice_number_help: Número de factura del proveïdor
         iva_amount_help: Import d'IVA de la factura
         iva_rate_help: Tipus d'IVA aplicat com a decimal
@@ -1198,23 +1210,22 @@ cli:
         valuation_method_help: Mètode de valoració (fifo o pmp)
         valuation_preview_help: Previsualitza existències finals i cost de vendes
         year_help: Exercici fiscal
-      payable_invoice:
-        add_help: Registra una nova factura pagable
-        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
-          intracomunitàries UE)
-        eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
-        group_help: Factures que has de pagar a un proveïdor
+      invoice:
+        add_help: 'Registra una nova factura de negoci'
+        country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions intracomunitàries UE)'
+        eu_iva_id_help: 'NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)'
+        group_help: 'Registres de factures de negoci (emeses o rebudes)'
         invoice_date_help: 'Data d''emissió de la factura en ISO 8601 (AAAA-MM-DD), p. ex. 2026-01-15.'
-        invoice_id_help: Identificador de la factura (o prefix no ambigu)
-        list_help: Llista les factures pagables registrades
-        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T
-          triangular, R rectificació, A adquisició béns, I adquisició serveis, M miscel·lània'
+        invoice_id_help: 'Identificador de la factura (o prefix no ambigu)'
+        kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus a un proveïdor)'
+        list_help: 'Llista les factures de negoci (ambdós tipus llevat que --kind filtri)'
+        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T triangular, R rectificació, A adquisició béns, I adquisició serveis, M miscel·lània'
         operation_type_invalid: '--operation-type ha de ser un de: {valid}'
-        remove_help: Elimina una factura pagable registrada
-        update_help: Actualitza les dades d'una factura pagable
-        view_help: Mostra les dades d'una factura pagable
-        yes_help: Confirma l'eliminació de la factura pagable
-        yes_required: Has de passar --yes per eliminar una factura pagable
+        remove_help: 'Elimina una factura de negoci'
+        update_help: 'Actualitza les dades d''una factura de negoci'
+        view_help: 'Mostra una factura de negoci'
+        yes_help: 'Confirma l''eliminació de la factura'
+        yes_required: 'Has de passar --yes per eliminar una factura'
       ratios:
         category_help: Id de categoria de despesa (p. ex. USAGE_RATIO_VEHICLE)
         eligible_help: Llista les categories que admeten proporció específica
@@ -1268,19 +1279,25 @@ cli:
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
-        capture_all_modelo_help: 'Limita pull-all a aquest model.'
+        capture_all_modelo_help: Limita pull-all a aquest model.
         latest_help: Mostra el snapshot d'expedients més recent
         list_help: Llista els snapshots d'expedients desats
-        pull_all_help: 'Descarrega el registre de declaracions d''AEAT per a cada model del registre sollicitat en un rang d''anys i desa instantanies del bucket.'
-        pull_help: 'Descarrega el registre de declaracions d''AEAT i desa una instantania del bucket.'
+        pull_all_help: Descarrega el registre de declaracions d'AEAT per a cada model
+          del registre sollicitat en un rang d'anys i desa instantanies del bucket.
+        pull_help: Descarrega el registre de declaracions d'AEAT i desa una instantania
+          del bucket.
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
       filed:
-        capture_all_modelo_help: 'Limita pull-all a aquest model.'
+        capture_all_modelo_help: Limita pull-all a aquest model.
         list_help: Llistar declaracions presentades sense descarregar artefactes
-        pull_all_help: 'Descarrega declaracions i justificants presentats per a cada model del registre sollicitat en un rang d''anys. Nomes lectura; informa dels errors per model.'
-        pull_help: 'Descarrega dades de declaracions presentades del registre autenticat d''AEAT.'
-        pull_sources_help: 'Descarrega les observacions presentades que requereixen les dependencies d''una declaracio objectiu.'
+        pull_all_help: Descarrega declaracions i justificants presentats per a cada
+          model del registre sollicitat en un rang d'anys. Nomes lectura; informa
+          dels errors per model.
+        pull_help: Descarrega dades de declaracions presentades del registre autenticat
+          d'AEAT.
+        pull_sources_help: Descarrega les observacions presentades que requereixen
+          les dependencies d'una declaracio objectiu.
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
@@ -1297,7 +1314,9 @@ cli:
             qr_required: aprovació QR requerida
             unknown: desconegut
             wrong_identity: identitat incorrecta
-        app_help: 'Descàrrega de la cartera de compensació d''IVA de l''AEAT (només lectura; només permet representació en nom propi i la consulta de lectura protegida de cartera).'
+        app_help: Descàrrega de la cartera de compensació d'IVA de l'AEAT (només lectura;
+          només permet representació en nom propi i la consulta de lectura protegida
+          de cartera).
         as_of_year_help: Exercici usat per calcular l'antiguitat dels saldos de compensació
           d'IVA.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
@@ -1307,14 +1326,18 @@ cli:
           de l'AEAT. L'única acció de formulari AEAT permesa és la consulta de lectura
           protegida de cartera; les portes de representació només continuen en mode
           nom propi.
-        pull_history_help: 'Descarrega l''historial del Model 303 presentat i desa l''estat segur de compensacio d''IVA. No s''envia cap declaracio ni opcio de formulari de cartera AEAT.'
-        pull_remote_state_help: 'Descarrega l''historial del Model 303 presentat i intenta la lectura de la cartera/IVA d''AEAT com una adquisicio tipada de nomes lectura.'
+        pull_history_help: Descarrega l'historial del Model 303 presentat i desa l'estat
+          segur de compensacio d'IVA. No s'envia cap declaracio ni opcio de formulari
+          de cartera AEAT.
+        pull_remote_state_help: Descarrega l'historial del Model 303 presentat i intenta
+          la lectura de la cartera/IVA d'AEAT com una adquisicio tipada de nomes lectura.
         taxpayer_nif_help: NIF del contribuent; per defecte, la identitat autenticada.
       justificante:
         app_help: 'Captures de justificants AEAT (només lectura): descarrega un justificant
           presentat i concilia-hi.'
         list_help: Llista les captures de justificants desades al perfil actiu.
-        pull_help: 'Descarrega d''AEAT el justificant d''un periode presentat i el desa com a evidencia oficial.'
+        pull_help: Descarrega d'AEAT el justificant d'un periode presentat i el desa
+          com a evidencia oficial.
         snapshot_id_help: Id d'instantània (o prefix inequívoc).
         view_help: Mostra una captura de justificant.
       limit_help: Nombre màxim de files a capturar
@@ -1323,7 +1346,7 @@ cli:
         app_help: Snapshots de notificacions DEHú de només lectura
         latest_help: Mostra la instantania de notificacio DEHU mes recent.
         list_help: Llista els snapshots de notificacions DEHú desats
-        pull_help: 'Descarrega les notificacions DEHu i desa una instantania del bucket.'
+        pull_help: Descarrega les notificacions DEHu i desa una instantania del bucket.
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot de notificacions DEHú
       output_root_help: Directori per a observacions capturades de declaracions presentades
@@ -1916,7 +1939,8 @@ cli:
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
-      invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix ISO 8601 (AAAA-MM-DD).'
+      invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix
+        ISO 8601 (AAAA-MM-DD).'
       no_active_profile_error_value: sense-perfil-actiu
       period_empty: El periode fiscal no pot estar buit
       period_missing_year: El testimoni de període '{token}' necessita un any en aquesta
@@ -2152,7 +2176,8 @@ cli:
         apply_help: Sobrescriu el perfil amb els valors censals comunicats per AEAT
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
         help: Sincronitza el cens 036 d'AEAT amb aquest perfil
-        pull_help: 'Descarrega el teu cens mes recent d''AEAT al magatzem d''instantanies d''aquest perfil.'
+        pull_help: Descarrega el teu cens mes recent d'AEAT al magatzem d'instantanies
+          d'aquest perfil.
         refresh_help: Descarrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
@@ -2433,7 +2458,8 @@ cli:
   ledger:
     add:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      amount_help: 'Import de la transacció en la moneda de la transacció (decimal, p. ex. 1200.50).'
+      amount_help: Import de la transacció en la moneda de la transacció (decimal,
+        p. ex. 1200.50).
       attachment_help: Id d'adjunt segur addicional; es pot repetir
       business_pct_help: Proporció d'ús professional de 0 a 1
       category_help: Id de categoria de despesa deduïble (només moviments de despesa;
@@ -2570,12 +2596,17 @@ cli:
       taxable_base_help: Import de base imposable
     doclink:
       actor_help: Etiqueta de l'operador.
-      help: 'Descarrega un enllaç de document de Drive i desa''n els bytes com a evidència xifrada en una fila del llibre.'
+      help: Descarrega un enllaç de document de Drive i desa'n els bytes com a evidència
+        xifrada en una fila del llibre.
       id_help: Identificador de transacció del llibre major.
       note_help: Nota opcional.
       reference_help: Referència de l'enllaç al document.
+      refused: 'No es pot descarregar el document de %{source} per a %{reference}%{scope_hint}:
+        l''evidència ha de contenir els bytes xifrats del document, i un enllaç mai
+        no es desa tot sol. Descarrega el document i adjunta''l amb ''aeat app ledger
+        attach --attachment-id ...'', o concedeix el permís de Google requerit i torna-ho
+        a provar.'
       source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
-      refused: 'No es pot descarregar el document de %{source} per a %{reference}%{scope_hint}: l''evidència ha de contenir els bytes xifrats del document, i un enllaç mai no es desa tot sol. Descarrega el document i adjunta''l amb ''aeat app ledger attach --attachment-id ...'', o concedeix el permís de Google requerit i torna-ho a provar.'
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
         està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al
@@ -2599,7 +2630,8 @@ cli:
       invalid_category: 'Categoria de despesa desconeguda ''{category}''. Categories
         conegudes: {known}. Executa ''aeat app ledger categories'' per veure valors
         valids de --category-id.'
-      invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}. Utilitzeu el punt com a separador decimal i sense separador de milers, p. ex. 1234.56.'
+      invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}. Utilitzeu el
+        punt com a separador decimal i sense separador de milers, p. ex. 1234.56.'
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
         l'import sense signe i defineix el flux amb --direction (OUTGOING per a sortides,
         INCOMING per a entrades, INTERNAL_TRANSFER entre els teus propis comptes).
@@ -2630,7 +2662,7 @@ cli:
         són una vista prèvia del que una importació real afegiria i ometria.'
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
-      file_help: 'Fitxer original usat per verificar les files importades.'
+      file_help: Fitxer original usat per verificar les files importades.
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
         amb una transacció que ja és al llibre però tenen una descripció diferent:
@@ -2717,7 +2749,10 @@ cli:
       invoice_id_help: Id de la factura a vincular bidireccionalment amb el moviment.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
-      filter_help: 'Filtreu les files per estat, periode (un testimoni AEAT simple, p. ex. period=1T) amb l''any (p. ex. year=2026), classificacio, incidencia, importacio, direccio (ingres/despesa) o text. Per filtrar per etiqueta de grup useu l''opcio --group.'
+      filter_help: Filtreu les files per estat, periode (un testimoni AEAT simple,
+        p. ex. period=1T) amb l'any (p. ex. year=2026), classificacio, incidencia,
+        importacio, direccio (ingres/despesa) o text. Per filtrar per etiqueta de
+        grup useu l'opcio --group.
       footer_truncated: Mostrant files {start}-{end} de {total} (desplacament {offset}).
         Feu servir --offset/--limit per paginar.
       group_filter_help: Mostra nomes les files d'aquesta etiqueta de grup.
@@ -2725,9 +2760,10 @@ cli:
       help: Llistar moviments del llibre al perfil actiu
       limit_help: 'Nombre maxim de files a mostrar (per defecte: totes).'
       offset_help: 'Omet aquest nombre de files abans de llistar (per defecte: 0).'
-      ungrouped_label: (sense grup)
-      sort_by_help: 'Ordena les files llistades per aquest camp (date, amount, description, created_at, modified_at, ...).'
+      sort_by_help: Ordena les files llistades per aquest camp (date, amount, description,
+        created_at, modified_at, ...).
       sort_order_help: 'Ordre: asc (ascendent) o desc (descendent).'
+      ungrouped_label: (sense grup)
     merge:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       child_id_help: Id de transacció filla que vols fusionar; es pot repetir
@@ -2765,7 +2801,9 @@ cli:
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la restauració del moviment del llibre a actiu
     review:
-      filter_help: 'Filtrar files per status, period (un testimoni AEAT simple, p. ex. period=1T) amb year (p. ex. year=2026), issue, import, classification, text o direction'
+      filter_help: Filtrar files per status, period (un testimoni AEAT simple, p.
+        ex. period=1T) amb year (p. ex. year=2026), issue, import, classification,
+        text o direction
       header: SESSIÓ DE REVISIÓ DEL LLIBRE COMPTABLE
       help: Revisió interactiva i validació d'entrades del llibre
       id_help: Identificador de l'entrada específica a revisar
@@ -2773,20 +2811,25 @@ cli:
       verbose_help: Mostrar informació detallada durant la revisió
     split:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      apply_help: Persisteix la divisio --llm proposada (requereix --yes); sense aixo
+        la proposta nomes es previsualitza.
       child_amount_help: Import d'una transacció filla; es pot repetir
       child_description_help: Descripció d'una transacció filla; es pot repetir
       errors:
         child_args_mismatch: Cada import fill ha de tenir una descripció filla corresponent
         min_two_children: Has d'indicar almenys dues transaccions filles
+      evidence_acknowledged_help: Reconeix que --read-evidence envia l'evidencia a
+        un model al nuvol (desactivat per defecte, vetat per a gestors).
       help: Divideix una transacció del llibre en diverses transaccions filles
       id_help: Id de la transacció que vols dividir
+      llm_exclusive: --llm no es pot combinar amb --child-amount/--child-description;
+        la via manual es l'anul.lacio explicita de l'operador.
+      llm_help: Proposa una divisio en N parts basada en evidencia amb el proveidor
+        LLM indicat.
+      read_evidence_help: Llegeix la factura adjunta de la transaccio en local i alimenta-la
+        al proposant de divisio --llm.
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la divisió de la transacció
-      llm_help: 'Proposa una divisio en N parts basada en evidencia amb el proveidor LLM indicat.'
-      apply_help: 'Persisteix la divisio --llm proposada (requereix --yes); sense aixo la proposta nomes es previsualitza.'
-      read_evidence_help: 'Llegeix la factura adjunta de la transaccio en local i alimenta-la al proposant de divisio --llm.'
-      evidence_acknowledged_help: 'Reconeix que --read-evidence envia l''evidencia a un model al nuvol (desactivat per defecte, vetat per a gestors).'
-      llm_exclusive: '--llm no es pot combinar amb --child-amount/--child-description; la via manual es l''anul.lacio explicita de l''operador.'
     stash:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Apartar un moviment del llibre al perfil actiu
@@ -2862,8 +2905,8 @@ cli:
         ledger_status: Mostrar l'estat del llibre de transaccions.
         ledger_update: Actualitzar una entrada del llibre de transaccions.
         ledger_view: Veure el detall d'una entrada del llibre.
-        live_filed_capture: 'Descarregar declaracions presentades en viu des de l''AEAT.'
-        live_filed_capture_sources: 'Mostrar les fonts disponibles per a la descarrega.'
+        live_filed_capture: Descarregar declaracions presentades en viu des de l'AEAT.
+        live_filed_capture_sources: Mostrar les fonts disponibles per a la descarrega.
         live_filed_list: Llistar declaracions presentades capturades de l'AEAT.
         modelo_bindings: Gestionar les vinculacions d'un model fiscal.
         modelo_describe: Descriure l'estructura d'un model fiscal.
@@ -4039,6 +4082,12 @@ errors:
       184 han de sumar exactament el 100 %.
     modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
       requereixen cobertura declarativa explícita.
+    modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
+    modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
+    modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
+    modelo_calculate_input: errors.refused.modelo_calculate_input
+    modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
+    modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
     modelo_calculation_revision_selector_ambiguous: El selector de revisio de calcul
       coincideix amb mes d'una revisio; refineu el selector.
     modelo_calculation_revision_selector_state: La revisio de calcul seleccionada
@@ -4053,6 +4102,7 @@ errors:
       selecciona un perfil i torna-ho a provar.
     modelo_project_invalid_decimal_override: Una sobrescriptura de projecció no és
       un import decimal vàlid.
+    modelo_revision_pick: errors.refused.modelo_revision_pick
     modelo_work_period_token: Periode de model no valid.
     modelo_work_registry_year_mismatch: La revisió de registre seleccionada no cobreix
       l'exercici fiscal sol·licitat.
