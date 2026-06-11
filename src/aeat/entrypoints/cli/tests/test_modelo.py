@@ -409,6 +409,7 @@ def test_work_create_rejects_unknown_revision() -> None:
         ("4T", "4T"),
         ("0A", "0A"),
         ("0a", "0A"),
+        ("1P", "1P"),
     ],
 )
 def test_work_create_accepts_core_period_tokens(period: str, expected_normalized: str) -> None:

@@ -17,6 +17,7 @@ requested modelo, year, and period.
 
 from __future__ import annotations
 
+from ...core import Period
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     RegistrySnapshotError,
@@ -34,7 +35,7 @@ def profile_resolvable_binding_ids(
     modelo: str,
     bucket_id: str,
     filing_year: int,
-    period: str | None,
+    period: Period | None,
 ) -> frozenset[str]:
     """Return binding ids resolvable from the active profile's stored facts.
 
@@ -51,8 +52,14 @@ def profile_resolvable_binding_ids(
     binding as missing, which is the correct conservative answer.
     """
     authority = _resources_authority()
-    resolved_period = (
-        period if period is not None else _annual_period_for_year(authority, modelo=modelo, filing_year=filing_year)
+    if period is not None and period.year != filing_year:
+        raise RegistryValidationError(
+            f"binding-readiness period {period} does not match filing year {filing_year}",
+        )
+    resolved_period = period.registry_token if period is not None else _annual_period_for_year(
+        authority,
+        modelo=modelo,
+        filing_year=filing_year,
     )
     if resolved_period is None:
         return frozenset()

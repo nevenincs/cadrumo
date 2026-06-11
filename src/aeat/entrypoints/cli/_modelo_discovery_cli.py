@@ -352,7 +352,7 @@ def _profile_resolved_binding_ids(report) -> frozenset[str]:
             modelo=str(report.code),
             bucket_id=bucket_id,
             filing_year=int(filing_year),
-            period=getattr(report, "period", None),
+            period=getattr(report, "filing_period", None),
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset()
