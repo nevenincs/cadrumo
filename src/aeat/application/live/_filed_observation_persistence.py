@@ -104,7 +104,7 @@ def persist_iva_compensation_history_observations_strict(
                 f"filed Modelo 303 {observation.ejercicio}/{observation.period} "
                 "could not be promoted into IVA compensation history",
             ) from exc
-        if history_repo.load_period(observation.ejercicio, observation.period) is None:
+        if history_repo.load_period(Period.from_year_and_code(observation.ejercicio, observation.period)) is None:
             raise LiveApplicationError(
                 f"secure IVA compensation history did not reload after persisting "
                 f"Modelo 303 {observation.ejercicio}/{observation.period}",

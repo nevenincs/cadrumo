@@ -166,7 +166,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
             IvaCompensationPeriodState(
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2022,
-                period="4T",
+                period=Period.from_year_and_code(2022, "4T"),
                 expediente_id="EXP-2022-4T",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
@@ -180,7 +180,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
             IvaCompensationPeriodState(
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2024,
-                period="1T",
+                period=Period.from_year_and_code(2024, "1T"),
                 expediente_id="EXP-2024-1T",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
@@ -259,7 +259,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             IvaCompensationPeriodState(
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2025,
-                period="4T",
+                period=Period.from_year_and_code(2025, "4T"),
                 expediente_id="EXP-2025-4T",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
@@ -333,7 +333,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         reloaded_wallet = FiledDeclaracionObservationStore(
             tmp_path / "remote-iva-evidence",
         ).load_iva_wallet_observation(wallet_ref)
-        reloaded_history = IvaCompensationHistoryRepository().load_period(2025, "4T")
+        reloaded_history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2025, "4T"))
         reloaded_decision = IvaWalletDecisionRepository().load_decision(
             _TAXPAYER_REF,
             Period.from_year_and_code(2026, "1T"),
@@ -374,7 +374,7 @@ def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_boo
                 IvaCompensationPeriodState(
                     taxpayer_nif=_TAXPAYER_REF,
                     filing_year=2025,
-                    period="4T",
+                    period=Period.from_year_and_code(2025, "4T"),
                     expediente_id="EXP-2025-4T",
                     status="ALTA",
                     presented_at=_CAPTURED_AT,

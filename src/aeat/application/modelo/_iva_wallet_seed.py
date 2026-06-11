@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...domain.iva_compensation import IvaCompensationPeriodState
 from ...domain.modelos._calculation_revision import CalculationRevisionState
 from ...domain.modelos._errors import ModeloError
@@ -218,7 +218,8 @@ def correct_iva_compensation_period_for_bucket(
     from ..calculations import IvaCompensationHistoryRepository
 
     repository = IvaCompensationHistoryRepository()
-    existing = repository.load_period(filing_year, period)
+    filing_period = Period.from_year_and_code(filing_year, period)
+    existing = repository.load_period(filing_period)
     if existing is None:
         raise ModeloIvaWalletCorrectionNoRecordError(
             translated_message="application.modelo.iva_wallet.correct_no_record",

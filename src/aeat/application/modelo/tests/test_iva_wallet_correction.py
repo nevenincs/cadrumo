@@ -167,7 +167,7 @@ def test_correction_overwrites_balance_and_emits_audit_event() -> None:
     )
 
     assert state.available_end_amount == Decimal("1200.50")
-    persisted = IvaCompensationHistoryRepository().load_period(_SEED_YEAR, _SEED_PERIOD)
+    persisted = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD))
     assert persisted is not None
     assert persisted.available_end_amount == Decimal("1200.50")
     assert persisted.taxpayer_nif == _taxpayer_nif()
@@ -244,7 +244,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
     assert context["blocking_filing_year"] == 2025
     assert context["blocking_period"] == "1T"
     # The stored balance is unchanged: the guard fired before any write.
-    persisted = IvaCompensationHistoryRepository().load_period(_SEED_YEAR, _SEED_PERIOD)
+    persisted = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD))
     assert persisted is not None
     assert persisted.available_end_amount == Decimal("500.00")
     # No audit event was emitted for the refused correction.

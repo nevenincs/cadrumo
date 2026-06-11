@@ -302,7 +302,9 @@ def _gather_single_key_observation(
         ),
     )
     if requirement_modelo == Modelo.M303.value and iva_history_repository is not None:
-        state = iva_history_repository.load_period(requirement_filing_year, requirement_period)
+        state = iva_history_repository.load_period(
+            Period.from_year_and_code(requirement_filing_year, requirement_period),
+        )
         if state is not None:
             history_gathered = _gathered_observation(
                 _observation_from_iva_compensation_history(state),
@@ -400,7 +402,7 @@ def _observation_from_iva_compensation_history(
     snapshot = resources().modelos.authority.snapshot(
         Modelo.M303.value,
         filing_year=state.filing_year,
-        period=state.period,
+        period=state.period.registry_token,
     )
     casillas = {item.id: item for item in snapshot.revision.casillas}
     formulas = {item.target: item for item in snapshot.revision.formulas}
@@ -432,7 +434,7 @@ def _observation_from_iva_compensation_history(
     return RegistryModeloObservation(
         modelo=Modelo.M303.value,
         filing_year=state.filing_year,
-        period=state.period,
+        period=state.period.registry_token,
         observations=(
             *observed("110", state.prior_pending_amount),
             *observed("78", state.applied_amount),
