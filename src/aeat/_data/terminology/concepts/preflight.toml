@@ -1,0 +1,36 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `aeat.terminology` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `aeat.terminology` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "preflight"
+domain = "concepto"
+lifecycle = "approved"
+related = ["ledger", "prorrata"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "La comprobacion de que el ledger esta completo para un periodo antes de calcular un modelo."
+definition = "Comprobacion de disponibilidad del ledger para un periodo. Informa de las filas a las que les falta una categoria, un importe de base, un tipo de IVA, una divisa o una referencia de prorrata antes de calcular un modelo, para que la persona corrija los datos antes de continuar."
+
+[language.es.source]
+citation = "Documentacion de la aplicacion aeat; concepto interno del producto."
+authority = "other"
+
+[[language.es.term]]
+label = "preflight"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "A readiness check on the ledger for a period before you calculate a modelo."
+
+[language.ca]
+short_description = "La comprovacio que el ledger esta complet per a un periode abans de calcular un model."
+
+[language.hu]
+short_description = "A ledger keszenleti ellenorzese egy idoszakra, mielott egy modelo-t szamolnal."
