@@ -1109,8 +1109,8 @@ class ModeloReconciliationDiffPayload(OutputSchema):
     kind: str
 
 
-@register_schema("modelo.reconcile")
-@register_schema("modelo.reconcile_from_justificante")
+@register_schema("modelo.reconcile.pull")
+@register_schema("modelo.reconcile.file")
 class ModeloReconcileResult(OutputSchema):
     """Result payload for ``modelo reconcile`` and ``reconcile-from-justificante``.
 
