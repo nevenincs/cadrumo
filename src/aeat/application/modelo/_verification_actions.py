@@ -71,6 +71,10 @@ from ...domain.modelos._verification_repository import (
 )
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.transactions import TransactionCatalogueRepository
+from ..aggregation import (
+    CalculationSourceDiagnostic,
+    missing_evidence_advisory_observations,
+)
 from ..aggregation._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -762,6 +766,58 @@ def _iva_wallet_decision_covers_cross_period_dependency(
     return bool(source_kinds & {"aeat_wallet", "taxpayer_override"})
 
 
+#: Legal grounding for the missing-evidence advisory. Deducting input IVA
+#: requires the original factura (LIVA art. 97, RD 1619/2012 art. 2); a
+#: business income/expense must be documentally justified (LIRPF art. 28.1 via
+#: LGT art. 106.4). The advisory is non-blocking, so the citation is a pointer,
+#: not a gate.
+_MISSING_EVIDENCE_LEGAL_REFS: tuple[str, ...] = (
+    "ley-37-1992:art-97",
+    "rd-1619-2012:art-2",
+)
+
+
+def _missing_evidence_advisory_findings(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepository | None,
+) -> list[ModeloVerificationFinding]:
+    """Build non-blocking ADVISORY findings for evidence-less significant rows.
+
+    Loads the revision's source transactions and projects each
+    :class:`~aeat.application.aggregation.CalculationSourceDiagnostic`
+    (reason ``missing_transaction_evidence``) into an ADVISORY
+    :class:`ModeloVerificationFinding`. A revision with no contributing
+    transactions, or whose significant rows all carry evidence, yields no
+    findings (``no-silent-under-declaration``: visible but non-blocking).
+    """
+    if not target.source_transaction_ids:
+        return []
+    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    catalogue = tx_repo.load()
+    transactions = [
+        transaction
+        for transaction_id in target.source_transaction_ids
+        if (transaction := catalogue.get(transaction_id)) is not None
+    ]
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = missing_evidence_advisory_observations(transactions)
+    return [
+        ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.ADVISORY,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            message=diagnostic.message,
+            next_action=(
+                "Attach the supporting invoice with "
+                f"`aeat app ledger attach --id {diagnostic.binding_id} --attachment-id ATTACHMENT_ID` "
+                "(or --purchase-invoice-evidence-id), then rerun verification."
+            ),
+            legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
+        )
+        for diagnostic in diagnostics
+    ]
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -846,6 +902,13 @@ def verify_modelo_revision(
                 ),
             ),
             iva_compensation_decision=iva_compensation_decision,
+        ),
+    )
+    findings.extend(
+        _missing_evidence_advisory_findings(
+            target=target,
+            work_unit=work_unit,
+            transaction_repository=transaction_repository,
         ),
     )
     completeness, granted = _classify_verification_outcome(
