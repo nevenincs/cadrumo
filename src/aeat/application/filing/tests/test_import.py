@@ -150,14 +150,14 @@ class TestImportFromJustificante:
         with pytest.raises(ModeloImportError, match="modelo '100'"):
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
-    def test_year_only_justificante_period_is_rejected_at_parse_boundary(
+    def test_year_only_justificante_period_is_rejected_at_registry_boundary(
         self,
         tmp_path: Path,
         schema_provider: RegistrySchemaProvider,
     ) -> None:
         pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
 
-        with pytest.raises(JustificanteParseError, match="justificante PDF parse failed"):
+        with pytest.raises(ModeloImportError, match="period token '0A'"):
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
     def test_missing_pdf_raises_parse_error(
