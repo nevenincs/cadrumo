@@ -272,53 +272,31 @@ def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddres
     raise TypeError(f"expected modelo work target, got {type(target).__name__}")
 
 
-def normalize_modelo_work_period(year: int, period: str, *, modelo: str | None = None) -> Period:
-    """Normalize an operator-facing period token into registry filing scope."""
-    period_text = period.strip()
-    if not period_text:
-        raise ModeloWorkPeriodTokenError(year=year, token=period, modelo=modelo, declared_tokens=())
-    lowered = period_text.lower()
+def _modelo_work_period_from_core(year: int, period: Period | str, *, modelo: str | None = None) -> Period:
+    """Resolve a modelo work period through the core ``Period`` value object only."""
     declared = declared_modelo_period_tokens(modelo)
-    if year < 1000 or year > 9999:
-        raise ModeloWorkPeriodTokenError(year=year, token=period_text, modelo=modelo, declared_tokens=declared)
-    declared_match = next((declared_token for declared_token in declared if declared_token.lower() == lowered), None)
-    if declared_match is not None:
-        try:
-            return Period.from_year_and_code(year, declared_match)
-        except PeriodError as exc:
+    if isinstance(period, Period):
+        if period.filing_year != year:
             raise ModeloWorkPeriodTokenError(
                 year=year,
-                token=period_text,
+                token=str(period),
                 modelo=modelo,
                 declared_tokens=declared,
-            ) from exc
-    if lowered in {"annual", "anual", "0a"}:
-        return Period.from_year_and_code(year, "0A")
-    elif lowered in {"q1", "1t", "1"}:
-        return Period.from_year_and_code(year, "1T")
-    elif lowered in {"q2", "2t", "2"}:
-        return Period.from_year_and_code(year, "2T")
-    elif lowered in {"q3", "3t", "3"}:
-        return Period.from_year_and_code(year, "3T")
-    elif lowered in {"q4", "4t", "4"}:
-        return Period.from_year_and_code(year, "4T")
-    elif lowered.isdigit() and len(lowered) == 2:
-        if 1 <= int(lowered) <= 12:
-            return Period.from_year_and_code(year, lowered)
-        raise ModeloWorkPeriodTokenError(year=year, token=period_text, modelo=modelo, declared_tokens=declared)
-    elif lowered.isdigit() and len(lowered) == 4:
+            )
+        return period
+
+    period_text = period.strip()
+    if not period_text:
+        raise ModeloWorkPeriodTokenError(year=year, token=period, modelo=modelo, declared_tokens=declared)
+    try:
+        return Period.from_year_and_code(year, period_text)
+    except PeriodError as exc:
         raise ModeloWorkPeriodTokenError(
             year=year,
             token=period_text,
             modelo=modelo,
             declared_tokens=declared,
-        )
-    raise ModeloWorkPeriodTokenError(
-        year=year,
-        token=period_text,
-        modelo=modelo,
-        declared_tokens=declared,
-    )
+        ) from exc
 
 
 def modelo_work_address_from_operator_target(
@@ -326,13 +304,13 @@ def modelo_work_address_from_operator_target(
     work_unit_id: str | None,
     modelo: str | None,
     year: int | None,
-    period: str | None,
+    period: Period | str | None,
     registry_revision_id: str | None,
     bucket_id: str | None = None,
 ) -> ModeloWorkAddress:
     """Build a :class:`ModeloWorkAddress` from exact or visible operator input."""
     if modelo is not None and year is not None and period is not None:
-        period = normalize_modelo_work_period(year, period, modelo=modelo)
+        period = _modelo_work_period_from_core(year, period, modelo=modelo)
         year = period.year
     elif work_unit_id is None:
         raise ModeloWorkAddressNotFoundError(
@@ -353,7 +331,7 @@ def resolve_modelo_work_unit_for_operator_target(
     work_unit_id: str | None = None,
     modelo: str | None = None,
     year: int | None = None,
-    period: str | None = None,
+    period: Period | str | None = None,
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
@@ -376,7 +354,7 @@ def resolve_modelo_revision_for_operator_target(
     work_unit_id: str | None,
     modelo: str | None,
     year: int | None,
-    period: str | None,
+    period: Period | str | None,
     registry_revision_id: str | None,
     bucket_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
@@ -726,7 +704,6 @@ __all__ = [
     "ModeloWorkTarget",
     "ensure_modelo_work_unit_for_visible_target",
     "modelo_work_address_from_operator_target",
-    "normalize_modelo_work_period",
     "project_modelo_work_target",
     "project_modelo_work_unit",
     "resolve_exportable_modelo_calculation_revision_address",

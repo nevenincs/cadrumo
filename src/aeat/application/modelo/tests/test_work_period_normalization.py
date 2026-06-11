@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from .. import ModeloWorkPeriodTokenError, normalize_modelo_work_period
+from .. import ModeloWorkPeriodTokenError, modelo_work_address_from_operator_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -11,32 +11,50 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 @pytest.mark.parametrize(
     ("raw_period", "expected_period"),
     (
-        ("q1", "1T"),
-        ("1", "1T"),
-        ("anual", "0A"),
+        ("1T", "1T"),
+        ("0A", "0A"),
         ("03", "03"),
     ),
 )
-def test_normalize_modelo_work_period_returns_bare_registry_tokens(
+def test_operator_target_resolves_periods_through_core_period(
     raw_period: str,
     expected_period: str,
 ) -> None:
-    period = normalize_modelo_work_period(2026, raw_period)
+    address = modelo_work_address_from_operator_target(
+        work_unit_id=None,
+        modelo="303",
+        year=2026,
+        period=raw_period,
+        registry_revision_id=None,
+    )
 
-    assert period == Period.from_year_and_code(2026, expected_period)
+    assert address.period == Period.from_year_and_code(2026, expected_period)
+    assert address.filing_year == 2026
 
 
-@pytest.mark.parametrize("raw_period", ("2026", "2026Q1", "2026-03", "M03", "00", "13", "alta"))
-def test_normalize_modelo_work_period_rejects_combined_or_unknown_tokens(raw_period: str) -> None:
+@pytest.mark.parametrize("raw_period", ("q1", "1", "anual", "annual", "2026", "2026Q1", "2026-03", "M03", "00", "13"))
+def test_operator_target_rejects_legacy_aliases_combined_or_unknown_tokens(raw_period: str) -> None:
     with pytest.raises(ModeloWorkPeriodTokenError) as exc_info:
-        normalize_modelo_work_period(2026, raw_period, modelo="130")
+        modelo_work_address_from_operator_target(
+            work_unit_id=None,
+            modelo="130",
+            year=2026,
+            period=raw_period,
+            registry_revision_id=None,
+        )
 
     assert exc_info.value.context["token"] == raw_period
     assert "1T" in exc_info.value.context["tokens"]
 
 
-def test_normalize_modelo_work_period_rejects_non_yyyy_year() -> None:
+def test_operator_target_rejects_period_year_mismatch() -> None:
     with pytest.raises(ModeloWorkPeriodTokenError) as exc_info:
-        normalize_modelo_work_period(26, "q1", modelo="130")
+        modelo_work_address_from_operator_target(
+            work_unit_id=None,
+            modelo="130",
+            year=2025,
+            period=Period.from_year_and_code(2026, "1T"),
+            registry_revision_id=None,
+        )
 
-    assert exc_info.value.context["year"] == 26
+    assert exc_info.value.context["year"] == 2025
