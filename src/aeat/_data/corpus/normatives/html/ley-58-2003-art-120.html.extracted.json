@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-120.html",
+  "source_sha256": "4a46d281446a1776b571e207000b08ab3249287a4c1c6229aff42743486d43a8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Las autoliquidaciones son declaraciones en las que los obligados tributarios, además de comunicar a la Administración los datos necesarios para la liquidación del tributo y otros de contenido informativo, realizan por sí mismos las operaciones de calificación y cuantificación necesarias para determinar e ingresar el importe de la deuda tributaria o, en su caso, determinar la cantidad que resulte a devolver o a compensar.\n2. Las autoliquidaciones presentadas por los obligados tributarios podrán ser objeto de verificación y comprobación por la Administración, que practicará, en su caso, la liquidación que proceda.\n3. Cuando un obligado tributario considere que una autoliquidación ha perjudicado de cualquier modo sus intereses legítimos, podrá instar la rectificación de dicha autoliquidación de acuerdo con el procedimiento que se regule reglamentariamente. No obstante, cuando lo establezca la normativa propia del tributo, la rectificación deberá ser realizada por el obligado tributario mediante la presentación de una autoliquidación rectificativa, conforme a lo dispuesto en el apartado 4 de este artículo.\nCuando la rectificación de una autoliquidación origine una devolución derivada de la normativa del tributo y hubieran transcurrido seis meses sin que se hubiera ordenado el pago por causa imputable a la Administración tributaria, ésta abonará el interés de demora del artículo 26 de esta Ley sobre el importe de la devolución que proceda, sin necesidad de que el obligado lo solicite.\nCuando la rectificación de una autoliquidación origine la devolución de un ingreso indebido, la Administración tributaria abonará el interés de demora en los términos señalados en el apartado 2 del artículo 32 de esta Ley.\n4. Cuando lo establezca la normativa propia del tributo, el obligado tributario deberá presentar una autoliquidación rectificativa, utilizando el modelo normalizado de autoliquidación que se apruebe conforme a lo previsto en el apartado 3 del artículo 98 de esta ley.",
+      "title": "Artículo 120. Autoliquidaciones.",
+      "section": "Artículo 120. Autoliquidaciones.",
+      "anchor": null
+    }
+  ]
+}

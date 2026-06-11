@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-31-2022-art-39.html",
+  "source_sha256": "03008b88dc5ecabddeb7a304834fd2b1da55ecc4396497126a889dca2cf138e8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se modifica el artículo 29 de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades, que queda redactado de la siguiente forma:\n«Artículo 29. Tipos de gravamen.\n1. El tipo general de gravamen para los contribuyentes de este Impuesto será el 25 por ciento.\nNo obstante, tributarán al tipo del 23 por ciento los contribuyentes cuyo importe neto de la cifra de negocios del período impositivo inmediato anterior sea inferior a 1 millón de euros.",
+      "title": "Artículo 39. Modificación de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades.",
+      "section": "Artículo 39. Modificación de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-19-1991-art-30.html",
+  "source_sha256": "32a783b4cbb1a63272cace322c7f5c7a730892489cd52e5acba2cb20e20c0825",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Ley 19/1991 Art. 30 — Impuesto sobre el Patrimonio: cuota íntegra (escala de gravamen)\nArtículo 30. Cuota íntegra.\nLa base liquidable del impuesto será gravada a los tipos de la escala que haya sido aprobada\npor la Comunidad Autónoma. Si la Comunidad Autónoma no hubiese aprobado la escala a que se\nrefiere el artículo anterior, la base liquidable del impuesto será gravada a los tipos de la\nsiguiente escala:\nBase liquidable Hasta eurosCuota EurosResto Base liquidable Hasta eurosTipo aplicable Porcentaje\n0,000,00167.129,450,2\n167.129,45334,26167.123,430,3\n334.252,88835,63334.246,870,5\n668.499,752.506,86668.499,760,9\n1.336.999,518.523,361.336.999,501,3\n2.673.999,0125.904,352.673.999,021,7\n5.347.998,0371.362,335.347.998,032,1\n10.695.996,06183.670,29en adelante3,5\nImpuesto sobre el Patrimonio — Ley 19/1991, escala estatal por defecto (Modelo 714)\nLa tarifa estatal del Impuesto sobre el Patrimonio comprende ocho tramos, con tipos marginales\ncrecientes desde el 0,2 por ciento hasta el 3,5 por ciento aplicable a la base liquidable que\nexceda de 10.695.996,06 euros. Esta escala se aplica con carácter subsidiario cuando la\nComunidad Autónoma de residencia del sujeto pasivo no haya aprobado su propia escala. El\ngravamen se declara anualmente mediante el Modelo 714 (Orden HAC/1023/2021, BOE-A-2021-7593).\nFuente: Ley 19/1991, de 6 de junio, del Impuesto sobre el Patrimonio, artículo 30, redacción\nvigente (BOE-A-1991-14392, texto consolidado).",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

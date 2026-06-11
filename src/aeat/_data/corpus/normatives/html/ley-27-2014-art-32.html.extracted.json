@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-32.html",
+  "source_sha256": "515b65c5128b5e813486c161991c36cdc631216b1f95cd585b821e39c57153a1",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Cuando en la base imponible se computen dividendos o participaciones en beneficios pagados por una entidad no residente en territorio español, se deducirá el impuesto efectivamente pagado por esta última respecto de los beneficios con cargo a los cuales se abonan los dividendos, en la cuantía correspondiente de tales dividendos, siempre que dicha cuantía se incluya en la base imponible del contribuyente. Para la aplicación de esta deducción será necesario el cumplimiento de los siguientes requisitos:\na) Que el porcentaje de participación, directa o indirecta, en el capital o en los fondos propios de la entidad no residente sea, al menos, del 5 por ciento.\nb) Que la participación se hubiera poseído de manera ininterrumpida durante el año anterior al día en que sea exigible el beneficio que se distribuya o, en su defecto, que se mantenga durante el tiempo que sea necesario para completar un año.",
+      "title": "Artículo 32. Deducción para evitar la doble imposición económica internacional: dividendos y participaciones en beneficios.",
+      "section": "Artículo 32. Deducción para evitar la doble imposición económica internacional: dividendos y participaciones en beneficios.",
+      "anchor": null
+    }
+  ]
+}

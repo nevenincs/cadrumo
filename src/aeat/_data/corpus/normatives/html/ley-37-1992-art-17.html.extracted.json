@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-17.html",
+  "source_sha256": "edda514e6cb92fccad46d165a3d4a4b9d02c4d41ca4b81d95f752d3dc351f852",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Estarán sujetas al impuesto las importaciones de bienes, cualquiera que sea el fin a que se destinen y la condición del importador.",
+      "title": "Artículo 17. Hecho imponible.",
+      "section": "Artículo 17. Hecho imponible.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-68-3.html",
+  "source_sha256": "d8dc7fb853afa92b2a5f8eea7dca390ddce2ee45142eadd1f4394d1c6ddbb9b2",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "3. Deducciones por donativos y otras aportaciones.\nLos contribuyentes podrán aplicar, en este concepto:\na) Las deducciones previstas en la Ley 49/2002, de 23 de diciembre, de régimen fiscal de las entidades sin fines lucrativos y de los incentivos fiscales al mecenazgo.\nb) El 10 por ciento de las cantidades donadas a las fundaciones legalmente reconocidas que rindan cuentas al órgano del protectorado correspondiente, así como a las asociaciones declaradas de utilidad pública, no comprendidas en el párrafo anterior.\nc) El 20 por ciento de las cuotas de afiliación y las aportaciones a Partidos Políticos, Federaciones, Coaliciones o Agrupaciones de Electores. La base máxima de esta deducción será de 600 euros anuales y estará constituida por las cuotas de afiliación y aportaciones previstas en la letra a) del apartado Dos del artículo 2 de la Ley Orgánica 8/2007, de 4 de julio, sobre financiación de los partidos políticos.",
+      "title": "Artículo 68. Deducciones.",
+      "section": "Artículo 68. Deducciones.",
+      "anchor": null
+    }
+  ]
+}

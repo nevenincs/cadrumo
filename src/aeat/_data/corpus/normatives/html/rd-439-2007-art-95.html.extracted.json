@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-95.html",
+  "source_sha256": "bdf95bb31911dd2bcee33c6591efa29191878e6d58faa35acfd1294865c69180",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Cuando los rendimientos sean contraprestación de una actividad profesional, se aplicará el tipo de retención del 15 por ciento sobre los ingresos íntegros satisfechos.\nNo obstante lo dispuesto en el párrafo anterior, en el caso de contribuyentes que inicien el ejercicio de actividades profesionales, el tipo de retención será del 7 por ciento en el período impositivo de inicio de actividades y en los dos siguientes, siempre y cuando no hubieran ejercido actividad profesional alguna en el año anterior a la fecha de inicio de las actividades.\nPara la aplicación del tipo de retención previsto en el párrafo anterior, los contribuyentes deberán comunicar al pagador de los rendimientos la concurrencia de dicha circunstancia, quedando obligado el pagador a conservar la comunicación debidamente firmada.\nEl tipo de retención será del 7 por ciento en el caso de rendimientos satisfechos a:\na) Recaudadores municipales.\nb) Mediadores de seguros que utilicen los servicios de auxiliares externos.\nc) Delegados comerciales de la Sociedad Estatal Loterías y Apuestas del Estado.\nd) Contribuyentes que desarrollen actividades incluidas en los grupos 851, 852, 853, 861, 862, 864 y 869 de la sección segunda y en las agrupaciones 01, 02, 03 y 05 de la sección tercera, de las Tarifas del Impuesto sobre Actividades Económicas, aprobadas junto con la Instrucción para su aplicación por el Real Decreto Legislativo 1175/1990, de 28 de septiembre.",
+      "title": "Artículo 95. Importe de las retenciones sobre rendimientos de actividades económicas.",
+      "section": "Artículo 95. Importe de las retenciones sobre rendimientos de actividades económicas.",
+      "anchor": null
+    }
+  ]
+}

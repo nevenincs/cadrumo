@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-163-sexvicies.html",
+  "source_sha256": "2f47c322f5516d8def70dbd67aea5e6431cc0f56ba8636de4701eec805faeece",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "En las entregas de bienes acogidas a este régimen especial el devengo del impuesto se producirá en el momento de la entrega, que se entenderá producida con la aceptación del pago del cliente.\nSe añade, con efectos de 1 de julio de 2021, por el art. 10.22 del Real Decreto-ley 7/2021, de 27 de abril. Ref. BOE-A-2021-6872\nTexto añadido, publicado el 28/04/2021, en vigor a partir del 01/07/2021.",
+      "title": "Artículo 163 sexvicies. Devengo.",
+      "section": "Artículo 163 sexvicies. Devengo.",
+      "anchor": null
+    }
+  ]
+}

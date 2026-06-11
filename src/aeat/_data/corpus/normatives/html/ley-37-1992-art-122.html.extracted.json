@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-122.html",
+  "source_sha256": "0115c88cc33c95fc1635a9c992050dd7ba89d0c59f76efbb610931f64509fbb5",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. El régimen simplificado se aplicará a los sujetos pasivos del Impuesto sobre el Valor Añadido que reúnan los siguientes requisitos:\n1.º Que sean personas físicas o entidades en régimen de atribución de rentas en el Impuesto sobre la Renta de las Personas Físicas, siempre que en este último caso todos sus socios, herederos, comuneros o partícipes sean personas físicas.\n2.º Que realicen cualquiera de las actividades económicas que se determinen reglamentariamente con sujeción a las limitaciones que en la misma norma se establezcan para cada actividad.\n3.º Que el volumen de operaciones en el año inmediato anterior no haya superado el límite que se determine reglamentariamente para el conjunto de sus actividades empresariales o profesionales.\nDos. No obstante lo establecido en el apartado anterior, el régimen simplificado se aplicará también a los sujetos pasivos cuyo volumen de operaciones no supere los límites establecidos reglamentariamente.",
+      "title": "Artículo 122. Régimen simplificado.",
+      "section": "Artículo 122. Régimen simplificado.",
+      "anchor": null
+    }
+  ]
+}

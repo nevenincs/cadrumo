@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1065-2007-art-10.html",
+  "source_sha256": "aa714cbbec0a33fba1dc20e57fc977ddf1253f9ca1c407d839ffd69bafb9d907",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Cuando se modifique cualquiera de los datos recogidos en la declaración de alta o en cualquier otra declaración de modificación posterior, el obligado tributario deberá comunicar a la Administración tributaria, mediante la correspondiente declaración, dicha modificación.\n2. Esta declaración, en particular, servirá para:\na) Comunicar el cambio de domicilio fiscal, de acuerdo con lo previsto en el artículo 48.3 de la Ley 58/2003, de 17 de diciembre, General Tributaria, por las personas jurídicas y demás entidades, así como por las personas físicas incluidas en el Censo de Empresarios, Profesionales y Retenedores.\nb) Comunicar la variación de cualquiera de los datos y situaciones tributarias recogidas en los artículos 4 a 9 de este reglamento, ambos inclusive.\nc) Comunicar el inicio de la realización habitual de las entregas de bienes o prestaciones de servicios correspondientes a actividades empresariales o profesionales, cuando la declaración de alta se hubiese formulado indicando que el inicio de la realización de dichas entregas de bienes o prestaciones de servicios se produciría con posterioridad al comienzo de la adquisición o importación de bienes o servicios destinados a la actividad.\nd) Optar por la determinación de la base imponible mediante el margen de beneficio global en el régimen especial de los bienes usados, objetos de arte, antigüedades y objetos de colección a que se refiere el apartado dos del artículo 137 de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido.\ne) Solicitar la inclusión en el Registro de operadores intracomunitarios cuando se vayan a producir, una vez presentada la declaración censal de alta, las circunstancias que lo requieran previstas en el artículo 3.3 de este reglamento.",
+      "title": "Artículo 10. Declaración de modificación en el Censo de Empresarios, Profesionales y Retenedores.",
+      "section": "Artículo 10. Declaración de modificación en el Censo de Empresarios, Profesionales y Retenedores.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-886-2023-art-3.html",
+  "source_sha256": "c80b7def67d218a6f19f9da99860f9cae8cfa28ec6303c633b59ff1b8626cb03",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. La presentación del Modelo 721 se realizará entre el 1 de enero y el 31 de marzo del año siguiente al ejercicio al que corresponda la información a suministrar. La primera declaración correspondiente a la información a suministrar se referirá al ejercicio 2023.",
+      "title": "Artículo 3. Plazo de presentación.",
+      "section": "Artículo 3. Plazo de presentación.",
+      "anchor": null
+    }
+  ]
+}

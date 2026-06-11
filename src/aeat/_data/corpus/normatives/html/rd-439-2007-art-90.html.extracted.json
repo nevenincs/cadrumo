@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-90.html",
+  "source_sha256": "f806fe997c76d77853936434cad188c52e9a92871482a64d3fbcf74742e4b6c4",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. La retención a practicar sobre los rendimientos del capital mobiliario será el resultado de aplicar a la base de retención el porcentaje del 19 por ciento.\n2. Este tipo de retención se reducirá en un 60 por ciento cuando se trate de rendimientos a los que sea de aplicación la deducción prevista en el artículo 68.4 de la Ley del Impuesto, procedentes de sociedades a que se refiere la letra h) del número 3.º del citado artículo.",
+      "title": "Artículo 90. Importe de las retenciones sobre rendimientos del capital mobiliario.",
+      "section": "Artículo 90. Importe de las retenciones sobre rendimientos del capital mobiliario.",
+      "anchor": null
+    }
+  ]
+}

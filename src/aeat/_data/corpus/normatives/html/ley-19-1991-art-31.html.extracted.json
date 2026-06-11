@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-19-1991-art-31.html",
+  "source_sha256": "4b7899dfbb25dbcd125c55e8513a474540c7c78556e5c59cc2d56b7d19e88052",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Ley 19/1991 Art. 31 — Impuesto sobre el Patrimonio: límite de la cuota íntegra\nArtículo 31. Límite de la cuota íntegra.\nUno. La cuota íntegra de este Impuesto conjuntamente con las cuotas del Impuesto sobre la Renta\nde las Personas Físicas, no podrá exceder, para los sujetos pasivos sometidos al impuesto por\nobligación personal, del 60 por 100 de la suma de las bases imponibles de este último. A estos\nefectos:\na) No se tendrá en cuenta la parte de la base imponible del ahorro derivada de ganancias y\npérdidas patrimoniales que corresponda al saldo positivo de las obtenidas por las transmisiones\nde elementos patrimoniales adquiridos o de mejoras realizadas en los mismos con más de un año de\nantelación a la fecha de transmisión, ni la parte de las cuotas íntegras del Impuesto sobre la\nRenta de las Personas Físicas correspondiente a dicha parte de la base imponible del ahorro.\nSe sumará a la base imponible del ahorro el importe de los dividendos y participaciones en\nbeneficios a los que se refiere la letra a) del apartado 6 de la disposición transitoria\nvigésima segunda del texto refundido de la Ley del Impuesto sobre Sociedades.\nb) No se tendrá en cuenta la parte del Impuesto sobre el Patrimonio que corresponda a elementos\npatrimoniales que, por su naturaleza o destino, no sean susceptibles de producir los\nrendimientos gravados por la Ley del Impuesto sobre la Renta de las Personas Físicas.\nc) En el supuesto de que la suma de ambas cuotas supere el límite anterior, se reducirá la\ncuota del Impuesto sobre el Patrimonio hasta alcanzar el límite indicado, sin que la reducción\npueda exceder del 80 por 100.\nImpuesto sobre el Patrimonio — Ley 19/1991, límite conjunto IRPF + IP (Modelo 714)\nEl límite conjunto fija que la suma de la cuota íntegra del Impuesto sobre el Patrimonio y de\nlas cuotas del IRPF no exceda del 60 por ciento de la suma de las bases imponibles del IRPF.\nCuando se supera, la cuota del IP se reduce hasta el límite, pero la reducción no puede exceder\ndel 80 por ciento de la cuota íntegra del IP — es decir, el sujeto pasivo satisface, como\nmínimo, el 20 por ciento de la cuota íntegra del Patrimonio (suelo del 20 por ciento).\nFuente: Ley 19/1991, de 6 de junio, del Impuesto sobre el Patrimonio, artículo 31, redacción\nvigente (BOE-A-1991-14392, texto consolidado).",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

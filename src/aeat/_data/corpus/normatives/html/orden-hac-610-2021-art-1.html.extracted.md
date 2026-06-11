@@ -1,0 +1,4 @@
+# Artículo 1. Aprobación del modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes».
+
+Se aprueba el modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes», de formato electrónico, cuyo contenido figura en el anexo de esta orden.
+El número identificativo que habrá de figurar en el modelo 369 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 369.

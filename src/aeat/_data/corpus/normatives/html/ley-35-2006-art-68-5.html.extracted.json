@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-68-5.html",
+  "source_sha256": "be7da055cdf2725bb9df7d9f2ebb7c3831dc13a423151524f2d66308b77b5c9a",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "5. Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial.\nLos contribuyentes tendrán derecho a una deducción en la cuota del 15 por ciento del importe de las inversiones o gastos que realicen para:\na) La adquisición de bienes del Patrimonio Histórico Español, realizada fuera del territorio español para su introducción dentro de dicho territorio, siempre que los bienes sean declarados bienes de interés cultural o incluidos en el Inventario general de bienes muebles en el plazo de un año desde su introducción y permanezcan en territorio español y dentro del patrimonio del titular durante al menos cuatro años.\nb) La conservación, reparación, restauración, difusión y exposición de los bienes de su propiedad que estén declarados de interés cultural conforme a la normativa del patrimonio histórico del Estado y de las comunidades autónomas, siempre y cuando se cumplan las exigencias establecidas en dicha normativa, en particular respecto de los deberes de visita y exposición pública de dichos bienes.\nc) La rehabilitación de edificios, el mantenimiento y reparación de sus tejados y fachadas, así como la mejora de infraestructuras de su propiedad situados en el entorno que sea objeto de protección de las ciudades españolas o de los conjuntos arquitectónicos, arqueológicos, naturales o paisajísticos y de los bienes declarados Patrimonio Mundial por la Unesco situados en España.",
+      "title": "Artículo 68. Deducciones.",
+      "section": "Artículo 68. Deducciones.",
+      "anchor": null
+    }
+  ]
+}

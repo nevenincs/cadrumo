@@ -1,0 +1,4 @@
+# Artículo 5. Formas de presentación del modelo 184.
+
+1. La presentación del modelo 184, «Declaración informativa anual de Entidades en régimen de atribución de rentas» se realizará de acuerdo con lo dispuesto en los artículos 12.a), c) y 13 de la Orden HAP/2194/2013, de 22 de noviembre, por la que se regulan los procedimientos y las condiciones generales para la presentación de determinadas autoliquidaciones y declaraciones informativas de naturaleza tributaria.
+2. La presentación electrónica por Internet del modelo 184 se efectuará de acuerdo con las condiciones y el procedimiento previsto en los artículos 16 y 17 de la Orden HAP/2194/2013, de 22 de noviembre, por la que se regulan los procedimientos y las condiciones generales para la presentación de determinadas autoliquidaciones y declaraciones informativas de naturaleza tributaria.

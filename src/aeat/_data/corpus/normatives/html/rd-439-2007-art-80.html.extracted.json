@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-80.html",
+  "source_sha256": "9502aeadb6e399c155741b89ee387e296562417ee2054acaf7549d26d1947b52",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. La retención a practicar sobre los rendimientos del trabajo será el resultado de aplicar a la cuantía total de las retribuciones que se satisfagan o abonen, el tipo de retención que corresponda de los siguientes:\n1.º Con carácter general, el tipo de retención que resulte según el artículo 86 de este Reglamento.\n2.º El determinado conforme con el procedimiento especial aplicable a perceptores de prestaciones pasivas regulado en el artículo 89.A) de este Reglamento.\n3.º El 35 por ciento para las retribuciones que se perciban por la condición de administradores y miembros de los Consejos de Administración, de las Juntas que hagan sus veces y demás miembros de otros órganos representativos.\nNo obstante, cuando los rendimientos procedan de entidades cuyo importe neto de la cifra de negocios del último período impositivo finalizado con anterioridad al pago de los rendimientos sea inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será del 19 por ciento. Si dicho período impositivo hubiere tenido una duración inferior al año, el importe neto de la cifra de negocios se elevará al año.\n4.º El 15 por ciento para los rendimientos derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación.",
+      "title": "Artículo 80. Importe de las retenciones sobre rendimientos del trabajo.",
+      "section": "Artículo 80. Importe de las retenciones sobre rendimientos del trabajo.",
+      "anchor": null
+    }
+  ]
+}

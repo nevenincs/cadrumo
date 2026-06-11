@@ -1,0 +1,6 @@
+# Artículo 1. Aprobación del modelo 111.
+
+1. Se aprueba el modelo 111 «Retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas Físicas. Rendimientos del trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales e imputaciones de renta. Autoliquidación».
+Dicho modelo, que figura como anexo I de la presente orden, consta de los tres ejemplares siguientes: Ejemplar para el declarante; Ejemplar para la Entidad colaboradora-AEAT; Ejemplar para la Administración.
+El número de justificante que habrá de figurar en dicho modelo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 111. No obstante, en el supuesto a que se refiere el artículo 4.3 de la presente orden, el número de justificante comenzará con el código 112.
+2. Se aprueba el sobre de envío del Modelo 111 «Retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas Físicas. Rendimientos del trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales e imputaciones de renta. Autoliquidación», que figura en el Anexo II de la presente orden.

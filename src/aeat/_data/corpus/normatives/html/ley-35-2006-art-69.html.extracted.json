@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-69.html",
+  "source_sha256": "5a82708648480010817a8972495baeb7f0fc801d1fae8f7e01c1fc1d2e573341",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. La base de las deducciones a que se refieren los apartados 3 y 5 del artículo 68 de esta Ley, no podrá exceder para cada una de ellas del 10 por ciento de la base liquidable del contribuyente.\n2. Los límites de la deducción a que se refiere el apartado 2 del artículo 68 de esta Ley serán los que establezca la normativa del Impuesto sobre Sociedades para los incentivos y estímulos a la inversión empresarial. Dichos límites se aplicarán sobre la cuota que resulte de minorar la suma de las cuotas íntegras, estatal y autonómica, en el importe total de las deducciones por inversión en empresas de nueva o reciente creación, prevista en el artículo 68.1 de la misma, y por actuaciones para la protección y difusión del Patrimonio Histórico Español y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial, prevista en el artículo 68.5 de esta Ley.",
+      "title": "Artículo 69. Límites de determinadas deducciones.",
+      "section": "Artículo 69. Límites de determinadas deducciones.",
+      "anchor": null
+    }
+  ]
+}

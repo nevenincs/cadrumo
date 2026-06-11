@@ -1,0 +1,3 @@
+# Artículo 4. Plazo de presentación del formulario 360 de solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto.
+
+El plazo para la presentación de la solicitud de devolución se iniciará el día siguiente al final del período de devolución y concluirá el 30 de septiembre siguiente al año natural en el que se hayan soportado las cuotas a que se refiera.

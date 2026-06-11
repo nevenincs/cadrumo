@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hap-2250-2015-art-4.html",
+  "source_sha256": "cf8347f7fe88bd9a45b6108993be49cb99c5602cea49c1dac70585d04ede20be",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La presentación de la declaración informativa, modelo 184, se realizará en el mes de febrero de cada año, en relación con las rentas obtenidas por la entidad y las rentas atribuibles a cada uno de sus miembros en el año natural inmediato anterior.",
+      "title": "Artículo 4. Plazo de presentación.",
+      "section": "Artículo 4. Plazo de presentación.",
+      "anchor": null
+    }
+  ]
+}

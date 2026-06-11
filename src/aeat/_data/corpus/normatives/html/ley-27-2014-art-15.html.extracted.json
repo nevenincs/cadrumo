@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-15.html",
+  "source_sha256": "c3a6fa5f73f6eb4e25b4033582ca3ea0c6082fbf736a69b5454212df19536c89",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "No tendrán la consideración de gastos fiscalmente deducibles:\na) Los que representen una retribución de los fondos propios. A los efectos de lo previsto en esta Ley, tendrá la consideración de retribución de fondos propios, la correspondiente a los valores representativos del capital o de los fondos propios de entidades.\nb) Los derivados de la contabilización del Impuesto sobre Sociedades y del Impuesto Complementario. No tendrán la consideración de ingresos los procedentes de dicha contabilización.\nc) Las multas y sanciones penales y administrativas, los recargos del período ejecutivo y el recargo por declaración extemporánea sin requerimiento previo.\nd) Las pérdidas del juego.\ne) Los donativos y liberalidades. No se entenderán comprendidos en esta letra e) los gastos por atenciones a clientes o proveedores ni los que con arreglo a los usos y costumbres se efectúen con respecto al personal de la empresa. No obstante, los gastos por atenciones a clientes o proveedores serán deducibles con el límite del 1 por ciento del importe neto de la cifra de negocios del período impositivo.\nf) Los gastos de actuaciones contrarias al ordenamiento jurídico.\ng) Los gastos de servicios correspondientes a operaciones realizadas, directa o indirectamente, con personas o entidades residentes en países o territorios calificados como paraísos fiscales.",
+      "title": "Artículo 15. Gastos no deducibles.",
+      "section": "Artículo 15. Gastos no deducibles.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-103.html",
+  "source_sha256": "bfc6ad89c7c060e7f1d073700a62e4ee3c1be2c301334dbf2d895d32c4503aac",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Cuando la suma de las retenciones, ingresos a cuenta y pagos fraccionados de este Impuesto, así como de las cuotas del Impuesto sobre la Renta de no Residentes a que se refiere el párrafo d) del artículo 79 de esta Ley y, en su caso, de las deducciones previstas en el artículo 81 y 81 bis de esta Ley, sea superior al importe de la cuota resultante de la autoliquidación, la Administración tributaria practicará, si procede, liquidación provisional dentro de los seis meses siguientes al término del plazo establecido para la presentación de la declaración.\nCuando la declaración hubiera sido presentada fuera de plazo, los seis meses a que se refiere el párrafo anterior se computarán desde la fecha de su presentación.\n2. Cuando la cuota resultante de la autoliquidación o, en su caso, de la liquidación provisional, sea inferior a la suma de las cantidades efectivamente retenidas y de los pagos a cuenta de este Impuesto realizados, así como de las cuotas del Impuesto sobre la Renta de no Residentes a que se refiere la letra d) del artículo 79 de esta Ley y, en su caso, de las deducciones previstas en el artículo 81 y 81 bis de esta Ley, la Administración tributaria procederá a devolver de oficio el exceso sobre la citada cuota, sin perjuicio de la práctica de las ulteriores liquidaciones, provisionales o definitivas, que procedan.\n3. Si la liquidación provisional no se hubiera practicado en el plazo establecido en el apartado 1 anterior, la Administración tributaria procederá a devolver de oficio el exceso sobre la cuota autoliquidada, sin perjuicio de la práctica de las liquidaciones provisionales o definitivas ulteriores que pudieran resultar procedentes.",
+      "title": "Artículo 103. Devolución derivada de la normativa del tributo.",
+      "section": "Artículo 103. Devolución derivada de la normativa del tributo.",
+      "anchor": null
+    }
+  ]
+}

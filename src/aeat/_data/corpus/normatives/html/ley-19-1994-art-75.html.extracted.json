@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-19-1994-art-75.html",
+  "source_sha256": "344657dee928cc9c7728dcd3ceab364b60252db3bf13dd2d5ee8aa8e77155dbe",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Para los tripulantes de los buques inscritos en el Registro Especial de Buques y Empresas Navieras, contribuyentes del Impuesto sobre la Renta de las Personas Físicas, tendrá la consideración de renta exenta el 50 por 100 de los rendimientos del trabajo personal, que se hayan devengado con ocasión de la navegación realizada en buques inscritos en el citado Registro.\n2. Para los tripulantes de los buques inscritos en el Registro Especial de Buques y Empresas Navieras contribuyentes del Impuesto sobre la Renta de no Residentes, tendrá la consideración de renta exenta el 50 por 100 de los rendimientos del trabajo personal que se hayan devengado con ocasión de la navegación realizada en buques inscritos en el citado Registro.\n3. No obstante, cuando se trate de buques adscritos a servicios regulares de pasajeros entre puertos de la Unión Europea, lo dispuesto en los apartados anteriores únicamente resultará de aplicación a los tripulantes que sean nacionales de algún Estado miembro de la Unión Europea o de alguno de los Estados Parte en el Acuerdo sobre el Espacio Económico Europeo.",
+      "title": "Artículo 75. Impuesto sobre la Renta de las Personas Físicas e Impuesto sobre la Renta de no Residentes.",
+      "section": "Artículo 75. Impuesto sobre la Renta de las Personas Físicas e Impuesto sobre la Renta de no Residentes.",
+      "anchor": null
+    }
+  ]
+}

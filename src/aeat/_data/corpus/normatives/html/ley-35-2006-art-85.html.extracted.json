@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-85.html",
+  "source_sha256": "387cb7bfeab55a98eae131036c9112af78f27e2e7c3c637cdb589d03dab85fa5",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. En el supuesto de los bienes inmuebles urbanos, calificados como tales en el artículo 7 del texto refundido de la Ley del Catastro Inmobiliario, aprobado por el Real Decreto Legislativo 1/2004, de 5 de marzo, así como en el caso de los inmuebles rústicos con construcciones que no resulten indispensables para el desarrollo de explotaciones agrícolas, ganaderas o forestales, no afectos en ambos casos a actividades económicas, ni generadores de rendimientos del capital, excluida la vivienda habitual y el suelo no edificado, tendrá la consideración de renta imputada la cantidad que resulte de aplicar el 2 por ciento al valor catastral, determinándose proporcionalmente al número de días que corresponda en cada período impositivo.\nEn el caso de inmuebles localizados en municipios en los que los valores catastrales hayan sido revisados, modificados o determinados mediante un procedimiento de valoración colectiva de carácter general, de conformidad con la normativa catastral, y hayan entrado en vigor en el período impositivo o en el plazo de los diez períodos impositivos anteriores, el porcentaje será el 1,1 por ciento.\nSi a la fecha de devengo del impuesto el inmueble careciera de valor catastral o éste no hubiera sido notificado al titular, el porcentaje será del 1,1 por ciento y se aplicará sobre el 50 por ciento del mayor de los siguientes valores: el comprobado por la Administración a efectos de otros tributos o el precio, contraprestación o valor de la adquisición.\nCuando se trate de inmuebles en construcción y en los supuestos en que, por razones urbanísticas, el inmueble no sea susceptible de uso, no se estimará renta alguna.\n2. Estas rentas se imputarán a los titulares de los bienes inmuebles de acuerdo con el apartado 3 del artículo 11 de esta Ley.\nCuando existan derechos reales de disfrute, la renta computable a estos efectos en el titular del derecho será la que correspondería al propietario.\n3. En los supuestos de derechos de aprovechamiento por turno de bienes inmuebles la imputación se efectuará al titular del derecho real, prorrateando el valor catastral en función de la duración anual del periodo de aprovechamiento.\nSi a la fecha de devengo del impuesto los inmuebles a que se refiere este apartado carecieran de valor catastral, o éste no hubiera sido notificado al titular, se tomará como base de imputación el precio de adquisición del derecho de aprovechamiento.\nNo procederá la imputación de renta inmobiliaria a los titulares de derechos de aprovechamiento por turno de bienes inmuebles cuando su duración no exceda de dos semanas por año.\nSe modifican los apartados 1 y 2 por el art. 1.57 de la Ley 26/2014, de 27 de noviembre. Ref. BOE-A-2014-12327.\nSección 2.ª Régimen de atribución de rentas",
+      "title": "Artículo 85. Imputación de rentas inmobiliarias.",
+      "section": "Artículo 85. Imputación de rentas inmobiliarias.",
+      "anchor": null
+    }
+  ]
+}

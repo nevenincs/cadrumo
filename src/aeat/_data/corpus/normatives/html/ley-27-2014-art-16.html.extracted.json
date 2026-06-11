@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-16.html",
+  "source_sha256": "1d5abb0e0eaf3d795fd70f0f6b35288211de2519bb047c9e794d0d1304743720",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los gastos financieros netos serán deducibles con el límite del 30 por ciento del beneficio operativo del ejercicio.\nA estos efectos, se entenderá por gastos financieros netos el exceso de gastos financieros respecto de los ingresos derivados de la cesión a terceros de capitales propios devengados en el período impositivo, excluidos aquellos gastos no deducibles a que se refieren las letras g) y h) del artículo 15 y el artículo 15 bis de esta ley.\nEl beneficio operativo se determinará a partir del resultado de explotación de la cuenta de pérdidas y ganancias del ejercicio determinado de acuerdo con el Código de Comercio y demás normativa contable de desarrollo, eliminando la amortización del inmovilizado, la imputación de subvenciones de inmovilizado no financiero y otras, el deterioro y resultado por enajenaciones de inmovilizado, y adicionando los ingresos financieros de participaciones en instrumentos de patrimonio.\nEn todo caso, serán deducibles gastos financieros netos del período impositivo por importe de 1 millón de euros.\nLos gastos financieros netos que no hayan sido objeto de deducción podrán deducirse en los períodos impositivos siguientes, conjuntamente con los del período impositivo correspondiente, y con el límite previsto en este apartado.\n2. En el caso de que los gastos financieros netos del período impositivo no alcanzaran el límite establecido en el apartado 1 de este artículo, la diferencia entre el citado límite y los gastos financieros netos del período impositivo se adicionará al límite previsto en el apartado 1 de este artículo, respecto de la deducción de gastos financieros netos en los períodos impositivos que concluyan en los 5 años inmediatos y sucesivos.",
+      "title": "Artículo 16. Limitación en la deducibilidad de gastos financieros.",
+      "section": "Artículo 16. Limitación en la deducibilidad de gastos financieros.",
+      "anchor": null
+    }
+  ]
+}

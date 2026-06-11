@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-1274-2007-art-2.html",
+  "source_sha256": "d5a3282cd5e349298b903401ab243d867dbabe23be80f7fbe5d54559603604df",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden EHA/1274/2007 - Articulo 2\nArticulo 2. Obligados a presentar declaracion censal.\nQuienes hayan de formar parte del Censo de empresarios, profesionales y retenedores deberan presentar una declaracion de alta en el mismo.\nDeberan presentar la declaracion de baja en el Censo de empresarios, profesionales y retenedores quienes cesen en el desarrollo de actividades empresariales o profesionales o no deban formar parte del mismo, utilizando el modelo 036.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

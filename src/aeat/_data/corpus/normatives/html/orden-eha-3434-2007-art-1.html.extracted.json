@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3434-2007-art-1.html",
+  "source_sha256": "c144a7fa724203aa3c8400e7b31f04c9db9c3d9c8ec87e5fcf8fac2887bc2e09",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se aprueba el modelo 322 de «Impuesto sobre el Valor Añadido. Grupo de entidades. Modelo individual. Autoliquidación mensual. Ingreso del Impuesto sobre el Valor Añadido a la importación liquidado por la Aduana», que figura como anexo I en la presente Orden.\n2. Este modelo será presentado por los sujetos pasivos del Impuesto sobre el Valor Añadido que formen parte de un grupo de entidades, de acuerdo con lo establecido en el artículo 163 quinquies.Uno de la Ley del Impuesto, y hayan optado por aplicar el Régimen especial previsto en el Capítulo IX Título IX de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido. 3. La presentación de este modelo sólo podrá efectuarse por vía telemática en las condiciones y de acuerdo con el procedimiento previsto en los artículos 5 y 6 de esta Orden.\nSe modifica el apartado 1 por el art. 2.1 de la Orden HFP/1307/2017, de 29 de diciembre. Ref. BOE-A-2017-1584",
+      "title": "Artículo 1. Aprobación del modelo 322.",
+      "section": "Artículo 1. Aprobación del modelo 322.",
+      "anchor": null
+    }
+  ]
+}

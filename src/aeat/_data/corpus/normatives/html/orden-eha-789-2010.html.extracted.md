@@ -1,0 +1,152 @@
+# Artículo 1. Aprobación del formulario 360 de solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto, correspondientes a operaciones efectuadas en la Comunidad con excepción de las realizadas en dicho territorio.
+
+1. Se aprueba el formulario 360 de «Solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto», que figura como anexo I de la presente Orden.
+El número identificativo que habrá de figurar en dicho formulario será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 360.
+2. Este formulario será presentado obligatoriamente por vía telemática a través de Internet, en las condiciones y de acuerdo con el procedimiento previsto en los artículos 2 y 3 de la presente Orden, por los empresarios o profesionales que estén establecidos en el territorio de aplicación del Impuesto para solicitar la devolución de las cuotas soportadas por adquisiciones o importaciones de bienes o servicios efectuadas en la Comunidad, con excepción de las realizadas en dicho territorio.
+También utilizarán este formulario los empresarios o profesionales establecidos en las Islas Canarias, Ceuta o Melilla, para solicitar la devolución de las cuotas soportadas por adquisiciones o importaciones de bienes o servicios efectuadas en el territorio de aplicación del Impuesto, de acuerdo con lo dispuesto en el artículo 5.2 de la presente Orden.
+3. Cada uno de los Estados miembros en los que se hayan soportado las cuotas cuya devolución se solicita (en adelante Estados miembros de devolución), podrá optar por exigir la aportación de determinados datos recogidos en este modelo de formulario. Los campos correspondientes a los datos citados estarán disponibles en función de la opción elegida por el Estado miembro de devolución.
+
+# Artículo 2. Forma y condiciones generales para la presentación telemática por Internet del formulario 360 de solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto.
+
+1. La presentación de la solicitud por vía telemática a través de Internet podrá ser efectuada bien por el propio solicitante o bien por un tercero que actúe en su representación, de acuerdo con lo establecido en los artículos 79 a 81, ambos inclusive, del Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por el Real Decreto 1065/2007, de 27 de julio, y en la Orden HAC/1398/2003, de 27 de mayo, por la que se establecen los supuestos y condiciones en que podrá hacerse efectiva la colaboración social en la gestión de los tributos, y se extiende ésta expresamente a la presentación telemática de determinados modelos de declaración y otros documentos tributarios.
+2. La presentación electrónica estará sujeta a las siguientes condiciones:
+a) El declarante deberá disponer de Número de Identificación Fiscal (NIF) y estar identificado en el Censo de empresarios, profesionales y retenedores con carácter previo a la presentación del formulario.
+b) Para efectuar la presentación electrónica utilizando un sistema de identificación y autenticación basado en certificado electrónico, el declarante deberá disponer de un certificado electrónico reconocido emitido de acuerdo a las condiciones que establece la Ley 59/2003, de 19 de diciembre, de Firma Electrónica, que resulte admisible por la Agencia Estatal de Administración Tributaria según la normativa vigente en cada momento.
+Si la presentación electrónica se realiza por colaboradores sociales, serán estos quienes deberán disponer de su certificado electrónico reconocido, en los términos señalados en el párrafo anterior.
+En el caso de personas físicas, también podrán utilizar un sistema de identificación y autenticación con clave de acceso en un registro previo como usuario, basado en el establecido en el apartado primero.3.c) y desarrollado en el anexo III de la Resolución de 17 de noviembre de 2011, de la Presidencia de la Agencia Estatal de Administración Tributaria, por la que se aprueban sistemas de identificación y autenticación distintos de la firma electrónica avanzada para relacionarse electrónicamente con la Agencia Estatal de Administración Tributaria (sistema Cl@ve-PIN).
+c) Para efectuar la presentación electrónica el solicitante, o en su caso, el presentador, deberá cumplimentar y transmitir los datos del formulario, que estará disponible en la Sede electrónica de la Agencia Tributaria en Internet, en la dirección electrónica https://www.agenciatributaria.gob.es.
+3. En aquellos casos en que se detecten anomalías de tipo formal en la transmisión telemática de declaraciones, dicha circunstancia se pondrá en conocimiento del presentador del formulario por el propio sistema mediante los correspondientes mensajes de error, para que proceda a su subsanación.
+4. La solicitud de devolución únicamente se considerará presentada cuando contenga toda la información exigida por el Estado miembro de devolución correspondiente.
+Se modifica el apartado 2 por la disposición final 1.1 de la Orden HAP/841/2016, de 30 de mayo. Ref. BOE-A-2016-5273
+
+# Artículo 3. Procedimiento para la presentación telemática por Internet del formulario 360 de solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto.
+
+El procedimiento para la presentación telemática por Internet del formulario 360 será el siguiente:
+a) El solicitante o, en su caso, el presentador se conectará con la sede electrónica de la Agencia Estatal de Administración Tributaria, dirección electrónica https://www.agenciatributaria.gob.es y seleccionará el concepto fiscal (Impuesto sobre el Valor Añadido) y el formulario específico a transmitir correspondiente a la solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto por operaciones efectuadas en otros Estados miembros de la Comunidad.
+El presentador deberá presentar las copias electrónicas de las facturas o documentos de importación que en su caso sean exigibles por el país de devolución en el registro electrónico de la Agencia Estatal de Administración Tributaria, de acuerdo con lo previsto en la Resolución de 28 de diciembre de 2009, de la Presidencia de la Agencia Estatal de Administración Tributaria, por la que se crea la sede electrónica y se regulan los registros electrónicos de la Agencia Estatal de Administración Tributaria.
+b) A continuación procederá a transmitir el formulario utilizando cualquiera de los sistemas establecidos en el artículo 2.2 de la presente orden, siempre que resulte de aplicación en cada caso.
+Si el presentador es un colaborador social debidamente autorizado, se requerirá una única firma, la correspondiente a su certificado.
+c) Como resultado del envío de la solicitud se puedan dar los siguientes casos:
+1.º Si la solicitud es aceptada, la Agencia Estatal de Administración Tributaria le devolverá en pantalla un resumen de la solicitud validado con un código seguro de verificación de 16 caracteres, además de la fecha y hora de presentación y la relación de expedientes de devolución generados. En esta relación se indicará el país destinatario del expediente, el número de referencia y la versión (que permitirán identificar el expediente ante el Estado miembro de devolución) y el número del expediente en la Agencia Estatal de Administración Tributaria.
+El presentador deberá conservar el formulario aceptado, debidamente validado con el correspondiente código seguro de verificación.
+2.º En el supuesto de que la presentación fuese rechazada, se mostrarán en pantalla un resumen de la solicitud y la descripción de los errores detectados, debiendo procederse a la subsanación de los mismos. Si no se produce la subsanación de los errores, se tendrá por no presentada la solicitud y el solicitante o, en su caso, el presentador, deberá proceder a enviar una nueva solicitud.
+3.º Cuando se trate de una solicitud que se refiera a un gran número de facturas o documentos de importación no será posible validar los datos suministrados de forma inmediata. En este caso, se devolverá en la pantalla un resumen de la solicitud con un código seguro de verificación de 16 caracteres y un mensaje en el que se informará de que se realizará un proceso de validación posterior.
+d) En el supuesto c.3.º) anterior, en el que se trate de una solicitud con un gran número de facturas o documentos de importación, con posterioridad a la recepción de la solicitud y en un plazo inferior a 5 días, se efectuará un proceso de validación de los datos suministrados telemáticamente y se verificará que las características de la información se ajustan a las condiciones exigidas por el Estado miembro de devolución correspondiente.
+El solicitante o, en su caso, el presentador podrá comprobar el resultado de la validación en el servicio de verificación del estado de la solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto por operaciones efectuadas en otros Estados miembros de la Comunidad. Se pueden dar los siguientes casos:
+1.º Si la solicitud es aceptada, la Agencia Estatal de Administración Tributaria le devolverá en pantalla un resumen de la solicitud validado con un código seguro de verificación de 16 caracteres, además de la fecha y hora de presentación y la relación de expedientes de devolución generados. En esta relación se indicará el país destinatario del expediente, el número de referencia y la versión (que permitirán identificar el expediente ante la administración competente) y el número del expediente en la Agencia Estatal de Administración Tributaria.
+El presentador deberá conservar el formulario aceptado, debidamente validado con el correspondiente código seguro de verificación.
+2.º En el supuesto de que la solicitud fuese rechazada, se mostrarán en pantalla un resumen de la solicitud y la descripción de los errores detectados. En este caso, se tendrá la solicitud por no presentada y el solicitante o, en su caso, el presentador deberá proceder a enviar una nueva solicitud.
+Se modifica la letra b) por la disposición final 1.2 de la Orden HAP/841/2016, de 30 de mayo. Ref. BOE-A-2016-5273
+
+# Artículo 4. Plazo de presentación del formulario 360 de solicitud de devolución del Impuesto sobre el Valor Añadido soportado por empresarios o profesionales establecidos en el territorio de aplicación del Impuesto.
+
+El plazo para la presentación de la solicitud de devolución se iniciará el día siguiente al final del período de devolución y concluirá el 30 de septiembre siguiente al año natural en el que se hayan soportado las cuotas a que se refiera.
+
+# Artículo 5. Aprobación del contenido y forma de presentación del formulario de solicitud de devolución de cuotas soportadas en el territorio de aplicación del Impuesto por empresarios o profesionales no establecidos en dicho territorio pero establecidos en la Comunidad, Islas Canarias, Ceuta o Melilla.
+
+1. Los empresarios o profesionales no establecidos en el territorio de aplicación del Impuesto pero establecidos en la Comunidad, Islas Canarias, Ceuta o Melilla, podrán solicitar la devolución de las cuotas del Impuesto sobre el Valor Añadido a que se refiere el artículo 119 de la Ley del Impuesto mediante la presentación por vía telemática a través de Internet del formulario dispuesto al efecto en el portal electrónico de la Administración tributaria del Estado miembro donde esté establecido el solicitante, con el contenido y cumpliendo los requisitos que se establecen a continuación:
+a) Cuando la base Imponible que figure en cada una de las facturas o documentos de importación a que se refiere la solicitud, supere el importe de 1.000 euros con carácter general, o 250 euros cuando se trate de carburante, dicha solicitud deberá acompañarse de copia electrónica de dichas facturas o documentos de importación.
+b) La solicitud de devolución deberá contener la descripción de la actividad empresarial o profesional del solicitante de acuerdo con lo dispuesto en el Reglamento (CE) n.º 1893/2006, del Parlamento europeo y del Consejo, de 20 de diciembre de 2006, por el que se establece la nomenclatura estadística de actividades económicas NACE revisión 2.
+c) La solicitud de devolución contendrá, en relación con cada factura o documento de importación, la siguiente información:
+1.º Nombre y domicilio completo del proveedor de los bienes o prestador de los servicios.
+2.º Salvo en el caso de importación, el número de identificación fiscal a efectos del IVA o el número de identificación fiscal del proveedor de los bienes o prestador de los servicios que le haya sido asignado por el Estado miembro de devolución.
+3.º Salvo en el caso de importación, el prefijo del Estado miembro de devolución.
+4.º Fecha y número de la factura o del documento de importación.
+5.º La base imponible y cuota del IVA expresados en euros.
+6.º Cuota de IVA deducible calculada en euros.
+7.º Cuando proceda, el porcentaje de prorrata deducible.
+8.º Naturaleza de los bienes y servicios adquiridos designados con los códigos a que se refiere la letra d) siguiente.
+d) En la solicitud de devolución deberá indicarse la naturaleza de los bienes y servicios adquiridos, por cada factura o documento de importación, utilizando para ello los códigos, y en su caso, los subcódigos y sub-subcódigos siguientes:
+Código 1. Carburante.
+• Subcódigo 1.3 Carburante para transporte de pasajeros.
+• Subcódigo 1.14 Carburante para medios de transporte con restricciones en el derecho a la deducción.
+Código 2. Arrendamiento de medios de transporte.
+• Subcódigo 2.3 Arrendamiento de medios de transporte para transporte de pasajeros.
+• Subcódigo 2.11 Arrendamiento de medios de transporte con restricciones en el derecho a la deducción.
+Código 3. Gastos relacionados con los medios de transporte, distintos de los bienes y servicios a que hacen referencia los Códigos 1 y 2.
+• Subcódigo 3.3 Gastos relacionados con transporte de pasajeros.
+• Subcódigo 3.14 Gastos relacionados con medios de transporte con restricciones en el derecho a la deducción.
+Código 4. Peajes y tasas por el uso de las carreteras.
+Código 5. Gastos de transporte, tales como taxi o gastos de utilización de medios de transporte públicos.
+Código 6. Alojamiento.
+Código 7. Alimentación, bebidas y servicios de restaurante.
+Código 8. Entradas a ferias y exposiciones.
+Código 9. Gastos suntuarios, de ocio y de representación.
+Código 10. Otros.
+• Subcódigo 10.2 Reparaciones en periodo de garantía.
+• Subcódigo 10.3 Servicios relacionados con la educación.
+• Subcódigo 10.4 Servicios relacionados con bienes.
+Sub-subcódigo 10.4.1 Servicios relacionados con bienes inmuebles.
+Sub-subcódigo 10.4.2 Servicios relacionados con bienes inmuebles de uso particular.
+Sub-subcódigo 10.4.3 Servicios relacionados con bienes muebles distintos de los comprendidos en el Código 3.
+• Subcódigo 10.5 Adquisición o arrendamiento de bienes.
+Sub-subcódigo 10.5.1 Adquisición o arrendamiento de bienes inmuebles.
+Sub-subcódigo 10.5.2 Adquisición o arrendamiento de bienes inmuebles de uso particular.
+Sub-subcódigo 10.5.4 Adquisición o arrendamiento de bienes muebles distintos de los comprendidos en el Código 2.
+• Subcódigo 10.7 Obsequios publicitarios de pequeño valor.
+• Subcódigo 10.13 Bienes y servicios adquiridos por organizador de viajes en beneficio del viajero.
+e) La solicitud de devolución, así como, la información adicional que sea requerida por el órgano competente para su tramitación y resolución, deberá cumplimentarse en castellano.
+2. Los empresarios o profesionales establecidos en las Islas Canarias, Ceuta o Melilla, presentarán la solicitud de devolución de las cuotas soportadas en el territorio de aplicación del Impuesto a través de la sede electrónica de la Agencia Estatal de Administración Tributaria, en las condiciones y de acuerdo con el procedimiento previsto en los artículos 2 y 3 de la presente Orden, utilizando para ello el formulario 360 que figura como anexo I de la misma, el cual deberá incluir el contenido y cumplir los requisitos establecidos en el apartado anterior.
+
+# Artículo 6. Plazo de presentación del formulario de solicitud de devolución a empresarios o profesionales no establecidos en el territorio de aplicación del Impuesto pero establecidos en la Comunidad, Islas Canarias, Ceuta o Melilla.
+
+El plazo para la presentación de la solicitud de devolución se iniciará el día siguiente al final de cada trimestre natural o de cada año natural y concluirá el 30 de septiembre siguiente al año natural en el que se hayan soportado las cuotas a que se refiera.
+La solicitud de devolución podrá comprender las cuotas soportadas durante un trimestre natural o en el curso de un año natural. También podrá referirse a un período inferior a un trimestre cuando se trate del conjunto de operaciones realizadas en un año natural.
+
+# Artículo 7. Aprobación del modelo 361 de solicitud de devolución del Impuesto sobre el Valor Añadido a determinados empresarios o profesionales no establecidos en el territorio de aplicación del Impuesto, ni en la Comunidad, Islas Canarias, Ceuta y Melilla.
+
+1. Se aprueba el modelo 361 de «Solicitud de devolución del IVA a determinados empresarios o profesionales no establecidos en el territorio de aplicación del Impuesto, ni en la Comunidad, Islas Canarias, Ceuta o Melilla », que figura como anexo II de la presente Orden.
+El número identificativo que habrá de figurar en el modelo 361 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 361.
+2. Este modelo será presentado por los empresarios o profesionales no establecidos en el territorio de aplicación del Impuesto, ni en la Comunidad, Islas Canarias, Ceuta o Melilla, para solicitar la devolución de las cuotas del Impuesto que hayan soportado por las adquisiciones o importaciones de bienes o servicios realizadas en dicho territorio.
+
+# Artículo 8. Forma y condiciones generales para la presentación telemática por internet del modelo 361.
+
+1. La presentación de la solicitud de devolución se realizará por vía electrónica a través de internet y deberá ser efectuada, de forma obligatoria, por el representante establecido en el territorio de aplicación del impuesto nombrado por el solicitante de acuerdo con lo establecido en el artículo 119 bis de la Ley del Impuesto sobre el Valor Añadido.
+En caso de empresas pertenecientes a un mismo grupo fiscal en su país de establecimiento, se presentará una solicitud para cada empresa perteneciente al grupo, a la que se identificará de forma individualizada en la solicitud.
+2. El contenido de la solicitud se ajustará al modelo 361 recogido en el anexo II de esta orden, que estará disponible en la sede electrónica de la Agencia Tributaria, y deberá ir acompañada obligatoriamente de la siguiente documentación:
+a) Copia electrónica de la certificación, expedida por las autoridades competentes del Estado donde esté establecido el solicitante, en la que se acredite que realiza en el mismo actividades empresariales o profesionales sujetas al Impuesto sobre el Valor Añadido o a un tributo análogo durante el período al que se refiera la solicitud.
+b) Cuando se trate de la primera solicitud que un representante presenta por cuenta de un determinado solicitante o cuando no esté vigente el poder que se hubiese aportado con anterioridad, la solicitud deberá ir acompañada de copia electrónica del poder de representación original otorgado ante fedatario público a favor de un representante establecido en el territorio de aplicación del impuesto, en el que se deberá hacer constar, expresamente, la capacidad del otorgante para actuar en nombre y representación de la persona o entidad representada, el lugar y la fecha en que dicho poder se otorga, el nombre y apellidos o razón social, el domicilio y el número de identificación fiscal del empresario o profesional que confiere el poder, los datos identificativos y el domicilio del representante, así como, las facultades que dicho poder le confiere, entre las que se ha de hacer constar expresamente la facultad que se le confiere para presentar por medios telemáticos el modelo 361. Si el representante pretende, además, estar habilitado para recibir a su nombre por cuenta del solicitante las devoluciones del Impuesto sobre el Valor Añadido, deberá hacerlo constar expresamente en dicho poder. El poder deberá estar redactado íntegramente en castellano o traducido por intérprete o traductor jurado. Si el fedatario público no es español, el poder deberá incorporar la apostilla de la Haya.
+En el caso de que el país de residencia del fedatario no haya suscrito el Convenio de la Haya, deberá ser debidamente legalizado.
+No se considerará presentada la solicitud en tanto no vaya acompañada de la certificación y del poder de representación a los que se refieren las letras a) y b).
+c) Cuando la base imponible que figure en cada una de las facturas o documentos de importación a que se refiere la solicitud supere el importe de 1.000 euros con carácter general, o 250 euros cuando se trate de carburante, dicha solicitud deberá acompañarse de copia electrónica de dichas facturas o documentos de importación.
+d) En caso de que el solicitante pertenezca a un grupo fiscal en su país de establecimiento y el número de identificación fiscal sea único para todo el grupo fiscal, careciendo el solicitante de número de identificación individual en el país de sede, junto con la primera solicitud de devolución de la entidad deberá aportarse documentación de la estructura del grupo y asociar el número de identificación del grupo seguido de un número de orden a cada empresa del grupo que pretenda presentar solicitudes de devolución de IVA en España.
+3. La presentación electrónica estará sujeta a las siguientes condiciones:
+a) El presentador deberá disponer de Número de Identificación Fiscal (NIF) y estar identificado en el Censo de obligados tributarios con carácter previo a la presentación de la solicitud de devolución.
+b) Para efectuar la presentación electrónica utilizando un sistema de identificación y autenticación basado en certificado electrónico, el presentador deberá disponer de un certificado electrónico reconocido emitido de acuerdo a las condiciones que establece la Ley 59/2003, de 19 de diciembre, de Firma Electrónica, que resulte admisible por la Agencia Estatal de Administración Tributaria según la normativa vigente en cada momento.
+En el caso de personas físicas, también podrán utilizar un sistema de identificación y autenticación con clave de acceso en un registro previo como usuario, basado en el establecido en el apartado primero 3.c) y desarrollado en el anexo III de la Resolución de 17 de noviembre de 2011, de la Presidencia de la Agencia Estatal de Administración Tributaria, por la que se aprueban sistemas de identificación y autenticación distintos de la firma electrónica avanzada para relacionarse electrónicamente con la Agencia Estatal de Administración Tributaria (sistema Cl@ve).
+c) Para efectuar la presentación electrónica el presentador deberá cumplimentar y transmitir los datos del formulario, ajustado al modelo 361, que estará disponible en la Sede electrónica de la Agencia Tributaria en internet, en la dirección electrónica https://www.agenciatributaria.gob.es.
+4. En aquellos casos en que se detecten anomalías de tipo formal en la transmisión electrónica de declaraciones, dicha circunstancia se pondrá en conocimiento del presentador de la declaración por el propio sistema mediante los correspondientes mensajes de error, para que proceda a su subsanación.
+Se modifica por el art. único.1 de la Orden HAC/498/2024, de 21 de mayo. Ref. BOE-A-2024-10681
+Se modifica por la disposición final 1.3 de la Orden HAP/841/2016, de 30 de mayo. Ref. BOE-A-2016-5273
+
+# Artículo 9. Procedimiento para la presentación telemática por Internet de las solicitudes de devolución correspondientes al modelo 361.
+
+El procedimiento para la presentación telemática por Internet del modelo 361 será el siguiente:
+a) El presentador se conectará con la sede electrónica de la Agencia Estatal de Administración Tributaria, en la dirección electrónica https://www.agenciatributaria.gob.es y seleccionará el concepto fiscal (Impuesto sobre el Valor Añadido) y el modelo de declaración a transmitir (modelo 361).
+b) A continuación procederá a transmitir la solicitud utilizando cualquiera de los sistemas establecidos en el artículo 8.3 de la presente orden, siempre que resulte de aplicación en cada caso.
+c) Si la solicitud es aceptada, la Agencia Estatal de Administración Tributaria le devolverá en pantalla los datos del formulario validados con un código seguro de verificación de 16 caracteres, además de la fecha y hora de presentación. En el supuesto de que la presentación fuese rechazada se mostrará en pantalla la descripción de los errores detectados. En este caso, se deberá proceder a subsanar los mismos en el formulario de entrada, o repitiendo la presentación si el error fuese originado por otro motivo.
+El presentador deberá conservar la solicitud aceptada, debidamente validada con el correspondiente código seguro de verificación.
+Se modifica la letra b) por la disposición final 1.4 de la Orden HAP/841/2016, de 30 de mayo. Ref. BOE-A-2016-5273
+
+# Artículo 10. Plazo de presentación del modelo 361.
+
+El plazo para la presentación de la solicitud de devolución, modelo 361, se iniciará el día siguiente al final de cada trimestre natural o de cada año natural y concluirá el 30 de septiembre siguiente al año natural en el que se hayan soportado las cuotas a que se refiera.
+La solicitud de devolución podrá comprender las cuotas soportadas durante un trimestre natural o en el curso de un año natural. También podrá referirse a un período inferior a un trimestre cuando se trate del conjunto de operaciones realizadas en un año natural.
+
+# Disposición derogatoria única. Derogación de modelos de declaración, y de las normas que regulan el lugar, forma y plazo de su presentación, así como las condiciones y procedimiento para su presentación telemática por Internet.
+
+Quedan derogadas las siguientes disposiciones:
+1. Orden HAC/261/2002, de 8 de febrero, por la que se aprueba el modelo 361 de solicitud de devolución del Impuesto sobre el Valor Añadido soportado por determinados empresarios o profesionales no establecidos en el territorio de aplicación del Impuesto.
+2. Orden HAC/998/2002, de 3 de mayo, por la que se establecen las condiciones generales y el procedimiento para la presentación telemática del modelo 361 de solicitud de devolución del Impuesto sobre el Valor Añadido soportado por determinados empresarios o profesionales no establecidos en el territorio de aplicación del Impuesto y por la que se modifica el anexo VII de la Orden de 15 de junio de 1995.
+
+# Disposición final única. Entrada en vigor.
+
+La presente Orden entrará en vigor el día siguiente al de su publicación en el Boletín Oficial del Estado, y será aplicable a las solicitudes de devolución presentadas después del 31 de diciembre de 2009.
+Madrid, 16 de marzo de 2010.–La Vicepresidenta Segunda del Gobierno y Ministra de Economía y Hacienda, Elena Salgado Méndez.
+ANEXO I
+Formulario 360
+ANEXO II
+Modelo 361
+Se sustituye por el que figura como Anexo de la Orden HAC/498/2024, de 21 de mayo, según establece su art. único.2. Ref. BOE-A-2024-10681
+Este documento es de carácter informativo y no tiene valor jurídico.
+Ayúdenos a mejorar: puede dirigir sus comentarios y sugerencias a nuestro Servicio de atención al ciudadano

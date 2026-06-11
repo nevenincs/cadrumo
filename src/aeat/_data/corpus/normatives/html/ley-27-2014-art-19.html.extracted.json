@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-19.html",
+  "source_sha256": "e2ee92ae5cf360848f8d5c66fa71781501d4111f831b39c3cd0f8f499e791198",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se integrará en la base imponible la diferencia entre el valor de mercado y el valor fiscal de los elementos patrimoniales que sean propiedad de una entidad residente en territorio español que traslada su residencia fuera de éste, excepto que dichos elementos patrimoniales queden afectados a un establecimiento permanente situado en territorio español de la mencionada entidad. En caso de afectación a un establecimiento permanente, será de aplicación a dichos elementos patrimoniales lo previsto en el artículo 78 de esta Ley.\nEn el supuesto de elementos patrimoniales transferidos a un Estado miembro de la Unión Europea o del Espacio Económico Europeo que haya celebrado un acuerdo con España o con la Unión Europea sobre asistencia mutua en materia de cobro de créditos tributarios que sea equivalente a la asistencia mutua prevista en la Directiva 2010/24/UE del Consejo, el contribuyente podrá optar por fraccionar el pago de la deuda tributaria resultante en quintas partes anuales iguales.",
+      "title": "Artículo 19. Cambios de residencia, operaciones realizadas con o por personas o entidades residentes en paraísos fiscales y cantidades sujetas a retención. Reglas especiales.",
+      "section": "Artículo 19. Cambios de residencia, operaciones realizadas con o por personas o entidades residentes en paraísos fiscales y cantidades sujetas a retención. Reglas especiales.",
+      "anchor": null
+    }
+  ]
+}

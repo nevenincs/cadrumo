@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-100.html",
+  "source_sha256": "09822e006ff73380bbd23c1bd3fd58475c9989c0da65ee0a60e83611be381b93",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los contribuyentes imputarán en su base imponible las rentas positivas a que se refieren los apartados 2 o 3 de este artículo cuando se cumplan las circunstancias siguientes:\na) Que por sí solos o conjuntamente con personas o entidades vinculadas en el sentido del artículo 18 de esta Ley tengan una participación igual o superior al 50 por ciento en el capital, los fondos propios, los resultados o los derechos de voto de una entidad no residente en territorio español, en la fecha del cierre del ejercicio social de esta última.\nb) Que el importe satisfecho por la entidad no residente en territorio español, imputable a alguna de las clases de rentas previstas en el apartado 2 o 3 de este artículo por razón de gravamen de naturaleza idéntica o análoga a este Impuesto, sea inferior al 75 por ciento del que hubiera correspondido de acuerdo con las normas de aquel.\nEsta imputación también procederá cuando dichas rentas sean obtenidas a través de un establecimiento permanente si se da la circunstancia prevista en la letra b) de este apartado sin que, en este caso, resulte de aplicación la exención prevista en el artículo 22 de esta Ley.\n2. Los contribuyentes imputarán la renta total obtenida por la entidad no residente en territorio español o el establecimiento permanente, cuando estos no dispongan de la correspondiente organización de medios materiales y personales para su obtención incluso si las operaciones tienen carácter recurrente.",
+      "title": "Artículo 100. Imputación de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes.",
+      "section": "Artículo 100. Imputación de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes.",
+      "anchor": null
+    }
+  ]
+}

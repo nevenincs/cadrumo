@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-94.html",
+  "source_sha256": "7aeb7cf6042e7b073667d0ebb8ee2561eae15f83085ca9c93357d02ef60a4803",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. Los sujetos pasivos a que se refiere el apartado uno del artículo anterior podrán deducir las cuotas del Impuesto sobre el Valor Añadido comprendidas en el artículo 92 en la medida en que los bienes o servicios, cuya adquisición o importación determinen el derecho a la deducción, se utilicen por el sujeto pasivo en la realización de las siguientes operaciones:\n1.º Las entregas de bienes y prestaciones de servicios sujetas y no exentas del Impuesto sobre el Valor Añadido.\n2.º Las prestaciones de servicios cuyo valor esté incluido en la base imponible de las importaciones de bienes, de acuerdo con lo establecido en el artículo 83 de esta Ley.\n3.º Las operaciones realizadas fuera del territorio de aplicación del Impuesto que originarían el derecho a la deducción si se hubieran efectuado en el interior del mismo.\n4.º Las operaciones de seguro, reaseguro, capitalización y servicios relativos a las mismas, así como las bancarias o financieras, exentas del impuesto, en las que el destinatario esté establecido fuera de la Comunidad, o que estén directamente relacionadas con exportaciones fuera de la Comunidad y se efectúen a partir del momento en que los bienes se expidan con tal destino.\n5.º Los servicios prestados por agencias de viajes que estén exentos del Impuesto en virtud de lo establecido en el artículo 143 de esta Ley.",
+      "title": "Artículo 94. Operaciones cuya realización origina el derecho a la deducción.",
+      "section": "Artículo 94. Operaciones cuya realización origina el derecho a la deducción.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-101.html",
+  "source_sha256": "26ed2d15acdfe9896444aa7da13cf4cfe2d393ed9234fdfd4e66e3eb10e66bd5",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se determinará con arreglo al procedimiento que reglamentariamente se establezca.\nPara determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan, y se aplicará la siguiente escala: hasta 12.450 EUR al 19 por ciento; de 12.450 a 20.200 EUR al 24 por ciento; de 20.200 a 35.200 EUR al 30 por ciento; de 35.200 a 60.000 EUR al 37 por ciento; de 60.000 a 300.000 EUR al 45 por ciento; en adelante al 47 por ciento.\nTratándose de atrasos que corresponda imputar a ejercicios anteriores, el porcentaje de retención e ingreso a cuenta será del 15 por ciento, salvo que resulte de aplicación los porcentajes previstos en los apartados 2 y 3 de este artículo.\nLos porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.\n2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento.\nNo obstante, en los términos que reglamentariamente se establezcan, cuando los rendimientos procedan de entidades con un importe neto de la cifra de negocios inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será del 19 por ciento.",
+      "title": "Artículo 101. Importe de los pagos a cuenta.",
+      "section": "Artículo 101. Importe de los pagos a cuenta.",
+      "anchor": null
+    }
+  ]
+}

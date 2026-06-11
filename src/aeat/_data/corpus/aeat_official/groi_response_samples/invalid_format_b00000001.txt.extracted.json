@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "unsupported_text",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/aeat_official/groi_response_samples/invalid_format_b00000001.txt",
+  "source_sha256": "a330302b66e69ed8453587352e5d5b6412e26a02f76e7edc4cf9ebe9a6fbb0a0",
+  "preprocessor_id": "unsupported-text",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT) / Boletin Oficial del Estado (BOE). Reused with attribution.",
+  "units": [
+    {
+      "text": "Consulta Operadores IVA intracomunitarios españoles\n\nEl campo Nif no es un NIF válido. (Ir a error)\n\n* Número IVA del operador español a consultar: ES",
+      "title": "invalid_format_b00000001.txt",
+      "section": "invalid_format_b00000001.txt",
+      "anchor": null
+    }
+  ]
+}

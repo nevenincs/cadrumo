@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-2572-2003-art-1.html",
+  "source_sha256": "36d7a1e0a4260bcc0e9a12a2b55da8167bc2d5b3fca2f5459c9ae1c3aff67086",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Aprobación del modelo de declaración del Impuesto sobre Actividades Económicas.\nSe aprueba el modelo 840, \"Impuesto sobre Actividades Económicas\", que figura en el anexo I de la presente Orden. Este modelo consta de dos ejemplares, uno para la Administración y otro para el interesado.\nAsimismo, como anexo al modelo 840 se aprueba la \"Relación de locales\".\nEl número de referencia que habrá de figurar en el modelo 840 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 890.",
+      "title": "Primero.",
+      "section": "Primero.",
+      "anchor": null
+    }
+  ]
+}

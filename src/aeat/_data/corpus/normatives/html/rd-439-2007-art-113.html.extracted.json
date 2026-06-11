@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-113.html",
+  "source_sha256": "db39730b64478a49cb5caa9c35638f667bc79c5e965ecaec025e9c58e374d777",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "RD 439/2007 Art. 113 — Opción por el régimen especial de impatriados\nArtículo 113. Ejercicio de la opción.\nLas personas físicas que quieran ejercitar la opción prevista en el artículo 93 de la Ley\ndel Impuesto deberán cumplir las condiciones establecidas en el mencionado artículo y\ncomunicar dicha opción a la Administración tributaria en el plazo de seis meses desde\nla fecha de inicio de la actividad que conste en el alta en la Seguridad Social en España\no en la documentación que le permita, en su caso, mantener la legislación de Seguridad\nSocial de origen.\nEl ejercicio de la opción implicará la determinación de la deuda tributaria del\nImpuesto sobre la Renta de las Personas Físicas conforme a las normas establecidas\nen el artículo 93 de la Ley del Impuesto, en tanto el contribuyente tenga la condición\nde trabajador desplazado a territorio español. Los trabajadores desplazados tributan\nal tipo fijo del IRNR durante el período de aplicación del régimen especial.\nLa opción se ejerce mediante el Modelo 149 (comunicación) y la declaración anual mediante\nel Modelo 151, regulado por la Orden EHA/2887/2008.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

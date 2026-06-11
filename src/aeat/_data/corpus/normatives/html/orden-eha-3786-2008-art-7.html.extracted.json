@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3786-2008-art-7.html",
+  "source_sha256": "6d95d9b367d28881d397dd44bd5f1987c52b81f3496293fdfae8216f8a3293d8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. En el supuesto de sujetos pasivos cuyo período de liquidación coincida con el mes natural, la presentación de las autoliquidaciones del modelo 303, así como, en su caso, el ingreso o la solicitud de devolución, si corresponde, de la cantidad resultante, se efectuará en los veinte primeros días naturales del mes siguiente a la finalización del correspondiente período de liquidación mensual, excepto la relativa al último período de liquidación del año, que deberá presentarse durante los treinta primeros días naturales del mes de enero siguiente.\nSin perjuicio de lo anterior, las declaraciones-liquidaciones correspondientes a las personas y entidades a que se refiere el artículo 62.6 de este Reglamento, deberán presentarse durante los treinta primeros días naturales del mes siguiente al correspondiente período de liquidación mensual, o hasta el último día del mes de febrero en el caso de la declaración-liquidación correspondiente al mes de enero.\n2. En el supuesto de sujetos pasivos cuyo período de liquidación coincida con el trimestre natural, la presentación de las autoliquidaciones del modelo 303, así como, en su caso, el ingreso o la solicitud de devolución, si corresponde, de la cantidad resultante, se efectuará en los veinte primeros días naturales del mes siguiente a la finalización del correspondiente período de liquidación trimestral, excepto la correspondiente al último período de liquidación del año, que deberá presentarse durante los treinta primeros días naturales del mes de enero siguiente.\nSe modifica, con efectos de 1 de julio de 2017, por la disposición final 3.3 de la Orden HFP/417/2017, de 12 de mayo. Ref. BOE-A-2017-5312\nSe modifica el apartado 1, con efectos para las operaciones realizadas a partir de 1 de enero de 2014, por el art. 1.4 de la Orden HAP/2215/2013, de 26 de noviembre. Ref. BOE-A-2013-12489.",
+      "title": "Artículo 7. Plazo de presentación del modelo 303.",
+      "section": "Artículo 7. Plazo de presentación del modelo 303.",
+      "anchor": null
+    }
+  ]
+}

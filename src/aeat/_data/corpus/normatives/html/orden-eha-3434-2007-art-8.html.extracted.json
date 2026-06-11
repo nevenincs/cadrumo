@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3434-2007-art-8.html",
+  "source_sha256": "3936f6327e3656534ac6be3a1a4ff6e4dbe6fe6f3b6ca86c82ebc38ecdd8ad3c",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La presentación de las autoliquidaciones correspondientes a los modelos 322 y 353, así como, en su caso, el ingreso de la cantidad resultante del modelo de autoliquidación 353, se efectuará en los treinta días naturales del mes siguiente al correspondiente periodo de liquidación mensual, o hasta el último día del mes de febrero en el caso de la declaración-liquidación mensual correspondiente al mes de enero.\nSe modifica, con efectos de 1 de julio de 2017, por la disposición final 2.2 de la Orden HFP/417/2017, de 12 de mayo. Ref. BOE-A-2017-5312\nSe modifica por el art. 1.3 de la Orden HAP/1222/2014, de 9 de julio. Ref. BOE-A-2014-7469.",
+      "title": "Artículo 8. Plazo de presentación de los modelos 322 y 353.",
+      "section": "Artículo 8. Plazo de presentación de los modelos 322 y 353.",
+      "anchor": null
+    }
+  ]
+}

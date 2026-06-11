@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-39.html",
+  "source_sha256": "69d7de61e63565f4ed8f6520c3dae44333f059abc9fa0939dc4b11c6f3e5ee65",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Las deducciones previstas en el presente Capítulo se practicarán una vez realizadas las deducciones y bonificaciones de los Capítulos II y III de este Título.\nLas cantidades correspondientes al período impositivo no deducidas podrán aplicarse en las liquidaciones de los periodos impositivos que concluyan en los 15 años inmediatos y sucesivos.\n2. No obstante, en el caso de insuficiencia de cuota, se podrá solicitar su abono a la Administración tributaria a través de la declaración de este Impuesto, una vez finalizado el plazo a que se refiere la letra a) siguiente. Este abono se regirá por lo dispuesto en el artículo 31 de la Ley 58/2003, de 17 de diciembre, General Tributaria, y en su normativa de desarrollo, sin que, en ningún caso, se produzca el devengo del interés de demora a que se refiere el apartado 2 de dicho artículo 31.\nEl importe de la deducción aplicada o abonada, de acuerdo con lo dispuesto en este apartado, en el caso de las actividades de innovación tecnológica no podrá superar conjuntamente el importe de 1 millón de euros anuales. Asimismo, el importe de la deducción aplicada o abonada por las actividades de investigación y desarrollo e innovación tecnológica, de acuerdo con lo dispuesto en este apartado, no podrá superar conjuntamente, y por todos los conceptos, los 3 millones de euros anuales.",
+      "title": "Artículo 39. Normas comunes a las deducciones previstas en este capítulo.",
+      "section": "Artículo 39. Normas comunes a las deducciones previstas en este capítulo.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-48.html",
+  "source_sha256": "21dca695d739ed12f83e98f751bf167411492590dabff4fda9f16f8b4262b4b3",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Ley 35/2006 Art. 48 — Integración y compensación de rentas en la base imponible general\nArtículo 48. Integración y compensación de rentas en la base imponible general.\nLa base imponible general será el resultado de sumar los siguientes saldos:\na) El saldo resultante de integrar y compensar entre sí, sin limitación alguna, en cada\nperíodo impositivo, los rendimientos y las imputaciones de renta a que se refiere el artículo 45\nde esta Ley.\nb) El saldo positivo resultante de integrar y compensar, exclusivamente entre sí, en cada\nperíodo impositivo, las ganancias y pérdidas patrimoniales, excluidas las previstas en el\nartículo siguiente.\nSi el resultado de la integración y compensación a que se refiere este párrafo arrojase saldo\nnegativo, su importe se compensará con el saldo positivo de las rentas previstas en el párrafo a)\nde este artículo, obtenido en el mismo período impositivo, con el límite del 25 por ciento de\ndicho saldo positivo.\nSi tras dicha compensación quedase saldo negativo, su importe se compensará en los cuatro\naños siguientes en el mismo orden establecido en los párrafos anteriores.\nLa compensación deberá efectuarse en la cuantía máxima que permita cada uno de los\nejercicios siguientes y sin que pueda practicarse fuera del plazo de cuatro años mediante la\nacumulación a pérdidas patrimoniales de ejercicios posteriores.\nIRPF — Ley 35/2006, compensación de saldos negativos de la base general (Modelo 100)\nLos saldos negativos de la base imponible general que no se compensen en el período\nimpositivo se trasladan a los cuatro años siguientes (casilla de saldos pendientes 1391 →\naplicación 1388 en el Modelo 100), con el límite del 25 por ciento del saldo positivo de la otra\nclase de renta de la base general en cada ejercicio.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hap-72-2013-art-1.html",
+  "source_sha256": "25957a8ceefbdb2f7510bc9df9ca229ffd6f1cf4ee3fa820c81c0f87b267a021",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se aprueba el modelo 720 «Declaración informativa de bienes y derechos situados en el extranjero» cuyos diseños físicos y lógicos figuran en el anexo de esta Orden.\nEl número identificativo que habrá de figurar en el modelo 720 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 720.\nEl número identificativo que habrá de figurar en el modelo 720 en el caso de tratarse de una declaración sustitutiva o complementaria que incorpore registros no declarados previamente será un número secuencial cuyos tres primeros dígitos se correspondan con el código 720.\nLa presentación de declaraciones complementarias que modifiquen el contenido de datos declarados en otra declaración presentada anteriormente que se refiera al mismo período, se realizará desde el servicio de consulta y modificación de declaraciones informativas dentro de los trámites asociados al modelo 720 y que se encuentra disponible en la Sede electrónica de la Agencia Estatal de Administración Tributaria, en la dirección electrónica https://www.agenciatributaria.gob.es. En este caso la declaración complementaria quedará identificada por el código electrónico de su presentación, no siendo necesario indicar ningún número identificativo.\n2. Para efectuar la presentación telemática de la declaración correspondiente al modelo 720 el declarante o, en su caso, el presentador autorizado, deberá utilizar previamente un programa para obtener el fichero con la declaración. Este programa podrá ser el formulario desarrollado por la Agencia Estatal de Administración Tributaria para la declaración correspondiente al modelo 720 u otro que obtenga un fichero con el mismo formato. El contenido del dicho fichero se deberá ajustar a los diseños físicos y lógicos que se describen en el anexo de esta Orden.",
+      "title": "Artículo 1. Aprobación del Modelo 720 y de sus diseños físicos y lógicos.",
+      "section": "Artículo 1. Aprobación del Modelo 720 y de sus diseños físicos y lógicos.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-3786-2008-art-11.html",
+  "source_sha256": "16ea975a734c5b90a40823b24843e5b4b74600eb70d732227dfdc58930f19c08",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. La presentación de la autoliquidación con solicitud de devolución por sujetos pasivos ocasionales que realicen entregas exentas de medios de transporte nuevos, se efectuará en el plazo de treinta días naturales a contar desde el día en que tenga lugar dicha entrega.\n2. La presentación de la autoliquidación con solicitud de devolución por sujetos pasivos que tributen en el régimen simplificado del Impuesto y ejerzan la actividad de transporte de viajeros o de mercancías por carretera, de acuerdo con lo previsto en el artículo 30 bis del Reglamento del Impuesto sobre el Valor Añadido, se realizará durante los primeros 20 días naturales del mes siguiente a aquél en el cual se haya realizado la adquisición del correspondiente medio de transporte.\n3. La presentación de la autoliquidación con solicitud de devolución por sujetos pasivos en recargo de equivalencia que hayan realizado devoluciones a exportadores en régimen de viajeros, se efectuará en los veinte primeros días naturales del mes siguiente a la finalización de cada trimestre del año, excepto la correspondiente al cuarto trimestre que se presentará durante los treinta primeros días naturales del mes de enero del año siguiente.\nEn la autoliquidación correspondiente a cada trimestre sólo se computarán las devoluciones efectivamente practicadas durante el mismo por el sujeto pasivo.\n4. La presentación de la autoliquidación con solicitud de devolución por los sujetos pasivos a que se refiere el apartado 2.d) del artículo 2 de la presente Orden se efectuará en el plazo de tres meses desde que se haya realizado la entrega de bienes que origina el derecho a la devolución.\nSe añade el apartado 4 por el art. único.5 de la Orden EHA/1033/2011, de 18 de abril. Ref. BOE-A-2011-7479.",
+      "title": "Artículo 11. Plazos de presentación del modelo 308.",
+      "section": "Artículo 11. Plazos de presentación del modelo 308.",
+      "anchor": null
+    }
+  ]
+}

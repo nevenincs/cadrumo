@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-109.html",
+  "source_sha256": "efd58db61e6b815b8b7d007df4cc0703a7ae785fea630101886b2dc0c3a0ef34",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La regularización de las deducciones a que se refiere el artículo 107 de esta Ley se realizará del siguiente modo:\n1.º Conocido el porcentaje de deducción definitivamente aplicable en cada uno de los años en que deba tener lugar la regularización, se determinará el importe de la deducción que procedería si la repercusión de las cuotas se hubiese soportado en el año que se considere.\n2.º Dicho importe se restará del de la deducción efectuada en el año en que tuvo lugar la repercusión.\n3.º La diferencia positiva o negativa se dividirá por cinco o, tratándose de terrenos o edificaciones, por diez, y el cociente resultante será la cuantía del ingreso o de la deducción complementarios a efectuar.",
+      "title": "Artículo 109. Procedimiento para practicar la regularización de deducciones por bienes de inversión.",
+      "section": "Artículo 109. Procedimiento para practicar la regularización de deducciones por bienes de inversión.",
+      "anchor": null
+    }
+  ]
+}

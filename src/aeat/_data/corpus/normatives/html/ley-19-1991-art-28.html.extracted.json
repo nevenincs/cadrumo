@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-19-1991-art-28.html",
+  "source_sha256": "1088c098abc85c3a3d4f533b90e11d3fc2efff4b6be031de9547d9e4726674aa",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Ley 19/1991 Art. 28 — Impuesto sobre el Patrimonio: base liquidable\nArtículo 28. Base liquidable.\nEn el Impuesto sobre el Patrimonio la base liquidable será el resultado de practicar en la\nbase imponible las reducciones que legalmente sean aplicables.\nLa base liquidable del impuesto coincidirá con la base imponible cuando no resulte aplicable\nla reducción prevista en el artículo siguiente.\nImpuesto sobre el Patrimonio — Ley 19/1991 (Ley del Impuesto sobre el Patrimonio)\nEl Impuesto sobre el Patrimonio (IP) grava el patrimonio neto de las personas físicas\nresidentes en España y el patrimonio situado en España de los no residentes. Se declara\nanualmente mediante el Modelo 714, aprobado por Orden HAC/1023/2021 (BOE-A-2021-7593).\nMínimo exento: con carácter general 700.000 euros, si bien las comunidades autónomas pueden\nestablecer umbrales distintos. La Comunitat Valenciana fijó el umbral en 600.000 euros.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

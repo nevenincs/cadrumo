@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-15.html",
+  "source_sha256": "1832ba52bf712d3179c47b9cd14d00cca75497e560c94458bd69180209180d9f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. Se entenderá por adquisición intracomunitaria de bienes:\na) La obtención del poder de disposición sobre bienes muebles corporales expedidos o transportados al territorio de aplicación del Impuesto, con destino al adquirente, desde otro Estado miembro, por el transmitente, el propio adquirente o un tercero en nombre y por cuenta de cualquiera de los anteriores.\nb) La obtención del poder de disposición sobre bienes muebles corporales en el marco de un acuerdo de ventas de bienes en consigna en los términos previstos en el artículo 9 bis, apartado dos, de esta Ley.\nDos. Cuando los bienes adquiridos por una persona jurídica que no actúe como empresario o profesional sean transportados desde un territorio tercero e importados por dicha persona en otro Estado miembro, dichos bienes se considerarán expedidos o transportados a partir del citado Estado miembro de importación.",
+      "title": "Artículo 15. Concepto de adquisición intracomunitaria de bienes.",
+      "section": "Artículo 15. Concepto de adquisición intracomunitaria de bienes.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-31.html",
+  "source_sha256": "9a702cd42e52fe7d4c05daa194420ed9b420fed7a3165aa010d898f60c7c6adc",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Cuando en la base imponible del contribuyente se integren rentas positivas obtenidas y gravadas en el extranjero, se deducirá de la cuota íntegra la menor de las dos cantidades siguientes:\na) El importe efectivo de lo satisfecho en el extranjero por razón del gravamen de naturaleza idéntica o análoga a este Impuesto. No se deducirán los impuestos no pagados en virtud de exención, bonificación o cualquier otro beneficio fiscal. Siendo de aplicación un convenio para evitar la doble imposición, la deducción no podrá exceder del impuesto que corresponda según aquél.\nb) El importe de la cuota íntegra que en España correspondería pagar por las mencionadas rentas si se hubieran obtenido en territorio español.\n2. El importe del impuesto satisfecho en el extranjero se incluirá en la renta a los efectos previstos en el apartado anterior e, igualmente, formará parte de la base imponible, aun cuando no fuese plenamente deducible.\n6. Las cantidades no deducidas por insuficiencia de cuota íntegra podrán deducirse en los períodos impositivos siguientes.\n7. El derecho de la Administración para iniciar el procedimiento de comprobación de las deducciones por doble imposición aplicadas o pendientes de aplicar prescribirá a los 10 años a contar desde el día siguiente a aquel en que finalice el plazo establecido para presentar la declaración o autoliquidación correspondiente al período impositivo en que se generó el derecho a su aplicación.",
+      "title": "Artículo 31. Deducción para evitar la doble imposición jurídica: impuesto soportado por el contribuyente.",
+      "section": "Artículo 31. Deducción para evitar la doble imposición jurídica: impuesto soportado por el contribuyente.",
+      "anchor": null
+    }
+  ]
+}

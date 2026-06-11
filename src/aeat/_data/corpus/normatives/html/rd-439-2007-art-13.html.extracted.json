@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-13.html",
+  "source_sha256": "7d37acd97cbe8c8834effd677b0827492dfe25bd8fbd0fd4096f66e3068eb563",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Tendrán la consideración de gasto deducible para la determinación del rendimiento neto del capital inmobiliario todos los gastos necesarios para su obtención.\nEn particular, se considerarán incluidos entre los gastos a que se refiere el párrafo anterior:\na) Los intereses de los capitales ajenos invertidos en la adquisición o mejora del bien, derecho o facultad de uso o disfrute del que procedan los rendimientos, y demás gastos de financiación, así como los gastos de reparación y conservación.\nA estos efectos, tendrán la consideración de gastos de reparación y conservación: Los efectuados regularmente con la finalidad de mantener el uso normal de los bienes materiales, como el pintado, revoco o arreglo de instalaciones. Los de sustitución de elementos, como instalaciones de calefacción, ascensor, puertas de seguridad u otros.\nNo serán deducibles por este concepto las cantidades destinadas a ampliación o mejora.\nEl importe total a deducir por los gastos previstos en este apartado a) no podrá exceder, para cada bien o derecho, de la cuantía de los rendimientos íntegros obtenidos.\nb) Los tributos y recargos no estatales, así como las tasas y recargos estatales, cualquiera que sea su denominación, siempre que incidan sobre los rendimientos computados o sobre los bienes o derechos productores de los mismos y no tengan carácter sancionador.\nc) Las cantidades devengadas por terceros en contraprestación directa o indirecta o como consecuencia de servicios personales, tales como los de administración, vigilancia, portería o similares.\nd) Los ocasionados por la formalización del arrendamiento, subarriendo, cesión o constitución de derechos y los de defensa de carácter jurídico relativos a los bienes, derechos o rendimientos.\ne) Los saldos de dudoso cobro siempre que esta circunstancia quede suficientemente justificada.\nf) El importe de las primas de contratos de seguro, bien sean de responsabilidad civil, incendio, robo, rotura de cristales u otros de naturaleza análoga, sobre los bienes o derechos productores de los rendimientos.\ng) Las cantidades destinadas a servicios o suministros.\nh) Las cantidades destinadas a la amortización en las condiciones establecidas en el artículo siguiente de este Reglamento.",
+      "title": "Artículo 13. Gastos deducibles de los rendimientos del capital inmobiliario.",
+      "section": "Artículo 13. Gastos deducibles de los rendimientos del capital inmobiliario.",
+      "anchor": null
+    }
+  ]
+}

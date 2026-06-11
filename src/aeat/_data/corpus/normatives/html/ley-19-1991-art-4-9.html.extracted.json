@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-19-1991-art-4-9.html",
+  "source_sha256": "4a9cf89a6e86e2e259ddac00655e26b65f68dbd44a8c9f801cbd0d564e78d563",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Ley 19/1991 Art. 4.Nueve — Impuesto sobre el Patrimonio: exención de la vivienda habitual\nArtículo 4. Bienes y derechos exentos — apartado Nueve.\nEstarán exentos de este Impuesto:\nNueve. La vivienda habitual del contribuyente, según se define en el artículo 68.1.3.º de la\nLey 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Físicas y de\nmodificación parcial de las leyes de los Impuestos sobre Sociedades, sobre la Renta de no\nResidentes y sobre el Patrimonio, hasta un importe máximo de 300.000 euros.\nImpuesto sobre el Patrimonio — Ley 19/1991, exención vivienda habitual (Modelo 714)\nEl apartado Nueve del artículo 4 declara exenta la vivienda habitual del contribuyente hasta un\nimporte máximo de 300.000 euros. El exceso sobre ese límite se integra en la base imponible del\nImpuesto sobre el Patrimonio. La remisión al artículo 68.1.3.º de la Ley 35/2006 fija el\nconcepto de vivienda habitual a efectos del IRPF, aplicable igualmente a esta exención. Se\ndeclara mediante el Modelo 714.\nNota de grounding: la exención de la vivienda habitual reside en el artículo 4, apartado\nNueve de la Ley 19/1991 (no en el apartado Cuatro, que regula la exención de\ndeterminados bienes del patrimonio empresarial y profesional).\nFuente: Ley 19/1991, de 6 de junio, del Impuesto sobre el Patrimonio, artículo 4.Nueve,\nredacción vigente (BOE-A-1991-14392, texto consolidado).",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

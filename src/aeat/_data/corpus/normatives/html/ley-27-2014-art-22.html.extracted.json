@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-22.html",
+  "source_sha256": "4025f33c3d74e57fc51f09845f25d7d4e8f9ee43da809d542d9bc997bd7d7db2",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Estarán exentas las rentas positivas obtenidas en el extranjero a través de un establecimiento permanente situado fuera del territorio español cuando el mismo haya estado sujeto y no exento a un impuesto de naturaleza idéntica o análoga a este Impuesto con un tipo nominal de, al menos, un 10 por ciento, en los términos del apartado 1 del artículo anterior.\nEstarán exentas, igualmente, las rentas positivas derivadas de la transmisión de un establecimiento permanente o cese de su actividad cuando se cumpla el requisito de tributación señalado.\n2. No se integrarán en la base imponible las rentas negativas obtenidas en el extranjero a través de un establecimiento permanente. Tampoco serán objeto de integración las rentas negativas derivadas de la transmisión de un establecimiento permanente.\nNo obstante, serán fiscalmente deducibles las rentas negativas generadas en caso de cese del establecimiento permanente. En este caso, el importe de las rentas negativas se minorará en el importe de las rentas positivas netas obtenidas con anterioridad y que hayan tenido derecho a la aplicación de un régimen de exención o de deducción para la eliminación de la doble imposición.",
+      "title": "Artículo 22. Exención de las rentas obtenidas en el extranjero a través de un establecimiento permanente.",
+      "section": "Artículo 22. Exención de las rentas obtenidas en el extranjero a través de un establecimiento permanente.",
+      "anchor": null
+    }
+  ]
+}

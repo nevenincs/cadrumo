@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-79.html",
+  "source_sha256": "71825387aad00ce0ab6236a46f44ae1923dc85b0472ee689317d3623a258036f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La cuota diferencial será el resultado de minorar la cuota líquida total del impuesto, que será la suma de las cuotas líquidas, estatal y autonómica, en los siguientes importes:\na) La deducción por doble imposición internacional prevista en el artículo 80 de esta Ley.\nb) Las deducciones a que se refieren el artículo 91.10 y el artículo 92.4 de esta Ley.\nc) Las retenciones a que se refiere el apartado 11 del artículo 99 de esta Ley.\nd) Cuando el contribuyente adquiera su condición por cambio de residencia, las retenciones e ingresos a cuenta a que se refiere el apartado 8 del artículo 99 de esta Ley, así como las cuotas satisfechas del Impuesto sobre la Renta de no Residentes y devengadas durante el período impositivo en que se produzca el cambio de residencia.\ne) Las retenciones, los ingresos a cuenta y los pagos fraccionados previstos en esta Ley y en sus normas reglamentarias de desarrollo.",
+      "title": "Artículo 79. Cuota diferencial.",
+      "section": "Artículo 79. Cuota diferencial.",
+      "anchor": null
+    }
+  ]
+}

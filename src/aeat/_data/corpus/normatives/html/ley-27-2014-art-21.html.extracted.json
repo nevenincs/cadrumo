@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-21.html",
+  "source_sha256": "7cb702edb2c2f24e8740729cc600ade7cfdd04ba828ea511b4dbd0e151c463c3",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Estarán exentos los dividendos o participaciones en beneficios de entidades, cuando se cumplan los siguientes requisitos:\na) Que el porcentaje de participación, directa o indirecta, en el capital o en los fondos propios de la entidad sea, al menos, del 5 por ciento.\nLa participación correspondiente se deberá poseer de manera ininterrumpida durante el año anterior al día en que sea exigible el beneficio que se distribuya o, en su defecto, se deberá mantener posteriormente durante el tiempo necesario para completar dicho plazo.\nb) Adicionalmente, en el caso de participaciones en el capital o en los fondos propios de entidades no residentes en territorio español, que la entidad participada haya estado sujeta y no exenta por un impuesto extranjero de naturaleza idéntica o análoga a este Impuesto a un tipo nominal de, al menos, el 10 por ciento.",
+      "title": "Artículo 21. Exención sobre dividendos y rentas derivadas de la transmisión de valores representativos de los fondos propios de entidades residentes y no residentes en territorio español.",
+      "section": "Artículo 21. Exención sobre dividendos y rentas derivadas de la transmisión de valores representativos de los fondos propios de entidades residentes y no residentes en territorio español.",
+      "anchor": null
+    }
+  ]
+}

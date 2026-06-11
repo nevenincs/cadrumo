@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-90.html",
+  "source_sha256": "45f7d4f2b2e2b96da9e7f57d8f7391ab39d8fc9fd7f4595bf278683c54d3de89",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. El Impuesto se exigirá al tipo del 21 por ciento, salvo lo dispuesto en el artículo siguiente.\nDos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo.\nTres. En las reimportaciones de bienes que hayan sido exportados temporalmente fuera de la Comunidad y que se efectúen después de haber sido objeto en un país tercero de trabajos de reparación, transformación, adaptación, ejecuciones de obra o incorporación de otros bienes, se aplicará el tipo impositivo que hubiera correspondido a las operaciones indicadas si se hubiesen realizado en el territorio de aplicación del Impuesto.\nEn las operaciones asimiladas a las importaciones de bienes que hayan sido exclusivamente objeto de servicios exentos mientras han permanecido vinculados a los regímenes o situaciones a que se refieren los artículos 23 y 24 de esta Ley, se aplicará el tipo impositivo que hubiera correspondido a los citados servicios si no hubiesen estado exentos.\nSe modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. 23.2 del Real Decreto-ley 20/2012, de 13 de julio. Ref. BOE-A-2012-9364.\nSe modifica el apartado 1 por el art. 79 .1 de la Ley 26/2009, de 23 de diciembre. Ref. BOE-A-2009-20765.\nSe modifica el apartado 3 por el art. 28.13 del Real Decreto-Ley 12/1995, de 28 de diciembre. Ref. BOE-A-1995-27964\nSe modifica el apartado 1, con efectos desde el 1 de enero de 1995, por el art. 78.1 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967",
+      "title": "Artículo 90. Tipo impositivo general.",
+      "section": "Artículo 90. Tipo impositivo general.",
+      "anchor": null
+    }
+  ]
+}

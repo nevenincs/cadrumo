@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-117-bis.html",
+  "source_sha256": "9b8f8564c510de062ce5470cde6887a22fabd4f65e6840989c5bebf186320f9e",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Los empresarios o profesionales que estén establecidos en el territorio de aplicación del Impuesto, Islas Canarias, Ceuta y Melilla, solicitarán la devolución de las cuotas soportadas por adquisiciones o importaciones de bienes o servicios efectuadas en la Comunidad, con excepción de las realizadas en el territorio de aplicación del Impuesto, mediante la presentación por vía electrónica de una solicitud a través de los formularios dispuestos al efecto en el portal electrónico de la Agencia Estatal de Administración Tributaria.\nLa recepción y la tramitación de la solicitud a que se refiere este artículo se llevarán a cabo a través del procedimiento que se establezca reglamentariamente.",
+      "title": "Artículo 117 bis. Solicitudes de devolución de empresarios o profesionales establecidos en el territorio de aplicación del Impuesto, Islas Canarias, Ceuta y Melilla correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepción de las realizadas en el territorio de aplicación del Impuesto.",
+      "section": "Artículo 117 bis. Solicitudes de devolución de empresarios o profesionales establecidos en el territorio de aplicación del Impuesto, Islas Canarias, Ceuta y Melilla correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepción de las realizadas en el territorio de aplicación del Impuesto.",
+      "anchor": null
+    }
+  ]
+}
