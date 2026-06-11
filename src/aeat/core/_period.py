@@ -23,6 +23,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
+from .errors import AeatError
+
 
 class StandardPeriodCode(StrEnum):
     """Canonical enumeration of standard filing-period codes."""
@@ -122,13 +124,12 @@ def _format_accepted_period_set() -> str:
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
 
 
-class PeriodError(ValueError):
+class PeriodError(AeatError, ValueError):
     """Raised when a :class:`Period` is constructed from an invalid year/code.
 
-    Subclasses :class:`ValueError` (not the registered ``AeatError`` hierarchy)
-    so the core value object stays self-contained: it carries no error-code
-    registry or locale-message dependency, and pydantic — which already raises
-    :class:`ValueError` on field validation — composes with it cleanly.
+    Subclasses :class:`ValueError` so pydantic validation and existing callers
+    retain value-error compatibility while still routing through the registered
+    :class:`AeatError` hierarchy required for production exceptions.
     """
 
 
