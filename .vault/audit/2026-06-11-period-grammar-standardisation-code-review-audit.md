@@ -274,3 +274,23 @@ matches were gone from `src/aeat/application/overview/_calendar.py`; ruff passed
 for that file; `git diff --check` reported no whitespace errors on the scoped
 file; the focused overview typed-period assertion and the combined-string gate
 passed with `2 passed`.
+
+## PERIOD-018 | MEDIUM | Verification diagnostics needed primitive Period context
+
+Review of the filing-evidence typed-period cleanup initially found two medium
+issues in the verification boundary. A typed `Period` whose filing year did not
+match `ejercicio` raised `RegistrySnapshotError` past the application boundary
+instead of `VerificationError`, and verification error contexts carried raw
+`Period` objects that rendered as `<Period>` in CLI diagnostics.
+
+Resolution landed in commit `9798dc210`: `_parse_period` now reports mismatched
+typed filing years as `VerificationError`, verification contexts project periods
+through a primitive display label such as `2025 1T`, and tests cover the
+primitive text/JSON rendering path plus the mismatch boundary.
+
+Verification after the fix: ruff passed for all touched files; the expanded
+reconciliation, justificante, and verification suite passed with `150 passed`;
+the declaration parser boundary/synthetic suite passed with `102 passed`; CLI
+import smoke printed `OK`; the combined-string gate passed with `1 passed`; and
+`git diff --check` reported no whitespace errors on the scoped files. The
+follow-up reviewer reported no findings.
