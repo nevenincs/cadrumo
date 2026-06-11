@@ -126,3 +126,39 @@ fixtures, helpers, and test-only support types.
 
 Verification reported by the reviewer: `test_actions_review.py` passed with `5 passed`,
 and the integration ledger link/check verb suite passed with `6 passed`.
+
+## PERIOD-010 | MEDIUM | Readiness no-period fallback was unreachable
+
+Review of commits `94fa01ae7` and `ec84d2fab` found that the direct
+`core.Period` pass-throughs were correct for explicit periods: modelo calculation
+preflight passes `work_unit.period` directly, and state projection readiness no
+longer projects ledger reports through the old aggregation-period adapter.
+
+The review found one medium issue in the state projection no-period path:
+`ModeloReadinessRequest(period=None)` still became an empty `period_token` before
+profile preflight report construction. Because `ProfilePreflightReport.period`
+requires a non-empty token, the intended annual `0A` fallback could not be reached.
+
+Resolution landed in commit `debaac92e`: state projection now resolves
+`readiness_period = Period.from_year_and_code(filing_year, "0A")` before profile
+preflight and reuses that typed value for profile preflight, registry snapshot
+lookup, and ledger preflight. A real projection regression test covers the
+no-period request path and asserts the projected annual `Period`.
+
+Verification before the fix: the reviewer ran state projection plus ledger
+preflight tests with `27 passed`. Local verification after the fix: ruff passed
+for `state_projection.py` and `test_state_projection.py`; the full state projection
+test file passed with `16 passed`; CLI import smoke printed `OK`.
+
+## PERIOD-011 | INFO | No findings in readiness annual fallback follow-up
+
+Review of commit `debaac92e` found no remaining issues. The reviewer confirmed
+that no-period readiness resolves `Period.from_year_and_code(filing_year, "0A")`
+before profile report construction, that the same resolved token is used for
+registry snapshot lookup, and that actual ledger preflight receives the typed
+`readiness_period`. The reviewer also confirmed the regression test is
+non-tautological because it builds real isolated storage/profile state and invokes
+the production projection path.
+
+Verification reported by the reviewer: the no-period annual fallback regression
+and the explicit-period ledger preflight blocker test passed with `2 passed`.
