@@ -111,7 +111,7 @@ def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: s
             description,
             "--idempotency-key",
             key,
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
     return _json(result)
@@ -224,7 +224,7 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, Any]:
             "21.00",
             "--idempotency-key",
             "cash-office-2026-05-02",
-        ]
+        ],
     )
     assert bucket_id not in json.dumps(payload, sort_keys=True)
     assert payload["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
@@ -262,7 +262,6 @@ def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
             "app",
             "ledger",
             "update",
-            "--id",
             transaction_id,
             "--amount",
             "121.50",
@@ -274,7 +273,7 @@ def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
             "OUTGOING",
             "--description",
             "cash office supplies corrected",
-        ]
+        ],
     )
     transaction = cast(dict[str, object], edited["transaction"])
     assert Decimal(cast(str, transaction["amount"])) == Decimal("121.50")
@@ -290,7 +289,6 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
             "app",
             "ledger",
             "classify",
-            "--id",
             transaction_id,
             "--classification",
             "BUSINESS",
@@ -302,7 +300,7 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
             "0.21",
             "--iva-amount",
             "21.09",
-        ]
+        ],
     )
     transaction = cast(dict[str, object], classified["transaction"])
     assert transaction["business_classification"] == "BUSINESS"
@@ -334,7 +332,6 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
             "app",
             "ledger",
             "allocate",
-            "--id",
             transaction_id,
             "--business-pct",
             "0.60",
@@ -342,7 +339,7 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
             "telefonia_movil",
             "--usage-ratio-id",
             "telefonia_movil",
-        ]
+        ],
     )
     transaction = cast(dict[str, object], allocated["transaction"])
     assert transaction["business_classification"] == "MIXED"
@@ -385,7 +382,7 @@ def _assert_ledger_track_returns_lineage(
 
 def _assert_ledger_review_returns_transaction(transaction_id: str) -> None:
     """The review verb returns the transaction by id with the post-update description."""
-    reviewed = _run_ledger_cli_json(["app", "ledger", "review", "--id", transaction_id])
+    reviewed = _run_ledger_cli_json(["app", "ledger", "review", transaction_id])
     assert reviewed["id"] == transaction_id
     assert reviewed["description"] == "cash office supplies corrected"
     assert reviewed["review_status"] == "reviewed"
@@ -394,7 +391,7 @@ def _assert_ledger_review_returns_transaction(transaction_id: str) -> None:
 def _assert_ledger_review_filtered_by_period_returns_empty(transaction_id: str) -> None:
     """Review with a period filter that doesn't match returns an empty rows list."""
     filtered_out = _run_ledger_cli_json(
-        ["app", "ledger", "review", "--id", transaction_id, "--filter", "period=2026-06"]
+        ["app", "ledger", "review", transaction_id, "--filter", "period=2026-06"],
     )
     assert filtered_out["rows"] == []
     assert filtered_out["filters"] == ["period=2026-06", f"id={transaction_id}"]
@@ -413,7 +410,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     """
     _isolate(monkeypatch, tmp_path)
     init = _invoke(
-        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"]
+        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
     )
     assert init.exit_code == 0, init.output
     bucket_id = _active_bucket_id()
@@ -436,7 +433,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     transaction_id = cast(str, allocated["transaction_id"])
     _assert_ledger_status_one_ready_row(bucket_id)
     _assert_ledger_track_returns_lineage(
-        transaction_id, expected_created_event_id=created_event_id, bucket_id=bucket_id
+        transaction_id, expected_created_event_id=created_event_id, bucket_id=bucket_id,
     )
     _assert_ledger_review_returns_transaction(transaction_id)
     _assert_ledger_review_filtered_by_period_returns_empty(transaction_id)
@@ -487,7 +484,7 @@ def _drive_ledger_lifecycle_round_trip(
     """
     _isolate(monkeypatch, tmp_path)
     init = _invoke(
-        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"]
+        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
     )
     assert init.exit_code == 0, init.output
     bucket_id = _active_bucket_id()
@@ -558,7 +555,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
             "currency": "EUR",
             "lines": (purchase_line,),
             "payment_status": PaymentStatus.PAID,
-        }
+        },
     )
     with activate_master_key_provider(get_master_key_provider()):
         InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
@@ -572,25 +569,25 @@ def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, 
         [
             "--format", "json",
             "app", "ledger", "attach",
-            "--id", str(row["transaction_id"]),
+            str(row["transaction_id"]),
             "--purchase-invoice-evidence-id", purchase_invoice_evidence_id,
-        ]
+        ],
     )  # fmt: skip
     assert attached.exit_code == 0, attached.output
     return _json(attached)
 
 
 def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) -> dict[str, object]:
-    """Drive one ``app ledger <verb> --id ... --reason ... --yes`` lifecycle transition."""
+    """Drive one ``app ledger <verb> <id> --reason ... --yes`` lifecycle transition."""
     row = _create_manual_ledger_row(f"{verb} row", key=key)
     result = _invoke(
         [
             "--format", "json",
             "app", "ledger", verb,
-            "--id", str(row["transaction_id"]),
+            str(row["transaction_id"]),
             "--reason", reason,
             "--yes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _json(result)
@@ -600,12 +597,12 @@ def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object
     """Drive the three-step remove flow: --dry-run, refused (no --yes), confirmed --yes."""
     remove_row = _create_manual_ledger_row("remove row", key="cli-remove-row")
     dry = _invoke(
-        ["--format", "json", "app", "ledger", "remove", "--id", str(remove_row["transaction_id"]), "--dry-run"]
+        ["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"]), "--dry-run"],
     )
     assert dry.exit_code == 0, dry.output
-    refused = _invoke(["--format", "json", "app", "ledger", "remove", "--id", str(remove_row["transaction_id"])])
+    refused = _invoke(["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"])])
     confirmed = _invoke(
-        ["--format", "json", "app", "ledger", "remove", "--id", str(remove_row["transaction_id"]), "--yes"]
+        ["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"]), "--yes"],
     )
     assert confirmed.exit_code == 0, confirmed.output
     return _json(dry), refused.exit_code, _json(confirmed)
@@ -621,7 +618,7 @@ def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
             "--output", str(export_path),
             "--export-format", "jsonl",
             "--include-inactive",
-        ]
+        ],
     )  # fmt: skip
     assert exported.exit_code == 0, exported.output
     return _json(exported), export_path
@@ -750,7 +747,7 @@ def test_app_ledger_import_reimport_review_round_trips_state(
             "12345678Z",
             "--activity",
             "Test",
-        ]
+        ],
     )
     assert init.exit_code == 0
     statement = tmp_path / "n26.csv"
@@ -782,7 +779,7 @@ def test_app_ledger_import_reimport_review_round_trips_state(
     assert {row["status"] for row in payload["rows"]} == {"pending"}
     vendor_id = rows_by_description["Subscription"]["id"]
 
-    reviewed = _invoke(["--format", "json", "app", "ledger", "review", "--id", vendor_id])
+    reviewed = _invoke(["--format", "json", "app", "ledger", "review", vendor_id])
     assert reviewed.exit_code == 0, reviewed.output
     reviewed_payload = _json(reviewed)
     assert reviewed_payload["id"] == vendor_id

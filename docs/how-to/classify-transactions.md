@@ -45,7 +45,7 @@ Expense rows normally need a category id before a modelo can calculate from
 them:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
 For money you received (income), aeat does not usually need a category — it calculates income totals automatically.
@@ -61,7 +61,7 @@ use `aeat app ledger payable-invoice --help` for supplier invoices and
 If a row needs regulated tax fields, add only the fields that apply:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --classification BUSINESS --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
 ```
 
 Common fields include taxable base, IVA rate, IVA amount, IVA category, IRPF
@@ -82,13 +82,13 @@ EU suppliers, or recargo de equivalencia. Run
 Use `MIXED` with a business percentage from `0` to `1`:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --classification MIXED --business-pct 0.5 --category-id <category-id>
+aeat app ledger classify <transaction-id> --classification MIXED --business-pct 0.5 --category-id <category-id>
 ```
 
 You can also record allocation through the allocation command:
 
 ```bash
-aeat app ledger allocate --id <transaction-id> --business-pct 0.5 --category-id <category-id>
+aeat app ledger allocate <transaction-id> --business-pct 0.5 --category-id <category-id>
 ```
 
 Leave `--usage-ratio-id` out unless you have already set up a saved proportion
@@ -137,7 +137,7 @@ Recommended workflow:
 1. Select rows with `ledger list`:
 
    ```bash
-   aeat app ledger list --filter period=2026-1T --filter classification=NOT_YET_PROCESSED
+   aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
    ```
 
 2. Export the period as a review snapshot:
@@ -158,7 +158,7 @@ Recommended workflow:
 
    ```bash
    aeat app ledger classify --from-csv ./classifications.csv
-   aeat app ledger list --filter period=2026-1T
+   aeat app ledger list --filter period=1T --filter year=2026
    aeat app ledger preflight --year 2026 --period 1T
    ```
 
@@ -208,7 +208,7 @@ rate, currency, or proportionality reference.
 Re-run `classify` on the same transaction id:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --classification PERSONAL
+aeat app ledger classify <transaction-id> --classification PERSONAL
 ```
 
 A manual decision replaces the previous classification. Inspect the row again

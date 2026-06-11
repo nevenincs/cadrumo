@@ -80,7 +80,7 @@ def _import_corpus() -> None:
 
 def _import_bbva() -> None:
     result = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"]
+        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
 
@@ -261,7 +261,7 @@ def test_history_after_disposition_records_the_decision() -> None:
     before_val = before_hist.get("event_count")
     before = before_val if isinstance(before_val, int) else 0
     archived = _RUNNER.invoke(
-        app, ["app", "ledger", "archive", "--id", tx_val, "--reason", "personal expense", "--yes"]
+        app, ["app", "ledger", "archive", tx_val, "--reason", "personal expense", "--yes"],
     )
     assert archived.exit_code == 0, archived.output
     after_hist = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx_val]).output)
@@ -285,7 +285,7 @@ def test_asesor_can_classify_then_preflight_surfaces_recargo_gaps() -> None:
     assert isinstance(tx_val, str)
     classify = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx_val, "--classification", "BUSINESS"],
+        ["app", "ledger", "classify", tx_val, "--classification", "BUSINESS"],
     )
     assert classify.exit_code == 0, classify.output
     refreshed = _find(_list_rows(), _RECARGO_DESC)
@@ -320,7 +320,7 @@ def test_personal_row_drops_out_of_readiness_when_classified() -> None:
     assert isinstance(tx_val, str)
     classify = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx_val, "--classification", "PERSONAL"],
+        ["app", "ledger", "classify", tx_val, "--classification", "PERSONAL"],
     )
     assert classify.exit_code == 0, classify.output
 
@@ -347,7 +347,7 @@ def test_check_clears_recargo_row_once_personal_and_business_dispositioned() -> 
     """
     _import_corpus()
     before_issues_val = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"]).output).get(
-        "issues", []
+        "issues", [],
     )
     before = len(before_issues_val) if isinstance(before_issues_val, list) else 0
     row = _find(_list_rows(), _PERSONAL_DESC)
@@ -355,11 +355,11 @@ def test_check_clears_recargo_row_once_personal_and_business_dispositioned() -> 
     assert isinstance(tx_val, str)
     classify = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx_val, "--classification", "PERSONAL"],
+        ["app", "ledger", "classify", tx_val, "--classification", "PERSONAL"],
     )
     assert classify.exit_code == 0, classify.output
     after_issues_val = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"]).output).get(
-        "issues", []
+        "issues", [],
     )
     after = len(after_issues_val) if isinstance(after_issues_val, list) else 0
     assert after < before, (before, after)

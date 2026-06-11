@@ -664,6 +664,7 @@ def _cross_period_clean_state_next_action(
         CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
         CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
         CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD,
+        CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,
         CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,
         CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
     }:
@@ -809,7 +810,7 @@ def _missing_evidence_advisory_findings(
             message=diagnostic.message,
             next_action=(
                 "Attach the supporting invoice with "
-                f"`aeat app ledger attach --id {diagnostic.binding_id} --attachment-id ATTACHMENT_ID` "
+                f"`aeat app ledger attach {diagnostic.binding_id} --attachment-id ATTACHMENT_ID` "
                 "(or --purchase-invoice-evidence-id), then rerun verification."
             ),
             legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,

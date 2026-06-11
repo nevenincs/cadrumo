@@ -15,7 +15,7 @@ current list, run `aeat app ledger providers`.
 Use one of those names in the classification command:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --llm claude
+aeat app ledger classify <transaction-id> --llm claude
 ```
 
 ## Check what aeat can see
@@ -53,7 +53,7 @@ ledger:
 ```bash
 aeat config profile status
 aeat app ledger list --filter classification=NOT_YET_PROCESSED
-aeat app ledger classify --id <transaction-id> --llm claude
+aeat app ledger classify <transaction-id> --llm claude
 ```
 
 A successful smoke test previews a suggestion and leaves the ledger unchanged.
@@ -65,7 +65,7 @@ Only use `--apply` after you have verified that preview works and you have
 reviewed the suggestion:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --llm claude --apply
+aeat app ledger classify <transaction-id> --llm claude --apply
 ```
 
 ## Privacy boundary

@@ -187,7 +187,6 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
             "app",
             "ledger",
             "classify",
-            "--id",
             tx,
             "--classification",
             "BUSINESS",
@@ -251,7 +250,6 @@ def test_split_then_merge_roundtrip() -> None:
             "app",
             "ledger",
             "split",
-            "--id",
             tx,
             "--child-amount",
             f"{half}",
@@ -286,7 +284,7 @@ def test_archive_then_history() -> None:
     rows = _list_rows()
     personal = next(r for r in rows if "Suscripcion Netflix" in r["description"])
     tx = personal["transaction_id"]
-    archived = _RUNNER.invoke(app, ["app", "ledger", "archive", "--id", tx, "--reason", "personal", "--yes"])
+    archived = _RUNNER.invoke(app, ["app", "ledger", "archive", tx, "--reason", "personal", "--yes"])
     assert archived.exit_code == 0, archived.output
     history = _RUNNER.invoke(app, ["app", "ledger", "history", tx])
     assert history.exit_code == 0, history.output
@@ -340,7 +338,6 @@ def test_allocate_records_business_proportion() -> None:
             "app",
             "ledger",
             "allocate",
-            "--id",
             tx,
             "--business-pct",
             "0.30",
@@ -394,7 +391,6 @@ def test_split_children_then_merge() -> None:
             "app",
             "ledger",
             "split",
-            "--id",
             parent["transaction_id"],
             "--child-amount",
             f"{half}",
@@ -479,7 +475,7 @@ def test_stash_remove_and_track() -> None:
     stash_row = _find(rows, "Material oficina Papeleria Gomez")
     stashed = _RUNNER.invoke(
         app,
-        ["app", "ledger", "stash", "--id", stash_row["transaction_id"], "--reason", "pending review", "--yes"],
+        ["app", "ledger", "stash", stash_row["transaction_id"], "--reason", "pending review", "--yes"],
     )
     assert stashed.exit_code == 0, stashed.output
     # Post-stash post-state: the row remains listed but transitions to STASHED
@@ -507,7 +503,7 @@ def test_stash_remove_and_track() -> None:
     remove_row = _find(rows, "Comida de trabajo Restaurante El Olivo")
     removed = _RUNNER.invoke(
         app,
-        ["app", "ledger", "remove", "--id", remove_row["transaction_id"], "--reason", "duplicate", "--yes"],
+        ["app", "ledger", "remove", remove_row["transaction_id"], "--reason", "duplicate", "--yes"],
     )
     assert removed.exit_code == 0, removed.output
     # Post-remove: the removed row is absent from the default list.
@@ -583,7 +579,7 @@ def test_list_truncation_footer_states_the_full_total() -> None:
 
 # --- Grouping / labelling + grouped display ----------------------------------------
 def _set_group(tx_id: str, label: str) -> None:
-    res = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx_id, "--group", label])
+    res = _RUNNER.invoke(app, ["app", "ledger", "update", tx_id, "--group", label])
     assert res.exit_code == 0, res.output
 
 
@@ -618,13 +614,13 @@ def test_unrelated_update_preserves_group_label() -> None:
     row = _find(rows, "Material oficina Papeleria Gomez")
     _set_group(row["transaction_id"], "Q1 viajes")
     # An edit to an unrelated field must NOT wipe the operator's grouping.
-    res = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", row["transaction_id"], "--notes", "revisado"])
+    res = _RUNNER.invoke(app, ["app", "ledger", "update", row["transaction_id"], "--notes", "revisado"])
     assert res.exit_code == 0, res.output
     after = {r["transaction_id"]: r for r in _list_rows()}[row["transaction_id"]]
     assert after["group_label"] == "Q1 viajes"
 
     # Passing an empty --group clears the label.
-    cleared = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", row["transaction_id"], "--group", ""])
+    cleared = _RUNNER.invoke(app, ["app", "ledger", "update", row["transaction_id"], "--group", ""])
     assert cleared.exit_code == 0, cleared.output
     final = {r["transaction_id"]: r for r in _list_rows()}[row["transaction_id"]]
     assert final["group_label"] is None
@@ -709,13 +705,13 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() 
     assert transfer["direction"] == "OUTGOING"
     assert transfer["business_classification"] == "NOT_YET_PROCESSED"
 
-    reclass = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx, "--direction", "INTERNAL_TRANSFER"])
+    reclass = _RUNNER.invoke(app, ["app", "ledger", "update", tx, "--direction", "INTERNAL_TRANSFER"])
     assert reclass.exit_code == 0, reclass.output
     after = {r["transaction_id"]: r for r in _list_rows()}[tx]
     assert after["direction"] == "INTERNAL_TRANSFER"
 
     # A transfer must not be promotable to a tax-relevant BUSINESS row.
-    refused = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx, "--classification", "BUSINESS"])
+    refused = _RUNNER.invoke(app, ["app", "ledger", "update", tx, "--classification", "BUSINESS"])
     assert refused.exit_code != 0, refused.output
     assert after["business_classification"] != "BUSINESS"
 
@@ -740,7 +736,7 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
     old_id = target["transaction_id"]
 
     res = _RUNNER.invoke(
-        app, ["app", "ledger", "update", "--id", old_id, "--description", "Material oficina (corregido)"],
+        app, ["app", "ledger", "update", old_id, "--description", "Material oficina (corregido)"],
     )
     assert res.exit_code == 0, res.output
 
@@ -765,12 +761,12 @@ def test_reclassify_retains_classification_event_chain() -> None:
 
     first = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--category-id", "material_oficina"],
+        ["app", "ledger", "classify", tx, "--classification", "BUSINESS", "--category-id", "material_oficina"],
     )
     assert first.exit_code == 0, first.output
     second = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS", "--category-id", "asesoria_fiscal"],
+        ["app", "ledger", "classify", tx, "--classification", "BUSINESS", "--category-id", "asesoria_fiscal"],
     )
     assert second.exit_code == 0, second.output
 
@@ -863,7 +859,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
         ),
     )
 
-    refused = _RUNNER.invoke(app, ["app", "ledger", "update", "--id", tx, "--notes", "tweak"])
+    refused = _RUNNER.invoke(app, ["app", "ledger", "update", tx, "--notes", "tweak"])
     assert refused.exit_code != 0, refused.output
     assert "finalized modelo" in refused.output.lower() or "modelo" in refused.output.lower()
 
@@ -881,7 +877,7 @@ def test_doclink_refuses_when_document_bytes_are_unreachable() -> None:
 
     res = _RUNNER.invoke(
         app,
-        ["app", "ledger", "doclink", "--id", tx, "--source", "GOOGLE_DRIVE", "--reference", link, "--note", "ticket"],
+        ["app", "ledger", "doclink", tx, "--source", "GOOGLE_DRIVE", "--reference", link, "--note", "ticket"],
     )
     assert res.exit_code != 0, res.output
 
@@ -902,7 +898,6 @@ def test_doclink_refuses_non_link_source(tmp_path: Path) -> None:
             "app",
             "ledger",
             "doclink",
-            "--id",
             tx,
             "--source",
             "LOCAL_FILE",
@@ -935,7 +930,6 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
             "app",
             "ledger",
             "split",
-            "--id",
             parent_id,
             "--child-amount",
             str(biz),
@@ -968,7 +962,6 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
             "app",
             "ledger",
             "classify",
-            "--id",
             biz_child.transaction_id,
             "--classification",
             "BUSINESS",
@@ -978,7 +971,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     )
     assert cls_biz.exit_code == 0, cls_biz.output
     cls_per = _RUNNER.invoke(
-        app, ["app", "ledger", "classify", "--id", per_child.transaction_id, "--classification", "PERSONAL"],
+        app, ["app", "ledger", "classify", per_child.transaction_id, "--classification", "PERSONAL"],
     )
     assert cls_per.exit_code == 0, cls_per.output
 

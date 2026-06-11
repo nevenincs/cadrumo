@@ -33,7 +33,7 @@ def test_link_requires_at_least_one_target(cli_runner: CliRunner) -> None:
     """Neither --invoice-id nor --evidence-id supplied surfaces as
     BadParameter; the canonical call is meant to bind something."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "link", "--id", "0" * 64])
+    result = cli_runner.invoke(app, ["app", "ledger", "link", "0" * 64])
     assert result.exit_code != 0, result.output
 
 
@@ -43,7 +43,7 @@ def test_link_refuses_unknown_transaction_id(cli_runner: CliRunner) -> None:
 
     result = cli_runner.invoke(
         app,
-        ["app", "ledger", "link", "--id", "0" * 64, "--evidence-id", "ev-123"],
+        ["app", "ledger", "link", "0" * 64, "--evidence-id", "ev-123"],
     )
     assert result.exit_code != 0, result.output
 

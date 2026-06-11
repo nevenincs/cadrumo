@@ -100,7 +100,7 @@ def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
     (extra=forbid) previously omitted the two fields, so
     ``LedgerViewResult.model_validate(result_payload.model_dump(...))`` raised
     ValidationError(extra_forbidden) for any GBP/USD row — making the entire
-    single-transaction correction surface (view/classify --id/update/archive/
+    single-transaction correction surface (view/classify/update/archive/
     stash, all of which nest TransactionPayload) unreachable. Before the field
     declaration this view exits non-zero with extra_forbidden; after, it exits 0
     and surfaces the persisted EUR-equivalent and applied rate.
@@ -109,7 +109,7 @@ def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
 
     assert (
         _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"]
+            app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"],
         ).exit_code
         == 0
     )
@@ -146,7 +146,7 @@ def test_view_single_eur_row_keeps_fx_fields_null() -> None:
 
     assert (
         _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"]
+            app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"],
         ).exit_code
         == 0
     )
@@ -217,7 +217,7 @@ def test_review_filter_by_classification() -> None:
 
     rows = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"]).output)["result"]["rows"]
     tx = next(r["transaction_id"] for r in rows if "ACME" in r["description"])
-    assert _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS"]).exit_code == 0
+    assert _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--classification", "BUSINESS"]).exit_code == 0
     after = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--filter", "classification=BUSINESS"])
     assert after.exit_code == 0, after.output
     matched = json.loads(after.output)["result"]["rows"]
@@ -249,7 +249,7 @@ def test_status_surfaces_income_expense_net_rollup() -> None:
 
     assert (
         _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"]
+            app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
         ).exit_code
         == 0
     )
@@ -257,7 +257,7 @@ def test_status_surfaces_income_expense_net_rollup() -> None:
     income = next(r.get("full_id") or r["transaction_id"] for r in rows if "ACME" in r["description"])
     expense = next(r.get("full_id") or r["transaction_id"] for r in rows if "Gestoria" in r["description"])
     for tx in (income, expense):
-        classify_result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--classification", "BUSINESS"])
+        classify_result = _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--classification", "BUSINESS"])
         assert classify_result.exit_code == 0
     report = json.loads(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "status"]).output)["result"]
     assert report["income_total"] != "0.00"
@@ -271,7 +271,7 @@ def test_review_filter_text_search() -> None:
 
     assert (
         _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"]
+            app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
         ).exit_code
         == 0
     )
