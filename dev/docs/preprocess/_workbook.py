@@ -262,7 +262,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
                 preprocessor_version=WORKBOOK_EXTRACTOR_VERSION,
                 attribution=attribution,
                 units=(),
-            )
+            ),
         ]
 
     groups = _split_units_by_budget(units)
@@ -281,7 +281,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
                 preprocessor_version=WORKBOOK_EXTRACTOR_VERSION,
                 attribution=attribution,
                 units=tuple(group),
-            )
+            ),
         )
     return outputs
 

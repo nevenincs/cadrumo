@@ -313,6 +313,31 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 ),
             ),
         )
+        wrong_identity_body = b"modelo-303-2025-3T-justificante"
+        wrong_identity_artefact = store.persist_artefact(
+            ("303", 2025, "3T", "12345678901234567892"),
+            FiledDeclaracionArtefact(
+                kind="justificante_pdf",
+                source_url=_SOURCE_URL,
+                content_type="application/pdf",
+                byte_count=len(wrong_identity_body),
+                sha256=hashlib.sha256(wrong_identity_body).hexdigest(),
+                captured_at=datetime(2025, 10, 16, 12, 1, tzinfo=UTC),
+            ),
+            wrong_identity_body,
+        )
+        store.persist_observation(
+            FiledDeclaracionObservation(
+                modelo="303",
+                ejercicio=2025,
+                period="3T",
+                expediente_id="12345678901234567892",
+                status="ALTA",
+                presented_at=datetime(2025, 10, 15, 9, 30, tzinfo=UTC),
+                authenticated_identity="Y7654321Z",
+                artefacts=(wrong_identity_artefact,),
+            ),
+        )
 
     with profile_create_storage_span("second"):
         workflow_state_repository().update(
@@ -327,7 +352,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     with profile_storage_session("second"):
         second_evidence = _local_calendar_filing_evidence("second", ())
     with profile_storage_session("operator"):
-        operator_evidence = _local_calendar_filing_evidence("operator", ())
+        operator_evidence = _local_calendar_filing_evidence("operator", (), expected_tax_id="X1234567L")
 
     assert second_evidence == ()
     by_period = {row.period: row for row in operator_evidence}
@@ -339,10 +364,12 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     ]
     period_1t = Period.from_year_and_code(2025, "1T")
     period_2t = Period.from_year_and_code(2025, "2T")
+    period_3t = Period.from_year_and_code(2025, "3T")
     assert by_period[period_1t].aeat_submission_state.value == "justificante_verified"
     assert by_period[period_1t].justificante_verified is True
     assert by_period[period_2t].aeat_submission_state.value == "submitted_observed"
     assert by_period[period_2t].justificante_verified is False
+    assert period_3t not in by_period
 
 
 def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata() -> None:

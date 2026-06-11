@@ -12,6 +12,15 @@ related:
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `calendar-filing-semantics` `implementation` plan
 
@@ -36,6 +45,17 @@ Add regression tests that prevent conflating local filed records with AEAT-submi
 
 - [x] `W02.P02.S03` - Add application and CLI regression tests for dual filing states; `src/aeat/application/overview/tests/test_calendar.py`.
 - [x] `W02.P02.S04` - Run focused gates, live-local calendar verification, execution records, and code review; `.vault/exec/2026-06-05-calendar-filing-semantics`.
+
+## Wave `W03` - taxpayer-bound justificante verification
+
+Close the continuation gap where Modelo external evidence could mark calendar entries as justificante-verified without persisted taxpayer-bound justificante metadata.
+
+### Phase `W03.P03` - metadata-bound calendar verification
+
+Require calendar verificante state to come from secure persisted justificante metadata matched to the rendered taxpayer.
+
+- [x] `W03.P03.S05` - Bind calendar justificante verification to persisted metadata and active taxpayer; `src/aeat/application/overview/_calendar.py, src/aeat/entrypoints/cli/_overview.py, src/aeat/application/overview/tests/test_calendar.py, src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
+- [x] `W03.P03.S06` - Bind live filed-declaration evidence to authenticated taxpayer identity; `src/aeat/application/overview/_calendar.py, src/aeat/application/overview/tests/test_calendar.py`.
 
 ## Description
 

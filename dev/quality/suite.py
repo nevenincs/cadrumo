@@ -47,8 +47,8 @@ def _strip_just_noise(output: str) -> str:
 
 def run_gate(name: str) -> GateResult:
     """Run a single ``just`` gate recipe, capturing combined output."""
-    result = subprocess.run(  # noqa: S603
-        ["just", name],  # noqa: S607
+    result = subprocess.run(
+        ["just", name],
         capture_output=True,
         text=True,
         check=False,

@@ -709,11 +709,14 @@ application:
         egy mező értéke szükséges; a megadott leképezés üres.
       external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
         already exists in the catalogue; an identical import was already recorded.
+      external_import_justificante_mismatch: application.modelo.errors.external_import_justificante_mismatch
+      external_import_justificante_missing: application.modelo.errors.external_import_justificante_missing
       external_import_registry_root_missing: Registry root %{registry_root} is missing;
         imported casilla ids cannot be validated.
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.
+      external_import_tax_id_missing: 'A kulso bevallasimport bizonyiteka %{evidence_reference_id} (%{evidence_kind}) megkoveteli a bevallo adoazonositojat, mielott igazolo artefakthoz kotheto.'
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
@@ -1052,10 +1055,6 @@ application:
       no_run_for_period: Nem található munkafolyamat-futás a(z) {modelo} modellhez
         {period} időszakra. Futtassa a munkafolyamatot legalább egyszer a folytatás
         előtt.
-      period_registry_unmappable: A(z) {period} munkafolyamat-időszak nem képezhető
-        le nyilvántartási időszakra.
-      period_registry_year_unresolvable: Nem vezethető le a nyilvántartás éve a(z)
-        {period} munkafolyamat-időszakból.
       profile_label_ambiguous: 'A(z) {label} profilcímke kétértelmű: {count} aktív
         tároló viseli.'
       resume_refused_no_aborted_reason: A(z) {run_id} futás ABORTED állapotban van
@@ -1151,21 +1150,28 @@ cli:
         valuation_preview_help: Zárópreparát és értékesítési önköltség előnézete.
         year_help: Adóév.
       invoice:
-        add_help: 'Új üzleti számla regisztrálása.'
-        country_code_help: 'Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi műveletek).'
-        eu_iva_id_help: 'Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi műveletekhez.'
-        group_help: 'Üzleti számlák nyilvántartása (kiállított vagy beérkezett).'
-        invoice_date_help: 'A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN), pl. 2026-01-15.'
-        invoice_id_help: 'Számla azonosítója (vagy egyértelmű előtag).'
-        kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak tartozol).'
-        list_help: 'Üzleti számlák listázása (mindkét típus, ha a --kind nem szűr).'
-        operation_type_help: 'M349 művelettípus: E áruszállítás, S szolgáltatás, T háromszögügylet, R helyesbítés, A áruátvétel, I szolgáltatásvásárlás, M egyéb.'
-        operation_type_invalid: 'A --operation-type értéke csak a következők egyike lehet: {valid}'
-        remove_help: 'Üzleti számla törlése.'
-        update_help: 'Üzleti számla adatainak frissítése.'
-        view_help: 'Üzleti számla adatainak megjelenítése.'
-        yes_help: 'Üzleti számla törlésének megerősítése.'
-        yes_required: 'Adja meg a --yes kapcsolót az üzleti számla törléséhez.'
+        add_help: Új üzleti számla regisztrálása.
+        country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
+          műveletek).
+        eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
+          műveletekhez.
+        group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
+        invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
+          pl. 2026-01-15.
+        invoice_id_help: Számla azonosítója (vagy egyértelmű előtag).
+        kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
+          tartozol).'
+        list_help: Üzleti számlák listázása (mindkét típus, ha a --kind nem szűr).
+        operation_type_help: 'M349 művelettípus: E áruszállítás, S szolgáltatás, T
+          háromszögügylet, R helyesbítés, A áruátvétel, I szolgáltatásvásárlás, M
+          egyéb.'
+        operation_type_invalid: 'A --operation-type értéke csak a következők egyike
+          lehet: {valid}'
+        remove_help: Üzleti számla törlése.
+        update_help: Üzleti számla adatainak frissítése.
+        view_help: Üzleti számla adatainak megjelenítése.
+        yes_help: Üzleti számla törlésének megerősítése.
+        yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
       ratios:
         category_help: Kiadási kategóriaazonosító (pl. USAGE_RATIO_VEHICLE).
         eligible_help: Egy adott arányhoz alkalmas kategóriák listázása.
@@ -1688,6 +1694,7 @@ cli:
           a CLI-ben nem támogatott. Jogi alap: Orden HFP/887/2023 és RD 1065/2007
           Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi
           kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
+        dependencies_help: 'Keresztidoszaki bevallastorteneti fuggosegek es az aktualis clean-state blokkolok megjelenitese a celbevallashoz'
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
@@ -2508,13 +2515,14 @@ cli:
         tiltott export_third_country_zero_rated esetén.
       evidence_acknowledged_help: Erositse meg, hogy a bizonyitek felhoszolgaltatoval
         valo beolvasasa feltolti azt a geperol (a hozzajarulasi kapu megkoveteli).
-      from_csv_exclusive: --from-csv cannot be combined with --id or --classification.
+      from_csv_exclusive: --from-csv nem kombinálható tranzakció-azonosítóval vagy
+        --classification értékkel.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
-      id_required: --id is required when --from-csv is not provided.
+      id_required: Tranzakció-azonosító szükséges, ha a --from-csv nincs megadva.
       irpf_category_help: IRPF-kategória a nyomtatványszámításokhoz.
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
@@ -2840,6 +2848,21 @@ cli:
         előtag).
   locales:
     app_help: Lokalizációs katalógusok ellenőrzése és sablonjainak létrehozása.
+    modelo:
+      app_help: Modellsema helyi forditasok kezelese.
+      audit_help: Modellsema forditasok auditja.
+      coverage_help: Modellsema lefedettseg kiirasa.
+      field_help: Forditasi mezo.
+      key_help: Semakulcs.
+      locale_help: Locale kod.
+      modelo_help: Modelo azonosito.
+      registry_root_help: Alternativ AEAT regiszter gyoker.
+      remove_help: Egy modellsema forditas eltavolitasa.
+      revision_help: Revizio azonosito.
+      scaffold_check_help: Ellenorzes iras nelkul.
+      scaffold_help: Modellsema forditasi fajlok generalasa.
+      set_help: Egy modellsema forditas beallitasa.
+      value_help: Leforditott ertek.
     remove_key_help: Eltávolítandó pontozott locale-kulcs.
     remove_locale_help: Frissítendő locale kód.
     scaffold_check_help: Eltérések jelentése lokalizációs fájlok írása nélkül.
@@ -4309,6 +4332,22 @@ locales:
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
       key_missing: '  missing %{key}'
+    modelo:
+      audit:
+        missing: hianyzo locale=%{locale_code} modell=%{modelo} revizio=%{revision}
+          scope=%{scope} mezo=%{field} kulcs=%{key}
+        stale: elavult locale=%{locale_code} modell=%{modelo} revizio=%{revision}
+          scope=%{scope} mezo=%{field} kulcs=%{key}
+      coverage:
+        row: locale=%{locale_code} modell=%{modelo} revizio=%{revision} cimkek=%{label_translated}/%{label_required}
+          help=%{help_translated}/%{help_required}
+      remove:
+        removed: Eltavolitva %{path} %{field} %{key}
+      scaffold:
+        no_changes: A modell locale scaffold mar osszhangban van.
+        updated: Frissitve %{path}
+      set:
+        updated: Frissitve %{path} %{field} %{key}
     remove:
       removed: removed %{locale_file}:%{key}
     scaffold_updated: locale scaffold updated

@@ -43,7 +43,7 @@ def scaffold(
             "Drift detected: "
             f"{len(drift.missing_stubs)} missing, "
             f"{len(drift.orphan_stubs)} orphan, "
-            f"{len(drift.stale_stubs)} stale."
+            f"{len(drift.stale_stubs)} stale.",
         )
         if drift.missing_stubs:
             typer.echo("Missing stubs:")
@@ -62,7 +62,7 @@ def scaffold(
     result = manager.scaffold()
     typer.echo(
         f"Scaffolded {result.written} changed stubs, "
-        f"left {result.unchanged} unchanged, removed {result.removed} stale stubs."
+        f"left {result.unchanged} unchanged, removed {result.removed} stale stubs.",
     )
     if result.removed_names:
         typer.echo("Removed stale stubs:")

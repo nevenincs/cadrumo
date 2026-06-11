@@ -77,7 +77,7 @@ def _scan_file(path: Path) -> tuple[list[tuple[int, str]], list[str]]:
             f"{path}: file is {size} bytes (limit {_MAX_SOURCE_BYTES}); "
             "refusing to scan. If this is a legitimate large source, raise "
             "_MAX_SOURCE_BYTES; otherwise inspect why a binary or blob "
-            "landed in src/aeat/."
+            "landed in src/aeat/.",
         )
         return findings, errors
 
@@ -178,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     if all_errors:
         sys.stderr.write(
             "dev/quality/relative_imports.py: refusing to certify the tree because "
-            f"{len(all_errors)} file(s) could not be scanned:\n"
+            f"{len(all_errors)} file(s) could not be scanned:\n",
         )
         for err in all_errors:
             sys.stderr.write(f"  {err}\n")
@@ -187,7 +187,7 @@ def main(argv: list[str] | None = None) -> int:
     if all_findings:
         sys.stderr.write(
             "Absolute `aeat.*` imports are banned inside src/aeat/.\n"
-            "Use relative imports (`from .module import X` or `from ..sibling import Y`).\n\n"
+            "Use relative imports (`from .module import X` or `from ..sibling import Y`).\n\n",
         )
         for path, lineno, line in all_findings:
             rel = path.relative_to(REPO_ROOT)

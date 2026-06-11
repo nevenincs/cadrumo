@@ -53,3 +53,23 @@ Resolution: open. The plan now tracks this as explicit live work instead of clai
 Persisted live expedientes and notifications project into the calendar event stream correctly, including Modelo 303 filing events with `justificante_verified` state. However, because every inspected profile currently has `taxpayer_model_declared = false`, these events are not yet attached to legal obligation rows for the active taxpayer model.
 
 Resolution: accepted as phased state. Evidence projection is verified by W03 `S08`; obligation-row reconciliation remains open under W03 `S06` and `S07`.
+
+## CENSO-007 | MEDIUM | Live-captured justificante evidence was not calendar-verified from filing records
+
+`aeat_live_capture` is official AEAT justificante evidence in the live justificante reconciliation path and the cross-period clean-state gate, but overview filing evidence only promoted `aeat_justificante_pdf` to `justificante_verified`. A live-captured justificante stamped onto a filing record could therefore remain visible in the calendar as accepted/submitted but not justificante-verified.
+
+Resolution: fixed. Overview filing evidence now treats both `aeat_justificante_pdf` and `aeat_live_capture` as `justificante_verified`, with a focused regression test.
+
+## CENSO-008 | HIGH | Final live censo/calendar proof is blocked by encrypted profile-store unlock
+
+The current shell can reach AEAT's live Clave selector, but profile-bound CLI reads require the encrypted secret-store master key. `AEAT_SECRET_PASSPHRASE` is not set, and the OS keychain backend returned a logon-session error before falling back to the passphrase backend. Consequently the run could not execute live `config profile censo pull`, apply the resulting Modelo 036/G313 snapshot, or prove active-profile legal obligation rows reconciled with live filing/message/justificante evidence.
+
+Resolution: open. Added W04 steps to the plan for non-interactive profile-store unlock, full authenticated censo/filed-history/message/justificante pulls, and final active-profile calendar proof.
+
+## CENSO-009 | HIGH | Noninteractive secret-store fallback hangs instead of refusing
+
+The profile-bound CLI smoke for `app overview calendar` still timed out before any live AEAT call. A `faulthandler` probe showed the process blocked in `getpass.win_getpass` while the file-fallback master-key provider tried to prompt for the secret-store passphrase. In this automation shell, the prompt is not visible or answerable, so profile-bound live verification could hang indefinitely rather than returning the actionable CENSO-008 unlock blocker.
+
+Resolution 2026-06-11: fixed for the hang path. `_default_passphrase_callback` now refuses when no configured `Settings.aeat_secret_passphrase` exists and either stdin or stderr is not interactive. Configured passphrase resolution remains unchanged. The real CLI smoke now exits promptly with `AEAT_SECRET_PASSPHRASE is not set and stdin is not interactive` instead of hanging. W04.P04.S09, S10, and S11 remain open because the encrypted profile store is still not unlocked and no authenticated censo/filed-history/message/justificante/calendar proof has been completed.
+
+Verification 2026-06-11: `uv run pytest src/aeat/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py src/aeat/adapters/persistence/storage/master_key/tests/test_master_key.py -q` passed with 62 tests. `uv run ruff check src/aeat/adapters/persistence/storage/master_key/_master_key_io.py src/aeat/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py` passed. `uv run aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete` returned the noninteractive passphrase refusal in about 3 seconds.

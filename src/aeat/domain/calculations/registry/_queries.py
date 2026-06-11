@@ -39,6 +39,30 @@ _BARE_PERIOD_RE = re.compile(
     r"^(?:0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$",
     re.I,
 )
+
+_YEAR_PERIOD_RE = re.compile(
+    r"^(?P<year>\d{4})(?:[-_/]?(?P<period>0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+))?$",
+    re.I,
+)
+
+
+def parse_modelo_period(value: str) -> tuple[int, str]:
+    """Parse a year-qualified modelo period token.
+
+    A bare year denotes an annual declaration and therefore resolves to
+    ``0A``. Non-annual period tokens may be appended with an optional
+    separator, e.g. ``2024-1T`` or ``202401``.
+    """
+    candidate = value.strip()
+    match = _YEAR_PERIOD_RE.fullmatch(candidate)
+    if match is None:
+        raise RegistryValidationError(f"invalid modelo period {value!r}")
+    year = int(match.group("year"))
+    if year < 2000 or year > 2099:
+        raise RegistryValidationError(f"invalid modelo period year {year!r}")
+    return year, (match.group("period") or "0A").upper()
+
+
 class ModeloListRow(BaseModel):
     """One entry in a ``modelo`` catalogue listing.
 
@@ -988,4 +1012,5 @@ __all__ = [
     "ModeloListReport",
     "ModeloListRow",
     "RegistryQueryService",
+    "parse_modelo_period",
 ]

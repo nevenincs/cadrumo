@@ -52,7 +52,7 @@ def select_declarations_for_capture(
     """Select :class:`Declaracion` rows for capture from one register query."""
     selected = declarations
     if period is not None:
-        selected = tuple(row for row in selected if row.period.upper() == period.registry_token)
+        selected = tuple(row for row in selected if row.period == period)
     if expediente_id is not None:
         selected = tuple(row for row in selected if row.expediente_id == expediente_id)
     if expediente_id is not None and not selected:
@@ -71,7 +71,7 @@ def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
     return FiledDataListingRow(
         modelo=declaration.modelo,
         year=declaration.ejercicio,
-        period=Period.from_year_and_code(declaration.ejercicio, declaration.period),
+        period=declaration.period,
         expediente_id=declaration.expediente_id,
         status=declaration.estado,
         presented_at=declaration.presented_at,
