@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FIXTURE — minimal hand-authored IATE-style TBX sample for the Tier-A seed
+  importer tests (ADR D9). NOT real IATE bulk data: a clearly-labelled
+  structural sample proving the parser reads the termEntry / langSet / tig
+  three-tier shape, the reliability filter, the subject-field filter, and the
+  termType -> term-status mapping. The real IATE TBX export is placed at an
+  operator-chosen path; this fixture only exercises the parse path.
+-->
+<martif type="TBX" xml:lang="en">
+  <text>
+    <body>
+      <termEntry id="IATE-1126728">
+        <descrip type="subjectField">finance</descrip>
+        <langSet xml:lang="es">
+          <tig>
+            <term>prorrata de deduccion</term>
+            <termNote type="termType">fullForm</termNote>
+            <descrip type="reliabilityCode">9</descrip>
+          </tig>
+        </langSet>
+        <langSet xml:lang="en">
+          <tig>
+            <term>deductible proportion</term>
+            <termNote type="termType">fullForm</termNote>
+            <descrip type="reliabilityCode">9</descrip>
+          </tig>
+          <tig>
+            <term>pro rata</term>
+            <termNote type="termType">synonym</termNote>
+            <descrip type="reliabilityCode">9</descrip>
+          </tig>
+        </langSet>
+        <langSet xml:lang="hu">
+          <tig>
+            <term>levonasi hanyad</term>
+            <termNote type="termType">fullForm</termNote>
+            <descrip type="reliabilityCode">9</descrip>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry id="IATE-LOWREL">
+        <descrip type="subjectField">finance</descrip>
+        <langSet xml:lang="es">
+          <tig>
+            <term>termino poco fiable</term>
+            <termNote type="termType">fullForm</termNote>
+            <descrip type="reliabilityCode">1</descrip>
+          </tig>
+        </langSet>
+      </termEntry>
+      <termEntry id="IATE-OFFDOMAIN">
+        <descrip type="subjectField">chemistry</descrip>
+        <langSet xml:lang="es">
+          <tig>
+            <term>termino fuera de dominio</term>
+            <termNote type="termType">fullForm</termNote>
+            <descrip type="reliabilityCode">9</descrip>
+          </tig>
+        </langSet>
+      </termEntry>
+    </body>
+  </text>
+</martif>

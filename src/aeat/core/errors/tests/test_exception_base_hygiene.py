@@ -25,6 +25,12 @@ _ALLOWLIST = {
         "private ValueError raised by the multi-year enrollment recorder validator; "
         "internal contract sentinel — not surfaced to user/CLI/registry-error envelopes"
     ),
+    "aeat.terminology._errors.TerminologyError": (
+        "build-time Terminology Handbook loader ValueError; deliberately outside the "
+        "AeatError runtime hierarchy (a malformed fragment is a developer/CI stack trace, "
+        "not an operator-facing runtime failure needing an ErrorCode or JSON-envelope "
+        "redaction) — see the rationale in aeat.terminology._errors; not raised to the CLI"
+    ),
 }
 
 

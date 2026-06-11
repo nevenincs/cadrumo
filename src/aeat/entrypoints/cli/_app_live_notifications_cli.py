@@ -84,7 +84,7 @@ def notifications_pull(ctx: typer.Context) -> None:
         f"row_count\t{len(persisted.rows)}",
         f"source_url\t{persisted.source_url}",
     ]
-    _emit_envelope(ctx, command="app.live.notifications.capture", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.notifications.pull", result=result, lines=lines)
 
 
 @notifications_app.command(

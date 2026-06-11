@@ -115,7 +115,7 @@ def expedientes_pull(
         f"declaration_count\t{len(persisted.declarations)}",
         f"source_url\t{persisted.source_url}",
     ]
-    _emit_envelope(ctx, command="app.live.expedientes.capture", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.expedientes.pull", result=result, lines=lines)
 
 
 @expedientes_app.command(
@@ -201,7 +201,7 @@ def expedientes_pull_all(
             for failure in report.failures
         ],
     )
-    _emit_envelope(ctx, command="app.live.expedientes.capture_all", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.expedientes.pull_all", result=result, lines=lines)
 
 
 @expedientes_app.command(

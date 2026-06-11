@@ -132,6 +132,26 @@ class LedgerImportDiagnosticPayload(OutputSchema):
     affected_transaction_ids: list[str] = []
 
 
+class LedgerSplitChildProposalPayload(OutputSchema):
+    """One proposed child of an evidence-driven LLM split (preview surface).
+
+    The model proposed the ``proportion`` and selected the ``category`` /
+    ``iva_category``; the system DERIVED the euro ``amount`` and the regulated
+    ``iva_rate`` / ``taxable_base`` / ``iva_amount`` from the registry. Numbers
+    are JSON strings to preserve ``~decimal.Decimal`` precision.
+    """
+
+    proportion: str
+    amount: str
+    description: str
+    category: str | None = None
+    iva_category: str | None = None
+    iva_rate: str | None = None
+    taxable_base: str | None = None
+    iva_amount: str | None = None
+    rate_derivable: bool = False
+
+
 # ---------------------------------------------------------------------------
 # P01 — Mutation verb result schemas
 # ---------------------------------------------------------------------------
@@ -273,13 +293,30 @@ class LedgerResetResult(OutputSchema):
 
 @register_schema("ledger.split")
 class LedgerSplitResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger split``."""
+    """JSON envelope for ``aeat app ledger split``.
+
+    Covers the manual split (explicit ``--child-amount`` / ``--child-description``)
+    and the evidence-driven LLM split (``--llm``). On the LLM preview path
+    (``--llm`` without ``--apply``) ``persisted`` is False, nothing is written, and
+    ``proposed_children`` carries the derived child amounts for review; the
+    structural ``split_group_id`` / ``bucket_event_id`` appear only once a split is
+    actually persisted.
+    """
 
     bucket_id: str
     parent_transaction_id: str
-    split_group_id: str
-    child_transaction_ids: list[str]
-    bucket_event_id: str
+    split_group_id: str | None = None
+    child_transaction_ids: list[str] = []
+    bucket_event_id: str | None = None
+    # LLM evidence-driven path (--llm)
+    llm: bool | None = None
+    persisted: bool | None = None
+    provider: str | None = None
+    provenance: str | None = None
+    reason: str | None = None
+    parent_amount: str | None = None
+    proposed_children: list[LedgerSplitChildProposalPayload] | None = None
+    classified_child_count: int | None = None
 
 
 @register_schema("ledger.merge")
@@ -350,7 +387,10 @@ class LedgerStatusResult(OutputSchema):
     pending_review_count: int
     reviewed_count: int
     skipped_count: int
-    period: str | None = None
+    # The filing period travels as a typed :class:`Period` date span on the
+    # backend report; the JSON envelope surfaces its serialised mapping (year,
+    # quarter/month, start/end), mirroring ``LedgerPreflightResult.period``.
+    period: dict[str, object] | None = None
     checked_transaction_count: int = 0
     readiness_issue_count: int = 0
     ready: bool | None = None
@@ -436,7 +476,9 @@ class LedgerImportPayload(OutputSchema):
     likely_duplicates: int = 0
     dry_run: bool
     verify: bool
-    period: str | None = None
+    # The filing period travels as a typed :class:`Period` date span on the
+    # backend result; the JSON envelope surfaces its serialised mapping.
+    period: dict[str, object] | None = None
     bucket_id: str | None = None
     import_batch_id: str | None = None
     bucket_event_ids: list[str] = []

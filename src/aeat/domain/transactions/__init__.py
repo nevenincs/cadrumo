@@ -61,6 +61,7 @@ from ._llm import (
     prompt_spec_with_saturation_fields,
     register_classifier,
     resolve_classifier,
+    resolve_split_proposer,
     unregister_classifier,
 )
 from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
@@ -193,6 +194,7 @@ __all__ = [
     "register_classifier",
     "resolve_classifier",
     "resolve_profile",
+    "resolve_split_proposer",
     "set_classification",
     "snapshot_classification_state",
     "transaction_catalogue_object_key",

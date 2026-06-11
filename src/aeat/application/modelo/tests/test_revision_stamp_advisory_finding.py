@@ -90,7 +90,7 @@ def test_legacy_unstamped_clean_dependency_produces_warning_advisory_finding() -
     finding = advisory[0]
     assert "revision stamp" in finding.message
     assert finding.next_action is not None
-    assert "aeat app live filed capture-sources" in finding.next_action
+    assert "aeat app live filed pull-sources" in finding.next_action
     # No BLOCKING finding may be emitted for a clean-but-unstamped dependency.
     assert not any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
 
@@ -157,7 +157,7 @@ def test_registry_revision_divergence_next_action_names_re_file_remediation() ->
     assert "no longer" in next_action
     assert "re-stamped under the current revision" in next_action
     # The remediation must name the SOURCE period capture, not the generic target import/reconcile message.
-    assert "aeat app live filed capture-sources --modelo 303 --year 2025 --period 1T" in next_action
+    assert "aeat app live filed pull-sources --modelo 303 --year 2025 --period 1T" in next_action
     assert "Import or capture the upstream justificante/CSV/live evidence" not in next_action
 
 

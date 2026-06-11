@@ -226,7 +226,7 @@ def _clean_state_repair_verdict(
             (CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER,),
             (
                 "Configure the expected grupo member roster",
-                "aeat app live filed capture-sources --modelo 390 --year 2025 --period 0A",
+                "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A",
             ),
             (),
             (),
@@ -336,7 +336,7 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
     )
     assert any(
         finding.next_action is not None
-        and "aeat app live filed capture-sources --modelo 390 --year 2025 --period 0A" in finding.next_action
+        and "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A" in finding.next_action
         and "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in finding.next_action
         for finding in cross_period_findings
     )

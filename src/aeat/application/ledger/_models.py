@@ -34,6 +34,7 @@ from ...domain.transactions._models import (
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
 )
+from ..aggregation import Period
 from ..export import ExportSerializationFormat
 from ..review import LedgerReviewStatus
 
@@ -43,7 +44,7 @@ _TRANSFER_ALLOWED_STATES = frozenset(
         BusinessClassification.PERSONAL,
         BusinessClassification.PROCESSED_UNCLASSIFIED,
         BusinessClassification.SKIPPED_BY_RULE,
-    }
+    },
 )
 
 
@@ -175,11 +176,11 @@ class ManualLedgerTransactionCommand(BaseModel):
         if self.amount < Decimal("0"):
             raise TransactionValidationError(
                 "manual ledger transaction amount must be a non-negative magnitude; "
-                "set the flow with --direction (OUTGOING / INCOMING / INTERNAL_TRANSFER), not a negative amount"
+                "set the flow with --direction (OUTGOING / INCOMING / INTERNAL_TRANSFER), not a negative amount",
             )
         if self.amount == Decimal("0"):
             raise TransactionValidationError(
-                "manual ledger transaction amount must be non-zero; attach zero-value evidence to an existing row"
+                "manual ledger transaction amount must be non-zero; attach zero-value evidence to an existing row",
             )
         if self.direction is TransactionDirection.INTERNAL_TRANSFER:
             self._validate_internal_transfer_payload()
@@ -188,7 +189,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     def _validate_internal_transfer_payload(self) -> None:
         if self.business_classification not in _TRANSFER_ALLOWED_STATES:
             raise TransactionValidationError(
-                "INTERNAL_TRANSFER rows must not be classified as tax-relevant business rows"
+                "INTERNAL_TRANSFER rows must not be classified as tax-relevant business rows",
             )
         forbidden = {
             "category_id": self.category_id,
@@ -524,11 +525,11 @@ class LedgerSourceImportCommand(BaseModel):
     dry_run: bool = False
     verify: bool = False
     source: Path | None = None
-    period: str | None = None
+    period: Period | None = None
     actor: str = Field(default="operator", min_length=1, max_length=64)
     source_command: str = Field(default="aeat app ledger import", min_length=1, max_length=128)
 
-    @field_validator("bucket_id", "provider", "period", "actor", "source_command")
+    @field_validator("bucket_id", "provider", "actor", "source_command")
     @classmethod
     def _trim_text(cls, value: str | None) -> str | None:
         if value is None:
@@ -550,7 +551,7 @@ class LedgerSourceImportResult(BaseModel):
     likely_duplicates: int = Field(default=0, ge=0)
     dry_run: bool
     verify: bool
-    period: str | None = None
+    period: Period | None = None
     bucket_id: BucketId | None = None
     import_batch_id: str | None = None
     bucket_event_ids: tuple[str, ...] = ()
@@ -568,7 +569,7 @@ class LedgerReviewQuery(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    period: str | None = None
+    period: Period | None = None
     status: str | None = None
     issue: str | None = None
     import_id: str | None = None
@@ -578,7 +579,7 @@ class LedgerReviewQuery(BaseModel):
     transaction_id: str | None = Field(default=None, min_length=64, max_length=64)
 
     @field_validator(
-        "bucket_id", "period", "status", "issue", "import_id", "classification", "text", "direction", "transaction_id"
+        "bucket_id", "status", "issue", "import_id", "classification", "text", "direction", "transaction_id",
     )
     @classmethod
     def _trim_optional_query_text(cls, value: str | None) -> str | None:
@@ -633,7 +634,7 @@ class LedgerStatusReport(BaseModel):
     pending_review_count: int = Field(ge=0)
     reviewed_count: int = Field(ge=0)
     skipped_count: int = Field(ge=0)
-    period: str | None = None
+    period: Period | None = None
     checked_transaction_count: int = Field(default=0, ge=0)
     readiness_issue_count: int = Field(default=0, ge=0)
     ready: bool | None = None
@@ -695,10 +696,11 @@ class LedgerExportCommand(BaseModel):
     export_format: ExportSerializationFormat = ExportSerializationFormat.CSV
     include_inactive: bool = False
     output_path: Path | None = None
-    # Optional period filter (e.g. "2025Q1", "2025"): restrict the export to rows
-    # whose effective date falls in the period, so an operator can hand a gestor
-    # just the quarter/year. None exports the whole bucket.
-    period: str | None = None
+    # Optional period filter, carried as a typed :class:`Period` date span built
+    # from the ``(--year, AEAT token)`` pair: restrict the export to rows whose
+    # effective date falls in the period, so an operator can hand a gestor just
+    # the quarter/year. None exports the whole bucket.
+    period: Period | None = None
     actor: str = Field(default="operator", min_length=1, max_length=64)
     source_command: str = Field(default="aeat app ledger export", min_length=1, max_length=128)
 
@@ -771,7 +773,7 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
         "taxable_base",
         "iva_rate",
         "iva_amount",
-    }
+    },
 )
 
 

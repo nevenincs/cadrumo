@@ -74,7 +74,7 @@ def test_contract_lifecycle_forbids_live_submission() -> None:
             steps=(
                 ModeloLifecycleStep.CALCULATE,
                 ModeloLifecycleStep.FILE,
-            )
+            ),
         )
     with pytest.raises(ValidationError, match=r"live_submission_enabled|forbidden|False"):
         LifecycleContract(
@@ -127,7 +127,7 @@ def test_contract_models_are_strict_and_immutable() -> None:
                 "owns_storage_maintenance": True,
                 "owns_operational_workflow": False,
                 **extra_kwargs,
-            }
+            },
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         root.purpose = "mutated"
@@ -214,7 +214,7 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     assert ("aeat config " + "init") not in root_text
     assert "aeat app ledger import" in root_text
     assert "aeat app live filed list" in root_text
-    assert "aeat app live filed capture" in app_text
+    assert "aeat app live filed pull" in app_text
     assert "aeat config bucket" not in root_text
     assert "aeat config bucket" not in config_text
     assert "aeat config profile history" in config_text

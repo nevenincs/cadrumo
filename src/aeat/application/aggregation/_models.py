@@ -216,6 +216,70 @@ class Period(BaseModel):
         """
         return self.start <= value <= self.end
 
+    @classmethod
+    def from_year_and_token(cls, *, year: int, token: str) -> Period:
+        """Build a :class:`Period` from a separate filing year and a bare AEAT token.
+
+        This is the canonical operator-grammar constructor: the filing year and
+        the registry period token always travel as a ``(year, token)`` pair, never
+        as a single combined calendar string. The ledger filters by a calendar
+        date span, so only the span-shaped tokens are convertible:
+
+        - ``1T``-``4T`` (quarters)
+        - ``0A`` (annual)
+        - ``01``-``12`` (months)
+
+        Args:
+            year: Filing year (e.g. ``2024``).
+            token: A bare span-shaped AEAT period token.
+
+        Raises:
+            AggregationPeriodError: When ``token`` is not a span-shaped token the
+                ledger can filter by (instalment claves ``1P``-``4P`` and the
+                extended union members ``EXT-*`` / ``AD-HOC`` / ``EVENT-N`` carry
+                no ledger date span).
+        """
+        normalised = token.strip().upper()
+        if len(normalised) == 2 and normalised.endswith("T") and normalised[0] in "1234":
+            return cls.model_validate(
+                {
+                    "raw": f"{year}Q{normalised[0]}",
+                    "year": year,
+                    "quarter": Quarter(f"Q{normalised[0]}"),
+                    "month": None,
+                    "kind": PeriodKind.QUARTERLY,
+                },
+            )
+        if normalised == "0A":
+            return cls.model_validate(
+                {"raw": str(year), "year": year, "quarter": None, "month": None, "kind": PeriodKind.ANNUAL},
+            )
+        if len(normalised) == 2 and normalised.isdigit() and 1 <= int(normalised) <= 12:
+            return cls.model_validate(
+                {
+                    "raw": f"{year}-{normalised}",
+                    "year": year,
+                    "quarter": None,
+                    "month": int(normalised),
+                    "kind": PeriodKind.MONTHLY,
+                },
+            )
+        raise AggregationPeriodError(
+            message=tr("aggregation.period.parse_error"),
+            context={"period": token},
+        )
+
+    @property
+    def registry_token(self) -> str:
+        """Return the bare AEAT registry token (``1T``-``4T`` / ``0A`` / ``01``-``12``)."""
+        if self.kind is PeriodKind.QUARTERLY:
+            assert self.quarter is not None
+            return f"{self.quarter.value[1]}T"
+        if self.kind is PeriodKind.MONTHLY:
+            assert self.month is not None
+            return f"{self.month:02d}"
+        return "0A"
+
 
 class CasillaProvenance(BaseModel):
     """Transaction trace backing one (casilla, category) subtotal.

@@ -1,11 +1,12 @@
 """Single boundary-authority pin for the shared ledger period filter.
 
 ADR ``2026-06-10-ledger-filter-period`` (decision 1) ratifies one shared filter
-authority: the CLI ledger surface (``--filter period=`` / ``--period``+``--year``)
-and the modelo calculation snapshot (``aggregation_period_for_modelo``) are two
-spellings of the same ``(year, AEAT-token)`` input that MUST both resolve to the
-same :class:`Period` and its fully-closed :meth:`Period.contains` boundary. No
-parallel period boundary implementation is permitted.
+authority: the CLI ledger surface (``--filter period=``+``--filter year=`` /
+``--period``+``--year``) and the modelo calculation snapshot
+(``aggregation_period_for_modelo``) are two spellings of the same
+``(year, AEAT-token)`` input that MUST both resolve to the same :class:`Period`
+and its fully-closed :meth:`Period.contains` boundary. No parallel period
+boundary implementation is permitted.
 
 This module pins that convergence: for every canonical span token, the CLI
 transport and the calc-engine transport produce an *identical* ``Period``
@@ -22,7 +23,6 @@ import pytest
 
 from ....core import StandardPeriodCode
 from ....entrypoints.cli._common import (
-    _aeat_token_to_calendar,
     _canonical_period,
     _filter_canonical_period,
 )
@@ -49,14 +49,12 @@ _LEDGER_SPAN_TOKENS = tuple(
 
 def _cli_period_via_command_transport(token: str, *, year: int) -> Period:
     """Resolve a ``--period TOKEN --year YEAR`` pair to a Period the CLI way."""
-    internal = _canonical_period(token, year=year)
-    return Period.model_validate(internal)
+    return _canonical_period(token, year=year)
 
 
 def _cli_period_via_filter_transport(token: str, *, year: int) -> Period:
-    """Resolve a ``--filter period=YYYY-TOKEN`` clause to a Period the CLI way."""
-    internal = _filter_canonical_period(f"{year}-{token}")
-    return Period.model_validate(internal)
+    """Resolve a ``--filter period=TOKEN --filter year=YEAR`` clause to a Period the CLI way."""
+    return _filter_canonical_period(token, year=year)
 
 
 def _calc_engine_period(token: str, *, year: int) -> Period:
@@ -88,19 +86,20 @@ def test_cli_and_calc_engine_produce_an_identical_period(token: str, year: int) 
     assert command_period.contains(command_period.end)
 
 
-def test_both_transports_route_through_aeat_token_to_calendar() -> None:
-    """The CLI and calc-engine internal strings agree token-for-token.
+def test_both_transports_route_through_one_period_boundary() -> None:
+    """The CLI and calc-engine transports converge on one Period token-for-token.
 
-    Forbids a parallel boundary implementation: the calc-engine translator must
-    emit the exact internal calendar string the CLI's ``_aeat_token_to_calendar``
-    helper emits for the same (year, token), so neither side can drift to a
-    private boundary shape.
+    Forbids a parallel boundary implementation: for the same (year, token) the
+    CLI ``(--year, AEAT token)`` resolution and the calc-engine translator must
+    produce the *identical* :class:`Period` date span, so neither side can drift
+    to a private boundary shape. There is no intermediate calendar string on the
+    CLI side — the pair builds the Period directly.
     """
     for year in _YEARS:
         for token in _LEDGER_SPAN_TOKENS:
-            cli_internal = _aeat_token_to_calendar(str(year), token)
-            engine_internal = aggregation_period_for_modelo(filing_year=year, period=token)
-            assert cli_internal == engine_internal, (year, token)
+            cli_period = _canonical_period(token, year=year)
+            engine_period = Period.model_validate(aggregation_period_for_modelo(filing_year=year, period=token))
+            assert cli_period == engine_period, (year, token)
 
 
 def test_no_parallel_contains_boundary_is_defined_on_period() -> None:

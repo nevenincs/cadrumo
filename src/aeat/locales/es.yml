@@ -2820,6 +2820,11 @@ cli:
       id_help: Id de la transacción que quieres dividir
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la división de la transacción
+      llm_help: 'Propon una division en N partes basada en evidencia con el proveedor LLM indicado.'
+      apply_help: 'Persiste la division --llm propuesta (requiere --yes); sin ella la propuesta solo se previsualiza.'
+      read_evidence_help: 'Lee la factura adjunta de la transaccion en local y alimentala al proponente de division --llm.'
+      evidence_acknowledged_help: 'Reconoce que --read-evidence envia la evidencia a un modelo en la nube (desactivado por defecto, vetado para gestores).'
+      llm_exclusive: '--llm no puede combinarse con --child-amount/--child-description; la via manual es la anulacion explicita del operador.'
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el perfil activo
@@ -2894,9 +2899,8 @@ cli:
         ledger_status: Mostrar el estado del libro de transacciones.
         ledger_update: Actualizar una entrada del libro de transacciones.
         ledger_view: Ver el detalle de una entrada del libro.
-        live_filed_capture: Capturar declaraciones presentadas en vivo desde la AEAT.
-        live_filed_capture_sources: Mostrar las fuentes disponibles para captura de
-          declaraciones en vivo.
+        live_filed_capture: 'Descargar declaraciones presentadas en vivo desde la AEAT.'
+        live_filed_capture_sources: 'Mostrar las fuentes disponibles para la descarga.'
         live_filed_list: Listar declaraciones presentadas capturadas desde la AEAT.
         modelo_bindings: Gestionar las vinculaciones de un modelo fiscal.
         modelo_describe: Describir la estructura de un modelo fiscal.

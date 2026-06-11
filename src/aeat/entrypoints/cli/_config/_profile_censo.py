@@ -93,7 +93,7 @@ def _register_censo_refresh(censo_app: typer.Typer) -> None:
             f"captured_at\t{snapshot.captured_at.isoformat()}",
             f"facts\t{len(snapshot.censo_facts)}",
         ]
-        _emit_envelope(ctx, command="config.profile.censo.refresh", result=typed_refresh, lines=lines)
+        _emit_envelope(ctx, command="config.profile.censo.pull", result=typed_refresh, lines=lines)
 
 
 def _register_censo_show(censo_app: typer.Typer) -> None:

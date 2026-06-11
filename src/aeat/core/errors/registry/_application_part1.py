@@ -64,7 +64,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_APPLICATION_LIVE_IVA_SURFACE_TIMEOUT",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_application_live_iva_surface_timeout",
-            default_suggestion="aeat app live iva-wallet capture-remote-state --help",
+            default_suggestion="aeat app live iva-wallet pull-remote-state --help",
             retryable=True,
             runbook_id=None,
         ),

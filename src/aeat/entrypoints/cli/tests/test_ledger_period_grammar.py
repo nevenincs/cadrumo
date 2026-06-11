@@ -5,11 +5,13 @@ period grammar
 everywhere. The ledger ``--period`` sites accept exactly the AEAT tokens
 (``0A`` / ``1T``-``4T`` / ``01``-``12``) and take a separate ``--year`` to
 supply the year the calendar shape used to embed, so ``--period 1T --year
-2024`` reads identically across ledger and modelo. The calendar shapes
-(``2024Q1`` / ``2024-03`` / ``2024``) and the ``2024-1T`` year-qualified hybrid
-the first D4 implementation accepted are **removed** — they now refuse.
+2024`` reads identically across ledger and modelo. A filing period is ALWAYS
+carried as a ``(year, bare-token)`` pair, materialised as a typed
+:class:`Period` date span — never a combined calendar string. The calendar
+shapes (``2024Q1`` / ``2024-03`` / ``2024``) and the ``2024-1T`` year-qualified
+hybrid the first D4 implementation accepted are **removed** — they now refuse.
 
-These are real-behaviour tests: the conversion and refusal cases exercise the
+These are real-behaviour tests: the resolution and refusal cases exercise the
 production ``_canonical_period`` normaliser (which consumes the registry
 period-union validator at :mod:`aeat.core._period`), and the end-to-end cases
 drive ``aeat app ledger preflight`` / ``status`` against a real isolated
@@ -19,6 +21,7 @@ encrypted bucket and the real ledger backend.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -36,63 +39,70 @@ from .._common import _canonical_period, _filter_canonical_period
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-# --- Strict conversion: (AEAT token, --year) -> internal calendar shape -------
+# --- Strict resolution: (AEAT token, --year) -> typed Period date span --------
 #
-# Each row is (bare AEAT token, year, expected internal representation). The
-# bare token is the only accepted operator grammar; the year arrives through
-# ``--year``. The conversion must land on the internal calendar shape the
-# ledger filters by, and that shape must validate downstream as a
-# :class:`Period`.
-_TOKEN_YEAR_INTERNAL = (
-    ("1T", 2024, "2024Q1"),
-    ("2T", 2024, "2024Q2"),
-    ("3T", 2024, "2024Q3"),
-    ("4T", 2024, "2024Q4"),
-    ("0A", 2024, "2024"),
-    ("01", 2024, "2024-01"),
-    ("03", 2024, "2024-03"),
-    ("12", 2024, "2024-12"),
+# Each row is (bare AEAT token, year, expected registry_token, expected
+# inclusive start, expected inclusive end). The bare token is the only accepted
+# operator grammar; the year arrives through ``--year``. The pair resolves to a
+# typed :class:`Period` date span the ledger filters by — there is no
+# intermediate calendar string.
+_TOKEN_YEAR_SPAN = (
+    ("1T", 2024, "1T", date(2024, 1, 1), date(2024, 3, 31)),
+    ("2T", 2024, "2T", date(2024, 4, 1), date(2024, 6, 30)),
+    ("3T", 2024, "3T", date(2024, 7, 1), date(2024, 9, 30)),
+    ("4T", 2024, "4T", date(2024, 10, 1), date(2024, 12, 31)),
+    ("0A", 2024, "0A", date(2024, 1, 1), date(2024, 12, 31)),
+    ("01", 2024, "01", date(2024, 1, 1), date(2024, 1, 31)),
+    ("03", 2024, "03", date(2024, 3, 1), date(2024, 3, 31)),
+    ("12", 2024, "12", date(2024, 12, 1), date(2024, 12, 31)),
 )
 
 
-@pytest.mark.parametrize(("token", "year", "internal"), _TOKEN_YEAR_INTERNAL)
-def test_aeat_token_plus_year_converts_to_internal_period(token: str, year: int, internal: str) -> None:
-    """A bare AEAT token plus ``--year`` converts to the one internal calendar shape."""
+@pytest.mark.parametrize(("token", "year", "registry_token", "start", "end"), _TOKEN_YEAR_SPAN)
+def test_aeat_token_plus_year_resolves_to_period(
+    token: str, year: int, registry_token: str, start: date, end: date,
+) -> None:
+    """A bare AEAT token plus ``--year`` resolves to one typed :class:`Period`."""
 
-    assert _canonical_period(token, year=year) == internal
+    resolved = _canonical_period(token, year=year)
+    assert isinstance(resolved, Period)
+    assert resolved.year == year
+    assert resolved.registry_token == registry_token
+    assert resolved.start == start
+    assert resolved.end == end
 
 
-@pytest.mark.parametrize(("token", "year", "internal"), _TOKEN_YEAR_INTERNAL)
-def test_converted_period_validates_as_ledger_period(token: str, year: int, internal: str) -> None:
-    """The internal representation parses as a ledger ``Period``.
+@pytest.mark.parametrize(("token", "year", "registry_token", "start", "end"), _TOKEN_YEAR_SPAN)
+def test_resolved_period_round_trips_through_registry_token(
+    token: str, year: int, registry_token: str, start: date, end: date,
+) -> None:
+    """The resolved :class:`Period` carries the bare registry token back out.
 
-    Anti-leak proof: a conversion that emitted a shape the ledger cannot
-    consume would raise here instead of silently producing an unusable token.
+    Anti-leak proof: the operator's ``(year, token)`` pair is recoverable from
+    the resolved date span, so no combined calendar string is needed to render
+    the period back to the operator.
     """
 
-    converted = _canonical_period(token, year=year)
-    assert converted == internal
-    parsed = Period.model_validate(converted)
-    assert parsed.year == year
+    resolved = _canonical_period(token, year=year)
+    assert (resolved.year, resolved.registry_token) == (year, registry_token)
 
 
 def test_registry_union_validator_is_the_token_authority() -> None:
     """``_canonical_period`` accepts exactly the span-shaped registry tokens.
 
-    Quarters, the annual period, and months are ledger-meaningful and convert.
+    Quarters, the annual period, and months are ledger-meaningful and resolve.
     The extended-union members the registry validator also accepts (``EXT-*``,
     ``AD-HOC``, ``EVENT-N``) and the instalment claves (``1P``-``4P``) are NOT
-    a ledger date span, so they are not silently converted into a calendar
-    shape the ledger cannot filter by.
+    a ledger date span, so they refuse rather than resolve to a usable period.
     """
 
-    # Span-shaped tokens convert.
-    assert _canonical_period("1T", year=2024) == "2024Q1"
-    assert _canonical_period("0A", year=2024) == "2024"
-    assert _canonical_period("06", year=2024) == "2024-06"
+    # Span-shaped tokens resolve.
+    assert _canonical_period("1T", year=2024).registry_token == "1T"
+    assert _canonical_period("0A", year=2024).registry_token == "0A"
+    assert _canonical_period("06", year=2024).registry_token == "06"
 
-    # Non-span registry-union members and instalment claves do not convert to a
-    # ledger calendar shape; they raise rather than emit an unusable token.
+    # Non-span registry-union members and instalment claves do not resolve to a
+    # ledger date span; they raise rather than emit an unusable period.
     for non_ledger in ("1P", "EXT-1T", "EVENT-3", "AD-HOC"):
         with pytest.raises(typer.BadParameter):
             _canonical_period(non_ledger, year=2024)
@@ -146,23 +156,28 @@ def test_empty_period_refuses() -> None:
         _canonical_period("   ", year=2024)
 
 
-# --- Filter clause: year-qualified AEAT token (no --year on a --filter) --------
+# --- Filter clause: bare AEAT token plus a separate year= clause --------------
 
 
-def test_filter_clause_accepts_year_qualified_aeat_token() -> None:
-    """``--filter period=2024-1T`` converts to the internal shape (year inline)."""
+def test_filter_clause_accepts_bare_token_with_year() -> None:
+    """``--filter period=1T --filter year=2024`` resolves to a typed :class:`Period`.
 
-    assert _filter_canonical_period("2024-1T") == "2024Q1"
-    assert _filter_canonical_period("2024-0A") == "2024"
-    assert _filter_canonical_period("2024-03") == "2024-03"
+    The filter grammar carries the year on a separate ``year=`` clause, so
+    ``period=`` is the same bare AEAT token the ``--period`` option accepts —
+    there is no year-qualified combined token.
+    """
+
+    assert _filter_canonical_period("1T", year=2024).registry_token == "1T"
+    assert _filter_canonical_period("0A", year=2024).registry_token == "0A"
+    assert _filter_canonical_period("03", year=2024).registry_token == "03"
 
 
-@pytest.mark.parametrize("calendar_shape", ["2024Q1", "2024", "not-a-period", "1T"])
-def test_filter_clause_refuses_calendar_and_bare_token(calendar_shape: str) -> None:
-    """The filter clause refuses a calendar shape or a bare (year-less) token."""
+@pytest.mark.parametrize("rejected", ["2024Q1", "2024", "2024-1T", "not-a-period", "1P"])
+def test_filter_clause_refuses_calendar_and_year_qualified(rejected: str) -> None:
+    """The filter clause refuses a calendar shape or a year-qualified hybrid token."""
 
     with pytest.raises(typer.BadParameter):
-        _filter_canonical_period(calendar_shape)
+        _filter_canonical_period(rejected, year=2024)
 
 
 # --- End-to-end: real ledger command takes --period AEAT token + --year -------
@@ -190,7 +205,7 @@ def _add_business_row_missing_facts(cli_runner: CliRunner) -> None:
             "--date",
             "2026-02-10",
             "--amount",
-            "-242.00",
+            "242.00",
             "--direction",
             "OUTGOING",
             "--description",
@@ -216,8 +231,10 @@ def test_preflight_accepts_aeat_token_with_year(cli_runner: CliRunner, _isolated
     result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
-    # The internal canonical period for Q1 2026 prints as 2026Q1.
-    assert "period\t2026Q1" in result.output
+    # The period echoes back as the operator-facing ``<token> <year>`` pair,
+    # never a combined calendar string.
+    assert "period\t1T 2026" in result.output
+    assert "2026Q1" not in result.output
     assert "checked\t1" in result.output
     assert "ready\tfalse" in result.output
 
@@ -230,8 +247,9 @@ def test_status_accepts_aeat_token_with_year(cli_runner: CliRunner, _isolated_ba
     result = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
-    for marker in ("expense_total\t242", "net_total\t-242", "Period\t2026Q1"):
+    for marker in ("expense_total\t242", "net_total\t-242", "1T 2026"):
         assert marker in result.output, result.output
+    assert "2026Q1" not in result.output
 
 
 def test_preflight_calendar_shape_refuses(cli_runner: CliRunner, _isolated_backend: None) -> None:

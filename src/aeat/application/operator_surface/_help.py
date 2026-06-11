@@ -457,11 +457,11 @@ def _app_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.app.live_filed_list"),
                     ),
                     HelpEntry(
-                        command="aeat app live filed capture",
+                        command="aeat app live filed pull",
                         description=tr("cli.operator_surface.help.app.live_filed_capture"),
                     ),
                     HelpEntry(
-                        command="aeat app live filed capture-sources",
+                        command="aeat app live filed pull-sources",
                         description=tr("cli.operator_surface.help.app.live_filed_capture_sources"),
                     ),
                 ),

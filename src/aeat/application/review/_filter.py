@@ -3,10 +3,10 @@
 The CLI routes every record-list command through ``--filter KEY=VALUE``
 flags. Representative invocations:
 
-- ``aeat app ledger review --filter status=pending --filter period=2026-1T``
-- ``aeat app ledger review --filter issue=gap --filter period=2026-1T``
-- ``aeat app ledger review --filter issue=duplicate --filter period=2026-1T``
-- ``aeat app ledger review --filter import=import_003 --filter period=2026-1T``
+- ``aeat app ledger review --filter status=pending --filter period=1T --filter year=2026``
+- ``aeat app ledger review --filter issue=gap --filter period=1T --filter year=2026``
+- ``aeat app ledger review --filter issue=duplicate --filter period=1T --filter year=2026``
+- ``aeat app ledger review --filter import=import_003 --filter period=1T --filter year=2026``
 - invoice evidence and modelo work-unit queue filters
 - modelo status filters by period and modelo code
 
@@ -132,9 +132,12 @@ class LedgerReviewFilterKey(StrEnum):
     Attributes:
         STATUS: Lifecycle state of the row (``pending`` / ``reviewed``
             / ``skipped``).
-        PERIOD: Filing period the row falls into, as a year-qualified AEAT
-            token: ``YYYY-1T``..``YYYY-4T`` (quarters), ``YYYY-0A`` (annual),
-            or ``YYYY-01``..``YYYY-12`` (months).
+        PERIOD: Filing period the row falls into, as a bare AEAT token:
+            ``1T``..``4T`` (quarters), ``0A`` (annual), or ``01``..``12``
+            (months). The filing year travels as a separate ``year=`` clause —
+            there is no year-qualified combined token.
+        YEAR: Filing year (``YYYY``) supplying the year context the bare
+            ``period=`` token needs; required whenever ``period=`` is present.
         ISSUE: Filters to rows that carry an import-time diagnostic
             (``gap`` / ``duplicate`` / ``original-file`` / ``parser``).
         IMPORT: Filters to rows from a specific import-batch id.
@@ -146,6 +149,7 @@ class LedgerReviewFilterKey(StrEnum):
 
     STATUS = "status"
     PERIOD = "period"
+    YEAR = "year"
     ISSUE = "issue"
     IMPORT = "import"
     CLASSIFICATION = "classification"
@@ -298,6 +302,27 @@ def _enum_value_or_raise[E: StrEnum](
     return enum_cls(clause.value)
 
 
+def _filter_year_or_raise(clause: FilterClause) -> int:
+    """Coerce a ``year=YYYY`` filter clause value to an ``int`` or raise.
+
+    Args:
+        clause: The parsed ``year=`` clause.
+
+    Returns:
+        The four-digit filing year as an ``int``.
+
+    Raises:
+        FilterParseError: When the value is not a four-digit year.
+    """
+    text = clause.value.strip()
+    if len(text) == 4 and text.isdigit():
+        return int(text)
+    raise FilterParseError(
+        f"--filter {clause.key}={clause.value}",
+        reason="invalid-value-ledger-year",
+    )
+
+
 class LedgerReviewFilterSpec(BaseModel):
     """Typed ``aeat app ledger review --filter`` spec.
 
@@ -306,11 +331,13 @@ class LedgerReviewFilterSpec(BaseModel):
             command is invoked without ``--filter``.
         status: Resolved :class:`LedgerReviewStatus` if ``status=`` was
             provided.
-        period: Raw year-qualified AEAT period token (e.g. ``2024-1T``) if
-            ``period=`` was provided.
+        period: Raw bare AEAT period token (e.g. ``1T``) if ``period=`` was
+            provided. The filing year is carried separately on :attr:`year`.
             Period parsing is delegated to the consuming use-case so
             this layer does not duplicate
             :class:`aeat.application.aggregation.Period`.
+        year: Filing year (``YYYY``) if ``year=`` was provided; supplies the
+            year context the bare ``period=`` token needs.
         issue: Resolved :class:`LedgerImportDiagnosticKind` if ``issue=`` was
             provided.
         import_id: Raw import-batch id if ``import=`` was provided.
@@ -323,6 +350,7 @@ class LedgerReviewFilterSpec(BaseModel):
     clauses: tuple[FilterClause, ...] = ()
     status: LedgerReviewStatus | None = None
     period: str | None = None
+    year: int | None = None
     issue: LedgerImportDiagnosticKind | None = None
     import_id: str | None = None
     classification: BusinessClassification | None = None
@@ -337,6 +365,7 @@ class LedgerReviewFilterSpec(BaseModel):
         _ensure_unique_keys(clauses, scope="ledger")
         status: LedgerReviewStatus | None = None
         period: str | None = None
+        year: int | None = None
         issue: LedgerImportDiagnosticKind | None = None
         import_id: str | None = None
         classification: BusinessClassification | None = None
@@ -351,6 +380,8 @@ class LedgerReviewFilterSpec(BaseModel):
                 )
             elif clause.key == LedgerReviewFilterKey.PERIOD:
                 period = clause.value
+            elif clause.key == LedgerReviewFilterKey.YEAR:
+                year = _filter_year_or_raise(clause)
             elif clause.key == LedgerReviewFilterKey.ISSUE:
                 issue = _enum_value_or_raise(
                     clause,
@@ -384,6 +415,7 @@ class LedgerReviewFilterSpec(BaseModel):
             clauses=clauses,
             status=status,
             period=period,
+            year=year,
             issue=issue,
             import_id=import_id,
             classification=classification,
@@ -404,6 +436,16 @@ class LedgerReviewFilterSpec(BaseModel):
             raise ValueError("clauses[status] / status field disagree")
         if (LedgerReviewFilterKey.PERIOD in present_keys) != (self.period is not None):
             raise ValueError("clauses[period] / period field disagree")
+        if (LedgerReviewFilterKey.YEAR in present_keys) != (self.year is not None):
+            raise ValueError("clauses[year] / year field disagree")
+        # The bare ``period=`` token carries no year of its own; a ``year=``
+        # clause supplies it. The two travel together — one without the other
+        # cannot select a date span.
+        if (self.period is not None) != (self.year is not None):
+            raise FilterParseError(
+                "--filter period=/year=",
+                reason="ledger-period-year-pairing",
+            )
         if (LedgerReviewFilterKey.ISSUE in present_keys) != (self.issue is not None):
             raise ValueError("clauses[issue] / issue field disagree")
         if (LedgerReviewFilterKey.IMPORT in present_keys) != (self.import_id is not None):

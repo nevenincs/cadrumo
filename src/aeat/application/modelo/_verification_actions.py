@@ -137,7 +137,7 @@ def _resolve_predicate_next_action(predicate_id: str) -> str | None:
 # fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
 # and denominator > 0. Used for Art. 110.3.b RIRPF M130 high-retention exemption.
 _PREDICATE_ADVISORY_WHEN_RATIO_GE = _re.compile(
-    r'^advisory_when_ratio_ge\(\["(?P<num>[^"]+)",\s*"(?P<den>[^"]+)",\s*"(?P<thr>[^"]+)"\]\)$'
+    r'^advisory_when_ratio_ge\(\["(?P<num>[^"]+)",\s*"(?P<den>[^"]+)",\s*"(?P<thr>[^"]+)"\]\)$',
 )
 
 
@@ -386,7 +386,7 @@ def _evaluate_verification_predicates(
                         severity=ModeloVerificationFindingSeverity.WARNING,
                         message=tr(advisory_key),
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
-                    )
+                    ),
                 )
         else:
             if not _evaluate_predicate_expression(predicate.expression, casilla_values, profile):
@@ -407,7 +407,7 @@ def _evaluate_verification_predicates(
                         ),
                         next_action=next_action,
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
-                    )
+                    ),
                 )
     return findings
 
@@ -535,7 +535,7 @@ def _cross_period_clean_state_findings(
                             f"origin_ids={origin_text} blockers={blocker_text}"
                         ),
                         next_action=_cross_period_clean_state_next_action(verdict, evidence),
-                    )
+                    ),
                 )
         if evidence.unstamped_revision_advisory:
             findings.append(_cross_period_unstamped_revision_advisory_finding(verdict, evidence))
@@ -557,7 +557,7 @@ def _cross_period_unstamped_revision_advisory_finding(
     """
     requirement = evidence.requirement
     re_file_capture = (
-        "aeat app live filed capture-sources "
+        "aeat app live filed pull-sources "
         f"--modelo {requirement.source_modelo} "
         f"--year {requirement.filing_year} "
         f"--period {requirement.period}"
@@ -599,7 +599,7 @@ def _cross_period_clean_state_next_action(
     requirement = evidence.requirement
     blockers = set(evidence.blockers)
     target_capture = (
-        "aeat app live filed capture-sources "
+        "aeat app live filed pull-sources "
         f"--modelo {verdict.target_modelo} "
         f"--year {verdict.target_filing_year} "
         f"--period {verdict.target_period}"
@@ -608,7 +608,7 @@ def _cross_period_clean_state_next_action(
         f"source modelo={requirement.source_modelo} year={requirement.filing_year} period={requirement.period}"
     )
     source_capture = (
-        "aeat app live filed capture-sources "
+        "aeat app live filed pull-sources "
         f"--modelo {requirement.source_modelo} "
         f"--year {requirement.filing_year} "
         f"--period {requirement.period}"
@@ -800,7 +800,7 @@ def verify_modelo_revision(
     if target.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
-            f"{target.state.value!r}; only DRAFT revisions can be verified"
+            f"{target.state.value!r}; only DRAFT revisions can be verified",
         )
 
     _assert_revision_content_integrity(target)
@@ -809,7 +809,7 @@ def verify_modelo_revision(
     work_unit = work_units.get(target.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
+            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
 
     findings, resolved_casillas, missing_required = _collect_revision_verification_findings(
@@ -840,7 +840,7 @@ def verify_modelo_revision(
                 ),
             ),
             iva_compensation_decision=iva_compensation_decision,
-        )
+        ),
     )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
@@ -949,7 +949,7 @@ def _persist_verified_revision_evidence(
             "updated_at": now,
             "ledger_filing_snapshot": filing_snapshot,
             "ledger_filing_evidence": filing_evidence,
-        }
+        },
     )
     calculation_repository.save(upsert_calculation_revision(revisions, verified))
 
@@ -1037,7 +1037,7 @@ def _collect_revision_verification_findings(
                     period=str(work_unit.period),
                 ),
                 next_action="aeat app registry verify",
-            )
+            ),
         )
         return findings, resolved_casillas, missing_required
 
@@ -1054,7 +1054,7 @@ def _collect_revision_verification_findings(
                         casilla_id,
                         target.work_unit_id,
                         casilla_def=casilla,
-                    )
+                    ),
                 )
 
     # Layer 2: cross-casilla predicate gate.
@@ -1063,7 +1063,7 @@ def _collect_revision_verification_findings(
             snapshot.revision.verification_predicates,
             target.casilla_values,
             profile,
-        )
+        ),
     )
 
     # Advisory: DT 12ª LIRPF — warn when a large trabajo income (0003 > 20 000)
