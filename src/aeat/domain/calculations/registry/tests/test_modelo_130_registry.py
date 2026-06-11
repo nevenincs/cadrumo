@@ -185,7 +185,7 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
     [("3T", "2T", 10), ("4T", "3T", 1)],
 )
 def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarter_saldo(
-    modelo_130_registry: _ModeloFixture, target_period: str, prior_period: str, filing_date_month: int
+    modelo_130_registry: _ModeloFixture, target_period: str, prior_period: str, filing_date_month: int,
 ) -> None:
     """Extend regression coverage to 3T and 4T quarters.
 
@@ -244,7 +244,7 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
                 filing_year if target_period != "4T" else filing_year + 1,
                 filing_date_month,
                 20,
-            )
+            ),
         },
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),

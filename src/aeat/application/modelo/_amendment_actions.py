@@ -70,26 +70,26 @@ def _load_amendment_baseline(
         raise AmendmentEvidenceMissingError(
             f"filing record {from_filing_record_id!r} has no external_evidence; the "
             f"modelo amend path requires an imported AEAT-attested baseline. Use the "
-            f"standard re-file path (calculate → verify → file) for locally-filed returns."
+            f"standard re-file path (calculate → verify → file) for locally-filed returns.",
         )
     if baseline.status is not ModeloRecordStatus.VIGENTE:
         raise AmendmentTargetStateError(
             f"filing record {from_filing_record_id!r} is in status {baseline.status.value!r}; "
-            f"only CURRENT filings can be amended"
+            f"only CURRENT filings can be amended",
         )
 
     work_units = work_unit_repository.load()
     work_unit = work_units.get(baseline.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"filing record {from_filing_record_id!r} references missing work_unit_id={baseline.work_unit_id!r}"
+            f"filing record {from_filing_record_id!r} references missing work_unit_id={baseline.work_unit_id!r}",
         )
 
     revisions = calculation_repository.load()
     baseline_revision = revisions.get(baseline.calculation_revision_id)
     if baseline_revision is None:
         raise CalculationRevisionNotFoundError(
-            f"baseline calculation revision {baseline.calculation_revision_id!r} is missing from the catalogue"
+            f"baseline calculation revision {baseline.calculation_revision_id!r} is missing from the catalogue",
         )
 
     _reject_unknown_override_casillas(
@@ -148,7 +148,7 @@ def amend_modelo_revision(
     if new_revision_id in revisions:
         raise CalculationRevisionStateError(
             f"amendment overrides produce calculation_revision_id {new_revision_id!r} "
-            f"that already exists in the catalogue; no-op overrides cannot be filed as amendments"
+            f"that already exists in the catalogue; no-op overrides cannot be filed as amendments",
         )
 
     # Carry regulatory grounding onto the amendment: build typed
@@ -200,7 +200,7 @@ def amend_modelo_revision(
             "verified_at": now,
             "verified_by": actor.strip(),
             "updated_at": now,
-        }
+        },
     )
     revisions = upsert_calculation_revision(revisions, verified_amendment)
 
@@ -224,7 +224,7 @@ def amend_modelo_revision(
             "status": ModeloRecordStatus.SUPERSEDIDO,
             "superseded_at": now,
             "superseded_by_filing_record_id": new_filing_id,
-        }
+        },
     )
     updated_filing_catalogue = upsert_filing_record(filing_catalogue, superseded_baseline)
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
@@ -235,7 +235,7 @@ def amend_modelo_revision(
             "filed_at": now,
             "filed_by": actor.strip(),
             "updated_at": now,
-        }
+        },
     )
     revisions = upsert_calculation_revision(revisions, filed_amendment)
 
@@ -315,9 +315,9 @@ def _persist_amendment_side_effects(
                     "filed_calculation_revision_id": new_revision_id,
                     "current_filing_record_id": new_filing_id,
                     "updated_at": now,
-                }
+                },
             ),
-        )
+        ),
     )
     _emit_bucket_event(
         repository=bucket_event_repository,

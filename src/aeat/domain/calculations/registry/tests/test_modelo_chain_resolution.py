@@ -27,7 +27,7 @@ def _revision(modelo_id: str, revision_id: str) -> ModeloRevision:
 
 
 def _quarterly_filings(
-    modelo_id: str, filing_year: int, casilla_quarters: dict[str, dict[str, Decimal]]
+    modelo_id: str, filing_year: int, casilla_quarters: dict[str, dict[str, Decimal]],
 ) -> tuple[RegistryModeloObservation, ...]:
     """Build one ``RegistryModeloObservation`` per quarter from a per-quarter casilla map."""
 

@@ -70,9 +70,9 @@ class RentaWebOpenLivePayload(RentaWebOpenModel):
     app_url: AnyUrl = Field(
         default_factory=lambda: AnyUrl(
             Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(
-                year=_RENTA_WEB_OPEN_DEFAULT_YEAR
-            )
-        )
+                year=_RENTA_WEB_OPEN_DEFAULT_YEAR,
+            ),
+        ),
     )
     timeout_ms: int = Field(default=60_000, ge=1_000, le=180_000)
     casilla_overrides: dict[str, str] = Field(default_factory=dict)
@@ -269,7 +269,7 @@ class RentaWebOpenOracle:
         """
         if not expected:
             raise RegistryValidationError(
-                "RentaWebOpenOracle.planned_operations requires at least one expected casilla"
+                "RentaWebOpenOracle.planned_operations requires at least one expected casilla",
             )
         if self._driver is not None:
             return self._driver.planned_operations(payload, expected=expected)

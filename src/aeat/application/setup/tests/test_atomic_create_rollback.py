@@ -30,7 +30,7 @@ import pytest
 
 from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....adapters.persistence.storage.bucket._manifest_io import manifest_path
-from ....core._bucket_pointer_io import read_pointer
+from ....core import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -88,7 +88,7 @@ def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
                 display_name=profile_id.capitalize(),
                 facts=fact_tuple,
                 routing_profile_id=routing_profile_id,
-            )
+            ),
         )
 
 

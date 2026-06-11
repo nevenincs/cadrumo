@@ -53,5 +53,5 @@ def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
 
     raise ArtefactNotRecognisedError(
         f"could not recognise Modelo 100 artefact type in {_INPUT_PDF_SOURCE_LABEL}; "
-        "expected one of: VISTA PREVIA watermark, BORRADOR header, CSV stamp"
+        "expected one of: VISTA PREVIA watermark, BORRADOR header, CSV stamp",
     )

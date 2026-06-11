@@ -362,7 +362,7 @@ class TestAuthenticatorDescribeNarrowing:
             raise CertificateError("expired")
 
         auth = AeatAuthenticator(
-            settings, certificate_health_check=cast(CertificateHealthCheck, _raise_certificate_error)
+            settings, certificate_health_check=cast(CertificateHealthCheck, _raise_certificate_error),
         )
         desc = auth.describe()
 

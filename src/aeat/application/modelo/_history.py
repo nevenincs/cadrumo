@@ -103,7 +103,7 @@ def assemble_work_unit_history(
         catalogue.for_object(
             object_type=BucketEventObjectType.WORK_UNIT,
             object_id=work_unit_id,
-        )
+        ),
     )
 
     revisions = cr_repo.load()
@@ -114,7 +114,7 @@ def assemble_work_unit_history(
             catalogue.for_object(
                 object_type=BucketEventObjectType.CALCULATION_REVISION,
                 object_id=revision.calculation_revision_id,
-            )
+            ),
         )
 
     revision_ids = {
@@ -128,7 +128,7 @@ def assemble_work_unit_history(
             catalogue.for_object(
                 object_type=BucketEventObjectType.VERIFICATION_REPORT,
                 object_id=report.verification_report_id,
-            )
+            ),
         )
 
     filings = fr_repo.load()
@@ -139,7 +139,7 @@ def assemble_work_unit_history(
             catalogue.for_object(
                 object_type=BucketEventObjectType.FILING_RECORD,
                 object_id=filing.filing_record_id,
-            )
+            ),
         )
 
     collected.sort(key=lambda event: event.occurred_at)

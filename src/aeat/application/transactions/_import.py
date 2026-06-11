@@ -78,7 +78,7 @@ def import_ledger_with_diagnostics(
                 severity=BaseSeverity.WARNING,
                 message=tr("transactions.import.message_185962"),
                 source_path=source_path,
-            )
+            ),
         )
         return LedgerImportResult(imported_count=0, skipped_count=0, diagnostics=tuple(diagnostics))
 
@@ -97,7 +97,7 @@ def import_ledger_with_diagnostics(
                     message=tr("transactions.import.message_082074"),
                     source_path=source_path,
                     affected_transaction_ids=(tx_id,),
-                )
+                ),
             )
         elif fingerprint in seen_fingerprints:
             skipped_count += 1
@@ -108,7 +108,7 @@ def import_ledger_with_diagnostics(
                     message=tr("transactions.import.message_053465"),
                     source_path=source_path,
                     affected_transaction_ids=(tx_id,),
-                )
+                ),
             )
         else:
             imported_count += 1
@@ -129,7 +129,7 @@ def import_ledger_with_diagnostics(
                         severity=BaseSeverity.WARNING,
                         message=tr("transactions.import.message_829073"),
                         source_path=source_path,
-                    )
+                    ),
                 )
                 break  # Warn once per file to avoid noise
 
@@ -142,7 +142,7 @@ def import_ledger_with_diagnostics(
                     severity=BaseSeverity.INFO,
                     message=tr("transactions.import.verified"),
                     source_path=original_source_path,
-                )
+                ),
             )
         except OSError:
             _logger.warning("could not read original file %s", original_source_path, exc_info=True)
@@ -152,7 +152,7 @@ def import_ledger_with_diagnostics(
                     severity=BaseSeverity.WARNING,
                     message=tr("transactions.import.unreadable"),
                     source_path=original_source_path,
-                )
+                ),
             )
 
     result = LedgerImportResult(

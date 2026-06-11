@@ -52,7 +52,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core import Modelo
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (

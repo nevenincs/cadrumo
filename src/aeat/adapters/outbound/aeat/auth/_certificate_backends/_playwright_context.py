@@ -57,7 +57,7 @@ def build_client_certificates_kwarg(
             "origin": origin,
             "pfxPath": str(cert.source_path),
             "passphrase": password_value,
-        }
+        },
     ]
 
 
@@ -107,7 +107,7 @@ class PlaywrightContextBackend(_CertBackend):
                 "use aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context."
                 "build_client_certificates_kwarg() from the browser session "
                 "factory and tag the resulting context with "
-                f"{CERTIFICATE_CONTEXT_MARKER}={cert.sha256_thumbprint!r}."
+                f"{CERTIFICATE_CONTEXT_MARKER}={cert.sha256_thumbprint!r}.",
             )
         log.info(
             "verified playwright_context: thumbprint=%s",

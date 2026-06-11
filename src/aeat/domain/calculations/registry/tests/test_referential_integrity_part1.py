@@ -70,7 +70,7 @@ def test_committed_registry_passes_referential_integrity(
                 # Pre-existing registry defects prevent snapshot construction;
                 # _check_all_id_references cannot fire here -- log and skip.
                 logging.getLogger(__name__).debug(
-                    "skipping revision %s/%s: snapshot build failed: %s", modelo.id, revision.id, exc
+                    "skipping revision %s/%s: snapshot build failed: %s", modelo.id, revision.id, exc,
                 )
                 continue
             _check_all_id_references(snapshot)  # must not raise
@@ -678,7 +678,7 @@ def test_single_segment_bare_number_reference_resolves() -> None:
 
     input_casilla = _segmented_casilla("01", "01", None)
     computed_casilla = _segmented_casilla("02", "02", None).model_copy(
-        update={"input_kind": "computed", "formula": "test.formula"}
+        update={"input_kind": "computed", "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
@@ -713,7 +713,7 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
     target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
-        update={"input_kind": "computed", "formula": "test.formula"}
+        update={"input_kind": "computed", "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
@@ -752,7 +752,7 @@ def test_bare_number_reference_resolves_when_id_is_segment_qualified() -> None:
 
     sole_occurrence = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
-        update={"input_kind": "computed", "formula": "test.formula"}
+        update={"input_kind": "computed", "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",

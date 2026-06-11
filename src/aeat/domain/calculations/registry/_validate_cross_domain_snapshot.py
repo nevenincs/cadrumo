@@ -87,7 +87,7 @@ def check_cross_domain_snapshot_routing(
             "routing cross-domain snapshot check, but no cross-domain checks "
             "are registered -- import aeat.domain.renta at the composition "
             "point that builds the snapshot so register_cross_domain_snapshot_check "
-            "runs before validation"
+            "runs before validation",
         )
     for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
         for failure in check(snapshot.modelo.id, casilla_ids):

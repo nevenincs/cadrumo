@@ -168,7 +168,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
         relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
         relation_binding_values = materialize_relation_binding_values(
-            snapshot.revision, relation_values_map, period="0A"
+            snapshot.revision, relation_values_map, period="0A",
         )
         annual_ledger_values = resolve_ledger_iva_aggregation_binding_values(
             snapshot.revision,
@@ -215,7 +215,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
                 generated_amount=Decimal("0.00"),
                 available_end_amount=Decimal("75.00"),
                 source_observation_key="303:2025:4T:history-source",
-            )
+            ),
         )
         snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
 

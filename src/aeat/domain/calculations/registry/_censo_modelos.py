@@ -16,7 +16,7 @@ from typing import Literal, Self
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 from ....core import Modelo
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.logging import get_logger
 from ....core.resources import resources
 from ._authority import ValidatedRegistryAuthority
@@ -364,14 +364,14 @@ def resolve_censo_modelo_work_unit_foundation(
         return None
     if not ownership.active_work_unit_allowed:
         raise RegistryValidationError(
-            f"censo modelo {ownership.modelo} is historical censo metadata only and cannot create active work units"
+            f"censo modelo {ownership.modelo} is historical censo metadata only and cannot create active work units",
         )
     payload: dict[str, object] = {"modelo": ownership.modelo}
     try:
         payload["event_kind"] = CensoModeloEventKind(period)
     except ValueError as exc:
         raise RegistryValidationError(
-            "active censo modelo 036 work units require one of the censo event periods: alta, modificacion, baja"
+            "active censo modelo 036 work units require one of the censo event periods: alta, modificacion, baja",
         ) from exc
     return resolve_censo_modelo_foundation(CensoModeloFoundationCommand.model_validate(payload))
 

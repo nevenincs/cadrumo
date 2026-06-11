@@ -38,7 +38,13 @@ class _DeadlineEngine:
 
 class _DraftBuilder:
     def build(
-        self, *, modelo: str, period: str, profile: TaxpayerProfile, inputs: ModeloInputs, fail_on_warning: bool = False
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: TaxpayerProfile,
+        inputs: ModeloInputs,
+        fail_on_warning: bool = False,
     ):
         del modelo, period, profile, inputs, fail_on_warning
         raise AssertionError("draft builder should not run while constructing default_engine")

@@ -13,12 +13,12 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
+from typing import Annotated, Self
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ...core import Modelo
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo, Period
 from ...core.external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
 from ..contribuyente._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
@@ -511,7 +511,7 @@ class TaxpayerProfile(BaseModel):
                 f"irpf_estimation_regime {regime.value!r} contradicts "
                 f"uses_objective_estimation_irpf={self.uses_objective_estimation_irpf}; "
                 "the objective-estimation boolean must be True only for the "
-                "OBJETIVA regime"
+                "OBJETIVA regime",
             )
         return self
 
@@ -528,7 +528,7 @@ class TaxpayerProfile(BaseModel):
         if self.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO and self.special_regime_start_date is None:
             raise DeadlineValidationError(
                 "special_regime_start_date is required when "
-                "irpf_special_regime is IMPATRIADO (Art. 93 LIRPF / RIRPF Art. 116)"
+                "irpf_special_regime is IMPATRIADO (Art. 93 LIRPF / RIRPF Art. 116)",
             )
         return self
 
@@ -544,7 +544,7 @@ class TaxpayerProfile(BaseModel):
         if self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR and self.country_of_fiscal_residence is None:
             raise DeadlineValidationError(
                 "country_of_fiscal_residence is required when "
-                "fiscal_residency is NON_RESIDENT_IRNR (TRLIRNR RDLeg 5/2004 Art. 2)"
+                "fiscal_residency is NON_RESIDENT_IRNR (TRLIRNR RDLeg 5/2004 Art. 2)",
             )
         return self
 
@@ -572,7 +572,7 @@ class TaxpayerProfile(BaseModel):
                     missing.append("representante_fiscal_nombre")
                 raise DeadlineValidationError(
                     f"{' and '.join(missing)} required for non-EU/EEA non-resident "
-                    "(Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004)"
+                    "(Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004)",
                 )
         return self
 
@@ -751,7 +751,7 @@ class RecargoBand(BaseModel):
         if self.max_days_late is not None and self.max_days_late < self.min_days_late:
             raise DeadlineValidationError(
                 f"RecargoBand {self.id}: max_days_late ({self.max_days_late}) "
-                f"is below min_days_late ({self.min_days_late})"
+                f"is below min_days_late ({self.min_days_late})",
             )
         return self
 
@@ -786,6 +786,19 @@ class Recovery(BaseModel):
     next_command: str = Field(min_length=1, max_length=256)
 
 
+def _parse_modelo_deadline_period(value: object) -> Period:
+    """Coerce runtime or persisted periods into :class:`~aeat.core.Period`.
+
+    Runtime producers pass :class:`~aeat.core.Period`; JSON persistence
+    restores it from ``{"filing_year": ..., "code": ...}``.
+    """
+    if isinstance(value, Period):
+        return value
+    if isinstance(value, dict):
+        return Period.model_validate(value)
+    raise ValueError(f"deadline period must be a Period or period dict, got {type(value).__name__}")
+
+
 class ModeloDeadline(BaseModel):
     """A single filing obligation in a :class:`Schedule`.
 
@@ -793,8 +806,8 @@ class ModeloDeadline(BaseModel):
         modelo: The modelo string identifier; carried as a plain
             ``str`` on this record so JSON round-tripping is loss-free
             for downstream consumers.
-        period: The period covered, e.g. ``"2026Q1"``, ``"2026"``,
-            ``"2026-03"``.
+        period: The period covered as a typed :class:`~aeat.core.Period`
+            (e.g. ``Period.from_year_and_code(2026, "1T")``).
         opens_on: The first day the AEAT filing window accepts the
             modelo for this period.
         closes_on: The last day the AEAT filing window accepts the
@@ -817,7 +830,7 @@ class ModeloDeadline(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1)
-    period: str = Field(min_length=1)
+    period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
     opens_on: date
     closes_on: date
     payment_cutoff_on: date | None = None
@@ -833,7 +846,7 @@ class ModeloDeadline(BaseModel):
             raise DeadlineValidationError(f"opens_on ({self.opens_on}) is after closes_on ({self.closes_on})")
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
             raise DeadlineValidationError(
-                f"payment_cutoff_on ({self.payment_cutoff_on}) is after closes_on ({self.closes_on})"
+                f"payment_cutoff_on ({self.payment_cutoff_on}) is after closes_on ({self.closes_on})",
             )
         return self
 

@@ -95,7 +95,7 @@ def test_ledger_spec_parses_category_share_and_reference_together() -> None:
             "category=software",
             "business.share=1.0",
             "reference=invoice-1",
-        ]
+        ],
     )
     assert spec.category == "software"
     assert spec.business_share == Decimal("1.0")
@@ -185,7 +185,7 @@ def test_invoice_spec_parses_base_iva_and_payment_edits_together() -> None:
             "iva.rate=21",
             "iva.amount=25.20",
             "payment.id=row_1_1",
-        ]
+        ],
     )
     assert spec.base == Decimal("120.00")
     assert spec.iva_rate == Decimal("21")
@@ -198,7 +198,7 @@ def test_invoice_spec_parses_retention_fields() -> None:
         [
             "retention.rate=15",
             "retention.amount=18.00",
-        ]
+        ],
     )
     assert spec.retention_rate == Decimal("15")
     assert spec.retention_amount == Decimal("18.00")
@@ -264,7 +264,7 @@ def test_declaration_spec_parses_multi_casilla_edits() -> None:
             "casilla.71=1200.00",
             "casilla.03=-500.50",
             "casilla.12345=0",
-        ]
+        ],
     )
     assert spec.casilla_edits == {
         "71": Decimal("1200.00"),

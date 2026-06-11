@@ -85,7 +85,7 @@ def _operator_edits_for(snapshot, values: dict[str, Decimal | str | None]) -> tu
                 casilla_number=casilla.number,
                 label=casilla.label,
                 value=values.get(casilla.id),
-            )
+            ),
         )
     return tuple(edits)
 

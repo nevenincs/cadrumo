@@ -318,7 +318,7 @@ class AeatAuthenticator:
                 provisioner=CertificateContextProvisioner(
                     cert,
                     origin=self._settings.aeat_certificate_verify_url,
-                )
+                ),
             )
 
             try:
@@ -371,7 +371,7 @@ class AeatAuthenticator:
                 update={
                     "authenticated_at": authenticated_at,
                     "idle_deadline": authenticated_at + AEAT_SESSION_IDLE_TTL,
-                }
+                },
             )
             self._browser_session = session_like
             self._context = context
@@ -474,7 +474,7 @@ class AeatAuthenticator:
             raise AeatSessionExpiredError(
                 redact_for_log(
                     f"session for nif={session.identity_nif} is stale "
-                    f"(idle_deadline={session.idle_deadline.isoformat()})"
+                    f"(idle_deadline={session.idle_deadline.isoformat()})",
                 ),
                 translated_message="adapters.auth.authenticator.errors.session_stale",
             )
@@ -636,7 +636,7 @@ class AeatAuthenticator:
                         source_path=self._settings.aeat_certificate_path,
                         friendly_name=self._settings.aeat_certificate_friendly_name,
                         backend=backend,
-                    )
+                    ),
                 )
             except CertificateNifParseError:
                 identity_nif = None
@@ -859,7 +859,7 @@ class AeatAuthenticator:
                 update={
                     "authenticated_at": assertion.attempted_at,
                     "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
-                }
+                },
             )
         except _PersistedSessionInvalidError:
             await self._teardown_resume_attempt(
@@ -1138,7 +1138,7 @@ class AeatAuthenticator:
             "AeatAuthenticator was constructed without a browser "
             "session factory; the default Playwright factory is not "
             "yet wired. Pass a factory explicitly or use only the "
-            "synchronous helpers (health, verify_handshake)."
+            "synchronous helpers (health, verify_handshake).",
         )
 
     async def _drop_context(self) -> None:

@@ -167,7 +167,7 @@ def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
             ):
                 offences.append(f"{relative}:{node.lineno}: environment call")
             if isinstance(node, ast.Assign | ast.AnnAssign | ast.AugAssign | ast.Delete) and _mutates_environment(
-                node, constants, os_aliases, environ_aliases
+                node, constants, os_aliases, environ_aliases,
             ):
                 offences.append(f"{relative}:{node.lineno}: environment mutation")
             if isinstance(node, ast.ClassDef) and node.name.startswith(("_Fake", "_Stub")):
@@ -230,7 +230,7 @@ def _secure_object_repository_module_aliases(tree: ast.AST) -> set[str]:
                     (
                         "adapters.persistence.storage.sql",
                         "adapters.persistence.storage.sql.secure_objects",
-                    )
+                    ),
                 )
             )
         if isinstance(node, ast.ImportFrom) and node.module in {

@@ -94,7 +94,7 @@ def _transaction(
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -126,7 +126,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
         bucket_id="bucket-a",
         period="2026Q2",
         transactions=TransactionCatalogue.from_transactions(
-            (unclassified, missing_business_facts, mixed_missing_ratio)
+            (unclassified, missing_business_facts, mixed_missing_ratio),
         ),
     )
 
@@ -140,7 +140,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
             LedgerPreflightIssueReason.MISSING_IVA_AMOUNT,
             LedgerPreflightIssueReason.MISSING_IVA_RATE,
             LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
-        )
+        ),
     )
 
 
@@ -217,7 +217,7 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
     report = preflight_transaction_catalogue(
@@ -389,7 +389,7 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: Secure
 def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
-            TransactionCatalogue.from_transactions((_transaction("row-ready"),))
+            TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
         )
 
         report = preflight_ledger_tax_readiness(bucket_id=profile.bucket_id, period="2026Q2")

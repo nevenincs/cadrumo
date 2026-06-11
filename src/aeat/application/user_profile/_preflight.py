@@ -74,7 +74,7 @@ class ProfilePreflightService:
                         selector=field.model_selectors[0] if field.model_selectors else candidate_path,
                         section_key=section.key,
                         field_key=field.key,
-                    )
+                    ),
                 )
         return ProfilePreflightReport(
             profile_id=record.profile_id,

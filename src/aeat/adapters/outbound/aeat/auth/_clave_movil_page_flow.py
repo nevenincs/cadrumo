@@ -136,7 +136,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         if click is None or fill is None or type_text is None or wait_for is None:
             raise AeatLoginAssertionError(
                 "Playwright page missing click/fill/type/wait_for_selector; "
-                "cannot drive the Cl@ve Móvil non-QR fallback"
+                "cannot drive the Cl@ve Móvil non-QR fallback",
             )
         surface = self._clave_surface()
         await click(surface.authorize_button_selector)
@@ -154,7 +154,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             fecha = (self._settings.aeat_clave_movil_dni_fecha or "").strip()
             if not fecha:
                 raise ClaveMovilConfigurationError(
-                    "AEAT_CLAVE_MOVIL_DNI_FECHA is required for the non-QR DNI fallback (format YYYY-MM-DD)."
+                    "AEAT_CLAVE_MOVIL_DNI_FECHA is required for the non-QR DNI fallback (format YYYY-MM-DD).",
                 )
             await type_text(surface.dni_fecha_input_selector, fecha)
         else:
@@ -162,7 +162,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             soporte = unwrap_optional_secret(self._settings.aeat_clave_movil_nie_soporte).strip()
             if not soporte:
                 raise ClaveMovilConfigurationError(
-                    "AEAT_CLAVE_MOVIL_NIE_SOPORTE is required for the non-QR NIE fallback."
+                    "AEAT_CLAVE_MOVIL_NIE_SOPORTE is required for the non-QR NIE fallback.",
                 )
             await type_text(surface.nie_soporte_input_selector, soporte)
         await wait_for(surface.continue_button_visible_selector, timeout=self._navigation_timeout_ms)
@@ -293,7 +293,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                           }}
                           return false;
                         }}
-                        """
+                        """,
                     ),
                     timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
                 )
@@ -506,7 +506,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         if wait_for is None or click is None:
             raise AeatLoginAssertionError(
                 "Playwright page does not expose wait_for_selector()/click(); "
-                "cannot drive AEAT own-name representation gate"
+                "cannot drive AEAT own-name representation gate",
             )
         try:
             selected_own_name = await self._wait_for_own_name_representation_selector(page)
@@ -530,7 +530,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         wait_for = getattr(page, "wait_for_selector", None)
         if wait_for is None:
             raise AeatLoginAssertionError(
-                "Playwright page does not expose wait_for_selector(); cannot drive AEAT own-name representation gate"
+                "Playwright page does not expose wait_for_selector(); cannot drive AEAT own-name representation gate",
             )
         last_error: PlaywrightError | None = None
         for selector in _own_name_representation_selectors(

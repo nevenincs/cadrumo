@@ -21,7 +21,7 @@ def _production_modules() -> tuple[Path, ...]:
             for package in packages
             for path in package.glob("*.py")
             if not path.name.startswith("test_") and path.name != "conftest.py"
-        )
+        ),
     )
 
 

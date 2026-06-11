@@ -29,7 +29,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.time import now as _utc_now
 from ....core.time._utc import validate_utc_aware
 from ....domain.calculations.registry import (

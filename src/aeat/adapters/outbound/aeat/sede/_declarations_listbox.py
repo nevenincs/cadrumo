@@ -108,7 +108,7 @@ def _parse_listbox(
                 justificante_cell_index=justificante_index,
                 archive_cell_index=archive_index,
                 declaration_copy_cell_index=declaration_copy_index,
-            )
+            ),
         )
     return tuple(rows)
 

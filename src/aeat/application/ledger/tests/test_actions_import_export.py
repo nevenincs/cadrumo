@@ -75,7 +75,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     assert duplicate_import.bucket_event_ids == ()
     persisted = transaction_repository.load()
     assert tuple(sorted(persisted.transactions)) == tuple(
-        sorted(ref.transaction_id for ref in first_import.summary.imported_refs)
+        sorted(ref.transaction_id for ref in first_import.summary.imported_refs),
     )
     events = event_repository.load().for_bucket("bucket-a")
     assert [event.event_type for event in events] == [
@@ -429,7 +429,7 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: 
     assert result.rows[0].transaction_id == first.ref.transaction_id
     assert b"bucket b row" not in result.payload
     assert [event.event_type for event in event_repo_b.load().for_bucket("bucket-b")] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED
+        BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
 
@@ -461,5 +461,5 @@ def test_export_ledger_transactions_writes_output_before_export_event(
         )
 
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED
+        BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]

@@ -203,14 +203,14 @@ def _portal_consumer_binding(modelo_id: str, revision_id: str, consumer: str) ->
                 return Portal[member_name]
             except KeyError as exc:
                 raise PortalIntegrityError(
-                    f"modelo {modelo_id} revision {revision_id} binds unknown portal enum {consumer!r}"
+                    f"modelo {modelo_id} revision {revision_id} binds unknown portal enum {consumer!r}",
                 ) from exc
     if consumer.startswith("portal_"):
         try:
             return Portal(consumer)
         except ValueError as exc:
             raise PortalIntegrityError(
-                f"modelo {modelo_id} revision {revision_id} binds unknown portal {consumer!r}"
+                f"modelo {modelo_id} revision {revision_id} binds unknown portal {consumer!r}",
             ) from exc
     return None
 

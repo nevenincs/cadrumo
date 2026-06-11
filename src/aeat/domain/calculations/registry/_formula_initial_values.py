@@ -45,7 +45,7 @@ def materialise_observations(
                 legal_refs=legal_refs,
                 source_refs=source_refs,
                 absent_by_design=casilla_id in absent_by_design_casillas,
-            )
+            ),
         )
     return tuple(materialised)
 
@@ -185,7 +185,7 @@ def _reject_inconsistent_previous_filing_projections(
                     casilla_id,
                     f"casilla {casilla_id!r}: inputs={input_value!r} vs "
                     f"binding_values[{binding.id!r}]={binding_value!r}",
-                )
+                ),
             )
     if inconsistent:
         raise RegistryValidationError(

@@ -67,7 +67,7 @@ class ParityScenario(ParityTapeModel):
             raise RegistryValidationError("scenario synthetic input revision must match scenario revision")
         if set(self.output_cells) != set(self.registry_outputs):
             raise RegistryValidationError(
-                "scenario workbook outputs and registry outputs must use the same identifiers"
+                "scenario workbook outputs and registry outputs must use the same identifiers",
             )
         if len(set(self.registry_outputs.values())) != len(self.registry_outputs):
             raise RegistryValidationError("scenario registry outputs must target unique casillas")

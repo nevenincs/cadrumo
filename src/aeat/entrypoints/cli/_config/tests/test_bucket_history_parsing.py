@@ -16,7 +16,7 @@ def test_parse_bucket_event_types_returns_typed_filters() -> None:
         [
             BucketEventType.LEDGER_TRANSACTION_CREATED.value,
             BucketEventType.MODELO_FILED.value,
-        ]
+        ],
     )
 
     assert parsed == (

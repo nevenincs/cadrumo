@@ -23,7 +23,7 @@ def test_data_binding_definition_accepts_explicit_aeat_prefilled_marker() -> Non
         {
             **binding.model_dump(mode="python"),
             "aeat_prefilled": True,
-        }
+        },
     )
 
     assert marked.aeat_prefilled is True

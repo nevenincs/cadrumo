@@ -489,7 +489,7 @@ def build_live_auth_preflight_report(
         else None,
         certificate_path_configured=resolved_settings.aeat_certificate_path is not None,
         certificate_file_present=bool(
-            resolved_settings.aeat_certificate_path is not None and resolved_settings.aeat_certificate_path.is_file()
+            resolved_settings.aeat_certificate_path is not None and resolved_settings.aeat_certificate_path.is_file(),
         ),
         certificate_backend=resolved_settings.aeat_certificate_backend.value,
         persisted_session_present=probe.persisted_session_present,
@@ -575,7 +575,7 @@ async def login_operator_auth(
                 ),
                 action="auth.session.verified",
                 object_id=provider_kind.value,
-            )
+            ),
         )
 
     return AuthLoginResult(
@@ -700,7 +700,7 @@ def _apply_auth_clear_to_repository(
             *_optional_clear_events(event_object, session_event_count, cleared_locks),
         )
         repository.update(
-            lambda current: _append_bucket_events(current.model_copy(update={"auth": AuthState()}), events)
+            lambda current: _append_bucket_events(current.model_copy(update={"auth": AuthState()}), events),
         )
         return
     if not (session_event_count or cleared_locks):

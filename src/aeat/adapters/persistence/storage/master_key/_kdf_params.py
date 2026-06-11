@@ -29,7 +29,7 @@ from ..errors import StorageValidationError
 if TYPE_CHECKING:
     from ..bucket._manifest import ManifestKdfParams
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SALT_BYTES = KDF_SALT_BYTES
 _OUTPUT_BYTES = 32

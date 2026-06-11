@@ -43,7 +43,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .. import NON_REGISTRY_MODELOS, Modelo
-from .._toml import read_toml
+from .. import read_toml
 from ._errors import AuthorizationManifestError
 
 #: Minimum number of distinct renta (annual) years an enrolling test must
@@ -156,7 +156,7 @@ class ModeloAuthorizationEntry(BaseModel):
             raise ValueError(
                 f"modelo {self.modelo!r} authorization claim must span at least "
                 f"{MIN_DISTINCT_RENTA_YEARS} distinct renta years; got "
-                f"{sorted(self.renta_years)!r} ({len(distinct)} distinct)"
+                f"{sorted(self.renta_years)!r} ({len(distinct)} distinct)",
             )
         return self
 
@@ -187,7 +187,7 @@ class AuthorizationManifest(BaseModel):
             if entry.modelo in seen:
                 raise ValueError(
                     f"authorization manifest declares modelo {entry.modelo!r} more than once; "
-                    f"each modelo enrolls through exactly one entry"
+                    f"each modelo enrolls through exactly one entry",
                 )
             seen.add(entry.modelo)
         return self
@@ -241,12 +241,12 @@ class ModeloAuthorization(BaseModel):
         if self.state is AuthorizationState.AUTHORIZED and self.entry is None:
             raise ValueError(
                 f"modelo {self.modelo!r} is AUTHORIZED but carries no backing manifest entry; "
-                f"the derived capability must reference the entry that authorizes it"
+                f"the derived capability must reference the entry that authorizes it",
             )
         if self.state is AuthorizationState.UNAUTHORIZED and self.entry is not None:
             raise ValueError(
                 f"modelo {self.modelo!r} is UNAUTHORIZED but carries a manifest entry; "
-                f"an unauthorized capability must not reference an enrolling entry"
+                f"an unauthorized capability must not reference an enrolling entry",
             )
         return self
 
@@ -291,7 +291,7 @@ def _load_manifest_fragment(path: Path) -> ModeloAuthorizationEntry:
     if not isinstance(raw_entry, dict):
         raise AuthorizationManifestError(
             f"{path}: an authorization.d fragment must declare exactly one [modelo] table; "
-            f"got {type(raw_entry).__name__ if raw_entry is not None else 'no [modelo] table'}"
+            f"got {type(raw_entry).__name__ if raw_entry is not None else 'no [modelo] table'}",
         )
     try:
         # TOML hydration is a boundary coercion: arrays decode to ``list``
@@ -306,7 +306,7 @@ def _load_manifest_fragment(path: Path) -> ModeloAuthorizationEntry:
     if entry.modelo != path.stem:
         raise AuthorizationManifestError(
             f"{path}: fragment filename stem {path.stem!r} does not match its declared "
-            f"modelo id {entry.modelo!r}; name the fragment <modelo>.toml"
+            f"modelo id {entry.modelo!r}; name the fragment <modelo>.toml",
         )
     return entry
 

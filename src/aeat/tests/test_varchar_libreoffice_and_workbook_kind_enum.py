@@ -41,7 +41,7 @@ _WORKBOOK_KIND_MEMBERS: frozenset[str] = frozenset(
         "static_layout",
         "unsupported_binary_xls",
         "unreadable",
-    }
+    },
 )
 
 

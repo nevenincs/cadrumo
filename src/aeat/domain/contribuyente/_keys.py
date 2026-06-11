@@ -137,7 +137,7 @@ def _profile_keys() -> tuple[ProfileKey, ...]:
         raise ProfileKeysRegistrationError(
             "profile keys are not registered; import the wizard catalogue "
             "(aeat.application.wizard) so the compiled keys are pushed via "
-            "register_profile_keys before the profile-key registry is read"
+            "register_profile_keys before the profile-key registry is read",
         )
     return _PROFILE_KEYS_CACHE[0]
 

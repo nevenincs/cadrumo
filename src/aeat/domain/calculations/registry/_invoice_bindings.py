@@ -31,7 +31,7 @@ _InvoiceRowField = Literal[
 # that needs "is this binding an invoice binding?" routes through this
 # frozenset so the answer stays single-sourced.
 INVOICE_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
-    {"collectible_invoice", "payable_invoice", "purchase_invoice_evidence"}
+    {"collectible_invoice", "payable_invoice", "purchase_invoice_evidence"},
 )
 
 __all__ = [
@@ -110,7 +110,7 @@ class InvoiceObservation(BaseModel):
         if self.is_rectification:
             if self.rectified_year is None or self.rectified_period is None:
                 raise RegistryValidationError(
-                    "rectification observation must declare rectified_year and rectified_period"
+                    "rectification observation must declare rectified_year and rectified_period",
                 )
             if self.rectified_base_previous is None:
                 raise RegistryValidationError("rectification observation must declare rectified_base_previous")
@@ -211,18 +211,18 @@ def invoice_binding_requirements(
                 claves=claves,
                 rectification_scope=scope,
                 iva_regime=regime,
-            )
+            ),
         )
     return tuple(requirements)
 
 
 _InvoiceFact = Literal["operator_count", "base_sum", "rectified_base_delta_sum", "row_field"]
 _INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
-    {"operator_count", "base_sum", "rectified_base_delta_sum", "row_field"}
+    {"operator_count", "base_sum", "rectified_base_delta_sum", "row_field"},
 )
 
 _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
-    {"rectified_year", "rectified_period", "rectified_base_previous"}
+    {"rectified_year", "rectified_period", "rectified_base_previous"},
 )
 
 # Row fields the InvoiceObservation model cannot supply at all. The
@@ -268,13 +268,14 @@ def _validate_scalar_invoice_fact_op(binding: DataBindingDefinition, selector: _
     """
     if selector.fact == "operator_count" and op != "count_distinct":
         raise RegistryValidationError(
-            f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'"
+            f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'",
         )
     if selector.fact in {"base_sum", "rectified_base_delta_sum"} and op != "sum":
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
     if selector.fact == "rectified_base_delta_sum" and selector.rectification_scope != "only_rectifications":
         raise RegistryValidationError(
-            f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires rectification_scope 'only_rectifications'"
+            f"binding {binding.id!r} fact 'rectified_base_delta_sum' "
+            "requires rectification_scope 'only_rectifications'",
         )
 
 
@@ -292,24 +293,24 @@ def _validate_row_field_invoice_fact(binding: DataBindingDefinition, selector: _
     if selector.row_field in _OPTIONAL_ONLY_INVOICE_ROW_FIELDS:
         raise RegistryValidationError(
             f"binding {binding.id!r} row_field {selector.row_field!r} is optional on the underlying "
-            f"observation and cannot be required by a row-producer binding"
+            f"observation and cannot be required by a row-producer binding",
         )
     if selector.grouping is None:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
     if selector.grouping == "operator_clave_period" and selector.rectification_scope != "only_rectifications":
         raise RegistryValidationError(
             f"binding {binding.id!r} grouping 'operator_clave_period' requires "
-            f"rectification_scope 'only_rectifications'"
+            f"rectification_scope 'only_rectifications'",
         )
     if selector.row_field in _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS:
         if selector.grouping != "operator_clave_period":
             raise RegistryValidationError(
-                f"binding {binding.id!r} row_field {selector.row_field!r} requires grouping 'operator_clave_period'"
+                f"binding {binding.id!r} row_field {selector.row_field!r} requires grouping 'operator_clave_period'",
             )
         if selector.rectification_scope != "only_rectifications":
             raise RegistryValidationError(
                 f"binding {binding.id!r} row_field {selector.row_field!r} requires "
-                f"rectification_scope 'only_rectifications'"
+                f"rectification_scope 'only_rectifications'",
             )
 
 
@@ -394,7 +395,7 @@ def resolve_invoice_binding_row_values(
                 if value is None:
                     raise RegistryValidationError(
                         f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
-                        f"for grouping {grouping!r}"
+                        f"for grouping {grouping!r}",
                     )
                 resolved[(binding.id, row_index)] = value
     return resolved
@@ -463,7 +464,7 @@ def _build_operator_clave_period_rows(
             continue
         if observation.rectified_year is None or observation.rectified_period is None:
             raise RegistryValidationError(
-                "operator_clave_period grouping requires rectification metadata on every observation"
+                "operator_clave_period grouping requires rectification metadata on every observation",
             )
         key = (
             observation.country_code,
@@ -562,7 +563,7 @@ def _aggregate_invoice_binding(
     if selector.fact == "operator_count":
         if op != "count_distinct":
             raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'"
+                f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'",
             )
         # AEAT defines this count as the number of Tipo 2 records (one per
         # (operator, clave) pair for the operador grouping; one per (operator,
@@ -582,8 +583,8 @@ def _aggregate_invoice_binding(
                             observation.rectified_period,
                         )
                         for observation in observations
-                    }
-                )
+                    },
+                ),
             )
         return Decimal(
             len(
@@ -594,8 +595,8 @@ def _aggregate_invoice_binding(
                         observation.intracommunity_clave,
                     )
                     for observation in observations
-                }
-            )
+                },
+            ),
         )
     if selector.fact == "base_sum":
         if op != "sum":
@@ -604,7 +605,7 @@ def _aggregate_invoice_binding(
     if selector.fact == "rectified_base_delta_sum":
         if op != "sum":
             raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires aggregation op 'sum'"
+                f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires aggregation op 'sum'",
             )
         total = Decimal("0")
         for observation in observations:

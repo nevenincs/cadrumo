@@ -65,7 +65,7 @@ def test_sqlite_foreign_keys_cascade(tmp_path: Path) -> None:
                     sha256="a" * 64,
                     source_url=sede_pdf_url(PDF_FORM_PATH_FIXTURE),
                     fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
-                )
+                ),
             )
         with session_scope(engine) as session:
             ModeloRepository(session).delete(1)
@@ -89,7 +89,7 @@ def test_portal_auth_method_check_constraint(tmp_path: Path) -> None:
             session.execute(
                 text(
                     "insert into portals (identifier, base_url, auth_method, modelo_id, label)"
-                    " values ('BAD', 'https://example.test', 'totally-bogus', :mid, 'Bad')"
+                    " values ('BAD', 'https://example.test', 'totally-bogus', :mid, 'Bad')",
                 ),
                 {"mid": modelo.id},
             )
@@ -127,7 +127,7 @@ def test_corpus_artifact_unique_identity(tmp_path: Path) -> None:
                     sha256="c" * 64,
                     source_url=sede_pdf_url(PDF_100_PATH_FIXTURE),
                     fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
-                )
+                ),
             )
         with session_scope(engine) as session:
             listed = CorpusArtifactRepository(session).list_all()
@@ -149,7 +149,7 @@ def test_secure_object_schema_version_check_constraint(tmp_path: Path) -> None:
                 text(
                     "insert into secure_objects "
                     "(namespace, object_key, classification, schema_version, written_at, payload) "
-                    "values ('aeat.test.raw', :object_key, 'financial', 0, :written_at, :payload)"
+                    "values ('aeat.test.raw', :object_key, 'financial', 0, :written_at, :payload)",
                 ),
                 {
                     "object_key": b"raw-key",
@@ -173,7 +173,7 @@ def test_secure_object_revision_hash_check_constraints(tmp_path: Path) -> None:
                 text(
                     "insert into secure_objects "
                     "(namespace, object_key, classification, schema_version, written_at, revision_id, payload) "
-                    "values ('aeat.test.raw', :object_key, 'financial', 1, :written_at, 'short', :payload)"
+                    "values ('aeat.test.raw', :object_key, 'financial', 1, :written_at, 'short', :payload)",
                 ),
                 {
                     "object_key": b"raw-key",
@@ -211,7 +211,7 @@ def test_portal_upsert_wraps_integrity_error(tmp_path: Path) -> None:
                     auth_method=PortalAuthMethod.NONE,
                     modelo_id=9999,
                     label="Orphan",
-                )
+                ),
             )
     finally:
         engine.dispose()

@@ -50,7 +50,7 @@ _M210_RATE_SENTINELS = frozenset(
         _M210_DEFERRED_TIPO_SENTINEL,
         _M210_CONVENIO_MISSING_SENTINEL,
         _M210_NOT_YET_AUTHORED_SENTINEL,
-    }
+    },
 )
 
 # Public-aliased re-exports for the application-layer verification
@@ -452,7 +452,7 @@ def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: _EvalContext) -
         raise RegistryValidationError(f"parameter {bracket_arg.parameter!r} not registered")
     if bracket_param.data_type != "bracket_table":
         raise RegistryValidationError(
-            f"parameter {bracket_arg.parameter!r} must declare data_type='bracket_table' to be used by lookup_bracket"
+            f"parameter {bracket_arg.parameter!r} must declare data_type='bracket_table' to be used by lookup_bracket",
         )
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(bracket_arg.parameter)
@@ -470,18 +470,18 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
         raise RegistryValidationError("formula op 'lookup_bracket_by_ccaa' requires args[1] to be a binding leaf")
     if dispatch_arg.dispatch_table is None:
         raise RegistryValidationError(
-            "formula op 'lookup_bracket_by_ccaa' requires args[2] to be a dispatch_table leaf"
+            "formula op 'lookup_bracket_by_ccaa' requires args[2] to be a dispatch_table leaf",
         )
     if binding_arg.binding not in ctx.enum_binding_values:
         raise RegistryValidationError(
-            f"enum binding {binding_arg.binding!r} has no supplied value; required by lookup_bracket_by_ccaa"
+            f"enum binding {binding_arg.binding!r} has no supplied value; required by lookup_bracket_by_ccaa",
         )
     dispatch_key = ctx.enum_binding_values[binding_arg.binding]
     dispatch_table = dispatch_arg.dispatch_table
     if dispatch_key not in dispatch_table:
         raise RegistryValidationError(
             f"lookup_bracket_by_ccaa dispatch_table is missing CCAA {dispatch_key!r} "
-            f"(declared keys: {sorted(dispatch_table)})"
+            f"(declared keys: {sorted(dispatch_table)})",
         )
     bracket_param_id = dispatch_table[dispatch_key]
     bracket_param = ctx.parameters.get(bracket_param_id)
@@ -490,7 +490,7 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
     if bracket_param.data_type != "bracket_table":
         raise RegistryValidationError(
             f"parameter {bracket_param_id!r} must declare data_type='bracket_table' "
-            f"to be used by lookup_bracket_by_ccaa"
+            f"to be used by lookup_bracket_by_ccaa",
         )
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
@@ -966,7 +966,7 @@ def _resolve_bracket(
     """Compute the cuota for ``base`` using parameter's piecewise-linear bracket schedule."""
     if parameter.data_type != "bracket_table":
         raise RegistryValidationError(
-            f"parameter {parameter.id!r} must declare data_type='bracket_table' to use lookup_bracket"
+            f"parameter {parameter.id!r} must declare data_type='bracket_table' to use lookup_bracket",
         )
     if parameter.bracket_axis is None:
         raise RegistryValidationError(f"parameter {parameter.id!r} bracket_table requires bracket_axis")
@@ -1016,7 +1016,7 @@ def _resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str
             matches.append(value)
     if len(matches) != 1:
         raise RegistryValidationError(
-            f"parameter {parameter.id!r} expected exactly one dated value, found {len(matches)}"
+            f"parameter {parameter.id!r} expected exactly one dated value, found {len(matches)}",
         )
     return matches[0].value
 
@@ -1093,6 +1093,6 @@ def read_parameter(
     parameter = next((p for p in revision.parameters if p.id == parameter_id), None)
     if parameter is None:
         raise RegistryValidationError(
-            f"parameter {parameter_id!r} not registered under modelo {modelo_id!r} revision {revision_id!r}"
+            f"parameter {parameter_id!r} not registered under modelo {modelo_id!r} revision {revision_id!r}",
         )
     return _resolve_parameter(parameter, date_context)

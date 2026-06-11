@@ -19,6 +19,8 @@ Use of :class:`BucketEventHistoryRepository` for compliance.
 
 from __future__ import annotations
 
+from datetime import date
+
 import typer
 
 from ....core.errors import resolve_error_message
@@ -59,6 +61,37 @@ def _build_service(bucket_id: str):
         bucket_id=bucket_id,
         events=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),
     )
+
+
+def _calendar_summary_after_apply(*, bucket_id: str, profile_id: str) -> dict[str, object]:
+    from ....application.overview import OverviewCalendarRange, build_overview_calendar
+    from ....application.user_profile import (
+        UserProfileLifecycleRepository,
+        projection_for_taxpayer,
+        record_to_values,
+    )
+
+    today = date.today()
+    rng = OverviewCalendarRange(
+        from_date=date(today.year, 1, 1),
+        to_date=date(today.year, 12, 31),
+    )
+    record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(profile_id)
+    calendar = build_overview_calendar(
+        projection_for_taxpayer(record),
+        rng,
+        today=today,
+        raw_values=record_to_values(record),
+    )
+    return {
+        "taxpayer_model_declared": calendar.taxpayer_model_declared,
+        "calendar_range_from": rng.from_date.isoformat(),
+        "calendar_range_to": rng.to_date.isoformat(),
+        "calendar_obligation_count": len(calendar.entries),
+        "calendar_obligation_modelos": sorted({entry.modelo for entry in calendar.entries}),
+        "calendar_warning_codes": [warning.code for warning in calendar.warnings],
+        "calendar_defaulted_modelos": list(calendar.completeness.defaulted_modelos),
+    }
 
 
 def _register_censo_refresh(censo_app: typer.Typer) -> None:
@@ -237,13 +270,22 @@ def _register_censo_apply(censo_app: typer.Typer) -> None:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         except CensoApplyConflictError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        typed_apply = CensoApplyPayload.from_result(result)
+        apply_payload = result.model_dump(mode="json")
+        apply_payload.update(_calendar_summary_after_apply(bucket_id=bucket_id, profile_id=profile_id))
+        typed_apply = CensoApplyPayload.model_validate(apply_payload)
         lines = [
             f"snapshot_id\t{result.snapshot_id}",
             f"written\t{len(result.written_paths)}",
             f"unchanged\t{len(result.unchanged_paths)}",
             f"derived\t{len(result.derived_paths)}",
+            f"taxpayer_model_declared\t{str(typed_apply.taxpayer_model_declared).lower()}",
+            f"calendar_range\t{typed_apply.calendar_range_from}\t{typed_apply.calendar_range_to}",
+            f"calendar_obligations\t{typed_apply.calendar_obligation_count}",
         ]
+        if typed_apply.calendar_obligation_modelos:
+            lines.append(f"calendar_modelos\t{','.join(typed_apply.calendar_obligation_modelos)}")
+        if typed_apply.calendar_warning_codes:
+            lines.append(f"calendar_warnings\t{','.join(typed_apply.calendar_warning_codes)}")
         for path in result.written_paths:
             lines.append(f"written\t{path}")
         for path in result.unchanged_paths:

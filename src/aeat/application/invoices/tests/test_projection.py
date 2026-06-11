@@ -54,10 +54,10 @@ def _invoice() -> Invoice:
                         "subtotal": Decimal("100.00"),
                         "iva_rate": IvaRate.RATE_21,
                         "iva_amount": Decimal("21.00"),
-                    }
+                    },
                 ),
             ),
-        }
+        },
     )
 
 

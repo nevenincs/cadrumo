@@ -40,7 +40,7 @@ def reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
         return
     available = ", ".join(sorted(modelo_def.revisions))
     raise ModeloError(
-        f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. Available revisions: {available}"
+        f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. Available revisions: {available}",
     )
 
 
@@ -63,5 +63,5 @@ def reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period:
     available = ", ".join(sorted(declared))
     raise ModeloError(
         f"period {period!r} is not declared on modelo {modelo!r} "
-        f"revision {revision_id!r}. Available periods: {available}"
+        f"revision {revision_id!r}. Available periods: {available}",
     )

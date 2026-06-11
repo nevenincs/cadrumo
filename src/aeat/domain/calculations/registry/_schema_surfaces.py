@@ -68,7 +68,7 @@ class CasillaContinuidadEvolutionDefinition(RegistryModel):
     def _validate_revision_pair(self) -> CasillaContinuidadEvolutionDefinition:
         if self.from_revision == self.to_revision:
             raise RegistryValidationError(
-                f"casilla continuidad evolution {self.id!r} must span two different revisions"
+                f"casilla continuidad evolution {self.id!r} must span two different revisions",
             )
         return self
 
@@ -120,19 +120,19 @@ class CasillaConstraints(RegistryModel):
     def _validate_bounds(self) -> CasillaConstraints:
         if self.min_value is not None and self.max_value is not None and self.min_value > self.max_value:
             raise RegistryValidationError(
-                f"casilla constraints: min_value {self.min_value} > max_value {self.max_value}"
+                f"casilla constraints: min_value {self.min_value} > max_value {self.max_value}",
             )
         if self.sign == "non_negative" and self.max_value is not None and self.max_value < Decimal("0"):
             raise RegistryValidationError(
-                "casilla constraints: sign='non_negative' is incompatible with negative max_value"
+                "casilla constraints: sign='non_negative' is incompatible with negative max_value",
             )
         if self.sign == "non_positive" and self.min_value is not None and self.min_value > Decimal("0"):
             raise RegistryValidationError(
-                "casilla constraints: sign='non_positive' is incompatible with positive min_value"
+                "casilla constraints: sign='non_positive' is incompatible with positive min_value",
             )
         if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
             raise RegistryValidationError(
-                f"casilla constraints: min_length {self.min_length} > max_length {self.max_length}"
+                f"casilla constraints: min_length {self.min_length} > max_length {self.max_length}",
             )
         if self.enum is not None and len(self.enum) == 0:
             raise RegistryValidationError("casilla constraints: enum must declare at least one value")
@@ -143,7 +143,7 @@ class CasillaConstraints(RegistryModel):
                 re.compile(self.pattern)
             except re.error as exc:
                 raise RegistryValidationError(
-                    f"casilla constraints: pattern {self.pattern!r} is not a valid regex: {exc}"
+                    f"casilla constraints: pattern {self.pattern!r} is not a valid regex: {exc}",
                 ) from exc
         return self
 
@@ -299,26 +299,26 @@ class CasillaDefinition(RegistryModel):
         if self.internal_only and self.export_refs:
             raise RegistryValidationError(
                 f"internal_only casilla {self.id!r} must not declare export_refs "
-                "(an app-internal casilla cannot also be exported to a fichero record)"
+                "(an app-internal casilla cannot also be exported to a fichero record)",
             )
         if self.internal_only and self.input_kind != InputKind.COMPUTED:
             raise RegistryValidationError(
                 f"internal_only casilla {self.id!r} must be computed "
-                "(an internal ceiling has no legitimate computation surface unless formula-derived)"
+                "(an internal ceiling has no legitimate computation surface unless formula-derived)",
             )
         if self.semantic_role_cardinality == "intentional_singleton":
             if self.semantic_role is None:
                 raise RegistryValidationError(
-                    f"casilla {self.id!r} declares intentional singleton role cardinality without semantic_role"
+                    f"casilla {self.id!r} declares intentional singleton role cardinality without semantic_role",
                 )
             if self.semantic_role_cardinality_reason is None:
                 raise RegistryValidationError(
-                    f"casilla {self.id!r} declares intentional singleton role cardinality without reason"
+                    f"casilla {self.id!r} declares intentional singleton role cardinality without reason",
                 )
         elif self.semantic_role_cardinality_reason is not None:
             raise RegistryValidationError(
                 f"casilla {self.id!r} declares semantic_role_cardinality_reason "
-                "without intentional singleton cardinality"
+                "without intentional singleton cardinality",
             )
         return self
 
@@ -392,7 +392,7 @@ class CalculationCompletenessManifest(RegistryModel):
     """
 
     source_ref: SourceRefId = Field(
-        description="Catalogue source id of the AEAT Diseño de Registros the manifest was derived from."
+        description="Catalogue source id of the AEAT Diseño de Registros the manifest was derived from.",
     )
     casillas: tuple[CalculationCompletenessCasilla, ...]
     manual_extraction: bool = False
@@ -412,19 +412,19 @@ class CalculationCompletenessManifest(RegistryModel):
                 for segmento, number in duplicates
             )
             raise RegistryValidationError(
-                f"calculation-completeness manifest declares duplicate casilla identities: {rendered}"
+                f"calculation-completeness manifest declares duplicate casilla identities: {rendered}",
             )
         if self.source_ref not in self.source_refs:
             raise RegistryValidationError(
-                "calculation-completeness manifest source_ref must be included in source_refs"
+                "calculation-completeness manifest source_ref must be included in source_refs",
             )
         if self.manual_extraction and self.manual_extraction_reason is None:
             raise RegistryValidationError(
-                "calculation-completeness manifest with manual_extraction must declare manual_extraction_reason"
+                "calculation-completeness manifest with manual_extraction must declare manual_extraction_reason",
             )
         if not self.manual_extraction and self.manual_extraction_reason is not None:
             raise RegistryValidationError(
-                "calculation-completeness manifest declares manual_extraction_reason without manual_extraction"
+                "calculation-completeness manifest declares manual_extraction_reason without manual_extraction",
             )
         return self
 
@@ -490,7 +490,7 @@ class RelationDefinition(RegistryModel):
     def _validate_dependency_role(self) -> RelationDefinition:
         if self.kind == "annual_summary" and self.dependency_role != "periodic_to_annual_summary":
             raise RegistryValidationError(
-                f"annual summary relation {self.id!r} must use periodic_to_annual_summary role"
+                f"annual summary relation {self.id!r} must use periodic_to_annual_summary role",
             )
         if self.source_period_offset_from_target is not None:
             # The offset declares "for each target_period, derive source_period
@@ -498,7 +498,8 @@ class RelationDefinition(RegistryModel):
             # with explicit source_periods which fixes a single static source set.
             if self.source_periods:
                 raise RegistryValidationError(
-                    f"relation {self.id!r} cannot declare source_periods together with source_period_offset_from_target"
+                    f"relation {self.id!r} cannot declare source_periods together with "
+                    "source_period_offset_from_target",
                 )
             if self.source_period_offset_from_target == 0:
                 raise RegistryValidationError(f"relation {self.id!r} source_period_offset_from_target must be non-zero")
@@ -597,7 +598,7 @@ class ExportLayoutDefinition(RegistryModel):
                 raise RegistryValidationError(f"export layout {self.id!r} must declare dictionary_source_ref")
             if self.dictionary_source_ref not in self.source_refs:
                 raise RegistryValidationError(
-                    f"export layout {self.id!r} dictionary source must be included in source_refs"
+                    f"export layout {self.id!r} dictionary source must be included in source_refs",
                 )
         return self
 
@@ -630,7 +631,7 @@ class ExportLayoutDefinition(RegistryModel):
                 f"export layout {self.id!r} declares inconsistent encodings "
                 f"across its records: {per_record}. A single fichero-BOE "
                 f"layout must use one wire encoding so the published payload "
-                f"decodes uniformly."
+                f"decodes uniformly.",
             )
         return self
 

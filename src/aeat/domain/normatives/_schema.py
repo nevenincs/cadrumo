@@ -133,7 +133,7 @@ def _require_spanish(translatable: LocalizedText, field_name: str) -> None:
     if unknown:
         raise NormativeValidationError(
             f"{field_name}: unknown language code(s) {sorted(unknown)!r} "
-            f"(codified languages are {sorted(SUPPORTED_OUTPUT_LANGUAGES)!r})"
+            f"(codified languages are {sorted(SUPPORTED_OUTPUT_LANGUAGES)!r})",
         )
     if not translatable.get("es", "").strip():
         raise NormativeValidationError(f"{field_name}: missing authoritative Spanish ('es') translation")
@@ -218,14 +218,14 @@ class NormativeReference(_NormativeStrictFrozen):
         for articulo in self.articulos:
             if articulo.numero in seen:
                 raise NormativeValidationError(
-                    f"NormativeReference[{self.id}]: duplicate articulo numero {articulo.numero!r}"
+                    f"NormativeReference[{self.id}]: duplicate articulo numero {articulo.numero!r}",
                 )
             seen.add(articulo.numero)
             permalink = str(articulo.permalink)
             if self.boe_id not in permalink:
                 raise NormativeValidationError(
                     f"NormativeReference[{self.id}].articulo[{articulo.numero}]: "
-                    f"permalink {permalink!r} does not reference boe_id {self.boe_id!r}"
+                    f"permalink {permalink!r} does not reference boe_id {self.boe_id!r}",
                 )
         return self
 
@@ -250,7 +250,7 @@ class NormativeCatalogue(_NormativeStrictMutable):
         for key, ref in self.references.items():
             if key != ref.id:
                 raise NormativeValidationError(
-                    f"NormativeCatalogue: key {key!r} does not match reference id {ref.id!r}"
+                    f"NormativeCatalogue: key {key!r} does not match reference id {ref.id!r}",
                 )
         return self
 

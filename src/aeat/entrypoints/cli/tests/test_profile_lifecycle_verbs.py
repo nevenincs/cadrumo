@@ -115,7 +115,7 @@ def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunn
 
 def test_repair_profile_named_active_clear_active_clears_pointer(cli_runner: CliRunner, tmp_path: Path) -> None:
     from ....application.user_profile._orchestration import _write_active_profile_pointer
-    from ....core._bucket_pointer_io import read_pointer
+    from ....core import read_pointer
 
     stage_bucket_manifest("operator", label="operator")
     _write_active_profile_pointer("operator")

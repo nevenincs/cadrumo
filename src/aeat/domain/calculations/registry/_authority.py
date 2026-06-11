@@ -30,6 +30,7 @@ from ._validate import RegistryValidator
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
+_AUTHORITY_CACHE_SCHEMA_VERSION = "period-value-object-v1"
 
 
 @dataclass(slots=True)
@@ -193,13 +194,26 @@ class ValidatedRegistryAuthority:
                 raise
             for revision, window in candidates:
                 out.append((modelo.id, revision, window))
-        out.sort(key=lambda item: (item[2].closes_on, item[0], item[2].period))
+        out.sort(
+            key=lambda item: (
+                item[2].closes_on,
+                item[0],
+                *_deadline_window_period_sort_key(item[2]),
+            ),
+        )
         return tuple(out)
 
     def _selected_modelos(self, modelos: tuple[str, ...] | None) -> tuple[ModeloDefinition, ...]:
         if modelos is None:
             return self.modelos
         return tuple(self.modelo(modelo_id) for modelo_id in modelos)
+
+
+def _deadline_window_period_sort_key(window: DeadlineWindowDefinition) -> tuple[int, str]:
+    token = getattr(window.period, "registry_token", str(window.period)).strip().upper()
+    if token.startswith(f"{window.filing_year} "):
+        token = token.split(maxsplit=1)[1]
+    return window.filing_year, token
 
 
 def bundled_authority() -> ValidatedRegistryAuthority:
@@ -227,6 +241,7 @@ def _load_authority(
     import tempfile
 
     hasher = hashlib.sha256()
+    hasher.update(_AUTHORITY_CACHE_SCHEMA_VERSION.encode("utf-8"))
     hasher.update(str(root.resolve()).encode("utf-8"))
     hasher.update(str(source_root.resolve()).encode("utf-8"))
     for item in _fingerprint:

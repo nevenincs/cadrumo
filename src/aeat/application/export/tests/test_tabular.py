@@ -193,7 +193,7 @@ def test_export_format_error_locale_key_present_in_catalogue() -> None:
     import yaml
 
     locale_dir = pathlib.Path(
-        importlib.resources.files("aeat.locales").__str__()  # type: ignore[arg-type]
+        importlib.resources.files("aeat.locales").__str__(),  # type: ignore[arg-type]
     )
     for locale_code in ("en", "es", "ca", "hu"):
         text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
@@ -213,7 +213,7 @@ def test_export_field_error_locale_key_present_in_catalogue() -> None:
     import yaml
 
     locale_dir = pathlib.Path(
-        importlib.resources.files("aeat.locales").__str__()  # type: ignore[arg-type]
+        importlib.resources.files("aeat.locales").__str__(),  # type: ignore[arg-type]
     )
     for locale_code in ("en", "es", "ca", "hu"):
         text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)

@@ -31,9 +31,9 @@ from pydantic import (
     model_validator,
 )
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core._period import Period as _CorePeriod
-from ...core._period import PeriodError as _CorePeriodError
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period as _CorePeriod
+from ...core import PeriodError as _CorePeriodError
 from ...core.aggregation import PeriodKind
 from ...core.i18n import Translatable as tr
 from ...domain.categories import SpendingCategory

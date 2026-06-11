@@ -29,7 +29,7 @@ _EXPECTED_TOPICS = frozenset(
         "formats",
         "providers",
         "regimens",
-    }
+    },
 )
 
 
@@ -78,7 +78,7 @@ def test_every_topic_renders_title_and_body_in_default_locale() -> None:
 
 _FORBIDDEN_IMPORT_ROOTS: frozenset[str] = frozenset({"click", "rich", "typer", "aeat.entrypoints"})
 _FORBIDDEN_IMPORT_NAMES: frozenset[str] = frozenset(
-    {"_emit", "emit_json_document", "emit_json_success", "render_command_output"}
+    {"_emit", "emit_json_document", "emit_json_success", "render_command_output"},
 )
 _FORBIDDEN_CALL_NAMES: frozenset[str] = frozenset({"echo", "print"})
 

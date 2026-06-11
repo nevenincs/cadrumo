@@ -325,7 +325,7 @@ async def _snapshot_html(page: object) -> str:
                 await wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_TIMEOUT_SHORT_MS)
             except PlaywrightError as wait_exc:
                 log.debug(
-                    "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)", wait_exc
+                    "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)", wait_exc,
                 )
         try:
             return await content()
@@ -388,7 +388,7 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
                     try { a.click(); } catch (e) {}
                 });
             }
-            """
+            """,
         )
     # Give AEAT's AJAX a beat to populate the DOM before the caller
     # snapshots it. networkidle is too strict (GA pings keep it busy);

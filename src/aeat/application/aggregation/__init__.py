@@ -35,10 +35,6 @@ from ._counterpart import (
     declarable_counterparty_nifs_347,
     declarable_for_347,
 )
-from ._evidence_advisory import (
-    MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND,
-    missing_evidence_advisory_observations,
-)
 from ._errors import (
     AggregationCategoryCoverageError,
     AggregationConfigError,
@@ -47,6 +43,10 @@ from ._errors import (
     AggregationPeriodError,
     AggregationUnsupportedModeloError,
     AggregationValidationError,
+)
+from ._evidence_advisory import (
+    MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND,
+    missing_evidence_advisory_observations,
 )
 from ._foreign_assets import (
     ForeignAssetClassRollup,

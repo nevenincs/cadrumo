@@ -73,7 +73,7 @@ class ReviewQueue:
         """
         if confidence_below is not None:
             items: list[ReviewItem] = list(
-                transactions_low_confidence(settings, bucket_id=bucket_id, threshold=confidence_below)
+                transactions_low_confidence(settings, bucket_id=bucket_id, threshold=confidence_below),
             )
         else:
             items = [

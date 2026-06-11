@@ -84,7 +84,7 @@ def _observation(
             "rectified_base_previous": Decimal(previous) if previous is not None else None,
             "rectified_period": period,
             "rectified_year": year,
-        }
+        },
     )
 
 
@@ -110,7 +110,7 @@ def test_counterpart_observation_validates_country_and_clave_enums() -> None:
 
 def test_counterpart_observation_rejects_inconsistent_rectification_metadata() -> None:
     with pytest.raises(
-        ValidationError, match=r"rectification observation must declare rectified_year and rectified_period"
+        ValidationError, match=r"rectification observation must declare rectified_year and rectified_period",
     ):
         CounterpartAggregationObservation(
             source_id="inv-1",
@@ -121,7 +121,7 @@ def test_counterpart_observation_rejects_inconsistent_rectification_metadata() -
             is_rectification=True,
         )
     with pytest.raises(
-        ValidationError, match=r"non-rectification observation must not declare rectified_base_previous"
+        ValidationError, match=r"non-rectification observation must not declare rectified_base_previous",
     ):
         CounterpartAggregationObservation(
             source_id="inv-1",
@@ -257,7 +257,7 @@ def test_resolve_counterpart_binding_values_rejects_unsupported_fact() -> None:
 def test_resolve_counterpart_binding_values_rejects_op_mismatch_for_fact() -> None:
     revision = _revision(_with_aggregation(_binding("iva-349-declarante-numero-operadores"), "sum"))
     with pytest.raises(
-        RegistryValidationError, match=r"fact 'operator_count' requires aggregation op 'count_distinct'"
+        RegistryValidationError, match=r"fact 'operator_count' requires aggregation op 'count_distinct'",
     ):
         resolve_counterpart_binding_values(revision, ())
 
@@ -296,10 +296,10 @@ def test_counterpart_binding_requirements_groups_bindings_by_clave_and_scope() -
 
 def test_counterpart_binding_requirements_keep_source_kind_cohorts_distinct() -> None:
     payable_binding = _binding("iva-349-declarante-importe-operaciones").model_copy(
-        update={"source": "payable_invoice"}
+        update={"source": "payable_invoice"},
     )
     collectible_binding = _binding("iva-349-declarante-numero-operadores").model_copy(
-        update={"source": "collectible_invoice"}
+        update={"source": "collectible_invoice"},
     )
     revision = _revision(payable_binding, collectible_binding)
 

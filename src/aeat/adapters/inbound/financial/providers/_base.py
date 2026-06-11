@@ -102,7 +102,6 @@ class InvalidFinancialSourceError(FinancialProviderError):
 class FinancialValidationError(FinancialProviderError):
     """Raised when a specific field (date, amount) fails domain validation."""
 
-    pass
 
 
 class BankStatementParseError(FinancialProviderError):
@@ -242,29 +241,29 @@ class FinancialProvider(ABC):
         if getattr(cls, "__abstractmethods__", None):
             return
         _VALID_SOURCES: frozenset[str] = frozenset(
-            {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"}
+            {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"},
         )
         if not hasattr(cls, "verification_source"):
             raise FinancialProviderConfigError(
-                f"{cls.__qualname__} must declare a 'verification_source' class variable"
+                f"{cls.__qualname__} must declare a 'verification_source' class variable",
             )
         vs = cls.verification_source  # type: ignore[attr-defined]  # CAST-RATIONALE-DYNAMIC-CLASSVAR-PROBE: provider subclasses declare verification_source ClassVar; base reads it via dynamic access during registration.
         if vs not in _VALID_SOURCES:
             raise FinancialProviderConfigError(
-                f"{cls.__qualname__}.verification_source={vs!r} is not one of {sorted(_VALID_SOURCES)}"
+                f"{cls.__qualname__}.verification_source={vs!r} is not one of {sorted(_VALID_SOURCES)}",
             )
         if not hasattr(cls, "provisional_pending_specimen"):
             raise FinancialProviderConfigError(
-                f"{cls.__qualname__} must declare a 'provisional_pending_specimen' class variable"
+                f"{cls.__qualname__} must declare a 'provisional_pending_specimen' class variable",
             )
         pps = cls.provisional_pending_specimen  # type: ignore[attr-defined]  # CAST-RATIONALE-DYNAMIC-CLASSVAR-PROBE: provider subclasses declare provisional_pending_specimen ClassVar; base reads it via dynamic access during registration.
         if not isinstance(pps, bool):
             raise FinancialProviderConfigError(
-                f"{cls.__qualname__}.provisional_pending_specimen must be bool, got {type(pps)}"
+                f"{cls.__qualname__}.provisional_pending_specimen must be bool, got {type(pps)}",
             )
         if vs == "no_corpus" and pps is not True:
             raise FinancialProviderConfigError(
-                f"{cls.__qualname__}: verification_source='no_corpus' requires provisional_pending_specimen=True"
+                f"{cls.__qualname__}: verification_source='no_corpus' requires provisional_pending_specimen=True",
             )
 
     def can_handle(self, path: Path) -> bool:
@@ -630,7 +629,7 @@ def build_raw_transaction(
     """
     if amount == Decimal("0"):
         raise InvalidFinancialSourceError(
-            f"{provider.name} row {source_row_index} has a zero amount; a ledger movement must be non-zero"
+            f"{provider.name} row {source_row_index} has a zero amount; a ledger movement must be non-zero",
         )
     direction = direction_from_signed_amount(amount)
     raw = RawTransaction(

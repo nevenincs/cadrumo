@@ -83,7 +83,7 @@ def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(t
             year_to=2024,
             output_root=tmp_path,
             modelos=("151", "721"),
-        )
+        ),
     )
 
     assert report.modelos == ("151", "721")

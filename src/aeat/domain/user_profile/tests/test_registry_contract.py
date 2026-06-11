@@ -42,7 +42,7 @@ def test_profile_binding_selectors_is_public_and_deduplicates_supported_selector
             "required_when_profile_key": "enrollment.large_company",
             "profile_model": "TaxResidenceProfile",
             "field": "ccaa",
-        }
+        },
     )
 
     assert selectors == (

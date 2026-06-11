@@ -180,5 +180,5 @@ class UsageRecorder:
                 record.created_at.isoformat(),
                 record.request_id,
                 uuid4().hex,
-            )
+            ),
         )

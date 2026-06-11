@@ -68,7 +68,7 @@ def _tx(
             "raw": raw,
             "direction": direction,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-        }
+        },
     )
 
 
@@ -93,7 +93,7 @@ def test_each_bucket_ledger_is_independent(secure_objects: SecureObjectRepositor
 
 def test_unknown_bucket_loads_empty(secure_objects: SecureObjectRepository) -> None:
     TransactionCatalogueRepository(bucket_id="marta", objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((_tx("marta-1", amount=Decimal("100.00")),))
+        TransactionCatalogue.from_transactions((_tx("marta-1", amount=Decimal("100.00")),)),
     )
     fresh = TransactionCatalogueRepository(bucket_id="never-used", objects=secure_objects).load()
     assert tuple(fresh.values()) == ()

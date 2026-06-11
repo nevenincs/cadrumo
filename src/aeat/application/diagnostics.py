@@ -140,7 +140,7 @@ class DiagnosticCheck(BaseModel):
             if next_action is None and dead_end is None:
                 raise DiagnosticModelError(
                     f"DiagnosticCheck(status={self.status!r}) must populate one of "
-                    "`next_action` or `dead_end`; silent failing rows are forbidden"
+                    "`next_action` or `dead_end`; silent failing rows are forbidden",
                 )
         else:  # status == "ok"
             if next_action is not None or dead_end is not None:
@@ -321,7 +321,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     name="secure_state.load",
                     status="ok",
                     summary=tr("cli.diagnostics.summary.state_backend_readable"),
-                )
+                ),
             )
             profile_health = assess_active_profile_health(state)
             checks.append(_active_profile_storage_check(profile_health))
@@ -350,7 +350,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                         if missing_active_bucket_session
                         else "aeat config repair reset-progress --yes"
                     ),
-                )
+                ),
             )
             checks.append(_active_profile_storage_check(profile_health))
             checks.append(_profile_unavailable_check(profile_health))
@@ -477,7 +477,7 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
     if report.setup is not None:
         lines.append(
             f"{tr('cli.diagnostics.repair.profile_label', default='Profile')}\t{report.setup.active_profile or '-'} "
-            f"({report.setup.profile_present_keys}/{report.setup.profile_total_keys})"
+            f"({report.setup.profile_present_keys}/{report.setup.profile_total_keys})",
         )
         lines.append(f"{tr('cli.diagnostics.repair.auth_label', default='Auth')}\t{report.setup.auth_provider or '-'}")
     lines.append(tr("cli.diagnostics.repair.checks_heading", default="Checks"))
@@ -586,7 +586,7 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
                     namespace=ns,
                     readable=0,
                     unreadable=1,
-                )
+                ),
             )
     integrity = tuple(integrity_items)
     readable_total = sum(item.readable for item in integrity)
@@ -789,7 +789,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
                 summary=f"{entry.key} — {label}",
                 requirement=requirement,
                 next_action=_PROFILE_EDIT_COMMAND,
-            )
+            ),
         )
     return tuple(findings)
 

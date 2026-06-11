@@ -99,7 +99,7 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
 
 
 def build_typed_observations(
-    *, engine_result: RegistryCalculationResult, snapshot: RegistrySnapshot
+    *, engine_result: RegistryCalculationResult, snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
     """Build a :class:`CasillaObservation` tuple for every engine-result casilla.
 
@@ -162,7 +162,7 @@ def casilla_observation_for(
             f"casilla {casilla_id!r} is present in the engine result but absent "
             f"from the registry snapshot revision; it has no legal_refs / "
             f"source_refs definition and cannot be projected to a "
-            f"CasillaObservation without erasing legal provenance"
+            f"CasillaObservation without erasing legal provenance",
         )
     return CasillaObservation(
         casilla_id=casilla_id,
@@ -201,7 +201,7 @@ def amendment_observations(
                 f"casilla {casilla_id!r} is present in the amendment's corrected "
                 f"values but absent from the registry snapshot revision; it has "
                 f"no legal_refs / source_refs definition and cannot be projected "
-                f"to a CasillaObservation without erasing legal provenance"
+                f"to a CasillaObservation without erasing legal provenance",
             )
         observations.append(
             CasillaObservation(
@@ -212,7 +212,7 @@ def amendment_observations(
                 operand_values=(),
                 legal_refs=registry_casilla.legal_refs,
                 source_refs=registry_casilla.source_refs,
-            )
+            ),
         )
     return tuple(observations)
 

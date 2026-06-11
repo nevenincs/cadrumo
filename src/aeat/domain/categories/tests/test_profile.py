@@ -76,5 +76,5 @@ def test_category_profile_rejects_stale_casilla_projection_payload() -> None:
                     "notes": "Perfil sin proyección a casillas.",
                 },
                 "casilla_mappings": [],
-            }
+            },
         )

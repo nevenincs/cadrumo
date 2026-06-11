@@ -191,7 +191,7 @@ def _seed_unverified_filing(*, work_unit_id: str, modelo: str, filing_year: int,
                 status=ModeloRecordStatus.VIGENTE,
                 external_evidence=None,
             ),
-        )
+        ),
     )
 
 
@@ -309,7 +309,7 @@ def test_capture_orchestrator_stamps_evidence_when_period_is_filed() -> None:
             declarations_provider=declarations,
             expedientes_provider=expedientes,
             justificante_provider=capture,
-        )
+        ),
     )
 
     assert persisted.period == "1T"
@@ -345,7 +345,7 @@ def test_capture_orchestrator_skips_stamp_when_period_not_filed() -> None:
             declarations_provider=declarations,
             expedientes_provider=expedientes,
             justificante_provider=capture,
-        )
+        ),
     )
 
     assert persisted.snapshot_id  # the snapshot is still persisted

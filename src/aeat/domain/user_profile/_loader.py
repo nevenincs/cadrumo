@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...core._toml import freeze_toml, read_toml
+from ...core import freeze_toml, read_toml
 from ...core.resources import bundled_path
 from ._errors import UserProfileSchemaLoadError
 from ._schema import ProfileSchemaDefinition
@@ -39,7 +39,7 @@ def _load_user_profile_schema_cached(path: str, byte_count: int, modified_ns: in
         read_toml(
             source_path,
             error_factory=lambda message: _schema_load_error(source_path, message, operation="read"),
-        )
+        ),
     )
     raw_schema = data.get("schema")
     if not isinstance(raw_schema, dict):

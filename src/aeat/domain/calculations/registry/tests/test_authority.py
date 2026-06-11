@@ -10,8 +10,10 @@ from pathlib import Path
 
 import pytest
 
+from .....core import Period
 from .....core.resources import bundled_path, resources
 from .. import RegistrySnapshotError, ValidatedRegistryAuthority, calculate_registry_snapshot
+from .._authority import _AUTHORITY_CACHE_SCHEMA_VERSION
 from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -89,7 +91,12 @@ def test_authority_deadline_windows_are_validated_and_sorted() -> None:
 
     windows = authority.deadline_windows(2026, modelos=("130",))
 
-    assert [window.period for _, _, window in windows] == ["2026Q1", "2026Q2", "2026Q3", "2026Q4"]
+    assert [window.period for _, _, window in windows] == [
+        Period.from_year_and_code(2026, "1T"),
+        Period.from_year_and_code(2026, "2T"),
+        Period.from_year_and_code(2026, "3T"),
+        Period.from_year_and_code(2026, "4T"),
+    ]
     assert [window.closes_on for _, _, window in windows] == sorted(window.closes_on for _, _, window in windows)
 
 
@@ -219,6 +226,7 @@ def test_authority_uses_validation_cache_and_invalidates(tmp_path: Path) -> None
     # Calculate expected cache path
     fingerprints = _collect_registry_tree_fingerprints(registry_root)
     hasher = hashlib.sha256()
+    hasher.update(_AUTHORITY_CACHE_SCHEMA_VERSION.encode("utf-8"))
     hasher.update(str(registry_root.resolve()).encode("utf-8"))
     hasher.update(str(tmp_path.resolve()).encode("utf-8"))
     for item in fingerprints:
@@ -247,6 +255,7 @@ def test_authority_uses_validation_cache_and_invalidates(tmp_path: Path) -> None
     # New expected cache path
     fingerprints2 = _collect_registry_tree_fingerprints(registry_root)
     hasher2 = hashlib.sha256()
+    hasher2.update(_AUTHORITY_CACHE_SCHEMA_VERSION.encode("utf-8"))
     hasher2.update(str(registry_root.resolve()).encode("utf-8"))
     hasher2.update(str(tmp_path.resolve()).encode("utf-8"))
     for item in fingerprints2:

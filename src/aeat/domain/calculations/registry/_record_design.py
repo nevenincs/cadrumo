@@ -136,7 +136,7 @@ def _extract_record_design_workbook_cached(
             if not sheets:
                 skipped_sheets = ", ".join(skipped) if skipped else "none"
                 raise RegistryValidationError(
-                    f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}"
+                    f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}",
                 )
             return tuple(sheets)
         finally:
@@ -166,7 +166,7 @@ def _extract_record_design_xls_workbook_cached(
         if not sheets:
             skipped_sheets = ", ".join(skipped) if skipped else "none"
             raise RegistryValidationError(
-                f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}"
+                f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}",
             )
         return tuple(sheets)
     finally:
@@ -252,7 +252,7 @@ def _extract_record_design_pdf_stream(
                 pages = tuple(_snapshot_pdf_page(page) for page in pdf.pages)
         except Exception as pdf_exc:  # pragma: no cover - defensive; pdfplumber surface
             raise RegistryValidationError(
-                f"pdfplumber could not open record-design PDF {source_label}: {pdf_exc}"
+                f"pdfplumber could not open record-design PDF {source_label}: {pdf_exc}",
             ) from pdf_exc
         visual_chart = _extract_visual_record_design_chart(pages, source_label=source_label)
         if visual_chart:
@@ -336,7 +336,7 @@ def _extract_sheet_rows(
                 description=description,
                 validation=validation,
                 content=content,
-            )
+            ),
         )
     return RecordDesignSheet(name=sheet_name, fields=tuple(fields), total_positions=total_positions)
 
@@ -805,24 +805,24 @@ def _validate_pdf_sheet(sheet: RecordDesignSheet, *, source_label: str) -> None:
     first_field = sheet.fields[0]
     if first_field.offset != 1:
         raise RegistryValidationError(
-            f"{source_label} {sheet.name!r} first field starts at position {first_field.offset}; expected 1"
+            f"{source_label} {sheet.name!r} first field starts at position {first_field.offset}; expected 1",
         )
     for parsed_field in sheet.fields:
         if parsed_field.offset < 1:
             raise RegistryValidationError(
                 f"{source_label} {sheet.name!r} field ordinal {parsed_field.ordinal} has invalid "
-                f"position {parsed_field.offset}"
+                f"position {parsed_field.offset}",
             )
         if parsed_field.length < 1:
             raise RegistryValidationError(
                 f"{source_label} {sheet.name!r} field ordinal {parsed_field.ordinal} has invalid "
-                f"length {parsed_field.length}"
+                f"length {parsed_field.length}",
             )
     terminal_position = max(parsed_field.offset + parsed_field.length - 1 for parsed_field in sheet.fields)
     if sheet.total_positions is not None and terminal_position != sheet.total_positions:
         raise RegistryValidationError(
             f"{source_label} {sheet.name!r} declares {sheet.total_positions} total positions "
-            f"but parsed fields fill {terminal_position}"
+            f"but parsed fields fill {terminal_position}",
         )
 
 
@@ -909,7 +909,7 @@ def _is_pdf_footer(line: str) -> bool:
     return bool(
         re.match(r"^P[áa]gina\s+\d+\s+de\s+\d+$", line, re.IGNORECASE)
         or re.match(r"^Ejercicio\s+\d{4}(?:\s+\d+)?$", line, re.IGNORECASE)
-        or re.match(r"^\d+$", line)
+        or re.match(r"^\d+$", line),
     )
 
 
@@ -924,7 +924,7 @@ def _is_pdf_page_heading(line: str) -> bool:
         or line == "Resumen anual"
         or line == "MODELO 193"
         or line == "MODELO 190"
-        or line == "DISEÑOS DE REGISTRO"
+        or line == "DISEÑOS DE REGISTRO",
     )
 
 
@@ -1028,7 +1028,7 @@ def _extract_visual_chart_fragments(page: _PdfPageSnapshot) -> list[_VisualChart
                     start=start,
                     end=end,
                     description=_visual_chart_description(page, rule, region_top=region_top),
-                )
+                ),
             )
     return fragments
 

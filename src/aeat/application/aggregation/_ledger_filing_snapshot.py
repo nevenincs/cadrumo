@@ -50,7 +50,7 @@ _FINALIZED_STATES = frozenset(
         CalculationRevisionState.VERIFICADO_COMPLETO,
         CalculationRevisionState.PRESENTADO,
         CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }
+    },
 )
 
 # Tax-relevant projection: (label, accessor). Order is fixed and canonical.

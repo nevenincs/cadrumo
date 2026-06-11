@@ -113,7 +113,7 @@ class ScaffoldPlan:
     @property
     def counts(self) -> Mapping[ScaffoldAction, int]:
         """Outcome counts keyed by action, for the report surface."""
-        counts: dict[ScaffoldAction, int] = {action: 0 for action in ScaffoldAction}
+        counts: dict[ScaffoldAction, int] = dict.fromkeys(ScaffoldAction, 0)
         for entry in self.entries:
             counts[entry.action] += 1
         return counts

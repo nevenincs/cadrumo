@@ -17,7 +17,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -175,7 +175,7 @@ def build_iva_compensation_carry_forward_report(
                     applied_amount=_ZERO,
                     remaining_amount=lot_amount,
                     source_observation_key=state.source_observation_key,
-                )
+                ),
             )
     lots = tuple(
         IvaCompensationCarryForwardLot(
@@ -219,7 +219,7 @@ def enforce_iva_compensation_four_year_window(
         first = expired[0]
         raise IvaCompensationCarryForwardPolicyError(
             "IVA compensation carry-forward contains expired remaining balance "
-            f"from {first.source_filing_year}/{first.source_period}"
+            f"from {first.source_filing_year}/{first.source_period}",
         )
     return report
 

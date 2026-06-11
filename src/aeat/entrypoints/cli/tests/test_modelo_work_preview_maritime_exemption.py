@@ -61,7 +61,7 @@ def _register_maritime_profile(*, overrides: dict[str, str]) -> None:
             profile_id=_BUCKET_ID,
             overrides=overrides,
             enforce_unique_tax_id=False,
-        )
+        ),
     )
 
 
@@ -80,7 +80,7 @@ class TestHelpSurfaceLocalisation:
             [
                 "--language", "es",
                 "app", "modelo", "work", "preview-maritime-exemption", "--help",
-            ]
+            ],
         )  # fmt: skip
         assert result.exit_code == 0, result.output
         # The Spanish help text mentions the legal pathway. The raw tr()
@@ -94,7 +94,7 @@ class TestHelpSurfaceLocalisation:
             [
                 "--language", "en",
                 "app", "modelo", "work", "preview-maritime-exemption", "--help",
-            ]
+            ],
         )  # fmt: skip
         assert result.exit_code == 0, result.output
         assert "preview_maritime_exemption_help" not in result.output
@@ -110,7 +110,7 @@ class TestArt7pEnvelopeContract:
                 "maritime_worker.worker_class": "trabajador_del_mar",
                 "maritime_worker.vessel_flag": "foreign",
                 "maritime_worker.waters_type": "international",
-            }
+            },
         )
         result = invoke_cached_cli(
             [
@@ -118,7 +118,7 @@ class TestArt7pEnvelopeContract:
                 "app", "modelo", "work", "preview-maritime-exemption",
                 "--annual-salary", "36500",
                 "--qualifying-days", "100",
-            ]
+            ],
         )  # fmt: skip
         assert result.exit_code == 0, result.output
         payload = _unwrap(result.output)
@@ -145,7 +145,7 @@ class TestRetmarMandatoryFilingWarningSurface:
                 "maritime_worker.worker_class": "trabajador_del_mar",
                 "maritime_worker.vessel_registry": "REBECA",
                 "maritime_worker.retmar_registered": "true",
-            }
+            },
         )
         result = invoke_cached_cli(
             [
@@ -153,7 +153,7 @@ class TestRetmarMandatoryFilingWarningSurface:
                 "--format", "json",
                 "app", "modelo", "work", "preview-maritime-exemption",
                 "--gross-navigation-income", "30000",
-            ]
+            ],
         )  # fmt: skip
         assert result.exit_code == 0, result.output
         payload = _unwrap(result.output)
@@ -190,7 +190,7 @@ class TestDa41InactiveGuard:
                 "maritime_worker.worker_class": "trabajador_del_mar",
                 "maritime_worker.tuna_fleet": "true",
                 "maritime_worker.pending_eu_clearance": "true",
-            }
+            },
         )
         result = invoke_cached_cli(
             [
@@ -198,7 +198,7 @@ class TestDa41InactiveGuard:
                 "app", "modelo", "work", "preview-maritime-exemption",
                 "--annual-salary", "36500",
                 "--qualifying-days", "100",
-            ]
+            ],
         )  # fmt: skip
         refused_exit = get_error_exit_code(ErrorCategory.REFUSED)
         assert result.exit_code == refused_exit, result.output
@@ -221,7 +221,7 @@ class TestVerbWiringIntegration:
             [
                 "--format", "json",
                 "app", "modelo", "work", "preview-maritime-exemption",
-            ]
+            ],
         )  # fmt: skip
         assert result.exit_code == 0, result.output
         payload = _unwrap(result.output)
@@ -236,7 +236,7 @@ class TestVerbWiringIntegration:
             overrides={
                 "maritime_worker.worker_class": "trabajador_del_mar",
                 "maritime_worker.vessel_registry": "rebeca_eu_eea",
-            }
+            },
         )
         facts = maritime_facts_from_active_profile()
         assert facts.worker_class == "trabajador_del_mar"

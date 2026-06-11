@@ -63,7 +63,7 @@ def _write_object(runtime: TestRuntimeProfile, namespace: str, object_key: str) 
                 written_at=now,
                 payload=envelope.model_dump_json().encode("utf-8"),
             ),
-        )
+        ),
     )
 
 
@@ -92,7 +92,7 @@ def test_browse_namespace_filter_restricts_returned_rows(runtime: TestRuntimePro
     _write_object(runtime, namespace=_INVOICE_NAMESPACE, object_key="key-b1")
 
     result = BucketMaintenanceService().browse(
-        BrowseBucketCommand(bucket_id=runtime.bucket_id, namespace_filter="buckets")
+        BrowseBucketCommand(bucket_id=runtime.bucket_id, namespace_filter="buckets"),
     )
 
     returned_namespaces = {row.namespace for row in result.rows}

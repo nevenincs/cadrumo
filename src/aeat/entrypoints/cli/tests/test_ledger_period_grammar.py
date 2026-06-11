@@ -13,7 +13,7 @@ hybrid the first D4 implementation accepted are **removed** — they now refuse.
 
 These are real-behaviour tests: the resolution and refusal cases exercise the
 production ``_canonical_period`` normaliser (which consumes the registry
-period-union validator at :mod:`aeat.core._period`), and the end-to-end cases
+period-union validator at :mod:`aeat.core`), and the end-to-end cases
 drive ``aeat app ledger preflight`` / ``status`` against a real isolated
 encrypted bucket and the real ledger backend.
 """
@@ -97,9 +97,9 @@ def test_registry_union_validator_is_the_token_authority() -> None:
     """
 
     # Span-shaped tokens resolve.
-    assert _canonical_period("1T", year=2024).registry_token == "1T"
-    assert _canonical_period("0A", year=2024).registry_token == "0A"
-    assert _canonical_period("06", year=2024).registry_token == "06"
+    assert _canonical_period("1T", year=2024).registry_token == "1T"  # noqa: S105 - period token
+    assert _canonical_period("0A", year=2024).registry_token == "0A"  # noqa: S105 - period token
+    assert _canonical_period("06", year=2024).registry_token == "06"  # noqa: S105 - period token
 
     # Non-span registry-union members and instalment claves do not resolve to a
     # ledger date span; they raise rather than emit an unusable period.
@@ -167,9 +167,9 @@ def test_filter_clause_accepts_bare_token_with_year() -> None:
     there is no year-qualified combined token.
     """
 
-    assert _filter_canonical_period("1T", year=2024).registry_token == "1T"
-    assert _filter_canonical_period("0A", year=2024).registry_token == "0A"
-    assert _filter_canonical_period("03", year=2024).registry_token == "03"
+    assert _filter_canonical_period("1T", year=2024).registry_token == "1T"  # noqa: S105 - period token
+    assert _filter_canonical_period("0A", year=2024).registry_token == "0A"  # noqa: S105 - period token
+    assert _filter_canonical_period("03", year=2024).registry_token == "03"  # noqa: S105 - period token
 
 
 @pytest.mark.parametrize("rejected", ["2024Q1", "2024", "2024-1T", "not-a-period", "1P"])

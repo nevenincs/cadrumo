@@ -64,7 +64,7 @@ class LLMCache:
         }
         prompt_hash = hashlib.sha256(prompt_material.encode("utf-8")).hexdigest()
         args_hash = hashlib.sha256(
-            json.dumps(args_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+            json.dumps(args_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
         ).hexdigest()
         return CacheKey(provider=provider, model=model, prompt_hash=prompt_hash, args_hash=args_hash)
 
@@ -105,7 +105,7 @@ class LLMCache:
             update={
                 "cache_hit": True,
                 "cost_estimate_usd": entry.response.cost_estimate_usd * 0,
-            }
+            },
         )
 
     def write(self, request: LLMRequest, response: LLMResponse) -> CachedEntry:
@@ -265,7 +265,7 @@ class LLMCache:
                 sanitised_model,
                 key.prompt_hash,
                 key.args_hash,
-            )
+            ),
         )
 
     def _logical_root(self) -> str:

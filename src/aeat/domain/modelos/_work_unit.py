@@ -229,23 +229,23 @@ class WorkUnit(BaseModel):
             raise ModeloValidationError(
                 f"work_unit_id {self.work_unit_id!r} does not match the derived id "
                 f"{derived!r} for (bucket={self.bucket_id!r}, modelo={self.modelo!r}, "
-                f"year={self.filing_year}, period={self.period!r}, revision={self.revision_id!r})"
+                f"year={self.filing_year}, period={self.period!r}, revision={self.revision_id!r})",
             )
         if self.updated_at < self.created_at:
             raise ModeloValidationError(
-                f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
+                f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}",
             )
         if self.state is WorkUnitState.BORRADOR:
             if self.discarded_at is not None or self.discarded_by is not None or self.discard_reason is not None:
                 raise ModeloValidationError(
-                    "draft work unit must not carry discard metadata (discarded_at / discarded_by / discard_reason)"
+                    "draft work unit must not carry discard metadata (discarded_at / discarded_by / discard_reason)",
                 )
         elif self.state is WorkUnitState.DESCARTADO:
             if self.discarded_at is None or self.discarded_by is None:
                 raise ModeloValidationError("discarded work unit must carry discarded_at and discarded_by")
             if self.discarded_at < self.created_at:
                 raise ModeloValidationError(
-                    f"discarded_at {self.discarded_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
+                    f"discarded_at {self.discarded_at.isoformat()} precedes created_at {self.created_at.isoformat()}",
                 )
         stamped = self.censo_stamped_stale_at is not None
         reasoned = self.censo_stale_reason is not None

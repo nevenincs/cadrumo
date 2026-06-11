@@ -603,7 +603,7 @@ async def _continue_alert_modal(
               continueButton.click();
               return "continued";
             }
-            """
+            """,
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -880,7 +880,7 @@ async def _capture_filed_declaration_observation_from_row(
             observation_key=observation_key,
             artefact=justificante,
             body=justificante_body,
-        )
+        ),
     )
 
     declaration_pdf_body: bytes | None = None
@@ -899,7 +899,7 @@ async def _capture_filed_declaration_observation_from_row(
                 observation_key=observation_key,
                 artefact=declaration_pdf,
                 body=declaration_pdf_body,
-            )
+            ),
         )
 
     if declaration.archive_link_text and declaration.archive_cell_index is not None:
@@ -945,7 +945,7 @@ async def _capture_filed_declaration_observation_from_row(
         extraction_coverage["declaration_pdf"] = 1.0
     elif not casillas and not declaration.archive_link_text and declaration_pdf_body is None:
         raise SedeParseError(
-            f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data"
+            f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data",
         )
 
     return FiledDeclaracionObservation(
@@ -1005,7 +1005,7 @@ async def capture_previous_filing_observations(
             if missing:
                 raise SedeParseError(
                     f"previous-filing requirement {requirement.modelo!r}/"
-                    f"{requirement.filing_year}/{requirement.period!r} missing observed casillas {missing!r}"
+                    f"{requirement.filing_year}/{requirement.period!r} missing observed casillas {missing!r}",
                 )
             observations.append(observation)
     return tuple(observations)
@@ -1058,7 +1058,7 @@ async def capture_relation_source_observations(
             if missing:
                 raise SedeParseError(
                     f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
-                    f"missing observed casillas {missing!r}"
+                    f"missing observed casillas {missing!r}",
                 )
             observations.append(observation)
     return tuple(observations)

@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from ._bucket_pointer import BucketPointer
+from . import BucketPointer
 
 _POINTER_FILENAME = "active-profile"
 

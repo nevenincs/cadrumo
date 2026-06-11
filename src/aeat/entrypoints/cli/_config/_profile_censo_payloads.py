@@ -69,6 +69,13 @@ class CensoApplyPayload(OutputSchema):
     written_paths: list[str] = []
     unchanged_paths: list[str] = []
     derived_paths: list[str] = []
+    taxpayer_model_declared: bool | None = None
+    calendar_range_from: str | None = None
+    calendar_range_to: str | None = None
+    calendar_obligation_count: int = 0
+    calendar_obligation_modelos: list[str] = []
+    calendar_warning_codes: list[str] = []
+    calendar_defaulted_modelos: list[str] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor; mypy
     # assignment check is incorrect.

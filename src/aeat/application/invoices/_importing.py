@@ -217,7 +217,7 @@ def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
             "subtotal": str(base),
             "iva_rate": rate,
             "iva_amount": str(iva_amount),
-        }
+        },
     ]
     payload.pop("iva_rate", None)
 

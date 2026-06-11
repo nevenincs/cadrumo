@@ -55,7 +55,7 @@ _log = _get_logger(__name__)
 # typer._click.types.ParamType. They are the same object at runtime (the vendored
 # click), so the cast only bridges the static type duality — no Any escape.
 _CONFIG_RESET_SCOPE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType, click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES)
+    typer_click_types.ParamType, click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
 )
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
@@ -184,7 +184,7 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
                 # refusal applies to a fresh `profile create` only.
                 enforce_unique_tax_id=False,
                 routing_profile_id=routing_profile_id,
-            )
+            ),
         )
     return profile_id
 
@@ -386,19 +386,19 @@ def config_profile_show(
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
         _emit_profile_record_missing(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label,
         )
         raise typer.Exit(code=2) from exc
     except _AeatError as exc:
         _emit_profile_record_unreadable(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=exc
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=exc,
         )
         raise typer.Exit(code=2) from exc
     except Exception as exc:
         _log.debug("config profile show wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=boundary
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=boundary,
         )
         raise typer.Exit(code=2) from boundary
     from ....domain.user_profile import UserProfileStatus
@@ -519,7 +519,7 @@ def config_profile_preflight(
     filing_year: int = typer.Option(..., "--filing-year", help=tr("cli.config.profile.preflight_filing_year_help")),
     period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
     revision_id: str | None = typer.Option(
-        None, "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help")
+        None, "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -754,7 +754,7 @@ def config_profile_duplicate(
     source: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_source_help")),
     target: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_target_help")),
     display_name: str | None = typer.Option(
-        None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help")
+        None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -867,7 +867,7 @@ _config_profile_edit_callback = profile_app.command(
 def config_profile_rename(
     ctx: typer.Context,
     source: str = typer.Argument(
-        ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
+        ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name."),
     ),
     target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
     output_language: OutputLanguage | None = typer.Option(

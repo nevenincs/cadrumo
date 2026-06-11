@@ -68,7 +68,7 @@ class TestExtractedCasillaShape:
                     "source_page": 1,
                     "extraction_confidence": 1.0,
                     "surprise": "not allowed",
-                }
+                },
             )
 
     def test_source_page_must_be_positive(self) -> None:
@@ -94,7 +94,7 @@ class TestExtractedCasillaShape:
                     "source_page": 1,
                     "source_bbox": (10.0, 20.0, 30.0),
                     "extraction_confidence": 1.0,
-                }
+                },
             )
 
     def test_json_roundtrip(self) -> None:

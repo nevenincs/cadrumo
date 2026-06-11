@@ -92,7 +92,7 @@ def _observed_casilla_values(
         if casilla_value is None:
             raise RegistryValidationError(
                 f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
-                f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
+                f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}",
             )
         values.append(casilla_value)
     return values
@@ -117,7 +117,7 @@ def _resolve_anchor_values(
         if not matches:
             raise RegistryValidationError(
                 f"binding {binding.id!r} (per_grupo_member) expected at least one observed filing "
-                f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found 0"
+                f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found 0",
             )
         values: list[Decimal] = []
         for member_match in matches:
@@ -126,7 +126,7 @@ def _resolve_anchor_values(
     if len(matches) != 1:
         raise RegistryValidationError(
             f"binding {binding.id!r} expected one observed filing "
-            f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}"
+            f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}",
         )
     return _observed_casilla_values(binding, selector, matches[0], expected_year, required_period)
 
@@ -147,8 +147,8 @@ def _resolve_binding_values(
         expected_year = filing_year + selector.filing_year_delta + period_year_delta
         values.extend(
             _resolve_anchor_values(
-                binding, selector, available, expected_year=expected_year, required_period=required_period
-            )
+                binding, selector, available, expected_year=expected_year, required_period=required_period,
+            ),
         )
     return values
 
@@ -252,7 +252,7 @@ class _PreviousModeloSelector(BaseModel):
             if self.period is not None or self.source_periods:
                 raise RegistryValidationError(
                     "previous-filing selector cannot declare period/source_periods together with "
-                    "source_period_offset_from_target"
+                    "source_period_offset_from_target",
                 )
             if self.source_period_offset_from_target == 0 and self.grouping != "per_grupo_member":
                 raise RegistryValidationError("previous-filing source_period_offset_from_target must be non-zero")
@@ -265,7 +265,7 @@ class _PreviousModeloSelector(BaseModel):
             and self.source_casillas
         ):
             raise RegistryValidationError(
-                "previous-filing selector must declare period, source_periods, or source_period_offset_from_target"
+                "previous-filing selector must declare period, source_periods, or source_period_offset_from_target",
             )
         return self
 
@@ -273,7 +273,7 @@ class _PreviousModeloSelector(BaseModel):
     def _validate_source_spec(self) -> _PreviousModeloSelector:
         if self.source_casillas and self.source_output is not None:
             raise RegistryValidationError(
-                "previous-filing selector cannot declare both source_casillas and source_output"
+                "previous-filing selector cannot declare both source_casillas and source_output",
             )
         return self
 
@@ -307,7 +307,7 @@ def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[in
         return apply_period_offset(offset, target_period=target_period)
     except RegistryValidationError as exc:
         raise RegistryValidationError(
-            f"previous-filing source_period_offset_from_target cannot interpret target period {target_period!r}"
+            f"previous-filing source_period_offset_from_target cannot interpret target period {target_period!r}",
         ) from exc
 
 

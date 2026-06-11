@@ -44,7 +44,7 @@ def _valid_invoice(
             "subtotal": Decimal("100.00"),
             "iva_rate": IvaRate.RATE_21,
             "iva_amount": Decimal("21.00"),
-        }
+        },
     )
     return Invoice.model_validate(
         {
@@ -61,7 +61,7 @@ def _valid_invoice(
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
             "linked_transaction_ids": linked_transaction_ids,
-        }
+        },
     )
 
 
@@ -72,7 +72,7 @@ def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
         [
             _valid_invoice(invoice_number="INV-001"),
             _valid_invoice(invoice_number="INV-002", kind=InvoiceKind.RECEIVED),
-        ]
+        ],
     )
     restored = InvoiceCatalogue.model_validate_json(catalogue.model_dump_json())
     assert restored == catalogue

@@ -22,7 +22,7 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 
-from defusedxml import ElementTree as ET  # noqa: N817  # ElementTree-as-ET is the conventional alias
+from defusedxml import ElementTree
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.parsing import parse_iso8601_date
@@ -72,7 +72,7 @@ def _parse_eurofxref(path: Path) -> dict[date, dict[str, Decimal]]:
     elements are matched by the local ``Cube`` tag name rather than a fixed
     qualified name.
     """
-    root = ET.fromstring(path.read_text(encoding=UTF_8_ENCODING))
+    root = ElementTree.fromstring(path.read_text(encoding=UTF_8_ENCODING))
     by_date: dict[date, dict[str, Decimal]] = {}
     for node in root.iter():
         if not node.tag.endswith("Cube"):

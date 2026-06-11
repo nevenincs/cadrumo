@@ -174,7 +174,7 @@ async def _build_default_browser_session(
     session = await resolved_factory(settings)
     if not _is_verify_browser_session_like(session):
         raise _BrowserAdapterTypeError(
-            f"default_browser_session_factory returned an incompatible type: {type(session)}"
+            f"default_browser_session_factory returned an incompatible type: {type(session)}",
         )
     return session
 

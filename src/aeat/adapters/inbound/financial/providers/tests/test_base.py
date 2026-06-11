@@ -52,7 +52,7 @@ def test_raw_transaction_round_trip_uses_mapping_field() -> None:
                 "provider_name": "CSV provider",
             },
             "raw_fields": {"Concepto": "Consulting payment"},
-        }
+        },
     )
     round_tripped = RawTransaction.model_validate_json(original.model_dump_json())
     assert round_tripped == original

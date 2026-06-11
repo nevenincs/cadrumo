@@ -484,6 +484,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
+    taxpayer_tax_id: str | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -503,6 +504,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         expected_member_sets=expected_member_sets,
+        taxpayer_tax_id=taxpayer_tax_id,
     )
 
 
@@ -697,6 +699,7 @@ def _require_cross_period_clean_state(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     iva_compensation_decision: object | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
+    taxpayer_tax_id: str | None = None,
 ) -> None:
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
@@ -705,6 +708,7 @@ def _require_cross_period_clean_state(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         expected_member_sets=expected_member_sets,
+        taxpayer_tax_id=taxpayer_tax_id,
     )
     findings = _cross_period_clean_state_findings(
         verdict,
@@ -901,6 +905,7 @@ def verify_modelo_revision(
                     workflow_profile,
                     cross_period_expected_member_sets,
                 ),
+                taxpayer_tax_id=workflow_profile.tax_id,
             ),
             iva_compensation_decision=iva_compensation_decision,
         ),

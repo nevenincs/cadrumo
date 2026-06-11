@@ -39,8 +39,8 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
                 f"bearer {_JWT}",
                 f"url={_URL}",
                 f"object_key={_OBJECT_KEY}",
-            )
-        )
+            ),
+        ),
     )
 
     assert _PROFILE_ID not in rendered

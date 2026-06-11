@@ -55,7 +55,7 @@ def _seed_active_profile(name: str = "operator") -> None:
                 state,
                 profile_id=name,
                 enforce_unique_tax_id=False,
-            )
+            ),
         )
 
 

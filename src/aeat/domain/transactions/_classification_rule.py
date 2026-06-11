@@ -16,7 +16,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.logging import get_logger
 from ...core.time import now
 from ._enums import BusinessClassification

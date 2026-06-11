@@ -96,7 +96,7 @@ def registered_profile(runtime: TestRuntimeProfile) -> None:
             profile_id=runtime.bucket_id,
             display_name=_ORIGINAL_LABEL,
             facts=_all_required_facts(schema),
-        )
+        ),
     )
 
 

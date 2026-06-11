@@ -75,7 +75,7 @@ class TestRaiseOnErrors:
                     code="synthetic",
                     message="test-only failure",
                 ),
-            )
+            ),
         )
         with pytest.raises(NormativeError, match=r"normative"):
             raise_on_errors(report)

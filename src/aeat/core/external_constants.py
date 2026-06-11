@@ -21,7 +21,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from ._modelo import Modelo
+from . import Modelo
 from .errors import CoreValidationError
 
 #: ISO 4217 currency code for the Euro, used as the functional currency throughout AEAT.
@@ -353,6 +353,14 @@ XLSM_EXTENSION: Final[Literal[".xlsm"]] = ".xlsm"
 
 #: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
 LATIN_1_ENCODING: Final[str] = "latin-1"
+
+#: ISO-8859-1 encoding string as accepted by the fichero-BOE wire layer.
+#:
+#: Identical in coverage to :data:`LATIN_1_ENCODING` at runtime; declared as a
+#: typed ``Literal["iso-8859-1"]`` so callers that pass it to a
+#: :data:`~aeat.adapters.outbound.aeat.export._formats._record_spec.FicheroBoeEncoding`
+#: parameter satisfy the static type checker without a cast.
+ISO_8859_1_ENCODING: Final[Literal["iso-8859-1"]] = "iso-8859-1"
 
 #: UTF-8 character encoding used for all text file I/O in the application layer.
 UTF_8_ENCODING: Final[str] = "utf-8"

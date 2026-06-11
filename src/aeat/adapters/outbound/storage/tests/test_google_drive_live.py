@@ -67,7 +67,7 @@ def _skip_unless_drive_configured() -> None:
     if settings.aeat_storage_provider_kind != "google_drive":
         pytest.skip(
             "aeat_storage_provider_kind is not google_drive; "
-            "set AEAT_STORAGE_PROVIDER_KIND=google_drive to run live drive tests"
+            "set AEAT_STORAGE_PROVIDER_KIND=google_drive to run live drive tests",
         )
     if not settings.aeat_google_drive_root_folder_id:
         pytest.skip("aeat_google_drive_root_folder_id is not configured")

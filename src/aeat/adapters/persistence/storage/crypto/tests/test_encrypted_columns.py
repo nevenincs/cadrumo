@@ -273,7 +273,7 @@ class TestHashedLookup:
                 _CryptoRow(lookup_key="alpha"),
                 _CryptoRow(lookup_key="beta"),
                 _CryptoRow(lookup_key="gamma"),
-            ]
+            ],
         )
         session.commit()
         # The decorator digests the bound parameter, so consumers can

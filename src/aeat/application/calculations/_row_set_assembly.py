@@ -115,7 +115,7 @@ def assemble_observations_for_grouping(
         raise RegistryValidationError(
             f"row-set grouping {grouping!r} has no application-layer assembler; "
             f"declared but unassemblable groupings are: "
-            f"{sorted(set(_GROUPING_DISPATCH) ^ {grouping})}"
+            f"{sorted(set(_GROUPING_DISPATCH) ^ {grouping})}",
         )
     if source_kind == RowSetGroupingKind.WITHHOLDING:
         return (source_kind, assemble_withholding_observations(cells, revision, filing_year=filing_year))
@@ -273,7 +273,7 @@ def assemble_withholding_observations(
                     percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
                     retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
                     ingreso_a_cuenta=coerce_decimal(fields.get("ingreso_a_cuenta"), default=Decimal("0")),
-                )
+                ),
             )
         except ValidationError as exc:
             raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
@@ -321,7 +321,7 @@ def assemble_related_party_observations(
                     operation_kind_code=_coerce_text(fields.get("operation_kind_code"), default="01") or "01",
                     transfer_pricing_method_code=_coerce_text(fields.get("transfer_pricing_method_code")),
                     amount=coerce_decimal(fields.get("amount"), default=Decimal("0")),
-                )
+                ),
             )
         except ValidationError as exc:
             raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
@@ -365,7 +365,7 @@ def assemble_foreign_asset_observations(
                     asset_identifier=_coerce_text(fields.get("asset_identifier")),
                     acquisition_date=_coerce_iso_date(fields.get("acquisition_date"), default=default_acquisition_date),
                     valuation_amount=coerce_decimal(fields.get("valuation_amount"), default=Decimal("0")),
-                )
+                ),
             )
         except ValidationError as exc:
             raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
@@ -412,7 +412,7 @@ def assemble_atribucion_observations(
                     transaction_date=default_date,
                     share_percentage=coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
                     base_imponible_assigned=coerce_decimal(fields.get("base_imponible_assigned"), default=Decimal("0")),
-                )
+                ),
             )
         except ValidationError as exc:
             raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
@@ -454,7 +454,7 @@ def assemble_refund_observations(
                     operation_date=_coerce_iso_date(fields.get("operation_date"), default=default_operation_date),
                     supplier_tax_id=_coerce_text(fields.get("supplier_tax_id")),
                     refund_amount=coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
-                )
+                ),
             )
         except ValidationError as exc:
             raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc

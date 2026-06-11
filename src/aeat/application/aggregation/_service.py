@@ -19,7 +19,7 @@ from typing import Annotated, Any
 from pydantic import BaseModel, BeforeValidator, Field, computed_field, field_validator, model_validator
 
 from ...core import Modelo, Period
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import AggregationSourceKind
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import get_logger

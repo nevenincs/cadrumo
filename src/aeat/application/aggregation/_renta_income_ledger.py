@@ -35,7 +35,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import Modelo
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,

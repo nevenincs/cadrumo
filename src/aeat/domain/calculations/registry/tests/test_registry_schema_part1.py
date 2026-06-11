@@ -46,8 +46,8 @@ def test_formula_expression_accepts_dispatch_table_entries() -> None:
             "dispatch_table_entries": [
                 {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
                 {"key": "cataluna", "parameter": "renta-2025-escala-autonomica-cataluna-base-general"},
-            ]
-        }
+            ],
+        },
     )
 
     assert expression.dispatch_table == {
@@ -63,8 +63,8 @@ def test_formula_expression_rejects_duplicate_dispatch_table_entries() -> None:
                 "dispatch_table_entries": [
                     {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
                     {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
-                ]
-            }
+                ],
+            },
         )
 
 
@@ -74,9 +74,9 @@ def test_formula_expression_rejects_mixed_dispatch_table_shapes() -> None:
             {
                 "dispatch_table": {"madrid": "renta-2025-escala-autonomica-madrid-base-general"},
                 "dispatch_table_entries": [
-                    {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"}
+                    {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
                 ],
-            }
+            },
         )
 
 
@@ -159,7 +159,7 @@ def test_revision_without_casillas_is_registry_validation_failure() -> None:
             "export_layouts": (),
             "extraction_profiles": (),
             "verification_expectations": (),
-        }
+        },
     )
 
     with pytest.raises(
@@ -167,7 +167,7 @@ def test_revision_without_casillas_is_registry_validation_failure() -> None:
         match="revision must declare at least one casilla",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
-            _with_revision(modelo, empty_revision)
+            _with_revision(modelo, empty_revision),
         )
 
 
@@ -192,7 +192,7 @@ def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() ->
                 cross_reference_id: cross_reference.model_copy(update={"evidence_tier": "layout_authority"})
                 for cross_reference_id, cross_reference in snapshot.live_cross_references.items()
             },
-        }
+        },
     )
 
     layout_only_ledger = build_model_law_coverage_ledger(layout_only_snapshot)
@@ -221,7 +221,7 @@ def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> 
             "formula_coverage": "formula_form",
             "runner_required": True,
             "output_cells": {"result": "Modelo!A1"},
-        }
+        },
     )
     guidance_cross_reference = cross_reference.model_copy(update={"evidence_tier": "official_source_guidance"})
     parity_snapshot = snapshot.model_copy(
@@ -229,7 +229,7 @@ def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> 
             "sources": {source_id: parity_source},
             "workbook_parity_refs": {workbook_id: parity_workbook},
             "live_cross_references": {cross_reference_id: guidance_cross_reference},
-        }
+        },
     )
 
     by_tier = {gate.tier: gate for gate in build_model_law_coverage_ledger(parity_snapshot).gates}
@@ -381,7 +381,7 @@ def test_validator_rejects_formula_workbook_without_executable_parity_source() -
             "formula_coverage": "formula_form",
             "runner_required": True,
             "output_cells": {"result": "Modelo!A1"},
-        }
+        },
     )
     mutated = revision.model_copy(update={"workbook_parity_refs": (workbook,)})
 
@@ -448,7 +448,7 @@ def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
             "source": "invoice",
             "selector": {"claves": ("E",)},
             "aggregation": {"op": "sum"},
-        }
+        },
     )
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
     mutated = revision.model_copy(update={"bindings": bindings})
@@ -463,7 +463,7 @@ def test_validator_rejects_profile_binding_selector_missing_from_user_profile_sc
     binding = next(item for item in revision.bindings if item.source == "profile")
     mutated_binding = binding.model_copy(update={"selector": {**binding.selector, "profile_key": "unknown.profile"}})
     mutated = revision.model_copy(
-        update={"bindings": tuple(mutated_binding if item.id == binding.id else item for item in revision.bindings)}
+        update={"bindings": tuple(mutated_binding if item.id == binding.id else item for item in revision.bindings)},
     )
 
     with pytest.raises(
@@ -481,7 +481,7 @@ def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
             "source": "invoice",
             "selector": {"fact": "operator_count", "claves": ("E",)},
             "aggregation": {"op": "sum"},
-        }
+        },
     )
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
     mutated = revision.model_copy(update={"bindings": bindings})
@@ -498,7 +498,7 @@ def test_validator_rejects_invoice_rectification_delta_without_rectification_sco
             "source": "invoice",
             "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
             "aggregation": {"op": "sum"},
-        }
+        },
     )
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
     mutated = revision.model_copy(update={"bindings": bindings})
@@ -520,7 +520,7 @@ def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> 
                 "claves": ("E",),
             },
             "aggregation": {"op": "rows"},
-        }
+        },
     )
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
     mutated = revision.model_copy(update={"bindings": bindings})
@@ -549,7 +549,7 @@ def test_export_fields_can_reference_structured_bindings() -> None:
                 "required": False,
                 "padding": "left_zero",
                 "justification": "right",
-            }
+            },
         ),
     )
 
@@ -579,13 +579,13 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
                 "required": False,
                 "padding": "left_zero",
                 "justification": "right",
-            }
+            },
         ),
     )
 
     with pytest.raises(RegistryValidationError, match="unknown binding"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
-            _with_revision(modelo, bound_revision)
+            _with_revision(modelo, bound_revision),
         )
 
 
@@ -679,8 +679,8 @@ def test_validator_rejects_extraction_profile_unknown_casilla() -> None:
                     match_strategy="numeric_casilla",
                     value_kind="amount",
                 ),
-            )
-        }
+            ),
+        },
     )
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
@@ -759,7 +759,7 @@ def test_casilla_accepts_continuidad_id_roundtrip() -> None:
             "continuidad_id": "renta.base-liquidacion.general",
             "legal_refs": ("ley-35-2006:art-48",),
             "source_refs": ("aeat-manual",),
-        }
+        },
     )
 
     restored = CasillaDefinition.model_validate(casilla.model_dump())
@@ -779,7 +779,7 @@ def test_casilla_continuidad_id_uses_registry_id_shape() -> None:
                 "continuidad_id": "Renta Base",
                 "legal_refs": ("ley-35-2006:art-48",),
                 "source_refs": ("aeat-manual",),
-            }
+            },
         )
 
 
@@ -804,7 +804,7 @@ def test_modelo_revision_defaults_to_advisory_continuidad_validation() -> None:
             "period_selector": {"years": (2024,), "periods": ("0A",)},
             "legal_refs": ("ley-35-2006:art-48",),
             "source_refs": ("aeat-manual",),
-        }
+        },
     )
 
     assert revision.continuidad_validation == "advisory"

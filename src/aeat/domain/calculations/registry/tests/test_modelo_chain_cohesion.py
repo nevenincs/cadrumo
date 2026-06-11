@@ -144,7 +144,7 @@ _ACCEPTED_CHAIN_DEPENDENCY_ROLES = frozenset(
         # Generic cross-modelo evidence (e.g., 100 picking up 111 retentions):
         # the source filing is consumed as factual data, not as a structural roll-up.
         "factual_evidence",
-    }
+    },
 )
 
 
@@ -162,7 +162,7 @@ def _chain_role_offences(*, summary, feeder_id: str, summary_id: str) -> tuple[s
                     f"summary modelo {summary_id!r} revision {revision.id!r} "
                     f"relation {relation.id!r} feeds from {feeder_id!r} but uses "
                     f"dependency_role {relation.dependency_role!r}; expected one of "
-                    f"{sorted(_ACCEPTED_CHAIN_DEPENDENCY_ROLES)!r}"
+                    f"{sorted(_ACCEPTED_CHAIN_DEPENDENCY_ROLES)!r}",
                 )
     return tuple(offences)
 

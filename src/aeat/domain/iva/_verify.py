@@ -50,7 +50,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                 code="missing_category",
                 message=f"catalogue does not cover IvaCategory.{member.name}",
                 category_id=member.value,
-            )
+            ),
         )
 
     for regulation in catalogue:
@@ -61,7 +61,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                     code="missing_citation",
                     message="regulation has no IvaCitation records",
                     category_id=regulation.category.value,
-                )
+                ),
             )
         for citation in regulation.citations:
             if not citation.quoted_text.strip():
@@ -71,7 +71,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                         code="empty_quoted_text",
                         message=f"citation {citation.article!r} has empty quoted_text",
                         category_id=regulation.category.value,
-                    )
+                    ),
                 )
         for ref in regulation.boe_references:
             if not _NORMATIVE_ID_PATTERN.fullmatch(ref):
@@ -81,7 +81,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                         code="invalid_normative_id",
                         message=f"boe_reference {ref!r} is not a kebab-case normative id",
                         category_id=regulation.category.value,
-                    )
+                    ),
                 )
     _logger.debug("verify_catalogue produced %d issue(s)", len(issues))
     return IvaVerificationReport(issues=tuple(issues))

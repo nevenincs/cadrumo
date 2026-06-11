@@ -40,7 +40,7 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
         "cancellation",
         "document-submission",
         "declaration-submission",
-    ]
+    ],
 )
 
 

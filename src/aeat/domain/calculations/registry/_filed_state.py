@@ -84,7 +84,7 @@ def compare_calculation_to_filed_observation(
     if calculation.modelo != observation.modelo:
         raise RegistryValidationError(
             f"cannot compare calculation modelo {calculation.modelo!r} "
-            f"with filed observation modelo {observation.modelo!r}"
+            f"with filed observation modelo {observation.modelo!r}",
         )
     target_casillas = tuple(sorted(set(required_casillas)))
     if not target_casillas:

@@ -31,7 +31,7 @@ _G313_HTML = dedent(
         </table>
       </body>
     </html>
-    """
+    """,
 )
 
 

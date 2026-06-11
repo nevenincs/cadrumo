@@ -35,8 +35,8 @@ from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import resolve_active_bucket_id
-from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core._period import Period
+from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core import Period
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -53,7 +53,6 @@ from ..domain.invoices import InvoiceCatalogueRepository
 from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ..domain.modelos._repository import WorkUnitCatalogueRepository
 from ..domain.modelos._work_unit import WorkUnitState
-from ..domain.period import parse_canonical_period as _parse_canonical_period
 from ..domain.transactions import TransactionCatalogueRepository
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
@@ -499,19 +498,10 @@ def _build_pending_obligations(
         return ()
     obligations: list[ProjectionObligation] = []
     for obligation in schedule.obligations:
-        try:
-            year, token = _parse_canonical_period(obligation.period)
-            period_obj = Period.from_year_and_code(year, token)
-        except (ValueError, LookupError):
-            _log.debug(
-                "state projection: skipping obligation with unparseable period",
-                extra={"modelo": obligation.modelo, "period": obligation.period},
-            )
-            continue
         obligations.append(
             ProjectionObligation(
                 modelo=obligation.modelo,
-                period=period_obj,
+                period=obligation.period,
                 opens_on=obligation.opens_on,
                 closes_on=obligation.closes_on,
                 status=obligation.status,

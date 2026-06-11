@@ -85,7 +85,7 @@ def scrub_xmp(
                 code="pdfa_claim_invalidated",
                 detail="Source PDF declared PDF/A conformance; the sanitiser's content "
                 "rewrite invalidates the alignment so the claim is dropped.",
-            )
+            ),
         )
 
     if strategy == "delete":

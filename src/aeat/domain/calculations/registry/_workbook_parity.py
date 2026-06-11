@@ -207,7 +207,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             exc_info=True,
         )
         raise RegistryValidationError(
-            f"Unexpected error scanning workbook {relative}: {type(exc).__name__}: {exc}"
+            f"Unexpected error scanning workbook {relative}: {type(exc).__name__}: {exc}",
         ) from exc
     kind = _classify_xlsx(relative, formulas)
     evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
@@ -372,7 +372,7 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
         )
     raise RegistryValidationError(
         "No LibreOffice/soffice executable or Excel COM automation found on this host. "
-        f"Install LibreOffice or set {_LIBREOFFICE_EXECUTABLE_ENV} to a valid soffice executable."
+        f"Install LibreOffice or set {_LIBREOFFICE_EXECUTABLE_ENV} to a valid soffice executable.",
     )
 
 
@@ -625,7 +625,7 @@ def run_registry_workbook_parity(
     """
     if workbook.workbook_kind != WorkbookKind.FORMULA_FORM:
         raise RegistryValidationError(
-            f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle"
+            f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle",
         )
     workbook_inputs: dict[WorkbookCellRef, Decimal | int | str | bool] = {}
     registry_inputs: dict[str, Decimal] = {}
@@ -644,7 +644,7 @@ def run_registry_workbook_parity(
             registry_binding_values[value.registry_binding] = registry_value
         else:
             raise RegistryValidationError(
-                f"synthetic input {value.id!r} references unknown registry target {value.registry_binding!r}"
+                f"synthetic input {value.id!r} references unknown registry target {value.registry_binding!r}",
             )
 
     workbook_values = run_workbook_with_libreoffice(
@@ -718,7 +718,7 @@ def _resolve_libreoffice_runner(executable: str | None) -> Path:
         if not found:
             raise RegistryValidationError(
                 "LibreOffice or soffice executable is not available on PATH. "
-                f"Install LibreOffice or set {_LIBREOFFICE_EXECUTABLE_ENV}."
+                f"Install LibreOffice or set {_LIBREOFFICE_EXECUTABLE_ENV}.",
             )
         return Path(found).resolve()
     candidate = Path(executable).resolve()
@@ -822,7 +822,7 @@ def compare_registry_to_workbook(
                 legal_refs=(legal_refs or {}).get(output_id, ()),
                 source_refs=(source_refs or {}).get(output_id, ()),
                 detail=None if status == "match" else "registry output differs from workbook output",
-            )
+            ),
         )
     run_status: ParityStatus = "match" if all(c.status == "match" for c in comparisons) else "mismatch"
     return WorkbookParityRunReport(
@@ -897,7 +897,7 @@ def assert_formula_workbook_runner_ready(report: WorkbookBackendVerificationRepo
     if report.runner.status != "available":  # pragma: no cover — defensive
         raise RegistryValidationError(
             "formula-bearing official workbooks require a local recalculation runner; "
-            f"runner status is {report.runner.status!r}: {report.runner.detail}"
+            f"runner status is {report.runner.status!r}: {report.runner.detail}",
         )
 
 
@@ -1191,5 +1191,5 @@ def _registry_decimal_value(input_id: str, value: Decimal | int | str | bool) ->
         return Decimal(value)
     except (ArithmeticError, ValueError, TypeError) as exc:
         raise RegistryValidationError(
-            f"synthetic input {input_id!r} cannot feed non-decimal value into registry calculation"
+            f"synthetic input {input_id!r} cannot feed non-decimal value into registry calculation",
         ) from exc

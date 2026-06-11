@@ -68,7 +68,7 @@ def test_no_bare_2000_timeout_literal_in_renta_web_open() -> None:
         if value == 2_000
     ]
     assert offenders == [], "Bare 2_000 timeout literals found; use _VISIBLE_PROBE_TIMEOUT_MS instead:\n" + "\n".join(
-        offenders
+        offenders,
     )
 
 
@@ -85,5 +85,5 @@ def test_no_bare_10000_timeout_literal_in_renta_web_open() -> None:
         if value == 10_000
     ]
     assert offenders == [], "Bare 10_000 timeout literals found; use _ELEMENT_WAIT_TIMEOUT_MS instead:\n" + "\n".join(
-        offenders
+        offenders,
     )

@@ -198,7 +198,7 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             typer.Option(
                 "--explain",
                 help=tr(
-                    "cli.app.modelo.casillas.explain_help", default="Include localized help text in the text output."
+                    "cli.app.modelo.casillas.explain_help", default="Include localized help text in the text output.",
                 ),
             ),
         ] = False,
@@ -361,12 +361,12 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[dict[s
                 "typed_enum": row.typed_enum,
                 "input_channel": row.input_channel,
                 "borrador_capable": row.borrador_capable,
-            }
+            },
         )
         text_rows.append(
             f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
             f"{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t"
-            f"{row.input_channel}\t{row.borrador_capable}"
+            f"{row.input_channel}\t{row.borrador_capable}",
         )
     return merged_rows, text_rows
 
@@ -500,7 +500,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
                     revision=report.revision,
                     period=report.period,
                     suggestion=suggestion,
-                )
+                ),
             )
         result = ModeloBindingsPreviewResult(
             modelo=report.code,
@@ -537,7 +537,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
                     row.source,
                     _readiness_for_source(row.source),
                     overrides.get(row.binding_id) or "-",
-                )
+                ),
             )
             for row in report.rows
         )

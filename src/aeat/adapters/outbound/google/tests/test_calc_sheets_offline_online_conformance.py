@@ -138,7 +138,7 @@ def test_apply_adapter_emits_number_format_and_emphasis_requests() -> None:
             "anchors": (
                 SheetAnchor(address=SheetCellAddress.at(TabName.CALCULOS, 2, 6), kind="final", label="RESULTADO"),
             ),
-        }
+        },
     )
     sheet_id_by_tab = {tab.value: index for index, tab in enumerate(TabName)}
     number_requests = _build_number_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)

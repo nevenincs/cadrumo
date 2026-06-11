@@ -85,7 +85,7 @@ class TestWorkflowStepValidation:
                 "success": True,
                 "summary": "translation",
                 "details": {"error_count": 42},
-            }
+            },
         )
         assert step.details is not None
         assert step.details["error_count"] == 42

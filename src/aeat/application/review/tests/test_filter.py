@@ -95,16 +95,29 @@ def test_filter_clause_is_frozen() -> None:
 
 
 def test_ledger_spec_parses_status_and_period() -> None:
-    spec = LedgerReviewFilterSpec.from_strings(["status=pending", "period=2026-Q1"])
+    spec = LedgerReviewFilterSpec.from_strings(["status=pending", "period=1T", "year=2026"])
     assert spec.status is LedgerReviewStatus.PENDING
-    assert spec.period == "2026-Q1"
+    assert spec.period == "1T"
+    assert spec.year == 2026
     assert spec.issue is None
     assert spec.import_id is None
-    assert [c.key for c in spec.clauses] == ["status", "period"]
+    assert [c.key for c in spec.clauses] == ["status", "period", "year"]
+
+
+def test_ledger_spec_requires_year_with_period() -> None:
+    """A bare ``period=`` token with no ``year=`` clause refuses (the pair travels together)."""
+    with pytest.raises(FilterParseError, match=r"period-year-pairing"):
+        LedgerReviewFilterSpec.from_strings(["period=1T"])
+
+
+def test_ledger_spec_requires_period_with_year() -> None:
+    """A ``year=`` clause with no ``period=`` token refuses (the pair travels together)."""
+    with pytest.raises(FilterParseError, match=r"period-year-pairing"):
+        LedgerReviewFilterSpec.from_strings(["year=2026"])
 
 
 def test_ledger_spec_parses_issue_filter() -> None:
-    spec = LedgerReviewFilterSpec.from_strings(["issue=gap", "period=2026-Q1"])
+    spec = LedgerReviewFilterSpec.from_strings(["issue=gap", "period=1T", "year=2026"])
     assert spec.issue is LedgerImportDiagnosticKind.GAP
 
 

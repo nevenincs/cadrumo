@@ -92,7 +92,7 @@ def _validated_related_party_selector(binding: DataBindingDefinition) -> _Relate
         raise RegistryValidationError(f"binding {binding.id!r} has malformed related-party selector") from exc
     if selector.fact != "row_field":
         raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported related-party fact {selector.fact!r}"
+            f"binding {binding.id!r} declares unsupported related-party fact {selector.fact!r}",
         )
     op = str((binding.aggregation or {}).get("op", "rows"))
     if op != "rows":
@@ -130,7 +130,7 @@ def resolve_related_party_binding_row_values(
             value = row.get(selector.row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for related-party rows"
+                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for related-party rows",
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
@@ -226,7 +226,7 @@ def _validated_foreign_asset_selector(binding: DataBindingDefinition) -> _Foreig
         raise RegistryValidationError(f"binding {binding.id!r} has malformed foreign-asset selector") from exc
     if selector.fact != "row_field":
         raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported foreign-asset fact {selector.fact!r}"
+            f"binding {binding.id!r} declares unsupported foreign-asset fact {selector.fact!r}",
         )
     op = str((binding.aggregation or {}).get("op", "rows"))
     if op != "rows":
@@ -269,7 +269,7 @@ def resolve_foreign_asset_binding_row_values(
             value = row.get(selector.row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for foreign-asset rows"
+                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for foreign-asset rows",
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
@@ -291,7 +291,7 @@ def _build_foreign_asset_rows(
                 "asset_identifier": obs.asset_identifier,
                 "valuation_amount": obs.valuation_amount,
                 "acquisition_date": obs.acquisition_date.isoformat(),
-            }
+            },
         )
     return tuple(rows)
 
@@ -410,7 +410,7 @@ def resolve_atribucion_binding_row_values(
             value = row.get(selector.row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for atribucion rows"
+                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for atribucion rows",
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
@@ -514,7 +514,7 @@ def resolve_refund_binding_row_values(
             "refund_amount": obs.refund_amount,
         }
         for obs in sorted(
-            available, key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id)
+            available, key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id),
         )
     )
     resolved: dict[tuple[str, int], Decimal | str] = {}
@@ -524,7 +524,7 @@ def resolve_refund_binding_row_values(
             value = row.get(selector.row_field)
             if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for refund rows"
+                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for refund rows",
                 )
             resolved[(binding.id, row_index)] = value
     return resolved

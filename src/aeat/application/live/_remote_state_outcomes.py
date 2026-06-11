@@ -188,7 +188,7 @@ _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS = frozenset(
         "secure_object_key",
         "storage_object_key",
         "tax_id",
-    }
+    },
 )
 _SENSITIVE_FAILURE_CONTEXT_KEY_PARTS = frozenset(
     {
@@ -209,7 +209,7 @@ _SENSITIVE_FAILURE_CONTEXT_KEY_PARTS = frozenset(
         "soporte",
         "support",
         "token",
-    }
+    },
 )
 _SAFE_FAILURE_CONTEXT_KEYS = frozenset(
     {
@@ -230,7 +230,7 @@ _SAFE_FAILURE_CONTEXT_KEYS = frozenset(
         "target_period",
         "target_year",
         "timeout_ms",
-    }
+    },
 )
 
 

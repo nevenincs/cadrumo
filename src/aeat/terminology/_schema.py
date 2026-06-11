@@ -11,7 +11,7 @@ label vocabulary at the term level (``term_status`` from
 ``hiddenLabel``).
 
 Every model is strict, frozen, and forbids extra fields
-(:data:`~aeat.core._models.STRICT_FROZEN_CONFIG`). The four-language
+(:data:`~aeat.core.STRICT_FROZEN_CONFIG`). The four-language
 axis reuses the canonical
 :class:`~aeat.core.external_constants.OutputLanguage`; the
 Handbook-local closed axes (:class:`~aeat.terminology._enums.ConceptDomain`,
@@ -35,7 +35,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.external_constants import OutputLanguage
 from ._enums import ConceptDomain, ConceptLifecycle, TermStatus
 from ._errors import TerminologyValidationError
@@ -57,7 +57,7 @@ _ConceptId = Annotated[
 _DomainRef = Annotated[
     str,
     StringConstraints(
-        strip_whitespace=True, min_length=2, max_length=128, pattern=r"^[a-z][a-z0-9.-]*:[A-Za-z0-9:._-]+$"
+        strip_whitespace=True, min_length=2, max_length=128, pattern=r"^[a-z][a-z0-9.-]*:[A-Za-z0-9:._-]+$",
     ),
 ]
 # Legal catalogue id, e.g. ``ley-37-1992:art-104``; resolution against the
@@ -65,7 +65,7 @@ _DomainRef = Annotated[
 _LegalRef = Annotated[
     str,
     StringConstraints(
-        strip_whitespace=True, min_length=2, max_length=128, pattern=r"^[a-z0-9][a-z0-9.-]*:[a-z0-9][A-Za-z0-9.-]*$"
+        strip_whitespace=True, min_length=2, max_length=128, pattern=r"^[a-z0-9][a-z0-9.-]*:[a-z0-9][A-Za-z0-9.-]*$",
     ),
 ]
 _ShortDescription = Annotated[
@@ -235,7 +235,7 @@ class LanguageSection(BaseModel):
         preferred = [term for term in self.terms if term.term_status is TermStatus.PREFERRED]
         if len(preferred) > 1:
             raise TerminologyValidationError(
-                f"language {self.language.value!r}: at most one preferred term, found {len(preferred)}"
+                f"language {self.language.value!r}: at most one preferred term, found {len(preferred)}",
             )
         return self
 
@@ -294,7 +294,7 @@ class ConceptRecord(BaseModel):
             raise TerminologyValidationError(f"concept {self.concept_id!r}: retired concept requires replaced_by")
         if self.lifecycle in (ConceptLifecycle.DRAFT, ConceptLifecycle.APPROVED) and self.replaced_by is not None:
             raise TerminologyValidationError(
-                f"concept {self.concept_id!r}: replaced_by is only valid on a deprecated or retired concept"
+                f"concept {self.concept_id!r}: replaced_by is only valid on a deprecated or retired concept",
             )
         if self.replaced_by == self.concept_id:
             raise TerminologyValidationError(f"concept {self.concept_id!r}: replaced_by must not reference itself")

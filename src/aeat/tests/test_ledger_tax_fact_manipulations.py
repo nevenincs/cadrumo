@@ -101,8 +101,8 @@ def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
                     "lifecycle_state": TransactionLifecycleState.ACTIVE,
                     "classified_at": _NOW,
                     "classified_by": "manual",
-                }
-            )
+                },
+            ),
         )
     catalogue = TransactionCatalogue.from_transactions(tuple(txns))
     result = aggregate_iva_ledger_observations(catalogue, period="2025Q1")
@@ -171,7 +171,7 @@ def _income_observation_count(irpf_category: str) -> int:
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
-        }
+        },
     )
     catalogue = TransactionCatalogue.from_transactions((txn,))
     result = aggregate_renta_income_ledger(catalogue, bucket_id="corpus", period="2025Q1")

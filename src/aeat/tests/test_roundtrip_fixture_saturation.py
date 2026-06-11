@@ -148,7 +148,7 @@ def test_snapshot_files_still_exist() -> None:
         joined = "\n  ".join(missing)
         raise AssertionError(
             f"S223 audit snapshot references {len(missing)} file(s) that no longer exist:\n  {joined}\n"
-            "Update the snapshot in src/aeat/_data/audit/s223-roundtrip-fixture-builders-2026-05-28.txt."
+            "Update the snapshot in src/aeat/_data/audit/s223-roundtrip-fixture-builders-2026-05-28.txt.",
         )
 
 
@@ -187,7 +187,7 @@ def test_populated_builders_carry_saturation_markers() -> None:
             failures.append(
                 f"  {rel}:{lineno} {name!r} — "
                 f"no saturation marker (module_kw={has_module_keyword}, "
-                f"func_kw={has_func_keyword}, max_kwargs={max_kwargs})"
+                f"func_kw={has_func_keyword}, max_kwargs={max_kwargs})",
             )
 
     if failures:
@@ -197,5 +197,5 @@ def test_populated_builders_carry_saturation_markers() -> None:
             "Fix by:\n"
             "  1. Adding a docstring/comment explaining that all optional fields are set, OR\n"
             "  2. Populating more fields (>=4 keyword args in return call), OR\n"
-            "  3. Adding a waiver entry in test_roundtrip_fixture_saturation._WAIVERS with rationale."
+            "  3. Adding a waiver entry in test_roundtrip_fixture_saturation._WAIVERS with rationale.",
         )

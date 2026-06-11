@@ -282,7 +282,7 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         """
         if not expected:
             raise RegistryValidationError(
-                "AeatNifIvaCheckerOracle.planned_operations requires at least one expected NIF"
+                "AeatNifIvaCheckerOracle.planned_operations requires at least one expected NIF",
             )
         expected_values = self._expected_values(expected)
         if self._driver is not None:
@@ -292,7 +292,9 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
             # Navigate to the sede entry point first so the session cookies the
             # servlet requires are acquired; then GET the form servlet itself.
             RemoteOperation(
-                kind="http", method="GET", url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}")
+                kind="http",
+                method="GET",
+                url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"),
             ),
             RemoteOperation(kind="http", method="GET", url=AnyUrl(_ext.aeat.oracles.nif_iva_verification)),
             RemoteOperation(kind="browser_action", action="open-nif-iva-form"),
@@ -302,7 +304,7 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
                 RemoteOperation(
                     kind="browser_action",
                     action=f"check-nif-{nif}",
-                )
+                ),
             )
         operations.append(RemoteOperation(kind="browser_action", action="discard-session"))
         return tuple(operations)

@@ -343,7 +343,7 @@ def _existing_carry_forward() -> tuple[CarryForwardEntry, ...]:
     """
     _log.debug(
         "rental aggregates: no carry-forward persistence registered; "
-        "art. 23.1.a) cap excess from prior years is not consumed"
+        "art. 23.1.a) cap excess from prior years is not consumed",
     )
     return ()
 

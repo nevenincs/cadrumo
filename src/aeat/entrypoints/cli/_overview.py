@@ -75,14 +75,21 @@ def _local_live_calendar_events(bucket_id: str, rng: OverviewCalendarRange):
     )
 
 
-def _local_calendar_filing_evidence(bucket_id: str, events: tuple[OverviewCalendarEvent, ...]):
+def _local_calendar_filing_evidence(
+    bucket_id: str,
+    events: tuple[OverviewCalendarEvent, ...],
+    *,
+    expected_tax_id: str | None = None,
+):
     """Return local/AEAT filing evidence rows from persisted local stores."""
     try:
         from ...adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
         from ...application.calculations import CalculationObservationRepository
+        from ...domain.justificante import JustificanteRepository
         from ...domain.modelos import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
+        justificantes = tuple(JustificanteRepository().iter_justificantes())
         filed_observation_store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
         filed_declaration_observations = _calendar_verified_filed_declaration_observations(filed_observation_store)
         calculation_observations = tuple(CalculationObservationRepository().iter_records())
@@ -98,6 +105,8 @@ def _local_calendar_filing_evidence(bucket_id: str, events: tuple[OverviewCalend
         observed_events=events,
         filed_declaration_observations=tuple(filed_declaration_observations),
         calculation_observations=calculation_observations,
+        justificantes=justificantes,
+        expected_tax_id=expected_tax_id,
     )
 
 
@@ -159,13 +168,28 @@ def overview_status(
     if period is not None:
         if current is None:
             raise _no_active_profile_refusal()
+        from ...domain.period import PeriodValidationError, parse_canonical_period
+
         drafts = _load_drafts()
         canonical = _optional_canonical_period(period, year=year)
-        per_modelo_drafts = [d for d in drafts if d.period == canonical]
+        assert canonical is not None  # period is not None, so --year was required and supplied
+        wanted = (canonical.year, canonical.registry_token)
+
+        def _draft_matches(draft_period: str) -> bool:
+            # A draft persists its filing period in the WorkflowEngine runtime
+            # form; split it back to ``(year, registry_token)`` and compare to
+            # the operator's ``(--year, AEAT token)`` pair.
+            try:
+                return parse_canonical_period(draft_period) == wanted
+            except PeriodValidationError:
+                return False
+
+        per_modelo_drafts = [d for d in drafts if _draft_matches(d.period)]
         from ._overview_payloads import OverviewDraftPayload
 
+        period_display = f"{canonical.registry_token} {canonical.year}"
         typed_period = OverviewStatusResult(
-            period=canonical,
+            period=period_display,
             drafts=[
                 OverviewDraftPayload(draft_id=d.draft_id, modelo=d.modelo, status=d.status.value)
                 for d in per_modelo_drafts
@@ -173,7 +197,7 @@ def overview_status(
             verbose=verbose,
         )
         period_lines: list[str] = [
-            f"{tr('cli.overview.period')}\t{canonical}",
+            f"{tr('cli.overview.period')}\t{period_display}",
             f"{tr('cli.overview.drafts')}\t{len(per_modelo_drafts)}",
         ]
         for d in per_modelo_drafts:
@@ -277,10 +301,15 @@ def overview_calendar(
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
         raise _bad(tr("cli.config.errors.no_active_profile"))
+    workflow_profile = _profile_to_taxpayer(current)
     events = _local_live_calendar_events(bucket_id, rng)
-    filing_evidence = _local_calendar_filing_evidence(bucket_id, events)
+    filing_evidence = _local_calendar_filing_evidence(
+        bucket_id,
+        events,
+        expected_tax_id=workflow_profile.tax_id,
+    )
     cal: OverviewCalendar = build_overview_calendar(
-        _profile_to_taxpayer(current),
+        workflow_profile,
         rng,
         today=_date.today(),
         raw_values=raw_values,
@@ -318,7 +347,7 @@ def overview_calendar(
             f"\tshift={entry.shift_reason}"
             f"\tlocal={entry.filing_evidence.local_filing_state.value}"
             f"\taeat={entry.filing_evidence.aeat_submission_state.value}"
-            f"\tjustificante={str(entry.filing_evidence.justificante_verified).lower()}"
+            f"\tjustificante={str(entry.filing_evidence.justificante_verified).lower()}",
         )
     for warning in cal.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
@@ -347,13 +376,13 @@ def overview_calendar(
     if cal.completeness.computable_modelos:
         lines.append(
             f"computable\t{len(cal.completeness.computable_modelos)}"
-            f"\tdefaulted\t{len(cal.completeness.defaulted_modelos)}"
+            f"\tdefaulted\t{len(cal.completeness.defaulted_modelos)}",
         )
     for suppressed in cal.suppressed_entries:
         lines.append(
             f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
             f"\tverdict={suppressed.verdict.value}"
-            f"\treason={suppressed.reason[:80]}"
+            f"\treason={suppressed.reason[:80]}",
         )
     _emit_envelope(ctx, command="overview.calendar", result=typed_cal, lines=lines)
 
@@ -400,7 +429,11 @@ def _overview_calendar_all_profiles(
                 raw_values = record_to_values(record.record)
                 taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
                 events = _local_live_calendar_events(bucket_id, rng)
-                filing_evidence = _local_calendar_filing_evidence(bucket_id, events)
+                filing_evidence = _local_calendar_filing_evidence(
+                    bucket_id,
+                    events,
+                    expected_tax_id=taxpayer.tax_id,
+                )
         except Exception:
             logger.warning(
                 "overview calendar: skipping unreadable profile %s (%s)",
@@ -433,12 +466,12 @@ def _overview_calendar_all_profiles(
                 f"\tshift={entry.shift_reason}"
                 f"\tlocal={entry.filing_evidence.local_filing_state.value}"
                 f"\taeat={entry.filing_evidence.aeat_submission_state.value}"
-                f"\tjustificante={str(entry.filing_evidence.justificante_verified).lower()}"
+                f"\tjustificante={str(entry.filing_evidence.justificante_verified).lower()}",
             )
         if not cal.taxpayer_model_declared:
             all_lines.append(
                 f"warning\tINCOMPLETE_TAXPAYER_MODEL\t"
-                f"{cal.incomplete_reason or tr('cli.overview.taxpayer_model_undeclared')}"
+                f"{cal.incomplete_reason or tr('cli.overview.taxpayer_model_undeclared')}",
             )
         for warning in cal.warnings:
             all_lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
@@ -460,7 +493,7 @@ def _overview_calendar_all_profiles(
             all_lines.append(
                 f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
                 f"\tverdict={suppressed.verdict.value}"
-                f"\treason={suppressed.reason[:80]}"
+                f"\treason={suppressed.reason[:80]}",
             )
 
         all_calendars.append(
@@ -468,7 +501,7 @@ def _overview_calendar_all_profiles(
                 "profile_id": bucket_id,
                 "label": pointer.label,
                 "calendar": cal.model_dump(mode="json"),
-            }
+            },
         )
 
     typed_all = OverviewCalendarResult.model_validate({"profiles": all_calendars})
@@ -553,7 +586,7 @@ def overview_agenda(
     if agenda.next_due is not None:
         lines.append(
             f"next_due\t{agenda.next_due.modelo}\t{agenda.next_due.period}"
-            f"\tcloses={agenda.next_due.adjusted_closes_on.isoformat()}"
+            f"\tcloses={agenda.next_due.adjusted_closes_on.isoformat()}",
         )
     else:
         lines.append("next_due\t(none)")

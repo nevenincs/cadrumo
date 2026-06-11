@@ -101,7 +101,7 @@ def test_provider_object_metadata_rejects_extra_fields() -> None:
                 "content_hash": "sha256-x",
                 "written_at": datetime(2026, 5, 14, tzinfo=UTC),
                 "unexpected": "value",
-            }
+            },
         )
 
 

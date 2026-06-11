@@ -194,7 +194,7 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
                 "created_at": _T0,
                 "updated_at": _T0,
                 "unknown_axis": "extra-value",
-            }
+            },
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         unit.name = "renamed"

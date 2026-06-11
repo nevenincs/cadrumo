@@ -85,7 +85,7 @@ def test_flow_rejects_non_tuple_sections() -> None:
                 "description": "wizard.setup.description",
                 "sections": [_section().model_dump()],
                 "answers_model": _EmptyAnswersBase,
-            }
+            },
         )
 
 
@@ -136,7 +136,7 @@ def test_question_answer_type_rejects_non_canonical_type() -> None:
                 "widget": "text",
                 "prompt": "wizard.setup.profile.tax-id.prompt",
                 "answer_type": float,
-            }
+            },
         )
 
 
@@ -149,7 +149,7 @@ def test_question_widget_must_be_member() -> None:
                 "widget": "unsupported",
                 "prompt": "wizard.setup.profile.tax-id.prompt",
                 "answer_type": str,
-            }
+            },
         )
 
 

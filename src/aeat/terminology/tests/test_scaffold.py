@@ -111,7 +111,7 @@ def test_scaffold_empty_tree_creates_expected_drafts(tmp_path: Path) -> None:
     candidates = {
         "modelo-303": _candidate("modelo-303", ConceptDomain.MODELO, "modelo:303"),
         "iva-domestic-general-21": _candidate(
-            "iva-domestic-general-21", ConceptDomain.REGIMEN, "iva-category:domestic_general_21"
+            "iva-domestic-general-21", ConceptDomain.REGIMEN, "iva-category:domestic_general_21",
         ),
     }
     plan = scaffold_handbook(concepts, candidates, today=_TODAY, apply=True)
@@ -305,7 +305,7 @@ def test_build_plan_is_deterministically_ordered(tmp_path: Path) -> None:
     candidates = {
         "modelo-303": _candidate("modelo-303", ConceptDomain.MODELO, "modelo:303"),
         "iva-domestic-general-21": _candidate(
-            "iva-domestic-general-21", ConceptDomain.REGIMEN, "iva-category:domestic_general_21"
+            "iva-domestic-general-21", ConceptDomain.REGIMEN, "iva-category:domestic_general_21",
         ),
     }
     plan = build_scaffold_plan(candidates, {}, today=_TODAY)

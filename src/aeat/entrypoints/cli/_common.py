@@ -204,10 +204,10 @@ def _ledger_aeat_token(token: str) -> str | None:
     does not filter by (``EXT-*``, ``AD-HOC``, ``EVENT-N``) and instalment
     claves (``1P``-``4P``) return ``None``.
     """
-    from ...core._period import StandardPeriodCode, _validate_period_against_registry
+    from ...core import StandardPeriodCode
 
     try:
-        registry_period = _validate_period_against_registry(token)
+        registry_period = StandardPeriodCode(token.strip().upper()).value
     except ValueError:
         return None
     if registry_period not in frozenset(StandardPeriodCode):
@@ -220,7 +220,7 @@ def _canonical_period(period: str, *, year: int) -> Period:
 
     The ledger ``--period`` surface accepts only the canonical AEAT modelo
     tokens (``0A`` annual, ``1T``-``4T`` quarters, ``01``-``12`` months),
-    validated through the registry period union at :mod:`aeat.core._period`,
+    validated through the registry period union at :mod:`aeat.core`,
     and composes them with ``--year`` exactly as the modelo surface does. A
     calendar shape (``2026Q1`` / ``2026-03`` / ``2026``) or any other notation
     is refused with a message naming the AEAT tokens and the ``--year``

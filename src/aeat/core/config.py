@@ -867,7 +867,7 @@ class Settings(AeatTimeoutSettings):
     def _validate_live_iva_timeout_hierarchy(self) -> Settings:
         if self.aeat_live_iva_declaration_capture_timeout_ms >= self.aeat_live_iva_surface_timeout_ms:
             raise ValueError(
-                "aeat_live_iva_declaration_capture_timeout_ms must be lower than aeat_live_iva_surface_timeout_ms"
+                "aeat_live_iva_declaration_capture_timeout_ms must be lower than aeat_live_iva_surface_timeout_ms",
             )
         return self
 
@@ -909,7 +909,7 @@ class Settings(AeatTimeoutSettings):
             # uses strict pydantic validation; this preserves the
             # one-resolver invariant the disaster ADR Ruling 2
             # mandates.
-            from ._bucket_pointer_io import pointer_path, read_pointer
+            from . import pointer_path, read_pointer
 
             try:
                 pointer = read_pointer(self.aeat_local_storage_root)
@@ -1074,7 +1074,7 @@ class Settings(AeatTimeoutSettings):
         """Reject templates that omit the ``{target}`` placeholder."""
         if "{target}" not in value:
             raise CoreValidationError(
-                "aeat_clave_sede_access_url_template must contain '{target}' for the URL-encoded post-auth path"
+                "aeat_clave_sede_access_url_template must contain '{target}' for the URL-encoded post-auth path",
             )
         return value
 

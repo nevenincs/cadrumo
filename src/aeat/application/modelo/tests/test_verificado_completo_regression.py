@@ -108,7 +108,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, p
             source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
             source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
             parsed_at=_T0,
-        )
+        ),
     )
 
 
@@ -173,6 +173,7 @@ def _seed_clean_cross_period_sources_for_m130(
             calculation_repository=calculation_repository,
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
+            expected_tax_id="X1234567L",
             clock=_T0,
         )
         observation_repository.save_observation(

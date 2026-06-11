@@ -13,7 +13,6 @@ from pydantic import AnyUrl
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_url, configured_path
-from .... import renta as _renta_snapshot_checks  # noqa: F401  # snapshot-check registration side effect
 from ....contribuyente import PROFILE_KEYS, TaxResidenceProfile
 from ....contribuyente.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 from .. import (
@@ -153,7 +152,7 @@ _PERSONAL_FAMILY_BINDINGS: frozenset[str] = frozenset(
         "renta-2025-family-ascendant-disability-grade",
         "renta-2025-family-ascendant-cohabiting-descendant-count",
         "renta-2025-family-ascendant-death-date",
-    }
+    },
 )
 
 _PERSONAL_FAMILY_CASILLAS: frozenset[str] = frozenset(
@@ -188,7 +187,7 @@ _PERSONAL_FAMILY_CASILLAS: frozenset[str] = frozenset(
         "PCTMINASDLG",
         "CONVASDLG",
         "FALLASDLG",
-    }
+    },
 )
 
 _SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
@@ -202,7 +201,7 @@ _SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
         "modelo-100-approval",
         "modelo-100-reconciliation",
         "modelo-100-workflow",
-    }
+    },
 )
 
 
@@ -820,8 +819,8 @@ def test_construct_reader_rejects_unknown_member_id_at_runtime() -> None:
     mutated_construct = construct.model_copy(update={"casillas": (*construct.casillas, "0000-ghost")})
     mutated_revision = revision.model_copy(
         update={
-            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs)
-        }
+            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
+        },
     )
 
     with pytest.raises(
@@ -839,8 +838,8 @@ def test_validator_rejects_construct_member_outside_revision() -> None:
     mutated_construct = construct.model_copy(update={"relations": (*construct.relations, "missing-relation")})
     mutated_revision = revision.model_copy(
         update={
-            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs)
-        }
+            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
+        },
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
@@ -854,12 +853,12 @@ def test_validator_rejects_construct_dependency_classification_outside_revision(
     revision = modelo.revisions["2025"]
     construct = next(item for item in revision.constructs if item.id == "renta-dependent-modelos")
     mutated_construct = construct.model_copy(
-        update={"dependency_classifications": (*construct.dependency_classifications, "missing-dependency")}
+        update={"dependency_classifications": (*construct.dependency_classifications, "missing-dependency")},
     )
     mutated_revision = revision.model_copy(
         update={
-            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs)
-        }
+            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
+        },
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
@@ -873,7 +872,7 @@ def test_validator_rejects_dependency_classification_source_drift() -> None:
     revision = modelo.revisions["2025"]
     classification = revision.dependency_classifications[0].model_copy(update={"source_modelo": "115"})
     mutated_revision = revision.model_copy(
-        update={"dependency_classifications": (classification, *revision.dependency_classifications[1:])}
+        update={"dependency_classifications": (classification, *revision.dependency_classifications[1:])},
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
@@ -889,8 +888,8 @@ def test_validator_rejects_unclassified_relation_source() -> None:
         update={
             "dependency_classifications": tuple(
                 item for item in revision.dependency_classifications if item.source_modelo != "130"
-            )
-        }
+            ),
+        },
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
@@ -909,8 +908,8 @@ def test_validator_rejects_partial_dependency_classification_relation_coverage()
             "dependency_classifications": tuple(
                 mutated_classification if item.id == classification.id else item
                 for item in revision.dependency_classifications
-            )
-        }
+            ),
+        },
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
@@ -934,7 +933,7 @@ def test_validator_rejects_duplicate_dependency_classification_source() -> None:
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
     duplicate = classification.model_copy(update={"id": "renta-2025-dep-130-duplicate"})
     mutated_revision = revision.model_copy(
-        update={"dependency_classifications": (*revision.dependency_classifications, duplicate)}
+        update={"dependency_classifications": (*revision.dependency_classifications, duplicate)},
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
@@ -952,13 +951,13 @@ def test_validator_rejects_dependency_classification_target_construct_drift() ->
         update={
             "dependency_classifications": tuple(
                 item for item in construct.dependency_classifications if item != classification.id
-            )
-        }
+            ),
+        },
     )
     mutated_revision = revision.model_copy(
         update={
-            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs)
-        }
+            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
+        },
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 

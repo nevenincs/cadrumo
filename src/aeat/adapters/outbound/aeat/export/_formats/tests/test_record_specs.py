@@ -80,7 +80,7 @@ def _get_record_specs(mod: ModuleType) -> tuple[RecordFieldSpec, ...]:
     if specs is None:
         raise AttributeError(
             f"Record-spec module {mod.__name__!r} must declare _RECORD_SPECS "
-            f"at module level but the attribute is missing."
+            f"at module level but the attribute is missing.",
         )
     if not isinstance(specs, tuple):
         raise TypeError(f"{mod.__name__!r}._RECORD_SPECS must be a tuple, got {type(specs)!r}")
@@ -92,7 +92,7 @@ def _get_record_length(mod: ModuleType) -> int:
     if length is None:
         raise AttributeError(
             f"Record-spec module {mod.__name__!r} must declare RECORD_LENGTH "
-            f"at module level but the attribute is missing."
+            f"at module level but the attribute is missing.",
         )
     if not isinstance(length, int):
         raise TypeError(f"{mod.__name__!r}.RECORD_LENGTH must be an int, got {type(length)!r}")
@@ -103,7 +103,7 @@ def _get_modelo_id(mod: ModuleType) -> str:
     modelo_id = getattr(mod, "MODELO_ID", None)
     if modelo_id is None:
         raise AttributeError(
-            f"Record-spec module {mod.__name__!r} must declare MODELO_ID at module level but the attribute is missing."
+            f"Record-spec module {mod.__name__!r} must declare MODELO_ID at module level but the attribute is missing.",
         )
     if not isinstance(modelo_id, str):
         raise TypeError(f"{mod.__name__!r}.MODELO_ID must be a str, got {type(modelo_id)!r}")
@@ -115,7 +115,7 @@ def _get_filing_year(mod: ModuleType) -> int:
     if filing_year is None:
         raise AttributeError(
             f"Record-spec module {mod.__name__!r} must declare FILING_YEAR "
-            f"at module level but the attribute is missing."
+            f"at module level but the attribute is missing.",
         )
     if not isinstance(filing_year, int):
         raise TypeError(f"{mod.__name__!r}.FILING_YEAR must be an int, got {type(filing_year)!r}")
@@ -126,7 +126,7 @@ def _get_period(mod: ModuleType) -> str:
     period = getattr(mod, "PERIOD", None)
     if period is None:
         raise AttributeError(
-            f"Record-spec module {mod.__name__!r} must declare PERIOD at module level but the attribute is missing."
+            f"Record-spec module {mod.__name__!r} must declare PERIOD at module level but the attribute is missing.",
         )
     if not isinstance(period, str):
         raise TypeError(f"{mod.__name__!r}.PERIOD must be a str, got {type(period)!r}")
@@ -207,7 +207,7 @@ def test_record_spec_casilla_ids_resolve_in_registry(mod: ModuleType) -> None:
         if spec.casilla_id is not None and spec.casilla_id not in revision_casilla_ids:
             missing.append(
                 f"  field_id={spec.field_id!r} casilla_id={spec.casilla_id!r} "
-                f"(offset={spec.offset}, length={spec.length})"
+                f"(offset={spec.offset}, length={spec.length})",
             )
 
     assert not missing, (

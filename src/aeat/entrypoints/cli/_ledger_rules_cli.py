@@ -60,7 +60,7 @@ def _validate_category_id(category_id: str | None) -> str | None:
                 category=value,
                 known=known,
                 default=f"Unknown spending category '{value}'. Known categories: {known}.",
-            )
+            ),
         )
     return value
 
@@ -190,7 +190,7 @@ def _rule_apply_dry_run_matches(
                 "description": transaction.raw.description,
                 "matched_rule_id": rule.rule_id,
                 "classification": rule.classification.value,
-            }
+            },
         )
     return would_match
 
@@ -205,7 +205,7 @@ def _rule_apply_dry_run_lines(would_match: list[dict[str, object]]) -> list[str]
             "cli.app.ledger.rule.apply_dry_run_summary",
             count=len(would_match),
             default=f"dry-run: {len(would_match)} transaction(s) would be classified",
-        )
+        ),
     ]
     lines.extend(f"  match\t{str(row['transaction_id'])[:16]}...\t{row['classification']}" for row in would_match)
     return lines
@@ -248,7 +248,7 @@ def _rule_apply_lines(result: ApplyRulesResult) -> list[str]:
                 f"matched: {result.matched}, skipped: {result.skipped_already_classified}, "
                 f"no_match: {result.no_match}"
             ),
-        )
+        ),
     ]
     lines.extend(f"  applied\t{row.transaction_id[:16]}...\t{row.classification.value}" for row in result.applied)
     return lines
@@ -341,14 +341,14 @@ def rule_list(ctx: typer.Context) -> None:
                 "created_at": r.created_at.isoformat(),
             }
             for r in rules
-        ]
+        ],
     }
     lines: list[str] = [tr("cli.app.ledger.rule.list_header", default="priority\tclassification\tpattern\trule_id")]
     if not rules:
         lines.append(tr("cli.app.ledger.rule.list_empty", default="(no rules stored)"))
     for rule in rules:
         lines.append(
-            f"{rule.priority}\t{rule.classification.value}\t{rule.description_pattern}\t{rule.rule_id[:16]}..."
+            f"{rule.priority}\t{rule.classification.value}\t{rule.description_pattern}\t{rule.rule_id[:16]}...",
         )
     from ._ledger_payloads import RuleListResult
 

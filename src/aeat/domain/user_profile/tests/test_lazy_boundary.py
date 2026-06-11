@@ -68,7 +68,7 @@ def test_importing_domain_user_profile_does_not_load_registry() -> None:
             or name.startswith("aeat.domain.calculations.registry.")
         )
         print("\\n".join(leaked))
-        """
+        """,
     )
 
     assert completed.returncode == 0, completed.stderr
@@ -103,7 +103,7 @@ def test_portable_export_resolves_on_demand_via_getattr() -> None:
             or n.startswith("aeat.domain.calculations.registry.")
         )
         print(cls.__name__, before, after)
-        """
+        """,
     )
 
     assert completed.returncode == 0, completed.stderr

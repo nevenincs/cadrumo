@@ -19,6 +19,7 @@ from datetime import date, datetime
 from typing import NoReturn
 
 from ...application.auth import describe_provider_operator_impact
+from ...core import Period
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
@@ -143,7 +144,7 @@ class WorkflowEngine:
         self._run_tax_id: str | None = None
         self._run_started_at: datetime | None = None
         self._run_target_modelo: str | None = None
-        self._run_target_period: str | None = None
+        self._run_target_period: Period | None = None
         self._run_obligation: ModeloDeadline | None = None
 
     # ------------------------------------------------------------------ public
@@ -178,7 +179,7 @@ class WorkflowEngine:
         self,
         profile: TaxpayerProfile,
         modelo: str,
-        period: str,
+        period: Period,
         *,
         fail_on_warning: bool = False,
         today: date | None = None,
@@ -236,7 +237,7 @@ class WorkflowEngine:
         *,
         profile: TaxpayerProfile,
         target_modelo: str | None,
-        target_period: str | None,
+        target_period: Period | None,
         fail_on_warning: bool,
         today: date | None,
         resumed_from: str | None = None,
@@ -329,7 +330,8 @@ class WorkflowEngine:
         self._run_target_period = None
         self._run_obligation = None
         modelo_for_hash = target_modelo or (obligation.modelo if obligation is not None else "-")
-        period_for_hash = target_period or (obligation.period if obligation is not None else "-")
+        _period_raw: Period | None = target_period or (obligation.period if obligation is not None else None)
+        period_for_hash = str(_period_raw) if _period_raw is not None else "-"
         run_id = compute_run_id(
             tax_id=profile.tax_id,
             modelo=modelo_for_hash,
@@ -389,7 +391,7 @@ class WorkflowEngine:
         *,
         profile: TaxpayerProfile,
         target_modelo: str | None,
-        target_period: str | None,
+        target_period: Period | None,
         today: date,
         steps: list[WorkflowStep],
         purpose: WorkflowPurpose = WorkflowPurpose.FILE,
@@ -489,7 +491,7 @@ class WorkflowEngine:
                     summary=closed_summary,
                     details={
                         "modelo": obligation.modelo,
-                        "period": obligation.period,
+                        "period": str(obligation.period),
                         "closes_on": obligation.closes_on.isoformat(),
                     },
                 ),
@@ -511,7 +513,7 @@ class WorkflowEngine:
                 ),
                 details={
                     "modelo": obligation.modelo,
-                    "period": obligation.period,
+                    "period": str(obligation.period),
                     "closes_on": obligation.closes_on.isoformat(),
                 },
             ),
@@ -523,7 +525,7 @@ class WorkflowEngine:
         *,
         obligation: ModeloDeadline | None,
         target_modelo: str | None,
-        target_period: str | None,
+        target_period: Period | None,
         today: date,
         started: datetime,
         steps: list[WorkflowStep],
@@ -560,7 +562,7 @@ class WorkflowEngine:
                     ),
                     details={
                         "modelo": obligation.modelo,
-                        "period": obligation.period,
+                        "period": str(obligation.period),
                         "opens_on": obligation.opens_on.isoformat(),
                         "closes_on": obligation.closes_on.isoformat(),
                         "filing_window": window_state,
@@ -599,7 +601,7 @@ class WorkflowEngine:
                 ),
                 details={
                     "modelo": target_modelo,
-                    "period": target_period,
+                    "period": str(target_period),
                     "filing_window": FilingWindowState.ABSENT,
                     "deadline_role": "informational",
                 },
@@ -738,7 +740,7 @@ class WorkflowEngine:
                         summary=already_summary,
                         details={
                             "modelo": obligation.modelo,
-                            "period": obligation.period,
+                            "period": str(obligation.period),
                             "expediente_count": str(len(already)),
                         },
                     ),
@@ -843,7 +845,7 @@ class WorkflowEngine:
         mismatches: dict[str, str] = {}
         if draft.modelo != obligation.modelo:
             mismatches["modelo"] = f"{draft.modelo} != {obligation.modelo}"
-        if str(draft.period) != obligation.period:
+        if draft.period != obligation.period:
             mismatches["period"] = f"{draft.period} != {obligation.period}"
         if draft.profile_tax_id != profile.tax_id:
             mismatches["profile_tax_id"] = f"{draft.profile_tax_id} != {profile.tax_id}"
@@ -1106,7 +1108,8 @@ class WorkflowEngine:
             return None
         obligation = self._run_obligation
         modelo = self._run_target_modelo or (obligation.modelo if obligation is not None else "-")
-        period = self._run_target_period or (obligation.period if obligation is not None else "-")
+        _p_raw: Period | None = self._run_target_period or (obligation.period if obligation is not None else None)
+        period = str(_p_raw) if _p_raw is not None else "-"
         return compute_run_id(
             tax_id=self._run_tax_id,
             modelo=modelo,

@@ -151,7 +151,7 @@ def taxpayer_profile_from_mapping(
         activity_end_date=_parse_date(canonical.get("censo.activity_end_date")),
         incn_prior_12_months=_parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
         new_entity_first_two_profit_periods=_parse_optional_bool(
-            canonical.get("taxpayer_type.new_entity_first_two_profit_periods")
+            canonical.get("taxpayer_type.new_entity_first_two_profit_periods"),
         ),
         establecimiento_type=canonical.get("censo.establecimiento_type", ""),
         elected_withholding_pct=canonical.get("censo.elected_withholding_pct", ""),
@@ -164,16 +164,16 @@ def taxpayer_profile_from_mapping(
             # path-keyed value from record_to_path_values so the field is
             # reachable from persisted facts even before a wizard question is
             # added to the SETUP_FLOW.
-            typed.irpf_special_regime or canonical.get("irpf.special_regime", "")
+            typed.irpf_special_regime or canonical.get("irpf.special_regime", ""),
         ),
         special_regime_start_date=_parse_date(
-            typed.irpf_special_regime_start_date or canonical.get("irpf.special_regime_start_date")
+            typed.irpf_special_regime_start_date or canonical.get("irpf.special_regime_start_date"),
         ),
         fiscal_residency=_resolve_fiscal_residency(
-            typed.fiscal_residency or canonical.get("taxpayer_type.fiscal_residency", "")
+            typed.fiscal_residency or canonical.get("taxpayer_type.fiscal_residency", ""),
         ),
         country_of_fiscal_residence=_coerce_country_code(
-            typed.country_of_fiscal_residence or canonical.get("taxpayer_type.country_of_fiscal_residence", "")
+            typed.country_of_fiscal_residence or canonical.get("taxpayer_type.country_of_fiscal_residence", ""),
         ),
         representante_fiscal_nif=canonical.get("taxpayer_type.representante_fiscal_nif") or None,
         representante_fiscal_nombre=canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
@@ -270,13 +270,13 @@ def _parse_cross_period_group_member_rosters(canonical: dict[str, str]) -> tuple
                 filing_year=filing_year,
                 period=period,
                 member_nifs=member_nifs,
-            )
+            ),
         )
     return tuple(
         sorted(
             rosters,
             key=lambda item: (item.source_modelo, item.filing_year, item.period),
-        )
+        ),
     )
 
 

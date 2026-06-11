@@ -158,7 +158,7 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: 
     if not 2000 <= target_year <= 2099:
         raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
     digest = hashlib.sha256(
-        "\x1f".join((taxpayer_token, str(target_year), target_period.strip().upper())).encode(UTF_8_ENCODING)
+        "\x1f".join((taxpayer_token, str(target_year), target_period.strip().upper())).encode(UTF_8_ENCODING),
     ).hexdigest()
     return f"iva-wallet-decision:{digest}"
 
@@ -177,8 +177,8 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
                 decision.decided_at.isoformat(),
                 decision.wallet_captured_at.isoformat() if decision.wallet_captured_at is not None else "",
                 _decision_payload_digest(decision),
-            )
-        ).encode(UTF_8_ENCODING)
+            ),
+        ).encode(UTF_8_ENCODING),
     ).hexdigest()
     return f"iva-wallet-decision-event:{digest}"
 
@@ -195,7 +195,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
         observation = payload.observation
         return member_observation_key(
-            observation.modelo, observation.filing_year, observation.period, payload.member_nif
+            observation.modelo, observation.filing_year, observation.period, payload.member_nif,
         )
 
     def load_observation(
@@ -328,7 +328,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
                     decision.taxpayer_nif,
                     decision.decided_at,
                 ),
-            )
+            ),
         )
 
     def load_decision_history(
@@ -349,7 +349,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
             max_supported_version=self.schema_version,
         ):
             envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(
-                record.payload.decode(UTF_8_ENCODING)
+                record.payload.decode(UTF_8_ENCODING),
             )
             decision = envelope.payload.decision
             if (

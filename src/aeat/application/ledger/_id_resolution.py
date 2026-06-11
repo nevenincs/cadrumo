@@ -96,7 +96,7 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
     if len(matches) > 1:
         joined = ", ".join(matches)
         raise TransactionIdPrefixError(
-            f"transaction id prefix {prefix!r} matches {len(matches)} transactions: {joined}"
+            f"transaction id prefix {prefix!r} matches {len(matches)} transactions: {joined}",
         )
     return matches[0]
 
@@ -179,7 +179,7 @@ def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue)
         if len(resolved) > 1:
             joined = ", ".join(sorted(resolved))
             raise TransactionIdPrefixError(
-                f"transaction id prefix {prefix!r} matches {len(resolved)} transactions: {joined}"
+                f"transaction id prefix {prefix!r} matches {len(resolved)} transactions: {joined}",
             ) from live_error
         return next(iter(resolved))
 

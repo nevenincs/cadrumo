@@ -232,7 +232,7 @@ def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObj
     )
 
     full = query_ledger_review_rows(
-        LedgerReviewQuery(bucket_id="bucket-a"), transaction_repository=transaction_repository
+        LedgerReviewQuery(bucket_id="bucket-a"), transaction_repository=transaction_repository,
     )
     outgoing = query_ledger_review_rows(
         LedgerReviewQuery(bucket_id="bucket-a", direction=TransactionDirection.OUTGOING.value),

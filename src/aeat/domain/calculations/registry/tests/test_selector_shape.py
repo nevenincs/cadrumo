@@ -48,7 +48,7 @@ def _binding(
             "selector": selector,
             "legal_refs": ("lirpf.art-99",),
             "source_refs": ("aeat.test",),
-        }
+        },
     )
 
 

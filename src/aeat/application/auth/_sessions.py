@@ -368,7 +368,7 @@ async def ensure_authenticated_aeat_session(
 
             raise AeatLoginAssertionError(
                 "AEAT authentication completed but live verification failed: "
-                f"{_invalid_assertion_diagnostic(assertion)}"
+                f"{_invalid_assertion_diagnostic(assertion)}",
             )
         _assert_session_identity_matches_expected(session, expected_identity)
         return AuthenticatedAeatSessionResult(
@@ -439,7 +439,7 @@ def _provider_neutral_session_metadata(raw: dict[str, object]) -> PersistedAuthS
             "identity_nif": str(raw["identity_nif"]),
             "authenticated_at": _session_metadata_datetime(raw["authenticated_at"], field="authenticated_at"),
             "idle_deadline": _session_metadata_datetime(raw["idle_deadline"], field="idle_deadline"),
-        }
+        },
     )
 
 

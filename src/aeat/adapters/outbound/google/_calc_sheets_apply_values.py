@@ -35,7 +35,7 @@ def _build_value_data(value_cells: Iterable[SheetValueCell]) -> list[dict[str, A
             {
                 "range": cell.address.qualified(),
                 "values": [[_coerce_cell_value(cell.value)]],
-            }
+            },
         )
     return data
 
@@ -47,7 +47,7 @@ def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[
             {
                 "range": cell.address.qualified(),
                 "values": [[f"={cell.formula}"]],
-            }
+            },
         )
     return data
 
@@ -61,7 +61,7 @@ def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str
                 {
                     "range": column.header_address.qualified(),
                     "values": [[column.header_label]],
-                }
+                },
             )
     return data
 
@@ -100,6 +100,6 @@ def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
             {
                 "range": f"'{TabName.GUIDE.value}'!A{base_row + offset}",
                 "values": [[label, value]],
-            }
+            },
         )
     return data

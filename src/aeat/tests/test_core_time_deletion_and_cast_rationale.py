@@ -43,7 +43,7 @@ def test_no_source_imports_aeat_core_time() -> None:
             violations.append(str(rel))
     if violations:
         raise AssertionError(
-            f"{len(violations)} source file(s) still reference aeat.core._time:\n  " + "\n  ".join(violations)
+            f"{len(violations)} source file(s) still reference aeat.core._time:\n  " + "\n  ".join(violations),
         )
 
 
@@ -148,5 +148,5 @@ def test_every_production_cast_has_rationale_marker(
         raise AssertionError(
             f"{len(violations)} cast() call(s) lack a CAST-RATIONALE-* marker:\n  {joined}\n\n"
             "Add a '# CAST-RATIONALE-<SLUG>: ...' comment on the cast line or "
-            "in the immediately preceding comment block."
+            "in the immediately preceding comment block.",
         )

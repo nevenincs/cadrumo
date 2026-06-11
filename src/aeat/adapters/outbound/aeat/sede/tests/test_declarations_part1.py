@@ -193,7 +193,7 @@ def test_modelo_303_submitted_file_fallback_refuses_invalid_page_record_footer()
             casilla_87="00000000000000000",
             casilla_69="N0000000000025802",
             casilla_71="N0000000000025802",
-        )
+        ),
     )
     body[1005:1017] = b"</T30303001>"
 

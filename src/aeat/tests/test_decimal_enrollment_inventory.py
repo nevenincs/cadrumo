@@ -34,7 +34,7 @@ _COERCE_MODULE = _SRC_ROOT / "core" / "decimal" / "_coerce.py"
 
 # Pattern 1: inline quantize to cent precision with ROUND_HALF_UP.
 _QUANTIZE_PATTERN = re.compile(
-    r'\.quantize\s*\(\s*Decimal\s*\(\s*["\']0\.01["\']\s*\)\s*,\s*rounding\s*=\s*ROUND_HALF_UP\s*\)'
+    r'\.quantize\s*\(\s*Decimal\s*\(\s*["\']0\.01["\']\s*\)\s*,\s*rounding\s*=\s*ROUND_HALF_UP\s*\)',
 )
 
 # Pattern 2: bare Decimal(str(...)) coercion.
@@ -103,7 +103,7 @@ def test_no_inline_quantize_round_half_up() -> None:
         raise AssertionError(
             f"{len(violations)} inline quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)"
             f" call(s) found in production code:\n  {joined}\n\n"
-            "Replace each call with round_to_cents() from aeat.core.money."
+            "Replace each call with round_to_cents() from aeat.core.money.",
         )
 
 
@@ -119,5 +119,5 @@ def test_no_bare_decimal_str_coercion() -> None:
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} bare Decimal(str()) coercion call(s) found in production code:\n  {joined}\n\n"
-            "Replace each call with coerce_decimal() from aeat.core.decimal."
+            "Replace each call with coerce_decimal() from aeat.core.decimal.",
         )

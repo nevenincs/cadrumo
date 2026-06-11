@@ -166,7 +166,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                         "Pass --confirm to acknowledge: this declares the M303 carry-forward "
                         "balance for the specified period. Filing accuracy depends on correct seeding."
                     ),
-                )
+                ),
             )
 
         try:
@@ -177,7 +177,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                     "cli.app.modelo.iva_wallet.seed_invalid_amount",
                     amount=amount,
                     default=f"Amount {amount!r} is not a valid decimal.",
-                )
+                ),
             ) from exc
 
         try:
@@ -193,7 +193,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                 tr(
                     exc.translated_message,
                     default="Amount must be non-negative.",
-                )
+                ),
             ) from exc
         except ModeloIvaWalletSeedNoTaxpayerError as exc:
             assert exc.translated_message is not None
@@ -201,7 +201,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                 tr(
                     exc.translated_message,
                     default="Active profile has no identity.tax_id configured. Set it via config profile.",
-                )
+                ),
             ) from exc
         except IvaCompensationSeedConflictError as exc:
             raise typer.BadParameter(
@@ -213,7 +213,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                         f"A compensation state for {filing_year}/{period} already exists. "
                         "Seeding is refused to prevent overwriting."
                     ),
-                )
+                ),
             ) from exc
 
         seed_result = IvaWalletSeedResult(
@@ -316,7 +316,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                         "Pass --confirm to acknowledge: this overwrites the previously seeded M303 "
                         "carry-forward balance for the specified period."
                     ),
-                )
+                ),
             )
 
         clean_reason = reason.strip()
@@ -325,7 +325,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                 tr(
                     "cli.app.modelo.iva_wallet.correct_reason_required",
                     default="--reason must not be blank; record why the opening balance is being corrected.",
-                )
+                ),
             )
 
         try:
@@ -336,7 +336,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                     "cli.app.modelo.iva_wallet.seed_invalid_amount",
                     amount=amount,
                     default=f"Amount {amount!r} is not a valid decimal.",
-                )
+                ),
             ) from exc
 
         previous_state = _load_existing_seeded_period(active_bucket_id(), filing_year, period)
@@ -358,7 +358,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                 tr(
                     exc.translated_message,
                     default="Active profile has no identity.tax_id configured. Set it via config profile.",
-                )
+                ),
             ) from exc
         except ModeloIvaWalletCorrectionNoRecordError as exc:
             assert exc.translated_message is not None
@@ -371,7 +371,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                         f"No seeded compensation record exists for {filing_year}/{period}. "
                         "Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing seed."
                     ),
-                )
+                ),
             ) from exc
         except ModeloIvaWalletCorrectionSealedError as exc:
             assert exc.translated_message is not None
@@ -388,7 +388,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                         f"({context.get('blocking_filing_year', '?')}/{context.get('blocking_period', '?')}) "
                         "has consumed this seeded compensation basis. Changing it would alter a filed return."
                     ),
-                )
+                ),
             ) from exc
 
         correct_result = IvaWalletCorrectResult(

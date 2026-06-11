@@ -117,7 +117,7 @@ def test_config_repair_profile_cli_redacts_profile_identifiers() -> None:
 
     named_text = invoke_cached_cli(["config", "repair", "profile", "--profile", "operator"])
     named_payload_result = invoke_cached_cli(
-        ["--format", "json", "config", "repair", "profile", "--profile", "operator"]
+        ["--format", "json", "config", "repair", "profile", "--profile", "operator"],
     )
     assert named_text.exit_code == 0, named_text.output
     assert named_payload_result.exit_code == 0, named_payload_result.output
@@ -158,7 +158,7 @@ def test_config_repair_integrity_objects_cli_is_metadata_only_for_unreadable_row
 
     text = invoke_cached_cli(["config", "repair", "integrity", "objects", "--namespace", namespace])
     payload_result = invoke_cached_cli(
-        ["--format", "json", "config", "repair", "integrity", "objects", "--namespace", namespace]
+        ["--format", "json", "config", "repair", "integrity", "objects", "--namespace", namespace],
     )
 
     assert text.exit_code == 0, text.output
@@ -203,7 +203,7 @@ def test_config_repair_quarantine_moves_unreadable_rows_without_disclosing_paylo
 
     result = invoke_cached_cli(["config", "repair", "quarantine", "--yes"])
     payload_result = invoke_cached_cli(
-        ["--format", "json", "config", "repair", "integrity", "objects", "--namespace", namespace]
+        ["--format", "json", "config", "repair", "integrity", "objects", "--namespace", namespace],
     )
 
     assert result.exit_code == 0, result.output
@@ -345,6 +345,6 @@ def _create_operator_profile() -> None:
             "design",
             "--iva-regime",
             "GENERAL",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output

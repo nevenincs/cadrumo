@@ -30,7 +30,7 @@ from typing import Literal, Self, override
 from pydantic import BaseModel, Field, ValidationError, field_serializer, field_validator, model_validator
 from pydantic_core import core_schema
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.identity import BucketId

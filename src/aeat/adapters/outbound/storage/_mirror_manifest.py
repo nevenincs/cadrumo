@@ -102,7 +102,7 @@ def inspect_remote_mirror_upload(
                     namespace=entry.namespace,
                     object_key_hmac=entry.object_key_hmac,
                     detail="ciphertext object is missing from the remote provider",
-                )
+                ),
             )
             continue
         except OutboundStorageIntegrityError as exc:
@@ -112,7 +112,7 @@ def inspect_remote_mirror_upload(
                     namespace=entry.namespace,
                     object_key_hmac=entry.object_key_hmac,
                     detail=str(exc),
-                )
+                ),
             )
             continue
         if not _provider_payload_matches_manifest_entry(payload, metadata, entry):
@@ -122,7 +122,7 @@ def inspect_remote_mirror_upload(
                     namespace=entry.namespace,
                     object_key_hmac=entry.object_key_hmac,
                     detail="remote ciphertext metadata does not match the expected manifest entry",
-                )
+                ),
             )
     return RemoteMirrorInspection(namespace=expected_manifest.namespace, issues=tuple(issues))
 
@@ -143,7 +143,7 @@ def inspect_remote_mirror_download(
                     namespace=entry.namespace,
                     object_key_hmac=entry.object_key_hmac,
                     detail=str(exc),
-                )
+                ),
             )
             continue
         if not _provider_payload_matches_manifest_entry(payload, metadata, entry):
@@ -153,7 +153,7 @@ def inspect_remote_mirror_download(
                     namespace=entry.namespace,
                     object_key_hmac=entry.object_key_hmac,
                     detail="remote ciphertext metadata does not match the manifest entry",
-                )
+                ),
             )
     return RemoteMirrorInspection(namespace=remote_manifest.namespace, issues=tuple(issues))
 
@@ -222,7 +222,7 @@ def _compare_manifest_objects(
                 namespace=local.namespace,
                 object_key_hmac=object_key_hmac,
                 detail="local manifest entry is absent from the remote manifest",
-            )
+            ),
         )
     for object_key_hmac in sorted(remote_by_key.keys() - local_by_key.keys()):
         issues.append(
@@ -231,7 +231,7 @@ def _compare_manifest_objects(
                 namespace=local.namespace,
                 object_key_hmac=object_key_hmac,
                 detail="remote manifest entry is absent from the local manifest",
-            )
+            ),
         )
     for object_key_hmac in sorted(local_by_key.keys() & remote_by_key.keys()):
         local_entry = local_by_key[object_key_hmac]
@@ -244,7 +244,7 @@ def _compare_manifest_objects(
                         namespace=local.namespace,
                         object_key_hmac=object_key_hmac,
                         detail="matching revision ids carry different ciphertext hashes",
-                    )
+                    ),
                 )
             continue
         if _is_stale_remote_entry(local_entry=local_entry, remote_entry=remote_entry):
@@ -254,7 +254,7 @@ def _compare_manifest_objects(
                     namespace=local.namespace,
                     object_key_hmac=object_key_hmac,
                     detail="remote manifest is behind the local storage revision",
-                )
+                ),
             )
             continue
         issues.append(
@@ -263,7 +263,7 @@ def _compare_manifest_objects(
                 namespace=local.namespace,
                 object_key_hmac=object_key_hmac,
                 detail="local and remote storage revisions are not in the same lineage",
-            )
+            ),
         )
     return tuple(issues)
 

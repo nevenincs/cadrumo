@@ -47,8 +47,8 @@ def test_deterministic_adapter_contract() -> None:
                 max_tokens=32,
                 temperature=0.0,
                 timeout_s=30,
-            )
-        )
+            ),
+        ),
     )
     assert completion.text == "done:hello"
     assert adapter.calls == 1

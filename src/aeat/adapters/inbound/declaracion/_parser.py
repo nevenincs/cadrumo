@@ -470,7 +470,7 @@ def _classify_target(
             source_page=page_number,
             source_bbox=None,
             extraction_confidence=1.0,
-        )
+        ),
     )
 
 
@@ -612,7 +612,7 @@ def _find_bbox_casilla_hits(
 
         for anchor_word in anchor_words:
             value_word = _resolve_value_word(
-                words, anchor_word, anchor_spec.value_offset, value_x_max=anchor_spec.value_x_max
+                words, anchor_word, anchor_spec.value_offset, value_x_max=anchor_spec.value_x_max,
             )
             if value_word is not None:
                 hits.append((page_index, value_word["text"]))

@@ -35,7 +35,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING

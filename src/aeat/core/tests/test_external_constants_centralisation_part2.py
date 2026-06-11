@@ -155,7 +155,7 @@ def test_no_bare_iva_rate_decimal_literal_in_contribuyente_assets() -> None:
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "21.00":
             offenders.append(
-                f"assets/__init__.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT"
+                f"assets/__init__.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT",
             )
 
     assert offenders == [], (
@@ -181,7 +181,7 @@ def test_no_bare_iva_rate_decimal_literal_in_contribuyente_inventory() -> None:
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "21.00":
             offenders.append(
-                f"inventory/__init__.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT"
+                f"inventory/__init__.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT",
             )
 
     assert offenders == [], (
@@ -208,7 +208,7 @@ def test_no_bare_iva_rate_string_literal_in_ledger_inventory_cli() -> None:
             continue
         offenders.append(
             f"_ledger_inventory_cli.py:{node.lineno}: bare '21.00' string literal; "
-            f"use str(DEFAULT_IVA_GENERAL_RATE_PCT)"
+            f"use str(DEFAULT_IVA_GENERAL_RATE_PCT)",
         )
 
     assert offenders == [], (
@@ -566,7 +566,7 @@ def test_no_bare_1200_maternidad_cap_literal_in_family() -> None:
         for arg in node.args:
             if isinstance(arg, ast.Constant) and arg.value == 1200:
                 offenders.append(
-                    f"family.py:{node.lineno}: bare 1200 literal in min(); use DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"
+                    f"family.py:{node.lineno}: bare 1200 literal in min(); use DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
                 )
 
     assert offenders == [], "Bare 1200 maternidad cap literals found in family.py:\n" + "\n".join(offenders)
@@ -594,11 +594,11 @@ def test_no_bare_1200_maternidad_cap_literal_in_deduccion_maternidad() -> None:
             if isinstance(arg, ast.Constant) and arg.value == 1200:
                 offenders.append(
                     f"_deduccion_maternidad.py:{node.lineno}: bare 1200 literal in min(); "
-                    f"use DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"
+                    f"use DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
                 )
 
     assert offenders == [], "Bare 1200 maternidad cap literals found in _deduccion_maternidad.py:\n" + "\n".join(
-        offenders
+        offenders,
     )
 
 
@@ -660,7 +660,7 @@ def test_no_bare_1000_guarderia_cap_literal_in_family() -> None:
         for arg in node.args:
             if isinstance(arg, ast.Constant) and arg.value == 1000:
                 offenders.append(
-                    f"family.py:{node.lineno}: bare 1000 literal in min(); use INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR"
+                    f"family.py:{node.lineno}: bare 1000 literal in min(); use INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
                 )
 
     assert offenders == [], "Bare 1000 guarderia cap literals found in family.py:\n" + "\n".join(offenders)
@@ -739,7 +739,7 @@ def test_no_bare_amortizacion_decimal_literal_in_amortization_ledger() -> None:
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "0.03":
             offenders.append(
-                f"_amortization_ledger.py:{node.lineno}: bare Decimal('0.03'); use AMORTIZACION_INMUEBLE_RATE"
+                f"_amortization_ledger.py:{node.lineno}: bare Decimal('0.03'); use AMORTIZACION_INMUEBLE_RATE",
             )
 
     assert offenders == [], (
@@ -809,7 +809,7 @@ def test_no_bare_rebeca_fraction_decimal_literal_in_maritime_exemption() -> None
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "0.50":
             offenders.append(
-                f"_maritime_exemption.py:{node.lineno}: bare Decimal('0.50'); use REBECA_MARITIME_EXEMPTION_FRACTION"
+                f"_maritime_exemption.py:{node.lineno}: bare Decimal('0.50'); use REBECA_MARITIME_EXEMPTION_FRACTION",
             )
 
     assert offenders == [], (

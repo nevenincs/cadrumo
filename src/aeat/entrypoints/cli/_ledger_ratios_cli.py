@@ -172,7 +172,8 @@ def _resolve_category(raw: str):
 @ratios_app.command(
     "list",
     help=tr(
-        "cli.app.ledger.ratios.list_help", default="List every per-category usage-ratio override on the active profile.",
+        "cli.app.ledger.ratios.list_help",
+        default="List every per-category usage-ratio override on the active profile.",
     ),
 )
 def ratios_list(

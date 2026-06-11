@@ -172,7 +172,7 @@ def _legal_reference(
             "kind": kind,
             "article": article,
             "notes": reference.notes if notes is None else notes,
-        }
+        },
     )
 
 
@@ -183,7 +183,7 @@ def _source_reference(path: str, payload: bytes) -> SourceReference:
             "corpus_path": path,
             "sha256": hashlib.sha256(payload).hexdigest(),
             "bytes": len(payload),
-        }
+        },
     )
 
 
@@ -289,7 +289,7 @@ def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path
         update={
             "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
             "required_text": ("20 por ciento del rendimiento neto",),
-        }
+        },
     )
 
     with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
@@ -307,7 +307,7 @@ def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Pat
         update={
             "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
             "required_text": ("20 por ciento del rendimiento neto",),
-        }
+        },
     )
 
     assert reference.required_text, "reference must declare required_text for the verifier to check"
@@ -334,7 +334,7 @@ def test_verify_legal_catalogue_corpus_strict_false_skips_required_text(tmp_path
         update={
             "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
             "required_text": ("phrase absent from corpus",),
-        }
+        },
     )
 
     assert reference.required_text, "reference must declare required_text for the check to be meaningful"
@@ -363,7 +363,7 @@ def test_registry_validator_corpus_strict_false_does_not_abort(tmp_path: Path) -
         update={
             "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
             "required_text": ("phrase absent from corpus",),
-        }
+        },
     )
     # Wrap in minimal catalogues (no sources needed for this check).
     from .._schema import RegistryCatalogues
@@ -428,7 +428,7 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
                 "fetched_at": "2026-05-06T00:00:00Z",
                 "definition_reviewed_by": "operator",
                 "definition_reviewed_at": "2026-06-08",
-            }
+            },
         ),
         encoding="utf-8",
     )
@@ -486,7 +486,7 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
                 "source": {"manual_url": f"{Settings.external_constants().aeat.domains.sede}/", "page": 1},
                 "definition_reviewed_by": "operator",
                 "definition_reviewed_at": "2026-06-08",
-            }
+            },
         ),
         encoding="utf-8",
     )

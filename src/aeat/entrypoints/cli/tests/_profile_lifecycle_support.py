@@ -104,7 +104,7 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
                 profile_id=name,
                 overrides=overrides,
                 enforce_unique_tax_id=False,
-            )
+            ),
         )
 
 

@@ -236,7 +236,7 @@ async def _capture_iva_compensation_history_with_session(
                         "stage": "walk_declarations_register",
                         "modelo": Modelo.M303.value,
                         "ejercicio": year,
-                    }
+                    },
                 )
             declarations = await register.walk(modelo=Modelo.M303.value, ejercicio=year)
             for declaration in _latest_declarations_by_period(declarations):
@@ -247,7 +247,7 @@ async def _capture_iva_compensation_history_with_session(
                             "modelo": declaration.modelo,
                             "ejercicio": declaration.ejercicio,
                             "period": declaration.period,
-                        }
+                        },
                     )
                 try:
                     observation = await asyncio.wait_for(
@@ -498,7 +498,7 @@ def persist_and_reconcile_iva_compensation_wallet(
         decision_repository
         if decision_repository is not None
         else _IvaWalletDecisionRepository(
-            objects=repository.secure_object_repository if repository is not None else None
+            objects=repository.secure_object_repository if repository is not None else None,
         )
     )
     loaded_decision = decision_repo.load_decision(
@@ -508,7 +508,7 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
     if loaded_decision != decision:
         raise LiveApplicationError(
-            "persisted IVA wallet reconciliation decision did not reload with identical evidence"
+            "persisted IVA wallet reconciliation decision did not reload with identical evidence",
         )
     return IvaWalletCaptureReport(
         taxpayer_ref=_taxpayer_ref(reloaded.taxpayer_nif),
@@ -577,7 +577,7 @@ async def _capture_iva_compensation_wallet_with_session(
                 "stage": "fetch_iva_compensation_wallet",
                 "target_year": target_year,
                 "target_period": target_period,
-            }
+            },
         )
     observation: _IvaCompensationWalletObservation = await _fetch_iva_compensation_wallet(
         session,
@@ -759,7 +759,7 @@ async def _capture_iva_compensation_history_by_year_with_session(
                     "ejercicio": year,
                     "year_from": year_from,
                     "year_to": year_to,
-                }
+                },
             )
         report = await _capture_iva_compensation_history_with_session(
             session,
@@ -966,7 +966,7 @@ def _iva_remote_state_acquisition_manifest(
             captured_at.isoformat(),
             report.auth.model_dump_json(),
             *(surface.model_dump_json() for surface in surfaces),
-        )
+        ),
     )
     digest = _sha256_hex(manifest_seed.encode("utf-8"))
     timestamp = captured_at.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ")

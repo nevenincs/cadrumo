@@ -53,7 +53,7 @@ def test_gmail_link_refused_with_gmail_scope() -> None:
 def test_external_url_refused_with_drive_readonly_scope() -> None:
     with pytest.raises(OutboundStoragePermissionError) as excinfo:
         resolve_document_link(
-            source=AttachmentSource.URL, reference="https://example.com/justificante.pdf", credentials=None
+            source=AttachmentSource.URL, reference="https://example.com/justificante.pdf", credentials=None,
         )
     assert excinfo.value.context is not None
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"
@@ -82,7 +82,7 @@ class _InMemoryDriveFiles:
         self._payload = payload
         self._recorder = recorder
 
-    def get_media(self, *, fileId: str) -> _InMemoryDriveRequest:  # noqa: N803 — Google API kwarg name
+    def get_media(self, *, fileId: str) -> _InMemoryDriveRequest:  # noqa: N803 - Google API kwarg
         self._recorder["file_id"] = fileId
         return _InMemoryDriveRequest(self._payload)
 
@@ -107,7 +107,7 @@ def test_drive_download_preserves_google_media_bytes() -> None:
 
 def test_drive_403_surfaces_drive_readonly_scope() -> None:
     class _Files:
-        def get_media(self, *, fileId: str):  # noqa: N803
+        def get_media(self, *, fileId: str):  # noqa: N803 - Google API kwarg
             class _Req:
                 def execute(self) -> bytes:
                     raise HttpError(Response({"status": "403", "reason": "Forbidden"}), b"{}")

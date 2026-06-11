@@ -134,7 +134,7 @@ class ProfileLifecycleService:
                     status=record.status,
                     created_at=record.created_at,
                     updated_at=record.updated_at,
-                )
+                ),
             )
         listings.sort(key=lambda row: row.profile_id)
         return ProfileListResult(profiles=tuple(listings))
@@ -223,7 +223,7 @@ class ProfileLifecycleService:
             update={
                 "display_name": command.target_display_name,
                 "updated_at": now,
-            }
+            },
         )
         self._repository.save(target)
         self._emit_event(
@@ -257,7 +257,7 @@ class ProfileLifecycleService:
                 "updated_at": now,
                 "removed_at": None,
                 "status": UserProfileStatus.ACTIVE,
-            }
+            },
         )
         self._repository.save(target)
         self._emit_event(
@@ -364,7 +364,7 @@ def _profile_tombstoned_error(profile_id: str, *, action: Literal["rename", "dup
             context={"profile_id": profile_id, "action": action},
             translated_message="application.user_profile.errors.lifecycle_profile_tombstoned_rename",
         )
-    elif action == "duplicate":
+    if action == "duplicate":
         return ProfileNotFoundError(
             _PROFILE_TOMBSTONED_DUPLICATE_MESSAGE,
             context={"profile_id": profile_id, "action": action},

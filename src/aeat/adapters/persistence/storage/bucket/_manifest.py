@@ -24,7 +24,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time._utc import validate_utc_aware
 from .._kdf_salt import decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 

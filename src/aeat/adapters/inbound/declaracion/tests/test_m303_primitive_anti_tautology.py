@@ -54,7 +54,7 @@ _COMPUTED_CASILLAS_M303 = frozenset(
         "71",
         "iva.compensacion-generada-periodo",
         "iva.compensacion-disponible-fin-periodo",
-    }
+    },
 )
 
 
@@ -77,7 +77,7 @@ def _run_engine(inputs: dict[str, Decimal], year: int, period: str) -> dict[str,
         pytest.fail(
             "BINDING-GAP: calculate_registry_snapshot raised RegistryValidationError.\n"
             f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}"
+            f"  inputs supplied: {sorted(inputs)}",
         )
     return dict(result.values)
 

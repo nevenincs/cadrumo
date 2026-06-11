@@ -73,7 +73,7 @@ def _q(value: Decimal) -> Decimal:
 
 
 def _derive_base_iva(
-    rule: dict[str, Any], native_amount_abs: Decimal
+    rule: dict[str, Any], native_amount_abs: Decimal,
 ) -> tuple[Decimal | None, Decimal | None, Decimal | None]:
     """Return (taxable_base, iva_rate, iva_amount) per the oracle base_mode."""
     mode = rule["base_mode"]

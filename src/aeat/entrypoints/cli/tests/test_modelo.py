@@ -243,7 +243,7 @@ def test_work_amend_batch_reports_partial_missing_options() -> None:
             "f" * 64,
             "--kind",
             "complementaria",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -300,7 +300,7 @@ def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
             period,
             "--revision",
             "2009-y-siguientes",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, f"period {period!r} should be rejected; got: {result.output}"
@@ -332,7 +332,7 @@ def test_work_create_rejects_unknown_modelo() -> None:
             "Q1",
             "--revision",
             "2009-y-siguientes",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -365,7 +365,7 @@ def test_work_create_rejects_out_of_range_year(year: str) -> None:
             "Q1",
             "--revision",
             "2009-y-siguientes",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -391,7 +391,7 @@ def test_work_create_rejects_unknown_revision() -> None:
             "Q1",
             "--revision",
             "nonexistent-revision",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -448,7 +448,7 @@ def test_work_create_year_repeated_into_period_explains_composition() -> None:
             "2024",
             "--revision",
             "2024",
-        ]
+        ],
     )
 
     assert result.exit_code != 0, result.output

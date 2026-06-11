@@ -39,7 +39,7 @@ def _create_profile() -> None:
             "--tax-id", "12345678Z",
             "--name", "Operator",
             "--activity", "design",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
 
@@ -51,7 +51,7 @@ def _create_202_work_unit(period: str) -> str:
             "app", "modelo", "work", "create",
             "--modelo", "202", "--year", "2026", "--period", period,
             "--revision", "2025-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)

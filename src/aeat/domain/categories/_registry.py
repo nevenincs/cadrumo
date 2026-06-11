@@ -11,7 +11,7 @@ from typing import cast
 
 from pydantic import ValidationError
 
-from ...core._toml import read_toml, to_str_keyed_dict
+from ...core import read_toml, to_str_keyed_dict
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
@@ -146,7 +146,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
             "display_label": tr(str(data.get("display_label"))),
             "proportionality": _parse_rule(raw_rule),
             "iva_hint": (IvaDeductibilityHint(str(raw_iva_hint)) if raw_iva_hint is not None else None),
-        }
+        },
     )
 
 
@@ -173,7 +173,7 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
             "statutory_cap_variants": tuple(_parse_cap_variant(raw_variant) for raw_variant in raw_variants),
             "citations": tuple(_parse_citation(raw_citation) for raw_citation in raw_citations),
             "notes": tr(str(data.get("notes"))),
-        }
+        },
     )
 
 
@@ -187,7 +187,7 @@ def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
             "id": data.get("id"),
             "label": tr(str(data.get("label"))),
             "statutory_cap_eur_per_day": _decimal_or_none(data.get("statutory_cap_eur_per_day")),
-        }
+        },
     )
 
 
@@ -206,7 +206,7 @@ def _parse_citation(raw_citation: object) -> CategoryCitation:
             "locator": data.get("locator"),
             "url": parse_http_url(url),
             "quote": tr(str(data.get("quote"))),
-        }
+        },
     )
 
 

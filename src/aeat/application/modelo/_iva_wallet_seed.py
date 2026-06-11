@@ -29,7 +29,7 @@ _SEALED_REVISION_STATES = frozenset(
         CalculationRevisionState.VERIFICADO_COMPLETO,
         CalculationRevisionState.PRESENTADO,
         CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }
+    },
 )
 
 
@@ -161,7 +161,7 @@ def _sealed_modelo_303_blocker_for_period(
                 revision.calculation_revision_id,
                 work_unit.filing_year,
                 work_unit.period,
-            )
+            ),
         )
     if not candidates:
         return None

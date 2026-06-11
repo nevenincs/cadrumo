@@ -229,7 +229,7 @@ def _store_profile_with_nif(nif: str) -> None:
             facts=(UserProfileFact(path="identity.tax_id", value=nif),),
             created_at=_created_at,
             updated_at=_created_at,
-        )
+        ),
     )
 
 
@@ -511,7 +511,7 @@ def _seed_full_autónomo_profile_for_guidance(bucket_id: str) -> None:
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="provenance.source", value="manual_cli"),
             ),
-        )
+        ),
     )
 
 
@@ -551,7 +551,7 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
                 "1T",
                 "--revision",
                 "2023-y-siguientes",
-            ]
+            ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
         import json as _json
@@ -614,7 +614,7 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
                 "1T",
                 "--revision",
                 "2023-y-siguientes",
-            ]
+            ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
         import json as _json

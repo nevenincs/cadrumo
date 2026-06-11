@@ -28,12 +28,6 @@ import pytest
 # wizard package hits the "Wizard catalogue has not been registered"
 # guard. Documented in #158 entry 2 and ADR pending under
 # session-honest-followups P03.S19.
-from .application.wizard import (
-    _catalogue as _wizard_catalogue,  # noqa: F401  # wizard catalogue registration side effect
-)
-from .application.wizard import (
-    _persistence as _wizard_persistence,  # noqa: F401  # wizard persistence registration side effect
-)
 from .core.external_constants import UTF_8_ENCODING
 
 _SRC_AEAT_ROOT: Path = Path(__file__).resolve().parent

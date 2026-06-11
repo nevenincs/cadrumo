@@ -45,7 +45,7 @@ def lookup_rate(
             continue
         return rate
     raise IvaRateNotFoundError(
-        f"no rate for member_state={member_state.value!r} kind={kind.value!r} on_date={on_date.isoformat()}"
+        f"no rate for member_state={member_state.value!r} kind={kind.value!r} on_date={on_date.isoformat()}",
     )
 
 

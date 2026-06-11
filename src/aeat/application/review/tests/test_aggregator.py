@@ -78,7 +78,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
                 state,
                 profile_id="test",
                 overrides={"identity.tax_id": "00000000T"},
-            )
+            ),
         )
 
         raw = RawTransaction(
@@ -126,7 +126,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
                 "lines": (line,),
                 "payment_status": PaymentStatus.PENDING,
                 "linked_transaction_ids": (),
-            }
+            },
         )
         InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((invoice,)))
 

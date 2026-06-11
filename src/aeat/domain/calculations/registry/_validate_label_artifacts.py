@@ -52,7 +52,7 @@ def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tupl
                             artifact="unresolved_format_placeholder",
                             placeholder_token=match.group(0),
                             label=casilla.label,
-                        )
+                        ),
                     )
     return tuple(findings)
 

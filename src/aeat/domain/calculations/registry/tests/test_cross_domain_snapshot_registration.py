@@ -98,7 +98,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
             "routing cross-domain check"
         )
         print("M100_GATE_REGISTERED")
-        """
+        """,
     )
 
     assert result.returncode == 0, f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
@@ -143,7 +143,7 @@ def test_m100_build_succeeds_when_renta_is_imported() -> None:
         )
         assert snapshot.modelo.id == "100"
         print("M100_BUILD_OK")
-        """
+        """,
     )
 
     assert result.returncode == 0, f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
@@ -193,7 +193,7 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         )
         assert snapshot.modelo.id == "303"
         print("M303_BUILD_OK")
-        """
+        """,
     )
 
     assert result.returncode == 0, f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"

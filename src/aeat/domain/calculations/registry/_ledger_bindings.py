@@ -158,13 +158,13 @@ def validate_ledger_oss_aggregation_binding_definition(
         op = str(binding.aggregation.get("op", "sum"))
         if op != "sum":
             raise RegistryValidationError(
-                f"binding {binding.id!r} ledger_oss_aggregation supports only aggregation op 'sum', got {op!r}"
+                f"binding {binding.id!r} ledger_oss_aggregation supports only aggregation op 'sum', got {op!r}",
             )
 
     if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:
         raise RegistryValidationError(
             f"binding {binding.id!r} ledger_oss_aggregation supports only "
-            f"facts {{iva_amount_sum, base_amount_sum}}, got {selector.fact!r}"
+            f"facts {{iva_amount_sum, base_amount_sum}}, got {selector.fact!r}",
         )
 
 
@@ -326,13 +326,13 @@ def validate_ledger_iva_aggregation_binding_definition(
         op = str(binding.aggregation.get("op", "sum"))
         if op != "sum":
             raise RegistryValidationError(
-                f"binding {binding.id!r} ledger_iva_aggregation supports only aggregation op 'sum', got {op!r}"
+                f"binding {binding.id!r} ledger_iva_aggregation supports only aggregation op 'sum', got {op!r}",
             )
 
     if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:
         raise RegistryValidationError(
             f"binding {binding.id!r} ledger_iva_aggregation supports only "
-            f"facts {{iva_amount_sum, base_amount_sum}}, got {selector.fact!r}"
+            f"facts {{iva_amount_sum, base_amount_sum}}, got {selector.fact!r}",
         )
 
 
@@ -490,7 +490,7 @@ def _renta_ledger_expense_selector(binding: DataBindingDefinition) -> _RentaLedg
         return _RentaLedgerExpenseSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_renta_expense_aggregation selector"
+            f"binding {binding.id!r} has malformed ledger_renta_expense_aggregation selector",
         ) from exc
 
 
@@ -502,17 +502,17 @@ def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBi
     if selector.target_casilla not in _RENTA_100_FIRST_SLICE_CASILLAS:
         raise RegistryValidationError(
             f"binding {binding.id!r} target_casilla {selector.target_casilla!r} "
-            "is outside the first Modelo 100 Renta ledger expense slice"
+            "is outside the first Modelo 100 Renta ledger expense slice",
         )
     op = str((binding.aggregation or {}).get("op", "sum"))
     if op != "sum":
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only aggregation op 'sum', got {op!r}"
+            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only aggregation op 'sum', got {op!r}",
         )
     if selector.fact != "deductible_amount_sum":
         raise RegistryValidationError(
             f"binding {binding.id!r} ledger_renta_expense_aggregation supports only "
-            f"fact 'deductible_amount_sum', got {selector.fact!r}"
+            f"fact 'deductible_amount_sum', got {selector.fact!r}",
         )
 
 
@@ -577,7 +577,7 @@ def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedge
         return _RentaLedgerIncomeSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_renta_income_aggregation selector"
+            f"binding {binding.id!r} has malformed ledger_renta_income_aggregation selector",
         ) from exc
 
 
@@ -592,17 +592,17 @@ def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBin
     if selector.target_casilla not in _RENTA_130_INCOME_CASILLAS:
         raise RegistryValidationError(
             f"binding {binding.id!r} target_casilla {selector.target_casilla!r} "
-            "is outside the supported Modelo 130 income casillas"
+            "is outside the supported Modelo 130 income casillas",
         )
     op = str((binding.aggregation or {}).get("op", "sum"))
     if op != "sum":
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_income_aggregation supports only aggregation op 'sum', got {op!r}"
+            f"binding {binding.id!r} ledger_renta_income_aggregation supports only aggregation op 'sum', got {op!r}",
         )
     if selector.fact not in _RENTA_130_INCOME_SUPPORTED_FACTS:
         raise RegistryValidationError(
             f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
-            f"facts {sorted(_RENTA_130_INCOME_SUPPORTED_FACTS)!r}, got {selector.fact!r}"
+            f"facts {sorted(_RENTA_130_INCOME_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
         )
 
 

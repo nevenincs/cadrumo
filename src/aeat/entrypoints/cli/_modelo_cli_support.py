@@ -61,7 +61,7 @@ _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _CASILLA_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(CasillaId)
 _ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "contraparte"})
 _ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
-    {"porcentaje", "importe", "importe_Q1", "importe_Q2", "importe_Q3", "importe_Q4"}
+    {"porcentaje", "importe", "importe_Q1", "importe_Q2", "importe_Q3", "importe_Q4"},
 )
 
 
@@ -73,7 +73,7 @@ def validate_work_unit_id(value: str) -> str:
             tr(
                 "cli.app.modelo.work.invalid_work_unit_id",
                 default=(f"work_unit_id must be a 64-character lowercase hex string (SHA-256 digest); got {value!r}"),
-            )
+            ),
         )
     return stripped
 
@@ -89,7 +89,7 @@ def validate_calculation_revision_id(value: str) -> str:
                     "calculation_revision_id must be a 64-character lowercase "
                     f"hex string (SHA-256 digest); got {value!r}"
                 ),
-            )
+            ),
         )
     return stripped
 
@@ -112,7 +112,7 @@ def parse_kv_spec[T](
                 key_label=key_label,
                 value_label=value_label,
                 spec=spec,
-            )
+            ),
         )
     key, _, value = spec.partition("=")
     key = key.strip()
@@ -136,7 +136,7 @@ def validate_binding_key(key: str, spec: str) -> None:
                     f"(max {_BINDING_MAX_LEN} chars, lowercase kebab/dotted ref); "
                     f"got {spec!r}"
                 ),
-            )
+            ),
         ) from exc
 
 
@@ -163,7 +163,7 @@ def validate_casilla_key(key: str, spec: str) -> None:
                     f"(max {_CASILLA_MAX_LEN} chars, alphanumeric/dotted ref); "
                     f"got {spec!r}"
                 ),
-            )
+            ),
         ) from exc
 
 
@@ -186,7 +186,7 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
             tr(
                 "cli.app.modelo.work.row_empty_spec",
                 default="--row spec cannot be empty; expected TYPE FIELD=value [...]",
-            )
+            ),
         )
     row_type = parts[0].lower()
     if row_type not in _ROW_TYPES_SUPPORTED:
@@ -196,7 +196,7 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                 default=(f"--row type {row_type!r} is not recognised; supported types: {sorted(_ROW_TYPES_SUPPORTED)}"),
                 row_type=row_type,
                 supported=", ".join(sorted(_ROW_TYPES_SUPPORTED)),
-            )
+            ),
         )
     kv_raw: dict[str, str] = {}
     for token in parts[1:]:
@@ -206,7 +206,7 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                     "cli.app.modelo.work.row_kv_format_error",
                     default=f"--row field {token!r} must be in KEY=VALUE format",
                     token=token,
-                )
+                ),
             )
         key, _, value = token.partition("=")
         if not key:
@@ -215,7 +215,7 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                     "cli.app.modelo.work.row_empty_key",
                     default=f"--row field key cannot be empty in {token!r}",
                     token=token,
-                )
+                ),
             )
         kv_raw[key] = value
     try:
@@ -241,7 +241,7 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                         ),
                         nif=nif,
                         pais=pais,
-                    )
+                    ),
                 )
             return row_m349
         return Modelo347ContraparteRow.model_validate({"row_type": "contraparte", **kv_pairs})
@@ -254,7 +254,7 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                 default=f"--row {row_type!r} failed validation: {exc}",
                 row_type=row_type,
                 error=str(exc),
-            )
+            ),
         ) from exc
 
 
@@ -266,7 +266,7 @@ def parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
                 "cli.app.modelo.work.meses_trabajo_hijo_bad_format",
                 spec=spec,
                 default="--meses-trabajo-con-hijo-menor-3 requires HIJO_ID=MESES format; got: {spec}",
-            )
+            ),
         )
     hijo_id, _, meses_raw = spec.partition("=")
     hijo_id = hijo_id.strip()
@@ -279,7 +279,7 @@ def parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
                 "cli.app.modelo.work.meses_trabajo_hijo_not_integer",
                 spec=spec,
                 default="--meses-trabajo-con-hijo-menor-3 MESES must be an integer 0-12; got: {spec}",
-            )
+            ),
         ) from exc
     if not (0 <= meses <= 12):
         raise typer.BadParameter(
@@ -288,7 +288,7 @@ def parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
                 spec=spec,
                 meses=meses,
                 default="--meses-trabajo-con-hijo-menor-3 MESES must be 0-12; got {meses} in: {spec}",
-            )
+            ),
         )
     return hijo_id, meses
 
@@ -305,7 +305,7 @@ def optional_decimal_option(raw: str | None, *, translation_key: str, default: s
                 translation_key,
                 value=raw,
                 default=default,
-            )
+            ),
         ) from exc
 
 
@@ -406,7 +406,7 @@ def bad_parameter_from_localized_context(exc: BaseException) -> typer.BadParamet
 
 
 def calculation_revision_not_found_bad_parameter(
-    calculation_revision_id: str, exc: CalculationRevisionNotFoundError
+    calculation_revision_id: str, exc: CalculationRevisionNotFoundError,
 ) -> typer.BadParameter:
     """Render a not-found calc-revision id, hinting when it is really a work-unit id."""
     stripped = calculation_revision_id.strip()
@@ -430,7 +430,7 @@ def calculation_revision_not_found_bad_parameter(
             modelo=unit.modelo,
             year=unit.filing_year,
             period=unit.period,
-        )
+        ),
     )
 
 
@@ -453,8 +453,8 @@ def work_candidate_lines(candidates: tuple[ModeloWorkUnitCandidate, ...]) -> str
                     short_id(candidate.current_calculation_revision_id) or "",
                     short_id(candidate.filed_calculation_revision_id) or "",
                     candidate.work_unit_id,
-                )
-            )
+                ),
+            ),
         )
     return "\n".join(rows)
 
@@ -470,7 +470,7 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
                     "Choose a registry revision or pass an explicit work-unit id.\n{candidates}"
                 ),
                 candidates=work_candidate_lines(exc.candidates),
-            )
+            ),
         )
     if isinstance(exc, ModeloWorkRevisionConflictError):
         return typer.BadParameter(
@@ -483,7 +483,7 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
                 ),
                 existing_revision=exc.existing.revision_id,
                 requested_revision=exc.requested_revision_id,
-            )
+            ),
         )
     if isinstance(exc, ModeloCalculationRevisionSelectorAmbiguousError):
         candidates = "\n".join(
@@ -497,14 +497,14 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
                     "More than one calculation revision matches this selector. Choose one explicitly.\n{candidates}"
                 ),
                 candidates=candidates,
-            )
+            ),
         )
     if isinstance(exc, ModeloWorkAddressNotFoundError):
         return typer.BadParameter(
             tr(
                 "cli.app.modelo.work.selector_not_found",
                 default="No active work unit matches this modelo/year/period. Run `aeat app modelo work create` first.",
-            )
+            ),
         )
     key = getattr(exc, "translated_message", None)
     context = getattr(exc, "context", None) or {}
@@ -525,7 +525,7 @@ def parse_revision_selector(value: str) -> ModeloCalculationRevisionSelector:
                 default="Unknown revision selector {value!r}; choose one of: {choices}.",
                 value=value,
                 choices=choices,
-            )
+            ),
         ) from exc
 
 

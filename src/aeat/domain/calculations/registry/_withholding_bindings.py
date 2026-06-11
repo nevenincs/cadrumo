@@ -133,7 +133,7 @@ def validate_withholding_binding_selector_shape(binding: DataBindingDefinition) 
     except ValueError as exc:
         return [
             f"binding {binding.id!r} (source={binding.source!r}) selector violates "
-            f"{_WithholdingSelector.__name__}: {exc}"
+            f"{_WithholdingSelector.__name__}: {exc}",
         ]
     try:
         _validated_withholding_selector(binding)
@@ -149,7 +149,7 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
     op = str((binding.aggregation or {}).get("op", "sum"))
     if selector.fact == "perceptor_count" and op != "count_distinct":
         raise RegistryValidationError(
-            f"binding {binding.id!r} fact 'perceptor_count' requires aggregation op 'count_distinct'"
+            f"binding {binding.id!r} fact 'perceptor_count' requires aggregation op 'count_distinct'",
         )
     if selector.fact in {"percibido_sum", "retencion_sum"} and op != "sum":
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
@@ -158,7 +158,7 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
         if selector.row_field is None:
             raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
             )
         if selector.grouping is None:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
@@ -268,7 +268,7 @@ def resolve_withholding_binding_row_values(
                 if value is None:
                     raise RegistryValidationError(
                         f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
-                        f"for grouping {grouping!r}"
+                        f"for grouping {grouping!r}",
                     )
                 resolved[(binding.id, row_index)] = value
     return resolved

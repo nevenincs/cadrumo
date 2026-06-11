@@ -132,7 +132,7 @@ class TestTaxpayerProfileProjection:
         )
         assert profile.entity_type is EntityType.NATURAL_PERSON
         assert profile.irpf_income_categories == frozenset(
-            {IrpfIncomeCategory.CAPITAL_INMOBILIARIO, IrpfIncomeCategory.PENSION}
+            {IrpfIncomeCategory.CAPITAL_INMOBILIARIO, IrpfIncomeCategory.PENSION},
         )
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
         assert profile.iva_regime is IVARegime.REAGP

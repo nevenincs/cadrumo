@@ -15,6 +15,7 @@ Major declarations:
   taxonomy.
 """
 
+from ._document_link_resolver import parse_drive_file_id, resolve_document_link
 from ._errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthClientNotRegisteredError,
@@ -30,7 +31,6 @@ from ._errors import (
     GoogleAuthUnsecuredModeRefusedError,
     GoogleAuthValidationError,
 )
-from ._document_link_resolver import parse_drive_file_id, resolve_document_link
 from ._records import (
     DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,

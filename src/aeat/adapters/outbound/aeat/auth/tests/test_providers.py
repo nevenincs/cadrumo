@@ -49,10 +49,10 @@ def test_operator_impact_distinguishes_every_branch() -> None:
         describe_provider_operator_impact(_description(configured=False, available=False)),
         describe_provider_operator_impact(_description(configured=True, available=False)),
         describe_provider_operator_impact(
-            _description(configured=True, available=True, kind=AuthProviderKind.CERTIFICATE)
+            _description(configured=True, available=True, kind=AuthProviderKind.CERTIFICATE),
         ),
         describe_provider_operator_impact(
-            _description(configured=True, available=True, kind=AuthProviderKind.CLAVE_MOVIL)
+            _description(configured=True, available=True, kind=AuthProviderKind.CLAVE_MOVIL),
         ),
     }
     assert len(branches) == 4

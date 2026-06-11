@@ -85,7 +85,7 @@ def _unclassified(idx: int) -> Transaction:
             "raw": _raw(idx),
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
-        }
+        },
     )
 
 

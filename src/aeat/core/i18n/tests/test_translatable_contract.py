@@ -66,7 +66,7 @@ class _TranslatableContractVisitor(ast.NodeVisitor):
                     continue
                 if alias.asname != "tr":
                     self.violations.append(
-                        _location(self.path, node, "imports Translatable without the required 'as tr' alias")
+                        _location(self.path, node, "imports Translatable without the required 'as tr' alias"),
                     )
                 continue
             if bound_name == "tr" and not _is_i18n_tr_import(node.module, alias):
@@ -150,7 +150,7 @@ class _TranslatableContractVisitor(ast.NodeVisitor):
                 self.violations.append(_location(self.path, node, "calls forbidden translation helper '_t'"))
         elif isinstance(node.func, ast.Attribute) and node.func.attr == "Translatable":
             self.violations.append(
-                _location(self.path, node, "constructs Translatable through an attribute; use tr(...)")
+                _location(self.path, node, "constructs Translatable through an attribute; use tr(...)"),
             )
         self.generic_visit(node)
 

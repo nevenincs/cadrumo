@@ -67,7 +67,7 @@ class TestCacheRedaction:
     """Verify CACHE-class redaction is applied before any cache write."""
 
     def test_nif_canary_does_not_land_plaintext_in_cache(
-        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile
+        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile,
     ) -> None:
         cache = LLMCache(root_dir=tmp_path / "cache")
         request = _make_request()
@@ -79,7 +79,7 @@ class TestCacheRedaction:
         assert _NIF_CANARY.encode() not in db_path.read_bytes()
 
     def test_bearer_token_redacted_in_cache(
-        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile
+        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile,
     ) -> None:
         cache = LLMCache(root_dir=tmp_path / "cache")
         request = _make_request()
@@ -143,7 +143,7 @@ class TestUsageRedaction:
         )
 
     def test_nif_canary_does_not_land_plaintext_in_usage(
-        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile
+        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile,
     ) -> None:
         recorder = UsageRecorder(root_dir=tmp_path / "usage")
         record = self._make_record(text=f"customer NIF: {_NIF_CANARY}")
@@ -153,7 +153,7 @@ class TestUsageRedaction:
         assert _NIF_CANARY.encode() not in db_path.read_bytes()
 
     def test_bearer_token_redacted_in_usage(
-        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile
+        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile,
     ) -> None:
         recorder = UsageRecorder(root_dir=tmp_path / "usage")
         record = self._make_record(text=f"saw header {_BEARER_CANARY}")

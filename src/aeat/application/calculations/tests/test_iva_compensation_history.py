@@ -218,7 +218,7 @@ def test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward() ->
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),
             generated_not_in_last_period=Decimal("50.00"),
-        )
+        ),
     )
 
     cross_check = cross_check_iva_compensation_annual_summary(report, summary)
@@ -247,7 +247,7 @@ def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> Non
         _filed_390_observation(
             last_period_compensation=Decimal("80.00"),
             generated_not_in_last_period=Decimal("0.00"),
-        )
+        ),
     )
 
     cross_check = cross_check_iva_compensation_annual_summary(report, summary)
@@ -275,7 +275,7 @@ def test_modelo_390_cross_check_keeps_active_prior_year_lots_out_of_annual_field
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),
             generated_not_in_last_period=Decimal("0.00"),
-        )
+        ),
     )
 
     cross_check = cross_check_iva_compensation_annual_summary(report, summary)
@@ -300,7 +300,7 @@ def test_modelo_390_cross_check_keeps_expired_prior_year_lots_out_of_annual_fiel
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),
             generated_not_in_last_period=Decimal("0.00"),
-        )
+        ),
     )
 
     cross_check = cross_check_iva_compensation_annual_summary(report, summary)
@@ -566,7 +566,7 @@ def _filed_303_compensation_observation(
                     confidence=1.0,
                 ),
             ),
-        }
+        },
     )
 
 
@@ -656,8 +656,8 @@ def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_
                     source_locator="submitted-file:casilla-69",
                     confidence=1.0,
                 ),
-            )
-        }
+            ),
+        },
     )
 
     with pytest.raises(IvaCompensationDecimalParseError) as excinfo:

@@ -18,7 +18,6 @@ from .....core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
-from .... import renta as _renta_snapshot_checks  # noqa: F401  # snapshot-check registration side effect
 from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -218,7 +217,7 @@ def test_base_liquidable_general_applies_reductions() -> None:
         {
             "0003": Decimal("40000.00"),  # → 0432 = 40000 → 0435 = 40000
             "0501": Decimal("1000.00"),  # compensación bases liquidables negativas
-        }
+        },
     )
     scenario = RegistryCalculationScenario(
         id="base-liquidable-with-reductions",

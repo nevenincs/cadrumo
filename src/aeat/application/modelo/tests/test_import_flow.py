@@ -61,6 +61,7 @@ from .. import (
     mark_revision_verificado_completo,
 )
 from ._file_flow_support import _file_revision
+from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -78,6 +79,7 @@ _T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
+_TAX_ID = "X1234567L"
 
 
 @pytest.fixture
@@ -132,6 +134,13 @@ def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
     """Run the seed-work-unit + import-evidence scenario and bundle the observable state."""
     wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
+    persist_justificante_metadata(
+        "JUST-2026-303-Q1-OPERATOR1",
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        captured_at=_T1,
+    )
     filing = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
         casilla_values={"01": Decimal("1500"), "02": Decimal("300")},
@@ -142,6 +151,7 @@ def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        expected_tax_id=_TAX_ID,
         clock=_T1,
     )
     return _ImportOutcome(work_unit=work_unit, filing=filing)
@@ -253,6 +263,13 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
+    persist_justificante_metadata(
+        "JUST-FIRST",
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        captured_at=_T1,
+    )
 
     first = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
@@ -263,6 +280,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        expected_tax_id=_TAX_ID,
         clock=_T1,
     )
 
@@ -307,6 +325,13 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
+    persist_justificante_metadata(
+        "JUST-BASELINE",
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        captured_at=_T1,
+    )
 
     imported = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
@@ -317,6 +342,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        expected_tax_id=_TAX_ID,
         clock=_T1,
     )
     assert imported.external_evidence is not None
@@ -423,6 +449,110 @@ def test_import_refuses_empty_evidence_reference(repos: _Repos) -> None:
             clock=_T1,
         )
     assert raised.value.translated_message == "application.modelo.errors.external_filing_evidence_reference_blank"
+
+
+def test_import_refuses_justificante_evidence_without_persisted_artifact(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    with pytest.raises(ExternalModeloImportError) as raised:
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={"01": Decimal("1500")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="JUST-MISSING",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            expected_tax_id=_TAX_ID,
+            clock=_T1,
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_missing"
+
+
+def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    persist_justificante_metadata(
+        "JUST-NO-TAX-ID",
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        captured_at=_T1,
+    )
+
+    with pytest.raises(ExternalModeloImportError) as raised:
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={"01": Decimal("1500")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="JUST-NO-TAX-ID",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.external_import_tax_id_missing"
+
+
+def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    persist_justificante_metadata(
+        "JUST-MISMATCH",
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period="2T",
+        captured_at=_T1,
+    )
+
+    with pytest.raises(ExternalModeloImportError) as raised:
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={"01": Decimal("1500")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="JUST-MISMATCH",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            expected_tax_id=_TAX_ID,
+            clock=_T1,
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_mismatch"
+
+
+def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    persist_justificante_metadata(
+        "JUST-WRONG-TAXPAYER",
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        captured_at=_T1,
+    )
+
+    with pytest.raises(ExternalModeloImportError) as raised:
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={"01": Decimal("1500")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="JUST-WRONG-TAXPAYER",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            expected_tax_id="B12345678",
+            clock=_T1,
+        )
+
+    assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_mismatch"
 
 
 def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:

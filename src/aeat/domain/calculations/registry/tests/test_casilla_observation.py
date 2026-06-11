@@ -69,7 +69,7 @@ def test_casilla_observation_rejects_extra_fields() -> None:
                 "casilla_id": "0511",
                 "value": Decimal("0"),
                 "unknown_field": "x",
-            }
+            },
         )
 
 

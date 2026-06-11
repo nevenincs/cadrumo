@@ -28,8 +28,6 @@ import inspect
 
 import pytest
 
-from .. import ModeloSourceResolver
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Packages that publish resolver symbols through their ``__all__`` surface.
@@ -212,7 +210,7 @@ def test_discovery_count_is_pinned() -> None:
         f"Expected {len(_KNOWN_NON_MESH_RESOLVERS)} known non-mesh resolver(s), "
         f"discovered {len(non_mesh)}:\n" + "\n".join(f"  {name}" for name in sorted(non_mesh))
     )
-    assert _PROTOCOL_QUALNAME in discovered and discovered[_PROTOCOL_QUALNAME], (
+    assert discovered.get(_PROTOCOL_QUALNAME), (
         f"The {_PROTOCOL_QUALNAME} protocol contract is no longer discovered as a "
         f"source-mesh-shaped export; the discovery surface has drifted."
     )

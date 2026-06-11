@@ -323,7 +323,7 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
                 "reason": "Using later valid AEAT wallet observation without local recurrence.",
                 "wallet_captured_at": second_at,
                 "decided_at": second_at,
-            }
+            },
         )
 
         repo.save_decision(first)

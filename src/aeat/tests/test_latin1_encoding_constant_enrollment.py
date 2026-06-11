@@ -45,5 +45,5 @@ def test_no_bare_iso8859_1_in_export_test_package() -> None:
         lines = "\n  ".join(f"{path}:{lineno}: {text}" for path, lineno, text in violations)
         raise AssertionError(
             f"{len(violations)} bare 'iso-8859-1' literal(s) found in export test package; "
-            f"replace with LATIN_1_ENCODING from aeat.core.external_constants:\n  {lines}"
+            f"replace with LATIN_1_ENCODING from aeat.core.external_constants:\n  {lines}",
         )

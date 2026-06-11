@@ -101,7 +101,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         )
 
         reloaded_wallet = FiledDeclaracionObservationStore(tmp_path / "wallet-evidence").load_iva_wallet_observation(
-            Path(report.observation_path)
+            Path(report.observation_path),
         )
         reloaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, 2026, "2T")
 
@@ -170,7 +170,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                 applied_amount=Decimal("0.00"),
                 available_end_amount=Decimal("100.00"),
                 source_observation_key="303:2022:4T:EXP-2022-4T",
-            )
+            ),
         )
         history_repo.save_period(
             IvaCompensationPeriodState(
@@ -184,7 +184,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                 applied_amount=Decimal("40.00"),
                 available_end_amount=Decimal("90.00"),
                 source_observation_key="303:2024:1T:EXP-2024-1T",
-            )
+            ),
         )
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
@@ -217,7 +217,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                         amount=Decimal("90.00"),
                     ),
                 ),
-            )
+            ),
         )
 
         remote_state = load_iva_remote_state(as_of_year=2026)
@@ -267,7 +267,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
                 generated_amount=Decimal("20.00"),
                 available_end_amount=Decimal("100.00"),
                 source_observation_key="303:2025:4T:EXP-2025-4T",
-            )
+            ),
         )
 
         wallet = parse_iva_compensation_wallet_html(
@@ -285,7 +285,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             captured_at=_CAPTURED_AT,
         )
         wallet_ref = FiledDeclaracionObservationStore(tmp_path / "remote-iva-evidence").persist_iva_wallet_observation(
-            wallet
+            wallet,
         )
         assert _secure_object_namespace_count(profile.paths.db_dir / "aeat.db", wallet_ref.parts[-2]) == 1
         assert not (tmp_path / "remote-iva-evidence").exists()
@@ -323,11 +323,11 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
                         captured_at=_CAPTURED_AT,
                     ),
                 ),
-            )
+            ),
         )
 
         reloaded_wallet = FiledDeclaracionObservationStore(
-            tmp_path / "remote-iva-evidence"
+            tmp_path / "remote-iva-evidence",
         ).load_iva_wallet_observation(wallet_ref)
         reloaded_history = IvaCompensationHistoryRepository().load_period(2025, "4T")
         reloaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, 2026, "1T")
@@ -361,7 +361,7 @@ def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_boo
     with isolated_profile_storage_root(tmp_path=tmp_path):
         with profile_create_storage_span(_SESSION_BUCKET_ID):
             workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id=_SESSION_BUCKET_ID)
+                lambda state: register_minimal_profile(state, profile_id=_SESSION_BUCKET_ID),
             )
             IvaCompensationHistoryRepository().save_period(
                 IvaCompensationPeriodState(
@@ -374,7 +374,7 @@ def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_boo
                     generated_amount=Decimal("20.00"),
                     available_end_amount=Decimal("20.00"),
                     source_observation_key="303:2025:4T:EXP-2025-4T",
-                )
+                ),
             )
 
         assert has_active_bucket_session() is False

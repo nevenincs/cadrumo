@@ -18,7 +18,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import TransactionId
 from ...core.logging import get_logger
 from ..iva import InvoiceKind
@@ -154,7 +154,7 @@ def link_transaction(
     updated_ids = (*invoice.linked_transaction_ids, normalized_tx)
     try:
         updated_invoice = Invoice.model_validate(
-            {**invoice.model_dump(mode="python"), "linked_transaction_ids": updated_ids}
+            {**invoice.model_dump(mode="python"), "linked_transaction_ids": updated_ids},
         )
     except ValidationError as exc:
         raise InvoiceLinkError(f"invalid invoice link update for {invoice_id}") from exc
@@ -226,7 +226,7 @@ def suggest_reconciliations(
                     amount_match=amount_match,
                     counterparty_match=counterparty_match,
                     score=score,
-                )
+                ),
             )
     suggestions.sort(key=lambda s: (-s.score, s.invoice_id, s.transaction_id))
     _LOGGER.debug("suggest_reconciliations: %d candidate(s)", len(suggestions))
@@ -261,7 +261,7 @@ def verify_link_consistency(
                         invoice_id=invoice.invoice_id,
                         transaction_id=tx_id,
                         direction="invoice-only",
-                    )
+                    ),
                 )
     for transaction in transactions.values():
         if transaction.invoice_id is None:
@@ -273,7 +273,7 @@ def verify_link_consistency(
                     invoice_id=transaction.invoice_id,
                     transaction_id=transaction.transaction_id,
                     direction="transaction-only",
-                )
+                ),
             )
     inconsistencies.sort(key=lambda item: (item.invoice_id, item.transaction_id))
     if inconsistencies:

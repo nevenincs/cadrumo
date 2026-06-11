@@ -254,9 +254,9 @@ def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
                     "status": ModeloRecordStatus.SUPERSEDIDO,
                     "superseded_at": _T3,
                     "superseded_by_filing_record_id": fake_successor,
-                }
+                },
             ),
-        )
+        ),
     )
 
     with pytest.raises(AmendmentTargetStateError, match=r"status|CURRENT|superseded"):

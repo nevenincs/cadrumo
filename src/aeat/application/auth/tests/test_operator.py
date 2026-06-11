@@ -73,7 +73,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
             created_at=now,
             updated_at=now,
             schema_version="test",
-        )
+        ),
     )
     secure_object_repository_for_active_bucket().save(
         namespace=ModeloDraftRepository.namespace,
@@ -452,7 +452,7 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
             state,
             profile_id="operator",
             overrides={"identity.tax_id": "12345678Z"},
-        )
+        ),
     )
     settings = Settings(
         aeat_clave_movil_dni_nie=SecretStr("12345678Z"),
@@ -486,7 +486,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
             state,
             profile_id="operator",
             overrides={"identity.tax_id": "12345678Z"},
-        )
+        ),
     )
     with override_settings(aeat_clave_movil_dni_nie=SecretStr("12345678Z")):
         configure_operator_auth("clave_movil")
@@ -586,7 +586,7 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
             state,
             profile_id="operator",
             overrides={"identity.tax_id": "00000000T"},
-        )
+        ),
     )
     with override_settings(aeat_clave_movil_dni_nie="00000001R"):
         result = configure_operator_auth("clave_movil")
@@ -609,7 +609,7 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
             state,
             profile_id="operator",
             overrides={"identity.tax_id": "12345678Z"},
-        )
+        ),
     )
     with override_settings(aeat_clave_movil_dni_nie="12345678Z"):
         result = configure_operator_auth("clave_movil")
@@ -626,7 +626,7 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
             state,
             profile_id="operator",
             overrides={"identity.tax_id": "TEST-IDENTITY"},
-        )
+        ),
     )
     with override_settings(aeat_clave_movil_dni_nie=SecretStr("TEST-IDENTITY")):
         configure_operator_auth("clave_movil")
@@ -658,7 +658,7 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
             state,
             profile_id="operator",
             overrides={"identity.tax_id": "12345678Z"},
-        )
+        ),
     )
     with override_settings(aeat_clave_movil_dni_nie=SecretStr("12345678Z")) as settings:
         assert _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL) == "12345678Z"
@@ -672,7 +672,7 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
             state,
             profile_id="operator",
             overrides={"identity.tax_id": "00000000T"},
-        )
+        ),
     )
     with override_settings(aeat_clave_movil_dni_nie=SecretStr("00000001R")) as settings:
         with pytest.raises(AuthProfileIdentityMismatchError) as raised:

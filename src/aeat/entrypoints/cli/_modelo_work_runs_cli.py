@@ -61,7 +61,7 @@ def register_work_run_commands(
                 WorkflowRunPayload(
                     run_id=run.run_id,
                     modelo=run.obligation.modelo if run.obligation is not None else None,
-                    period=run.obligation.period if run.obligation is not None else None,
+                    period=str(run.obligation.period) if run.obligation is not None else None,
                     final_stage=run.final_stage.value,
                     aborted_reason=(run.aborted_reason.value if run.aborted_reason is not None else None),
                     started_at=run.started_at.isoformat(),
@@ -79,11 +79,11 @@ def register_work_run_commands(
                 (
                     run.run_id,
                     run.obligation.modelo if run.obligation is not None else "-",
-                    run.obligation.period if run.obligation is not None else "-",
+                    str(run.obligation.period) if run.obligation is not None else "-",
                     run.final_stage.value,
                     run.aborted_reason.value if run.aborted_reason is not None else "-",
                     run.started_at.isoformat(),
-                )
+                ),
             )
             for run in runs
         )
@@ -193,7 +193,7 @@ def _emit_work_resume(
         calculation_revision_id=resolution.calculation_revision_id,
         short_calculation_revision_id=resolution.short_calculation_revision_id,
         modelo=result.modelo,
-        period=result.period,
+        period=str(result.period),
         aborted_reason=result.aborted_reason.value,
         obligation=result.obligation.model_dump(mode="json"),
     )
@@ -202,7 +202,7 @@ def _emit_work_resume(
         f"prior_workflow_run_id\t{result.resumed_from_run_id}",
         f"resolved_source\t{resolution.source}",
         f"modelo\t{result.modelo}",
-        f"period\t{result.period}",
+        f"period\t{str(result.period)}",
         f"filing_year\t{resolution.filing_year or ''}",
         f"registry_period\t{resolution.registry_period or ''}",
         f"short_work_unit_id\t{resolution.short_work_unit_id or ''}",

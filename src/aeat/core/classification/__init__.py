@@ -26,7 +26,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class SensitivityClass(StrEnum):
@@ -315,7 +315,7 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             retention=RetentionPolicy(max_age=_DIAGNOSTIC_RETENTION),
             redaction_rules=_AUDIT_REDACTION_RULES,
         ),
-    }
+    },
 )
 
 _DEFAULT_OUTPUT_POLICY_TABLE: Mapping[OutputSensitivityClass, OutputClassificationPolicy] = MappingProxyType(
@@ -340,7 +340,7 @@ _DEFAULT_OUTPUT_POLICY_TABLE: Mapping[OutputSensitivityClass, OutputClassificati
             redaction_rules=_AUDIT_REDACTION_RULES,
             persisted_as=SensitivityClass.DIAGNOSTIC,
         ),
-    }
+    },
 )
 
 

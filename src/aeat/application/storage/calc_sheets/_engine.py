@@ -129,28 +129,28 @@ def _value_cells_for_entradas(
             address=SheetCellAddress.at(TabName.ENTRADAS, 1, 1),
             value=tr("application.storage.calc_sheets.engine.labels.section"),
             role="label",
-        )
+        ),
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.ENTRADAS, 1, 2),
             value=tr("application.storage.calc_sheets.engine.labels.casilla"),
             role="label",
-        )
+        ),
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.ENTRADAS, 1, 3),
             value=tr("application.storage.calc_sheets.engine.labels.concept"),
             role="label",
-        )
+        ),
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.ENTRADAS, 1, 4),
             value=tr("application.storage.calc_sheets.engine.labels.value"),
             role="label",
-        )
+        ),
     )
     previous_section: tuple[str, ...] | None = None
     for row in layout.entradas_rows:
@@ -166,7 +166,7 @@ def _value_cells_for_entradas(
                     address=SheetCellAddress.at(TabName.ENTRADAS, row.row, 1),
                     value=" › ".join(section),
                     role="label",
-                )
+                ),
             )
             previous_section = section
         cells.append(
@@ -174,14 +174,14 @@ def _value_cells_for_entradas(
                 address=SheetCellAddress.at(TabName.ENTRADAS, row.row, 2),
                 value=casilla.number,
                 role="label",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.ENTRADAS, row.row, 3),
                 value=casilla.label,
                 role="label",
-            )
+            ),
         )
         seed = by_casilla.get(casilla.id)
         cells.append(
@@ -190,7 +190,7 @@ def _value_cells_for_entradas(
                 value=seed.value if seed is not None else None,
                 casilla=casilla.id,
                 role="operator_input",
-            )
+            ),
         )
     for binding_row in layout.binding_rows:
         cells.append(
@@ -198,21 +198,21 @@ def _value_cells_for_entradas(
                 address=SheetCellAddress.at(TabName.ENTRADAS, binding_row.row, 1),
                 value=tr("application.storage.calc_sheets.engine.labels.source"),
                 role="label",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.ENTRADAS, binding_row.row, 2),
                 value="—",
                 role="label",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.ENTRADAS, binding_row.row, 3),
                 value=binding_row.label,
                 role="label",
-            )
+            ),
         )
         binding = binding_row.binding
         # Numeric bindings live in ``binding_cells``; date bindings (consumed by
@@ -226,7 +226,7 @@ def _value_cells_for_entradas(
                 address=binding_address,
                 value=None,
                 role="operator_input",
-            )
+            ),
         )
     return tuple(cells)
 
@@ -242,28 +242,28 @@ def _label_cells_for_calculos(
             address=SheetCellAddress.at(TabName.CALCULOS, 1, 1),
             value=tr("application.storage.calc_sheets.engine.labels.section"),
             role="label",
-        )
+        ),
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.CALCULOS, 1, 2),
             value=tr("application.storage.calc_sheets.engine.labels.casilla"),
             role="label",
-        )
+        ),
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.CALCULOS, 1, 3),
             value=tr("application.storage.calc_sheets.engine.labels.concept"),
             role="label",
-        )
+        ),
     )
     cells.append(
         SheetValueCell(
             address=SheetCellAddress.at(TabName.CALCULOS, 1, 4),
             value=tr("application.storage.calc_sheets.engine.labels.value"),
             role="label",
-        )
+        ),
     )
     previous_section: tuple[str, ...] | None = None
     for row in layout.calculos_rows:
@@ -275,7 +275,7 @@ def _label_cells_for_calculos(
                     address=SheetCellAddress.at(TabName.CALCULOS, row.row, 1),
                     value=" › ".join(section),
                     role="label",
-                )
+                ),
             )
             previous_section = section
         cells.append(
@@ -283,14 +283,14 @@ def _label_cells_for_calculos(
                 address=SheetCellAddress.at(TabName.CALCULOS, row.row, 2),
                 value=casilla.number,
                 role="label",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.CALCULOS, row.row, 3),
                 value=casilla.label,
                 role="label",
-            )
+            ),
         )
     return tuple(cells)
 
@@ -316,7 +316,7 @@ def _formula_cells(
                 casilla=casilla.id,
                 rounding_scale=scale,
                 rounding_rule=rule,
-            )
+            ),
         )
     return tuple(cells)
 
@@ -367,7 +367,7 @@ def _tariff_tables(
             # only happens when no temporal filter was applied at
             # layout time (legacy callers).
             active = layout.bracket_entries.get(parameter_id) or tuple(
-                sorted(definition.brackets, key=lambda b: b.lower_bound)
+                sorted(definition.brackets, key=lambda b: b.lower_bound),
             )
             rows = tuple(
                 SheetTariffTableRow(
@@ -387,7 +387,7 @@ def _tariff_tables(
                     data_type="bracket_table",
                     anchor=anchor,
                     bracket_rows=rows,
-                )
+                ),
             )
         else:
             scalar = _resolve_scalar(definition, today)
@@ -402,7 +402,7 @@ def _tariff_tables(
                     data_type=scalar_data_type,
                     anchor=anchor,
                     scalar_value=scalar,
-                )
+                ),
             )
     return tuple(tables)
 
@@ -425,7 +425,7 @@ def _tariff_value_cells(
                 value=table.label,
                 parameter=table.parameter,
                 role="label",
-            )
+            ),
         )
         if table.data_type == "bracket_table":
             # Anchor row holds column headers; subsequent rows hold
@@ -436,28 +436,28 @@ def _tariff_value_cells(
                     address=SheetCellAddress.at(anchor.tab, header_row, anchor.column),
                     value=tr("application.storage.calc_sheets.engine.labels.minimum_base"),
                     role="label",
-                )
+                ),
             )
             cells.append(
                 SheetValueCell(
                     address=SheetCellAddress.at(anchor.tab, header_row, anchor.column + 1),
                     value=tr("application.storage.calc_sheets.engine.labels.maximum_base"),
                     role="label",
-                )
+                ),
             )
             cells.append(
                 SheetValueCell(
                     address=SheetCellAddress.at(anchor.tab, header_row, anchor.column + 2),
                     value=tr("application.storage.calc_sheets.engine.labels.fixed_quota"),
                     role="label",
-                )
+                ),
             )
             cells.append(
                 SheetValueCell(
                     address=SheetCellAddress.at(anchor.tab, header_row, anchor.column + 3),
                     value=tr("application.storage.calc_sheets.engine.labels.marginal_rate"),
                     role="label",
-                )
+                ),
             )
             for offset, row in enumerate(table.bracket_rows, start=1):
                 bracket_row = header_row + offset
@@ -467,7 +467,7 @@ def _tariff_value_cells(
                         value=row.lower_bound,
                         parameter=table.parameter,
                         role="parameter_value",
-                    )
+                    ),
                 )
                 cells.append(
                     SheetValueCell(
@@ -475,7 +475,7 @@ def _tariff_value_cells(
                         value=row.upper_bound,
                         parameter=table.parameter,
                         role="parameter_value",
-                    )
+                    ),
                 )
                 cells.append(
                     SheetValueCell(
@@ -483,7 +483,7 @@ def _tariff_value_cells(
                         value=row.fixed_addition,
                         parameter=table.parameter,
                         role="parameter_value",
-                    )
+                    ),
                 )
                 cells.append(
                     SheetValueCell(
@@ -491,7 +491,7 @@ def _tariff_value_cells(
                         value=row.marginal_rate,
                         parameter=table.parameter,
                         role="parameter_value",
-                    )
+                    ),
                 )
         else:
             cells.append(
@@ -500,7 +500,7 @@ def _tariff_value_cells(
                     value=table.scalar_value,
                     parameter=table.parameter,
                     role="parameter_value",
-                )
+                ),
             )
     return tuple(cells)
 
@@ -528,7 +528,7 @@ def _provenance_rows(
                 legal_refs=tuple(formula.legal_refs),
                 source_refs=tuple(formula.source_refs),
                 target_address=layout.calculos_cells[casilla.id],
-            )
+            ),
         )
     return tuple(rows)
 
@@ -583,56 +583,56 @@ def _provenance_value_cells(rows: Iterable[SheetProvenanceRow]) -> tuple[SheetVa
                 value=row.casilla_id,
                 casilla=row.casilla_id,
                 role="metadata",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 2),
                 value=row.casilla_number,
                 role="metadata",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 3),
                 value=row.casilla_label,
                 role="metadata",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 4),
                 value=row.formula_id or "",
                 role="metadata",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 5),
                 value=row.rounding_rule,
                 role="metadata",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 6),
                 value=", ".join(row.legal_refs),
                 role="metadata",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 7),
                 value=", ".join(row.source_refs),
                 role="metadata",
-            )
+            ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 8),
                 value=row.target_address.qualified(),
                 role="metadata",
-            )
+            ),
         )
     return tuple(cells)
 
@@ -665,7 +665,7 @@ def _relation_value_cells(
                 address=label_address,
                 value=relation_id,
                 role="label",
-            )
+            ),
         )
         supplied = by_relation.get(relation_id)
         cells.append(
@@ -674,7 +674,7 @@ def _relation_value_cells(
                 value=supplied.value if supplied is not None else None,
                 note=supplied.note if supplied is not None else None,
                 role="parameter_value",
-            )
+            ),
         )
     return tuple(cells)
 
@@ -749,7 +749,7 @@ def _number_formats(
                 casilla=casilla.id,
                 data_type=data_type,
                 pattern=format_pattern,
-            )
+            ),
         )
     return tuple(formats)
 
@@ -771,7 +771,7 @@ def _section_headers(layout: SheetLayout) -> tuple[SheetSectionHeader, ...]:
                     SheetSectionHeader(
                         address=SheetCellAddress.at(row.tab, row.row, 1),
                         text=" › ".join(section),
-                    )
+                    ),
                 )
                 previous = section
     return tuple(headers)
@@ -792,7 +792,7 @@ def _anchors(layout: SheetLayout) -> tuple[SheetAnchor, ...]:
                 address=SheetCellAddress.at(first.tab, first.row, 6),
                 kind="start",
                 label=tr("application.storage.calc_sheets.engine.anchors.start"),
-            )
+            ),
         )
     if layout.calculos_rows:
         last = layout.calculos_rows[-1]
@@ -801,7 +801,7 @@ def _anchors(layout: SheetLayout) -> tuple[SheetAnchor, ...]:
                 address=SheetCellAddress.at(last.tab, last.row, 6),
                 kind="final",
                 label=tr("application.storage.calc_sheets.engine.anchors.final"),
-            )
+            ),
         )
     return tuple(anchors)
 
@@ -985,7 +985,7 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
                 columns=columns,
                 legal_refs=tuple(sorted(cohort_legal[grouping])),
                 source_refs=tuple(sorted(cohort_source[grouping])),
-            )
+            ),
         )
         # Reserve 50 data rows per grouping + one blank separator. The
         # apply adapter does not protect this area; operators may extend
@@ -1043,7 +1043,7 @@ def _collect_cell_constraints(
                 max_value=casilla.constraints.max_value,
                 legal_refs=tuple(casilla.constraints.legal_refs),
                 casilla=casilla.id,
-            )
+            ),
         )
     return tuple(constraints)
 

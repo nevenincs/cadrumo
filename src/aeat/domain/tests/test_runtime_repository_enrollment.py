@@ -80,7 +80,7 @@ def _invoice(bucket_id: str) -> Invoice:
             "lines": (line,),
             "payment_status": PaymentStatus.PENDING,
             "linked_transaction_ids": (),
-        }
+        },
     )
 
 

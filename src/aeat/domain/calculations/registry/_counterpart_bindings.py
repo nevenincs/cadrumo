@@ -95,7 +95,7 @@ class CounterpartAggregationObservation(BaseModel):
         if self.is_rectification:
             if self.rectified_year is None or self.rectified_period is None:
                 raise RegistryValidationError(
-                    "rectification observation must declare rectified_year and rectified_period"
+                    "rectification observation must declare rectified_year and rectified_period",
                 )
             if self.rectified_base_previous is None:
                 raise RegistryValidationError("rectification observation must declare rectified_base_previous")
@@ -133,7 +133,7 @@ def _validated_counterpart_selector(binding: DataBindingDefinition) -> _InvoiceS
     selector = _invoice_selector(binding)
     if selector.fact not in _COUNTERPART_FACTS:
         raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported counterpart aggregation fact {selector.fact!r}"
+            f"binding {binding.id!r} declares unsupported counterpart aggregation fact {selector.fact!r}",
         )
     op = str((binding.aggregation or {}).get("op", "sum"))
     _validate_scalar_invoice_fact_op(binding, selector, op)
@@ -186,7 +186,7 @@ def counterpart_binding_requirements(
                 source_kinds=source_kinds,
                 claves=claves,
                 rectification_scope=scope,
-            )
+            ),
         )
     return tuple(requirements)
 
@@ -265,7 +265,7 @@ def resolve_counterpart_binding_row_values(
                 if value is None:
                     raise RegistryValidationError(
                         f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
-                        f"for grouping {grouping!r}"
+                        f"for grouping {grouping!r}",
                     )
                 resolved[(binding.id, row_index)] = value
     return resolved

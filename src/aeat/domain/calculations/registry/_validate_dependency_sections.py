@@ -42,19 +42,19 @@ def validate_relation_section(
             if missing_legal_refs:
                 failures.append(
                     f"{prefix}: relation {relation.id!r} target binding {relation.target_binding!r} "
-                    f"does not include relation legal refs {missing_legal_refs!r}"
+                    f"does not include relation legal refs {missing_legal_refs!r}",
                 )
             missing_source_refs = sorted(set(relation.source_refs).difference(target_binding.source_refs))
             if missing_source_refs:
                 failures.append(
                     f"{prefix}: relation {relation.id!r} target binding {relation.target_binding!r} "
-                    f"does not include relation source refs {missing_source_refs!r}"
+                    f"does not include relation source refs {missing_source_refs!r}",
                 )
         unknown_target_periods = sorted(set(relation.target_periods).difference(revision.period_selector.periods))
         if unknown_target_periods:
             failures.append(
                 f"{prefix}: relation {relation.id!r} targets periods outside revision selector "
-                f"{unknown_target_periods!r}"
+                f"{unknown_target_periods!r}",
             )
 
 
@@ -94,14 +94,14 @@ def validate_dependency_classification_section(
             continue
         if classification.treatment == "non_dependency":
             failures.append(
-                f"{prefix}: relation source modelo {source_modelo!r} cannot be classified as non_dependency"
+                f"{prefix}: relation source modelo {source_modelo!r} cannot be classified as non_dependency",
             )
             continue
         missing_relation_refs = sorted(relation_ids_for_source.difference(classification.relation_refs))
         if missing_relation_refs:
             failures.append(
                 f"{prefix}: dependency classification {classification.id!r} does not cover relation refs "
-                f"{missing_relation_refs!r}"
+                f"{missing_relation_refs!r}",
             )
 
 
@@ -133,19 +133,19 @@ def _validate_single_dependency_classification(
         if relation.source_modelo != classification.source_modelo:
             failures.append(
                 f"{prefix}: {owner} source_modelo {classification.source_modelo!r} does not match "
-                f"relation {relation_id!r} source_modelo {relation.source_modelo!r}"
+                f"relation {relation_id!r} source_modelo {relation.source_modelo!r}",
             )
         missing_legal_refs = sorted(set(relation.legal_refs).difference(classification.legal_refs))
         if missing_legal_refs:
             failures.append(
                 f"{prefix}: {owner} relation {relation_id!r} "
-                f"does not include relation legal refs {missing_legal_refs!r}"
+                f"does not include relation legal refs {missing_legal_refs!r}",
             )
         missing_source_refs = sorted(set(relation.source_refs).difference(classification.source_refs))
         if missing_source_refs:
             failures.append(
                 f"{prefix}: {owner} relation {relation_id!r} "
-                f"does not include relation source refs {missing_source_refs!r}"
+                f"does not include relation source refs {missing_source_refs!r}",
             )
 
 
@@ -160,16 +160,16 @@ def validate_filing_schedule_section(
     selector_periods = set(revision.period_selector.periods)
     for schedule in revision.filing_schedules:
         failures.extend(
-            _missing_refs(prefix, f"filing schedule {schedule.id}", schedule.legal_refs, legal_refs, "legal")
+            _missing_refs(prefix, f"filing schedule {schedule.id}", schedule.legal_refs, legal_refs, "legal"),
         )
         failures.extend(
-            _missing_refs(prefix, f"filing schedule {schedule.id}", schedule.source_refs, source_refs, "source")
+            _missing_refs(prefix, f"filing schedule {schedule.id}", schedule.source_refs, source_refs, "source"),
         )
         unknown_periods = sorted(set(schedule.periods).difference(selector_periods))
         if unknown_periods:
             failures.append(
                 f"{prefix}: filing schedule {schedule.id!r} declares periods outside revision selector "
-                f"{unknown_periods!r}"
+                f"{unknown_periods!r}",
             )
         for condition in schedule.profile_conditions:
             condition_owner = f"filing schedule {schedule.id} condition {condition.field}"

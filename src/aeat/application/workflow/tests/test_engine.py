@@ -57,11 +57,16 @@ from .. import (
     WorkflowPurpose,
     WorkflowStage,
 )
+from ....core import Period
 from .._errors import UnhandledWorkflowError, WorkflowInputMismatchError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _SEDE_ROOT_URL = aeat_url("sede", "/")
 _NOTIFICATIONS_QUERY_URL = aeat_url("www6", configured_path("sede_paths", "notifications_query"))
+
+
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
 
 # ── Test doubles ────────────────────────────────────────────────────────
 
@@ -78,11 +83,11 @@ def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
     assert forbidden == []
 
 
-def _registry_schema_version(*, modelo: str = "130", period: str = "2026Q1") -> str:
-    registry_period = f"{period[-1]}T" if "Q" in period else "0A"
+def _registry_schema_version(*, modelo: str = "130", period: Period | None = None) -> str:
+    target_period = period or _period(2026, "1T")
     provider = build_runtime_schema_provider(
-        filing_year=int(period[:4]),
-        period=registry_period,
+        filing_year=target_period.filing_year,
+        period=target_period.registry_token,
         modelos=(modelo,),
     )
     return provider.get_subview(modelo).schema_version
@@ -94,7 +99,7 @@ class _ConcreteDraft:
 
     draft_id: str = "draft-xyz"
     modelo: str = "130"
-    period: str = "2026Q1"
+    period: Period = field(default_factory=lambda: _period(2026, "1T"))
     profile_tax_id: str = "X1234567L"
     schema_version: str = field(default_factory=_registry_schema_version)
     status: object = ModeloDraftStatus.APROBADO
@@ -135,7 +140,7 @@ class _ConcreteDraftBuilder:
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
@@ -235,7 +240,7 @@ class _ConcreteInputsProvider:
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
     ) -> ModeloInputs:
         if self.raise_exc is not None:
@@ -260,9 +265,10 @@ def _profile() -> TaxpayerProfile:
 def _obligation(
     *,
     modelo: str = "130",
-    period: str = "2026Q1",
+    period: Period | None = None,
     closes_on: date | None = None,
 ) -> ModeloDeadline:
+    period = period or _period(2026, "1T")
     closes_on = closes_on or date(2026, 4, 20)
     opens_on = closes_on - timedelta(days=30)
     return ModeloDeadline(
@@ -374,7 +380,7 @@ class TestHappyPath:
                 fx.obligation.modelo,
                 fx.obligation.period,
                 today=fx.today,
-            )
+            ),
         )
         assert result.final_stage is WorkflowStage.DONE
         assert result.resumed_from is None
@@ -393,7 +399,7 @@ class TestHappyPath:
                 fx.obligation.period,
                 today=fx.today,
                 resumed_from=prior_run_id,
-            )
+            ),
         )
         assert result.final_stage is WorkflowStage.DONE
         assert result.resumed_from == prior_run_id
@@ -414,7 +420,7 @@ class TestHappyPath:
                         fx.obligation.period,
                         today=fx.today,
                         resumed_from=bad,
-                    )
+                    ),
                 )
 
 
@@ -432,7 +438,7 @@ class TestAbortReasons:
     def test_deadline_passed_via_run_for_period(self) -> None:
         """A closed-window target triggers DEADLINE_PASSED."""
         fx = _fixtures()
-        past = _obligation(period="2025Q4", closes_on=date(2026, 1, 20))
+        past = _obligation(period=_period(2025, "4T"), closes_on=date(2026, 1, 20))
         fx.deadline_engine = _ConcreteDeadlineEngine(obligation=past, profile=fx.profile)
         result = asyncio.run(
             fx.engine().run_for_period(
@@ -440,7 +446,7 @@ class TestAbortReasons:
                 past.modelo,
                 past.period,
                 today=fx.today,
-            )
+            ),
         )
         assert result.aborted_reason is WorkflowAbortReason.DEADLINE_PASSED
 
@@ -479,7 +485,7 @@ class TestAbortReasons:
                         f"{configured_path('sede_paths', 'irpf_expediente_detail_year_prefix')}"
                         f"2026{configured_path('sede_paths', 'irpf_expediente_detail_year_suffix')}"
                         "?exp=202610013522456T",
-                    )
+                    ),
                 ),
             ),
         )
@@ -518,21 +524,21 @@ class TestAbortReasons:
 
     def test_draft_period_must_match_resolved_obligation(self) -> None:
         fx = _fixtures()
-        fx.draft = _ConcreteDraft(period="2026Q2")
+        fx.draft = _ConcreteDraft(period=Period.from_year_and_code(2026, "2T"))
         fx.draft_builder.draft = fx.draft
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
         last = result.steps[-1]
         assert last.stage is WorkflowStage.BUILDING_DRAFT
         assert last.details is not None
-        assert last.details["period"] == "2026Q2 != 2026Q1"
+        assert last.details["period"] == "2026 2T != 2026 1T"
 
     def test_unapproved_ready_draft_fails_preflight(self) -> None:
         fx = _fixtures()
         fx.draft = _ConcreteDraft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR)
         fx.draft_builder.draft = fx.draft
         fx.submission_engine.preflight_exc = SubmissionPreflightError(
-            "draft not approved for submission (status=READY_TO_SUBMIT)"
+            "draft not approved for submission (status=READY_TO_SUBMIT)",
         )
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.PREFLIGHT_FAILED
@@ -678,7 +684,7 @@ class TestVerifyPurpose:
                 fx.obligation.period,
                 today=fx.today,
                 purpose=WorkflowPurpose.FILE,
-            )
+            ),
         )
         assert file_result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
 
@@ -689,7 +695,7 @@ class TestVerifyPurpose:
                 fx.obligation.period,
                 today=fx.today,
                 purpose=WorkflowPurpose.VERIFY,
-            )
+            ),
         )
         assert verify_result.final_stage is WorkflowStage.DONE
         assert verify_result.aborted_reason is None
@@ -697,7 +703,7 @@ class TestVerifyPurpose:
     def test_verify_reaches_done_for_a_closed_filing_window(self) -> None:
         """Closed-window target: ``FILE`` aborts DEADLINE_PASSED, ``VERIFY`` proceeds."""
         fx = _fixtures()
-        past = _obligation(period="2025Q4", closes_on=date(2026, 1, 20))
+        past = _obligation(period=_period(2025, "4T"), closes_on=date(2026, 1, 20))
         fx.deadline_engine = _ConcreteDeadlineEngine(obligation=past, profile=fx.profile)
         fx.draft = _ConcreteDraft(period=past.period, profile_tax_id=fx.profile.tax_id)
         fx.draft_builder.draft = fx.draft
@@ -709,7 +715,7 @@ class TestVerifyPurpose:
                 past.period,
                 today=fx.today,
                 purpose=WorkflowPurpose.FILE,
-            )
+            ),
         )
         assert file_result.aborted_reason is WorkflowAbortReason.DEADLINE_PASSED
 
@@ -720,7 +726,7 @@ class TestVerifyPurpose:
                 past.period,
                 today=fx.today,
                 purpose=WorkflowPurpose.VERIFY,
-            )
+            ),
         )
         assert verify_result.final_stage is WorkflowStage.DONE
         assert verify_result.aborted_reason is None
@@ -738,7 +744,7 @@ class TestVerifyPurpose:
                 fx.obligation.period,
                 today=fx.today,
                 purpose=WorkflowPurpose.VERIFY,
-            )
+            ),
         )
         deadline_step = next(s for s in result.steps if s.stage is WorkflowStage.COMPUTING_DEADLINES)
         assert deadline_step.success is True
@@ -758,7 +764,7 @@ class TestVerifyPurpose:
                 fx.obligation.period,
                 today=fx.today,
                 purpose=WorkflowPurpose.VERIFY,
-            )
+            ),
         )
         assert fx.submission_engine.skip_deadline_window_calls == [True]
 
@@ -770,7 +776,7 @@ class TestVerifyPurpose:
                 fresh.obligation.period,
                 today=fresh.today,
                 purpose=WorkflowPurpose.FILE,
-            )
+            ),
         )
         assert fresh.submission_engine.skip_deadline_window_calls == [False]
 
@@ -792,7 +798,7 @@ class TestVerifyPurpose:
                 fx.obligation.period,
                 today=fx.today,
                 purpose=WorkflowPurpose.VERIFY,
-            )
+            ),
         )
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
 
@@ -916,7 +922,7 @@ class TestGateProjectionAgreement:
                 target.modelo,
                 target.period,
                 today=today,
-            )
+            ),
         )
 
         assert result.aborted_reason is not WorkflowAbortReason.NO_PENDING_OBLIGATION
@@ -933,7 +939,7 @@ class TestGateProjectionAgreement:
         today = date(2026, 4, 12)
 
         absent_modelo = "130"
-        absent_period = "9999Q9"
+        absent_period = _period(2099, "4T")
         projection_obligations = _build_pending_obligations(profile, today=today)
         assert not [o for o in projection_obligations if o.modelo == absent_modelo and o.period == absent_period]
 
@@ -943,7 +949,7 @@ class TestGateProjectionAgreement:
                 absent_modelo,
                 absent_period,
                 today=today,
-            )
+            ),
         )
 
         assert result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION

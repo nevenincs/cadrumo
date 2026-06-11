@@ -268,7 +268,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
@@ -304,7 +304,7 @@ def test_carry_missing_stamp_advises_and_carries(tmp_path: Path) -> None:
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
@@ -336,7 +336,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD
+            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
@@ -381,7 +381,7 @@ def test_multiyear_resolver_divergent_stamp_drops_observation(tmp_path: Path) ->
                 current_year=2025,
                 years_back=2,
                 periods=("4T",),
-            )
+            ),
         )
 
         # 2024 (correct stamp) must be in found_years; 2023 (divergent stamp) must be dropped.
@@ -412,7 +412,7 @@ def test_multiyear_resolver_missing_stamp_carries(tmp_path: Path) -> None:
                 current_year=2025,
                 years_back=2,
                 periods=("4T",),
-            )
+            ),
         )
 
         # Legacy (unstamped) records carry through — advisory is the mechanism, not blocking.

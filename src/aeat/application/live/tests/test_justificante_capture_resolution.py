@@ -190,10 +190,10 @@ def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) ->
             csv="CSV2T0001ABCD2345",
             expediente_id=expediente.expediente_id,
             cotejo_url=AnyHttpUrl(
-                "https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=CSV2T0001ABCD2345"
+                "https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=CSV2T0001ABCD2345",
             ),
             pdf_url=AnyHttpUrl(
-                "https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=CSV2T0001ABCD2345"
+                "https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=CSV2T0001ABCD2345",
             ),
         )
         return SedeCapture(
@@ -216,7 +216,7 @@ def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) ->
                 declarations_provider=_declarations,
                 expedientes_provider=_expedientes,
                 justificante_provider=_capture,
-            )
+            ),
         )
 
     assert persisted.modelo == _MODELO

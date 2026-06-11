@@ -98,7 +98,7 @@ def _blocking_transaction() -> Transaction:
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-        }
+        },
     )
 
 
@@ -110,7 +110,7 @@ def _seed_profile(bucket_id: str, *, iva_regime: str) -> None:
             facts=(UserProfileFact(path="iva.regime", value=iva_regime),),
             created_at=_T0,
             updated_at=_T0,
-        )
+        ),
     )
 
 

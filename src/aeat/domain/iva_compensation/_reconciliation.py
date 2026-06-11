@@ -35,7 +35,7 @@ _AEAT_FILED_HISTORY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
         "aeat_sede_justificante",
         "aeat_sede_iva_compensation_history",
         _FILED_HISTORY_OBSERVATION,
-    }
+    },
 )
 
 type IvaCompensationAuthority = Literal[
@@ -485,7 +485,7 @@ def _authority_sources(
                 amount=wallet.total_pending,
                 source_locator=str(wallet.source_url),
                 captured_at=wallet.captured_at,
-            )
+            ),
         )
     if local_recurrence_amount is not None:
         recurrence_source = local_recurrence_source or IvaCompensationAuthoritySource(
@@ -503,7 +503,7 @@ def _authority_sources(
                     source_modelo=recurrence_source.source_modelo,
                     source_filing_year=recurrence_source.source_filing_year,
                     source_periods=recurrence_source.source_periods,
-                )
+                ),
             )
         sources.append(recurrence_source)
     if override is not None:
@@ -513,7 +513,7 @@ def _authority_sources(
                 amount=override.amount,
                 source_locator=override.evidence_locator,
                 captured_at=override.recorded_at,
-            )
+            ),
         )
     return tuple(sources)
 
@@ -558,11 +558,11 @@ def validate_wallet_matches_snapshot(
     """Refuse a wallet observation that does not match the requested Modelo 303 target."""
     if wallet.taxpayer_nif != taxpayer_nif:
         raise IvaCompensationReconciliationInputError(
-            "IVA wallet observation taxpayer does not match the requested taxpayer"
+            "IVA wallet observation taxpayer does not match the requested taxpayer",
         )
     if wallet.target_year != target_year or wallet.target_period != target_period:
         raise IvaCompensationReconciliationInputError(
-            "IVA wallet observation target does not match the Modelo 303 snapshot"
+            "IVA wallet observation target does not match the Modelo 303 snapshot",
         )
 
 

@@ -172,7 +172,7 @@ def _seed_modelo_111_revisions(
                 else None,
                 filed_at=now if state_value is CalculationRevisionState.PRESENTADO else None,
                 filed_by="operator" if state_value is CalculationRevisionState.PRESENTADO else None,
-            )
+            ),
         )
 
     work_unit = WorkUnit(

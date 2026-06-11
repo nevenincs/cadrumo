@@ -121,6 +121,60 @@ class FindingPayload(OutputSchema):
     source_refs: list[str] = Field(default_factory=list)
 
 
+class CrossPeriodDependencyRequirementPayload(OutputSchema):
+    """One upstream filing dependency declared by the registry."""
+
+    source_modelo: str
+    filing_year: int
+    period: str
+    source_casillas: tuple[str, ...]
+    origin: str
+    origin_ids: tuple[str, ...]
+    requires_member_fan_in: bool
+
+
+class CrossPeriodDependencyInventoryItemPayload(OutputSchema):
+    """One target filing that requires clean upstream filing history."""
+
+    target_modelo: str
+    target_revision_id: str
+    target_filing_year: int
+    target_period: str
+    dependency_count: int
+    source_modelos: tuple[str, ...]
+    dependencies: tuple[CrossPeriodDependencyRequirementPayload, ...]
+
+
+class CrossPeriodDependencyEvidencePayload(OutputSchema):
+    """Current clean-state evidence for one dependency requirement."""
+
+    source_modelo: str
+    filing_year: int
+    period: str
+    clean: bool
+    blockers: tuple[str, ...]
+    observation_source_kind: str | None = None
+    filing_record_id: str | None = None
+    calculation_revision_id: str | None = None
+    external_evidence_kind: str | None = None
+    expected_member_nifs: tuple[str, ...] = ()
+    observed_member_nifs: tuple[str, ...] = ()
+    missing_member_nifs: tuple[str, ...] = ()
+    unexpected_member_nifs: tuple[str, ...] = ()
+
+
+class CrossPeriodCleanStatePayload(OutputSchema):
+    """Clean-state verdict for one target filing."""
+
+    target_modelo: str
+    target_filing_year: int
+    target_period: str
+    requires_clean_state: bool
+    clean: bool
+    blockers: tuple[str, ...]
+    dependencies: tuple[CrossPeriodDependencyEvidencePayload, ...]
+
+
 class VerificationReportPayload(OutputSchema):
     """Verification report fields returned by verify / verification-report commands."""
 
@@ -415,6 +469,21 @@ class WorkVerifyResult(OutputSchema):
     run_at: str
     verified_by: str
     findings: list[FindingPayload]
+
+
+@register_schema("modelo.work.dependencies")
+class WorkDependenciesResult(OutputSchema):
+    """Cross-period dependency inventory and optional active-bucket clean-state verdict."""
+
+    operation: str = "modelo.work.dependencies"
+    filing_year: int
+    modelo_filter: str | None = None
+    period_filter: str | None = None
+    target_modelos: tuple[str, ...]
+    source_modelos: tuple[str, ...]
+    target_count: int
+    items: tuple[CrossPeriodDependencyInventoryItemPayload, ...]
+    clean_state: CrossPeriodCleanStatePayload | None = None
 
 
 @register_schema("modelo.work.file")
@@ -1159,6 +1228,10 @@ __all__ = [
     "CasillaObservationPayload",
     "CasillaRowPayload",
     "CompareSectionPayload",
+    "CrossPeriodCleanStatePayload",
+    "CrossPeriodDependencyEvidencePayload",
+    "CrossPeriodDependencyInventoryItemPayload",
+    "CrossPeriodDependencyRequirementPayload",
     "DeltaRowPayload",
     "EvidenceBundleCheckFindingPayload",
     "EvidenceRecordRefPayload",
@@ -1203,6 +1276,7 @@ __all__ = [
     "WorkCalculateResult",
     "WorkCompareTaxationResult",
     "WorkCreateResult",
+    "WorkDependenciesResult",
     "WorkDiscardResult",
     "WorkFileResult",
     "WorkHistoryResult",

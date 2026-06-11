@@ -46,7 +46,7 @@ def test_rejects_unknown_keys() -> None:
                 "archive_schema_version": 1,
                 "created_at": datetime.now(tz=UTC),
                 "unexpected": 1,
-            }
+            },
         )
 
 
@@ -64,7 +64,7 @@ def test_rejects_missing_digest() -> None:
                 "recovery_wrap_present": True,
                 "archive_schema_version": 1,
                 "created_at": datetime.now(tz=UTC),
-            }
+            },
         )
 
 

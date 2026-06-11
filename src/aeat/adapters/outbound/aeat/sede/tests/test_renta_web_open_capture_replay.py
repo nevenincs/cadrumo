@@ -148,7 +148,7 @@ async def _capture_profile_variant_observation(profile_overrides: dict[str, str]
         .model_dump_json()
         .encode("utf-8")
     )
-    expected = {label: "0.00" for label in _BASELINE_EXPECTED}
+    expected = dict.fromkeys(_BASELINE_EXPECTED, "0.00")
     observation = await collect_renta_web_open_observation(payload, expected=expected)
     return observation.raw_evidence_locator or "", observation.values
 

@@ -78,7 +78,7 @@ def test_for_lookup_dispatch_arg_count_pins_expected_arity() -> None:
 
 def test_for_dispatch_parameter_kind_pins_parameter_and_op() -> None:
     err = RegistryValidationError.for_dispatch_parameter_kind(
-        parameter_id="is-tipo-general", op="lookup_parameter_by_entity_type"
+        parameter_id="is-tipo-general", op="lookup_parameter_by_entity_type",
     )
     assert err.context == {
         "parameter_id": "is-tipo-general",

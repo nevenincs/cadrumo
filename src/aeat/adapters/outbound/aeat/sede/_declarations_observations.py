@@ -149,10 +149,10 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
         decision_ids = ", ".join(sorted(decision.id for decision in matching_decisions)) or "none"
         raise RegistryValidationError(
             f"expected exactly one authenticated declarations read surface for modelo "
-            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}"
+            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}",
         )
     return remote_state_policy_from_cross_reference(matching_decisions[0]).model_copy(
-        update={"allowed_browser_action_patterns": _EXTERNAL.aeat.live_safety.declarations_browser_action_patterns}
+        update={"allowed_browser_action_patterns": _EXTERNAL.aeat.live_safety.declarations_browser_action_patterns},
     )
 
 
@@ -192,7 +192,7 @@ def _observed_casillas_from_submitted_file(
                 source_artefact_kind="submitted_file",
                 source_locator=casilla.source_locator,
                 confidence=1.0,
-            )
+            ),
         )
     if not observations:
         raise SedeParseError(f"submitted-file artefact {artefact.sha256[:16]} did not yield casilla observations")
@@ -300,7 +300,7 @@ def _observed_modelo_303_casillas_from_submitted_file(
         raw = page[position - 1 : position - 1 + width]
         if len(raw) != width:
             raise SedeParseError(
-                f"submitted Modelo 303 file for {declaration.expediente_id!r} has truncated casilla {casilla_id}"
+                f"submitted Modelo 303 file for {declaration.expediente_id!r} has truncated casilla {casilla_id}",
             )
         value = _parse_modelo_303_money(raw, casilla_id=casilla_id)
         observations.append(
@@ -310,7 +310,7 @@ def _observed_modelo_303_casillas_from_submitted_file(
                 source_artefact_kind="submitted_file",
                 source_locator=f"record:T30303:pos:{position}:width:{width}",
                 confidence=1.0,
-            )
+            ),
         )
     return tuple(observations)
 
@@ -454,7 +454,7 @@ def _observed_casillas_from_declaration_pdf(
                 source_artefact_kind="declaration_pdf",
                 source_locator=f"page:{casilla.source_page}:casilla:{casilla.casilla_id}",
                 confidence=casilla.extraction_confidence,
-            )
+            ),
         )
     if not observations:
         raise SedeParseError(
@@ -488,7 +488,7 @@ def _verify_submitted_file_context(
         observed = "" if parsed.value is None else str(parsed.value)
         if observed != expected[field.draft_attribute]:
             raise SedeParseError(
-                f"submitted-file field {parsed.field_id!r} does not match declaration {declaration.expediente_id!r}"
+                f"submitted-file field {parsed.field_id!r} does not match declaration {declaration.expediente_id!r}",
             )
 
 
@@ -499,7 +499,7 @@ def registry_observation_from_filed_declaration(
     if not observation.extraction_coverage:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
-            "has no extraction coverage"
+            "has no extraction coverage",
         )
     incomplete = {
         artefact_kind: coverage for artefact_kind, coverage in observation.extraction_coverage.items() if coverage < 1.0
@@ -507,7 +507,7 @@ def registry_observation_from_filed_declaration(
     if incomplete:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
-            "has incomplete extraction coverage"
+            "has incomplete extraction coverage",
         )
     casilla_values: dict[str, Decimal] = {}
     for casilla in observation.casillas:
@@ -524,7 +524,7 @@ def registry_observation_from_filed_declaration(
     if not casilla_values:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
-            "has no registry casilla observations"
+            "has no registry casilla observations",
         )
     return RegistryModeloObservation(
         modelo=observation.modelo,

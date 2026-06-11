@@ -48,7 +48,7 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import now

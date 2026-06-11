@@ -102,7 +102,7 @@ def _transaction(
             "iva_amount": iva_amount,
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -134,7 +134,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_T0,
             updated_at=_T0,
-        )
+        ),
     )
 
 
@@ -463,8 +463,8 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
                     taxable_base=Decimal("100.00"),
                     iva_amount=Decimal("21.00"),
                 ),
-            )
-        )
+            ),
+        ),
     )
 
     with pytest.raises(ModeloAggregationBindingError) as excinfo:

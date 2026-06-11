@@ -11,10 +11,12 @@ import pytest
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import CrossPeriodGroupMemberRoster, IVARegime, TaxpayerProfile
+from ....domain.filing import ModeloDraftError
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ExternalEvidenceKind,
     ModeloVerificationFindingKind,
     derive_calculation_revision_id,
     upsert_calculation_revision,
@@ -31,8 +33,10 @@ from .. import (
     create_work_unit,
     export_modelo_revision,
     file_modelo_revision,
+    import_external_filing_evidence,
     verify_modelo_revision,
 )
+from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -224,6 +228,84 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
     )
 
 
+def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-390-imported") as profile:
+        target_snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
+        observations = CalculationObservationRepository()
+        requirements_by_source: dict[tuple[str, int, str], set[str]] = {}
+        for requirement in cross_period_dependency_requirements(target_snapshot):
+            requirements_by_source.setdefault(
+                (requirement.source_modelo, requirement.filing_year, requirement.period),
+                set(),
+            ).update(requirement.source_casillas)
+
+        for (source_modelo, filing_year, period), source_casillas in sorted(requirements_by_source.items()):
+            source_snapshot = resources().modelos.authority.snapshot(
+                source_modelo,
+                filing_year=filing_year,
+                period=period,
+            )
+            source_work_unit = create_work_unit(
+                bucket_id=profile.bucket_id,
+                modelo=source_modelo,
+                filing_year=filing_year,
+                period=period,
+                revision_id=source_snapshot.revision.id,
+                clock=_CLOCK,
+            )
+            casilla_values = {
+                casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casillas))
+            }
+            evidence_reference_id = f"JUST-{source_modelo}-{filing_year}-{period}"
+            persist_justificante_metadata(
+                evidence_reference_id,
+                modelo=source_modelo,
+                filing_year=filing_year,
+                period=period,
+                captured_at=_CLOCK,
+            )
+            import_external_filing_evidence(
+                work_unit_id=source_work_unit.work_unit_id,
+                casilla_values=casilla_values,
+                evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                evidence_reference_id=evidence_reference_id,
+                actor="aeat-import-test",
+                expected_tax_id="X1234567L",
+                clock=_CLOCK,
+            )
+            observations.save_observation(
+                RegistryModeloObservation(
+                    modelo=source_modelo,
+                    filing_year=filing_year,
+                    period=period,
+                    observations=tuple(
+                        CasillaObservation(casilla_id=casilla_id, value=value)
+                        for casilla_id, value in casilla_values.items()
+                    ),
+                ),
+                source_kind="aeat_sede_justificante",
+                captured_at=_CLOCK,
+            )
+
+        revision_id = _seed_verified_revision(
+            bucket_id=profile.bucket_id,
+            modelo="390",
+            filing_year=2025,
+            period="0A",
+        )
+
+        with pytest.raises(ModeloDraftError):
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=revision_id,
+                    output_path=tmp_path / "modelo-390.txt",
+                    actor="operator-test",
+                ),
+                workflow_profile=_workflow_profile(),
+                clock=_CLOCK,
+            )
+
+
 def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-353") as profile:
         snapshot = resources().modelos.authority.snapshot("353", filing_year=2026, period="12")
@@ -307,8 +389,8 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
                         period="12",
                         member_nifs=("A00000000", "B00000001"),
                     ),
-                )
-            }
+                ),
+            },
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:

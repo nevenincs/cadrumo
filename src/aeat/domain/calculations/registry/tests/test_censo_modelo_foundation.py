@@ -199,7 +199,7 @@ def test_censo_foundation_result_rejects_active_037_work_unit() -> None:
 
 def test_resolve_censo_modelo_foundation_returns_active_036_decision() -> None:
     result = resolve_censo_modelo_foundation(
-        CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.BAJA)
+        CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.BAJA),
     )
 
     assert result.modelo == "036"
@@ -297,7 +297,7 @@ def test_censo_foundation_log_fields_are_strict_and_immutable() -> None:
                 "event_kind": CensoModeloEventKind.ALTA,
                 "active_work_unit_allowed": True,
                 "unexpected": "field",
-            }
+            },
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         log_fields.modelo = "037"
@@ -309,7 +309,7 @@ def test_resolve_censo_modelo_foundation_emits_structured_debug_log(
     caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._censo_modelos")
 
     resolve_censo_modelo_foundation(
-        CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.MODIFICACION)
+        CensoModeloFoundationCommand(modelo="036", event_kind=CensoModeloEventKind.MODIFICACION),
     )
 
     record = next(

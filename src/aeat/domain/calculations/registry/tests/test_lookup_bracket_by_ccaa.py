@@ -49,7 +49,7 @@ def _madrid_bracket_param() -> ParameterDefinition:
                     valid_to=date(2025, 12, 31),
                 ),
             ),
-        }
+        },
     )
 
 
@@ -81,7 +81,7 @@ def _cataluna_bracket_param() -> ParameterDefinition:
                     valid_to=date(2025, 12, 31),
                 ),
             ),
-        }
+        },
     )
 
 
@@ -97,10 +97,10 @@ def _dispatch_expression(base: Decimal) -> FormulaExpression:
                     "dispatch_table": {
                         "madrid": "renta-2025-escala-autonomica-madrid-base-general",
                         "cataluna": "renta-2025-escala-autonomica-cataluna-base-general",
-                    }
+                    },
                 },
             ),
-        }
+        },
     )
 
 
@@ -240,10 +240,10 @@ def test_lookup_bracket_by_ccaa_dispatches_with_entry_array_table() -> None:
                     "dispatch_table_entries": [
                         {"key": "madrid", "parameter": madrid_param.id},
                         {"key": "cataluna", "parameter": cataluna_param.id},
-                    ]
+                    ],
                 },
             ),
-        }
+        },
     )
     entry_array_result = _evaluate(
         entry_array_expression,
@@ -278,7 +278,7 @@ def test_lookup_bracket_by_ccaa_raises_when_dispatched_parameter_is_not_bracket_
                 {"binding": "renta-2025-profile-tax-residence-ccaa"},
                 {"dispatch_table": {"madrid": "renta-2025-some-rate-parameter"}},
             ),
-        }
+        },
     )
     parameters = {
         "renta-2025-some-rate-parameter": ParameterDefinition.model_validate(
@@ -295,7 +295,7 @@ def test_lookup_bracket_by_ccaa_raises_when_dispatched_parameter_is_not_bracket_
                 ),
                 "legal_refs": ("ley-35-2006:art-74",),
                 "source_refs": ("lirpf-cuota-chain-authority",),
-            }
+            },
         ),
     }
     enum_bindings = {"renta-2025-profile-tax-residence-ccaa": "madrid"}

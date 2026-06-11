@@ -15,7 +15,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core._period import Period
+from ....core import Period
 from ....domain.filing._repository import ModeloDraftRepository
 from ....domain.filing._schema import (
     ModeloDraft,

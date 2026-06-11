@@ -77,5 +77,5 @@ def test_no_bare_except_in_test_surface(source_tree_ast: Mapping[Path, ast.AST])
         raise AssertionError(
             f"Found {len(findings)} bare-except pattern(s) in test surface:\n{lines}\n"
             "Replace each with a specific exception assertion or a documented "
-            "controlled-failure helper."
+            "controlled-failure helper.",
         )

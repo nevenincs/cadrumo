@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Literal
 
 import pytest
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
 from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
-from ....core._period import Period
+from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.deadlines import (
     EntityType,
@@ -23,6 +25,7 @@ from ....domain.deadlines import (
     ObligationStatus,
     TaxpayerProfile,
 )
+from ....domain.justificante import Justificante
 from ....domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -31,7 +34,7 @@ from ....domain.modelos import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ....tests.aeat_literal_fixtures import aeat_url
+from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ...calculations._observations_repository import _ObservationEnvelopePayload
 from ...live._expedientes import PersistedExpedientesSnapshot
 from ...live._notifications import PersistedNotificationsSnapshot
@@ -122,6 +125,32 @@ def _filed_declaration_artefact(
         sha256="d" * 64,
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         storage_ref=storage_ref,
+    )
+
+
+def _justificante_metadata(
+    *,
+    csv: str = "JUST-303-2025-1T",
+    modelo: str = "303",
+    filing_year: int = 2025,
+    period: str = "1T",
+    tax_id: str = "X1234567L",
+) -> Justificante:
+    pdf_bytes = f"{csv}-pdf".encode()
+    return Justificante(
+        csv=csv,
+        modelo=modelo,
+        period=period,
+        ejercicio=str(filing_year),
+        presentation_id=None,
+        presented_at=datetime(filing_year, 4, 15, 9, 30, tzinfo=UTC),
+        tax_id=tax_id,
+        total_a_ingresar=None,
+        total_a_devolver=None,
+        verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+        source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
+        source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+        parsed_at=datetime(filing_year, 4, 16, 12, 0, tzinfo=UTC),
     )
 
 
@@ -470,6 +499,52 @@ def test_local_modelo_record_does_not_mark_aeat_submission() -> None:
     assert row.justificante_verified is False
 
 
+def test_live_capture_external_evidence_requires_persisted_justificante_to_verify() -> None:
+    csv = "CSVLIVE3031T2025"
+    evidence = calendar_filing_evidence_from_sources(
+        filing_records=(
+            _modelo_record(
+                aeat_accepted=True,
+                external_evidence=ExternalEvidence(
+                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+                    reference_id=csv,
+                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+                ),
+            ),
+        ),
+        justificantes=(_justificante_metadata(csv=csv),),
+        expected_tax_id="X1234567L",
+    )
+
+    assert len(evidence) == 1
+    row = evidence[0]
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+    assert row.aeat_evidence_kind == "aeat_live_capture"
+    assert row.justificante_verified is True
+
+
+def test_live_capture_external_evidence_without_metadata_is_not_justificante_verified() -> None:
+    evidence = calendar_filing_evidence_from_sources(
+        filing_records=(
+            _modelo_record(
+                aeat_accepted=True,
+                external_evidence=ExternalEvidence(
+                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+                    reference_id="CSVLIVE3031T2025",
+                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+                ),
+            ),
+        ),
+        expected_tax_id="X1234567L",
+    )
+
+    assert len(evidence) == 1
+    row = evidence[0]
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
+    assert row.aeat_evidence_kind == "aeat_live_capture"
+    assert row.justificante_verified is False
+
+
 def test_expedientes_event_marks_observed_submission_but_not_justificante_verified() -> None:
     event = calendar_events_from_expedientes_snapshots(
         (
@@ -563,17 +638,20 @@ def test_filed_declaration_observation_without_stored_justificante_is_observed_o
 
 def test_imported_justificante_record_marks_aeat_verified_without_implying_local_calculation() -> None:
     imported_at = datetime(2025, 4, 16, 11, 0, tzinfo=UTC)
+    csv = "JUST-303-2025-1T"
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
             _modelo_record(
                 aeat_accepted=True,
                 external_evidence=ExternalEvidence(
                     kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                    reference_id="JUST-303-2025-1T",
+                    reference_id=csv,
                     imported_at=imported_at,
                 ),
             ),
         ),
+        justificantes=(_justificante_metadata(csv=csv),),
+        expected_tax_id="X1234567L",
     )
 
     row = evidence[0]
@@ -581,6 +659,64 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
     assert row.aeat_evidence_kind == "aeat_justificante_pdf"
     assert row.justificante_verified is True
+
+
+def test_imported_justificante_record_for_wrong_taxpayer_is_not_verified() -> None:
+    csv = "JUST-303-2025-1T"
+    evidence = calendar_filing_evidence_from_sources(
+        filing_records=(
+            _modelo_record(
+                aeat_accepted=True,
+                external_evidence=ExternalEvidence(
+                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                    reference_id=csv,
+                    imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
+                ),
+            ),
+        ),
+        justificantes=(_justificante_metadata(csv=csv, tax_id="Y7654321Z"),),
+        expected_tax_id="X1234567L",
+    )
+
+    row = evidence[0]
+    assert row.local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
+    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
+    assert row.justificante_verified is False
+
+
+@pytest.mark.parametrize(
+    "metadata_updates",
+    [
+        pytest.param({"modelo": "130"}, id="wrong-modelo"),
+        pytest.param({"filing_year": 2024}, id="wrong-ejercicio"),
+        pytest.param({"period": "2T"}, id="wrong-period"),
+    ],
+)
+def test_imported_justificante_record_for_wrong_obligation_is_not_verified(
+    metadata_updates: dict[str, object],
+) -> None:
+    csv = "JUST-303-2025-1T"
+    evidence = calendar_filing_evidence_from_sources(
+        filing_records=(
+            _modelo_record(
+                aeat_accepted=True,
+                external_evidence=ExternalEvidence(
+                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                    reference_id=csv,
+                    imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
+                ),
+            ),
+        ),
+        justificantes=(_justificante_metadata(csv=csv, **metadata_updates),),
+        expected_tax_id="X1234567L",
+    )
+
+    row = evidence[0]
+    assert row.local_filing_state is OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
+    assert row.aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
+    assert row.aeat_evidence_kind == "aeat_justificante_pdf"
+    assert row.justificante_verified is False
 
 
 def test_calendar_entry_carries_distinct_local_and_aeat_states() -> None:

@@ -74,7 +74,7 @@ def _validate_export_record(
     if record.requires_positive_casilla is not None and record.requires_positive_casilla not in casillas:
         failures.append(
             f"{prefix}: export record {record.id!r} requires unknown positive casilla "
-            f"{record.requires_positive_casilla!r}"
+            f"{record.requires_positive_casilla!r}",
         )
     for field in record.fields:
         _validate_export_field(
@@ -104,7 +104,7 @@ def _validate_export_record_binding_link(
     if not matching_bindings:
         failures.append(
             f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
-            f"{record.binding_record!r}"
+            f"{record.binding_record!r}",
         )
     for binding in matching_bindings:
         if binding.aggregation is not None and binding.aggregation.get("op") == "rows":
@@ -113,7 +113,7 @@ def _validate_export_record_binding_link(
         if missing_selector_keys:
             failures.append(
                 f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
-                f"{missing_selector_keys!r}"
+                f"{missing_selector_keys!r}",
             )
 
 
@@ -147,5 +147,5 @@ def _validate_export_field(
         if literal_length > field.length:
             failures.append(
                 f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
-                f"declared length {field.length}"
+                f"declared length {field.length}",
             )

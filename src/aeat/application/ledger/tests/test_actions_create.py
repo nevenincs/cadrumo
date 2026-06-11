@@ -52,7 +52,7 @@ def test_create_manual_transaction_persists_source_provenance(secure_objects: Se
 
 @pytest.mark.parametrize(("field", "expected"), _PROVENANCE_RAW_FIELD_EXPECTATIONS)
 def test_create_manual_transaction_persists_raw_field(
-    secure_objects: SecureObjectRepository, field: str, expected: str
+    secure_objects: SecureObjectRepository, field: str, expected: str,
 ) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.raw_fields[field] == expected
@@ -67,7 +67,7 @@ def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fie
 
 @pytest.mark.parametrize(("attribute", "expected"), _TAXABLE_IVA_EXPECTATIONS)
 def test_create_manual_transaction_persists_taxable_iva(
-    secure_objects: SecureObjectRepository, attribute: str, expected: Decimal
+    secure_objects: SecureObjectRepository, attribute: str, expected: Decimal,
 ) -> None:
     outcome = _drive_create_manual_transaction(secure_objects)
     assert getattr(outcome.persisted, attribute) == expected
@@ -350,7 +350,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
             bucket_id="bucket-b",
             captured_by="operator-B",
             source_command="aeat app ledger attach",
-        )
+        ),
     )
 
     with pytest.raises(TransactionValidationError, match="command bucket"):

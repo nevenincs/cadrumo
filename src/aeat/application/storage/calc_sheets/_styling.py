@@ -113,7 +113,7 @@ def _data_tab_ranges(
     """
     ranges: list[SheetStyledRange] = [
         SheetStyledRange(
-            tab=tab, start_row=1, end_row=1, start_column=_COL_SECTION, end_column=_COL_VALUE, role=StyleRole.HEADER
+            tab=tab, start_row=1, end_row=1, start_column=_COL_SECTION, end_column=_COL_VALUE, role=StyleRole.HEADER,
         ),
         SheetStyledRange(
             tab=tab,
@@ -145,7 +145,7 @@ def _data_tab_ranges(
                 end_column=_COL_SECTION,
                 role=StyleRole.SECTION_BANNER,
                 wrap=True,
-            )
+            ),
         )
     return ranges
 
@@ -163,7 +163,7 @@ def _anchor_ranges(anchors: tuple[SheetAnchor, ...]) -> list[SheetStyledRange]:
                 start_column=anchor.address.column,
                 end_column=anchor.address.column,
                 role=role,
-            )
+            ),
         )
     return ranges
 
@@ -216,8 +216,8 @@ def compute_styling(
     # Provenance header band + wrapped concepto / legal / source columns.
     styled.append(
         SheetStyledRange(
-            tab=TabName.PROVENANCE, start_row=1, end_row=1, start_column=1, end_column=8, role=StyleRole.HEADER
-        )
+            tab=TabName.PROVENANCE, start_row=1, end_row=1, start_column=1, end_column=8, role=StyleRole.HEADER,
+        ),
     )
     for wrap_col in (3, 6, 7):
         styled.append(
@@ -229,14 +229,14 @@ def compute_styling(
                 end_column=wrap_col,
                 role=StyleRole.BODY,
                 wrap=True,
-            )
+            ),
         )
     # Evidencia: fingerprint title on A1, header band on row 3, wrapped note /
     # ref columns.
     styled.append(
         SheetStyledRange(
-            tab=TabName.EVIDENCIA, start_row=1, end_row=1, start_column=1, end_column=1, role=StyleRole.TITLE
-        )
+            tab=TabName.EVIDENCIA, start_row=1, end_row=1, start_column=1, end_column=1, role=StyleRole.TITLE,
+        ),
     )
     styled.append(
         SheetStyledRange(
@@ -246,7 +246,7 @@ def compute_styling(
             start_column=1,
             end_column=_EVIDENCIA_COLUMNS,
             role=StyleRole.HEADER,
-        )
+        ),
     )
     for wrap_col in (12, 15, 16):
         styled.append(
@@ -258,11 +258,11 @@ def compute_styling(
                 end_column=wrap_col,
                 role=StyleRole.BODY,
                 wrap=True,
-            )
+            ),
         )
     # Guía: title on A1, wrapped prose column.
     styled.append(
-        SheetStyledRange(tab=TabName.GUIDE, start_row=1, end_row=1, start_column=1, end_column=1, role=StyleRole.TITLE)
+        SheetStyledRange(tab=TabName.GUIDE, start_row=1, end_row=1, start_column=1, end_column=1, role=StyleRole.TITLE),
     )
     if guide_paragraphs:
         styled.append(
@@ -274,7 +274,7 @@ def compute_styling(
                 end_column=1,
                 role=StyleRole.BODY,
                 wrap=True,
-            )
+            ),
         )
     # Anchors last so the result accent wins over the broad value column.
     styled += _anchor_ranges(anchors)
@@ -306,7 +306,7 @@ def compute_styling(
             end_row=evidencia_last,
             start_column=1,
             end_column=_EVIDENCIA_COLUMNS,
-        )
+        ),
     )
 
     return tuple(styled), tuple(widths), tuple(frozen), tuple(filters)

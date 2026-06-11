@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core._period import Period
+from ....core import Period
 from ....domain.period import parse_canonical_period as _parse_canonical_period
 from .. import ModeloInputs, build_draft, build_runtime_schema_provider
 from ..testing import ModeloTestProfile

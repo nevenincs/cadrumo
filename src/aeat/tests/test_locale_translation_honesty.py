@@ -117,19 +117,19 @@ def test_ca_hu_values_differ_from_en_unless_allowlisted(locale_code: str) -> Non
             pytest.fail(
                 f"{locale_code}: 'untranslated_pending' bucket is active but "
                 f"'_untranslated_ceiling' is missing from _intentional_identical.json. "
-                f"Add the current identical-key count ({len(offenders)}) as the ceiling."
+                f"Add the current identical-key count ({len(offenders)}) as the ceiling.",
             )
         if len(offenders) > ceiling:
             pytest.fail(
                 f"{locale_code}.yml has {len(offenders)} key(s) identical to en.yml, "
                 f"exceeding the ratchet ceiling of {ceiling}. "
                 f"New untranslated keys (first five of overflow): "
-                f"{offenders[ceiling:][:5]}"
+                f"{offenders[ceiling:][:5]}",
             )
         return
 
     if offenders:
         pytest.fail(
             f"{locale_code}.yml carries {len(offenders)} value(s) identical to en.yml without an "
-            f"explicit allowlist entry. First five: {offenders[:5]}"
+            f"explicit allowlist entry. First five: {offenders[:5]}",
         )

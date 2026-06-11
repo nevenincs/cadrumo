@@ -70,10 +70,10 @@ log = get_logger(__name__)
 
 _PRE303_PRESENTATION_URL = f"{_EXTERNAL.aeat.domains.www1}{_PRE303.presentation_service_path}"
 _PRE303_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
-    target=quote(_PRE303.presentation_service_path, safe="")
+    target=quote(_PRE303.presentation_service_path, safe=""),
 )
 _WALLET_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
-    target=quote(_EXTERNAL.aeat.sede_paths.iva_compensation_wallet, safe="")
+    target=quote(_EXTERNAL.aeat.sede_paths.iva_compensation_wallet, safe=""),
 )
 _OWN_NAME_REPRESENTATION_ACTION = _PRE303.representation_own_name_action_label
 _WALLET_DISCOVERED_ENTRYPOINT_ACTION = _PRE303.wallet_discovered_entrypoint_action_label
@@ -170,7 +170,7 @@ async def fetch_iva_compensation_wallet(
                     )
             except PlaywrightError as exc:
                 raise SedeNavigationError(
-                    f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}"
+                    f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}",
                 ) from exc
             if is_aeat_wallet_auth_gate_redirect(page.url):
                 raise SedeNavigationError(
@@ -578,7 +578,7 @@ async def _submit_wallet_execute_gate_if_present(
             if _diag_dump_dir is not None:
                 await _dump_wallet_diagnostic(page, label="post-execute", dump_dir=_diag_dump_dir)
             if _wallet_execute_gate_status(
-                post_execute_html, expected_path=expected_path
+                post_execute_html, expected_path=expected_path,
             ) == "wallet-execute-submit-present" and not _has_wallet_table(post_execute_html):
                 raise SedeNavigationError(
                     "AEAT IVA wallet read query left the executable wallet shell without a wallet table",
@@ -681,7 +681,7 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
             summary.append(
                 f"page[{page_index}] url={shape['landing_url']} tables={shape['table_count']} "
                 f"forms={shape['form_count']} wallet_entrypoints={shape['wallet_entrypoint_count']} "
-                f"raw_sha256={shape['raw_sha256']}"
+                f"raw_sha256={shape['raw_sha256']}",
             )
             for form_index, form in enumerate(shape["forms"]):
                 summary.append(f"page[{page_index}].form[{form_index}] {form}")
@@ -698,7 +698,7 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
                 summary.append(
                     f"page[{page_index}].frame[{frame_index}] url={frame_shape['landing_url']} "
                     f"tables={frame_shape['table_count']} forms={frame_shape['form_count']} "
-                    f"raw_sha256={frame_shape['raw_sha256']}"
+                    f"raw_sha256={frame_shape['raw_sha256']}",
                 )
             except (PlaywrightError, OSError) as exc:
                 log.debug("wallet diagnostic: frame dump failed: %s", exc, exc_info=True)

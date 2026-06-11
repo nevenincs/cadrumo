@@ -16,7 +16,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ....core._toml import freeze_toml, read_toml
+from ....core import freeze_toml, read_toml
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._schema import (
     LegalParameter,
@@ -53,7 +53,7 @@ _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
         "support_removal_decisions",
         "constructs",
         "dependency_classifications",
-    }
+    },
 )
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
@@ -78,10 +78,11 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
         "filing_schedules",
         "support_removal_decisions",
         "dependency_classifications",
-    }
+    },
 )
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
+_REGISTRY_TREE_CACHE_SCHEMA_VERSION = "period-value-object-v1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -319,7 +320,7 @@ def _validate_translation_keys(
         for key in mapping:
             if key not in valid_ids:
                 raise RegistryValidationError(
-                    f"Invalid translation key {key!r} in {field_name} for locale {locale!r}{context}: {reason}"
+                    f"Invalid translation key {key!r} in {field_name} for locale {locale!r}{context}: {reason}",
                 )
 
 
@@ -410,7 +411,7 @@ def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> Non
     revision_translations = _load_revision_translations(modelo_dir)
     valid_casilla_ids, valid_continuidad_ids = _collect_valid_locale_ids(merged_revisions)
     _check_locale_referential_integrity(
-        modelo_translations, revision_translations, valid_casilla_ids, valid_continuidad_ids
+        modelo_translations, revision_translations, valid_casilla_ids, valid_continuidad_ids,
     )
     _inject_localized_translations(merged_revisions, modelo_translations, revision_translations)
 
@@ -438,7 +439,7 @@ def _load_modelo_manifest(resolved: Path) -> dict[str, object]:
     if "revisions" in manifest_data:
         raise RegistryLoadError(
             f"{manifest_path}: directory-mode manifest must not declare [revisions]; "
-            f"revision data lives in revisions/<id>.toml"
+            f"revision data lives in revisions/<id>.toml",
         )
     return manifest_data
 
@@ -478,7 +479,7 @@ def _merge_revision_file(path: Path, merged_revisions: dict[str, object]) -> Non
             raise RegistryLoadError(f"{path}: revision key must be a string")
         if revision_id in merged_revisions:
             raise RegistryLoadError(
-                f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
+                f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file",
             )
         merged_revisions[revision_id] = raw_revision
 
@@ -495,7 +496,7 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     fragment_paths.extend(
         sorted(
             p for p in path.rglob("*.toml") if p != revision_manifest and not any(part == "locales" for part in p.parts)
-        )
+        ),
     )
     merged_revision: dict[str, object] = {}
     for fragment_path in fragment_paths:
@@ -519,7 +520,7 @@ def _merge_revision_fragment(path: Path, expected_revision_id: str, merged_revis
         raise RegistryLoadError(f"{path}: revision key must be a string")
     if revision_id != expected_revision_id:
         raise RegistryLoadError(
-            f"{path}: revision fragment declares {revision_id!r}, expected {expected_revision_id!r}"
+            f"{path}: revision fragment declares {revision_id!r}, expected {expected_revision_id!r}",
         )
     raw_revision_table = _as_toml_table(raw_revision)
     if raw_revision_table is None:
@@ -562,7 +563,7 @@ def _merge_revision_fragment_field(
         existing = merged_revision.get(key, ())
         if not isinstance(existing, tuple):
             raise RegistryLoadError(
-                f"{path}: revision fragment field 'export_layouts' conflicts with a non-array field"
+                f"{path}: revision fragment field 'export_layouts' conflicts with a non-array field",
             )
         merged_revision[key] = _merge_export_layout_fragments(path, existing, value)
         return
@@ -608,13 +609,13 @@ def _merge_singleton_table_fragment(
             existing_values = merged.get(key, ())
             if not isinstance(existing_values, tuple):
                 raise RegistryLoadError(
-                    f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with a non-array field"
+                    f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with a non-array field",
                 )
             merged[key] = (*existing_values, *value)
             continue
         if key in merged and merged[key] != value:
             raise RegistryLoadError(
-                f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with another fragment"
+                f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with another fragment",
             )
         merged[key] = value
     return merged
@@ -676,7 +677,7 @@ def _merge_export_layout_by_id(
             continue
         if key in merged and merged[key] != value:
             raise RegistryLoadError(
-                f"{path}: export layout {layout_id!r} field {key!r} conflicts with another fragment"
+                f"{path}: export layout {layout_id!r} field {key!r} conflicts with another fragment",
             )
         merged[key] = value
     return merged
@@ -741,7 +742,7 @@ def _merge_table_fragment_by_id(
             existing_values = merged.get(key, ())
             if not isinstance(existing_values, tuple):
                 raise RegistryLoadError(
-                    f"{path}: {item_label} {item_id!r} field {key!r} conflicts with a non-array fragment"
+                    f"{path}: {item_label} {item_id!r} field {key!r} conflicts with a non-array fragment",
                 )
             _reject_duplicate_appended_table_ids(path, existing_values, value, item_label, item_id, key)
             merged[key] = (*existing_values, *value)
@@ -765,7 +766,7 @@ def _reject_duplicate_appended_table_ids(
     duplicate_ids = sorted(existing_ids.intersection(incoming_ids))
     if duplicate_ids:
         raise RegistryLoadError(
-            f"{path}: {item_label} {item_id!r} field {field!r} appends duplicate ids {duplicate_ids!r}"
+            f"{path}: {item_label} {item_id!r} field {field!r} appends duplicate ids {duplicate_ids!r}",
         )
 
 
@@ -952,7 +953,7 @@ def _append_modelo_source(
     if previous is not None:
         raise RegistryLoadError(
             f"{source.path}: modelo {source.modelo_id!r} also declared at {previous.path}; "
-            "remove one of the two layouts"
+            "remove one of the two layouts",
         )
     seen_modelo_ids[source.modelo_id] = source
     sources.append(source)
@@ -976,7 +977,7 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
                     layout="revision_file",
                     path=path,
                     fragment_paths=(path,),
-                )
+                ),
             )
     for path in sorted(revisions_dir.iterdir()):
         if not path.is_dir():
@@ -997,7 +998,7 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
                 layout="fragment_directory",
                 path=path,
                 fragment_paths=fragment_paths,
-            )
+            ),
         )
     return tuple(sources)
 
@@ -1083,6 +1084,7 @@ def _load_registry_tree_cached(
     import tempfile
 
     hasher = hashlib.sha256()
+    hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
     hasher.update(root.encode("utf-8"))
     for item in fingerprints:
         hasher.update(item[0].encode("utf-8"))
@@ -1132,7 +1134,7 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
         if overlap_legal or overlap_sources or overlap_parameters:
             raise RegistryLoadError(
                 f"{path}: duplicate catalogue ids legal={sorted(overlap_legal)!r} "
-                f"sources={sorted(overlap_sources)!r} parameters={sorted(overlap_parameters)!r}"
+                f"sources={sorted(overlap_sources)!r} parameters={sorted(overlap_parameters)!r}",
             )
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)

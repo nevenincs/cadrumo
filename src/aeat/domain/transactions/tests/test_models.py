@@ -73,7 +73,7 @@ def test_direction_enum_round_trips_through_json() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INTERNAL_TRANSFER,
-        }
+        },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
@@ -108,7 +108,7 @@ def test_business_pct_is_only_allowed_for_mixed_transactions() -> None:
             "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.MIXED,
             "business_pct": Decimal("0.5"),
-        }
+        },
     )
 
     assert mixed.business_pct == Decimal("0.5")
@@ -133,7 +133,7 @@ def test_transaction_tax_fields_are_typed_and_round_trip_through_json() -> None:
             "prorrata_reference": "prorrata-2026",
             "purchase_invoice_evidence_id": "purchase-evidence-1",
             "attachment_ids": ("attachment-1",),
-        }
+        },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
@@ -179,7 +179,7 @@ def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> N
                     "bucket_event_id": "d" * 64,
                 },
             ),
-        }
+        },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
@@ -210,7 +210,7 @@ def test_transaction_lifecycle_lineage_round_trips_through_json() -> None:
                     "bucket_event_id": "e" * 64,
                 },
             ),
-        }
+        },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
@@ -238,7 +238,7 @@ def test_transaction_lifecycle_lineage_rejects_noop_transition() -> None:
                         "changed_at": datetime(2026, 4, 15, 10, 0, tzinfo=UTC),
                     },
                 ),
-            }
+            },
         )
 
 
@@ -251,7 +251,7 @@ def test_transaction_tax_fields_reject_negative_values_and_legacy_multi_purchase
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.OUTGOING,
                 "taxable_base": Decimal("-1.00"),
-            }
+            },
         )
 
     with pytest.raises(ValidationError):
@@ -260,20 +260,20 @@ def test_transaction_tax_fields_reject_negative_values_and_legacy_multi_purchase
                 "raw": _sample_raw(),
                 "direction": TransactionDirection.OUTGOING,
                 "purchase_invoice_evidence_id": ("evidence-1", "evidence-2"),
-            }
+            },
         )
 
 
 def test_classified_by_accepts_only_whitelisted_shapes() -> None:
     """classified_by must be auto, manual, or rule:<rule-id>."""
     auto = Transaction.model_validate(
-        {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "auto"}
+        {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "auto"},
     )
     manual = Transaction.model_validate(
-        {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "manual"}
+        {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "manual"},
     )
     rule = Transaction.model_validate(
-        {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "rule:vendor-map"}
+        {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "rule:vendor-map"},
     )
 
     assert auto.classified_by == "auto"
@@ -282,12 +282,12 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
 
     with pytest.raises(ValidationError):
         Transaction.model_validate(
-            {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "rule:"}
+            {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "rule:"},
         )
 
     with pytest.raises(ValidationError):
         Transaction.model_validate(
-            {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "bot"}
+            {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "bot"},
         )
 
 
@@ -400,7 +400,7 @@ def test_source_jurisdiction_roundtrips_es_through_json() -> None:
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
             "source_jurisdiction": "ES",
-        }
+        },
     )
     restored = Transaction.model_validate_json(original.model_dump_json())
 
@@ -419,7 +419,7 @@ def test_source_jurisdiction_preserves_none_grandfather_state() -> None:
         {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
-        }
+        },
     )
     restored = Transaction.model_validate_json(original.model_dump_json())
 
@@ -436,7 +436,7 @@ def test_source_jurisdiction_rejects_non_iso_alpha2_codes() -> None:
                     "raw": _sample_raw(),
                     "direction": TransactionDirection.INCOMING,
                     "source_jurisdiction": invalid,
-                }
+                },
             )
 
 
@@ -447,7 +447,7 @@ def test_source_jurisdiction_normalises_surrounding_whitespace() -> None:
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
             "source_jurisdiction": " FR ",
-        }
+        },
     )
 
     assert txn.source_jurisdiction == "FR"

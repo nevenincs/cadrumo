@@ -122,5 +122,5 @@ class TestNormativeReference:
                     "last_reviewed_at": "2026-04-12",
                     "reviewed_by": "wgergely",
                     "unknown_field": "drift",
-                }
+                },
             )

@@ -65,7 +65,7 @@ def _create_profile(name: str, tax_id: str) -> None:
             "Servicios",
             "--iva-regime",
             "GENERAL",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
 

@@ -51,7 +51,7 @@ def record_unhandled(
                 "error_type": type(exc).__name__,
                 "error_message": str(exc),
             },
-        )
+        ),
     )
     raise WorkflowAbortSignalError(
         reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
@@ -90,7 +90,7 @@ def record_site_unavailable(
                 status=status,
                 run_id=alert_run_id,
             ),
-        )
+        ),
     )
     raise WorkflowAbortSignalError(
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,

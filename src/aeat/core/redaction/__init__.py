@@ -90,7 +90,7 @@ CLI_OBJECT_KEY_PLACEHOLDER = "<object-key>"
 
 _CLI_UUID_PATTERN = re.compile(
     r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
-    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b",
 )
 _CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
     r"(?i)(?P<label>\b(?:"
@@ -111,10 +111,10 @@ _CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
     r"storage[_-]?object[_-]?key"
     r")\b)"
     r"(?P<sep>\s*(?::|=|\t)\s*)"
-    r"(?P<value>[^\s,;]+)"
+    r"(?P<value>[^\s,;]+)",
 )
 _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
-    r"(?i)\b(?:wallet|transaction-catalogue|invoice|attachment|justificante):[^\s,;]+"
+    r"(?i)\b(?:wallet|transaction-catalogue|invoice|attachment|justificante):[^\s,;]+",
 )
 _CLI_PROFILE_ID_KEYS = frozenset(
     {
@@ -125,7 +125,7 @@ _CLI_PROFILE_ID_KEYS = frozenset(
         "repository_profile_id",
         "source_profile_id",
         "target_profile_id",
-    }
+    },
 )
 _CLI_PROFILE_REFERENCE_KEYS = frozenset({"active_profile"})
 _CLI_BUCKET_ID_KEYS = frozenset(
@@ -134,7 +134,7 @@ _CLI_BUCKET_ID_KEYS = frozenset(
         "bucket_id",
         "repository_bucket_id",
         "storage_bucket_id",
-    }
+    },
 )
 _CLI_OBJECT_KEY_KEYS = frozenset(
     {
@@ -142,7 +142,7 @@ _CLI_OBJECT_KEY_KEYS = frozenset(
         "object_key",
         "secure_object_key",
         "storage_object_key",
-    }
+    },
 )
 
 
@@ -209,7 +209,7 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
                 _SensitivityClass.DIAGNOSTIC,
             ),
         ),
-    }
+    },
 )
 
 
