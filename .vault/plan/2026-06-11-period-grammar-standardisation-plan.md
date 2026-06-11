@@ -128,7 +128,7 @@ Delete the combined-input regexes from parse_canonical_period; remove the round-
 - [x] `W01.P03.S09` - Confirm WorkUnit / draft / deadline-window persist a separated (filing_year, registry_token) and add or extend a roundtrip test proving no combined period string is ever persisted; `src/aeat/application/modelo/_work_addressing.py`.
 - [x] `W01.P03.S10` - Remove the round-trip through a combined token in normalize_modelo_work_period; `build (year, registry_token) directly without composing 2026Q1-style intermediates; `src/aeat/application/modelo/_work_addressing.py`.
 - [x] `W01.P03.S11` - Reconcile the registry parse_modelo_period dashed YYYY-Qn dialect with the AEAT-token-only mandate or document why the registry-introspection dialect is out of the operator-period scope; `src/aeat/domain/calculations/registry`.
-- [ ] `W01.P03.S12` - Update test_period.py to assert the combined forms now refuse and only the bare-token (with ejercicio), month, 0A and nP tokens are accepted; `src/aeat/domain/tests/test_period.py`.
+- [x] `W01.P03.S12` - Update test_period.py to assert the combined forms now refuse and only the bare-token (with ejercicio), month, 0A and nP tokens are accepted; `src/aeat/domain/tests/test_period.py`.
 
 ### Phase `W01.P04` - Docs sweep and final repo-wide conflation gate
 
