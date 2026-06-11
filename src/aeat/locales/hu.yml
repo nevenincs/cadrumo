@@ -2765,6 +2765,11 @@ cli:
         rögzített ok.
       yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
         N gyermek tranzakciót).
+      llm_help: 'Javasolj bizonyitek-alapu N-reszes felosztast a megadott LLM szolgaltatoval.'
+      apply_help: 'Mentsd el a javasolt --llm felosztast (--yes szukseges); enelkul a javaslat csak elonezetben jelenik meg.'
+      read_evidence_help: 'Olvasd be a tranzakciohoz csatolt szamlat helyben, es add at a --llm felosztasjavaslonak.'
+      evidence_acknowledged_help: 'Ismerd el, hogy a --read-evidence felhomodellnek kuldi a bizonyitekot (alapbol kikapcsolva, konyveloknel tiltva).'
+      llm_exclusive: '--llm nem kombinalhato a --child-amount/--child-description kapcsolokkal; a kezi ut a kezelo explicit felulbiralasa.'
     stash:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       help: Egyetlen főkönyvi tranzakció elrejtése az aktív profilban.

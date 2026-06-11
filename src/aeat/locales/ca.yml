@@ -2784,6 +2784,11 @@ cli:
       id_help: Id de la transacció que vols dividir
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la divisió de la transacció
+      llm_help: 'Proposa una divisio en N parts basada en evidencia amb el proveidor LLM indicat.'
+      apply_help: 'Persisteix la divisio --llm proposada (requereix --yes); sense aixo la proposta nomes es previsualitza.'
+      read_evidence_help: 'Llegeix la factura adjunta de la transaccio en local i alimenta-la al proposant de divisio --llm.'
+      evidence_acknowledged_help: 'Reconeix que --read-evidence envia l''evidencia a un model al nuvol (desactivat per defecte, vetat per a gestors).'
+      llm_exclusive: '--llm no es pot combinar amb --child-amount/--child-description; la via manual es l''anul.lacio explicita de l''operador.'
     stash:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Apartar un moviment del llibre al perfil actiu

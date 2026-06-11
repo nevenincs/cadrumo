@@ -5,16 +5,19 @@ Use of :class:`OutputSchema`, :class:`TransactionCatalogueRepository` for compli
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
 from typing import Protocol
 
 import typer
 from pydantic import ValidationError
 
 from ...application.ledger import (
+    LLMProvider,
+    PurchaseInvoiceEvidenceInputError,
     SplitChildCommand,
+    apply_evidence_split,
     archive_manual_transaction,
     attach_manual_transaction_evidence,
+    is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_review_status,
     list_manual_transactions,
@@ -25,17 +28,20 @@ from ...application.ledger import (
     restore_manual_transaction,
     split_transaction,
     stash_manual_transaction,
+    suggest_evidence_split,
 )
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.time import now
 from ...domain.attachments import DocumentLinkSource
 from ...domain.transactions import (
+    LLMClassifierError,
     Transaction,
     TransactionCatalogueRepository,
     TransactionIdPrefixError,
+    TransactionValidationError,
 )
-from ._common import _bad, _emit_envelope, _state, _tx_repo
+from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._schemas import OutputSchema
 
 
@@ -61,13 +67,6 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     app.command("reset", help=tr("cli.ledger.reset.help"))(ledger_reset)
     app.command("split", help=tr("cli.ledger.split.help"))(ledger_split)
     app.command("merge", help=tr("cli.ledger.merge.help"))(ledger_merge)
-
-
-def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
-    try:
-        return Decimal(raw.strip())
-    except (InvalidOperation, ValueError) as exc:
-        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw)) from exc
 
 
 def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[str, ...]:
@@ -101,7 +100,7 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
                     "cli.ledger.errors.id_prefix_collision",
                     prefix=prefix,
                     candidates=candidates.strip() or "?",
-                )
+                ),
             ) from exc
         raise _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message)) from exc
 
@@ -131,7 +130,7 @@ def _emit_update_result(
             "bucket_event_ids": list(events),
             "review_status": review_status,
             "transaction": transaction_payload.model_dump(mode="json"),
-        }
+        },
     )
     _emit_envelope(
         ctx,
@@ -195,10 +194,10 @@ def ledger_doclink(
         help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id."),
     ),
     source: DocumentLinkSource = typer.Option(
-        ..., "--source", help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url.")
+        ..., "--source", help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url."),
     ),
     reference: str = typer.Option(
-        ..., "--reference", help=tr("cli.ledger.doclink.reference_help", default="The document link reference.")
+        ..., "--reference", help=tr("cli.ledger.doclink.reference_help", default="The document link reference."),
     ),
     note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help", default="Optional note.")),
     actor: str | None = typer.Option(
@@ -439,11 +438,58 @@ def ledger_split(
         "--child-description",
         help=tr("cli.ledger.split.child_description_help"),
     ),
+    llm: LLMProvider | None = typer.Option(
+        None,
+        "--llm",
+        help=tr(
+            "cli.ledger.split.llm_help",
+            default="Propose an evidence-driven N-way split with the given LLM provider.",
+        ),
+    ),
+    apply: bool = typer.Option(
+        False,
+        "--apply",
+        help=tr(
+            "cli.ledger.split.apply_help",
+            default="Persist the proposed --llm split (requires --yes); without it the proposal is previewed only.",
+        ),
+    ),
+    read_evidence: bool = typer.Option(
+        False,
+        "--read-evidence",
+        help=tr(
+            "cli.ledger.split.read_evidence_help",
+            default="Read the transaction's attached invoice on-host and feed it to the --llm split proposer.",
+        ),
+    ),
+    evidence_acknowledged: bool = typer.Option(
+        False,
+        "--evidence-acknowledged",
+        help=tr(
+            "cli.ledger.split.evidence_acknowledged_help",
+            default="Acknowledge --read-evidence sends the evidence to a cloud model (off by default, gestor-barred).",
+        ),
+    ),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.split.reason_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.split.yes_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.split.actor_help")),
 ) -> None:
-    """Redistribute one parent transaction into N child transactions."""
+    """Redistribute one parent transaction into N child transactions (manual or --llm)."""
+    if llm is not None:
+        _ledger_split_llm(
+            ctx,
+            transaction_id=transaction_id,
+            child_amount=child_amount,
+            child_description=child_description,
+            provider=llm,
+            apply=apply,
+            read_evidence=read_evidence,
+            evidence_acknowledged=evidence_acknowledged,
+            reason=reason,
+            yes=yes,
+            actor=actor,
+        )
+        return
     if not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
     if len(child_amount) != len(child_description):
@@ -456,7 +502,7 @@ def ledger_split(
     try:
         children = tuple(
             SplitChildCommand(
-                amount=_parse_required_decimal(amount_raw, label="child-amount"),
+                amount=parse_decimal_amount(amount_raw, label="child-amount"),
                 description=description_raw,
             )
             for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
@@ -484,7 +530,7 @@ def ledger_split(
                 "split_group_id": result.split_group_id,
                 "child_transaction_ids": list(result.child_transaction_ids),
                 "bucket_event_id": result.bucket_event_id,
-            }
+            },
         ),
         lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
@@ -494,6 +540,154 @@ def ledger_split(
             f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}",
         ],
     )
+
+
+def _ledger_split_llm(
+    ctx: typer.Context,
+    *,
+    transaction_id: str,
+    child_amount: list[str],
+    child_description: list[str],
+    provider: LLMProvider,
+    apply: bool,
+    read_evidence: bool,
+    evidence_acknowledged: bool,
+    reason: str,
+    yes: bool,
+    actor: str | None,
+) -> None:
+    """Run the evidence-driven LLM split suggest / apply loop for ``ledger split --llm``.
+
+    Without ``--apply`` the proposed children (derived amounts, model-selected
+    categories, registry-derived IVA) are previewed and nothing is persisted.
+    With ``--apply`` (and ``--yes``) the reviewed proposal drives
+    :func:`apply_evidence_split`: the single-writer split plus per-child
+    classification, registry-derived numbers, parent-invoice evidence link, and
+    ``llm:<model>`` provenance. The manual ``--child-amount`` / ``--child-description``
+    flags are the explicit operator override and cannot be combined with ``--llm``.
+    """
+    from ._ledger_payloads import LedgerSplitChildProposalPayload, LedgerSplitResult
+
+    if child_amount or child_description:
+        raise _bad(
+            tr(
+                "cli.ledger.split.llm_exclusive",
+                default="--llm cannot be combined with --child-amount/--child-description; "
+                "the manual path is the explicit operator override.",
+            ),
+        )
+    if not is_llm_provider_available(provider):
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_provider_unavailable",
+                provider=provider.value,
+                default=(
+                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
+                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
+                    "or run 'aeat app ledger providers' to list usable providers."
+                ),
+            ),
+        )
+    if apply and not yes:
+        raise _bad(tr("cli.ledger.errors.confirm_required"))
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    bucket_id = transaction_repository.bucket_id
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    try:
+        suggestion = suggest_evidence_split(
+            bucket_id=bucket_id,
+            transaction_id=resolved_id,
+            provider=provider,
+            transaction_repository=transaction_repository,
+            read_evidence=read_evidence,
+            evidence_acknowledged=evidence_acknowledged,
+        )
+    except PurchaseInvoiceEvidenceInputError as exc:
+        raise _bad(str(exc)) from exc
+    except LLMClassifierError as exc:
+        raise _bad(
+            tr("cli.ledger.classify.llm_failed", reason=str(exc), default=f"LLM split proposal failed: {exc}"),
+        ) from exc
+
+    proposed_children = [
+        LedgerSplitChildProposalPayload.model_validate(
+            {
+                "proportion": format(child.proportion, "f"),
+                "amount": format(child.amount, "f"),
+                "description": child.description,
+                "category": child.category.value if child.category is not None else None,
+                "iva_category": child.iva_category.value if child.iva_category is not None else None,
+                "iva_rate": format(child.iva_rate, "f") if child.iva_rate is not None else None,
+                "taxable_base": format(child.taxable_base, "f") if child.taxable_base is not None else None,
+                "iva_amount": format(child.iva_amount, "f") if child.iva_amount is not None else None,
+                "rate_derivable": child.rate_derivable,
+            },
+        )
+        for child in suggestion.children
+    ]
+
+    if not apply:
+        result = LedgerSplitResult.model_validate(
+            {
+                "bucket_id": bucket_id,
+                "parent_transaction_id": suggestion.transaction_id,
+                "llm": True,
+                "persisted": False,
+                "provider": suggestion.provider.value,
+                "provenance": suggestion.provenance,
+                "reason": suggestion.reason,
+                "parent_amount": format(suggestion.parent_amount, "f"),
+                "proposed_children": [child.model_dump(mode="json") for child in proposed_children],
+            },
+        )
+        lines = [
+            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+            f"{tr('cli.ledger.labels.children')}\t{len(proposed_children)}",
+        ]
+        lines.extend(
+            f"{child.description}\t{child.amount}\t{child.iva_category or ''}" for child in proposed_children
+        )
+        lines.append(tr("cli.ledger.classify.llm_review_hint"))
+        _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+        return
+
+    try:
+        applied = apply_evidence_split(
+            suggestion,
+            bucket_id=bucket_id,
+            actor=actor or resolve_active_bucket_id() or "operator",
+            transaction_repository=transaction_repository,
+        )
+    except TransactionValidationError as exc:
+        raise _bad(str(exc)) from exc
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
+
+    result = LedgerSplitResult.model_validate(
+        {
+            "bucket_id": applied.bucket_id,
+            "parent_transaction_id": applied.parent_transaction_id,
+            "split_group_id": applied.split_group_id,
+            "child_transaction_ids": list(applied.child_transaction_ids),
+            "llm": True,
+            "persisted": True,
+            "provider": suggestion.provider.value,
+            "provenance": applied.provenance,
+            "reason": suggestion.reason,
+            "parent_amount": format(suggestion.parent_amount, "f"),
+            "proposed_children": [child.model_dump(mode="json") for child in proposed_children],
+            "classified_child_count": applied.classified_child_count,
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.parent_id')}\t{applied.parent_transaction_id}",
+        f"{tr('cli.ledger.labels.split_group_id')}\t{applied.split_group_id}",
+        f"{tr('cli.ledger.labels.children')}\t{len(applied.child_transaction_ids)}",
+        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}",
+    ]
+    _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
 
 
 def ledger_merge(
@@ -532,7 +726,7 @@ def ledger_merge(
                 "merged_transaction_id": result.merged_transaction_id,
                 "source_child_ids": list(result.source_child_ids),
                 "bucket_event_id": result.bucket_event_id,
-            }
+            },
         ),
         lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
