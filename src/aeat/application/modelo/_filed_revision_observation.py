@@ -35,6 +35,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Final
 
+from ...core import Period
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._work_unit import WorkUnit
@@ -95,7 +96,7 @@ def persist_filed_revision_observation(
         captured_at=captured_at,
         stamped_revision_id=work_unit.revision_id,
     )
-    return observation_key(work_unit.modelo, work_unit.filing_year, work_unit.period)
+    return observation_key(work_unit.modelo, Period.from_year_and_code(work_unit.filing_year, work_unit.period))
 
 
 __all__ = [

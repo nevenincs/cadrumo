@@ -80,8 +80,10 @@ def test_observation_key_derives_storage_token_from_typed_period() -> None:
 
 
 def test_observation_key_rejects_untyped_combined_period() -> None:
+    combined_period: object = "2026 1T"
+
     with pytest.raises(ObservationKeyError, match=r"aeat\.core\.Period"):
-        observation_key("303", "2026 1T")  # type: ignore[arg-type]
+        observation_key("303", combined_period)
 
 
 # ---------------------------------------------------------------------------

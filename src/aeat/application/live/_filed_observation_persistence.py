@@ -20,7 +20,7 @@ from ...application.calculations import (
     iva_compensation_state_from_filed_observation,
     observation_key,
 )
-from ...core import Modelo
+from ...core import Modelo, Period
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...domain.iva_compensation._carry_forward import derive_303_compensation_available
@@ -49,7 +49,10 @@ def persist_filed_calculation_observation(
     )
     if observation.modelo == Modelo.M303:
         IvaCompensationHistoryRepository().save_period(iva_compensation_state_from_filed_observation(observation))
-    return observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
+    return observation_key(
+        registry_observation.modelo,
+        Period.from_year_and_code(registry_observation.filing_year, registry_observation.period),
+    )
 
 
 def persist_latest_filed_calculation_observations(
