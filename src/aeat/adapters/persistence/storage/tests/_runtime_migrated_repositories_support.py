@@ -15,12 +15,12 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....application.auth import ApoderadoService
+from .....application.auth._diagnostics import list_auth_diagnostics
 from .....application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     IvaWalletDecisionRepository,
 )
-from .....application.auth._diagnostics import list_auth_diagnostics
 from .....application.config_reset import ConfigResetScope, reset_config
 from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
