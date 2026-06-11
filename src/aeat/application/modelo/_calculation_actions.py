@@ -13,6 +13,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from ...core import Period as _Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -539,7 +540,7 @@ def _resolve_bucket_source_mesh(
         bucket_id=work_unit.bucket_id,
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=_Period.from_year_and_code(work_unit.filing_year, work_unit.period),
         revision=snapshot.revision,
     )
     source_resolution = merge_source_resolutions(

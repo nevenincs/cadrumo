@@ -13,6 +13,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
+from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.iva_compensation._errors import (
@@ -106,9 +107,9 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
             bucket_id="operator",
             modelo="303",
             filing_year=2026,
-            period="2T",
+            period=Period.from_year_and_code(2026, "2T"),
             revision=snapshot.revision,
-        )
+        ),
     )
 
     assert resolution.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200")}
@@ -342,7 +343,7 @@ def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -
 
 
 def _wallet_for_period(
-    amount: Decimal, period: str, *, captured_at: datetime = _NOW
+    amount: Decimal, period: str, *, captured_at: datetime = _NOW,
 ) -> IvaCompensationWalletObservation:
     return IvaCompensationWalletObservation(
         taxpayer_nif=_TAXPAYER_REF,

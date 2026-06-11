@@ -75,13 +75,13 @@ class IvaWalletDecisionSourceResolver:
                 owned_sources=self.owned_sources,
             )
         decision = self._decision
-        if decision.target_year != context.filing_year or decision.target_period != context.period:
+        if decision.target_year != context.filing_year or decision.target_period != context.period.registry_token:
             raise IvaCompensationReconciliationInputError(
-                "IVA wallet reconciliation decision target does not match the Modelo 303 work unit"
+                "IVA wallet reconciliation decision target does not match the Modelo 303 work unit",
             )
         if decision.blocked:
             raise IvaCompensationReconciliationInputError(
-                f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}"
+                f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}",
             )
         if decision.selected_amount is None:
             raise IvaCompensationReconciliationInputError("IVA wallet reconciliation decision has no selected amount")
@@ -142,7 +142,7 @@ def reconcile_modelo_303_iva_compensation(
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
         raise IvaCompensationReconciliationInputError(
-            "IVA compensation wallet reconciliation only applies to Modelo 303"
+            "IVA compensation wallet reconciliation only applies to Modelo 303",
         )
     if wallet is not None:
         validate_wallet_matches_snapshot(

@@ -12,6 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
@@ -186,7 +187,7 @@ def test_borrador_binding_command_rejects_unknown_fields() -> None:
                 "period": _PERIOD,
                 "borrador_snapshot_id": None,
                 "unknown": "field",
-            }
+            },
         )
 
 
@@ -301,9 +302,9 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=_YEAR,
-            period=_PERIOD,
+            period=Period.from_year_and_code(_YEAR, _PERIOD),
             revision=registry_snapshot.revision,
-        )
+        ),
     )
 
     assert resolution.binding_values == expected.binding_values

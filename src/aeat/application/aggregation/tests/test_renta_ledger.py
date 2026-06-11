@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
@@ -36,10 +37,11 @@ from ....domain.transactions import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
+    CalculationSourceContext,
+    LedgerRentaExpenseAggregationSourceResolver,
     RentaLedgerAggregationIssueReason,
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
-    resolve_modelo_ledger_binding_values_from_repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -116,7 +118,7 @@ def _transaction(
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -154,7 +156,7 @@ def _invoice(
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
             "linked_transaction_ids": linked_transaction_ids if linked_transaction_ids is not None else (tx_id,),
-        }
+        },
     )
 
 
@@ -199,10 +201,10 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
         purchase_invoice_evidence_id=invoice.invoice_id,
     )
     TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((linked,))
+        TransactionCatalogue.from_transactions((linked,)),
     )
     InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects).save(
-        InvoiceCatalogue.from_invoices((invoice,))
+        InvoiceCatalogue.from_invoices((invoice,)),
     )
 
     result = aggregate_renta_ledger_expenses_from_repositories(
@@ -218,7 +220,7 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
 
 
 def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
-    """The application binding-resolution service resolves the modelo-100 renta-expense
+    """The LedgerRentaExpenseAggregationSourceResolver resolves modelo-100 renta-expense
     ledger bindings from repository-backed transactions, keyed by binding id."""
     transaction = _transaction(
         "row-cli-renta",
@@ -231,16 +233,19 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     invoice_repo.save(InvoiceCatalogue())
 
     snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
-    aggregation = resolve_modelo_ledger_binding_values_from_repositories(
-        bucket_id="test",
-        modelo="100",
-        revision=snapshot.revision,
-        filing_year=2025,
-        period="0A",
+    resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id="test",
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=snapshot.revision,
+        ),
     )
-    binding_values = aggregation.binding_values
+    binding_values = resolution.binding_values
 
     assert binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("121.00")
     assert binding_values["renta-2025-ledger-expense-0186-deductible"] == Decimal("0")

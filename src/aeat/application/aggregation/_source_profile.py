@@ -60,7 +60,7 @@ class ProfileSourceResolver:
             snapshot = resources().modelos.authority.snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
-                period=context.period,
+                period=context.period.registry_token,
             )
 
         from ..modelo._profile_binding import resolve_profile_sourced_bindings

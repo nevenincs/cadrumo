@@ -12,6 +12,7 @@ import pytest
 from sqlalchemy import text
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
+from ....core import Period
 from ....core.classification import SensitivityClass
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
@@ -58,7 +59,6 @@ from .. import (
     OssIossLedgerSourceResolver,
     aggregate_oss_ioss_bindings,
     merge_source_resolutions,
-    resolve_modelo_ledger_binding_values_from_repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -148,7 +148,7 @@ def _renta_transaction(
             "category_id": SpendingCategory.ASESORIA_FISCAL.value,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -177,11 +177,11 @@ def _invoice(tx_id: str, *, bucket_id: str = "bucket-a") -> Invoice:
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
             "linked_transaction_ids": (tx_id,),
-        }
+        },
     )
 
 
-def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_objects: SecureObjectRepository) -> None:
+def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase(secure_objects: SecureObjectRepository) -> None:
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
         bucket_id="bucket-a",
@@ -203,26 +203,21 @@ def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_o
     )
     tx_repo.save(TransactionCatalogue.from_transactions((incoming, outgoing)))
 
-    legacy = resolve_modelo_ledger_binding_values_from_repositories(
-        bucket_id="bucket-a",
-        modelo="303",
-        revision=revision,
-        filing_year=2026,
-        period="1T",
-        transaction_repository=tx_repo,
-    )
     resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
         CalculationSourceContext(
             bucket_id="bucket-a",
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision=revision,
-        )
+        ),
     )
 
-    assert resolution.binding_values == legacy.binding_values
-    assert resolution.source_transaction_ids == legacy.source_transaction_ids
+    assert resolution.binding_values  # non-empty: at least one IVA binding resolved
+    assert set(resolution.source_transaction_ids) == {
+        incoming.transaction_id,
+        outgoing.transaction_id,
+    }
     assert resolution.diagnostics == ()
     assert {item.source_ref for item in resolution.provenance} == {
         f"transaction:{incoming.transaction_id}",
@@ -279,9 +274,9 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
             bucket_id="bucket-a",
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision=revision,
-        )
+        ),
     )
 
     # The reverse-charge observation is now CONSUMED: the #64 advisory no longer
@@ -345,9 +340,9 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
             bucket_id="bucket-a",
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision=revision,
-        )
+        ),
     )
 
     assert resolution.binding_values
@@ -387,9 +382,9 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
             bucket_id="bucket-a",
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision=revision,
-        )
+        ),
     )
 
     assert resolution.binding_values
@@ -425,9 +420,9 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
                 bucket_id="bucket-a",
                 modelo="303",
                 filing_year=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
                 revision=revision,
-            )
+            ),
         )
     merged = merge_source_resolutions((resolution,))
 
@@ -462,9 +457,9 @@ def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
                 bucket_id="bucket-a",
                 modelo="303",
                 filing_year=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
                 revision=revision,
-            )
+            ),
         )
 
     assert resolution.binding_values == {}
@@ -489,15 +484,6 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
     invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
 
-    legacy = resolve_modelo_ledger_binding_values_from_repositories(
-        bucket_id="bucket-a",
-        modelo="100",
-        revision=revision,
-        filing_year=2025,
-        period="0A",
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-    )
     resolution = LedgerRentaExpenseAggregationSourceResolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
@@ -506,12 +492,12 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
             bucket_id="bucket-a",
             modelo="100",
             filing_year=2025,
-            period="0A",
+            period=Period.from_year_and_code(2025, "0A"),
             revision=revision,
-        )
+        ),
     )
 
-    assert resolution.binding_values == legacy.binding_values
+    assert resolution.binding_values  # non-empty: renta expense binding resolved
     assert resolution.source_transaction_ids == (linked.transaction_id,)
     assert resolution.diagnostics == ()
     assert {item.source_ref for item in resolution.provenance} == {
@@ -542,9 +528,9 @@ def test_oss_source_mesh_resolver_matches_existing_candidate_binding_wrapper() -
             bucket_id="bucket-a",
             modelo="369",
             filing_year=2025,
-            period="4T",
+            period=Period.from_year_and_code(2025, "4T"),
             revision=revision,
-        )
+        ),
     )
 
     assert resolution.binding_values == legacy

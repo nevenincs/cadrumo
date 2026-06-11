@@ -11,6 +11,7 @@ import pytest
 
 from ....adapters.persistence.storage import StorageValidationError
 from ....application.ledger import BusinessOperationInvoiceSourceKind
+from ....core import Period
 from ....core.resources import resources
 from ....domain.invoices import (
     Invoice,
@@ -148,7 +149,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
             bucket_id=_BUCKET_ID,
             modelo="349",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision=snapshot.revision,
         ),
     )
@@ -178,7 +179,7 @@ def test_invoice_catalogue_source_resolver_fails_closed_when_context_bucket_is_n
                     bucket_id=runtime.secondary.bucket_id,
                     modelo="349",
                     filing_year=2026,
-                    period="1T",
+                    period=Period.from_year_and_code(2026, "1T"),
                     revision=snapshot.revision,
                 ),
             )

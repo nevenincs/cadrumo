@@ -150,7 +150,7 @@ def resolve_relations_from_local_store(
             + int(
                 relation.source_revision_selector.get("filing_year_delta", 0)
                 if relation.source_revision_selector
-                else 0
+                else 0,
             )
         )
         source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
@@ -173,7 +173,7 @@ def resolve_relations_from_local_store(
                     target_year,
                     when,
                 ),
-            )
+            ),
         )
     return RelationValues(values=tuple(values))
 
@@ -209,14 +209,14 @@ def _resolve_requirement_value(
     if requirement.aggregation_op == "copy":
         if len(values) != 1:
             raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation"
+                f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation",
             )
         return values[0]
     if requirement.aggregation_op == "sum":
         return sum(values, Decimal("0"))
     raise RegistryValidationError(
         f"relation requirement {requirement.relation_ids!r} uses unsupported aggregation op "
-        f"{requirement.aggregation_op!r}"
+        f"{requirement.aggregation_op!r}",
     )
 
 
@@ -236,13 +236,13 @@ def _observed_requirement_values(
         if len(matches) != 1:
             raise RegistryValidationError(
                 f"expected one observed filing {requirement.source_modelo!r}/"
-                f"{requirement.filing_year}/{source_period!r}, found {len(matches)}"
+                f"{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
         value = matches[0].casilla_values.get(requirement.source_output)
         if value is None:
             raise RegistryValidationError(
                 f"requires observed output {requirement.source_output!r} from "
-                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}"
+                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
             )
         values.append(value)
     return tuple(values)
@@ -273,7 +273,7 @@ class RelationPrefillSourceResolver:
             snapshot = resources().modelos.authority.snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
-                period=context.period,
+                period=context.period.registry_token,
             )
         try:
             relation_values = resolve_relations_from_local_store(
@@ -300,7 +300,7 @@ class RelationPrefillSourceResolver:
         binding_values = materialize_relation_binding_values(
             snapshot.revision,
             resolved_relation_values,
-            period=context.period,
+            period=context.period.registry_token,
         )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,

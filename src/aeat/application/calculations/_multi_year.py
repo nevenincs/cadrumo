@@ -162,20 +162,20 @@ class EnrollmentEvidence(BaseModel):
         if any(obs.modelo != self.modelo for obs in self.observations):
             mismatched = sorted({obs.modelo for obs in self.observations if obs.modelo != self.modelo})
             raise EnrollmentEvidenceError(
-                f"enrollment evidence for modelo {self.modelo!r} mixes other modelos {mismatched!r}"
+                f"enrollment evidence for modelo {self.modelo!r} mixes other modelos {mismatched!r}",
             )
         if any(not obs.has_evidence for obs in self.observations):
             raise EnrollmentEvidenceError(
                 f"enrollment evidence for modelo {self.modelo!r} contains an observation with no "
                 f"un-fakeable evidence (a calculation-mode year with zero produced values, or a "
-                f"non-calculation-mode year with no context label)"
+                f"non-calculation-mode year with no context label)",
             )
         distinct = self.distinct_renta_years
         if len(distinct) < MIN_DISTINCT_RENTA_YEARS:
             raise EnrollmentEvidenceError(
                 f"enrollment evidence for modelo {self.modelo!r} spans only {len(distinct)} distinct "
                 f"renta year(s) {distinct!r}; the authorization gate requires at least "
-                f"{MIN_DISTINCT_RENTA_YEARS}"
+                f"{MIN_DISTINCT_RENTA_YEARS}",
             )
 
 
@@ -215,7 +215,7 @@ class EnrollmentRecorder:
         if produced_value_count <= 0:
             raise EnrollmentEvidenceError(
                 f"modelo {self._modelo!r} calculation-mode recording for {filing_year} produced "
-                f"{produced_value_count} values; a real calculation must emit at least one casilla"
+                f"{produced_value_count} values; a real calculation must emit at least one casilla",
             )
         self._observations.append(
             EnrollmentYearObservation(
@@ -223,7 +223,7 @@ class EnrollmentRecorder:
                 filing_year=filing_year,
                 calculation_mode=True,
                 produced_value_count=produced_value_count,
-            )
+            ),
         )
 
     def record_context_year(
@@ -265,14 +265,14 @@ class EnrollmentRecorder:
         if not context_label.strip():
             raise EnrollmentEvidenceError(
                 f"modelo {self._modelo!r} non-calculation recording for {filing_year} carries no "
-                f"context label; name the real two-year context the test constructed"
+                f"context label; name the real two-year context the test constructed",
             )
         if persisted_observation_count <= 0:
             raise EnrollmentEvidenceError(
                 f"modelo {self._modelo!r} context-mode recording for {filing_year} has "
                 f"persisted_observation_count={persisted_observation_count}; at least one real "
                 f"RegistryModeloObservation must be saved to the CalculationObservationRepository "
-                f"to prove the real adapters were exercised (a label alone is fakeable)"
+                f"to prove the real adapters were exercised (a label alone is fakeable)",
             )
         self._observations.append(
             EnrollmentYearObservation(
@@ -281,7 +281,7 @@ class EnrollmentRecorder:
                 calculation_mode=False,
                 context_label=context_label,
                 persisted_observation_count=persisted_observation_count,
-            )
+            ),
         )
 
     def evidence(self) -> EnrollmentEvidence:
@@ -307,7 +307,7 @@ class EnrollmentRecorder:
             raise EnrollmentEvidenceError(
                 f"modelo {self._modelo!r} recorded only {len(distinct)} distinct renta year(s) "
                 f"{tuple(distinct)!r}; the authorization gate requires at least "
-                f"{MIN_DISTINCT_RENTA_YEARS} distinct years driven through the real backend"
+                f"{MIN_DISTINCT_RENTA_YEARS} distinct years driven through the real backend",
             )
         return EnrollmentEvidence(modelo=self._modelo, observations=tuple(self._observations))
 
@@ -347,14 +347,14 @@ def assert_enrollment_matches_manifest(
     if entry is None:
         raise EnrollmentEvidenceError(
             f"modelo {evidence.modelo!r} recorded enrollment evidence but the authorization manifest "
-            f"declares no entry enrolling it; add the [[modelo]] entry in the same commit as the test"
+            f"declares no entry enrolling it; add the [[modelo]] entry in the same commit as the test",
         )
     recorded = evidence.distinct_renta_years
     claimed = entry.distinct_renta_years
     if recorded != claimed:
         raise EnrollmentEvidenceError(
             f"modelo {evidence.modelo!r} enrollment mismatch: the test exercised renta years "
-            f"{recorded!r} but the manifest claims {claimed!r}; the recorded year-set must equal the claim"
+            f"{recorded!r} but the manifest claims {claimed!r}; the recorded year-set must equal the claim",
         )
 
 
@@ -510,7 +510,7 @@ class PreviousFilingSourceResolver:
             snapshot = resources().modelos.authority.snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
-                period=context.period,
+                period=context.period.registry_token,
             )
         from ._binding_prefill import resolve_bindings_from_local_store
 

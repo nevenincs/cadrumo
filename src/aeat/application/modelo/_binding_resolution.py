@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
+from ...core import Period as _Period
 from ...domain.calculations.registry import (
     InputKind,
     ModeloRevision,
@@ -87,8 +88,8 @@ def resolve_calculation_binding_inputs(
                 **backend_binding_values,
                 **borrador_result.binding_values,
                 **caller_binding_values,
-            }.items()
-        )
+            }.items(),
+        ),
     )
     resolved_enum_bindings = dict(
         sorted(
@@ -96,8 +97,8 @@ def resolve_calculation_binding_inputs(
                 **profile_result.enum_binding_values,
                 **borrador_result.enum_binding_values,
                 **caller_enum_binding_values,
-            }.items()
-        )
+            }.items(),
+        ),
     )
     resolved_date_bindings = dict(sorted(profile_result.date_binding_values.items()))
     _reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
@@ -116,8 +117,8 @@ def resolve_calculation_binding_inputs(
                 snapshot.revision,
                 casilla_inputs,
                 resolved_bindings,
-            ).items()
-        )
+            ).items(),
+        ),
     )
     declaration_period_inputs = _resolve_declaration_period_inputs(
         snapshot.revision,
@@ -134,8 +135,8 @@ def resolve_calculation_binding_inputs(
                     resolved_bindings,
                 ),
                 **casilla_inputs,
-            }.items()
-        )
+            }.items(),
+        ),
     )
     return CalculationBindingResolution(
         resolved_inputs=resolved_inputs,
@@ -175,9 +176,9 @@ def _resolve_profile_bindings_for_calculation(
             bucket_id=bucket_id,
             modelo=snapshot.modelo.id,
             filing_year=snapshot.filing_year,
-            period=snapshot.period,
+            period=_Period.from_year_and_code(snapshot.filing_year, snapshot.period),
             revision=snapshot.revision,
-        )
+        ),
     )
     return ProfileSourcedBindingResult(
         binding_values=resolution.binding_values,
@@ -187,8 +188,8 @@ def _resolve_profile_bindings_for_calculation(
             sorted(
                 set(resolution.binding_values)
                 | set(resolution.enum_binding_values)
-                | set(resolution.date_binding_values)
-            )
+                | set(resolution.date_binding_values),
+            ),
         ),
     )
 
@@ -205,7 +206,7 @@ def _reject_binding_channel_mismatch(
         raise ModeloError(
             f"bindings {misrouted_to_decimal!r} are consumed by the registry as enum "
             f"dispatch keys and must be supplied through the enum-binding channel, "
-            f"not as Decimal binding values"
+            f"not as Decimal binding values",
         )
     misrouted_to_enum = sorted(set(enum_binding_values) & {b.id for b in revision.bindings} - enum_consumed)
     misrouted_to_enum = [
@@ -217,7 +218,7 @@ def _reject_binding_channel_mismatch(
             f"operands and must be supplied as Decimal binding values, not through the "
             f"enum-binding channel. `aeat app modelo bindings list` reports each "
             f"binding's input_channel; a binding shown as input_channel=decimal "
-            f"takes a numeric --binding KEY=VALUE even when typed_enum is set"
+            f"takes a numeric --binding KEY=VALUE even when typed_enum is set",
         )
 
 
@@ -251,9 +252,9 @@ def _resolve_borrador_bindings_for_calculation(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
-            period=period,
+            period=_Period.from_year_and_code(filing_year, period),
             revision=registry_snapshot.revision,
-        )
+        ),
     )
     sourced = tuple(sorted(set(resolution.binding_values) | set(resolution.enum_binding_values)))
     return Modelo100BorradorBindingResult(
@@ -346,7 +347,7 @@ def _resolve_declaration_period_inputs(
             if ordinal is None:
                 raise ModeloError(
                     f"work-unit period {period!r} has no registry period ordinal; "
-                    f"cannot resolve informational casilla {casilla.id!r}"
+                    f"cannot resolve informational casilla {casilla.id!r}",
                 )
             resolved[casilla.id] = Decimal(ordinal)
     return resolved
