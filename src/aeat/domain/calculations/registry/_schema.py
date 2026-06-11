@@ -15,8 +15,7 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core import Period
-from ....core import TaxDomain
+from ....core import Period, TaxDomain
 from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -915,10 +914,16 @@ def _parse_deadline_window_period(value: object) -> Period:
     Accepts the two-plus dialects used in the registry TOML authoring tree
     (``"2026Q1"``, ``"2026-1T"``, ``"2026-0A"``, ``"2026-03"``, ``"2026-1P"``,
     ``"2026-EXT-1T"``, bare ``"2026"``). A :class:`~aeat.core.Period`
-    instance is returned as-is (idempotent).
+    instance is returned as-is (idempotent), and the separated model-dump
+    shape is accepted for validation round trips.
     """
     if isinstance(value, Period):
         return value
+    if isinstance(value, Mapping):
+        try:
+            return Period.model_validate(value)
+        except ValueError as exc:
+            raise ValueError(f"invalid deadline window period mapping {value!r}: {exc}") from exc
     if not isinstance(value, str):
         raise ValueError(f"deadline window period must be a string or Period, got {type(value).__name__}")
     from ....domain.period import PeriodValidationError, parse_canonical_period
