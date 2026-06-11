@@ -14,32 +14,12 @@ Modelos: 111, 115, 123, 180, 190, 193.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Annotated, Any
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, InstanceOf, field_validator, model_validator
 
 from ...core import Modelo, Period
 from ...core.aggregation import AggregationSourceKind, RetencionScheme
-from ...domain.period import parse_canonical_period
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
-
-
-def _coerce_period(value: Any) -> Any:
-    """Accept a combined period string (e.g. ``"2025-Q1"``) and return a :class:`Period`.
-
-    Passes :class:`Period` instances through unchanged. Inbound combined strings are
-    parsed via :func:`~aeat.domain.period.parse_canonical_period` at the pydantic
-    boundary so the aggregation models always carry a typed ``Period``.
-    """
-    if isinstance(value, Period):
-        return value
-    if isinstance(value, str):
-        year, token = parse_canonical_period(value)
-        return Period.from_year_and_code(year, token)
-    return value
-
-
-_PeriodField = Annotated[Period, BeforeValidator(_coerce_period)]
 
 _CANONICAL_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
     AggregationSourceKind.LEDGER_TRANSACTION,
@@ -109,7 +89,7 @@ class RetencionesAggregation(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str = Field(min_length=1)
-    period: _PeriodField
+    period: InstanceOf[Period]
     rollups: tuple[RetencionPerceptorRollup, ...] = Field(default_factory=tuple)
     total_perceptors: int = Field(ge=0)
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
