@@ -480,3 +480,21 @@ header dates so this does not collapse back to the core date-span accessor.
 Verification after the change: focused modelo export suites passed with
 `20 passed`; core/domain Period gates passed with `31 passed`; and CLI import
 smoke printed `OK`.
+
+## PERIOD-028 | INFO | No findings in filed-declaration Period row cleanup
+
+Review of the AEAT filed-declaration row cleanup found no remaining issues. The
+first review pass caught that `Declaracion` carries both `ejercicio` and
+`period`, so the schema now rejects a `core.Period` whose filing year differs
+from the row year instead of relying on later registry lookups to fail.
+
+The review checked that scraped listbox rows hydrate `core.Period` at the
+adapter boundary, that declaration capture reuses the typed period directly,
+and that decomposition to `period.registry_token` remains confined to registry
+snapshot lookups, PDF parser overrides, submitted-file context checks, and
+AEAT row matching against registry requirements.
+
+Verification after the change: the split declarations adapter suite passed
+with `63 passed`; ruff passed for the touched adapter and test files; the
+core/domain Period gates passed with `31 passed`; and CLI import smoke printed
+`OK`.
