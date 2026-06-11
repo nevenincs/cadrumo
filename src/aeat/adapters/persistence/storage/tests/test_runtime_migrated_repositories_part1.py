@@ -6,6 +6,7 @@ from typing import cast
 
 import pytest
 
+from .....core import Period
 from ._runtime_migrated_repositories_support import (
     LLM_USAGE_NAMESPACE,
     AmortizacionLedger,
@@ -143,7 +144,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
         ("modelo_verification_reports", lambda: VerificationReportCatalogueRepository(bucket_id="bucket-a").load()),
         (
             "calculation_observations",
-            lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T"),
+            lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation(
+                "303",
+                Period.from_year_and_code(2026, "1T"),
+            ),
         ),
         ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
         (
@@ -215,7 +219,10 @@ def test_migrated_runtime_defaults_refuse_missing_session(
         ("modelo_verification_reports", lambda: VerificationReportCatalogueRepository(bucket_id="bucket-a").load()),
         (
             "calculation_observations",
-            lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T"),
+            lambda: CalculationObservationRepository(bucket_id="bucket-a").load_observation(
+                "303",
+                Period.from_year_and_code(2026, "1T"),
+            ),
         ),
         ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
         (
@@ -505,7 +512,13 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 
     with _active_runtime(tmp_path, "bucket-b"):
         assert ModeloHistoryRepository(bucket_id="bucket-b").list_modelos() == ()
-        assert CalculationObservationRepository(bucket_id="bucket-b").load_observation("303", 2026, "1T") is None
+        assert (
+            CalculationObservationRepository(bucket_id="bucket-b").load_observation(
+                "303",
+                Period.from_year_and_code(2026, "1T"),
+            )
+            is None
+        )
         assert IvaWalletDecisionRepository().list_decisions() == ()
         assert IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T") == ()
         assert IvaCompensationHistoryRepository(bucket_id="bucket-b").list_periods() == ()
@@ -521,7 +534,10 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 
     with _active_runtime(tmp_path, "bucket-a"):
         modelo_ids = ModeloHistoryRepository(bucket_id="bucket-a").list_modelos()
-        observed = CalculationObservationRepository(bucket_id="bucket-a").load_observation("303", 2026, "1T")
+        observed = CalculationObservationRepository(bucket_id="bucket-a").load_observation(
+            "303",
+            Period.from_year_and_code(2026, "1T"),
+        )
         wallet_repo = IvaWalletDecisionRepository()
         decisions = wallet_repo.list_decisions()
         decision_history = wallet_repo.load_decision_history("ESBUCKET-A", 2026, "2T")

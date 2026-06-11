@@ -34,6 +34,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...calculations import CalculationObservationRepository
 from ...calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
@@ -215,7 +216,7 @@ def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repo
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     _file_1t_with_negative_result(repos)
     # Confirm the carry observation was persisted under the non-official source_kind.
-    stored = CalculationObservationRepository().load_observation("130", 2026, "1T")
+    stored = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
     assert stored is not None
     assert stored.source_kind == APP_FILING_SOURCE_KIND
 

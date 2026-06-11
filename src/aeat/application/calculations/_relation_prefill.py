@@ -34,6 +34,7 @@ from typing import Final
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
+from ...core import Period
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -78,7 +79,10 @@ def _gather_observations_for_snapshot(
     )
     for requirement in requirements:
         for period in requirement.periods:
-            payload = repository.load_observation(requirement.source_modelo, requirement.filing_year, period)
+            payload = repository.load_observation(
+                requirement.source_modelo,
+                Period.from_year_and_code(requirement.filing_year, period),
+            )
             if payload is None:
                 continue
             obs = payload.observation

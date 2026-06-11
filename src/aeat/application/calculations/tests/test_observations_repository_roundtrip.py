@@ -80,7 +80,7 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             source_kind="aeat_sede_justificante",
             captured_at=captured_at,
         )
-        loaded = repo.load_observation("303", 2025, "1T")
+        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
         assert loaded is not None
         assert loaded.observation == original
@@ -142,7 +142,7 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
             source_kind="aeat_sede_justificante",
             captured_at=captured_at,
         )
-        loaded = repo.load_observation("130", 2026, "1T")
+        loaded = repo.load_observation("130", Period.from_year_and_code(2026, "1T"))
 
         assert loaded is not None
         assert loaded.observation == absent_by_design_observation
@@ -238,7 +238,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             casillas[1]["legal_refs"] = []
             row.payload = _json.dumps(envelope).encode("utf-8")
 
-        loaded = repo.load_observation("303", 2025, "1T")
+        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
         assert loaded.observation != original, (
             "anti-tautology proof failed: deleting legal_refs from a "

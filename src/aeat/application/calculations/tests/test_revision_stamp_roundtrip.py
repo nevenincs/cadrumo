@@ -92,7 +92,7 @@ def test_stamped_revision_id_survives_encrypted_storage_roundtrip(tmp_path: Path
             captured_at=_CLOCK,
             stamped_revision_id=revision_id,
         )
-        loaded = repo.load_observation(_MODELO, _YEAR, _PERIOD)
+        loaded = repo.load_observation(_MODELO, _filing_period())
 
         assert loaded is not None
         assert loaded.stamped_revision_id == revision_id, (
@@ -112,7 +112,7 @@ def test_stamped_revision_id_none_survives_encrypted_storage_roundtrip(tmp_path:
             captured_at=_CLOCK,
             stamped_revision_id=None,
         )
-        loaded = repo.load_observation(_MODELO, _YEAR, _PERIOD)
+        loaded = repo.load_observation(_MODELO, _filing_period())
 
         assert loaded is not None
         assert loaded.stamped_revision_id is None
@@ -183,7 +183,7 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
             envelope["payload"]["stamped_revision_id"] = None
             row.payload = _json.dumps(envelope).encode("utf-8")
 
-        loaded = repo.load_observation(_MODELO, _YEAR, _PERIOD)
+        loaded = repo.load_observation(_MODELO, _filing_period())
         assert loaded is not None
         assert loaded.stamped_revision_id != revision_id, (
             "anti-tautology proof failed: clearing stamped_revision_id from on-disk JSON "

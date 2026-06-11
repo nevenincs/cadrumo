@@ -214,11 +214,10 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     def load_observation(
         self,
         modelo: str,
-        filing_year: int,
-        period: str,
+        period: Period,
     ) -> _ObservationEnvelopePayload | None:
         """Return the persisted observation for one (modelo, year, period token) or None."""
-        filing_period = Period.from_year_and_code(filing_year, period)
+        filing_period = _require_observation_period(period)
         return self.load(observation_key(modelo, filing_period))
 
     def save_observation(
@@ -259,11 +258,10 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     def delete_observation(
         self,
         modelo: str,
-        filing_year: int,
-        period: str,
+        period: Period,
     ) -> bool:
         """Remove the observation for one (modelo, year, period token); return whether a row was deleted."""
-        filing_period = Period.from_year_and_code(filing_year, period)
+        filing_period = _require_observation_period(period)
         return self.delete(observation_key(modelo, filing_period))
 
     def iter_modelo(self, modelo: str) -> Iterator[_ObservationEnvelopePayload]:
