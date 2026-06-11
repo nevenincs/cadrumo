@@ -143,78 +143,60 @@ Discovery: combined 2026Q1/2026-1T strings are load-bearing BELOW the operator s
 
 ## Description
 
-<!-- Briefly describe the proposed work. Reference `{adr}`s,
-`{research}`, `{reference}`. Supporting documentation must be read prior to
-writing the plan document. -->
+Burns down every conflated period spelling in favour of the single
+`--year YYYY --period <AEAT-token>` shape mandated by the D4 amendment of
+`2026-06-10-cli-operator-surface-adr` ("AEAT tokens only; the calendar shapes
+`2026Q1 / 2026-03 / 2026` AND the `2026-1T` hybrid are removed; no dual
+notation, no conversion layer, no backward-compatibility shadow"). The work is
+stratified by depth:
 
-## Steps
-
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
-
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
-
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
-
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
-
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
-
-     One sentence stating what this Phase delivers.
-
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
-
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
-
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
-
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorising documents back it.
-
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
-
-     The Wave intent paragraph is mandatory. -->
-
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
-
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
-
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
-
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
+- **P01 — CLI operator-input grammar (done, landed `224a6cd6c`).** The ledger
+  `--period` / `--filter period=` surfaces accept only the canonical AEAT
+  tokens; the year travels on a separate `--year` option / `--filter year=`
+  clause. The `_aeat_token_to_calendar` conversion layer and the
+  `_FILTER_YEAR_QUALIFIED_RE` hybrid regex are deleted; the helpers build a
+  typed `Period` directly from `(year, bare-token)`, and the ledger command /
+  query / report period fields become `Period | None`.
+- **P02 — operator refusals + locale (done).** Calendar shapes and the
+  `2026-1T` hybrid refuse with an instructive, four-locale-parity message naming
+  the AEAT tokens and `--year`; the documented-command and educational-docs
+  conformance gates stay green.
+- **P03 — backend parser de-conflation (outstanding, blocked by P05).**
+  `domain/period.py::parse_canonical_period` still accepts the combined input
+  regexes, and `normalize_modelo_work_period` round-trips through a `2026Q1`
+  intermediate. These cannot be deleted until the deep representation migrates.
+- **P04 — docs + final gate.** The hand-authored how-to / reference docs already
+  teach only `--year --period`; the final repo-wide zero-conflation grep gate is
+  blocked until P05 clears the internal `2026Q1` strings.
+- **P05 — DEEP internal-representation layer (outstanding).** The combined token
+  is load-bearing below the operator surface: the registry deadline-window TOML
+  hardcodes `period = "2026Q1"` across every modelo, and the WorkflowEngine
+  contract (`workflow_period_for_work_unit`, `_resume`, `_workflow_gate`) emits
+  and asserts `2026Q1 / 2026-1T`. Migrating these to a separated
+  `(filing_year, registry_token)` is a high-blast-radius registry-authoring +
+  workflow refactor tracked here as a follow-on, not completed in this pass.
 
 ## Parallelization
 
-<!-- State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelised when they share no hard
-interdependency. -->
+P01 and P02 are landed. P03 (`domain/period.py` regex deletion) is hard-blocked
+by P05.S15 + P05.S16: the regexes are still exercised by the registry
+deadline-window parse and the WorkflowEngine token, so deletion regresses both
+until the deep layer carries `(filing_year, registry_token)`. P04.S14 (the
+repo-wide zero-conflation gate) is likewise blocked by P05 because the registry
+TOML and workflow legitimately still hold `2026Q1` until migrated. P05.S15
+(registry deadline-window TOML) and P05.S16 (WorkflowEngine contract) may
+proceed in parallel — they touch disjoint files — but both must land before
+P05.S17 / P03.S08 delete the now-dead regexes.
 
 ## Verification
 
-<!-- State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
+The plan is complete when all of the following hold:
+
+- `uv run --no-sync pytest src/aeat/domain/tests/test_period.py src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py src/aeat/application/aggregation/tests/test_period_boundary_authority.py -m "integration or not integration"` is green, with calendar shapes and the `2026-1T` hybrid asserted to refuse (the 5 `register_wizard_catalogue` integration-harness failures are tracked separately and are not period-logic).
+- `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py src/aeat/entrypoints/cli/tests/test_educational_docs_conformance.py` is green (landed: 107 passed).
+- `python -m aeat.locales scaffold --check` is clean and the four locale catalogues carry the period-refusal keys at parity.
+- A final repo-wide grep finds zero `YYYYQ[1-4]` / `YYYY-[1-4]T` / `period=YYYY` usage in code, tests, and docs **outside** the refusal-regression fixtures — gated only after P05 migrates the registry deadline-window TOML and the WorkflowEngine token off the combined form.
+- `uv run --no-sync vaultspec-core vault check all` stays green for this feature.
 
 The plan is complete when every Step in every Wave is closed
 (`- [x]`). At `L4`, the Epic-completion check additionally requires
