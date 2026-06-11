@@ -23,6 +23,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core import Period
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import BaseSeverity
 from ...domain.filing import ModeloDraft
@@ -71,7 +72,7 @@ class DeclaracionCalculateSummary(BaseModel):
         draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
             the summary was produced from.
         modelo: AEAT modelo identifier.
-        period: Canonical period identifier (e.g. ``"2026Q1"``).
+        period: Typed filing period for the draft.
         status: The draft's :class:`ModeloDraftStatus` after validation.
         blocker_count: Number of findings at
             :attr:`BaseSeverity.ERROR`. Always ``>= 0``.
@@ -94,7 +95,7 @@ class DeclaracionCalculateSummary(BaseModel):
 
     draft_id: str = Field(min_length=1, max_length=128)
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     status: ModeloDraftStatus
     blocker_count: int = Field(ge=0)
     warning_count: int = Field(ge=0)
@@ -194,7 +195,7 @@ def summarise_calculation(
     return DeclaracionCalculateSummary(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
-        period=str(draft.period),
+        period=draft.period,
         status=draft.status,
         blocker_count=counts[BaseSeverity.ERROR],
         warning_count=counts[BaseSeverity.WARNING],
