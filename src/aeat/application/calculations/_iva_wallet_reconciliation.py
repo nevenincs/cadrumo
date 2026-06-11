@@ -144,8 +144,8 @@ def reconcile_modelo_303_iva_compensation(
         raise IvaCompensationReconciliationInputError(
             "IVA compensation wallet reconciliation only applies to Modelo 303",
         )
+    snapshot_period = Period.from_year_and_code(snapshot.filing_year, snapshot.period)
     if wallet is not None:
-        snapshot_period = Period.from_year_and_code(snapshot.filing_year, snapshot.period)
         validate_wallet_matches_snapshot(
             wallet,
             taxpayer_nif=taxpayer_nif,

@@ -55,13 +55,13 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
-from ...core import Period
+from ...core import Period, PeriodError
 from ...core.errors import AeatError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import RegistryValidationError
-from ._common import _canonical_period, activate_subcommand_output_language
+from ._common import activate_subcommand_output_language
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
 from ._modelo_cli_support import (
@@ -322,8 +322,8 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
     and enumerates the registry-declared period tokens for that modelo.
     """
     try:
-        return _canonical_period(period, year=year)
-    except typer.BadParameter as exc:
+        return Period.from_year_and_code(year, period.strip())
+    except PeriodError as exc:
         raise typer.BadParameter(_period_token_error(year, period, modelo, fallback=str(exc))) from exc
 
 
