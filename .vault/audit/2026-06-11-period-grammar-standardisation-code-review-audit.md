@@ -82,3 +82,13 @@ SHA-backed golden export assertions.
 
 Verification reported by the reviewer: focused export model and fichero-BOE roundtrip
 tests passed with `28 passed`.
+
+## PERIOD-007 | INFO | No findings in application period literal cleanup
+
+Review of commit `dcd07b725` found no issues. The workflow mismatch test now passes
+the expected annual `Period` while mismatching only the modelo, preserving the intended
+assertion. The invoice projection change uses the separated `2026 1T` display label on
+a plain string projection field, without altering a typed API.
+
+Verification reported by the reviewer: the targeted workflow mismatch and invoice
+projection tests passed with `2 passed`.
