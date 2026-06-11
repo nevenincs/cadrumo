@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import StorageValidationError
+from ....application.ledger import BusinessOperationInvoiceSourceKind
 from ....core.resources import resources
 from ....domain.invoices import (
     Invoice,
@@ -22,7 +23,6 @@ from ....domain.invoices import (
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
-from ....application.ledger import BusinessOperationInvoiceSourceKind
 from .. import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -52,6 +52,7 @@ class TestInvoiceDirectionToSourceKind:
             BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE,
             BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE,
         }
+
 
 _BUCKET_ID = "bucket-invoices"
 _OTHER_BUCKET_ID = "bucket-other"

@@ -92,3 +92,9 @@ Status: resolved in S460.
 Review checked the S454 diff against the plan row, locale CLI mandate, central error registry, focused modelo tests, and static exception scans. The promoted modelo calculation-input and revision-pick failures now derive from AEAT error base classes, preserve `ValueError` compatibility where needed, use structured context, and carry locale keys populated through `aeat.locales`. The remaining raw exceptions are Pydantic validator or internal debug-logged parse sentinels, and the one broad export handler re-raises after cleanup.
 
 Status: no action required for S454. The CLI casilla-normalisation integration test remains blocked by the current-tree wizard catalogue registration failure before it reaches the S454 code path.
+
+## S462-001 | INFO | CLI startup wizard-registration review passed
+
+Review checked the S462 diff against the newly tracked W21.P43 row and the failing S454 verification evidence. The root callback now performs wizard catalogue registration before returning from an already-open active bucket session, preserving the existing no-active-profile and bootstrap-exempt refusals. The cold-process regression now supplies the file secret-store backend and dev-test passphrase through `Settings`-backed environment names, so it verifies wizard registration instead of blocking on interactive passphrase input.
+
+Status: no action required.

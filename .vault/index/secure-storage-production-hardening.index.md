@@ -868,6 +868,7 @@ related:
   - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S400]]'
   - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S401]]'
   - '[[2026-06-11-secure-storage-production-hardening-W20-P41-S454]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W21-P43-S462]]'
   - '[[2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit]]'
   - '[[2026-06-11-secure-storage-production-hardening-w20-p41-s454-localization-error-hierarchy-audit]]'
 ---
@@ -1746,6 +1747,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-11-secure-storage-production-hardening-W13-P28-S400` - W13.P28.S400 testimonial repair adoption
 - `2026-06-11-secure-storage-production-hardening-W13-P28-S401` - W13.P28.S401 testimonial synthesis
 - `2026-06-11-secure-storage-production-hardening-W20-P41-S454` - W20.P41.S454 Filing/Modelo Localization And Error Hierarchy
+- `2026-06-11-secure-storage-production-hardening-W21-P43-S462` - W21.P43.S462 CLI Startup Registration Repair
 
 ### plan
 
