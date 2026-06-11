@@ -61,7 +61,7 @@ class TransactionPayload(OutputSchema):
     # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
     # EUR-equivalent and applied CCY->EUR rate the application payload now emits.
     # Declared here so the strict single-transaction read surface (ledger
-    # view/classify --id/update/archive/stash) accepts the persisted FX fields
+    # view/classify/update/archive/stash) accepts the persisted FX fields
     # rather than rejecting them as extra_forbidden. None for EUR-native rows.
     value_in_eur: str | None = None
     fx_rate: str | None = None
@@ -702,7 +702,7 @@ class LedgerReviewResult(OutputSchema):
 
     Covers three payload branches:
     - Multi-row list: ``rows`` + ``filters``
-    - Empty-result (``--id`` with no match): empty ``rows`` + ``filters``
+    - Empty-result (positional id with no match): empty ``rows`` + ``filters``
     - Single-row detail: scalar fields for the matched row
 
     All fields are optional so each discriminated path validates cleanly.

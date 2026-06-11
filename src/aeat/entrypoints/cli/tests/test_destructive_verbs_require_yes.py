@@ -8,8 +8,8 @@ profile without seeding fixture state.
 
 Pinned verbs:
 
-- ``aeat app ledger archive --id <noop>`` — required ``--yes`` guard.
-- ``aeat app ledger remove --id <noop>`` — required ``--yes`` guard
+- ``aeat app ledger archive <noop>`` — required ``--yes`` guard.
+- ``aeat app ledger remove <noop>`` — required ``--yes`` guard
   (also covered by ``test_app_ledger_lifecycle_remove_requires_yes_flag``
   in test_cli_surface.py via the round-trip harness; this gate is the
   fast unit-style companion).
@@ -51,19 +51,19 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def test_ledger_archive_refuses_without_yes(cli_runner: CliRunner) -> None:
-    """``aeat app ledger archive --id <any>`` without ``--yes`` is refused
+    """``aeat app ledger archive <any>`` without ``--yes`` is refused
     with a non-zero exit code; the confirm_required guard fires before
     any backend read."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "archive", "--id", "any-transaction-id"])
+    result = cli_runner.invoke(app, ["app", "ledger", "archive", "any-transaction-id"])
     assert result.exit_code != 0, result.output
 
 
 def test_ledger_remove_refuses_without_yes(cli_runner: CliRunner) -> None:
-    """``aeat app ledger remove --id <any>`` without ``--yes`` (and
+    """``aeat app ledger remove <any>`` without ``--yes`` (and
     without ``--dry-run``) is refused with a non-zero exit code."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "remove", "--id", "any-transaction-id"])
+    result = cli_runner.invoke(app, ["app", "ledger", "remove", "any-transaction-id"])
     assert result.exit_code != 0, result.output
 
 
@@ -76,7 +76,7 @@ def test_ledger_reset_refuses_without_yes(cli_runner: CliRunner) -> None:
 
 
 def test_ledger_remove_with_dry_run_does_not_require_yes(cli_runner: CliRunner) -> None:
-    """``aeat app ledger remove --dry-run --id <missing>`` proceeds past
+    """``aeat app ledger remove --dry-run <missing>`` proceeds past
     the confirm_required guard without ``--yes`` (the dry-run path is
     explicitly allowed to skip the safeguard since it has no side
     effect). The verb subsequently fails on the missing-id lookup but
@@ -85,7 +85,7 @@ def test_ledger_remove_with_dry_run_does_not_require_yes(cli_runner: CliRunner) 
 
     result = cli_runner.invoke(
         app,
-        ["app", "ledger", "remove", "--id", "missing-transaction-id", "--dry-run"],
+        ["app", "ledger", "remove", "missing-transaction-id", "--dry-run"],
     )
     # The dry-run path bypasses the confirm guard; the missing-id error
     # is a separate downstream failure that this test does not assert on

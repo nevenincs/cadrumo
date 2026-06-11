@@ -5,7 +5,7 @@ If the provider CLI is not installed, on `PATH`, and authenticated already,
 start with [Set up LLM classification providers](setup-llm-classification.md).
 
 ```bash
-aeat app ledger classify --id <transaction-id> --llm claude
+aeat app ledger classify <transaction-id> --llm claude
 ```
 
 That command asks the `claude` provider for a suggestion and previews the
@@ -62,7 +62,7 @@ aeat app ledger view <transaction-id>
 Preview the LLM suggestion:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --llm claude
+aeat app ledger classify <transaction-id> --llm claude
 ```
 
 Use the row description, amount, direction, counterparty, and source documents
@@ -87,7 +87,7 @@ If the row is mixed-use, the LLM suggestion alone is not enough. Supply the
 business percentage manually with the normal classification workflow:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --classification MIXED --business-pct 0.5 --category-id <category-id>
+aeat app ledger classify <transaction-id> --classification MIXED --business-pct 0.5 --category-id <category-id>
 ```
 
 ## 3. Reject, apply, or override
@@ -98,7 +98,7 @@ unchanged.
 Apply a suggestion only after review:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --llm claude --apply
+aeat app ledger classify <transaction-id> --llm claude --apply
 ```
 
 The applied suggestion is saved to the active profile's ledger. It records
@@ -114,7 +114,7 @@ Override with a manual classification whenever the suggestion is wrong or
 incomplete:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
 ```
 
 Manual classification is the correction path. Re-run `ledger preflight` for the
@@ -131,7 +131,7 @@ Add `--saturate` to also select an IVA category and derive the tax substrate.
 Preview a saturated suggestion:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --llm claude --saturate
+aeat app ledger classify <transaction-id> --llm claude --saturate
 ```
 
 The preview adds the selected IVA category and, when the category has a Spanish
@@ -143,14 +143,14 @@ purchase) shows a short note instead of numbers, and you complete those by hand.
 Apply a saturated suggestion after review:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --llm claude --saturate --apply
+aeat app ledger classify <transaction-id> --llm claude --saturate --apply
 ```
 
 Override any field by classifying manually afterwards. Manual classification
 always wins:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
+aeat app ledger classify <transaction-id> --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
 ```
 
 ## Batch classification
@@ -190,7 +190,7 @@ extracted text off your machine. This is off by default. Enable it for the
 deployment, then acknowledge the upload each time:
 
 ```bash
-aeat app ledger classify --id <transaction-id> --llm claude --saturate --read-evidence --evidence-acknowledged
+aeat app ledger classify <transaction-id> --llm claude --saturate --read-evidence --evidence-acknowledged
 ```
 
 Acknowledge the upload every time. Evidence reading is not available in gestor or

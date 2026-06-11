@@ -218,7 +218,7 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
             "--name", "Operator",
             "--activity", "design",
             "--iva-regime", "GENERAL",
-        ]
+        ],
     )  # fmt: skip
     assert profile.exit_code == 0, profile.output
     status = _invoke(["--format", "json", "config", "profile", "status"])
@@ -227,7 +227,7 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     certificate = backend / "certificate.p12"
     certificate.write_bytes(b"not-a-real-certificate")
     configured = _invoke(
-        ["--format", "json", "config", "auth", "configure", "--provider", "certificate", "--file", str(certificate)]
+        ["--format", "json", "config", "auth", "configure", "--provider", "certificate", "--file", str(certificate)],
     )
     auth_status = _invoke(["--format", "json", "config", "auth", "status", "--provider", "certificate"])
     auth_test = _invoke(["--format", "json", "config", "auth", "test", "--provider", "certificate"])
@@ -269,7 +269,7 @@ _PROFILE_STATUS_EXPECTATIONS = (
 
 @pytest.mark.parametrize(("key", "expected"), _PROFILE_STATUS_EXPECTATIONS)
 def test_config_app_round_trip_profile_status_records_field(
-    _isolated_cli_backend: Path, key: str, expected: object
+    _isolated_cli_backend: Path, key: str, expected: object,
 ) -> None:
     outcome = _drive_workflow_round_trip(_isolated_cli_backend)
     assert outcome.status_payload[key] == expected
@@ -344,6 +344,6 @@ def test_config_app_round_trip_review_row_canonical_next_command_is_review_verb(
     outcome = _drive_workflow_round_trip(_isolated_cli_backend)
     canonical_next_command = _review_rows(outcome)[0]["canonical_next_command"]
     assert isinstance(canonical_next_command, str)
-    assert canonical_next_command.startswith("aeat app ledger review --id ")
+    assert canonical_next_command.startswith("aeat app ledger review ")
     assert " edit " not in canonical_next_command
     assert "--set" not in canonical_next_command

@@ -147,11 +147,11 @@ def _row_by_id(transaction_id: str) -> dict[str, Any]:
 
 
 def test_llm_suggest_returns_decision_and_persists_nothing(
-    tmp_path: Path, _deterministic_claude: _DeterministicClassifier
+    tmp_path: Path, _deterministic_claude: _DeterministicClassifier,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--id", tx, "--llm", "claude"])
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["llm"] is True
@@ -167,12 +167,12 @@ def test_llm_suggest_returns_decision_and_persists_nothing(
 
 
 def test_llm_reject_no_apply_leaves_row_unchanged(
-    tmp_path: Path, _deterministic_claude: _DeterministicClassifier
+    tmp_path: Path, _deterministic_claude: _DeterministicClassifier,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
     before = _row_by_id(tx)
 
-    suggest = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--llm", "claude"])
+    suggest = _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--llm", "claude"])
     assert suggest.exit_code == 0, suggest.output
 
     after = _row_by_id(tx)
@@ -186,19 +186,21 @@ def test_llm_reject_no_apply_leaves_row_unchanged(
 
 
 def test_llm_apply_persists_with_llm_provenance(
-    tmp_path: Path, _deterministic_claude: _DeterministicClassifier
+    tmp_path: Path, _deterministic_claude: _DeterministicClassifier,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
     result = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "classify", "--id", tx, "--llm", "claude", "--apply"],
+        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--apply"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
-    assert payload["llm"] is True
-    assert payload["persisted"] is True
+    # D1: --llm --apply is a single-transaction mutation and emits the canonical
+    # quintet; llm provenance rides on transaction.classified_by, not a top-level
+    # `llm`/`persisted` flag (those live on the non-apply suggest branch).
     assert payload["transaction"]["classified_by"] == "llm:claude:test-fixed-1"
+    assert payload["review_status"]
 
     row = _row_by_id(tx)
     assert row["business_classification"] == "BUSINESS"
@@ -214,12 +216,12 @@ def test_llm_apply_persists_with_llm_provenance(
 def test_llm_apply_then_manual_override_wins(tmp_path: Path, _deterministic_claude: _DeterministicClassifier) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    applied = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--llm", "claude", "--apply"])
+    applied = _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--llm", "claude", "--apply"])
     assert applied.exit_code == 0, applied.output
     assert _row_by_id(tx)["classified_by"] == "llm:claude:test-fixed-1"
 
     # Manual classification is always the explicit override and flips provenance.
-    override = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--classification", "PERSONAL"])
+    override = _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--classification", "PERSONAL"])
     assert override.exit_code == 0, override.output
 
     row = _row_by_id(tx)
@@ -242,7 +244,7 @@ def test_llm_unavailable_provider_refuses_instructively(tmp_path: Path) -> None:
     previous_path = os.environ.get("PATH", "")
     os.environ["PATH"] = str(empty_dir)
     try:
-        result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--llm", "antigravity"])
+        result = _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--llm", "antigravity"])
     finally:
         os.environ["PATH"] = previous_path
 
@@ -258,19 +260,19 @@ def test_llm_unavailable_provider_refuses_instructively(tmp_path: Path) -> None:
 
 
 def test_llm_rejects_combination_with_manual_classification(
-    tmp_path: Path, _deterministic_claude: _DeterministicClassifier
+    tmp_path: Path, _deterministic_claude: _DeterministicClassifier,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", tx, "--llm", "claude", "--classification", "BUSINESS"],
+        ["app", "ledger", "classify", tx, "--llm", "claude", "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0
 
 
 def test_llm_invalid_provider_lists_choices(tmp_path: Path) -> None:
     tx = _import_one_transaction(tmp_path)
-    result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx, "--llm", "not-a-provider"])
+    result = _RUNNER.invoke(app, ["app", "ledger", "classify", tx, "--llm", "not-a-provider"])
     assert result.exit_code != 0
     # Typer renders the Choice([...]) accepted-value set on a bad enum value.
     assert "claude" in result.output and "antigravity" in result.output and "codex" in result.output

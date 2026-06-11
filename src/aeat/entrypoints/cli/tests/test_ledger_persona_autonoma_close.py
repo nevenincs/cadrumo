@@ -109,8 +109,8 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     assert len(all_rows) >= 500, f"expected full corpus imported, got {len(all_rows)}"
 
     # --- Narrow to the quarter --------------------------------------------
-    # Marta tries the documented filter first: review --filter period=2025-1T.
-    by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=2025-1T"])
+    # Marta tries the documented filter first: review --filter period=1T --filter year=2025.
+    by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
     assert by_period.exit_code == 0, by_period.output
     # TESTIMONIAL: `review` renders a human table but does not emit a JSON row
     # list she can drive programmatically; to actually *act* on the quarter she
@@ -183,7 +183,6 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
                     "app",
                     "ledger",
                     "classify",
-                    "--id",
                     tx_id_val,
                     "--classification",
                     "MIXED",
@@ -198,7 +197,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     # --- Readiness gates --------------------------------------------------
     # Marta runs preflight for the quarter to see what's still missing.
     preflight = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"]
+        app, ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
     assert preflight.exit_code == 0, preflight.output
     pf = json.loads(preflight.output)["result"]
