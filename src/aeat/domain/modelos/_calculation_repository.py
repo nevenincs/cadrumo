@@ -12,12 +12,16 @@ from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ...core.time import now
-from ._calculation_revision import CalculationRevision, CalculationRevisionCatalogue
+from ._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    assert_revision_snapshot_evidence_coverage,
+)
 from ._errors import ModeloError
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 _CALCULATION_NAMESPACE = "aeat.domain.modelos.calculation_revisions"
@@ -148,6 +152,12 @@ class CalculationRevisionCatalogueRepository:
                     "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
                 },
             )
+        # Post-roundtrip coverage gate: every loaded revision's bundled
+        # ledger evidence must cover the same contributor set as its
+        # fingerprint snapshot. A row silently dropped after persistence
+        # surfaces here on load rather than shipping an unexplainable casilla.
+        for revision in envelope.payload.values():
+            assert_revision_snapshot_evidence_coverage(revision)
         return envelope.payload
 
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
@@ -179,9 +189,47 @@ class CalculationRevisionCatalogueRepository:
             payload=envelope.model_dump_json().encode("utf-8"),
         )
 
+    def to_secure_object_write(self, catalogue: CalculationRevisionCatalogue) -> SecureObjectWrite:
+        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it.
+
+        Mirrors the bucket-event-history repository so the catalogue save can be
+        co-emitted with related secure objects (e.g. the participation index) in
+        one ``save_with_secure_object_writes`` unit of work.
+        """
+        from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
+
+        envelope = Envelope[CalculationRevisionCatalogue](
+            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            written_at=now(),
+            classification=SensitivityClass.FINANCIAL,
+            payload=catalogue,
+        )
+        return SecureObjectWrite(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+    def save_with_secure_object_writes(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist ``catalogue`` plus related secure objects in one unit of work.
+
+        The catalogue save and every extra write land or fail together in a
+        single SQL transaction, so the participation index co-emitted here can
+        never drift from the calculation revision it indexes (per the
+        composition-service single-writer discipline).
+        """
+        self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
+
 
 def upsert_calculation_revision(
-    catalogue: CalculationRevisionCatalogue, revision: CalculationRevision
+    catalogue: CalculationRevisionCatalogue, revision: CalculationRevision,
 ) -> CalculationRevisionCatalogue:
     """Return a new :class:`CalculationRevisionCatalogue` with ``revision`` inserted or replaced.
 

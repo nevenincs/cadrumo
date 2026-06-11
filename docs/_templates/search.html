@@ -1,0 +1,39 @@
+{% extends "!page.html" %}
+{#
+  Pagefind-backed search page (replaces the stock Sphinx search surface).
+
+  The post-build index pass (dev/docs/pagefind_index.py) writes the chunked,
+  per-language Pagefind index into _build/html/pagefind/ after Sphinx runs.
+  This page loads the Pagefind UI bundle from that directory and renders the
+  default search box; the Ctrl-K command palette's full-text tier hands off
+  here (that palette wiring is a separate step, not this template).
+
+  Pagefind's own ranking and per-language stemming (es/ca/hu/en) serve the
+  full-text results; the injected concept / casilla / CLI custom records ride
+  the same index and surface here too once the custom-record injection lands.
+#}
+{% block content %}
+<article role="main" id="furo-main-content">
+  <h1>Search</h1>
+  <div id="pagefind-search" class="aeat-pagefind-search"
+       data-pagefind-base="{{ pathto('pagefind/pagefind-ui.js', 1) }}">
+    <noscript>
+      <p>Search requires JavaScript. Browse the documentation from the
+      navigation sidebar, or use the glossary for terminology.</p>
+    </noscript>
+  </div>
+  <link href="{{ pathto('pagefind/pagefind-ui.css', 1) }}" rel="stylesheet" />
+  <script src="{{ pathto('pagefind/pagefind-ui.js', 1) }}"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      if (typeof PagefindUI === 'undefined') { return; }
+      new PagefindUI({
+        element: '#pagefind-search',
+        bundlePath: '{{ pathto('pagefind/', 1) }}',
+        showImages: false,
+        showSubResults: true,
+      });
+    });
+  </script>
+</article>
+{% endblock %}

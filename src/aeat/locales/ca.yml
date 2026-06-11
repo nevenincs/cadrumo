@@ -782,9 +782,7 @@ application:
         a la revisió %{revision_id}: el registre declara un origen de vinculació que
         cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com
         a ajornat abans de calcular.'
-      reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
-        encara no està disponible; fes servir --from-justificante PATH fins que el
-        parser de declaració estigui implementat.
+      reconcile_declaration_unsupported: 'La reconciliació des de PDF de declaració encara no està disponible; reconcilia un justificant descarregat amb aeat app modelo reconcile file fins que el parser de declaracions estigui disponible.'
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
       verification_report_not_found: No s'ha trobat cap informe de verificació amb
@@ -1270,7 +1268,7 @@ cli:
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
-        capture_all_modelo_help: Limita capture-all a aquest model.
+        capture_all_modelo_help: 'Limita pull-all a aquest model.'
         latest_help: Mostra el snapshot d'expedients més recent
         list_help: Llista els snapshots d'expedients desats
         pull_all_help: 'Descarrega el registre de declaracions d''AEAT per a cada model del registre sollicitat en un rang d''anys i desa instantanies del bucket.'
@@ -1278,7 +1276,7 @@ cli:
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
       filed:
-        capture_all_modelo_help: Limita capture-all a aquest model.
+        capture_all_modelo_help: 'Limita pull-all a aquest model.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
         pull_all_help: 'Descarrega declaracions i justificants presentats per a cada model del registre sollicitat en un rang d''anys. Nomes lectura; informa dels errors per model.'
         pull_help: 'Descarrega dades de declaracions presentades del registre autenticat d''AEAT.'
@@ -1299,9 +1297,7 @@ cli:
             qr_required: aprovació QR requerida
             unknown: desconegut
             wrong_identity: identitat incorrecta
-        app_help: Captura de la cartera de compensació d'IVA de l'AEAT (només lectura;
-          només permet representació en nom propi i la consulta de lectura protegida
-          de cartera).
+        app_help: 'Descàrrega de la cartera de compensació d''IVA de l''AEAT (només lectura; només permet representació en nom propi i la consulta de lectura protegida de cartera).'
         as_of_year_help: Exercici usat per calcular l'antiguitat dels saldos de compensació
           d'IVA.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
@@ -2574,12 +2570,12 @@ cli:
       taxable_base_help: Import de base imposable
     doclink:
       actor_help: Etiqueta de l'operador.
-      help: Registra un enllaç a un document de Gmail/Drive/URL en una fila del llibre
-        major (mai descarregat).
+      help: 'Descarrega un enllaç de document de Drive i desa''n els bytes com a evidència xifrada en una fila del llibre.'
       id_help: Identificador de transacció del llibre major.
       note_help: Nota opcional.
       reference_help: Referència de l'enllaç al document.
       source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
+      refused: 'No es pot descarregar el document de %{source} per a %{reference}%{scope_hint}: l''evidència ha de contenir els bytes xifrats del document, i un enllaç mai no es desa tot sol. Descarrega el document i adjunta''l amb ''aeat app ledger attach --attachment-id ...'', o concedeix el permís de Google requerit i torna-ho a provar.'
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
         està fora de rang. Introdueix una proporció entre 0 i 1, p. ex. 0.5 per al

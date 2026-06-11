@@ -133,7 +133,7 @@ class ReconciliationEvidenceInvalidError(AeatError):
 class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
     """Raised when ``from_declaration`` is requested before the declaration parser ships.
 
-    ``--from-declaration PATH`` is a planned surface variant. Until the
+    A declaration-sourced reconcile is a planned surface variant. Until the
     declaration parser lands, the service refuses cleanly rather than
     silently degrading.
     """

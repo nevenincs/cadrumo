@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import typer
@@ -13,7 +12,14 @@ from ...application.ledger import (
     PurchaseInvoiceEvidenceService,
 )
 from ...core.i18n import tr
-from ._common import _bad, _emit_envelope, _state, _tx_repo
+from ._common import (
+    _bad,
+    _emit_envelope,
+    _parse_optional_iso_date_str,
+    _state,
+    _tx_repo,
+    parse_optional_decimal_amount,
+)
 from ._ledger_payloads import (
     EvidenceAddResult,
     EvidenceListResult,
@@ -57,7 +63,7 @@ def _register_evidence_add_command() -> None:
             help=tr("cli.app.ledger.evidence.source_path_help", default="Path to a PDF or image receipt/invoice."),
         ),
         supplier: str | None = typer.Option(
-            None, "--supplier", help=tr("cli.app.ledger.evidence.supplier_help", default="Supplier name.")
+            None, "--supplier", help=tr("cli.app.ledger.evidence.supplier_help", default="Supplier name."),
         ),
         invoice_number: str | None = typer.Option(
             None,
@@ -85,7 +91,7 @@ def _register_evidence_add_command() -> None:
             help=tr("cli.app.ledger.evidence.iva_amount_help", default="IVA amount (Decimal)."),
         ),
         notes: str = typer.Option(
-            "", "--notes", help=tr("cli.app.ledger.evidence.notes_help", default="Free-text notes.")
+            "", "--notes", help=tr("cli.app.ledger.evidence.notes_help", default="Free-text notes."),
         ),
     ) -> None:
         """Register a purchase invoice evidence record and return its id."""
@@ -95,10 +101,10 @@ def _register_evidence_add_command() -> None:
             source_path=source_path,
             supplier=supplier,
             invoice_number=invoice_number,
-            invoice_date=invoice_date,
-            taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-            iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
+            taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
+            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
+            iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
             notes=notes,
         )
         payload = _evidence_payload(result.record)
@@ -121,7 +127,7 @@ def _register_evidence_view_command() -> None:
     def evidence_view(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
-            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id.")
+            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
         ),
     ) -> None:
         """Show one purchase invoice evidence record by id."""
@@ -158,7 +164,7 @@ def _register_evidence_list_command() -> None:
             lines.append(
                 f"{data['evidence_id']}\t{data['media_kind']}\t{data.get('supplier') or '-'}\t"
                 f"{data.get('invoice_number') or '-'}\t{data.get('invoice_date') or '-'}\t"
-                f"{data.get('taxable_base') or '-'}\t{data.get('notes') or '-'}"
+                f"{data.get('taxable_base') or '-'}\t{data.get('notes') or '-'}",
             )
         _emit_envelope(
             ctx,
@@ -179,7 +185,7 @@ def _register_evidence_update_command() -> None:
     def evidence_update(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
-            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id.")
+            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
         ),
         supplier: str | None = typer.Option(None, "--supplier"),
         invoice_number: str | None = typer.Option(None, "--invoice-number"),
@@ -194,10 +200,10 @@ def _register_evidence_update_command() -> None:
         patch = PurchaseInvoiceEvidencePatch(
             supplier=supplier,
             invoice_number=invoice_number,
-            invoice_date=invoice_date,
-            taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-            iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
+            taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
+            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
+            iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
             notes=notes,
         )
         result = _evidence_service().update(
@@ -225,7 +231,7 @@ def _register_evidence_remove_command() -> None:
     def evidence_remove(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
-            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id.")
+            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
         ),
         yes: bool = typer.Option(
             False,
@@ -239,7 +245,7 @@ def _register_evidence_remove_command() -> None:
                 tr(
                     "cli.app.ledger.evidence.yes_required",
                     default="--yes is required to remove an evidence record",
-                )
+                ),
             )
         transaction_repository = _tx_repo(_state())
         result = _evidence_service().remove(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
@@ -253,15 +259,6 @@ def _register_evidence_remove_command() -> None:
             result=EvidenceRemoveResult.model_validate(payload),
             lines=lines,
         )
-
-
-def _parse_decimal(raw: str | None, *, label: str) -> Decimal | None:
-    if raw is None:
-        return None
-    try:
-        return Decimal(raw.strip())
-    except (InvalidOperation, ValueError) as exc:
-        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw)) from exc
 
 
 def _evidence_service() -> PurchaseInvoiceEvidenceService:

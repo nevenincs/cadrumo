@@ -50,7 +50,7 @@ from typing import Annotated, override
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ..calculations.registry import CasillaObservation
-from ._errors import ModeloValidationError
+from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ._row_models import ModeloDetailRow
@@ -326,7 +326,7 @@ class CalculationRevision(BaseModel):
         if derived != self.calculation_revision_id:
             raise ModeloValidationError(
                 f"calculation_revision_id {self.calculation_revision_id!r} does not match "
-                f"the derived id {derived!r} for work_unit_id={self.work_unit_id!r}"
+                f"the derived id {derived!r} for work_unit_id={self.work_unit_id!r}",
             )
         # The typed `observations` envelope is the logical source of truth;
         # the flat `casilla_values` field is a denormalised cache enforced
@@ -343,11 +343,11 @@ class CalculationRevision(BaseModel):
                     "casilla_values is inconsistent with the typed observations envelope: "
                     f"observations project to {projected!r} but casilla_values is {persisted!r}. "
                     "Both fields must encode the same per-casilla outputs; pass observations "
-                    "as the canonical source and let casilla_values mirror its projection."
+                    "as the canonical source and let casilla_values mirror its projection.",
                 )
         if self.updated_at < self.created_at:
             raise ModeloValidationError(
-                f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
+                f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}",
             )
         # State-specific audit-metadata invariants.
         if self.state is CalculationRevisionState.BORRADOR:
@@ -364,7 +364,7 @@ class CalculationRevision(BaseModel):
         elif self.state is CalculationRevisionState.VERIFICADO_COMPLETO:
             self._require_set("verified_at", "verified_by")
             self._require_none(
-                "filed_at", "filed_by", "superseded_at", "discarded_at", "discarded_by", "discard_reason"
+                "filed_at", "filed_by", "superseded_at", "discarded_at", "discarded_by", "discard_reason",
             )
         elif self.state is CalculationRevisionState.PRESENTADO:
             self._require_set("verified_at", "verified_by", "filed_at", "filed_by")
@@ -386,7 +386,7 @@ class CalculationRevision(BaseModel):
         )
         if any(amendment_set) and not all(amendment_set):
             raise ModeloValidationError(
-                "amendment_kind, amends_filing_record_id, and amendment_reason must all be set together or all be None"
+                "amendment_kind, amends_filing_record_id, and amendment_reason must all be set together or all be None",
             )
         return self
 
@@ -419,7 +419,7 @@ class CalculationRevision(BaseModel):
         for name in names:
             if getattr(self, name) is not None:
                 raise ModeloValidationError(
-                    f"calculation revision in state {self.state.value!r} must not carry {name!r}"
+                    f"calculation revision in state {self.state.value!r} must not carry {name!r}",
                 )
 
 
@@ -435,7 +435,7 @@ class CalculationRevisionCatalogue(BaseModel):
         for key, revision in self.revisions.items():
             if key != revision.calculation_revision_id:
                 raise ModeloValidationError(
-                    f"catalogue key {key!r} does not match calculation_revision_id {revision.calculation_revision_id!r}"
+                    f"catalogue key {key!r} does not match calculation_revision_id {revision.calculation_revision_id!r}",
                 )
         return self
 
@@ -468,10 +468,48 @@ class CalculationRevisionCatalogue(BaseModel):
         return False
 
 
+class LedgerFilingCoverageError(ModeloError):
+    """Raised when a persisted revision's snapshot and evidence contributor sets diverge.
+
+    A ledger-derived revision bundles a ``ledger_filing_snapshot`` (the
+    fingerprinted contributor set) and a ``ledger_filing_evidence`` (the typed
+    fact basis). The two are projected from the same ``source_transaction_ids``
+    and MUST cover the same contributors. A divergence on read-back means a
+    contributor row was silently dropped after persistence; this gate surfaces it
+    on load rather than letting the filing artefact ship an unexplainable casilla.
+    """
+
+
+def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) -> None:
+    """Cross-check a loaded revision's snapshot and evidence contributor coverage.
+
+    Post-roundtrip validator (per the modelo-export-evidence-parity discipline):
+    when both ``ledger_filing_snapshot`` and ``ledger_filing_evidence`` are
+    present, their ``rows`` contributor (transaction_id) sets MUST be equal. A
+    revision with neither (a non-ledger or borrador revision) passes trivially.
+    Raises :class:`LedgerFilingCoverageError` naming the divergent contributors.
+    """
+    snapshot = revision.ledger_filing_snapshot
+    evidence = revision.ledger_filing_evidence
+    if snapshot is None or evidence is None:
+        return
+    snapshot_ids = {row.transaction_id for row in snapshot.rows}
+    evidence_ids = {row.transaction_id for row in evidence.rows}
+    if snapshot_ids != evidence_ids:
+        missing = sorted(snapshot_ids - evidence_ids)
+        extra = sorted(evidence_ids - snapshot_ids)
+        raise LedgerFilingCoverageError(
+            f"calculation revision {revision.calculation_revision_id!r} ledger evidence does not cover the "
+            f"fingerprint snapshot: missing_from_evidence={missing} extra_in_evidence={extra}",
+        )
+
+
 __all__ = [
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
     "CalculationRevisionState",
+    "LedgerFilingCoverageError",
+    "assert_revision_snapshot_evidence_coverage",
     "derive_calculation_revision_id",
 ]

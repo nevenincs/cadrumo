@@ -5,8 +5,6 @@ Use of :class:`BucketEventHistoryRepository` for compliance.
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
-
 import typer
 
 from ...core.external_constants import OutputLanguage
@@ -14,7 +12,7 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.buckets import BucketEventType
-from ._common import _bad, _emit_envelope, _no_active_profile_refusal
+from ._common import _bad, _emit_envelope, _no_active_profile_refusal, parse_decimal_amount
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
 _log = get_logger(__name__)
@@ -29,13 +27,6 @@ ratios_app = typer.Typer(
 def register_ratios_commands(app: typer.Typer) -> None:
     """Mount ratios commands on the ledger app."""
     app.add_typer(ratios_app, name="ratios")
-
-
-def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
-    try:
-        return Decimal(raw.strip())
-    except (InvalidOperation, ValueError) as exc:
-        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw)) from exc
 
 
 def _ratios_bucket_id() -> str:
@@ -111,7 +102,7 @@ def _emit_ratios_event(
                 payload=payload,
                 payload_version=1,
             ),
-        )
+        ),
     )
 
 
@@ -174,14 +165,14 @@ def _resolve_category(raw: str):
         return SpendingCategory(raw.strip())
     except ValueError as exc:
         raise _bad(
-            tr("cli.app.ledger.ratios.unknown_category", default="Unknown spending category: {raw!r}", raw=raw)
+            tr("cli.app.ledger.ratios.unknown_category", default="Unknown spending category: {raw!r}", raw=raw),
         ) from exc
 
 
 @ratios_app.command(
     "list",
     help=tr(
-        "cli.app.ledger.ratios.list_help", default="List every per-category usage-ratio override on the active profile."
+        "cli.app.ledger.ratios.list_help", default="List every per-category usage-ratio override on the active profile.",
     ),
 )
 def ratios_list(
@@ -239,15 +230,15 @@ def ratios_list(
 
 
 @ratios_app.command(
-    "set", help=tr("cli.app.ledger.ratios.set_help", default="Set or replace one per-category usage-ratio override.")
+    "set", help=tr("cli.app.ledger.ratios.set_help", default="Set or replace one per-category usage-ratio override."),
 )
 def ratios_set(
     ctx: typer.Context,
     category: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.ratios.category_help", default="Spending category id (e.g. USAGE_RATIO_VEHICLE).")
+        ..., help=tr("cli.app.ledger.ratios.category_help", default="Spending category id (e.g. USAGE_RATIO_VEHICLE)."),
     ),
     ratio: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1].")
+        ..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1]."),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -263,7 +254,7 @@ def ratios_set(
     from ._ledger_payloads import RatiosSetResult
 
     category_enum = _resolve_category(category)
-    parsed = _parse_required_decimal(ratio, label="ratio")
+    parsed = parse_decimal_amount(ratio, label="ratio")
     bucket_id, profile_id = _ratios_bucket_and_profile()
     prior = set_usage_ratio(bucket_id=bucket_id, category=category_enum, ratio=parsed)
     _emit_ratios_event(
@@ -297,7 +288,7 @@ def ratios_set(
 
 
 @ratios_app.command(
-    "unset", help=tr("cli.app.ledger.ratios.unset_help", default="Clear one per-category usage-ratio override.")
+    "unset", help=tr("cli.app.ledger.ratios.unset_help", default="Clear one per-category usage-ratio override."),
 )
 def ratios_unset(
     ctx: typer.Context,
@@ -329,7 +320,7 @@ def ratios_unset(
                 default="No persisted override for category {category!r} on bucket {bucket_id!r}",
                 category=category_enum.value,
                 bucket_id=bucket_id,
-            )
+            ),
         ) from exc
     _emit_ratios_event(
         bucket_id=bucket_id,
@@ -350,7 +341,7 @@ def ratios_unset(
 @ratios_app.command(
     "eligible",
     help=tr(
-        "cli.app.ledger.ratios.eligible_help", default="List every category that may carry a per-category override."
+        "cli.app.ledger.ratios.eligible_help", default="List every category that may carry a per-category override.",
     ),
 )
 def ratios_eligible(
@@ -379,7 +370,7 @@ def ratios_eligible(
         default = "" if row.default_ratio is None else str(row.default_ratio)
         override_marker = "X" if row.override_present else "."
         lines.append(
-            f"{row.category.value}\t{row.proportionality_kind}\tdefault={default or '-'}\toverride={override_marker}"
+            f"{row.category.value}\t{row.proportionality_kind}\tdefault={default or '-'}\toverride={override_marker}",
         )
     _emit_envelope(
         ctx,

@@ -37,7 +37,7 @@ class FiledListingRowPayload(OutputSchema):
 
 
 class FiledCaptureFailurePayload(OutputSchema):
-    """One failed declaration capture row in a filed capture-all result."""
+    """One failed declaration capture row in a filed pull-all result."""
 
     modelo: str
     year: int
@@ -116,7 +116,7 @@ class FiledCaptureSourcesResult(OutputSchema):
 # IVA wallet leaves
 # ---------------------------------------------------------------------------
 #
-# The pull/history/capture-history/capture-remote-state verbs surface
+# The pull/history/pull-history/pull-remote-state verbs surface
 # read-only IVA compensation reports. Each registered schema below mirrors
 # the dict payload emitted at the corresponding call site in
 # ``_app_live.py``; tuple-typed report fields are flattened to ``list``
@@ -412,7 +412,7 @@ class ExpedientesCaptureResult(OutputSchema):
 
 
 class ExpedientesCaptureFailurePayload(OutputSchema):
-    """One failed expedientes capture-all row."""
+    """One failed expedientes pull-all row."""
 
     modelo: str
     year: int

@@ -76,6 +76,14 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
 
+    def save_with_secure_object_writes(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        extra_writes: tuple[object, ...],
+    ) -> None:
+        """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
+        ...
+
 
 @runtime_checkable
 class ModeloRecordCatalogueQueryProtocol(Protocol):

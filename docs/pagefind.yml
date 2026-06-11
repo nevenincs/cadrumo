@@ -1,0 +1,22 @@
+# Pagefind configuration for the aeat documentation search backend.
+#
+# Read by the post-build index pass (dev/docs/pagefind_index.py) from the
+# built HTML root. It scopes indexing to the article body so the navigation
+# sidebar, the on-page table of contents, and chrome do not pollute the
+# search index (the Furo + Pagefind prior art).
+#
+# The compiled index is an uncommitted build artifact written into
+# docs/_build/html/pagefind/, regenerated on every docs build like the
+# generated CLI reference - never committed.
+
+# Index only the Furo main article body, not the sidebar / TOC / chrome.
+root_selector: "article[role=main]"
+
+# Drop in-article navigation and non-prose chrome from the indexed content.
+exclude_selectors:
+  - "nav.contents"
+  - ".toc-tree"
+  - ".headerlink"
+  - "div.related"
+  - ".sidebar-tree"
+  - "a.copybtn"

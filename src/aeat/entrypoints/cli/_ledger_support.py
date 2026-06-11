@@ -7,7 +7,7 @@ stateless input-coercion and error-shaping utilities consumed by the
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 import typer
 from pydantic import ValidationError
@@ -15,7 +15,7 @@ from pydantic_core import ErrorDetails
 
 from ...core.i18n import tr
 from ...domain.categories import SpendingCategory
-from ._common import _bad
+from ._common import _bad, parse_decimal_amount, parse_optional_decimal_amount
 
 
 def _invoice_link_error_bad_parameter() -> typer.BadParameter:
@@ -23,18 +23,11 @@ def _invoice_link_error_bad_parameter() -> typer.BadParameter:
 
 
 def _parse_decimal(raw: str | None, *, label: str) -> Decimal | None:
-    if raw is None:
-        return None
-    try:
-        return Decimal(raw.strip())
-    except (InvalidOperation, ValueError) as exc:
-        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw)) from exc
+    return parse_optional_decimal_amount(raw, label=label)
 
 
 def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
-    parsed = _parse_decimal(raw, label=label)
-    assert parsed is not None
-    return parsed
+    return parse_decimal_amount(raw, label=label)
 
 
 def _parse_amount_magnitude(raw: str) -> Decimal:
@@ -81,7 +74,7 @@ def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
                 "cli.ledger.errors.business_pct_out_of_range",
                 value=format(value.normalize(), "f"),
                 percent=_format_percent(value),
-            )
+            ),
         )
     return value
 
@@ -121,7 +114,7 @@ def _validate_category_id(category_id: str | None) -> str | None:
                 "cli.ledger.errors.unknown_category",
                 category=category_id,
                 example=example,
-            )
+            ),
         ) from exc
 
 
@@ -142,7 +135,7 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
         tr(
             "cli.ledger.errors.command_input_invalid",
             details=details or tr("cli.ledger.errors.command_input_invalid_fallback"),
-        )
+        ),
     )
 
 
@@ -154,4 +147,3 @@ def _format_validation_error(item: ErrorDetails) -> str:
     if field_path:
         return f"{field_path}: {message}"
     return message
-

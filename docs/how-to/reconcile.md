@@ -59,7 +59,7 @@ Each reconciliation is recorded in the profile's event history. List the past
 reconciliations recorded for the active profile:
 
 ```bash
-aeat app modelo reconciliation-history
+aeat app modelo reconcile history
 ```
 
 Add `--work-unit-id <id>` to narrow the list to a single work unit. Each row

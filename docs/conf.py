@@ -61,8 +61,15 @@ extensions = [
     "sphinxext.opengraph",
     "notfound.extension",
     "sphinxcontrib.mermaid",
+    "hoverxref.extension",
     "myst_parser",
 ]
+
+# Hover tooltip cards on :term: cross-references to the generated glossary.
+# One term per glossary entry (the shared-entry rendering bug); aliases ride as
+# additional term lines on the same entry, so every declared surface resolves.
+hoverxref_roles = ["term"]
+hoverxref_role_types = {"term": "tooltip"}
 if _DOCS_BASE_URL:
     extensions.append("sphinx_sitemap")
 
@@ -878,8 +885,27 @@ def setup(app):
 
         generate_cli_reference(Path(__file__).resolve().parent)
 
+    def _generate_glossary_reference(app):
+        """Render the glossary fresh from the approved Handbook concepts.
+
+        The ``docs/_generated/glossary.rst`` page is a build-time projection of
+        the Terminology Handbook: regenerated on every build and gitignored,
+        never committed, so it cannot drift from the curated concepts. Only
+        approved concepts render; drafts are search-only. Generating in
+        ``builder-inited`` writes the page before Sphinx reads the source tree,
+        so its ``:term:`` anchors resolve and the nitpicky ``-n -W`` gate
+        enforces enrolment and single declaration.
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        from dev.docs.glossary_reference import generate_glossary_reference
+
+        generate_glossary_reference(Path(__file__).resolve().parent)
+
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
+    app.connect("builder-inited", _generate_glossary_reference)
     # Priority 700 runs after intersphinx (which resolves external targets at the
     # default priority) so the short-name bridge only fires for genuinely
     # unresolved in-tree references.

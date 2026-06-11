@@ -68,6 +68,7 @@ def resolve_document_link(
     source: AttachmentSource,
     reference: str,
     credentials: object,
+    service: Any | None = None,  # ANY-PARAM-RATIONALE-GOOGLE-DRIVE-SERVICE-SEAM
 ) -> bytes:
     """Resolve a recorded document link to its bytes, within the granted scopes.
 
@@ -75,6 +76,10 @@ def resolve_document_link(
         source: The recorded link's :class:`AttachmentSource`.
         reference: The link reference (Drive URL / file id, Gmail link, or URL).
         credentials: Google OAuth credentials carrying the granted scopes.
+        service: Optional pre-built Drive ``v3`` service. When ``None`` (the
+            production path) the service is built from ``credentials``; tests
+            inject a transport-only seam here so the fetch path runs without a
+            live network or real credentials.
 
     Returns:
         The fetched document bytes (only for ``GOOGLE_DRIVE`` links the
@@ -100,7 +105,8 @@ def resolve_document_link(
                 "Google Drive link does not contain a recognisable file id",
                 context={"reference": reference},
             )
-        return _download_drive_file(file_id, credentials)
+        drive_service = service if service is not None else _drive_service(credentials)
+        return _download_drive_file_from_service(file_id, drive_service)
     if source is AttachmentSource.URL:
         raise OutboundStoragePermissionError(
             "resolving an arbitrary external URL is outside the granted drive.file scope; "
@@ -111,11 +117,6 @@ def resolve_document_link(
         f"document-link source {source.value!r} is not a resolvable remote document",
         context={"source": source.value},
     )
-
-
-def _download_drive_file(file_id: str, credentials: object) -> bytes:
-    service = _drive_service(credentials)
-    return _download_drive_file_from_service(file_id, service)
 
 
 def _download_drive_file_from_service(file_id: str, service: Any) -> bytes:

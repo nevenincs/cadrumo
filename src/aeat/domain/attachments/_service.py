@@ -13,13 +13,47 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
-from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ._enums import AttachmentKind, AttachmentSource
 from ._models import Attachment
 from ._protocols import AttachmentStoreProtocol
 
 _logger = get_logger(__name__)
+
+
+def _build_attachment_manifest(
+    *,
+    sha256: str,
+    kind: AttachmentKind,
+    source: AttachmentSource,
+    source_reference: str,
+    mime_type: str,
+    bytes_size: int,
+    captured_at: datetime,
+    bucket_id: str | None,
+    link_transaction_ids: tuple[str, ...],
+    link_invoice_ids: tuple[str, ...],
+    metadata: Mapping[str, str] | None,
+    notes: str,
+) -> Attachment:
+    """Validate and return the :class:`Attachment` manifest for stored bytes."""
+    return Attachment.model_validate(
+        {
+            "attachment_id": sha256,
+            "kind": kind,
+            "source": source,
+            "source_reference": source_reference,
+            "sha256": sha256,
+            "mime_type": mime_type,
+            "bytes_size": bytes_size,
+            "captured_at": captured_at,
+            "linked_transaction_ids": link_transaction_ids,
+            "linked_invoice_ids": link_invoice_ids,
+            "bucket_id": bucket_id,
+            "metadata": metadata or {},
+            "notes": notes,
+        },
+    )
 
 
 def add_attachment(
@@ -31,12 +65,13 @@ def add_attachment(
     source_reference: str,
     mime_type: str,
     captured_at: datetime,
+    bucket_id: str | None = None,
     link_transaction_ids: tuple[str, ...] = (),
     link_invoice_ids: tuple[str, ...] = (),
     metadata: Mapping[str, str] | None = None,
     notes: str = "",
 ) -> Attachment:
-    """Store attachment bytes and persist the corresponding manifest.
+    """Store attachment bytes from a file and persist the corresponding manifest.
 
     The stored bytes' SHA-256 doubles as the attachment id so equal
     files deduplicate naturally.
@@ -56,6 +91,7 @@ def add_attachment(
         mime_type: MIME type of the attachment bytes.
         captured_at: Wall-clock timestamp when the bytes were
             captured upstream.
+        bucket_id: Optional owning profile bucket for the evidence record.
         link_transaction_ids: Optional tuple of transaction ids the
             attachment evidences.
         link_invoice_ids: Optional tuple of invoice ids the
@@ -69,33 +105,33 @@ def add_attachment(
     """
     _logger.debug("ingesting attachment from %s kind=%s source=%s", path, kind.value, source.value)
     sha256, bytes_size = store.put_file(path)
-    attachment = Attachment.model_validate(
-        {
-            "attachment_id": sha256,
-            "kind": kind,
-            "source": source,
-            "source_reference": source_reference,
-            "sha256": sha256,
-            "mime_type": mime_type,
-            "bytes_size": bytes_size,
-            "captured_at": captured_at,
-            "linked_transaction_ids": link_transaction_ids,
-            "linked_invoice_ids": link_invoice_ids,
-            "metadata": metadata or {},
-            "notes": notes,
-        }
+    attachment = _build_attachment_manifest(
+        sha256=sha256,
+        kind=kind,
+        source=source,
+        source_reference=source_reference,
+        mime_type=mime_type,
+        bytes_size=bytes_size,
+        captured_at=captured_at,
+        bucket_id=bucket_id,
+        link_transaction_ids=link_transaction_ids,
+        link_invoice_ids=link_invoice_ids,
+        metadata=metadata,
+        notes=notes,
     )
     store.write_manifest(attachment)
     _logger.info("added attachment kind=%s source=%s bytes=%d", kind.value, source.value, bytes_size)
     return attachment
 
 
-def add_link_attachment(
+def add_attachment_bytes(
     store: AttachmentStoreProtocol,
     *,
+    data: bytes,
     kind: AttachmentKind,
     source: AttachmentSource,
     source_reference: str,
+    mime_type: str,
     captured_at: datetime,
     bucket_id: str | None = None,
     link_transaction_ids: tuple[str, ...] = (),
@@ -103,38 +139,53 @@ def add_link_attachment(
     metadata: Mapping[str, str] | None = None,
     notes: str = "",
 ) -> Attachment:
-    """Record a document *link* (Gmail/Drive/URL) as a local attachment manifest.
+    """Store in-memory attachment bytes and persist the corresponding manifest.
 
-    Unlike :func:`add_attachment`, this never fetches or stores remote bytes: the
-    locally-stored payload is the link reference itself (``text/uri-list``), so a
-    Gmail message link or Drive file link is recorded as ledger evidence metadata
-    without any network access. The content-addressed id is the digest of the
-    reference text, so the same link deduplicates naturally.
+    The byte-bearing companion to :func:`add_attachment`: it accepts the
+    already-fetched document ``data`` (e.g. a Drive download resolved via
+    :func:`aeat.adapters.outbound.google.resolve_document_link`) instead of a
+    filesystem path, stores the encrypted blob through the same
+    ``put_bytes`` / ``write_manifest`` path, and records the *real* SHA-256
+    and supplied ``mime_type``. The stored bytes' SHA-256 is the attachment id,
+    so equal documents deduplicate naturally. There is deliberately no
+    link-only / ``text/uri-list`` path: an evidence record always carries the
+    document's encrypted bytes.
+
+    Args:
+        store: Backing :class:`AttachmentStoreProtocol`.
+        data: The already-fetched document bytes to encrypt and store.
+        kind: Logical :class:`~aeat.domain.attachments._enums.AttachmentKind`.
+        source: Originating :class:`~aeat.domain.attachments._enums.AttachmentSource`.
+        source_reference: The original link / reference recorded as provenance.
+        mime_type: MIME type of the fetched bytes.
+        captured_at: Wall-clock timestamp when the bytes were captured.
+        bucket_id: Optional owning profile bucket for the evidence record.
+        link_transaction_ids: Optional transaction ids the attachment evidences.
+        link_invoice_ids: Optional invoice ids the attachment evidences.
+        metadata: Optional free-form key/value metadata.
+        notes: Free-form operator notes; defaults to empty.
 
     Returns:
-        The created :class:`Attachment` manifest.
+        The persisted :class:`~aeat.domain.attachments._models.Attachment`
+        manifest carrying the real ``sha256`` and ``mime_type``.
     """
-    payload = source_reference.encode(UTF_8_ENCODING)
-    sha256 = store.put_bytes(payload)
-    attachment = Attachment.model_validate(
-        {
-            "attachment_id": sha256,
-            "kind": kind,
-            "source": source,
-            "source_reference": source_reference,
-            "sha256": sha256,
-            "mime_type": "text/uri-list",
-            "bytes_size": len(payload),
-            "captured_at": captured_at,
-            "linked_transaction_ids": link_transaction_ids,
-            "linked_invoice_ids": link_invoice_ids,
-            "bucket_id": bucket_id,
-            "metadata": metadata or {},
-            "notes": notes,
-        }
+    sha256 = store.put_bytes(data)
+    attachment = _build_attachment_manifest(
+        sha256=sha256,
+        kind=kind,
+        source=source,
+        source_reference=source_reference,
+        mime_type=mime_type,
+        bytes_size=len(data),
+        captured_at=captured_at,
+        bucket_id=bucket_id,
+        link_transaction_ids=link_transaction_ids,
+        link_invoice_ids=link_invoice_ids,
+        metadata=metadata,
+        notes=notes,
     )
     store.write_manifest(attachment)
-    _logger.info("recorded link attachment kind=%s source=%s", kind.value, source.value)
+    _logger.info("added attachment bytes kind=%s source=%s bytes=%d", kind.value, source.value, len(data))
     return attachment
 
 

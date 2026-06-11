@@ -134,6 +134,7 @@ from ._models import (
     SplitChildCommand,
     SplitTransactionResult,
 )
+from ._participation_read import get_transaction_participation
 from ._preflight import (
     LedgerPreflightIssue,
     LedgerPreflightIssueReason,
@@ -240,6 +241,7 @@ __all__ = [
     "eligible_ratio_categories",
     "export_ledger_transactions",
     "get_manual_transaction",
+    "get_transaction_participation",
     "import_ledger_source",
     "import_ledger_transactions",
     "is_llm_provider_available",
