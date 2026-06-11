@@ -865,7 +865,7 @@ def filed_list_cmd(
                     (
                         row.modelo,
                         str(row.year),
-                        row.period,
+                        str(row.period),
                         row.expediente_id,
                         row.status,
                         row.presented_at.isoformat(),
@@ -902,7 +902,7 @@ def filed_list_cmd(
             FiledListingRowPayload(
                 modelo=row.modelo,
                 year=row.year,
-                period=row.period,
+                period=str(row.period),
                 expediente_id=row.expediente_id,
                 status=row.status,
                 presented_at=row.presented_at.isoformat(),

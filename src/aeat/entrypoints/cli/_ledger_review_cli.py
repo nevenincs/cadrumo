@@ -16,7 +16,7 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
-from ._common import _bad, _emit_envelope, _filter_canonical_period, _state, _tx_repo
+from ._common import _bad, _emit_envelope, _state, _tx_repo
 
 ResolveTransactionId = Callable[[Any, str], str]
 
@@ -62,11 +62,7 @@ def _ledger_review_query(
     return LedgerReviewQuery(
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_record_id,
-        period=(
-            _filter_canonical_period(spec.period, year=spec.year)
-            if spec.period is not None and spec.year is not None
-            else None
-        ),
+        period=spec.period,
         status=spec.status.value if spec.status is not None else None,
         issue=spec.issue.value if spec.issue is not None else None,
         import_id=spec.import_id,
