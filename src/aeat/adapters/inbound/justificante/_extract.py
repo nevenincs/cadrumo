@@ -371,8 +371,8 @@ def _extract_period_and_ejercicio(normalised: str) -> tuple[str, str | None]:
     1. Labelled "Período <token>" (Modelo 100 modern body, M303).
     2. Positional "[<NIF>] <YYYY> <token>" lines that pdfplumber reads
        in form-laid-out quarterly receipts.
-    3. Anything else with an ejercicio: preserve the observed year as
-       the period token.
+    3. Anything else with an ejercicio: resolve the annual filing token
+       ``0A``.
     4. Anything without period or ejercicio fails hard.
     """
     ejercicio_match = _EJERCICIO_RE.search(normalised) or _EJERCICIO_LOOSE_RE.search(normalised)
@@ -393,7 +393,7 @@ def _extract_period_and_ejercicio(normalised: str) -> tuple[str, str | None]:
             ejercicio = positional_match.group("year").strip()
         return period, ejercicio
     if ejercicio is not None:
-        return ejercicio, ejercicio
+        return "0A", ejercicio
     raise JustificanteParseError("could not locate required field: period", missing=("period",))
 
 

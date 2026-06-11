@@ -58,6 +58,10 @@ _EXTENDED_PERIOD_SET = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
 _AD_HOC_PERIOD = "AD-HOC"
 _EXT_PERIOD_RE = re.compile(r"^EXT-[1-4]T$")
 _EVENT_PERIOD_RE = re.compile(r"^EVENT-\d+$")
+_DISPLAY_PERIOD_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
+_REGISTRY_AUTHORING_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$", re.I)
+_REGISTRY_AUTHORING_DASHED_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
+_REGISTRY_AUTHORING_BARE_YEAR_RE = re.compile(r"^(?P<year>\d{4})$")
 
 
 def _validate_period_against_registry(value: str) -> str:
@@ -191,6 +195,50 @@ class Period(BaseModel):
             return cls(filing_year=year, code=code)
         except ValueError as exc:
             raise PeriodError(f"cannot build a period from year={year!r} code={code!r}: {exc}") from exc
+
+    @classmethod
+    def from_string(cls, value: str) -> Period:
+        """Parse the canonical display string emitted by :meth:`__str__`.
+
+        Only the separated ``"YYYY <registry-code>"`` display form is accepted.
+        Combined calendar strings such as ``"2026Q1"`` or ``"2026-1T"`` remain
+        refused here; transitional registry-authoring TOML strings must use
+        :meth:`from_registry_authoring_string` so that compatibility is explicit.
+        """
+        if not isinstance(value, str):
+            raise PeriodError(f"period string must be str, got {type(value).__name__}")
+        match = _DISPLAY_PERIOD_RE.fullmatch(value.strip())
+        if match is None:
+            raise PeriodError(f"invalid period display string {value!r}: expected 'YYYY <period-code>'")
+        return cls.from_year_and_code(int(match.group("year")), match.group("code"))
+
+    @classmethod
+    def from_registry_authoring_string(cls, value: str) -> Period:
+        """Parse the transitional registry-authoring deadline period strings.
+
+        The registry deadline-window TOML still carries historical authoring
+        forms (``"2026Q1"``, ``"2026-1T"``, ``"2026-03"``, ``"2026-0A"``,
+        ``"2026-EXT-1T"``, bare ``"2026"``). This method centralises that
+        compatibility grammar in ``core.Period`` so schema loaders hydrate a
+        typed period without owning a parallel parser. It is not an operator
+        grammar; normal runtime construction remains :meth:`from_year_and_code`.
+        """
+        if not isinstance(value, str):
+            raise PeriodError(f"registry authoring period must be str, got {type(value).__name__}")
+
+        token = value.strip().upper()
+        if match := _DISPLAY_PERIOD_RE.fullmatch(token):
+            return cls.from_year_and_code(int(match.group("year")), match.group("code"))
+        if match := _REGISTRY_AUTHORING_QUARTER_PERIOD_RE.fullmatch(token):
+            return cls.from_year_and_code(int(match.group("year")), f"{match.group('quarter')}T")
+        if match := _REGISTRY_AUTHORING_DASHED_PERIOD_RE.fullmatch(token):
+            return cls.from_year_and_code(int(match.group("year")), match.group("code"))
+        if match := _REGISTRY_AUTHORING_BARE_YEAR_RE.fullmatch(token):
+            return cls.from_year_and_code(int(match.group("year")), "0A")
+        raise PeriodError(
+            f"invalid registry authoring period {value!r}: "
+            "expected 'YYYY <period-code>', YYYYQn, YYYY-<period-code>, or YYYY",
+        )
 
     @property
     def year(self) -> int:
