@@ -459,8 +459,22 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
         type(window).model_validate(payload)
 
 
-@pytest.mark.parametrize("authored_period", ("2026Q1", "2026-1T"))
-def test_deadline_window_hydrates_combined_toml_periods_at_schema_boundary(authored_period: str) -> None:
+@pytest.mark.parametrize(
+    ("authored_period", "expected_code"),
+    (
+        ("2026Q1", "1T"),
+        ("2026-1T", "1T"),
+        ("2026-0A", "0A"),
+        ("2026-03", "03"),
+        ("2026-1P", "1P"),
+        ("2026-EXT-1T", "EXT-1T"),
+        ("2026", "0A"),
+    ),
+)
+def test_deadline_window_hydrates_toml_periods_at_schema_boundary(
+    authored_period: str,
+    expected_code: str,
+) -> None:
     window = DeadlineWindowDefinition.model_validate(
         {
             "id": f"test-window-{authored_period.lower()}",
@@ -474,11 +488,12 @@ def test_deadline_window_hydrates_combined_toml_periods_at_schema_boundary(autho
         },
     )
 
-    assert window.period == Period.from_year_and_code(2026, "1T")
-    assert window.model_dump()["period"] == {"filing_year": 2026, "code": "1T"}
-    assert window.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
+    expected_period = Period.from_year_and_code(2026, expected_code)
+    assert window.period == expected_period
+    assert window.model_dump()["period"] == {"filing_year": 2026, "code": expected_code}
+    assert window.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": expected_code}
     assert '"period":"2026' not in window.model_dump_json()
-    assert DeadlineWindowDefinition.model_validate(window.model_dump()).period == Period.from_year_and_code(2026, "1T")
+    assert DeadlineWindowDefinition.model_validate(window.model_dump()).period == expected_period
 
 
 def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
