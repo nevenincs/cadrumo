@@ -58,7 +58,7 @@ def _profile() -> ModeloTestProfile:
 
 
 def _schema_provider() -> CasillaSchemaProvider:
-    return build_runtime_schema_provider(modelos=("130",), filing_year=2026, period="1T")
+    return build_runtime_schema_provider(modelos=("130",), filing_year=_PERIOD.filing_year, period=_PERIOD)
 
 
 def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
@@ -241,7 +241,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
             "modelo-131.dpa.031-032.vehiculos-afectos": "2",
             "modelo-131.did.012-045.iban": "ES9121000418450200051332",
         },
-        schema_provider=build_runtime_schema_provider(filing_year=2026, period="1T"),
+        schema_provider=build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -266,7 +266,7 @@ def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() ->
             "modelo-131.dpa.013-016.epigrafe-iae": ["722", "845"],
             "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2", "2": "3"},
         },
-        schema_provider=build_runtime_schema_provider(filing_year=2026, period="1T"),
+        schema_provider=build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD),
     )
 
     rows = {(value.binding_id, value.row_index): value.value for value in draft.binding_values}
@@ -292,7 +292,7 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
             "modelo-131.page1.692-692.declaracion-complementaria": "no",
             "modelo-131.page1.693-705.justificante-anterior": "1234567890123",
         },
-        schema_provider=build_runtime_schema_provider(filing_year=2026, period="1T"),
+        schema_provider=build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD),
     )
 
     binding_values = {value.binding_id: value.value for value in draft.binding_values}

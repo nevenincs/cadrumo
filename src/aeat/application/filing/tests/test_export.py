@@ -53,9 +53,14 @@ def _schema_provider(
     key = (filing_year, period, selected_modelos)
     provider = _SCHEMA_PROVIDER_CACHE.get(key)
     if provider is None:
+        typed_period = (
+            Period.from_year_and_code(filing_year, period)
+            if filing_year is not None and period is not None
+            else None
+        )
         provider = build_runtime_schema_provider(
             filing_year=filing_year,
-            period=period,
+            period=typed_period,
             modelos=selected_modelos,
         )
         _SCHEMA_PROVIDER_CACHE[key] = provider

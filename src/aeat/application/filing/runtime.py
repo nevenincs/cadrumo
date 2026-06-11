@@ -36,6 +36,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing
@@ -253,10 +254,11 @@ def build_runtime_schema_provider(
     *,
     source_root: Path | None = None,
     filing_year: int | None = None,
-    period: str | None = None,
+    period: Period | None = None,
     modelos: Sequence[str] | None = None,
 ) -> RegistrySchemaProvider:
     """Build and return the :class:`RegistrySchemaProvider` from validated registry TOML."""
+    _validate_period_arguments(filing_year=filing_year, period=period)
     root = (registry_root or bundled_path("registry", "aeat")).resolve()
     resolved_source_root = (source_root or bundled_path()).resolve()
     selected_ids = _normalize_modelo_selection(modelos)
@@ -276,7 +278,7 @@ def _build_runtime_schema_provider_cached(
     root: Path,
     resolved_source_root: Path,
     filing_year: int | None,
-    period: str | None,
+    period: Period | None,
     selected_tuple: tuple[str, ...] | None,
     _fingerprint: tuple[tuple[str, int, int], ...],
 ) -> RegistrySchemaProvider:
@@ -368,20 +370,37 @@ def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | Non
     return selected
 
 
+def _validate_period_arguments(*, filing_year: int | None, period: Period | None) -> None:
+    if filing_year is None and period is None:
+        return
+    if filing_year is None or period is None:
+        raise ModeloBuilderError(
+            "filing_year and period must be supplied together",
+            translated_message="application.filing.runtime.errors.filing_year_period_pair",
+        )
+    if not isinstance(period, Period):
+        raise ModeloBuilderError(
+            "runtime schema provider requires period as aeat.core.Period",
+            translated_message="application.filing.runtime.errors.period_type",
+            context={"period_type": type(period).__name__},
+        )
+    if filing_year != period.filing_year:
+        raise ModeloBuilderError(
+            "filing_year must match the supplied Period",
+            translated_message="application.filing.runtime.errors.filing_year_period_mismatch",
+            context={"filing_year": str(filing_year), "period": str(period)},
+        )
+
+
 def _snapshot_for_provider(
     authority: ValidatedRegistryAuthority,
     modelo: ModeloDefinition,
     *,
     filing_year: int | None,
-    period: str | None,
+    period: Period | None,
 ) -> RegistrySnapshot:
-    if (filing_year is None) != (period is None):
-        raise ModeloBuilderError(
-            "filing_year and period must be supplied together",
-            translated_message="application.filing.runtime.errors.filing_year_period_pair",
-        )
     if filing_year is not None and period is not None:
-        return authority.snapshot(modelo.id, filing_year=filing_year, period=period)
+        return authority.snapshot(modelo.id, filing_year=filing_year, period=period.registry_token)
     revision = _current_provider_revision(modelo)
     selector = revision.period_selector
     provider_year = selector.years[0] if selector.years else selector.year_from

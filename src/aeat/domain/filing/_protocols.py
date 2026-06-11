@@ -18,6 +18,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
+    from ...core import Period
     from ...core.identity import SubjectTaxId
 
 
@@ -171,9 +172,9 @@ class DeadlineStatus(Protocol):
 
 @runtime_checkable
 class DeadlineChecker(Protocol):
-    """Checks the filing deadline for a (modelo, period) tuple."""
+    """Checks the filing deadline for a typed modelo period."""
 
-    def check(self, modelo: str, period: str) -> DeadlineStatus:
+    def check(self, modelo: str, period: Period) -> DeadlineStatus:
         """Return the :class:`DeadlineStatus` for ``modelo`` and ``period``."""
         ...
 
