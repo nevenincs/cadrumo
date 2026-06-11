@@ -9,6 +9,15 @@ related:
   - '[[2026-06-10-cli-pull-file-standard-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cli-pull-file-standard` `CLI pull and file standardization rollout` plan
 
@@ -16,35 +25,35 @@ related:
 
 Convert reconcile into a pull/file/history group expressing both standards, with locales, tests, and docs.
 
-- [ ] `P01.S01` - Convert reconcile into a Typer group with pull, file, and history subcommands, removing the four --from-* flags and the reconcile-from-justificante sugar verb; `src/aeat/entrypoints/cli/_modelo_reconcile_cli.py`.
-- [ ] `P01.S02` - Move the reconcile help and error locale keys to the new pull/file group across all four catalogues via the aeat.locales CLI; `src/aeat/locales/en.yml`.
-- [ ] `P01.S03` - Update the reconcile CLI tests to drive reconcile pull and reconcile file --file; `src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py`.
+- [x] `P01.S01` - Convert reconcile into a Typer group with pull, file, and history subcommands, removing the four --from-* flags and the reconcile-from-justificante sugar verb; `src/aeat/entrypoints/cli/_modelo_reconcile_cli.py`.
+- [x] `P01.S02` - Move the reconcile help and error locale keys to the new pull/file group across all four catalogues via the aeat.locales CLI; `src/aeat/locales/en.yml`.
+- [x] `P01.S03` - Update the reconcile CLI tests to drive reconcile pull and reconcile file --file; `src/aeat/entrypoints/cli/tests/test_modelo_reconcile_verb.py`.
 
 ### Phase `P02` - Live pull renames
 
 Rename every live AEAT-fetch verb from capture/capture-* to pull/pull-*, with locales and CLI tests.
 
-- [ ] `P02.S04` - Rename justificante capture to pull; `src/aeat/entrypoints/cli/_app_live_justificante_cli.py`.
-- [ ] `P02.S05` - Rename expedientes capture to pull and capture-all to pull-all; `src/aeat/entrypoints/cli/_app_live_expedientes_cli.py`.
-- [ ] `P02.S06` - Rename notifications capture to pull; `src/aeat/entrypoints/cli/_app_live_notifications_cli.py`.
-- [ ] `P02.S07` - Rename filed capture/capture-all/capture-sources and iva-wallet capture-history/capture-remote-state to the pull family; `src/aeat/entrypoints/cli/_app_live.py`.
-- [ ] `P02.S08` - Move every live capture* help locale key family to the pull names across all four catalogues; `src/aeat/locales/en.yml`.
-- [ ] `P02.S09` - Update the live CLI verb tests and the live read subgroups test for the pull names; `src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
+- [x] `P02.S04` - Rename justificante capture to pull; `src/aeat/entrypoints/cli/_app_live_justificante_cli.py`.
+- [x] `P02.S05` - Rename expedientes capture to pull and capture-all to pull-all; `src/aeat/entrypoints/cli/_app_live_expedientes_cli.py`.
+- [x] `P02.S06` - Rename notifications capture to pull; `src/aeat/entrypoints/cli/_app_live_notifications_cli.py`.
+- [x] `P02.S07` - Rename filed capture/capture-all/capture-sources and iva-wallet capture-history/capture-remote-state to the pull family; `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `P02.S08` - Move every live capture* help locale key family to the pull names across all four catalogues; `src/aeat/locales/en.yml`.
+- [x] `P02.S09` - Update the live CLI verb tests and the live read subgroups test for the pull names; `src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py`.
 
 ### Phase `P03` - Censo and ledger
 
 Censo refresh to pull and ledger import --source to --file, with locales and tests.
 
-- [ ] `P03.S10` - Rename censo refresh to pull, with its locale keys and tests; `src/aeat/entrypoints/cli/_config/_profile_censo.py`.
-- [ ] `P03.S11` - Rename ledger import --source to --file, with its locale key and tests; `src/aeat/entrypoints/cli/_ledger_import_cli.py`.
+- [x] `P03.S10` - Rename censo refresh to pull, with its locale keys and tests; `src/aeat/entrypoints/cli/_config/_profile_censo.py`.
+- [x] `P03.S11` - Rename ledger import --source to --file, with its locale key and tests; `src/aeat/entrypoints/cli/_ledger_import_cli.py`.
 
 ### Phase `P04` - Docs, conformance, and codify
 
 Update the how-to guides, regenerate the CLI reference, keep conformance green, and codify the standard.
 
-- [ ] `P04.S12` - Update the six how-to guides that reference renamed verbs and flags; `docs/how-to/reconcile.md`.
-- [ ] `P04.S13` - Regenerate the CLI reference and keep the documented-command conformance gate green; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
-- [ ] `P04.S14` - Codify the aeat-cli-pull-and-file-standard project rule; `.vaultspec/rules/rules/aeat-cli-pull-and-file-standard.md`.
+- [x] `P04.S12` - Update the six how-to guides that reference renamed verbs and flags; `docs/how-to/reconcile.md`.
+- [x] `P04.S13` - Regenerate the CLI reference and keep the documented-command conformance gate green; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
+- [x] `P04.S14` - Codify the aeat-cli-pull-and-file-standard project rule; `.vaultspec/rules/rules/aeat-cli-pull-and-file-standard.md`.
 
 ## Description
 
