@@ -58,3 +58,29 @@ The documented-command conformance gate passed `41/41` under both `-m integratio
 ### INFO - Residual factory churn remains unrelated
 
 After the closeout commits, the worktree still carries unrelated peer edits in source files outside the ledger invoice closeout path. These were not staged or committed by this pass.
+
+## Pass 4 Update
+
+### VERIFIED - C5 deferred remainder is now structurally closed
+
+The ledger interface contract plan now has every row checked closed, including the previously deferred `W02.P02` positional-id work and the `W03.P05` typed-payload remainder. The C5 exec directory contains records for `S01` through `S32`; the earlier review concern about missing `S05` through `S09` peer records is resolved.
+
+### VERIFIED - C5 owner-surface gates are green
+
+The focused C5 completion gate passed `79/79`: transaction roundtrip, ledger verb spine, documented-command conformance, typed interface payloads, and ledger list sort. The C5 ledger CLI files also pass both owner-surface type checks: `ty check` reports `All checks passed!`, and `pyright` reports `0 errors, 0 warnings, 0 informations`.
+
+### OPEN - Repository-wide default test lane is not closable from ledger
+
+The default full-suite lane was started with `uv run --no-sync pytest src/aeat -q` and progressed to 40 percent before the 15-minute foreground tool timeout. The partial log had already surfaced a non-ledger failure in `src/aeat/core/errors/tests/test_exception_base_hygiene.py`. Replaying that test directly fails because `src/aeat/core/_period.py` defines `PeriodError(ValueError)`, which violates the production exception root hygiene gate.
+
+Tracking: this is a core-period exception-hygiene issue, not a ledger hardening implementation issue. Do not close the full default lane as green until the owning period/core campaign resolves or records that exception root.
+
+### OPEN - Explicit integration-or-not full lane is blocked before ledger
+
+The explicit lane `uv run --no-sync pytest src/aeat -m "integration or not integration" -q -x` fails before reaching ledger with `fixture '_settings_factory' not found` in `src/aeat/adapters/outbound/aeat/auth/tests/test_authenticator_part1.py::test_invalid_persisted_session_redacts_path_and_reason`. The fail-fast run reached `887 passed, 2 skipped` before that auth fixture error.
+
+Tracking: this is an outbound AEAT auth test fixture issue, not a ledger hardening implementation issue. It remains a campaign-close blocker for repository-wide green, but not an owner-surface blocker for C1-C7 ledger authoring.
+
+### OPEN - Repository-wide type harness remains baseline red
+
+`just check-types` currently reports `769 diagnostics` (`407 ty`, `362 pyright`) concentrated in calculation/modelo test surfaces. Focused type checks over the C5 ledger CLI payload and emit files are clean, so the global red is tracked as shared factory baseline rather than a ledger-interface-contract regression.
