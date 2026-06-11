@@ -73,6 +73,9 @@ docs/_build/
 # CLI reference is generated fresh at build time from the live command tree
 # (docs/conf.py builder-inited); never committed, so it cannot drift.
 docs/cli/
+# Glossary is generated fresh at build time from the approved Terminology
+# Handbook concepts (docs/conf.py builder-inited); never committed.
+docs/_generated/
 
 # PyBuilder
 .pybuilder/

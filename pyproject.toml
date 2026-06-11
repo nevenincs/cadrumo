@@ -190,6 +190,12 @@ dev = [
   "sphinx-notfound-page>=1.1",
   "sphinxext-opengraph>=0.9",
   "sphinx-sitemap>=2.6",
+  # Hover tooltip cards on :term: cross-references. With hoverxref_roles=["term"],
+  # every :term: reference to a generated glossary entry shows the definition on
+  # hover - the curated short description surfaces without a page load. The
+  # generated glossary's :term: anchors are the load-bearing part; this is the
+  # presentation enhancement over them.
+  "sphinx-hoverxref>=1.4",
   # Precompiled docs search backend (MIT). `pagefind` is the pure-Python API
   # wrapper; the `extended` extra pins `pagefind-bin-extended`, whose wheel
   # BUNDLES the platform Rust binary WITH the es/ca/hu/en Snowball stemmers
