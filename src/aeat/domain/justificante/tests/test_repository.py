@@ -15,8 +15,8 @@ from ....adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
-from ....core import Period
 from ....adapters.persistence.storage.errors import ClassificationError
+from ....core import Period
 from ....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._repository import JustificanteRepository
@@ -25,13 +25,18 @@ from .._schema import Justificante
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _make_justificante(tmp_path: Path, *, csv: str = "ABCD1234EFGH5678") -> Justificante:
+def _make_justificante(
+    tmp_path: Path,
+    *,
+    csv: str = "ABCD1234EFGH5678",
+    period: object = "1T",
+) -> Justificante:
     pdf = tmp_path / f"{csv}.pdf"
     pdf.write_bytes(b"%PDF-1.4\n%EOF\n")
     return Justificante(
         csv=csv,
         modelo="130",
-        period="1T",
+        period=period,
         ejercicio="2026",
         presentation_id=None,
         presented_at=datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC),
@@ -76,12 +81,12 @@ class TestSaveLoad:
         assert loaded == record
 
     def test_annual_period_requires_bare_registry_token(self, tmp_path: Path) -> None:
-        record = _make_justificante(tmp_path).model_copy(update={"period": "0A"})
+        record = _make_justificante(tmp_path, period="0A")
         assert record.period == Period.from_year_and_code(2026, "0A")
 
     def test_bare_year_period_is_not_accepted_as_annual_token(self, tmp_path: Path) -> None:
         with pytest.raises(ValidationError, match="Period"):
-            _make_justificante(tmp_path).model_copy(update={"period": "2026"})
+            _make_justificante(tmp_path, period="2026")
 
     def test_save_idempotent(self, tmp_path: Path) -> None:
         repo = JustificanteRepository()
