@@ -167,7 +167,7 @@ Delegate: re-seat application/aggregation Period on core.Period (drop the raw co
 
 Delegate per module: replace period: str fields with core.Period in state_projection, overview/_calendar (+ alias helpers), aggregation service/source_mesh/retenciones, workflow _resume models, iva/_prorrata, submission/_models, verification/_schema, filing/_schema, modelo/_export; each subagent grounds sites via rg + vaultspec-rag and adds roundtrip coverage at persistence boundaries.
 
-- [ ] `W02.P08.S22` - Replace the period: str fields and the _period_aliases / _normalize_period_token / _filing_year_from_period helper machinery in the overview calendar with core.Period; `src/aeat/application/overview/_calendar.py`.
+- [x] `W02.P08.S22` - Replace the period: str fields and the _period_aliases / _normalize_period_token / _filing_year_from_period helper machinery in the overview calendar with core.Period; `src/aeat/application/overview/_calendar.py`.
 - [ ] `W02.P08.S23` - Replace the period: str / ledger_period fields in the state projection with core.Period and add a save->load->equality roundtrip plus anti-tautology proof at that persistence boundary; `src/aeat/application/state_projection.py`.
 - [ ] `W02.P08.S24` - Replace the period: str fields in the aggregation service, source mesh and retenciones models with core.Period; `src/aeat/application/aggregation/_service.py, _source_mesh.py, _retenciones.py`.
 - [ ] `W02.P08.S25` - Replace the period: str fields in the iva prorrata, submission, verification schema, filing schema and modelo export models with core.Period; `src/aeat/domain/iva/_prorrata.py, src/aeat/domain/submission/_models.py, src/aeat/application/verification/_schema.py, src/aeat/domain/filing/_schema.py, src/aeat/application/modelo/_export.py`.
