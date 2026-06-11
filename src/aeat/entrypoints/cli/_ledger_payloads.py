@@ -65,6 +65,10 @@ class TransactionPayload(OutputSchema):
     # rather than rejecting them as extra_forbidden. None for EUR-native rows.
     value_in_eur: str | None = None
     fx_rate: str | None = None
+    # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
+    # rendered as ISO-8601 strings. ``None`` for rows authored before the axis.
+    created_at: str | None = None
+    modified_at: str | None = None
 
 
 class BulkClassifyFailurePayload(OutputSchema):
@@ -175,20 +179,13 @@ class LedgerSplitChildProposalPayload(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("ledger.add")
-class LedgerAddResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger add``."""
-
-    bucket_id: str
-    transaction_id: str
-    bucket_event_ids: list[str]
-    transaction: TransactionPayload
-
-
 class _LedgerMutationResult(OutputSchema):
     """Shared shape for single-transaction mutation verbs.
 
-    Subclassed per verb so each registers its own schema path.
+    The uniform mutation quintet settled by the ledger-interface-contract ADR
+    (D1): every verb that mutates exactly one ledger transaction returns
+    ``{bucket_id, transaction_id, bucket_event_ids, review_status,
+    transaction}``. Subclassed per verb so each registers its own schema path.
     """
 
     bucket_id: str
@@ -198,51 +195,91 @@ class _LedgerMutationResult(OutputSchema):
     transaction: TransactionPayload
 
 
+@register_schema("ledger.add")
+class LedgerAddResult(_LedgerMutationResult):
+    """JSON envelope for ``aeat app ledger add``.
+
+    D1: ``add`` joins the uniform mutation quintet by subclassing
+    :class:`_LedgerMutationResult`, gaining the ``review_status`` field every
+    other single-transaction mutation already carries.
+    """
+
+
 @register_schema("ledger.update")
 class LedgerUpdateResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger update``."""
 
 
 @register_schema("ledger.classify")
-class LedgerClassifyResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger classify``.
+class LedgerClassifySingleResult(_LedgerMutationResult):
+    """JSON envelope for the single-transaction ``aeat app ledger classify`` path (D1).
 
-    Covers both the single-transaction path and the bulk ``--from-csv`` path.
-    All fields are optional so both branches validate cleanly.
+    The primary, non-optional mutation quintet: classifying one transaction
+    returns the same ``{bucket_id, transaction_id, bucket_event_ids,
+    review_status, transaction}`` shape every other single-transaction
+    mutation carries, rather than the former all-optional union.
     """
 
-    # Single-transaction path fields
-    bucket_id: str | None = None
-    transaction_id: str | None = None
-    bucket_event_ids: list[str] | None = None
-    review_status: str | None = None
-    transaction: TransactionPayload | None = None
-    # Bulk --from-csv path fields
-    total: int | None = None
-    applied: int | None = None
-    skipped: int | None = None
-    failures: list[BulkClassifyFailurePayload] | None = None
-    # LLM suggest path fields (--llm without --apply): the proposed decision is
-    # surfaced for operator review; nothing is persisted. ``applied`` stays
-    # False until the operator re-runs with ``--apply``.
-    llm: bool | None = None
-    provider: str | None = None
+
+class LedgerClassifyBulkResult(OutputSchema):
+    """JSON result for the bulk ``aeat app ledger classify --from-csv`` path (D1).
+
+    A discriminated branch of the single ``classify`` CLI leaf; it shares the
+    leaf's registered ``ledger.classify`` command key (the conformance gate maps
+    one schema per leaf), so it is an unregistered branch type emitted under that
+    key rather than a separate registry entry.
+    """
+
+    total: int
+    applied: int
+    skipped: int
+    failures: list[BulkClassifyFailurePayload] = []
+
+
+class LedgerClassifyLlmSuggestResult(OutputSchema):
+    """JSON envelope for the ``aeat app ledger classify --llm`` (no ``--apply``) path (D1).
+
+    The proposed decision is surfaced for operator review; nothing is
+    persisted (``persisted`` is ``False``) until the operator re-runs with
+    ``--apply``.
+    """
+
+    llm: bool
+    provider: str
+    transaction_id: str
     classification: str | None = None
     category: str | None = None
     confidence: str | None = None
     reason: str | None = None
     provenance: str | None = None
-    persisted: bool | None = None
-    # Saturation path fields (--llm --saturate): the model-selected IVA category
-    # plus the system-derived euro substrate. The numbers are present only when
-    # the category was derivable; otherwise ``derivation_note`` explains why the
-    # operator must complete them.
+    persisted: bool = False
+
+
+class LedgerClassifyLlmSaturateResult(OutputSchema):
+    """JSON envelope for the ``aeat app ledger classify --llm --saturate`` path (D1).
+
+    The model-selected IVA category plus the system-derived euro substrate.
+    The numbers are present only when the category was derivable; otherwise
+    ``derivation_note`` explains why the operator must complete them.
+    """
+
+    llm: bool
+    provider: str
+    transaction_id: str
+    # Stage-1 classification decision carried alongside the saturated substrate.
+    classification: str | None = None
+    category: str | None = None
+    confidence: str | None = None
+    reason: str | None = None
+    provenance: str | None = None
+    # Saturated IVA substrate (system-derived from the registry).
     iva_category: str | None = None
     iva_rate: str | None = None
     taxable_base: str | None = None
     iva_amount: str | None = None
     rate_derivable: bool | None = None
     derivation_note: str | None = None
+    persisted: bool = False
 
 
 @register_schema("ledger.allocate")
@@ -354,6 +391,54 @@ class LedgerMergeResult(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
+class LedgerListRowPayload(OutputSchema):
+    """One typed ``aeat app ledger list`` row (D2).
+
+    Projected from :class:`aeat.application.ledger.LedgerTransactionReviewPayload`
+    plus the three id/group keys the list builder appends (``full_id``,
+    ``display_id``, ``group_label``). Carries the non-negative ``amount`` magnitude
+    plus ``direction`` (money shape fixed by C1) and the D6 ``created_at`` /
+    ``modified_at`` lifecycle timestamps, replacing the former bare
+    ``dict[str, object]`` row shape.
+    """
+
+    # Identity / display
+    full_id: str
+    display_id: str
+    transaction_id: str
+    # Core read projection (mirrors LedgerTransactionReviewPayload)
+    date: str
+    booked_date: str
+    value_date: str | None = None
+    amount: str
+    currency: str
+    direction: str
+    counterparty: str = ""
+    description: str
+    business_classification: str
+    business_pct: str | None = None
+    category_id: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str | None = None
+    iva_amount: str | None = None
+    irpf_category: str | None = None
+    usage_ratio_id: str | None = None
+    prorrata_reference: str | None = None
+    purchase_invoice_evidence_id: str | None = None
+    attachment_ids: list[str] = []
+    notes: str = ""
+    lifecycle_state: str
+    review_status: str
+    classified_by: str
+    source_jurisdiction: str | None = None
+    value_in_eur: str | None = None
+    fx_rate: str | None = None
+    created_at: str | None = None
+    modified_at: str | None = None
+    # List-builder extras
+    group_label: str | None = None
+
+
 @register_schema("ledger.list")
 class LedgerListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger list``.
@@ -365,7 +450,7 @@ class LedgerListResult(OutputSchema):
     """
 
     bucket_id: str
-    rows: list[dict[str, object]]
+    rows: list[LedgerListRowPayload]
     total: int = 0
     shown: int = 0
     offset: int = 0
@@ -643,9 +728,31 @@ class LedgerPreflightResult(OutputSchema):
     ready: bool
 
 
+class LedgerLinkEvidenceUpdatePayload(OutputSchema):
+    """Typed evidence-update projection nested in ``ledger link`` (D2).
+
+    Mirrors :class:`aeat.application.ledger.LedgerTransactionResultPayload`:
+    the single-transaction mutation result produced when ``link`` attaches
+    purchase-invoice evidence to the transaction. Replaces the former bare
+    ``dict[str, object]`` ``evidence_update`` field.
+    """
+
+    bucket_id: str
+    transaction_id: str
+    review_status: str
+    transaction: TransactionPayload
+
+
 @register_schema("ledger.link")
 class LedgerLinkResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger link``."""
+    """JSON envelope for ``aeat app ledger link``.
+
+    D1: ``link`` now projects the ``transaction`` it mutated (the evidence
+    attachment) alongside the link metadata; D2: the former bare-dict
+    ``evidence_update`` is the typed :class:`LedgerLinkEvidenceUpdatePayload`.
+    Both are ``None`` on an invoice-only link, where no single-transaction
+    mutation projection is produced.
+    """
 
     operation: str
     bucket_id: str
@@ -653,7 +760,8 @@ class LedgerLinkResult(OutputSchema):
     invoice_id: str | None = None
     evidence_id: str | None = None
     actor: str
-    evidence_update: dict[str, object] | None = None
+    transaction: TransactionPayload | None = None
+    evidence_update: LedgerLinkEvidenceUpdatePayload | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -904,6 +1012,7 @@ class EvidenceRecordPayload(OutputSchema):
     bucket_id: str
     source_path: str
     source_sha256: str
+    attachment_id: str | None = None
     media_kind: str
     supplier: str | None = None
     invoice_number: str | None = None

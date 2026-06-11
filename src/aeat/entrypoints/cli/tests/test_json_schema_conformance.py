@@ -184,11 +184,16 @@ def _click_leaf_paths(command: click.Command, prefix: tuple[str, ...]) -> set[tu
 #
 # When a future group callback adds an envelope emit, register its key
 # here so the gate continues to model the actual reach of the CLI tree.
+#  * ``aeat app ledger participation`` (group callback) emits
+#    ``ledger.participation`` for the inverse audit lookup invoked as
+#    ``participation <transaction-id>`` (the group is ``invoke_without_command``);
+#    the ``rebuild`` subcommand is a reachable leaf with its own key.
 _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
     {
         "root.status",
         "root.app",
-    }
+        "ledger.participation",
+    },
 )
 
 
@@ -301,7 +306,7 @@ _BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(
             "src/aeat/entrypoints/cli/_config/_repair_cli.py",
             "repair-report passthrough after config repair extraction",
         ),
-    }
+    },
 )
 
 _BARE_EMIT_EXEMPTION_PATHS: frozenset[str] = frozenset(path for path, _rationale in _BARE_EMIT_EXEMPTIONS)
@@ -323,7 +328,7 @@ _EXPECTED_SUCCESS_SPINE_KEYS = frozenset({"schema_version", "command", "status",
 #: date, a per-finding action, a label) and are intentionally NOT forbidden;
 #: only the bare ``next`` hint and the ``*_advisory`` smuggling are.
 _FORBIDDEN_NOTICE_FIELD_NAMES = frozenset(
-    {"next", "suggestion", "suggestions", "hint", "hints", "advisory", "advisories", "source_advisories"}
+    {"next", "suggestion", "suggestions", "hint", "hints", "advisory", "advisories", "source_advisories"},
 )
 
 
