@@ -576,3 +576,21 @@ and test file; the focused cross-period clean-state suite passed with
 `23 passed`; core/domain Period gates passed with `31 passed`; CLI import smoke
 printed `OK`; and the period plan check reported only the existing `PLAN022`
 ordering warning.
+
+## PERIOD-033 | INFO | Overview justificante metadata Period cleanup reviewed
+
+Review of the overview calendar justificante evidence matcher found no issues in
+the focused scope. The matcher now accepts the repository-returned
+`Justificante` contract directly, indexes metadata by `Justificante.csv`, and
+compares `Justificante.period` to the filing `core.Period` by full typed
+equality. The prior generic-object and string-token fallback has been removed.
+
+The reviewer attempted the mandated vaultspec-rag query for this seam, but the
+service timed out with `http_search_timeout`; the review was grounded with `rg`
+and direct source inspection instead.
+
+Verification after the change: ruff passed for the touched overview source and
+test file; the focused overview calendar suite passed with `52 passed`;
+core/domain Period gates passed with `31 passed`; CLI import smoke printed
+`OK`; and the period plan check reported only the existing `PLAN022` ordering
+warning.
