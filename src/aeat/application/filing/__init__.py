@@ -112,7 +112,7 @@ from .runtime import (
 def build_draft(
     *,
     modelo: str,
-    period: str,
+    period: str | _Period,
     profile: ModeloProfile,
     inputs: ModeloInputs,
     schema_provider: CasillaSchemaProvider,
@@ -123,7 +123,8 @@ def build_draft(
 
     Args:
         modelo: Stable modelo string ID.
-        period: Period identifier.
+        period: Filing period, either as the typed core period or the transitional
+            combined string still accepted at this boundary.
         profile: Taxpayer profile the draft would be built for.
         inputs: Raw filing inputs.
         schema_provider: Registry-backed casilla schema provider.
@@ -139,7 +140,7 @@ def build_draft(
     """
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
-    typed_period = _Period.from_year_and_code(filing_year, registry_period)
+    typed_period = period if isinstance(period, _Period) else _Period.from_year_and_code(filing_year, registry_period)
     snapshot_ref = _RegistrySnapshotRef(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
@@ -284,7 +285,7 @@ def build_draft(
 
 
 @lru_cache(maxsize=128)
-def _load_registry_snapshot(*, modelo: str, period: str) -> _RegistrySnapshot:
+def _load_registry_snapshot(*, modelo: str, period: str | _Period) -> _RegistrySnapshot:
     filing_year, registry_period = _registry_period(period)
     try:
         authority = _resources().modelos.authority
@@ -299,14 +300,16 @@ def _load_registry_snapshot(*, modelo: str, period: str) -> _RegistrySnapshot:
         ) from exc
 
 
-def _registry_period(period: str) -> tuple[int, str]:
+def _registry_period(period: str | _Period) -> tuple[int, str]:
+    if isinstance(period, _Period):
+        return period.filing_year, period.registry_token
     try:
         return _parse_canonical_period(period)
     except _PeriodValidationError as exc:
         raise ModeloBuilderError(str(exc)) from exc
 
 
-def _filing_period_date(period: str) -> date:
+def _filing_period_date(period: str | _Period) -> date:
     filing_year, registry_period = _registry_period(period)
     return _period_end_date(filing_year, registry_period)
 
