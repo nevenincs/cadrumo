@@ -38,10 +38,11 @@ architectural vocabulary set (`sweep`, `projection`, `relevance mapping`,
 `preprocess hook`, `laundering`, `record kinds`) and no codified terminology
 rules were found for the S32 candidates.
 
-Files touched by this reconciliation: `.vault/plan/2026-06-10-docs-terminology-search-plan.md`
-and `.vault/audit/2026-06-11-docs-terminology-search-reconciliation-audit.md`.
-No application code, docs prose, terminology concepts, or unrelated dirty files
-were edited.
+Files touched by this reconciliation:
+`.vault/plan/2026-06-10-docs-terminology-search-plan.md`,
+`.vault/audit/2026-06-11-docs-terminology-search-reconciliation-audit.md`, and
+`.vault/index/docs-terminology-search.index.md`. No application code, docs
+prose, terminology concepts, or unrelated dirty files were edited.
 
 ## Checks
 
@@ -54,6 +55,17 @@ and terminology/search surfaces. Targeted verification ran:
     marker filter.
 - `uv run pytest dev/docs/tests/test_prorrata_smoke_gate.py src/aeat/entrypoints/cli/tests/test_terminology_redeclaration_conformance.py -q -m integration`
   - Result: 42 passed.
+- `uv run vaultspec-core vault feature index -f docs-terminology-search`
+  - Result: passed; regenerated the feature index.
+- `uv run vaultspec-core vault plan status .vault/plan/2026-06-10-docs-terminology-search-plan.md`
+  - Result: 26 of 32 steps complete.
+- `uv run vaultspec-core vault plan check .vault/plan/2026-06-10-docs-terminology-search-plan.md`
+  - Result: passed.
+- `uv run vaultspec-core vault check all -f docs-terminology-search --no-hints`
+  - Result: failed on pre-existing vault issues outside this reconciliation:
+    unsupported `.vault/tmp`, non-standard filenames in unrelated ledger and
+    live-censo-calendar-reconciliation records, plus a template-annotation
+    warning in the earlier docs-terminology content audit.
 
 ## Closeout
 
