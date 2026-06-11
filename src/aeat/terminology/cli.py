@@ -39,6 +39,7 @@ from ._curation import (
 )
 from ._enums import TermStatus
 from ._errors import TerminologyError
+from ._ratchet import check_curation_backlog_ratchet
 from ._scaffold import ScaffoldAction, ScaffoldPlan, scaffold_handbook
 from ._seed_import import (
     SeedEntry,
@@ -125,7 +126,12 @@ def retire(
 
 
 @app.command("audit")
-def audit() -> None:
+def audit(
+    ratchet_check: Annotated[
+        bool,
+        typer.Option("--ratchet-check", help="Fail if curation backlog grows beyond the committed baseline."),
+    ] = False,
+) -> None:
     """Print the structured curation-health report."""
     report = audit_handbook()
     typer.echo(
@@ -145,6 +151,20 @@ def audit() -> None:
             typer.echo(f"    - {concept_id} -> {', '.join(targets)}")
     if report.retired_without_replaced_by:
         typer.echo(f"  retired without replaced_by: {', '.join(report.retired_without_replaced_by)}")
+    if ratchet_check:
+        ratchet = check_curation_backlog_ratchet()
+        if ratchet.passed:
+            typer.echo(
+                "  curation ratchet: clean "
+                f"(draft {report.draft_count}/{ratchet.baseline.draft_count}, "
+                f"empty short_description {len(report.empty_short_description)}/"
+                f"{ratchet.baseline.empty_short_description_count})",
+            )
+        else:
+            typer.echo("  curation ratchet: regression")
+            for violation in ratchet.violations:
+                typer.echo(f"    - {violation}")
+            raise typer.Exit(code=1)
     if not report.is_clean:
         raise typer.Exit(code=1)
 

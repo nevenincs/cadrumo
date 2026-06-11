@@ -63,6 +63,7 @@ from ._errors import (
     AeatSessionExpiredError,
     AuthConfigurationError,
     AuthError,
+    AuthValidationError,
 )
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
@@ -117,6 +118,7 @@ __all__ = [
     "AuthProvider",
     "AuthProviderKind",
     "AuthSessionDetail",
+    "AuthValidationError",
     "BrowserContextLike",
     "BrowserContextProvisioner",
     "BrowserPageLike",

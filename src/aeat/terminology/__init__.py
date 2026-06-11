@@ -43,6 +43,13 @@ from ._loader import (
     load_terminology_handbook,
     terminology_concepts_dir,
 )
+from ._ratchet import (
+    CurationBacklogRatchetBaseline,
+    CurationBacklogRatchetResult,
+    check_curation_backlog_ratchet,
+    load_curation_backlog_ratchet_baseline,
+    terminology_ratchet_baseline_path,
+)
 from ._scaffold import (
     ScaffoldAction,
     ScaffoldEntry,
@@ -88,6 +95,8 @@ __all__ = [
     "ConceptDomain",
     "ConceptLifecycle",
     "ConceptRecord",
+    "CurationBacklogRatchetBaseline",
+    "CurationBacklogRatchetResult",
     "CurationError",
     "EnrolmentCandidate",
     "GrammaticalGender",
@@ -118,12 +127,14 @@ __all__ = [
     "assert_source_ingestible",
     "audit_handbook",
     "build_scaffold_plan",
+    "check_curation_backlog_ratchet",
     "collect_enrolment_candidates",
     "default_handbook_validators",
     "id_uniqueness_validator",
     "legal_refs_resolve_validator",
     "lifecycle_replaced_by_validator",
     "load_bundled_terminology_handbook",
+    "load_curation_backlog_ratchet_baseline",
     "load_terminology_handbook",
     "parse_iate_tbx",
     "parse_ubterm_csv",
@@ -136,4 +147,5 @@ __all__ = [
     "set_term",
     "source_attribution",
     "terminology_concepts_dir",
+    "terminology_ratchet_baseline_path",
 ]

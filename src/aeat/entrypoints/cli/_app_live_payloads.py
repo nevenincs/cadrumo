@@ -61,7 +61,9 @@ class FiledListResult(OutputSchema):
     year_from: int
     year_to: int
     row_count: int
+    failed_count: int = 0
     rows: list[FiledListingRowPayload]
+    failures: list[FiledCaptureFailurePayload] = []
 
 
 @register_schema("app.live.filed.pull")

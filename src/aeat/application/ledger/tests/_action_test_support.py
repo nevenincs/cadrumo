@@ -3,21 +3,48 @@
 
 from __future__ import annotations
 
+import csv
+import hashlib
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from io import StringIO
 from pathlib import Path
 
 import pytest
 
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
+from ....adapters.persistence.storage import AttachmentStore
+from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....application.ledger import (
+    ExportSerializationFormat,
+    LedgerExportCommand,
+    LedgerSourceImportCommand,
+    ManualLedgerTransactionPatch,
+    archive_manual_transaction,
+    attach_manual_transaction_evidence,
+    export_ledger_transactions,
+    import_ledger_source,
+    import_ledger_transactions,
+    remove_manual_transaction,
+    reset_ledger_catalogue,
+    restore_manual_transaction,
+    stash_manual_transaction,
+    summarize_manual_transactions,
+    update_manual_transaction,
+    update_manual_transaction_fields,
+)
 from ....core.aggregation import AggregationSourceKind
+from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ....domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
 )
+from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -43,9 +70,13 @@ from ....domain.transactions import (
     RawTransaction,
     SourceFormat,
     Transaction,
+    TransactionCatalogue,
     TransactionCatalogueRepository,
     TransactionDirection,
+    TransactionLifecycleState,
+    TransactionValidationError,
 )
+from ....domain.usage_ratios import UsageRatioProfile
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import ManualLedgerTransactionCommand, ManualLedgerTransactionResult, create_manual_transaction
 
@@ -53,17 +84,55 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 __all__ = [
     "UTC",
+    "AggregationSourceKind",
+    "Attachment",
+    "AttachmentKind",
+    "AttachmentSource",
+    "AttachmentStore",
+    "BucketEvent",
+    "BucketEventObjectType",
+    "BucketEventType",
     "BusinessClassification",
     "Decimal",
+    "ExportSerializationFormat",
+    "LedgerExportCommand",
+    "LedgerSourceImportCommand",
     "ManualLedgerTransactionCommand",
+    "ManualLedgerTransactionPatch",
+    "ParsedLedgerRow",
     "Path",
+    "RawProvenance",
+    "RawTransaction",
     "SecureObjectRepository",
+    "SourceFormat",
+    "SpendingCategory",
+    "StorageValidationError",
+    "StringIO",
+    "Transaction",
+    "TransactionCatalogue",
     "TransactionDirection",
+    "TransactionLifecycleState",
+    "TransactionValidationError",
+    "UsageRatioProfile",
     "_repositories",
+    "archive_manual_transaction",
+    "attach_manual_transaction_evidence",
     "create_manual_transaction",
+    "csv",
     "date",
     "datetime",
+    "export_ledger_transactions",
+    "hashlib",
+    "import_ledger_source",
+    "import_ledger_transactions",
+    "remove_manual_transaction",
+    "reset_ledger_catalogue",
+    "restore_manual_transaction",
     "secure_objects",
+    "stash_manual_transaction",
+    "summarize_manual_transactions",
+    "update_manual_transaction",
+    "update_manual_transaction_fields",
 ]
 
 

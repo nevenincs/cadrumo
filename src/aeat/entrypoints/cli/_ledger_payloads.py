@@ -109,6 +109,13 @@ class LedgerRemovalBlockerPayload(OutputSchema):
     period: str
 
 
+class LedgerPeriodPayload(OutputSchema):
+    """Nested filing period payload used by ledger preflight/check surfaces."""
+
+    filing_year: int
+    code: str
+
+
 class LedgerTransactionParticipationEntryPayload(OutputSchema):
     """One finalized-revision participation recorded against a ledger transaction (nested).
 
@@ -848,11 +855,11 @@ class LedgerPreflightResult(OutputSchema):
 
     Mirrors ``LedgerPreflightReport.model_dump(mode='json')`` produced
     by :func:`preflight_ledger_tax_readiness`. ``period`` is the nested
-    :class:`aeat.core.Period` model dump; ``ready`` is the computed-field flag.
+    :class:`LedgerPeriodPayload` model dump; ``ready`` is the computed-field flag.
     """
 
     bucket_id: str
-    period: Period
+    period: LedgerPeriodPayload
     checked_transaction_count: int
     issues: list[LedgerPreflightIssuePayload]
     ready: bool

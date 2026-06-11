@@ -80,6 +80,7 @@ from ._export import (
     verify_export,
 )
 from ._history_models import ModeloHistory, ModeloHistoryEntry
+from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
 from ._review import (
     ModeloApprovalStaleReason,
@@ -609,6 +610,7 @@ __all__ = [
     "ModeloCode",
     "ModeloHistory",
     "ModeloHistoryEntry",
+    "ModeloHistoryRepository",
     "ModeloInputs",
     "ModeloOperatorProfile",
     "ModeloScalar",

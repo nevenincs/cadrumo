@@ -90,8 +90,7 @@ class Justificante(BaseModel):
         if not isinstance(ejercicio, str) or not ejercicio.isdigit():
             return raw_period
 
-        period_code = "0A" if raw_period == ejercicio else raw_period
         try:
-            return Period.from_year_and_code(int(ejercicio), period_code)
+            return Period.from_year_and_code(int(ejercicio), raw_period)
         except PeriodError:
             return raw_period

@@ -27,6 +27,7 @@ Major declarations:
 from __future__ import annotations
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
+from ..export import ExportSerializationFormat
 from ._actions import (
     LedgerProviderID,
     add_classification_rule,
@@ -177,6 +178,7 @@ __all__ = [
     "BusinessOperationInvoiceSourceKind",
     "CollectibleInvoiceService",
     "EligibleCategoryRow",
+    "ExportSerializationFormat",
     "IntracomOperationType",
     "LLMClassificationSuggestion",
     "LLMProvider",
