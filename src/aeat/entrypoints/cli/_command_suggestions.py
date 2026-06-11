@@ -41,6 +41,11 @@ from typer._click.core import Command as TyCommand
 
 # Use typer's internal click re-export to align with TyperGroup's type signatures
 from typer._click.core import Context as TyContext
+
+# TyperGroup is built on typer's vendored click, so its resolve_command raises
+# the vendored UsageError — a distinct class that is NOT a subclass of the
+# top-level ``click.UsageError``. The synonym-hint catch must name both.
+from typer._click.exceptions import UsageError as TyUsageError
 from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 
@@ -189,7 +194,7 @@ class AeatTyperGroup(TyperGroup):
     ) -> tuple[str | None, TyCommand | None, list[str]]:
         try:
             return super().resolve_command(ctx, args)
-        except click.UsageError as exc:
+        except (click.UsageError, TyUsageError) as exc:
             if args:
                 hint = _synonym_hint(self.name, args[0])
                 if hint is not None and "Did you mean" not in (exc.message or ""):
