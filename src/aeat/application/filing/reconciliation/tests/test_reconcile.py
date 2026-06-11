@@ -212,8 +212,10 @@ class TestReconcileMatch:
 
         assert report.status is ReconciliationStatus.COINCIDE
 
-    def test_year_only_remote_period_does_not_match_quarterly_revision(self) -> None:
-        justificante = _justificante("130", "2024-1T").model_copy(update={"period": "2024"})
+    def test_annual_remote_period_does_not_match_quarterly_revision(self) -> None:
+        justificante = _justificante("130", "2024-1T").model_copy(
+            update={"period": Period.from_year_and_code(2024, "0A")},
+        )
         draft = _draft_for_130(
             period=_P_2024_Q1,
             profile_tax_id=justificante.tax_id,

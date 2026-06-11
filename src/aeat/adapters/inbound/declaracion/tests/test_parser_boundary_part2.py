@@ -730,7 +730,7 @@ def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "036"
-    assert filing.period == "ALTA"
+    assert filing.period == _expected_period(2025, "AD-HOC")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "036"

@@ -40,6 +40,7 @@ from urllib.parse import urlparse
 
 import pytest
 
+from .....core import Period
 from .....domain.justificante import Justificante
 from .....tests import FIXTURES_DIR as _FIXTURES_ROOT
 from .....tests._justificante_parse_cache import parse_committed_justificante_fixture
@@ -204,7 +205,10 @@ class TestCorpusSidecarRoundtrip:
             f"ejercicio mismatch for {pdf_path.parent.name}/{pdf_path.stem}: "
             f"got {record.ejercicio!r}, expected {ground_truth.expected_ejercicio!r}"
         )
-        assert record.period == ground_truth.expected_period, (
+        assert record.period == _expected_period(
+            ground_truth.expected_ejercicio,
+            ground_truth.expected_period,
+        ), (
             f"period mismatch for {pdf_path.parent.name}/{pdf_path.stem}: "
             f"got {record.period!r}, expected {ground_truth.expected_period!r}"
         )
@@ -255,3 +259,8 @@ class TestCorpusSidecarRoundtrip:
             f"Expected at least 55 corpus pairs; found {len(_CORPUS_PAIRS)}. "
             "Was a fixture directory deleted or a sidecar removed?"
         )
+
+
+def _expected_period(ejercicio: str, observed_period: str) -> Period:
+    code = "0A" if observed_period == ejercicio else observed_period
+    return Period.from_year_and_code(int(ejercicio), code)

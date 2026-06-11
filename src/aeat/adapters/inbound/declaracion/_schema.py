@@ -79,8 +79,8 @@ class DeclaracionObservation(BaseModel):
 
     Attributes:
         modelo: Stable modelo identifier.
-        period: Raw AEAT period token as printed on the declaration.
-            The filing year is carried separately in ``ejercicio``.
+        period: Typed filing period resolved from the printed AEAT token
+            and ``ejercicio``.
         ejercicio: Four-digit tax year as printed on the receipt.
         tax_id: NIF / NIE of the filer (as printed).
         template_revision: Which AEAT template the PDF matches.
@@ -97,7 +97,7 @@ class DeclaracionObservation(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: str = Field(min_length=4, max_length=4)
-    period: Period | str = Field()
+    period: Period = Field()
     tax_id: str = Field(min_length=4, max_length=32)
     template_revision: TemplateRevision
     registry_snapshot_ref: RegistrySnapshotRef | None = None

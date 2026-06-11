@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
+from .....core import Period
 from .....domain.justificante import (
     Justificante,
     JustificanteCsvNotFoundError,
@@ -67,7 +68,7 @@ class TestParseJustificante:
         record = parse_justificante(modelo_130_pdf)
         assert isinstance(record, Justificante)
         assert record.modelo == "130"
-        assert record.period == "1T"
+        assert record.period == Period.from_year_and_code(2026, "1T")
         assert record.ejercicio == "2026"
         assert record.tax_id == "00000000T"
         assert record.csv == "ABCD1234EFGH5678"
@@ -82,7 +83,7 @@ class TestParseJustificante:
     def test_modelo_303_devolver(self, modelo_303_pdf: Path) -> None:
         record = parse_justificante(modelo_303_pdf)
         assert record.modelo == "303"
-        assert record.period == "1T"
+        assert record.period == Period.from_year_and_code(2026, "1T")
         assert record.ejercicio == "2026"
         assert record.csv == "ZZZZ9999YYYY8888"
         assert record.total_a_ingresar is None
@@ -92,7 +93,7 @@ class TestParseJustificante:
     def test_modelo_100_annual(self, modelo_100_pdf: Path) -> None:
         record = parse_justificante(modelo_100_pdf)
         assert record.modelo == "100"
-        assert record.period == "0A"
+        assert record.period == Period.from_year_and_code(2025, "0A")
         assert record.ejercicio == "2025"
         assert record.csv == "MNOP4321QRST8765"
         assert record.total_a_ingresar == Decimal("780.40")
@@ -191,12 +192,15 @@ class TestRealCorpusParses:
         assert isinstance(record, Justificante)
         # Filesystem layout identifies the fixture. Annual receipt PDFs in this
         # corpus name the filing period as 0A, but several bodies print only
-        # the ejercicio; the adapter preserves the observed PDF token.
+        # the ejercicio; the adapter resolves both to the same annual Period.
         modelo_expected = fixture.parent.name
         ejercicio_expected, period_expected = fixture.stem.split("-", 1)
-        observed_period_expected = _observed_period_expected(fixture, ejercicio_expected, period_expected)
+        expected_period = Period.from_year_and_code(
+            int(ejercicio_expected),
+            _expected_period_code(fixture, period_expected),
+        )
         assert record.modelo == modelo_expected, f"modelo mismatch for {fixture}: got {record.modelo}"
-        assert record.period == observed_period_expected, f"period mismatch for {fixture}: got {record.period}"
+        assert record.period == expected_period, f"period mismatch for {fixture}: got {record.period}"
         assert record.ejercicio == ejercicio_expected, f"ejercicio mismatch for {fixture}: got {record.ejercicio}"
         # Redacted NIE/NIF survives the round-trip.
         assert record.tax_id == "Y0000001S", f"tax_id mismatch for {fixture}: got {record.tax_id}"
@@ -218,25 +222,12 @@ class TestRealCorpusParses:
         assert urlparse(str(record.verification_url)).hostname == _SEDE_HOST
 
 
-def _observed_period_expected(fixture: Path, ejercicio: str, filename_period: str) -> str:
-    explicit_annual_fixtures = {
-        ("100", "2021-0A"),
-        ("100", "2022-0A"),
-        # Synthetic fixtures regenerated to print "Periodo: 0A" explicitly;
-        # parser extracts the label verbatim rather than promoting ejercicio.
-        ("390", "2022-0A"),
-        ("390", "2023-0A"),
-        # M180 and M193 print "Periodo: 0A" in the PDF body; parser extracts "0A".
-        ("180", "2024-0A"),
-        ("193", "2024-0A"),
-    }
+def _expected_period_code(fixture: Path, filename_period: str) -> str:
     # M036 uses event codes (alta/modificacion/baja) not calendar period codes.
-    # The parser's period regex requires at least one digit and cannot match
-    # "alta"; it falls back to returning the ejercicio year.
-    if fixture.parent.name == "036":
-        return ejercicio
-    if filename_period == "0A" and (fixture.parent.name, fixture.stem) not in explicit_annual_fixtures:
-        return ejercicio
+    # The parser falls back to returning the ejercicio year, which the boundary
+    # schema resolves to the annual Period.
+    if fixture.parent.name == "036" or filename_period == "0A":
+        return "0A"
     return filename_period
 
 
@@ -400,7 +391,8 @@ class TestJustificanteModel:
         return Justificante(
             csv="ABCD1234EFGH5678",
             modelo="130",
-            period="1T",
+            ejercicio="2026",
+            period=Period.from_year_and_code(2026, "1T"),
             presentation_id=None,
             presented_at=datetime(2026, 4, 10, 11, 23, 45),
             tax_id="00000000T",
