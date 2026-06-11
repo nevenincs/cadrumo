@@ -25,10 +25,9 @@ mapping each surface needs. Callers wrap :class:`ValueError` into their
 own domain error type (e.g. ``ModeloBuilderError``,
 ``RegistrySnapshotError``) at the boundary they own.
 
-The registry-introspection CLI's
-:func:`aeat.domain.calculations.registry.parse_modelo_period` is a
-deliberately separate dialect (it accepts ``YYYY-Qn`` with a dash); do
-not unify it with this surface.
+Registry-introspection surfaces use bare registry tokens directly, or
+an explicit ``(filing_year, registry_period)`` scope when the filing
+year must participate in revision selection.
 """
 
 from __future__ import annotations

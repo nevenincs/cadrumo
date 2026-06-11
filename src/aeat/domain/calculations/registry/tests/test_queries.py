@@ -7,7 +7,7 @@ import pytest
 from .....core.resources import bundled_path
 from .._authority import ValidatedRegistryAuthority
 from .._errors import RegistryValidationError
-from .._queries import RegistryQueryService, parse_modelo_period
+from .._queries import RegistryQueryService
 from .._schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -20,18 +20,19 @@ def _service() -> RegistryQueryService:
     return RegistryQueryService(authority)
 
 
-def test_parse_modelo_period_accepts_user_period_shapes() -> None:
-    assert parse_modelo_period("2026Q1") == (2026, "1T")
-    assert parse_modelo_period("2026-Q4") == (2026, "4T")
-    assert parse_modelo_period("2026-03") == (2026, "03")
-    assert parse_modelo_period("2026") == (2026, "0A")
+@pytest.mark.parametrize("period", ("2026Q1", "2026-Q4", "2026-03", "2026"))
+def test_query_service_rejects_combined_period_shapes(period: str) -> None:
+    service = _service()
+
+    with pytest.raises(RegistryValidationError, match="bare registry token"):
+        service.describe_modelo("303", period=period)
 
 
 def test_query_service_lists_and_describes_committed_modelo() -> None:
     service = _service()
 
     listed = service.list_modelos(year=2026)
-    described = service.describe_modelo("303", period="2026Q1")
+    described = service.describe_modelo_for_scope("303", filing_year=2026, period="1T")
 
     assert "303" in {row.code for row in listed.modelos}
     assert described.code == "303"
@@ -51,7 +52,7 @@ def test_describe_lists_every_declared_revision_id() -> None:
     service = _service()
     authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=bundled_path())
 
-    described = service.describe_modelo("303", period="2026Q1")
+    described = service.describe_modelo_for_scope("303", filing_year=2026, period="1T")
     expected = {str(item.id) for item in authority.modelo("303").revisions.values()}
 
     assert set(described.revision_ids) == expected
@@ -64,9 +65,9 @@ def test_describe_lists_every_declared_revision_id() -> None:
 def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision() -> None:
     service = _service()
 
-    casillas = service.casillas("303", period="2026Q1", input_kind=InputKind.COMPUTED)
-    bindings = service.bindings("130", period="2026Q1")
-    formulas = service.formulas("303", period="2026Q1")
+    casillas = service.casillas_for_scope("303", filing_year=2026, period="1T", input_kind=InputKind.COMPUTED)
+    bindings = service.bindings_for_scope("130", filing_year=2026, period="1T")
+    formulas = service.formulas_for_scope("303", filing_year=2026, period="1T")
 
     assert casillas.code == "303"
     assert casillas.rows
@@ -119,6 +120,18 @@ def test_describe_accepts_censo_event_period_token() -> None:
     service = _service()
 
     described = service.describe_modelo("036", period="alta")
+
+    assert described.code == "036"
+    assert described.period == "alta"
+    assert "alta" in described.periods
+
+
+def test_describe_for_scope_preserves_declared_censo_period_casing() -> None:
+    """Exact scope resolution returns the registry-declared non-date token."""
+
+    service = _service()
+
+    described = service.describe_modelo_for_scope("036", filing_year=2026, period="ALTA")
 
     assert described.code == "036"
     assert described.period == "alta"
