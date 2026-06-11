@@ -16,6 +16,7 @@ from ....adapters.outbound.aeat.sede import (
     parse_iva_compensation_wallet_html,
 )
 from ....adapters.persistence.storage import has_active_bucket_session
+from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation._reconciliation import (
@@ -103,7 +104,10 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         reloaded_wallet = FiledDeclaracionObservationStore(tmp_path / "wallet-evidence").load_iva_wallet_observation(
             Path(report.observation_path),
         )
-        reloaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, 2026, "2T")
+        reloaded_decision = IvaWalletDecisionRepository().load_decision(
+            _TAXPAYER_REF,
+            Period.from_year_and_code(2026, "2T"),
+        )
 
         assert reloaded_wallet == observation
         assert reloaded_decision is not None
@@ -114,7 +118,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         assert report.local_recurrence_amount == "1200.00"
         assert report.divergence == "match"
         assert report.blocked is False
-        assert report.decision_key == iva_wallet_decision_key(_TAXPAYER_REF, 2026, "2T")
+        assert report.decision_key == iva_wallet_decision_key(_TAXPAYER_REF, Period.from_year_and_code(2026, "2T"))
         database_bytes = db_path.read_bytes()
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert f"{_TAXPAYER_REF}:2026:2T".encode("ascii") not in database_bytes
@@ -149,10 +153,10 @@ def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persis
         )
 
         assert report.divergence == "match"
-        assert decision_repo.load_decision(_TAXPAYER_REF, 2026, "2T") is not None
+        assert decision_repo.load_decision(_TAXPAYER_REF, Period.from_year_and_code(2026, "2T")) is not None
 
     with isolated_runtime_profile(tmp_path=tmp_path / "other-profile", bucket_id="other-session"):
-        assert IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, 2026, "2T") is None
+        assert IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, Period.from_year_and_code(2026, "2T")) is None
 
 
 def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_path: Path) -> None:
@@ -190,7 +194,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
             IvaCompensationReconciliationDecision(
                 taxpayer_nif=_TAXPAYER_REF,
                 target_year=2026,
-                target_period="2T",
+                target_period=Period.from_year_and_code(2026, "2T"),
                 selected_authority="aeat_wallet",
                 selected_amount=Decimal("90.00"),
                 wallet_amount=Decimal("90.00"),
@@ -294,7 +298,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             IvaCompensationReconciliationDecision(
                 taxpayer_nif=_TAXPAYER_REF,
                 target_year=2026,
-                target_period="1T",
+                target_period=Period.from_year_and_code(2026, "1T"),
                 selected_authority="aeat_wallet",
                 selected_amount=Decimal("100.00"),
                 wallet_amount=Decimal("100.00"),
@@ -330,7 +334,10 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             tmp_path / "remote-iva-evidence",
         ).load_iva_wallet_observation(wallet_ref)
         reloaded_history = IvaCompensationHistoryRepository().load_period(2025, "4T")
-        reloaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, 2026, "1T")
+        reloaded_decision = IvaWalletDecisionRepository().load_decision(
+            _TAXPAYER_REF,
+            Period.from_year_and_code(2026, "1T"),
+        )
         remote_state = load_iva_remote_state(as_of_year=2026)
         report = remote_state.history
 

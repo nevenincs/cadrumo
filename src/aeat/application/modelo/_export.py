@@ -241,7 +241,7 @@ def _iva_wallet_decision_export_provenance(
         selected_authority=str(decision.selected_authority),
         divergence=str(decision.divergence),
         target_year=decision.target_year,
-        target_period=Period.from_year_and_code(decision.target_year, decision.target_period),
+        target_period=decision.target_period,
         authority_source_kinds=tuple(str(source.source_kind) for source in decision.authority_sources),
         authority_source_refs=tuple(_sha256_ref(source.source_locator) for source in decision.authority_sources),
     )

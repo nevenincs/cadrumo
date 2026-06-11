@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from .._actions import ModeloIvaWalletReconciliationBlocked, _apply_iva_compensation_decision_binding
@@ -25,7 +26,7 @@ def _decision(
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         selected_authority="aeat_wallet" if not blocked else "missing",
         selected_amount=amount,
         wallet_amount=Decimal("1200"),

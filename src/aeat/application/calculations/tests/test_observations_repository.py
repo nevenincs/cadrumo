@@ -93,12 +93,12 @@ def test_observation_key_rejects_untyped_combined_period() -> None:
 
 def test_iva_wallet_decision_key_raises_on_empty_nif() -> None:
     with pytest.raises(ObservationKeyError, match="taxpayer_nif must be non-empty"):
-        iva_wallet_decision_key("   ", 2024, "1T")
+        iva_wallet_decision_key("   ", Period.from_year_and_code(2024, "1T"))
 
 
 def test_iva_wallet_decision_key_raises_on_blank_nif() -> None:
     with pytest.raises(ObservationKeyError, match="taxpayer_nif must be non-empty"):
-        iva_wallet_decision_key("", 2024, "1T")
+        iva_wallet_decision_key("", Period.from_year_and_code(2024, "1T"))
 
 
 # ---------------------------------------------------------------------------
@@ -108,16 +108,16 @@ def test_iva_wallet_decision_key_raises_on_blank_nif() -> None:
 
 def test_iva_wallet_decision_key_raises_on_year_below_range() -> None:
     with pytest.raises(ObservationKeyError, match="out of supported range"):
-        iva_wallet_decision_key("12345678A", 1999, "1T")
+        iva_wallet_decision_key("12345678A", Period.from_year_and_code(1999, "1T"))
 
 
 def test_iva_wallet_decision_key_raises_on_year_above_range() -> None:
     with pytest.raises(ObservationKeyError, match="out of supported range"):
-        iva_wallet_decision_key("12345678A", 2100, "1T")
+        iva_wallet_decision_key("12345678A", Period.from_year_and_code(2100, "1T"))
 
 
 def test_iva_wallet_decision_key_succeeds() -> None:
-    key = iva_wallet_decision_key("12345678A", 2024, "1T")
+    key = iva_wallet_decision_key("12345678A", Period.from_year_and_code(2024, "1T"))
     assert key.startswith("iva-wallet-decision:")
 
 
@@ -130,7 +130,7 @@ def _make_decision(*, taxpayer_nif: str) -> IvaCompensationReconciliationDecisio
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2024,
-        target_period="1T",
+        target_period=Period.from_year_and_code(2024, "1T"),
         selected_authority="local_recurrence",
         selected_amount=Decimal("1234.56"),
         wallet_amount=None,
@@ -191,7 +191,7 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
     decision = IvaCompensationReconciliationDecision(
         taxpayer_nif="87654321B",
         target_year=2025,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2025, "2T"),
         selected_authority="local_recurrence",
         selected_amount=Decimal("500.00"),
         wallet_amount=None,
@@ -208,6 +208,6 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
         repo = IvaWalletDecisionRepository()
         repo.save_decision(decision)
 
-        loaded = repo.load_decision("87654321B", 2025, "2T")
+        loaded = repo.load_decision("87654321B", Period.from_year_and_code(2025, "2T"))
 
     assert loaded == decision, f"Expected decision to be found via hashed key; got {loaded!r}"

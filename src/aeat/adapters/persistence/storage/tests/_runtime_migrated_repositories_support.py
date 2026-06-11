@@ -666,7 +666,7 @@ def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompens
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=f"ES{label.upper()}",
         target_year=2026,
-        target_period=target_period,
+        target_period=_Period.from_year_and_code(2026, target_period),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),

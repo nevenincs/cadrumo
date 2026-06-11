@@ -152,7 +152,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
         ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
         (
             "iva_wallet_decision_history",
-            lambda: IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T"),
+            lambda: IvaWalletDecisionRepository().load_decision_history(
+                "ESBUCKET-A",
+                Period.from_year_and_code(2026, "2T"),
+            ),
         ),
         ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()),
         ("usage_ratios", lambda: load_usage_ratios(bucket_id="bucket-a")),
@@ -227,7 +230,10 @@ def test_migrated_runtime_defaults_refuse_missing_session(
         ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
         (
             "iva_wallet_decision_history",
-            lambda: IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T"),
+            lambda: IvaWalletDecisionRepository().load_decision_history(
+                "ESBUCKET-A",
+                Period.from_year_and_code(2026, "2T"),
+            ),
         ),
         ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()),
         ("usage_ratios", lambda: load_usage_ratios(bucket_id="bucket-a")),
@@ -520,7 +526,10 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             is None
         )
         assert IvaWalletDecisionRepository().list_decisions() == ()
-        assert IvaWalletDecisionRepository().load_decision_history("ESBUCKET-A", 2026, "2T") == ()
+        assert IvaWalletDecisionRepository().load_decision_history(
+            "ESBUCKET-A",
+            Period.from_year_and_code(2026, "2T"),
+        ) == ()
         assert IvaCompensationHistoryRepository(bucket_id="bucket-b").list_periods() == ()
         assert load_usage_ratios(bucket_id="bucket-b") == UsageRatioProfile()
         ModeloHistoryRepository(bucket_id="bucket-b").save(history_b)
@@ -540,7 +549,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         )
         wallet_repo = IvaWalletDecisionRepository()
         decisions = wallet_repo.list_decisions()
-        decision_history = wallet_repo.load_decision_history("ESBUCKET-A", 2026, "2T")
+        decision_history = wallet_repo.load_decision_history("ESBUCKET-A", Period.from_year_and_code(2026, "2T"))
         iva_periods = IvaCompensationHistoryRepository(bucket_id="bucket-a").list_periods()
         usage = load_usage_ratios(bucket_id="bucket-a")
 

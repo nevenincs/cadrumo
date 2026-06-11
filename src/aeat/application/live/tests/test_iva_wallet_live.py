@@ -11,7 +11,7 @@ import pytest
 
 from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
 from ....adapters.persistence.storage import get_master_key_provider
-from ....core import require_active_bucket_id
+from ....core import Period, require_active_bucket_id
 from ....core.config import load_settings
 from ....core.resources import resources
 from ....tests.live_gate import requires_live_enabled
@@ -42,6 +42,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
         today = date.today()
         target_year = today.year
         target_period = _quarter_period(today.month)
+        target_filing_period = Period.from_year_and_code(target_year, target_period)
         settings = load_settings()
         report = asyncio.run(
             capture_iva_compensation_wallet(
@@ -53,8 +54,8 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
         observation = FiledDeclaracionObservationStore(
             settings.aeat_audit_dir / "live" / "iva-wallet",
         ).load_iva_wallet_observation(Path(report.observation_path))
-        decision = IvaWalletDecisionRepository().load_decision(taxpayer_nif, target_year, target_period)
-        history = IvaWalletDecisionRepository().load_decision_history(taxpayer_nif, target_year, target_period)
+        decision = IvaWalletDecisionRepository().load_decision(taxpayer_nif, target_filing_period)
+        history = IvaWalletDecisionRepository().load_decision_history(taxpayer_nif, target_filing_period)
 
         if decision is None:
             pytest.fail("live IVA wallet capture did not persist a reconciliation decision")

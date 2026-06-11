@@ -249,7 +249,7 @@ def _save_wallet_gate_decision(*, amount: Decimal, blocked: bool = False) -> Non
         IvaCompensationReconciliationDecision(
             taxpayer_nif=_TAXPAYER_NIF,
             target_year=_TARGET_YEAR,
-            target_period=_TARGET_PERIOD,
+            target_period=_period(_TARGET_YEAR, _TARGET_PERIOD),
             selected_authority="aeat_wallet" if not blocked else "missing",
             selected_amount=amount if not blocked else None,
             wallet_amount=amount,
@@ -279,7 +279,10 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             decided_at=_DECIDED_AT,
         )
 
-        loaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, _TARGET_YEAR, _TARGET_PERIOD)
+        loaded_decision = IvaWalletDecisionRepository().load_decision(
+            _TAXPAYER_NIF,
+            _period(_TARGET_YEAR, _TARGET_PERIOD),
+        )
         assert loaded_decision == report.decision
         assert report.decision.selected_authority == "aeat_wallet"
         assert report.decision.local_recurrence_amount == Decimal("1200.00")
@@ -372,7 +375,7 @@ def test_no_seed_no_override_303_calculate_lazily_reconciles_local_zero_and_surf
 
         # A non-blocking first-period decision was persisted by the lazy reconcile.
         # Read it inside the active session block (the secure store needs it).
-        decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, _TARGET_YEAR, _TARGET_PERIOD)
+        decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, _period(_TARGET_YEAR, _TARGET_PERIOD))
 
     # Calculate proceeded (no ModeloIvaWalletReconciliationBlocked) and the prior
     # compensation is a computed zero, surfaced on the result.
@@ -777,7 +780,10 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
             decided_at=_DECIDED_AT,
             persist=False,
         )
-        assert IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, _TARGET_YEAR, _TARGET_PERIOD) is None
+        assert IvaWalletDecisionRepository().load_decision(
+            _TAXPAYER_NIF,
+            _period(_TARGET_YEAR, _TARGET_PERIOD),
+        ) is None
 
         work_repo, calc_repo, event_repo = _work_unit_repositories()
         work_unit = create_work_unit(

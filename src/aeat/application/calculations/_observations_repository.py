@@ -154,21 +154,24 @@ def member_observation_key(modelo: str, period: Period, member_nif: str | None) 
     return f"{base}:{member_nif}"
 
 
-def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: str) -> str:
+def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
     """Opaque latest-decision key for one taxpayer and Modelo 303 target period.
 
     Secure-object payloads are encrypted, but object keys are storage metadata.
     Hash the taxpayer/period tuple so the repository does not expose NIF/NIE
     values in cleartext database rows.
     """
+    filing_period = _require_observation_period(target_period)
+    target_year = filing_period.filing_year
+    target_period_token = filing_period.registry_token
     taxpayer_token = taxpayer_nif.strip().upper()
     if not taxpayer_token:
         raise ObservationKeyError("taxpayer_nif must be non-empty")
-    safe_repository_id(target_period, context="target_period")
+    safe_repository_id(target_period_token, context="target_period")
     if not 2000 <= target_year <= 2099:
         raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
     digest = hashlib.sha256(
-        "\x1f".join((taxpayer_token, str(target_year), target_period.strip().upper())).encode(UTF_8_ENCODING),
+        "\x1f".join((taxpayer_token, str(target_year), target_period_token)).encode(UTF_8_ENCODING),
     ).hexdigest()
     return f"iva-wallet-decision:{digest}"
 
@@ -183,7 +186,7 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
             (
                 taxpayer_token,
                 str(decision.target_year),
-                decision.target_period.strip().upper(),
+                decision.target_period.registry_token,
                 decision.decided_at.isoformat(),
                 decision.wallet_captured_at.isoformat() if decision.wallet_captured_at is not None else "",
                 _decision_payload_digest(decision),
@@ -295,7 +298,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     @override
     def extract_identifier(self, payload: _IvaWalletDecisionEnvelopePayload) -> str:
         decision = payload.decision
-        return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period)
+        return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_period)
 
     def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:
         """Persist `decision` to latest lookup and immutable audit history."""
@@ -319,11 +322,10 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     def load_decision(
         self,
         taxpayer_nif: str,
-        target_year: int,
-        target_period: str,
+        target_period: Period,
     ) -> IvaCompensationReconciliationDecision | None:
         """Return the latest persisted :class:`IvaCompensationReconciliationDecision` for the given period."""
-        payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
+        payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_period))
         return payload.decision if payload is not None else None
 
     def list_decisions(self) -> tuple[IvaCompensationReconciliationDecision, ...]:
@@ -337,7 +339,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
                 (payload.decision for payload in self.iter_records()),
                 key=lambda decision: (
                     decision.target_year,
-                    decision.target_period,
+                    decision.target_period.registry_token,
                     decision.taxpayer_nif,
                     decision.decided_at,
                 ),
@@ -347,13 +349,13 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     def load_decision_history(
         self,
         taxpayer_nif: str,
-        target_year: int,
-        target_period: str,
+        target_period: Period,
     ) -> tuple[IvaCompensationReconciliationDecision, ...]:
         """Return decision history for one taxpayer and target period.
 
         Returns an immutable tuple of :class:`IvaCompensationReconciliationDecision`.
         """
+        filing_period = _require_observation_period(target_period)
         taxpayer_token = taxpayer_nif.strip().upper()
         decisions: list[IvaCompensationReconciliationDecision] = []
         for record in self._objects.list_records(
@@ -367,8 +369,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
             decision = envelope.payload.decision
             if (
                 decision.taxpayer_nif.strip().upper() == taxpayer_token
-                and decision.target_year == target_year
-                and decision.target_period == target_period
+                and decision.target_period == filing_period
             ):
                 decisions.append(decision)
         return tuple(sorted(decisions, key=lambda item: (item.decided_at, item.wallet_captured_at or item.decided_at)))
