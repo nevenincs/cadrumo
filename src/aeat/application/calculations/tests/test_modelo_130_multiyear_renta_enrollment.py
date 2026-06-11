@@ -47,6 +47,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
@@ -143,7 +144,7 @@ def _calculate_quarter(
         bucket_id="default",
         modelo=_MODELO,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         revision_id=_REVISION,
         repository=wu_repo,
         clock=_CLOCK,
