@@ -11,6 +11,7 @@ related:
   - '[[2026-06-10-calculation-engine-foundations-audit]]'
   - '[[2026-06-10-calculation-engine-foundations-plan]]'
   - '[[2026-06-11-calculation-engine-foundations-closeout-audit]]'
+  - '[[2026-06-11-calculation-engine-foundations-code-review-audit]]'
 ---
 
 # `calculation-engine-foundations` feature index
@@ -23,6 +24,7 @@ Auto-generated index of all documents tagged with `#calculation-engine-foundatio
 
 - `2026-06-10-calculation-engine-foundations-audit` - `calculation-engine-foundations` audit: `Dormant calculation-parts census: every part not enrolled into the live calculate path (sonnet+opus audit swarm)`
 - `2026-06-11-calculation-engine-foundations-closeout-audit` - `calculation-engine-foundations` audit: `remaining-step reassessment against period rollout`
+- `2026-06-11-calculation-engine-foundations-code-review-audit` - `calculation-engine-foundations` Code Review
 
 ### exec
 
