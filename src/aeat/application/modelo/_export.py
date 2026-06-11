@@ -24,7 +24,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, PeriodError
+from ...core import Period
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.time import now as _utc_now
@@ -55,6 +55,7 @@ from ...domain.modelos._protocols import CalculationRevisionCatalogueRepositoryP
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.period import (
+    PeriodValidationError,
     period_end_date,
     period_start_date,
 )
@@ -341,8 +342,7 @@ def _compose_export_headers(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
-    filing_year: int,
-    registry_period: str,
+    period: Period,
 ) -> dict[str, str]:
     """Compose the full fichero-BOE export header dict for a revision.
 
@@ -358,8 +358,20 @@ def _compose_export_headers(
     keys is safe — the renderer ignores headers a layout never reads.
     """
     surnames, name = _operator_name_facts(work_unit.bucket_id)
-    period_start = period_start_date(filing_year, registry_period)
-    period_end = period_end_date(filing_year, registry_period)
+    try:
+        period_start = period.start_date if period.has_date_span() else period_start_date(
+            period.filing_year,
+            period.registry_token,
+        )
+        period_end = period.end_date if period.has_date_span() else period_end_date(
+            period.filing_year,
+            period.registry_token,
+        )
+    except PeriodValidationError as exc:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_period_unmappable",
+            context={"work_unit_id": work_unit.work_unit_id, "period": period.registry_token},
+        ) from exc
     tax_id = str(workflow_profile.tax_id)
 
     # A complementaria / sustitutiva still files as declaration type
@@ -392,13 +404,12 @@ def _compose_export_headers(
 
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
     """Return the typed :class:`~aeat.core.Period` carried by the work unit."""
-    try:
-        return Period.from_year_and_code(work_unit.filing_year, work_unit.period.registry_token)
-    except PeriodError as exc:
+    if work_unit.period.filing_year != work_unit.filing_year:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_period_unmappable",
             context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period.registry_token},
-        ) from exc
+        )
+    return work_unit.period
 
 
 def _approve_export_draft(
@@ -539,8 +550,7 @@ def export_modelo_revision(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
-        filing_year=export_period.filing_year,
-        registry_period=export_period.registry_token,
+        period=export_period,
     )
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
