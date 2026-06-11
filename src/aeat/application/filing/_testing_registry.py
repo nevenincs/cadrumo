@@ -16,7 +16,6 @@ from decimal import Decimal
 from ...core import Period
 from ...domain.filing._protocols import ModeloInputs
 from ...domain.filing._schema import ModeloDraft
-from ...domain.period import PeriodValidationError, parse_canonical_period
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
@@ -120,13 +119,10 @@ def _resolve_test_period(period: str | Period, *, filing_year: int) -> Period:
         return period
     try:
         return Period.from_year_and_code(filing_year, period)
-    except ValueError:
-        pass
-    try:
-        parsed_year, registry_period_token = parse_canonical_period(period)
-        return Period.from_year_and_code(parsed_year, registry_period_token)
-    except (PeriodValidationError, ValueError) as exc:
-        raise ModeloBuilderError(f"cannot map filing period {period!r} to a registry period") from exc
+    except ValueError as exc:
+        raise ModeloBuilderError(
+            f"cannot map filing period {period!r} to a registry period; pass a Period or bare registry token",
+        ) from exc
 
 
 __all__ = [

@@ -45,7 +45,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
 
     draft = build_draft(
         modelo="130",
-        period="2026Q1",
+        period=Period.from_year_and_code(2026, "1T"),
         profile=_profile(),
         inputs={
             "01": Decimal("10000"),
