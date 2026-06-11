@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import override
 
 from ...application.ledger import (
     LedgerReviewQuery,
@@ -44,9 +45,9 @@ def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
     """Return a comparable string for ``field`` on ``transaction``.
 
     Every axis is projected to a single ``str`` type so the sort never raises
-    on mixed-type comparison. A missing optional (a ``None`` timestamp on a row
-    that predates the D6 axis) yields the empty string; the caller pairs it with
-    a *missing* flag so absent keys always sort last regardless of order.
+    on mixed-type comparison. Optional business axes still yield the empty
+    string; the caller pairs it with a *missing* flag so absent keys always sort
+    last regardless of order.
     """
     raw = transaction.raw
     if field is LedgerSortField.DATE:
@@ -61,9 +62,9 @@ def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
     if field is LedgerSortField.DESCRIPTION:
         return raw.description
     if field is LedgerSortField.CREATED_AT:
-        return transaction.created_at.isoformat() if transaction.created_at is not None else ""
+        return transaction.created_at.isoformat()
     if field is LedgerSortField.MODIFIED_AT:
-        return transaction.modified_at.isoformat() if transaction.modified_at is not None else ""
+        return transaction.modified_at.isoformat()
     if field is LedgerSortField.CLASSIFIED_AT:
         return transaction.classified_at.isoformat() if transaction.classified_at is not None else ""
     if field is LedgerSortField.LIFECYCLE_STATE:
@@ -88,9 +89,11 @@ class _DescStr:
     def __lt__(self, other: _DescStr) -> bool:
         return self.value > other.value
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, _DescStr) and self.value == other.value
 
+    @override
     def __hash__(self) -> int:
         return hash(self.value)
 

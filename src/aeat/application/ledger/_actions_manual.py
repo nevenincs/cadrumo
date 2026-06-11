@@ -293,8 +293,8 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         source_jurisdiction=transaction.source_jurisdiction,
         value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
         fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
-        created_at=transaction.created_at.isoformat() if transaction.created_at is not None else None,
-        modified_at=transaction.modified_at.isoformat() if transaction.modified_at is not None else None,
+        created_at=transaction.created_at.isoformat(),
+        modified_at=transaction.modified_at.isoformat(),
     )
 
 
@@ -333,8 +333,8 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
         source_jurisdiction=transaction.source_jurisdiction,
         value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
         fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
-        created_at=transaction.created_at.isoformat() if transaction.created_at is not None else None,
-        modified_at=transaction.modified_at.isoformat() if transaction.modified_at is not None else None,
+        created_at=transaction.created_at.isoformat(),
+        modified_at=transaction.modified_at.isoformat(),
     )
 
 
@@ -526,7 +526,7 @@ def _prepare_manual_transaction_update(
         lifecycle_state=current.lifecycle_state,
         lifecycle_lineage=current.lifecycle_lineage,
         import_fingerprint=current.import_fingerprint,
-        created_at=current.created_at if current.created_at is not None else now,
+        created_at=current.created_at,
         modified_at=now,
     )
     if _mutation_signature(current) == _mutation_signature(replacement):
@@ -579,7 +579,7 @@ def _prepare_manual_transaction_update(
         bucket_event_id=primary_event_id,
         evidence_event_ids=evidence_event_ids,
         import_fingerprint=current.import_fingerprint,
-        created_at=current.created_at if current.created_at is not None else now,
+        created_at=current.created_at,
         modified_at=now,
     )
     return replacement, events

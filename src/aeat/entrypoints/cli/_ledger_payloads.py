@@ -66,9 +66,9 @@ class TransactionPayload(OutputSchema):
     value_in_eur: str | None = None
     fx_rate: str | None = None
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
-    # rendered as ISO-8601 strings. ``None`` for rows authored before the axis.
-    created_at: str | None = None
-    modified_at: str | None = None
+    # rendered as ISO-8601 strings.
+    created_at: str
+    modified_at: str
 
 
 class BulkClassifyFailurePayload(OutputSchema):
@@ -463,8 +463,8 @@ class LedgerListRowPayload(OutputSchema):
     source_jurisdiction: str | None = None
     value_in_eur: str | None = None
     fx_rate: str | None = None
-    created_at: str | None = None
-    modified_at: str | None = None
+    created_at: str
+    modified_at: str
     # List-builder extras
     group_label: str | None = None
 
