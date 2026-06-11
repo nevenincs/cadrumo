@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -24,14 +25,13 @@ from ....domain.transactions import (
     TransactionValidationError,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import Period
 from .. import LedgerPreflightIssueReason, preflight_ledger_tax_readiness, preflight_transaction_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_token(year=year, token=code)
+    return Period.from_year_and_code(year, code)
 
 
 _Q2_2026 = _period(2026, "2T")

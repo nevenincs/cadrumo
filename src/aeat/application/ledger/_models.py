@@ -10,6 +10,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -34,7 +35,6 @@ from ...domain.transactions._models import (
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
 )
-from ..aggregation import Period
 from ..export import ExportSerializationFormat
 from ..review import LedgerReviewStatus
 

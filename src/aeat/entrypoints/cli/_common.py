@@ -37,9 +37,9 @@ from ...core.output_rendering import render_command_output
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
 # resolving them.
 if TYPE_CHECKING:
-    from ...application.aggregation import Period
     from ...application.auth import AuthProviderListing
     from ...application.workflow import WorkflowState
+    from ...core import Period
     from ...core.json_contract import Notice
     from ...domain.contribuyente import ProfileKey
     from ...domain.deadlines import TaxpayerProfile
@@ -227,8 +227,7 @@ def _canonical_period(period: str, *, year: int) -> Period:
     argument. The ``(year, token)`` pair builds the :class:`Period` date span
     the ledger filters by — there is no intermediate calendar string.
     """
-    from ...application.aggregation import Period
-    from ...application.aggregation._errors import AggregationPeriodError
+    from ...core import Period, PeriodError
 
     stripped = period.strip()
     if not stripped:
@@ -237,11 +236,14 @@ def _canonical_period(period: str, *, year: int) -> Period:
     registry_period = _ledger_aeat_token(stripped)
     if registry_period is not None:
         try:
-            return Period.from_year_and_token(year=year, token=registry_period)
-        except AggregationPeriodError:
+            resolved = Period.from_year_and_code(year, registry_period)
+        except PeriodError:
+            pass
+        else:
+            if resolved.has_date_span():
+                return resolved
             # A registry-valid token the ledger cannot filter by (an instalment
             # clave such as ``1P``): refuse with the AEAT-token guidance below.
-            pass
 
     raise _bad(tr("cli.common.errors.period_unrecognised", raw=period))
 
