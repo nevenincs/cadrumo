@@ -9,6 +9,15 @@ related:
   - '[[2026-06-10-ledger-invoice-unification-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `ledger-invoice-unification` `Unify invoice CLI to invoice --kind` plan
 
@@ -54,7 +63,7 @@ Collapse payable_invoice_app and collectible_invoice_app into one invoice_app wi
 - [x] `P04.S21` - Update or remove the test assertion in src/aeat/application/operator_surface/tests/test_contract.py:311 that asserts the canonical minus operator values set equals {AggregationSourceKind.INVOICE.value} now that INVOICE is retired; `src/aeat/application/operator_surface/tests/test_contract.py`.
 - [x] `P04.S22` - Update the AST-gate allowlist in src/aeat/tests/test_enum_constant_extraction_inventory.py:168-173 that asserts sites use AggregationSourceKind.INVOICE: remove the entry or rewrite it to assert INVOICE no longer appears in production code; `src/aeat/tests/test_enum_constant_extraction_inventory.py`.
 - [x] `P04.S23` - Run python -m dev.docs.apidocs scaffold to regenerate any affected API reference stubs after the symbol relocations and deletions in this phase; `docs/api`.
-- [ ] `P04.S24` - Run uv run --no-sync pytest --collect-only -q across the full src/aeat tree to confirm clean collection before committing the P04 atomic explicit-path commit; `src/aeat`.
+- [x] `P04.S24` - Run uv run --no-sync pytest --collect-only -q across the full src/aeat tree to confirm clean collection before committing the P04 atomic explicit-path commit; `src/aeat`.
 
 ### Phase `P05` - Roundtrip and test surface hardening
 
