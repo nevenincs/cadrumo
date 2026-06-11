@@ -190,6 +190,14 @@ dev = [
   "sphinx-notfound-page>=1.1",
   "sphinxext-opengraph>=0.9",
   "sphinx-sitemap>=2.6",
+  # Precompiled docs search backend (MIT). `pagefind` is the pure-Python API
+  # wrapper; the `extended` extra pins `pagefind-bin-extended`, whose wheel
+  # BUNDLES the platform Rust binary WITH the es/ca/hu/en Snowball stemmers
+  # (the standard `bin` extra omits the non-English stemmers). Vendoring the
+  # binary inside the pinned wheel keeps the docs build offline-hermetic: the
+  # post-build index pass invokes the bundled binary and makes no network
+  # fetch. The compiled index is an uncommitted build artifact, like docs/cli/.
+  "pagefind[extended]>=1.5,<2",
   # Live-reloading docs dev server (`just docs-serve`): wraps the Sphinx build
   # with a filesystem watcher and a livereload websocket so edits to docs/ and
   # the src/aeat/ docstring surface refresh the browser without a manual rebuild.
