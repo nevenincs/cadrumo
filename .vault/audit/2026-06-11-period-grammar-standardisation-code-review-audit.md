@@ -521,3 +521,22 @@ documented-command, educational-docs, and JSON-schema conformance files passed
 with `198 passed`; and CLI import smoke printed `OK`. A `-k` conformance
 attempt was blocked during unrelated full-suite collection by peer WIP in split
 support modules, so the conformance gates were rerun by explicit file path.
+
+## PERIOD-030 | INFO | Cross-period justificante Period match reviewed
+
+Review of the cross-period clean-state matcher first found that comparing only
+registry tokens weakened the `core.Period` equality contract: a mismatched typed
+receipt period could pass if the receipt's separate ejercicio label matched the
+filing. The implementation now compares typed `Justificante.period` and
+`ModeloRecord.period` by full `Period` equality when both sides are typed, and
+keeps the fallback path only for generic string-like objects.
+
+A regression test persists a real `Justificante` through the real repository
+with a mismatched typed `Period` and matching ejercicio label, then verifies the
+external-evidence blocker reports a mismatch. The second review pass found no
+remaining issues in the focused scope.
+
+Verification after the change: ruff passed for the touched calculation files;
+the focused cross-period clean-state suite passed with `23 passed`;
+core/domain Period gates passed with `31 passed`; and CLI import smoke printed
+`OK`.
