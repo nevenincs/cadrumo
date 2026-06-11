@@ -289,6 +289,32 @@ class TestAggregationInvariants:
                 total_retencion=Decimal("0"),
             )
 
+    def test_combined_period_string_is_not_coerced(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Period"):
+            RetencionesAggregation(
+                modelo="111",
+                period="2025Q1",
+                rollups=(),
+                total_perceptors=0,
+                total_taxable_base=Decimal("0"),
+                total_retencion=Decimal("0"),
+            )
+
+    def test_period_dict_is_not_coerced(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Period"):
+            RetencionesAggregation(
+                modelo="111",
+                period={"filing_year": 2025, "code": "1T"},
+                rollups=(),
+                total_perceptors=0,
+                total_taxable_base=Decimal("0"),
+                total_retencion=Decimal("0"),
+            )
+
     def test_perceptor_count_must_match_distinct_nifs(self) -> None:
         from pydantic import ValidationError
 
