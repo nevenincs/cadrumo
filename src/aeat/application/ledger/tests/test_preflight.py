@@ -24,9 +24,17 @@ from ....domain.transactions import (
     TransactionValidationError,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation import Period
 from .. import LedgerPreflightIssueReason, preflight_ledger_tax_readiness, preflight_transaction_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_token(year=year, token=code)
+
+
+_Q2_2026 = _period(2026, "2T")
 
 
 @pytest.fixture
@@ -124,7 +132,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions(
             (unclassified, missing_business_facts, mixed_missing_ratio),
         ),
@@ -167,7 +175,7 @@ def test_preflight_does_not_flag_missing_category_on_income_transaction() -> Non
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income,)),
     )
 
@@ -190,7 +198,7 @@ def test_preflight_still_flags_missing_category_on_expense_transaction() -> None
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((expense,)),
     )
 
@@ -222,7 +230,7 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((refund,)),
     )
 
@@ -258,7 +266,7 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows() -
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((personal, transfer, old)),
     )
 
@@ -288,7 +296,7 @@ def test_preflight_ignores_archived_and_stashed_rows() -> None:
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((ready, archived_missing_facts, stashed_missing_facts)),
     )
 
@@ -320,7 +328,7 @@ def test_preflight_skips_iva_facts_on_trabajo_income_rows() -> None:
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((nomina,)),
     )
 
@@ -346,7 +354,7 @@ def test_preflight_still_flags_iva_facts_on_non_trabajo_income_rows() -> None:
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((income_no_irpf,)),
     )
 
@@ -362,7 +370,7 @@ def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> N
 
     report = preflight_transaction_catalogue(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transactions=TransactionCatalogue.from_transactions((usd,)),
     )
 
@@ -377,7 +385,7 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: Secure
 
     report = preflight_ledger_tax_readiness(
         bucket_id="bucket-a",
-        period="2026Q2",
+        period=_Q2_2026,
         transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects),
     )
 
@@ -392,7 +400,7 @@ def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path
             TransactionCatalogue.from_transactions((_transaction("row-ready"),)),
         )
 
-        report = preflight_ledger_tax_readiness(bucket_id=profile.bucket_id, period="2026Q2")
+        report = preflight_ledger_tax_readiness(bucket_id=profile.bucket_id, period=_Q2_2026)
 
     assert report.ready is True
     assert report.checked_transaction_count == 1
@@ -404,6 +412,6 @@ def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObje
     with pytest.raises(TransactionValidationError, match="bucket_id"):
         preflight_ledger_tax_readiness(
             bucket_id="bucket-a",
-            period="2026Q2",
+            period=_Q2_2026,
             transaction_repository=TransactionCatalogueRepository(bucket_id="bucket-b", objects=objects),
         )
