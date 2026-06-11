@@ -103,16 +103,16 @@ Ledger --period accepts only canonical AEAT tokens (0A/1T-4T/01-12); year travel
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Delete the _aeat_token_to_calendar conversion layer and the _FILTER_YEAR_QUALIFIED_RE hybrid regex; `make _canonical_period / _filter_canonical_period / _optional_canonical_period build a Period directly from (year, bare-token); `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `P01.S02` - Add Period.from_year_and_token(year, token) so the (year, AEAT-token) pair resolves straight to a Period date span with no intermediate calendar string; `src/aeat/application/aggregation/_models.py`.
-- [ ] `P01.S03` - Update every ledger CLI caller to the two-argument (token, year=...) period signature so the --filter mini-grammar carries year as a separate clause; `src/aeat/entrypoints/cli/_ledger_list.py, _ledger_review_cli.py, _ledger_read_cli.py, _ledger_import_cli.py, _overview.py`.
-- [ ] `P01.S04` - Land the CLI-layer grammar as one explicit-path commit; `confirm CLI import smoke and the ledger period grammar gates pass; `src/aeat/entrypoints/cli`.
+- [x] `P01.S01` - Delete the _aeat_token_to_calendar conversion layer and the _FILTER_YEAR_QUALIFIED_RE hybrid regex; `make _canonical_period / _filter_canonical_period / _optional_canonical_period build a Period directly from (year, bare-token); `src/aeat/entrypoints/cli/_common.py`.
+- [x] `P01.S02` - Add Period.from_year_and_token(year, token) so the (year, AEAT-token) pair resolves straight to a Period date span with no intermediate calendar string; `src/aeat/application/aggregation/_models.py`.
+- [x] `P01.S03` - Update every ledger CLI caller to the two-argument (token, year=...) period signature so the --filter mini-grammar carries year as a separate clause; `src/aeat/entrypoints/cli/_ledger_list.py, _ledger_review_cli.py, _ledger_read_cli.py, _ledger_import_cli.py, _overview.py`.
+- [x] `P01.S04` - Land the CLI-layer grammar as one explicit-path commit; `confirm CLI import smoke and the ledger period grammar gates pass; `src/aeat/entrypoints/cli`.
 
 ### Phase `P02` - Operator refusal regressions and locale messages
 
 Calendar shapes (2026Q1/2026-03/2026) and the 2026-1T hybrid refuse with instructive localised messages naming the AEAT tokens and --year; no dual-notation wording survives.
 
-- [ ] `P02.S05` - Assert calendar shapes (2026Q1/2026-03/2026) and the year-qualified hybrid (2026-1T) refuse at every ledger period site with an instructive message naming the AEAT tokens and --year; `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
+- [x] `P02.S05` - Assert calendar shapes (2026Q1/2026-03/2026) and the year-qualified hybrid (2026-1T) refuse at every ledger period site with an instructive message naming the AEAT tokens and --year; `src/aeat/entrypoints/cli/tests/test_ledger_period_grammar.py`.
 - [ ] `P02.S06` - Rewrite the period refusal locale messages via the aeat.locales CLI to name the AEAT tokens and the --year argument, removing every both-notations / calendar-shape phrasing; `src/aeat/locales/en.yml`.
 - [ ] `P02.S07` - Run the documented-command and educational-docs conformance gates green after the grammar and locale changes; `src/aeat/entrypoints/cli/tests`.
 
