@@ -24,7 +24,7 @@ from ...application.ledger import (
     summarize_manual_transactions,
 )
 from ...application.review import FilterParseError
-from ...core import resolve_active_bucket_id
+from ...core import LedgerSortField, LedgerSortOrder, resolve_active_bucket_id
 from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEvent,
@@ -424,6 +424,12 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
         offset: int = typer.Option(0, "--offset", min=0, help=tr("cli.ledger.list.offset_help")),
         group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.list.group_filter_help")),
         by_group: bool = typer.Option(False, "--by-group", help=tr("cli.ledger.list.by_group_help")),
+        sort_by: LedgerSortField | None = typer.Option(
+            None, "--sort-by", help=tr("cli.ledger.list.sort_by_help"),
+        ),
+        sort_order: LedgerSortOrder = typer.Option(
+            LedgerSortOrder.ASC, "--sort-order", help=tr("cli.ledger.list.sort_order_help"),
+        ),
     ) -> None:
         """List bucket-scoped ledger transactions through the backend read service."""
         transaction_repository = _tx_repo(_state())
@@ -438,6 +444,8 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
             by_group=by_group,
             limit=limit,
             offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
         from ._ledger_payloads import LedgerListResult
 

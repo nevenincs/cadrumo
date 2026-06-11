@@ -2587,6 +2587,8 @@ cli:
       limit_help: 'Maximum rows to show (default: all rows).'
       offset_help: 'Skip this many rows before listing (default: 0).'
       ungrouped_label: (ungrouped)
+      sort_by_help: 'Sort the listed rows by this field (date, amount, description, created_at, modified_at, ...).'
+      sort_order_help: 'Sort order: asc (ascending) or desc (descending).'
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
       child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every

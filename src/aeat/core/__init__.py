@@ -28,6 +28,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
 from ._period import Period, PeriodError, PeriodKind, StandardPeriodCode
@@ -42,6 +43,8 @@ __all__: list[str] = [
     "NON_REGISTRY_MODELOS",
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
+    "LedgerSortField",
+    "LedgerSortOrder",
     "Modelo",
     "Period",
     "PeriodError",
