@@ -529,7 +529,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
     assert resolved.work_unit_id == work_unit.work_unit_id
     assert resolved.short_work_unit_id == work_unit.work_unit_id[-12:]
     assert resolved.filing_year == 2026
-    assert resolved.registry_period == "1T"
+    assert resolved.period == workflow_period
 
 
 def test_unified_resume_target_preserves_legacy_work_unit_id_latest_run(tmp_path: Path) -> None:

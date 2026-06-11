@@ -110,7 +110,6 @@ class WorkflowResumeTargetResolution(BaseModel):
     modelo: str | None = None
     period: Period | None = None
     filing_year: int | None = None
-    registry_period: str | None = None
     work_unit_id: str | None = None
     short_work_unit_id: str | None = None
     calculation_revision_id: str | None = None
@@ -514,7 +513,6 @@ def _resolve_resume_from_work_unit(
         modelo=projection.modelo,
         period=workflow_period,
         filing_year=projection.filing_year,
-        registry_period=projection.period.registry_token,
         work_unit_id=projection.work_unit_id,
         short_work_unit_id=projection.short_work_unit_id,
         calculation_revision_id=calculation_revision_id,
