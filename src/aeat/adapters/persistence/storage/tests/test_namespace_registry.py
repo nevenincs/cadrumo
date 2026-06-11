@@ -163,7 +163,19 @@ def test_profile_ledger_namespace_registration_coverage_is_present() -> None:
         "iva_compensation_history",
         "calculation_observations",
         "modelo_calculation_revision_catalogue",
+        "transaction_participation_index",
     } <= registered_keys
+
+
+def test_transaction_participation_index_namespace_is_registered() -> None:
+    registered = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("transaction_participation_index")
+
+    assert registered.namespace == "aeat.domain.modelos.participation_index"
+    assert registered.owner == "aeat.domain.modelos"
+    assert registered.sensitivity is SensitivityClass.FINANCIAL
+    assert registered.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert registered.schema_version == 1
+    assert registered.object_key_grammar == "{transaction_id}"
 
 
 def test_auth_session_cache_remote_namespaces_are_registered() -> None:
@@ -609,7 +621,7 @@ def _iter_aeat_production_sources() -> tuple[Path, ...]:
             path
             for path in (PROJECT_ROOT / "src/aeat").rglob("*.py")
             if not _is_test_surface(path) and path.name != "_namespace_registry.py"
-        )
+        ),
     )
 
 

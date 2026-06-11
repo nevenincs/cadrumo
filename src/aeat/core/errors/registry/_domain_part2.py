@@ -556,6 +556,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.modelos._participation_index.TransactionParticipationIndexPersistenceError",
+        ErrorCode(
+            code="FAIL_MODELO_PARTICIPATION_INDEX_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_modelo_calculation_revision_persistence",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.modelos._filing_repository.ModeloRecordPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_FILING_RECORD_PERSISTENCE",
