@@ -12,9 +12,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-import click
 import pytest
 from click.exceptions import Exit
+
+# ``typer.main.get_command`` materialises the app against typer's *vendored*
+# click (``typer._click``), so the resulting group is a ``typer.core.TyperGroup``
+# and needs a vendored ``Context`` — it is NOT an instance of top-level
+# ``click.Group``. Walk the command tree with the vendored types to match.
+from typer._click.core import Context as TyContext
+from typer.core import TyperGroup
 from typer.main import get_command
 
 from ....adapters.outbound.aeat.auth.certificate import AeatSessionExpiredError
@@ -39,8 +45,8 @@ def test_suggestions_parse_as_valid_cli_commands() -> None:
     # Heavy subcommand groups are registered lazily, so the materialized
     # Click group's ``list_commands`` — not the Typer ``registered_*``
     # lists — is the canonical top-level command inventory.
-    assert isinstance(command, click.Group)
-    top_level = set(command.list_commands(click.Context(command)))
+    assert isinstance(command, TyperGroup)
+    top_level = set(command.list_commands(TyContext(command)))
 
     suggestions = [code.default_suggestion for code in ERROR_REGISTRY.values() if code.default_suggestion is not None]
     assert suggestions
