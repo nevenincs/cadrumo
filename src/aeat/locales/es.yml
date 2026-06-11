@@ -1158,7 +1158,7 @@ cli:
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que un cliente te debe pagar
-        invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
+        invoice_date_help: 'Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD), p. ej. 2026-01-15.'
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         list_help: Lista las facturas cobrables registradas
         operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
@@ -1173,7 +1173,7 @@ cli:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         group_help: Justificantes de facturas de compra en PDF o imagen
-        invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
+        invoice_date_help: 'Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD), p. ej. 2026-01-15.'
         invoice_number_help: Número de factura del proveedor
         iva_amount_help: Importe de IVA de la factura
         iva_rate_help: Tipo de IVA aplicado como decimal
@@ -1213,7 +1213,7 @@ cli:
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que debes pagar a un proveedor
-        invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
+        invoice_date_help: 'Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD), p. ej. 2026-01-15.'
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         list_help: Lista las facturas pagables registradas
         operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
@@ -1279,16 +1279,16 @@ cli:
         capture_all_modelo_help: Limita capture-all a este modelo.
         latest_help: Muestra el snapshot de expedientes más reciente
         list_help: Lista los snapshots de expedientes guardados
-        pull_all_help: cli.app.live.expedientes.pull_all_help
-        pull_help: cli.app.live.expedientes.pull_help
+        pull_all_help: 'Descarga el registro de declaraciones de AEAT para cada modelo del registro solicitado en un rango de anos y guarda instantaneas del bucket.'
+        pull_help: 'Descarga el registro de declaraciones de AEAT y guarda una instantanea del bucket.'
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de expedientes
       filed:
         capture_all_modelo_help: Limita capture-all a este modelo.
         list_help: Listar declaraciones presentadas sin descargar artefactos
-        pull_all_help: cli.app.live.filed.pull_all_help
-        pull_help: cli.app.live.filed.pull_help
-        pull_sources_help: cli.app.live.filed.pull_sources_help
+        pull_all_help: 'Descarga declaraciones y justificantes presentados para cada modelo del registro solicitado en un rango de anos. Solo lectura; informa de los fallos por modelo.'
+        pull_help: 'Descarga datos de declaraciones presentadas del registro autenticado de AEAT.'
+        pull_sources_help: 'Descarga las observaciones presentadas que requieren las dependencias de una declaracion objetivo.'
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -1317,14 +1317,14 @@ cli:
           de la AEAT. La única acción de formulario AEAT permitida es la consulta
           de lectura protegida de cartera; las puertas de representación solo continuan
           en modo nombre propio.
-        pull_history_help: cli.app.live.iva_wallet.pull_history_help
-        pull_remote_state_help: cli.app.live.iva_wallet.pull_remote_state_help
+        pull_history_help: 'Descarga el historial del Modelo 303 presentado y guarda el estado seguro de compensacion de IVA. No se envia ninguna declaracion ni opcion de formulario de cartera AEAT.'
+        pull_remote_state_help: 'Descarga el historial del Modelo 303 presentado e intenta la lectura de la cartera/IVA de AEAT como una adquisicion tipada de solo lectura.'
         taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
       justificante:
         app_help: 'Capturas de justificantes AEAT (solo lectura): descarga un justificante
           presentado y concilia contra él.'
         list_help: Lista las capturas de justificantes guardadas en el perfil activo.
-        pull_help: cli.app.live.justificante.pull_help
+        pull_help: 'Descarga de AEAT el justificante de un periodo presentado y lo guarda como evidencia oficial.'
         snapshot_id_help: Id de instantánea (o prefijo inequívoco).
         view_help: Muestra una captura de justificante.
       limit_help: Número máximo de filas a capturar
@@ -1333,7 +1333,7 @@ cli:
         app_help: Snapshots de notificaciones DEHú de solo lectura
         latest_help: Muestra la instantanea de notificacion DEHU mas reciente.
         list_help: Lista los snapshots de notificaciones DEHú guardados
-        pull_help: cli.app.live.notifications.pull_help
+        pull_help: 'Descarga las notificaciones DEHu y guarda una instantanea del bucket.'
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de notificaciones DEHú
       output_root_help: Directorio para observaciones capturadas de declaraciones
@@ -1951,9 +1951,6 @@ cli:
         ISO 8601 (AAAA-MM-DD).'
       no_active_profile_error_value: sin-perfil-activo
       period_empty: El periodo fiscal no puede estar vacío
-      period_filter_unrecognised: 'Periodo de filtro ''{raw}'' no reconocido. Use
-        un token AEAT con año en la cláusula de filtro: period=2024-1T (trimestres),
-        period=2024-0A (anual), period=2024-03 (meses).'
       period_missing_year: El token de periodo '{token}' necesita un año en este comando.
         Añada --year (p. ej. --period {token} --year 2024).
       period_unrecognised: 'Periodo ''{raw}'' no reconocido. Use un token AEAT: 1T-4T
@@ -2189,7 +2186,7 @@ cli:
           AEAT
         compare_help: Compara campo a campo el censo AEAT con este perfil
         help: Sincroniza el censo 036 de AEAT con este perfil
-        pull_help: cli.config.profile.censo.pull_help
+        pull_help: 'Descarga tu censo mas reciente de AEAT al almacen de instantaneas de este perfil.'
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
@@ -2473,7 +2470,7 @@ cli:
   ledger:
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
-      amount_help: Importe firmado de la transacción en la moneda de la transacción
+      amount_help: 'Importe de la transacción en la moneda de la transacción (decimal, p. ej. 1200.50).'
       attachment_help: Id de adjunto seguro adicional; se puede repetir
       business_pct_help: Proporción de uso profesional de 0 a 1
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
@@ -2641,7 +2638,7 @@ cli:
       invalid_category: 'Categoria de gasto desconocida ''{category}''. Categorias
         conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores
         validos de --category-id.'
-      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
+      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto como separador decimal y sin separador de miles, p. ej. 1234.56.'
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
@@ -2672,7 +2669,7 @@ cli:
         son una vista previa de lo que una importación real añadiría y omitiría.'
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
-      file_help: cli.ledger.import.file_help
+      file_help: 'Archivo original usado para verificar las filas importadas.'
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción que ya está en el libro pero tienen una descripción distinta:
@@ -2760,10 +2757,7 @@ cli:
       invoice_id_help: Id de la factura a vincular bidireccionalmente con el movimiento.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
-      filter_help: Filtre las filas por estado, periodo (un token AEAT con año, p.
-        ej. period=2024-1T), clasificación, incidencia, importación, dirección (ingreso/gasto)
-        o texto. Para filtrar por etiqueta de grupo organizativo use la opción --group
-        por separado.
+      filter_help: 'Filtre las filas por estado, periodo (un token AEAT simple, p. ej. period=1T) junto con el año (p. ej. year=2026), clasificacion, incidencia, importacion, direccion (ingreso/gasto) o texto. Para filtrar por etiqueta de grupo use la opcion --group.'
       footer_truncated: Mostrando filas {start}-{end} de {total} (desplazamiento {offset}).
         Use --offset/--limit para paginar.
       group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
@@ -2809,8 +2803,7 @@ cli:
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la restauración del movimiento del libro a activo
     review:
-      filter_help: Filtrar filas por status, period, issue, import, classification,
-        text o direction
+      filter_help: 'Filtrar filas por status, period (un token AEAT simple, p. ej. period=1T) junto con year (p. ej. year=2026), issue, import, classification, text o direction'
       header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
       help: Revisión interactiva y validación de entradas del libro
       id_help: Identificador de la entrada específica a revisar

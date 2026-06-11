@@ -86,7 +86,7 @@ _CLI_HARNESS = dedent(
         main()
     finally:
         config_module._settings_override.reset(token)
-    """
+    """,
 )
 
 _EXPLICIT_DATABASE_HARNESS = dedent(
@@ -120,7 +120,7 @@ _EXPLICIT_DATABASE_HARNESS = dedent(
         main()
     finally:
         config_module._settings_override.reset(token)
-    """
+    """,
 )
 
 
@@ -131,7 +131,7 @@ def _root_fallback_env(storage_root: Path) -> dict[str, str]:
         {
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
-        }
+        },
     )
     return env
 

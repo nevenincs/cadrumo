@@ -116,8 +116,8 @@ If a 303 return was filed outside `aeat`, capture or reconcile the official
 evidence before you rely on local values:
 
 ```bash
-aeat app live filed capture-sources --modelo 390 --year 2025 --period 0A
-aeat app modelo reconcile --modelo 303 --year 2025 --period 1T --from-justificante ./303-2025-1T-justificante.pdf
+aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
+aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T --file ./303-2025-1T-justificante.pdf
 ```
 
 Live filed capture is read-only. Reconciliation reads the justificante or
@@ -134,7 +134,7 @@ aeat app modelo iva-wallet balance --as-of-year 2025
 aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
 aeat app live iva-wallet history
-aeat app live iva-wallet capture-history
+aeat app live iva-wallet pull-history
 ```
 
 Use `seed` only when you have a real opening compensation balance from before
@@ -266,7 +266,7 @@ filing, keep the justificante and reconcile it locally:
 aeat app modelo work file --modelo 390 --year 2025 --period 0A
 aeat app modelo filing-record list
 aeat app modelo filing-record view <filing-record-id>
-aeat app modelo reconcile --modelo 390 --year 2025 --period 0A --from-justificante ./390-2025-justificante.pdf
+aeat app modelo reconcile file --modelo 390 --year 2025 --period 0A --file ./390-2025-justificante.pdf
 ```
 
 `work file` is an internal local marker. It does not submit anything to AEAT.
