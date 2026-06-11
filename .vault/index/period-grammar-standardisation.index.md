@@ -5,6 +5,7 @@ tags:
   - '#period-grammar-standardisation'
 date: '2026-06-11'
 related:
+  - '[[2026-06-11-period-grammar-standardisation-adr]]'
   - '[[2026-06-11-period-grammar-standardisation-plan]]'
 ---
 
@@ -13,6 +14,10 @@ related:
 Auto-generated index of all documents tagged with `#period-grammar-standardisation`.
 
 ## Documents
+
+### adr
+
+- `2026-06-11-period-grammar-standardisation-adr` - `period-grammar-standardisation` adr: `core Period value object: one typed period across the backend` | (**status:** `accepted`)
 
 ### plan
 
