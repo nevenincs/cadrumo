@@ -10,7 +10,6 @@ from typing import Annotated
 import typer
 
 from ...application.modelo import (
-    declared_modelo_period_tokens,
     profile_resolvable_binding_ids,
     registry_bindings,
     registry_bindings_for_scope,
@@ -109,7 +108,7 @@ def _resolve_discovery_year_period(
     modelo: str,
     year: int | None,
     period: str | None,
-) -> tuple[int, str] | None:
+) -> Period | None:
     _require_period_with_year(year=year, period=period)
     if year is None:
         return None
@@ -121,8 +120,7 @@ def _resolve_discovery_year_period(
     except Exception as exc:
         fallback = f"period must be a bare registry token; got {period!r}"
         raise typer.BadParameter(deps.bare_period_error(modelo, period, fallback=fallback)) from exc
-    declared = {token.upper(): token for token in declared_modelo_period_tokens(modelo)}
-    return typed_period.year, declared.get(typed_period.registry_token.upper(), typed_period.registry_token)
+    return typed_period
 
 
 def _register_list_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
@@ -173,8 +171,7 @@ def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             if resolved_scope is not None:
                 report = registry_describe_modelo_for_scope(
                     modelo,
-                    filing_year=resolved_scope[0],
-                    period=resolved_scope[1],
+                    period=resolved_scope,
                     as_of=_as_of(as_of),
                 )
             else:
@@ -251,8 +248,7 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             if resolved_scope is not None:
                 return registry_casillas_for_scope(
                     modelo,
-                    filing_year=resolved_scope[0],
-                    period=resolved_scope[1],
+                    period=resolved_scope,
                     as_of=_as_of(as_of),
                     input_kind=input_kind,
                     required=True if required else None,
@@ -375,8 +371,7 @@ def _bindings_report_for_target(
         return _run_query(
             lambda: registry_bindings_for_scope(
                 target,
-                filing_year=typed_period.year,
-                period=typed_period.registry_token,
+                period=typed_period,
                 as_of=_as_of(as_of),
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
@@ -539,8 +534,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
         report = _run_query(
             lambda: registry_bindings_for_scope(
                 modelo,
-                filing_year=typed_period.year,
-                period=typed_period.registry_token,
+                period=typed_period,
                 as_of=_as_of(as_of),
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
@@ -628,8 +622,7 @@ def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             if resolved_scope is not None:
                 return registry_formulas_for_scope(
                     modelo,
-                    filing_year=resolved_scope[0],
-                    period=resolved_scope[1],
+                    period=resolved_scope,
                     as_of=_as_of(as_of),
                 )
             return registry_formulas(modelo, period=period, as_of=_as_of(as_of))

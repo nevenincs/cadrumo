@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from ...core import Period
 from ...core.resources import resources
 from ...domain.calculations.registry import InputKind, RegistryQueryService
 
@@ -37,9 +38,14 @@ def registry_describe_modelo(modelo: str, *, period: str | None = None, as_of: d
     return _service().describe_modelo(modelo, period=period, as_of=as_of)
 
 
-def registry_describe_modelo_for_scope(modelo: str, *, filing_year: int, period: str, as_of: date | None = None):
+def registry_describe_modelo_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
     """Return the registry modelo description report for an exact filing scope."""
-    return _service().describe_modelo_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of)
+    return _service().describe_modelo_for_scope(
+        modelo,
+        filing_year=period.year,
+        period=period.registry_token,
+        as_of=as_of,
+    )
 
 
 def registry_casillas(
@@ -65,8 +71,7 @@ def registry_casillas(
 def registry_casillas_for_scope(
     modelo: str,
     *,
-    filing_year: int,
-    period: str,
+    period: Period,
     as_of: date | None = None,
     input_kind: InputKind | None = None,
     required: bool | None = None,
@@ -75,8 +80,8 @@ def registry_casillas_for_scope(
     """Return the registry casilla report for an exact filing scope."""
     return _service().casillas_for_scope(
         modelo,
-        filing_year=filing_year,
-        period=period,
+        filing_year=period.year,
+        period=period.registry_token,
         as_of=as_of,
         input_kind=input_kind,
         required=required,
@@ -94,9 +99,14 @@ def registry_bindings_for_year(modelo: str, *, filing_year: int, as_of: date | N
     return _service().bindings_for_year(modelo, filing_year=filing_year, as_of=as_of)
 
 
-def registry_bindings_for_scope(modelo: str, *, filing_year: int, period: str, as_of: date | None = None):
+def registry_bindings_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
     """Return the registry bindings report for an exact filing scope."""
-    return _service().bindings_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of)
+    return _service().bindings_for_scope(
+        modelo,
+        filing_year=period.year,
+        period=period.registry_token,
+        as_of=as_of,
+    )
 
 
 def registry_formulas(modelo: str, *, period: str | None = None, as_of: date | None = None):
@@ -104,9 +114,14 @@ def registry_formulas(modelo: str, *, period: str | None = None, as_of: date | N
     return _service().formulas(modelo, period=period, as_of=as_of)
 
 
-def registry_formulas_for_scope(modelo: str, *, filing_year: int, period: str, as_of: date | None = None):
+def registry_formulas_for_scope(modelo: str, *, period: Period, as_of: date | None = None):
     """Return the registry formulas report for an exact filing scope."""
-    return _service().formulas_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of)
+    return _service().formulas_for_scope(
+        modelo,
+        filing_year=period.year,
+        period=period.registry_token,
+        as_of=as_of,
+    )
 
 
 __all__ = [
