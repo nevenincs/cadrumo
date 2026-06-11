@@ -219,14 +219,14 @@ def test_bindings_list_year_resolves_the_year_covering_revision() -> None:
 
 
 # ---------------------------------------------------------------------------
-# D4 - censo period tokens accepted by every modelo surface
+# D4 - censo registry tokens stay outside filing-period work units
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
-def test_work_create_accepts_censo_period_tokens(token: str) -> None:
-    """``modelo work create --modelo 036`` accepts every censo period
-    token Modelo 036 declares as valid."""
+def test_work_create_rejects_censo_tokens_as_non_filing_periods(token: str) -> None:
+    """``modelo work create`` refuses censo registry tokens because work
+    units carry typed filing periods, while Modelo 036 declares event tokens."""
 
     _create_profile()
     result = invoke_cached_cli(
@@ -237,8 +237,13 @@ def test_work_create_accepts_censo_period_tokens(token: str) -> None:
             "--revision", "2025-02-03-y-siguientes",
         ],
     )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    assert _payload(result.output)["period"] == token
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = result.output.replace("\n", " ")
+    assert f"--period '{token}'" in flat
+    assert "is not a valid period token" in flat
+    assert "modelo 036" in flat
+    assert "alta" in flat and "modificacion" in flat and "baja" in flat
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
