@@ -92,3 +92,37 @@ a plain string projection field, without altering a typed API.
 
 Verification reported by the reviewer: the targeted workflow mismatch and invoice
 projection tests passed with `2 passed`.
+
+## PERIOD-008 | MEDIUM | Ledger check initially still passed a string period
+
+Review of commit `84e899cc9` found that the ledger model migration correctly seated
+ledger filters, import/export payloads, preflight, and status reporting on `core.Period`,
+but the CLI `ledger check` path still constructed `period=str(year)` before calling
+`preflight_transaction_catalogue`. That API now resolves the supplied period as a
+`core.Period` and calls `.contains(...)`, so the string path could crash once imported
+transactions were present.
+
+The same review also flagged that `src/aeat/application/ledger/tests/_action_test_support.py`
+had temporarily become a broad re-export barrel for production ledger APIs, which weakened
+the test import boundary.
+
+Resolution landed in commit `1f3d45569`: `ledger check` now passes
+`Period.from_year_and_code(year, "0A")`, and `test_actions_review.py` imports production
+ledger APIs directly from the application package while `_action_test_support.py` remains
+limited to shared test helpers and fixtures.
+
+Local verification after the fix: ruff passed for the touched files; focused ledger period
+tests passed with `71 passed`; ledger link/check verb tests passed with `6 passed`; the
+corpus preflight/check regression passed with `1 passed`; CLI import smoke printed `OK`.
+
+## PERIOD-009 | INFO | No findings in ledger check follow-up
+
+Review of commit `1f3d45569` found no remaining issues. The reviewer confirmed that
+`ledger check` imports `core.Period` and passes `Period.from_year_and_code(year, "0A")`
+into `preflight_transaction_catalogue`, whose typed API calls `.contains(...)` on the
+resolved period. The reviewer also confirmed that `test_actions_review.py` now imports
+production ledger APIs directly, while `_action_test_support.py` is restricted to shared
+fixtures, helpers, and test-only support types.
+
+Verification reported by the reviewer: `test_actions_review.py` passed with `5 passed`,
+and the integration ledger link/check verb suite passed with `6 passed`.
