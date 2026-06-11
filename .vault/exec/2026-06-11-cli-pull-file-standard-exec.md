@@ -79,6 +79,24 @@ fourteen plan Steps are closed.
   bootstrap-safe-probe guard are storage-route-refactor collateral; the
   registry-inspect setup errors are a secret-store passphrase prompt
   (`EOFError`) in the non-interactive run, not a feature regression.
+- A mandatory `vaultspec-code-reviewer` pass (commit `1b8e7767c` revision)
+  surfaced one CRITICAL and four HIGH findings the initial rename missed: the
+  verb-registration rename had not been swept through five out-of-band surfaces.
+  CRITICAL - the runtime profile-bound write-guard allowlist in
+  `storage_write_policy.py` still named the old `capture` / `refresh` verb paths,
+  so the renamed live + censo write verbs fell through to fail-OPEN and bypassed
+  the root-fallback write refusal; fixed by renaming the six entries and adding
+  the live `pull` verbs to the guard-predicate regression set. HIGH - curated
+  operator help advertised dead verbs (a RED gate), six error-registry
+  `default_suggestion` fields and the cross-period `next_action` builders and two
+  censo `LiveSnapshotError` suggestions instructed operators to run dead verbs;
+  all updated to the `pull` family with their asserting tests. MEDIUM - ten
+  `_emit_envelope(command=...)` identifiers had drifted from their already-renamed
+  `@register_schema` keys; realigned. The rule's enforcement claim was softened to
+  state the gates' real coverage and mandate the by-hand sweep surfaces a verb
+  rename must touch. Post-revision gates green; the two residual failures in the
+  affected-test run are the same peer `SecureObjectNamespaceIntegrity`
+  secure-storage rebuild error, out of scope.
 - One feature-internal test fix was required: the iva-wallet help test asserted
   the legacy Spanish phrase `No se envian opciones`; because translating the
   renamed `pull_history_help` key (which the honesty gate requires) makes the
