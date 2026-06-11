@@ -24,7 +24,6 @@ separate concerns and live submit is permanently forbidden.
 from __future__ import annotations
 
 import hashlib
-import re
 from collections.abc import Iterable
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
@@ -33,7 +32,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file
 from ...core.logging import get_logger
@@ -103,7 +103,7 @@ class DeclaracionExportResult(BaseModel):
         draft_id: The :class:`aeat.domain.filing.ModeloDraft` identity
             the export was generated from.
         modelo: AEAT modelo identifier.
-        period: Canonical period identifier (e.g. ``"2026Q1"``).
+        period: Typed filing period for the exported draft.
         format: The on-disk wire format (closed
             :class:`DeclaracionExportFormat`).
         output_path: Absolute path the file was written to.
@@ -120,7 +120,7 @@ class DeclaracionExportResult(BaseModel):
 
     draft_id: str = Field(min_length=1, max_length=128)
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     format: DeclaracionExportFormat
     output_path: Path
     byte_size: int = Field(ge=0)
@@ -251,7 +251,7 @@ def export_draft(
     return DeclaracionExportResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
-        period=str(draft.period),
+        period=draft.period,
         format=DeclaracionExportFormat.FICHERO_BOE,
         output_path=output_path,
         byte_size=len(payload),
@@ -329,7 +329,6 @@ def verify_export(
     )
 
 
-_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
 _MONEY_QUANT = Decimal("0.01")
 
 
@@ -640,13 +639,6 @@ def _exported_casilla_provenance(
         if field.kind == CasillaFieldKind.CASILLA and field.casilla is not None and field.casilla in draft_casillas
     )
     return _provenance_for_casillas(draft, layout_casillas)
-
-
-def _period_parts(period: str) -> tuple[str, str]:
-    match = _QUARTER_PERIOD_RE.fullmatch(period)
-    if match is None:
-        raise FilingExportError(f"declaration export does not support period {period!r}")
-    return match.group("year"), f"{match.group('quarter')}T"
 
 
 __all__ = [
