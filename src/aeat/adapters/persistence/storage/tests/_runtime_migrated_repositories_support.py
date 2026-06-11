@@ -20,7 +20,12 @@ from .....application.calculations import (
     IvaCompensationHistoryRepository,
     IvaWalletDecisionRepository,
 )
-from .....application.config_reset import ConfigResetScope
+from .....application.auth._diagnostics import list_auth_diagnostics
+from .....application.config_reset import ConfigResetScope, reset_config
+from .....application.diagnostics import (
+    preview_quarantine_unreadable_secure_objects,
+    secure_object_unreadable_total,
+)
 from .....application.filing import ModeloHistory, ModeloHistoryEntry
 from .....application.filing._history_repository import ModeloHistoryRepository
 from .....application.live._borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
@@ -121,6 +126,7 @@ from .....domain.transactions import (
     TransactionDirection,
 )
 from .....domain.usage_ratios import UsageRatioProfile
+from .....domain.usage_ratios._service import load_usage_ratios, save_usage_ratios
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AUTH_DIAGNOSTIC_PATH_FIXTURE,
@@ -133,12 +139,16 @@ from ....outbound.aeat.auth import _session_store as _session_store
 from ....outbound.aeat.sede._errors import ExpedienteNotFoundError
 from ....outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
 from ....outbound.aeat.sede._schema import FiledDeclaracionArtefact
+from ....outbound.google import _session_store as google_session_store
 from ....outbound.google._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 from ....outbound.llm._cache import LLMCache
 from ....outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from ....outbound.llm._usage import UsageRecorder
+from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
+from ...profile.inventory import load_inventory, save_inventory
 from .. import AttachmentStore, EphemeralMasterKeyProvider, SensitivityClass, StorageValidationError
 from .._namespace_registry import LLM_USAGE_NAMESPACE
+from ..master_key._active_session import activate_session
 from ..master_key._bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import dispose_engine
@@ -187,6 +197,20 @@ __all__ = [
     "WorkflowRunRepository",
     "WorkflowStateRepository",
     "_session_store",
+    "activate_session",
+    "google_session_store",
+    "list_auth_diagnostics",
+    "load_amortizacion_ledger",
+    "load_assets",
+    "load_inventory",
+    "load_usage_ratios",
+    "preview_quarantine_unreadable_secure_objects",
+    "reset_config",
+    "save_amortizacion_ledger",
+    "save_assets",
+    "save_inventory",
+    "save_usage_ratios",
+    "secure_object_unreadable_total",
 ]
 
 _KEK = b"k" * 32
