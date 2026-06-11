@@ -176,3 +176,29 @@ translates `PeriodError` into the existing aggregation validation error.
 Verification reported by the reviewer: ruff passed for the touched files,
 focused aggregation and tax-fact tests passed with `243 passed`, and CLI import
 smoke printed `OK`.
+
+## PERIOD-013 | LOW | Aggregation wrapper audit entry was written before independent review
+
+Follow-up review of commit `6fb07c8e` found no code issues, but noted that
+PERIOD-012 was committed as part of the implementation commit and therefore
+claimed reviewer verification before the independent review actually occurred.
+This entry corrects the trace: the independent review happened after the commit
+and confirmed the PERIOD-012 code claims.
+
+The reviewer confirmed that `aggregation_period_for_modelo` builds
+`core.Period` with `from_year_and_code`, translates invalid codes through
+`AggregationValidationError`, and refuses non-span tokens via `has_date_span()`.
+The reviewer also confirmed the aggregation package exports `core.Period` and
+`core.PeriodKind`, no in-repo imports of removed `Quarter` / `PeriodType`
+remain, and no wrapper-only `.start`, `.end`, `.quarter`, `.month`, or
+`from_year_and_token` usage remains in the reviewed surface.
+
+Verification reported by the reviewer: ruff passed for the touched files; the
+commit-touched aggregation tests plus `test_ledger_tax_fact_manipulations.py`
+passed with `243 passed`; import/API smoke confirmed aggregation `Period` is
+core `Period` and removed symbols are absent; non-span tokens (`1P`, `4P`,
+`EXT-1T`, `AD-HOC`, `EVENT-3`) reject via `AggregationValidationError`.
+
+Residual note: the broader `src/aeat/application/aggregation/tests` suite had two
+failures outside the commit-touched files, both from existing tests passing raw
+strings into typed-period APIs.
