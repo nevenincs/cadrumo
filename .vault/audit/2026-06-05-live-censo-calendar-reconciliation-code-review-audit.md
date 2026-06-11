@@ -81,3 +81,11 @@ The first W04 live-auth attempt tried to unlock the existing active profile stor
 Resolution 2026-06-11: fixed in verification procedure. W04.P04.S09 now creates an isolated fresh profile store with a fresh passphrase, proves `config profile create`, `config switch`, `config profile status`, overview calendar, and persisted live-snapshot list facades work under that passphrase, and only then attempts live AEAT pulls. The remaining blocker moved correctly to Cl@ve Móvil completion timeout, not profile-store unlock.
 
 Verification 2026-06-11: fresh profile `live-user-smoke-20260611-1248` was created under isolated storage and a file-backend passphrase. Calendar returned Modelo 100/303/390/721 obligation rows with justificante-required evidence state. `app live filed list --modelo 303` and `config profile censo pull` reached the live Cl@ve non-QR route with matching NIE identity and timed out at `auth_completion_timeout`.
+
+## CENSO-011 | HIGH | All-model filed listing aborted on one AEAT-unoffered Modelo
+
+The authenticated all-model `app live filed list` run reached AEAT and queried the declaration register across registry modelos, but the command aborted when the sede did not offer Modelo `721`. That made the all-model filing-history facade brittle: one unsupported/unoffered modelo prevented the operator from receiving the successful rows and explicit failure inventory for every other modelo.
+
+Resolution 2026-06-11: fixed. `app live filed list` now preserves fail-loud behavior for an explicit `--modelo`, but when no modelo filter is supplied it catches per-model failures, continues, and emits `failed_count` plus typed `failures` in the JSON payload using the same failure-row shape as `pull-all`. Typed `Period` values are stringified at the CLI boundary.
+
+Verification 2026-06-11: `uv run aeat --format json app live filed list --from-year 2026 --to-year 2026` now succeeds with `row_count=0`, `failed_count=1`, and an explicit Modelo `721` AEAT-register failure. `uv run ruff check src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_payloads.py` passed. `uv run pytest src/aeat/application/live/tests/test_filed_bulk_capture.py -q` passed with 3 tests.

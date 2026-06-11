@@ -71,6 +71,16 @@ Run the full profile-bound live CLI sequence after the encrypted secret store is
 - [ ] `W04.P04.S11` - Prove the active profile calendar contains legal obligation rows reconciled with live submitted and justificante-verified evidence; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W04.P04.S12` - Fail fast when profile-bound live CLI cannot prompt for secret-store passphrase; `src/aeat/adapters/persistence/storage/master_key/_master_key_io.py, src/aeat/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py`.
 
+## Wave `W05` - authenticated live surface proof
+
+Record the authenticated fresh-profile live reads that reached AEAT and verify calendar projection, while keeping Modelo 036 reconciliation open when G313 returns no legible censo.
+
+### Phase `W05.P05` - fresh-profile AEAT read proof
+
+Use the fresh password-backed profile and persisted live Clave session to prove all current live read facades and calendar projection behavior.
+
+- [x] `W05.P05.S13` - Record authenticated live all-model filing, expedientes, notifications, and calendar proof; `src/aeat/entrypoints/cli/_app_live.py, src/aeat/entrypoints/cli/_app_live_payloads.py, src/aeat/entrypoints/cli/_overview.py`.
+
 ## Description
 
 This plan closes the explicit live-censo calendar gap: Modelo obligations must derive from the taxpayer's legal situation, and the calendar must prove whether it used live censo-backed facts, profile facts, or refused because the necessary facts were not present.
