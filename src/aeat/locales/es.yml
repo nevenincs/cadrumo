@@ -2762,6 +2762,8 @@ cli:
       limit_help: 'Numero maximo de filas a mostrar (por defecto: todas).'
       offset_help: 'Omitir este numero de filas antes de listar (por defecto: 0).'
       ungrouped_label: (sin grupo)
+      sort_by_help: 'Ordena las filas listadas por este campo (date, amount, description, created_at, modified_at, ...).'
+      sort_order_help: 'Orden: asc (ascendente) o desc (descendente).'
     merge:
       actor_help: Nombre del operador registrado en el evento del bucket
       child_id_help: Id de transacción hija que quieres fusionar; se puede repetir

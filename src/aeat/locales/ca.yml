@@ -2726,6 +2726,8 @@ cli:
       limit_help: 'Nombre maxim de files a mostrar (per defecte: totes).'
       offset_help: 'Omet aquest nombre de files abans de llistar (per defecte: 0).'
       ungrouped_label: (sense grup)
+      sort_by_help: 'Ordena les files llistades per aquest camp (date, amount, description, created_at, modified_at, ...).'
+      sort_order_help: 'Ordre: asc (ascendent) o desc (descendent).'
     merge:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       child_id_help: Id de transacció filla que vols fusionar; es pot repetir

@@ -2692,6 +2692,8 @@ cli:
       limit_help: 'Megjelenitendo sorok maximalis szama (alapertelmezett: az osszes).'
       offset_help: 'Ennyi sor kihagyasa a listazas elott (alapertelmezett: 0).'
       ungrouped_label: (nincs csoport)
+      sort_by_help: 'A listázott sorok rendezése e mező szerint (date, amount, description, created_at, modified_at, ...).'
+      sort_order_help: 'Rendezési sorrend: asc (növekvő) vagy desc (csökkenő).'
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.
