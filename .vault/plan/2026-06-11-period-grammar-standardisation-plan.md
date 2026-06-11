@@ -172,6 +172,7 @@ Delegate per module: replace period: str fields with core.Period in state_projec
 - [x] `W02.P08.S24` - Replace the period: str fields in the aggregation service, source mesh and retenciones models with core.Period; `src/aeat/application/aggregation/_service.py, _source_mesh.py, _retenciones.py`.
 - [ ] `W02.P08.S25` - Replace the period: str fields in the iva prorrata, submission, verification schema, filing schema and modelo export models with core.Period; `src/aeat/domain/iva/_prorrata.py, src/aeat/domain/submission/_models.py, src/aeat/application/verification/_schema.py, src/aeat/domain/filing/_schema.py, src/aeat/application/modelo/_export.py`.
 - [ ] `W02.P08.S31` - DISCOVERY (recon): the period:str substrate splits into 8 file-disjoint clusters A-H — A overview/_calendar, B state_projection, C aggregation service/retenciones/source_mesh (waits on P07), D filing/_schema ModeloDraft (encrypted-SQL roundtrip), E submission/_models ModeloPresentado (encrypted-SQL roundtrip), F verification/_schema, G iva/_prorrata (DIFFERENT vocabulary Q1/M01/annual — NOT a core.Period candidate, out of scope), H modelo/_export bucket-event; `agents bridge inbound combined strings via parse_canonical_period during transition; `src/aeat/application, src/aeat/domain`.
+- [ ] `W02.P08.S33` - DEFERRED C2 (from cluster C): migrate CalculationSourceContext.period (aggregation/_source_mesh.py) plus the ~26 calculation resolvers that read it and the observation-store key derivation (observation_key in _observations_repository.py) to core.Period as one isolated atomic commit; `src/aeat/application/aggregation/_source_mesh.py, src/aeat/application/calculations`.
 
 ### Phase `W02.P09` - Registry deadline-window schema + TOML migration (sonnet)
 
@@ -193,6 +194,7 @@ Delegate then verify: once every consumer carries core.Period, delete the combin
 - [ ] `W02.P11.S28` - Delete the combined-input regexes from parse_canonical_period and rewrite the module docstring once every consumer carries core.Period; `src/aeat/domain/period.py`.
 - [ ] `W02.P11.S29` - Reconcile or retire the registry parse_modelo_period dashed YYYY-Qn dialect against core.Period; `src/aeat/domain/calculations/registry`.
 - [ ] `W02.P11.S30` - Add the repo-wide regression gate asserting zero combined-period-string construction or storage outside refusal-regression fixtures and the Period __str__ projection; `src/aeat/core/tests`.
+- [ ] `W02.P11.S34` - Remove the transitional _coerce_period BeforeValidator inbound coercions and the outbound _to_canonical_period / _period_to_canonical_str combined-string adapters (introduced by clusters C/E/H) once every producer emits core.Period, so combined strings can no longer enter at any pydantic boundary; `src/aeat/domain/submission/_models.py, src/aeat/application/aggregation, src/aeat/application/modelo/_export.py, src/aeat/application/filing/_complementaria.py`.
 
 ## Description
 
