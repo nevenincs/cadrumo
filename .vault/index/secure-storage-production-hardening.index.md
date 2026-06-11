@@ -867,7 +867,9 @@ related:
   - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S399]]'
   - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S400]]'
   - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S401]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W20-P41-S454]]'
   - '[[2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit]]'
+  - '[[2026-06-11-secure-storage-production-hardening-w20-p41-s454-localization-error-hierarchy-audit]]'
 ---
 
 # `secure-storage-production-hardening` feature index
@@ -1266,6 +1268,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit` - S455 provenance path audit
 - `2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit` - S456 redaction enrollment audit
 - `2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit` - S401 testimonial retest synthesis and final dispositions
+- `2026-06-11-secure-storage-production-hardening-w20-p41-s454-localization-error-hierarchy-audit` - S454 Filing/Modelo Localization And Error-Hierarchy Audit
 
 ### exec
 
@@ -1742,6 +1745,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-11-secure-storage-production-hardening-W13-P28-S399` - W13.P28.S399 secure-storage persona retests
 - `2026-06-11-secure-storage-production-hardening-W13-P28-S400` - W13.P28.S400 testimonial repair adoption
 - `2026-06-11-secure-storage-production-hardening-W13-P28-S401` - W13.P28.S401 testimonial synthesis
+- `2026-06-11-secure-storage-production-hardening-W20-P41-S454` - W20.P41.S454 Filing/Modelo Localization And Error Hierarchy
 
 ### plan
 

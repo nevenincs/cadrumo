@@ -638,6 +638,26 @@ application:
         required casilla ids are missing from the corrected map.'
       amendment_verification_refused_no_snapshot: Registry has no snapshot for the
         requested modelo, year, and period.
+      calculate_casilla_ambiguous: '--casilla %{key} matches multiple casillas in
+        this revision: %{candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate.'
+      calculate_casilla_non_numeric: --casilla %{casilla_id} targets non-numeric data
+        type %{data_type} (%{label}); use --binding or profile sources instead.
+      calculate_casilla_unknown: --casilla %{key} does not match any casilla number
+        in this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla
+        IDs.
+      calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
+        %{value}'
+      calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
+        sum to exactly 100%; got %{total} across %{count} rows.
+      calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
+        does not exceed the EUR %{threshold} threshold required by RD 1065/2007 art.
+        31.1.
+      calculate_pension_inputs_incomplete: The plan-pension rescue inputs must all
+        be supplied together.
+      calculate_sal_inputs_incomplete: The SAL/SLL reserve-special inputs must all
+        be supplied together.
+      calculate_semantic_role_missing: The modelo revision has no casilla with semantic
+        role %{semantic_role}.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -715,9 +735,14 @@ application:
         on revision %{revision_id}: the registry declares a binding source no enrolled
         calculation resolver handles. Enroll a resolver or register it as deferred
         before calculating.'
-      reconcile_declaration_unsupported: 'Declaration-PDF reconcile source is not yet implemented; reconcile a downloaded justificante via aeat app modelo reconcile file until the declaration parser lands.'
+      reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
+        implemented; reconcile a downloaded justificante via aeat app modelo reconcile
+        file until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
+      revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
+      revision_pick_id_requires_explicit_selector: calculation_revision_id is only
+        valid with the explicit revision selector.
       verification_report_not_found: No verification report found with id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
@@ -1068,29 +1093,11 @@ categories:
 cli:
   app:
     ledger:
-      collectible_invoice:
-        add_help: Register a new collectible invoice
-        country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
-          EU operations)
-        eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
-        group_help: Invoices a customer owes you
-        invoice_date_help: 'Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.'
-        invoice_id_help: Invoice id (or unambiguous prefix)
-        list_help: List registered collectible invoices
-        operation_type_help: 'M349 operation type: E supply of goods, S services,
-          T triangular, R rectification, A acquisition of goods, I acquisition of
-          services, M miscellaneous'
-        operation_type_invalid: '--operation-type must be one of: {valid}'
-        remove_help: Delete a registered collectible invoice
-        update_help: Update collectible invoice details
-        view_help: Show collectible invoice details
-        yes_help: Confirm deleting the collectible invoice
-        yes_required: Pass --yes to delete a collectible invoice
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         evidence_id_help: Evidence id (exact match)
         group_help: Purchase invoice evidence in PDF or image form
-        invoice_date_help: 'Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.'
+        invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount
         iva_rate_help: Applied IVA rate as a decimal
@@ -1124,24 +1131,26 @@ cli:
         valuation_method_help: Valuation method (fifo or pmp)
         valuation_preview_help: Preview closing stock and cost of sales
         year_help: Tax year
-      payable_invoice:
-        add_help: Register a new payable invoice
+      invoice:
+        add_help: Register a new business invoice
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
-        group_help: Invoices you owe a supplier
-        invoice_date_help: 'Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.'
+        group_help: Business invoice records (issued or received)
+        invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_id_help: Invoice id (or unambiguous prefix)
-        list_help: List registered payable invoices
+        kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
+          a supplier)'
+        list_help: List business invoices (both kinds unless --kind filters)
         operation_type_help: 'M349 operation type: E supply of goods, S services,
           T triangular, R rectification, A acquisition of goods, I acquisition of
           services, M miscellaneous'
         operation_type_invalid: '--operation-type must be one of: {valid}'
-        remove_help: Delete a registered payable invoice
-        update_help: Update payable invoice details
-        view_help: Show payable invoice details
-        yes_help: Confirm deleting the payable invoice
-        yes_required: Pass --yes to delete a payable invoice
+        remove_help: Delete a business invoice
+        update_help: Update business invoice details
+        view_help: Show one business invoice
+        yes_help: Confirm deleting the invoice
+        yes_required: Pass --yes to delete an invoice
       ratios:
         category_help: Spending category id (e.g. USAGE_RATIO_VEHICLE)
         eligible_help: List categories that accept a specific ratio
@@ -1187,19 +1196,24 @@ cli:
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots
-        capture_all_modelo_help: 'Limit pull-all to this modelo.'
+        capture_all_modelo_help: Limit pull-all to this modelo.
         latest_help: Show the most recent expediente snapshot
         list_help: List saved expediente snapshots
-        pull_all_help: 'Pull the AEAT declaration register for every requested registry modelo across a year range and persist bucket-scoped snapshots.'
-        pull_help: 'Pull the AEAT declaration register and persist a bucket-scoped snapshot.'
+        pull_all_help: Pull the AEAT declaration register for every requested registry
+          modelo across a year range and persist bucket-scoped snapshots.
+        pull_help: Pull the AEAT declaration register and persist a bucket-scoped
+          snapshot.
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
       filed:
-        capture_all_modelo_help: 'Limit pull-all to this modelo.'
+        capture_all_modelo_help: Limit pull-all to this modelo.
         list_help: List filed declaration rows without downloading artefacts
-        pull_all_help: 'Pull filed declarations and justificantes for every requested registry modelo across a year range. Read-only; reports per-modelo failures explicitly.'
-        pull_help: 'Pull filed-declaration data from the authenticated AEAT register.'
-        pull_sources_help: 'Pull the filed observations required by a target filing''s dependencies.'
+        pull_all_help: Pull filed declarations and justificantes for every requested
+          registry modelo across a year range. Read-only; reports per-modelo failures
+          explicitly.
+        pull_help: Pull filed-declaration data from the authenticated AEAT register.
+        pull_sources_help: Pull the filed observations required by a target filing's
+          dependencies.
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
@@ -1216,21 +1230,25 @@ cli:
             qr_required: QR approval required
             unknown: Unknown
             wrong_identity: wrong identity
-        app_help: 'AEAT IVA compensation wallet pull (read-only; allows only own-name representation and the guarded wallet read query).'
+        app_help: AEAT IVA compensation wallet pull (read-only; allows only own-name
+          representation and the guarded wallet read query).
         as_of_year_help: Year used to age IVA compensation carry-forward lots.
         history_help: List secure local IVA compensation history, carry-forward lots,
           and persisted wallet authority decisions derived from Modelo 303 captures.
         pull_help: Live-fetch and persist AEAT's IVA compensation wallet. The only
           AEAT form action allowed is the guarded wallet read query; representation
           gates only continue in own-name mode.
-        pull_history_help: 'Pull filed Modelo 303 history and persist secure IVA compensation state. No AEAT filing or wallet form choices are submitted.'
-        pull_remote_state_help: 'Pull filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one typed read-only acquisition.'
+        pull_history_help: Pull filed Modelo 303 history and persist secure IVA compensation
+          state. No AEAT filing or wallet form choices are submitted.
+        pull_remote_state_help: Pull filed Modelo 303 history and attempt the AEAT
+          IVA wallet/cartera read as one typed read-only acquisition.
         taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
       justificante:
         app_help: 'AEAT justificante captures (read-only): pull a filed receipt and
           reconcile against it.'
         list_help: List persisted justificante captures in the active profile.
-        pull_help: 'Pull the AEAT justificante for a filed period and persist it as official evidence.'
+        pull_help: Pull the AEAT justificante for a filed period and persist it as
+          official evidence.
         snapshot_id_help: Snapshot id (or unambiguous prefix).
         view_help: View one justificante capture.
       limit_help: Maximum rows to capture
@@ -1239,7 +1257,7 @@ cli:
         app_help: Read-only DEHú notification snapshots
         latest_help: Show the most recent DEHU notification snapshot.
         list_help: List saved DEHú notification snapshots
-        pull_help: 'Pull DEHu notifications and persist a bucket-scoped snapshot.'
+        pull_help: Pull DEHu notifications and persist a bucket-scoped snapshot.
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show a DEHú notification snapshot
       output_root_help: Directory for captured filed-declaration observations
@@ -1814,7 +1832,8 @@ cli:
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
-      invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD) is required.'
+      invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
+        is required.'
       no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
       period_missing_year: Period token '{token}' needs a year on this command. Add
@@ -2036,7 +2055,7 @@ cli:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field
         help: Sync AEAT 036 censo data with this profile
-        pull_help: 'Pull your latest censo from AEAT into this profile''s snapshot store.'
+        pull_help: Pull your latest censo from AEAT into this profile's snapshot store.
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
@@ -2302,7 +2321,7 @@ cli:
   ledger:
     add:
       actor_help: Operator name recorded on the bucket event
-      amount_help: 'Transaction amount in the transaction currency (decimal, e.g. 1200.50).'
+      amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
       attachment_help: Supplementary attachment id (repeatable)
       business_pct_help: Business-use share from 0 to 1 (only when classification
         is MIXED)
@@ -2438,12 +2457,16 @@ cli:
       taxable_base_help: Taxable base amount
     doclink:
       actor_help: Operator label.
-      help: 'Fetch a Drive document link and store its bytes as encrypted evidence on a ledger row.'
+      help: Fetch a Drive document link and store its bytes as encrypted evidence
+        on a ledger row.
       id_help: Ledger transaction id.
       note_help: Optional note.
       reference_help: The document link reference.
+      refused: 'Cannot fetch the %{source} document for %{reference}%{scope_hint}:
+        evidence must carry the document''s encrypted bytes, and a link is never stored
+        on its own. Download the document and attach it with ''aeat app ledger attach
+        --attachment-id ...'', or grant the required Google scope and retry.'
       source_help: 'Link source: gmail, google_drive, or url.'
-      refused: 'Cannot fetch the %{source} document for %{reference}%{scope_hint}: evidence must carry the document''s encrypted bytes, and a link is never stored on its own. Download the document and attach it with ''aeat app ledger attach --attachment-id ...'', or grant the required Google scope and retry.'
     errors:
       business_pct_out_of_range: Business-use share %{value} (= %{percent}) is out
         of range. Enter a share between 0 and 1, e.g. 0.5 for 50 percent.
@@ -2463,7 +2486,8 @@ cli:
       id_prefix_unknown: 'Unexpected transaction id prefix error: %{message}'
       invalid_category: 'Unknown spending category ''{category}''. Known categories:
         {known}. Run ''aeat app ledger categories'' for valid --category-id values.'
-      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.'
+      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal
+        separator with no thousands grouping, e.g. 1234.56.'
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
@@ -2493,7 +2517,7 @@ cli:
       dry_run_preview: 'Dry run: no rows were saved. The counts above are a preview
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
-      file_help: 'Original file used to verify imported rows.'
+      file_help: Original file used to verify imported rows.
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
         already in the ledger but have a different description - a likely duplicate
@@ -2578,7 +2602,10 @@ cli:
       invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
-      filter_help: 'Filter rows by status, period (a bare AEAT token, e.g. period=1T) plus year (e.g. year=2026), classification, issue, import, direction (ingreso/gasto), or text. To filter by organisational group label use the separate --group option.'
+      filter_help: Filter rows by status, period (a bare AEAT token, e.g. period=1T)
+        plus year (e.g. year=2026), classification, issue, import, direction (ingreso/gasto),
+        or text. To filter by organisational group label use the separate --group
+        option.
       footer_truncated: Showing rows {start}-{end} of {total} (offset {offset}). Use
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.
@@ -2586,9 +2613,10 @@ cli:
       help: List ledger transactions in the active profile
       limit_help: 'Maximum rows to show (default: all rows).'
       offset_help: 'Skip this many rows before listing (default: 0).'
-      ungrouped_label: (ungrouped)
-      sort_by_help: 'Sort the listed rows by this field (date, amount, description, created_at, modified_at, ...).'
+      sort_by_help: Sort the listed rows by this field (date, amount, description,
+        created_at, modified_at, ...).
       sort_order_help: 'Sort order: asc (ascending) or desc (descending).'
+      ungrouped_label: (ungrouped)
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
       child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every
@@ -2628,7 +2656,8 @@ cli:
       reason_help: Reason recorded in lifecycle history
       yes_help: Confirm restoring the ledger transaction to active
     review:
-      filter_help: 'Filter rows by status, period (a bare AEAT token, e.g. period=1T) plus year (e.g. year=2026), issue, import, classification, text, or direction'
+      filter_help: Filter rows by status, period (a bare AEAT token, e.g. period=1T)
+        plus year (e.g. year=2026), issue, import, classification, text, or direction
       header: ACCOUNTING LEDGER REVIEW SESSION
       help: Interactive review and validation of ledger entries
       id_help: Identifier of the specific entry to review
@@ -2636,6 +2665,8 @@ cli:
       verbose_help: Show detailed information during review
     split:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_SPLIT event
+      apply_help: Persist the proposed --llm split (requires --yes); without it the
+        proposal is previewed only.
       child_amount_help: One child amount (signed Decimal in the parent's currency).
         Repeat once per child; the count must match --child-description.
       child_description_help: One child narrative. Repeat once per child; the count
@@ -2645,17 +2676,19 @@ cli:
           and --child-description arguments
         min_two_children: ledger split requires at least two --child-amount / --child-description
           pairs
+      evidence_acknowledged_help: Acknowledge --read-evidence sends the evidence to
+        a cloud model (off by default, gestor-barred).
       help: Redistribute one parent transaction into N child transactions whose amounts
         sum to the parent amount exactly
       id_help: Parent transaction id (or unambiguous hex prefix) to split
+      llm_exclusive: --llm cannot be combined with --child-amount/--child-description;
+        the manual path is the explicit operator override.
+      llm_help: Propose an evidence-driven N-way split with the given LLM provider.
+      read_evidence_help: Read the transaction's attached invoice on-host and feed
+        it to the --llm split proposer.
       reason_help: Reason recorded in the bucket-event payload and lifecycle history
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
-      llm_help: 'Propose an evidence-driven N-way split with the given LLM provider.'
-      apply_help: 'Persist the proposed --llm split (requires --yes); without it the proposal is previewed only.'
-      read_evidence_help: 'Read the transaction''s attached invoice on-host and feed it to the --llm split proposer.'
-      evidence_acknowledged_help: 'Acknowledge --read-evidence sends the evidence to a cloud model (off by default, gestor-barred).'
-      llm_exclusive: '--llm cannot be combined with --child-amount/--child-description; the manual path is the explicit operator override.'
     stash:
       actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile
@@ -2728,8 +2761,8 @@ cli:
         ledger_status: Show ledger health and counts.
         ledger_update: Update a ledger transaction.
         ledger_view: Inspect one transaction.
-        live_filed_capture: 'Pull a read-only observation from AEAT.'
-        live_filed_capture_sources: 'List the sources a filed pull can read.'
+        live_filed_capture: Pull a read-only observation from AEAT.
+        live_filed_capture_sources: List the sources a filed pull can read.
         live_filed_list: List locally captured filed-return observations.
         modelo_bindings: Inspect registry binding coverage.
         modelo_describe: Describe one modelo revision.
@@ -3832,6 +3865,12 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
+    modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
+    modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
+    modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
+    modelo_calculate_input: errors.refused.modelo_calculate_input
+    modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
+    modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
     modelo_calculation_revision_selector_ambiguous: The calculation revision selector
       matched more than one revision; refine the selector.
     modelo_calculation_revision_selector_state: The selected calculation revision
@@ -3846,6 +3885,7 @@ errors:
       a profile and try again.
     modelo_project_invalid_decimal_override: A projection override is not a valid
       decimal amount.
+    modelo_revision_pick: errors.refused.modelo_revision_pick
     modelo_work_period_token: Invalid modelo period token.
     modelo_work_registry_year_mismatch: The selected registry revision does not cover
       the requested filing year.
@@ -4141,7 +4181,8 @@ filing:
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.
-    iva_history_modelo_303_only: 'IVA compensation history pull only accepts Modelo 303 observations.'
+    iva_history_modelo_303_only: IVA compensation history pull only accepts Modelo
+      303 observations.
     year_range_invalid: From-year must be less than or equal to to-year.
 locales:
   cli:

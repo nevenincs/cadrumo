@@ -1115,7 +1115,7 @@ Close the oldest custody and passphrase observations with current command-surfac
 Retire residual convention exceptions or make them explicit, localized, and privacy-safe.
 
 - [x] `W20.P41.S453` - Retire or narrow residual direct environment, monkeypatch, explicit-route, and literal filesystem-layout allowances from the secure-storage guard inventories, preserving only tests whose direct subject is the centralized Settings or low-level SQL contract; `src/aeat/tests; src/aeat/adapters/persistence/storage/tests; .vault/audit`.
-- [ ] `W20.P41.S454` - Localize remaining filing/modelo builder and calculation error messages through `tr()` and `python -m aeat.locales`, preserving AEAT core exception hierarchy and registry-backed error codes; `src/aeat/application/filing; src/aeat/application/modelo; src/aeat/locales`.
+- [x] `W20.P41.S454` - Localize remaining filing/modelo builder and calculation error messages through `tr()` and `python -m aeat.locales`, preserving AEAT core exception hierarchy and registry-backed error codes; `src/aeat/application/filing; src/aeat/application/modelo; src/aeat/locales`.
 - [x] `W20.P41.S455` - Review inbound parser and provenance path handling for raw PDF paths, byte-stream source labels, `source_pdf_path`, financial provenance, justificante provenance, PDF dispatch cache keys, and sanitizer hash disclosure; `redact or normalize path-bearing data where it can reach persisted state, logs, or user-facing errors; `src/aeat/adapters/inbound; src/aeat/application`.
 
 ### Phase `W20.P42` - central redaction enrollment proof

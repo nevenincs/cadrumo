@@ -710,6 +710,28 @@ application:
         faltan identificadores de casilla requeridos en el mapa corregido.'
       amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
         para el modelo, año y período solicitados.
+      calculate_casilla_ambiguous: '--casilla %{key} coincide con varias casillas
+        de esta revision: %{candidates}. Indica la forma cualificada PREFIX:NNNNN
+        para desambiguar.'
+      calculate_casilla_non_numeric: --casilla %{casilla_id} apunta a un tipo no numerico
+        %{data_type} (%{label}); usa --binding o fuentes de perfil.
+      calculate_casilla_unknown: --casilla %{key} no coincide con ningun numero de
+        casilla de esta revision. Usa `aeat app modelo casillas <MODELO>` para listar
+        los identificadores validos.
+      calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
+        %{value}'
+      calculate_m184_share_sum_invalid: Los porcentajes de participacion de las filas
+        de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
+        en %{count} filas.
+      calculate_m347_threshold_not_met: La contraparte %{nif} del modelo 347 suma
+        %{total}, que no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007
+        art. 31.1.
+      calculate_pension_inputs_incomplete: Los datos del rescate del plan de pensiones
+        deben indicarse juntos.
+      calculate_sal_inputs_incomplete: Los datos de la reserva especial SAL/SLL deben
+        indicarse juntos.
+      calculate_semantic_role_missing: La revision del modelo no contiene ninguna
+        casilla con el rol semantico %{semantic_role}.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -789,9 +811,15 @@ application:
         en la revisión %{revision_id}: el registro declara un origen de vinculación
         que ningún resolutor de cálculo gestiona. Registre un resolutor o márquelo
         como diferido antes de calcular.'
-      reconcile_declaration_unsupported: 'La reconciliación desde PDF de declaración aún no está disponible; reconcilia un justificante descargado con aeat app modelo reconcile file hasta que el parser de declaraciones esté disponible.'
+      reconcile_declaration_unsupported: La reconciliación desde PDF de declaración
+        aún no está disponible; reconcilia un justificante descargado con aeat app
+        modelo reconcile file hasta que el parser de declaraciones esté disponible.
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una unidad de trabajo.
+      revision_pick_explicit_id_required: La seleccion explicita de revision requiere
+        calculation_revision_id.
+      revision_pick_id_requires_explicit_selector: calculation_revision_id solo es
+        valido con el selector de revision explicita.
       verification_report_not_found: No existe ningún informe de verificación con
         id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' no es un token de periodo
@@ -1150,28 +1178,12 @@ categories:
 cli:
   app:
     ledger:
-      collectible_invoice:
-        add_help: Registra una nueva factura cobrable
-        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
-          intracomunitarias UE)
-        eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
-        group_help: Facturas que un cliente te debe pagar
-        invoice_date_help: 'Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD), p. ej. 2026-01-15.'
-        invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
-        list_help: Lista las facturas cobrables registradas
-        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
-          R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
-        operation_type_invalid: '--operation-type debe ser uno de: {valid}'
-        remove_help: Elimina una factura cobrable registrada
-        update_help: Actualiza los datos de una factura cobrable
-        view_help: Muestra los datos de una factura cobrable
-        yes_help: Confirma la eliminación de la factura cobrable
-        yes_required: Debes pasar --yes para eliminar una factura cobrable
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         group_help: Justificantes de facturas de compra en PDF o imagen
-        invoice_date_help: 'Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD), p. ej. 2026-01-15.'
+        invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
+          p. ej. 2026-01-15.
         invoice_number_help: Número de factura del proveedor
         iva_amount_help: Importe de IVA de la factura
         iva_rate_help: Tipo de IVA aplicado como decimal
@@ -1205,23 +1217,22 @@ cli:
         valuation_method_help: Método de valoración (fifo o pmp)
         valuation_preview_help: Previsualiza existencias finales y coste de ventas
         year_help: Ejercicio fiscal
-      payable_invoice:
-        add_help: Registra una nueva factura pagable
-        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
-          intracomunitarias UE)
-        eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
-        group_help: Facturas que debes pagar a un proveedor
+      invoice:
+        add_help: 'Registra una nueva factura de negocio'
+        country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones intracomunitarias UE)'
+        eu_iva_id_help: 'NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)'
+        group_help: 'Registros de facturas de negocio (emitidas o recibidas)'
         invoice_date_help: 'Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD), p. ej. 2026-01-15.'
-        invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
-        list_help: Lista las facturas pagables registradas
-        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
-          R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
+        invoice_id_help: 'Identificador de la factura (o prefijo no ambiguo)'
+        kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes a un proveedor)'
+        list_help: 'Lista las facturas de negocio (ambos tipos salvo que --kind filtre)'
+        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular, R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
-        remove_help: Elimina una factura pagable registrada
-        update_help: Actualiza los datos de una factura pagable
-        view_help: Muestra los datos de una factura pagable
-        yes_help: Confirma la eliminación de la factura pagable
-        yes_required: Debes pasar --yes para eliminar una factura pagable
+        remove_help: 'Elimina una factura de negocio'
+        update_help: 'Actualiza los datos de una factura de negocio'
+        view_help: 'Muestra una factura de negocio'
+        yes_help: 'Confirma la eliminación de la factura'
+        yes_required: 'Debes pasar --yes para eliminar una factura'
       ratios:
         category_help: Id de categoría de gasto (p. ej. USAGE_RATIO_VEHICLE)
         eligible_help: Lista las categorías que admiten proporción específica
@@ -1274,19 +1285,25 @@ cli:
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
-        capture_all_modelo_help: 'Limita pull-all a este modelo.'
+        capture_all_modelo_help: Limita pull-all a este modelo.
         latest_help: Muestra el snapshot de expedientes más reciente
         list_help: Lista los snapshots de expedientes guardados
-        pull_all_help: 'Descarga el registro de declaraciones de AEAT para cada modelo del registro solicitado en un rango de anos y guarda instantaneas del bucket.'
-        pull_help: 'Descarga el registro de declaraciones de AEAT y guarda una instantanea del bucket.'
+        pull_all_help: Descarga el registro de declaraciones de AEAT para cada modelo
+          del registro solicitado en un rango de anos y guarda instantaneas del bucket.
+        pull_help: Descarga el registro de declaraciones de AEAT y guarda una instantanea
+          del bucket.
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de expedientes
       filed:
-        capture_all_modelo_help: 'Limita pull-all a este modelo.'
+        capture_all_modelo_help: Limita pull-all a este modelo.
         list_help: Listar declaraciones presentadas sin descargar artefactos
-        pull_all_help: 'Descarga declaraciones y justificantes presentados para cada modelo del registro solicitado en un rango de anos. Solo lectura; informa de los fallos por modelo.'
-        pull_help: 'Descarga datos de declaraciones presentadas del registro autenticado de AEAT.'
-        pull_sources_help: 'Descarga las observaciones presentadas que requieren las dependencias de una declaracion objetivo.'
+        pull_all_help: Descarga declaraciones y justificantes presentados para cada
+          modelo del registro solicitado en un rango de anos. Solo lectura; informa
+          de los fallos por modelo.
+        pull_help: Descarga datos de declaraciones presentadas del registro autenticado
+          de AEAT.
+        pull_sources_help: Descarga las observaciones presentadas que requieren las
+          dependencias de una declaracion objetivo.
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -1303,7 +1320,9 @@ cli:
             qr_required: aprobación QR requerida
             unknown: desconocido
             wrong_identity: identidad incorrecta
-        app_help: 'Descarga de la cartera de compensación de IVA de la AEAT (solo lectura; solo permite representación en nombre propio y la consulta de lectura protegida de cartera).'
+        app_help: Descarga de la cartera de compensación de IVA de la AEAT (solo lectura;
+          solo permite representación en nombre propio y la consulta de lectura protegida
+          de cartera).
         as_of_year_help: Ejercicio usado para calcular la antigüedad de los saldos
           de compensación de IVA.
         history_help: Lista el historial local seguro de compensación de IVA, saldos
@@ -1313,14 +1332,19 @@ cli:
           de la AEAT. La única acción de formulario AEAT permitida es la consulta
           de lectura protegida de cartera; las puertas de representación solo continuan
           en modo nombre propio.
-        pull_history_help: 'Descarga el historial del Modelo 303 presentado y guarda el estado seguro de compensacion de IVA. No se envia ninguna declaracion ni opcion de formulario de cartera AEAT.'
-        pull_remote_state_help: 'Descarga el historial del Modelo 303 presentado e intenta la lectura de la cartera/IVA de AEAT como una adquisicion tipada de solo lectura.'
+        pull_history_help: Descarga el historial del Modelo 303 presentado y guarda
+          el estado seguro de compensacion de IVA. No se envia ninguna declaracion
+          ni opcion de formulario de cartera AEAT.
+        pull_remote_state_help: Descarga el historial del Modelo 303 presentado e
+          intenta la lectura de la cartera/IVA de AEAT como una adquisicion tipada
+          de solo lectura.
         taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
       justificante:
         app_help: 'Capturas de justificantes AEAT (solo lectura): descarga un justificante
           presentado y concilia contra él.'
         list_help: Lista las capturas de justificantes guardadas en el perfil activo.
-        pull_help: 'Descarga de AEAT el justificante de un periodo presentado y lo guarda como evidencia oficial.'
+        pull_help: Descarga de AEAT el justificante de un periodo presentado y lo
+          guarda como evidencia oficial.
         snapshot_id_help: Id de instantánea (o prefijo inequívoco).
         view_help: Muestra una captura de justificante.
       limit_help: Número máximo de filas a capturar
@@ -1329,7 +1353,7 @@ cli:
         app_help: Snapshots de notificaciones DEHú de solo lectura
         latest_help: Muestra la instantanea de notificacion DEHU mas reciente.
         list_help: Lista los snapshots de notificaciones DEHú guardados
-        pull_help: 'Descarga las notificaciones DEHu y guarda una instantanea del bucket.'
+        pull_help: Descarga las notificaciones DEHu y guarda una instantanea del bucket.
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de notificaciones DEHú
       output_root_help: Directorio para observaciones capturadas de declaraciones
@@ -2182,7 +2206,8 @@ cli:
           AEAT
         compare_help: Compara campo a campo el censo AEAT con este perfil
         help: Sincroniza el censo 036 de AEAT con este perfil
-        pull_help: 'Descarga tu censo mas reciente de AEAT al almacen de instantaneas de este perfil.'
+        pull_help: Descarga tu censo mas reciente de AEAT al almacen de instantaneas
+          de este perfil.
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
@@ -2466,7 +2491,8 @@ cli:
   ledger:
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
-      amount_help: 'Importe de la transacción en la moneda de la transacción (decimal, p. ej. 1200.50).'
+      amount_help: Importe de la transacción en la moneda de la transacción (decimal,
+        p. ej. 1200.50).
       attachment_help: Id de adjunto seguro adicional; se puede repetir
       business_pct_help: Proporción de uso profesional de 0 a 1
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
@@ -2605,12 +2631,17 @@ cli:
       taxable_base_help: Importe de base imponible
     doclink:
       actor_help: Etiqueta del operador.
-      help: 'Descarga un enlace de documento de Drive y guarda sus bytes como evidencia cifrada en una fila del libro.'
+      help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
+        cifrada en una fila del libro.
       id_help: Identificador de transacción del libro mayor.
       note_help: Nota opcional.
       reference_help: Referencia del enlace al documento.
+      refused: 'No se puede descargar el documento de %{source} para %{reference}%{scope_hint}:
+        la evidencia debe contener los bytes cifrados del documento, y un enlace nunca
+        se guarda por sí solo. Descarga el documento y adjúntalo con ''aeat app ledger
+        attach --attachment-id ...'', o concede el permiso de Google requerido e inténtalo
+        de nuevo.'
       source_help: 'Origen del enlace: gmail, google_drive o url.'
-      refused: 'No se puede descargar el documento de %{source} para %{reference}%{scope_hint}: la evidencia debe contener los bytes cifrados del documento, y un enlace nunca se guarda por sí solo. Descarga el documento y adjúntalo con ''aeat app ledger attach --attachment-id ...'', o concede el permiso de Google requerido e inténtalo de nuevo.'
     errors:
       business_pct_out_of_range: La proporción de uso profesional %{value} (= %{percent})
         está fuera de rango. Introduce una proporción entre 0 y 1, p. ej. 0.5 para
@@ -2634,7 +2665,8 @@ cli:
       invalid_category: 'Categoria de gasto desconocida ''{category}''. Categorias
         conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores
         validos de --category-id.'
-      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto como separador decimal y sin separador de miles, p. ej. 1234.56.'
+      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
+        como separador decimal y sin separador de miles, p. ej. 1234.56.'
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
@@ -2665,7 +2697,7 @@ cli:
         son una vista previa de lo que una importación real añadiría y omitiría.'
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
-      file_help: 'Archivo original usado para verificar las filas importadas.'
+      file_help: Archivo original usado para verificar las filas importadas.
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción que ya está en el libro pero tienen una descripción distinta:
@@ -2753,7 +2785,10 @@ cli:
       invoice_id_help: Id de la factura a vincular bidireccionalmente con el movimiento.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
-      filter_help: 'Filtre las filas por estado, periodo (un token AEAT simple, p. ej. period=1T) junto con el año (p. ej. year=2026), clasificacion, incidencia, importacion, direccion (ingreso/gasto) o texto. Para filtrar por etiqueta de grupo use la opcion --group.'
+      filter_help: Filtre las filas por estado, periodo (un token AEAT simple, p.
+        ej. period=1T) junto con el año (p. ej. year=2026), clasificacion, incidencia,
+        importacion, direccion (ingreso/gasto) o texto. Para filtrar por etiqueta
+        de grupo use la opcion --group.
       footer_truncated: Mostrando filas {start}-{end} de {total} (desplazamiento {offset}).
         Use --offset/--limit para paginar.
       group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
@@ -2761,9 +2796,10 @@ cli:
       help: Listar movimientos del libro en el perfil activo
       limit_help: 'Numero maximo de filas a mostrar (por defecto: todas).'
       offset_help: 'Omitir este numero de filas antes de listar (por defecto: 0).'
-      ungrouped_label: (sin grupo)
-      sort_by_help: 'Ordena las filas listadas por este campo (date, amount, description, created_at, modified_at, ...).'
+      sort_by_help: Ordena las filas listadas por este campo (date, amount, description,
+        created_at, modified_at, ...).
       sort_order_help: 'Orden: asc (ascendente) o desc (descendente).'
+      ungrouped_label: (sin grupo)
     merge:
       actor_help: Nombre del operador registrado en el evento del bucket
       child_id_help: Id de transacción hija que quieres fusionar; se puede repetir
@@ -2801,7 +2837,9 @@ cli:
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la restauración del movimiento del libro a activo
     review:
-      filter_help: 'Filtrar filas por status, period (un token AEAT simple, p. ej. period=1T) junto con year (p. ej. year=2026), issue, import, classification, text o direction'
+      filter_help: Filtrar filas por status, period (un token AEAT simple, p. ej.
+        period=1T) junto con year (p. ej. year=2026), issue, import, classification,
+        text o direction
       header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
       help: Revisión interactiva y validación de entradas del libro
       id_help: Identificador de la entrada específica a revisar
@@ -2809,20 +2847,25 @@ cli:
       verbose_help: Mostrar información detallada durante la revisión
     split:
       actor_help: Nombre del operador registrado en el evento del bucket
+      apply_help: Persiste la division --llm propuesta (requiere --yes); sin ella
+        la propuesta solo se previsualiza.
       child_amount_help: Importe de una transacción hija; se puede repetir
       child_description_help: Descripción de una transacción hija; se puede repetir
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
+      evidence_acknowledged_help: Reconoce que --read-evidence envia la evidencia
+        a un modelo en la nube (desactivado por defecto, vetado para gestores).
       help: Divide una transacción del libro en varias transacciones hijas
       id_help: Id de la transacción que quieres dividir
+      llm_exclusive: --llm no puede combinarse con --child-amount/--child-description;
+        la via manual es la anulacion explicita del operador.
+      llm_help: Propon una division en N partes basada en evidencia con el proveedor
+        LLM indicado.
+      read_evidence_help: Lee la factura adjunta de la transaccion en local y alimentala
+        al proponente de division --llm.
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la división de la transacción
-      llm_help: 'Propon una division en N partes basada en evidencia con el proveedor LLM indicado.'
-      apply_help: 'Persiste la division --llm propuesta (requiere --yes); sin ella la propuesta solo se previsualiza.'
-      read_evidence_help: 'Lee la factura adjunta de la transaccion en local y alimentala al proponente de division --llm.'
-      evidence_acknowledged_help: 'Reconoce que --read-evidence envia la evidencia a un modelo en la nube (desactivado por defecto, vetado para gestores).'
-      llm_exclusive: '--llm no puede combinarse con --child-amount/--child-description; la via manual es la anulacion explicita del operador.'
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el perfil activo
@@ -2897,8 +2940,8 @@ cli:
         ledger_status: Mostrar el estado del libro de transacciones.
         ledger_update: Actualizar una entrada del libro de transacciones.
         ledger_view: Ver el detalle de una entrada del libro.
-        live_filed_capture: 'Descargar declaraciones presentadas en vivo desde la AEAT.'
-        live_filed_capture_sources: 'Mostrar las fuentes disponibles para la descarga.'
+        live_filed_capture: Descargar declaraciones presentadas en vivo desde la AEAT.
+        live_filed_capture_sources: Mostrar las fuentes disponibles para la descarga.
         live_filed_list: Listar declaraciones presentadas capturadas desde la AEAT.
         modelo_bindings: Gestionar las vinculaciones de un modelo fiscal.
         modelo_describe: Describir la estructura de un modelo fiscal.
@@ -4080,6 +4123,12 @@ errors:
       184 deben sumar exactamente el 100 %.
     modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
       requieren cobertura declarativa explícita.
+    modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
+    modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
+    modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
+    modelo_calculate_input: errors.refused.modelo_calculate_input
+    modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
+    modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
     modelo_calculation_revision_selector_ambiguous: El selector de revisión de cálculo
       coincide con más de una revisión; refine el selector.
     modelo_calculation_revision_selector_state: La revisión de cálculo seleccionada
@@ -4095,6 +4144,7 @@ errors:
       o selecciona un perfil y vuelve a intentarlo.
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
+    modelo_revision_pick: errors.refused.modelo_revision_pick
     modelo_work_period_token: Periodo de modelo no valido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.

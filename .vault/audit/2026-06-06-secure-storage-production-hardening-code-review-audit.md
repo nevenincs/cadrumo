@@ -86,3 +86,9 @@ Status: resolved in S460.
 The root-fallback real-entrypoint regression continued to exercise `config profile switch` after the static policy table moved to `config unlock`. S460 updates the real-entrypoint regression to drive `config unlock` so the canonical recovery path remains guarded against root-fallback write-policy refusal.
 
 Status: resolved in S460.
+
+## S454-001 | INFO | Filing/modelo localization and error-hierarchy review passed
+
+Review checked the S454 diff against the plan row, locale CLI mandate, central error registry, focused modelo tests, and static exception scans. The promoted modelo calculation-input and revision-pick failures now derive from AEAT error base classes, preserve `ValueError` compatibility where needed, use structured context, and carry locale keys populated through `aeat.locales`. The remaining raw exceptions are Pydantic validator or internal debug-logged parse sentinels, and the one broad export handler re-raises after cleanup.
+
+Status: no action required for S454. The CLI casilla-normalisation integration test remains blocked by the current-tree wizard catalogue registration failure before it reaches the S454 code path.
