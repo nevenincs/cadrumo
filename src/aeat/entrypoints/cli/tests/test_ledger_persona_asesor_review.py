@@ -10,7 +10,7 @@ disposition with a legible audit trail.
 The journey exercised here:
 
 1. Import the operating-scale corpus (4 accounts, ~514 rows).
-2. Run ``check`` (all-period anomaly probe) and ``preflight --period 2025Q1``
+2. Run ``check`` (all-period anomaly probe) and ``preflight --period 1T --year 2025``
    to surface the rows that block a clean filing.
 3. Use ``review --filter status=pending`` to triage the unclassified backlog.
 4. Inspect ``history`` / ``track`` lineage on a single transaction.
@@ -80,7 +80,8 @@ def _import_corpus() -> None:
 
 def _import_bbva() -> None:
     result = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
+        app,
+        ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
 
@@ -171,13 +172,16 @@ def test_check_surfaces_all_period_anomalies_without_mutating() -> None:
 
 
 def test_preflight_period_scopes_the_readiness_gaps() -> None:
-    """``preflight --period 2025Q1`` scopes the readiness probe to one quarter.
+    """``preflight --period 1T --year 2025`` scopes the readiness probe to one quarter.
 
     The asesor reviews quarter by quarter; the period filter must narrow the
     checked set below the all-period total while still reporting gaps.
     """
     _import_corpus()
-    pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
+    pre = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+    )
     assert pre.exit_code == 0, pre.output
     result = _json(pre.output)
     assert result.get("ready") is False, result
@@ -202,7 +206,10 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
 def test_preflight_issue_detail_is_actionable_text() -> None:
     """Each preflight issue must name the missing fact in plain language."""
     _import_corpus()
-    pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
+    pre = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+    )
     assert pre.exit_code == 0, pre.output
     json_result = _json(pre.output)
     issues_val = json_result.get("issues")
@@ -261,7 +268,8 @@ def test_history_after_disposition_records_the_decision() -> None:
     before_val = before_hist.get("event_count")
     before = before_val if isinstance(before_val, int) else 0
     archived = _RUNNER.invoke(
-        app, ["app", "ledger", "archive", tx_val, "--reason", "personal expense", "--yes"],
+        app,
+        ["app", "ledger", "archive", tx_val, "--reason", "personal expense", "--yes"],
     )
     assert archived.exit_code == 0, archived.output
     after_hist = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx_val]).output)
@@ -291,7 +299,10 @@ def test_asesor_can_classify_then_preflight_surfaces_recargo_gaps() -> None:
     refreshed = _find(_list_rows(), _RECARGO_DESC)
     assert refreshed.get("business_classification") == "BUSINESS", refreshed
 
-    pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
+    pre = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+    )
     assert pre.exit_code == 0, pre.output
     issues_val = _json(pre.output).get("issues")
     recargo_issues = []
@@ -324,7 +335,10 @@ def test_personal_row_drops_out_of_readiness_when_classified() -> None:
     )
     assert classify.exit_code == 0, classify.output
 
-    pre = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "preflight", "--period", "2025Q1"])
+    pre = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+    )
     assert pre.exit_code == 0, pre.output
     issues_val = _json(pre.output).get("issues")
     personal_issues = []
@@ -347,7 +361,8 @@ def test_check_clears_recargo_row_once_personal_and_business_dispositioned() -> 
     """
     _import_corpus()
     before_issues_val = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"]).output).get(
-        "issues", [],
+        "issues",
+        [],
     )
     before = len(before_issues_val) if isinstance(before_issues_val, list) else 0
     row = _find(_list_rows(), _PERSONAL_DESC)
@@ -359,7 +374,8 @@ def test_check_clears_recargo_row_once_personal_and_business_dispositioned() -> 
     )
     assert classify.exit_code == 0, classify.output
     after_issues_val = _json(_RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"]).output).get(
-        "issues", [],
+        "issues",
+        [],
     )
     after = len(after_issues_val) if isinstance(after_issues_val, list) else 0
     assert after < before, (before, after)

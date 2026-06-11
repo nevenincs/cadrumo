@@ -10,18 +10,11 @@ related:
 ---
 
 
-
-
-
-
-
-
 # `ledger-interface-contract` `Uniform ledger response envelope, ID resolution, and sorting` plan
 
 ## Wave `W01` - Persistence boundary extension (D6)
 
 Add created_at and modified_at to Transaction and stamp them on add and every mutating edit; cover the change with a strict save-load-equality roundtrip test with both fields populated non-default. This Wave is a prerequisite for the honest temporal sort in W03.
-
 
 ### Phase `W01.P01` - Add created_at and modified_at to Transaction with roundtrip gate
 
@@ -40,11 +33,11 @@ Normalise every single-transaction mutation verb to return the uniform quintet v
 
 Merge the two duplicate CLI _resolve_id bodies into one shared helper; convert every mutation verb's id input from --id Option to positional Argument.
 
-- [ ] `W02.P02.S05` - Merge the _resolve_id body from _ledger_lifecycle_cli.py into the single authoritative _resolve_id helper in _ledger.py; `delete the duplicate from _ledger_lifecycle_cli.py; `src/aeat/entrypoints/cli/_ledger.py, src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [ ] `W02.P02.S06` - Convert every mutation verb id parameter from typer.Option('--id') to a positional typer.Argument in _ledger.py: update, classify, allocate, attach, doclink; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W02.P02.S07` - Convert every mutation verb id parameter from typer.Option('--id') to positional typer.Argument in _ledger_lifecycle_cli.py: attach/doclink, archive, stash, restore, remove, split, merge; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [ ] `W02.P02.S08` - Convert classify and review optional --id Option to optional positional typer.Argument consistent with D4; `remove --id Option outright from all converted verbs (no-legacy-compatibility); `src/aeat/entrypoints/cli/_ledger.py, src/aeat/entrypoints/cli/_ledger_review_cli.py`.
-- [ ] `W02.P02.S09` - Update CLI conformance test to assert every single-transaction verb accepts a positional id and no --id Option; `run uv run --no-sync pytest src/aeat/entrypoints/cli/tests/ -x -q to verify gate; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
+- [x] `W02.P02.S05` - Merge the _resolve_id body from _ledger_lifecycle_cli.py into the single authoritative _resolve_id helper in _ledger.py; `delete the duplicate from _ledger_lifecycle_cli.py; `src/aeat/entrypoints/cli/_ledger.py, src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [x] `W02.P02.S06` - Convert every mutation verb id parameter from typer.Option('--id') to a positional typer.Argument in _ledger.py: update, classify, allocate, attach, doclink; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W02.P02.S07` - Convert every mutation verb id parameter from typer.Option('--id') to positional typer.Argument in _ledger_lifecycle_cli.py: attach/doclink, archive, stash, restore, remove, split, merge; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [x] `W02.P02.S08` - Convert classify and review optional --id Option to optional positional typer.Argument consistent with D4; `remove --id Option outright from all converted verbs (no-legacy-compatibility); `src/aeat/entrypoints/cli/_ledger.py, src/aeat/entrypoints/cli/_ledger_review_cli.py`.
+- [x] `W02.P02.S09` - Update CLI conformance test to assert every single-transaction verb accepts a positional id and no --id Option; `run uv run --no-sync pytest src/aeat/entrypoints/cli/tests/ -x -q to verify gate; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
 
 ### Phase `W02.P03` - Mutation payload quintet normalisation (D1)
 
@@ -77,21 +70,21 @@ Define LedgerListRowPayload and replace all list[dict[str,object]] wire boundari
 - [ ] `W03.P05.S20` - Define LedgerHistoryEventPayload as OutputSchema and replace LedgerHistoryResult.events: list[dict[str,object]] with typed list; `update history emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_read_cli.py`.
 - [ ] `W03.P05.S21` - Define LedgerTrackingPayload as OutputSchema and replace LedgerTrackResult.tracking: dict[str,object] with the typed payload; `update track emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_read_cli.py`.
 - [ ] `W03.P05.S22` - Define LedgerImportTransactionRefPayload as OutputSchema and replace LedgerImportPayload.imported_transaction_refs, skipped_transaction_refs, likely_duplicate_transaction_refs: list[dict] with typed lists; `update import emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_import_cli.py`.
-- [ ] `W03.P05.S23` - Define LedgerExportRowPayload as OutputSchema and replace LedgerExportPayload.rows: list[dict] with typed list; `update LedgerExportPayload.from_result to construct typed rows; `src/aeat/entrypoints/cli/_ledger_payloads.py`.
-- [ ] `W03.P05.S24` - Define LedgerPreflightPeriodPayload and LedgerPreflightIssueDetailPayload as OutputSchema; `replace LedgerPreflightResult.period: dict and issues: list[dict] with typed fields; `src/aeat/entrypoints/cli/_ledger_payloads.py`.
-- [ ] `W03.P05.S25` - Define RatiosEligibleRowPayload as OutputSchema and replace RatiosEligibleResult.rows: list[dict] with typed list; `update ratios-eligible emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_ratios_cli.py`.
-- [ ] `W03.P05.S26` - Replace BusinessInvoiceListResult.rows: list[dict] with rows: list[BusinessInvoiceRecordPayload] for both PayableInvoiceListResult and CollectibleInvoiceListResult; `update business-invoice list emit sites; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_business_invoice_cli.py`.
-- [ ] `W03.P05.S27` - Replace InventoryListResult.rows: list[dict] with rows: list[InventoryLedgerPayload]; `replace InventoryLedgerPayload.opening_layers and period_movements: list[dict] with typed OutputSchema subclasses; update inventory list emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_inventory_cli.py`.
-- [ ] `W03.P05.S28` - Replace EvidenceListResult.rows: list[dict] with rows: list[EvidenceRecordPayload]; `update evidence list emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_evidence_cli.py`.
-- [ ] `W03.P05.S29` - Define RatiosValidateFindingPayload as OutputSchema and replace RatiosValidateResult.findings: list[dict] with typed list; `update ratios-validate emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_ratios_cli.py`.
-- [ ] `W03.P05.S30` - Run JSON-contract registry gate and mypy/pyright check to confirm all former bare-dict boundaries now produce strict OutputSchema subclasses and no new dict[str,Any] surfaces were introduced; `src/aeat/entrypoints/cli/tests/, src/aeat/entrypoints/cli/_ledger_payloads.py`.
+- [x] `W03.P05.S23` - Define LedgerExportRowPayload as OutputSchema and replace LedgerExportPayload.rows: list[dict] with typed list; `update LedgerExportPayload.from_result to construct typed rows; `src/aeat/entrypoints/cli/_ledger_payloads.py`.
+- [x] `W03.P05.S24` - Define LedgerPreflightPeriodPayload and LedgerPreflightIssueDetailPayload as OutputSchema; `replace LedgerPreflightResult.period: dict and issues: list[dict] with typed fields; `src/aeat/entrypoints/cli/_ledger_payloads.py`.
+- [x] `W03.P05.S25` - Define RatiosEligibleRowPayload as OutputSchema and replace RatiosEligibleResult.rows: list[dict] with typed list; `update ratios-eligible emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_ratios_cli.py`.
+- [x] `W03.P05.S26` - Replace BusinessInvoiceListResult.rows: list[dict] with rows: list[BusinessInvoiceRecordPayload] for both PayableInvoiceListResult and CollectibleInvoiceListResult; `update business-invoice list emit sites; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [x] `W03.P05.S27` - Replace InventoryListResult.rows: list[dict] with rows: list[InventoryLedgerPayload]; `replace InventoryLedgerPayload.opening_layers and period_movements: list[dict] with typed OutputSchema subclasses; update inventory list emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_inventory_cli.py`.
+- [x] `W03.P05.S28` - Replace EvidenceListResult.rows: list[dict] with rows: list[EvidenceRecordPayload]; `update evidence list emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_evidence_cli.py`.
+- [x] `W03.P05.S29` - Define RatiosValidateFindingPayload as OutputSchema and replace RatiosValidateResult.findings: list[dict] with typed list; `update ratios-validate emit site; `src/aeat/entrypoints/cli/_ledger_payloads.py, src/aeat/entrypoints/cli/_ledger_ratios_cli.py`.
+- [x] `W03.P05.S30` - Run JSON-contract registry gate and mypy/pyright check to confirm all former bare-dict boundaries now produce strict OutputSchema subclasses and no new dict[str,Any] surfaces were introduced; `src/aeat/entrypoints/cli/tests/, src/aeat/entrypoints/cli/_ledger_payloads.py`.
 
 ### Phase `W03.P06` - Reserve LedgerTransactionParticipationPayload and pin D7 pipeable JSON (D7)
 
 Declare the C7 slot schema stub in _ledger_payloads.py; assert via the JSON-contract registry gate that every ledger verb emits a SchemaEnvelope so D7 is pinned.
 
 - [ ] `W03.P06.S31` - Declare LedgerTransactionParticipationPayload as an OutputSchema stub in _ledger_payloads.py with a docstring noting it is the reserved slot for the C7 participation read verb; `src/aeat/entrypoints/cli/_ledger_payloads.py`.
-- [ ] `W03.P06.S32` - Assert via the JSON-contract registry gate that every registered ledger command path (all 26 verbs) returns a SchemaEnvelope; run pytest src/aeat/entrypoints/cli/tests/test_ledger_verb_spine.py to pin D7 contract; `src/aeat/entrypoints/cli/tests/test_ledger_verb_spine.py`.
+- [ ] `W03.P06.S32` - Assert via the JSON-contract registry gate that every registered ledger command path (all 26 verbs) returns a SchemaEnvelope; `run pytest src/aeat/entrypoints/cli/tests/test_ledger_verb_spine.py to pin D7 contract; `src/aeat/entrypoints/cli/tests/test_ledger_verb_spine.py`.
 
 ## Description
 

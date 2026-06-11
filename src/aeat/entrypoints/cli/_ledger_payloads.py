@@ -87,16 +87,21 @@ class SpendingCategoryFamilyPayload(OutputSchema):
 
 
 class LedgerPeriodPayload(OutputSchema):
-    """Typed filing-period projection nested in ledger envelopes (D2).
+    """Typed aggregation-period projection nested in ledger envelopes (D2).
 
-    Mirrors :class:`aeat.core.Period`'s ``model_dump(mode="json")`` —
-    replaces the former bare ``dict[str, object]`` ``period`` shape on the
-    status, import, and preflight envelopes. ``code`` is the AEAT period token
-    (``1T``..``4T``, ``0A``, ``01``..``12``, ...) bound to its ``filing_year``.
+    Mirrors :class:`aeat.application.aggregation.Period`'s
+    ``model_dump(mode="json")`` — replacing the former bare
+    ``dict[str, object]`` ``period`` shape on the status, import, and preflight
+    envelopes.
     """
 
-    filing_year: int
-    code: str
+    year: int
+    quarter: str | None = None
+    month: int | None = None
+    kind: str
+    start: str
+    end: str
+    period_type: str
 
 
 class LedgerReviewRowPayload(OutputSchema):
@@ -518,7 +523,7 @@ class LedgerStatusResult(OutputSchema):
     # The filing period travels as a typed :class:`Period` date span on the
     # backend report; the JSON envelope surfaces its serialised mapping (year,
     # quarter/month, start/end), mirroring ``LedgerPreflightResult.period``.
-    period: dict[str, object] | None = None
+    period: LedgerPeriodPayload | None = None
     checked_transaction_count: int = 0
     readiness_issue_count: int = 0
     ready: bool | None = None
@@ -667,7 +672,7 @@ class LedgerImportPayload(OutputSchema):
     verify: bool
     # The filing period travels as a typed :class:`Period` date span on the
     # backend result; the JSON envelope surfaces its serialised mapping.
-    period: dict[str, object] | None = None
+    period: LedgerPeriodPayload | None = None
     bucket_id: str | None = None
     import_batch_id: str | None = None
     bucket_event_ids: list[str] = []
@@ -869,9 +874,9 @@ class LedgerPreflightResult(OutputSchema):
     """
 
     bucket_id: str
-    period: dict[str, object]
+    period: LedgerPeriodPayload
     checked_transaction_count: int
-    issues: list[dict[str, object]]
+    issues: list[LedgerPreflightIssuePayload]
     ready: bool
 
 
@@ -923,6 +928,23 @@ class RatiosRowPayload(OutputSchema):
     ratio: str
 
 
+class RatiosEligibleRowPayload(OutputSchema):
+    """One ``ledger ratios eligible`` row (D2)."""
+
+    category: str
+    proportionality_kind: str
+    default_ratio: str | None = None
+    override_present: bool
+
+
+class RatiosValidateFindingPayload(OutputSchema):
+    """One ``ledger ratios validate`` finding row (D2)."""
+
+    category: str
+    kind: str
+    detail: str = ""
+
+
 @register_schema("ledger.ratios.list")
 class RatiosListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios list``."""
@@ -956,7 +978,7 @@ class RatiosEligibleResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios eligible``."""
 
     bucket_id: str
-    rows: list[dict[str, object]]
+    rows: list[RatiosEligibleRowPayload]
     count: int
 
 
@@ -973,7 +995,7 @@ class RatiosValidateResult(OutputSchema):
     eligible_count: int
     overrides_count: int
     missing_overrides: list[str] = []
-    findings: list[dict[str, object]] = []
+    findings: list[RatiosValidateFindingPayload] = []
 
 
 # ---------------------------------------------------------------------------
@@ -1023,7 +1045,7 @@ class BusinessInvoiceListResult(OutputSchema):
     """
 
     bucket_id: str
-    rows: list[dict[str, object]]
+    rows: list[BusinessInvoiceRecordPayload]
     count: int
 
 
@@ -1057,6 +1079,31 @@ class InvoiceListResult(BusinessInvoiceListResult):
 # ---------------------------------------------------------------------------
 
 
+class InventoryStockLayerPayload(OutputSchema):
+    """One opening-stock layer nested in an inventory ledger payload (D2)."""
+
+    sku: str = "default"
+    quantity: str
+    unit_cost: str
+    source_movement_id: str
+
+
+class InventoryMovementPayload(OutputSchema):
+    """One inventory movement nested in an inventory ledger payload (D2)."""
+
+    movement_id: str
+    movement_date: str
+    kind: str
+    sku: str = "default"
+    quantity: str
+    unit_cost: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str
+    iva_amount: str | None = None
+    deductible_iva_ratio: str
+    schema_version: str
+
+
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
@@ -1069,9 +1116,9 @@ class InventoryLedgerPayload(OutputSchema):
     year: int
     valuation_method: str
     opening_stock: str
-    opening_layers: list[dict[str, object]] = []
+    opening_layers: list[InventoryStockLayerPayload] = []
     closing_stock: str | None = None
-    period_movements: list[dict[str, object]] = []
+    period_movements: list[InventoryMovementPayload] = []
     schema_version: str
     bucket_event_ids: list[str] = []
 
@@ -1081,7 +1128,7 @@ class InventoryListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory list``."""
 
     bucket_id: str
-    rows: list[dict[str, object]]
+    rows: list[InventoryLedgerPayload]
     count: int
 
 
@@ -1182,7 +1229,7 @@ class EvidenceListResult(OutputSchema):
 
     bucket_id: str
     count: int
-    rows: list[dict[str, object]]
+    rows: list[EvidenceRecordPayload]
 
 
 # ---------------------------------------------------------------------------
@@ -1223,6 +1270,14 @@ class RuleApplyMatchPayload(OutputSchema):
     classification: str
 
 
+class RuleApplyAppliedPayload(OutputSchema):
+    """One live-applied rule row nested in ``ledger rule apply``."""
+
+    transaction_id: str
+    matched_rule_id: str
+    classification: str
+
+
 @register_schema("ledger.rule.apply")
 class RuleApplyResult(OutputSchema):
     """JSON envelope for ``aeat app ledger rule apply``.
@@ -1244,7 +1299,7 @@ class RuleApplyResult(OutputSchema):
     matched: int | None = None
     skipped_already_classified: int | None = None
     no_match: int | None = None
-    applied: list[dict[str, object]] | None = None
+    applied: list[RuleApplyAppliedPayload] | None = None
 
 
 class LLMProviderAvailabilityPayload(OutputSchema):
