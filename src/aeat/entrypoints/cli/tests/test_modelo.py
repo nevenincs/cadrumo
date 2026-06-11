@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import Period
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....tests.cli_runner import invoke_cached_cli
 
@@ -59,7 +60,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         bucket_id="default",
         modelo=ModeloCode("130"),
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
@@ -113,7 +114,7 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
         bucket_id="default",
         modelo=ModeloCode("130"),
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
@@ -166,7 +167,7 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
         bucket_id="default",
         modelo=ModeloCode("130"),
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
@@ -415,9 +416,10 @@ def test_work_create_normalizes_valid_period_tokens(period: str, expected_normal
 
     from .._modelo import _resolve_year_period
 
-    _, normalized = _resolve_year_period(2026, period)
-    assert normalized == expected_normalized, (
-        f"period {period!r} normalized to {normalized!r}, expected {expected_normalized!r}"
+    normalized = _resolve_year_period(2026, period)
+    assert normalized.year == 2026
+    assert normalized.registry_token == expected_normalized, (
+        f"period {period!r} normalized to {normalized.registry_token!r}, expected {expected_normalized!r}"
     )
 
 

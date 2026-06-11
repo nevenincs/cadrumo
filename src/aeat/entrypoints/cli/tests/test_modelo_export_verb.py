@@ -13,6 +13,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -49,16 +50,17 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _seed_work_unit_only(*, modelo: str = "130", filing_year: int = 2026, period: str = "Q1") -> str:
+def _seed_work_unit_only(*, modelo: str = "130", filing_year: int = 2026, period: str = "1T") -> str:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     revision_id = "r" + "0" * 63
+    filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
     )
     now = datetime.now(UTC)
@@ -67,7 +69,7 @@ def _seed_work_unit_only(*, modelo: str = "130", filing_year: int = 2026, period
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
         created_at=now,
@@ -137,11 +139,12 @@ def _seed_modelo_111_revisions(
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     registry_revision_id = "r" + "1" * 63
+    filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="111",
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=registry_revision_id,
     )
     now = datetime.now(UTC)
@@ -180,7 +183,7 @@ def _seed_modelo_111_revisions(
         bucket_id=bucket_id,
         modelo=ModeloCode("111"),
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=registry_revision_id,
         name=f"111-{filing_year}-{period}",
         created_at=now,
@@ -202,7 +205,7 @@ def _seed_exportable_modelo_111_revision(
     *,
     modelo: str = "111",
     filing_year: int = 2026,
-    period: str = "2026Q1",
+    period: str = "1T",
 ) -> tuple[str, str]:
     """Persist a verified-complete modelo-111 revision ready for export.
 
@@ -215,11 +218,12 @@ def _seed_exportable_modelo_111_revision(
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     revision_id = "r" + "1" * 63
+    filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
     )
     now = datetime.now(UTC)
@@ -228,7 +232,7 @@ def _seed_exportable_modelo_111_revision(
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
         created_at=now,

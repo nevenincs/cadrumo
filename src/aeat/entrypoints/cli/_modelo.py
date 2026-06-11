@@ -56,6 +56,7 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
+from ...core import Period
 from ...core.errors import AeatError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
@@ -304,13 +305,13 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
         return ()
 
 
-def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -> tuple[int, str]:
-    """Normalise CLI ``--year/--period`` into ``(filing_year, registry_period)``.
+def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -> Period:
+    """Normalise CLI ``--year/--period`` into a typed :class:`~aeat.core.Period`.
 
     Operators pass user-facing tokens (``Q1``, ``annual``, ``01``); the
-    registry expects ``1T``/``0A``/``01``. Bridge that by reconstructing
-    the canonical ``YYYY[Qn|-MM]`` string and delegating to the
-    registry parser.
+    backend expects one typed filing period. Registry-only callers should
+    project the returned value with ``period.year`` and
+    ``period.registry_token`` at the registry boundary.
 
     ``--year`` and ``--period`` are composed internally; a token that is
     itself a four-digit year (the common ``--period 2024`` confusion)

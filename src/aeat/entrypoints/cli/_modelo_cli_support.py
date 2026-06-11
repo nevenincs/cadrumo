@@ -429,7 +429,7 @@ def calculation_revision_not_found_bad_parameter(
             ),
             modelo=unit.modelo,
             year=unit.filing_year,
-            period=unit.period,
+            period=unit.period.registry_token,
         ),
     )
 

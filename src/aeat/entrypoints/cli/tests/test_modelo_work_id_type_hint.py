@@ -29,6 +29,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
@@ -54,7 +55,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 2026, period: str = "Q1") -> str:
+def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 2026, period: str = "1T") -> str:
     """Persist a work unit with NO calculation revision and return its id.
 
     A work unit that was created (``work create``) but never calculated
@@ -66,11 +67,12 @@ def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     revision_id = "r" + "0" * 63
+    filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
     )
     now = datetime.now(UTC)
@@ -79,7 +81,7 @@ def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
         created_at=now,
@@ -107,7 +109,7 @@ def test_verify_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> N
     assert "calculation-revision-id" in collapsed
     assert "--modelo" in collapsed and "130" in collapsed
     assert "--year" in collapsed and "2026" in collapsed
-    assert "--period" in collapsed and "Q1" in collapsed
+    assert "--period" in collapsed and "1T" in collapsed
     assert f"work calculate {work_unit_id}" not in collapsed
 
 
@@ -122,7 +124,7 @@ def test_file_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> Non
     assert "calculation-revision-id" in collapsed
     assert "--modelo" in collapsed and "130" in collapsed
     assert "--year" in collapsed and "2026" in collapsed
-    assert "--period" in collapsed and "Q1" in collapsed
+    assert "--period" in collapsed and "1T" in collapsed
     assert f"work calculate {work_unit_id}" not in collapsed
 
 

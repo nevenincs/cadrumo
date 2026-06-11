@@ -24,7 +24,7 @@ from ...application.modelo import (
     registry_list_modelos,
     registry_modelo_codes,
 )
-from ...core import Period, PeriodError
+from ...core import Period
 from ...core.i18n import output_language, tr
 from ...domain.calculations.registry import (
     InputKind,
@@ -49,7 +49,7 @@ from ._modelo_payloads import (
 
 @dataclass(frozen=True, slots=True)
 class _DiscoveryDeps:
-    resolve_year_period: Callable[..., tuple[int, str]]
+    resolve_year_period: Callable[..., Period]
     bare_period_error: Callable[..., str]
     parse_binding_override: Callable[[str], tuple[str, str]]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
@@ -58,7 +58,7 @@ class _DiscoveryDeps:
 def register_discovery_commands(
     app: typer.Typer,
     *,
-    resolve_year_period: Callable[..., tuple[int, str]],
+    resolve_year_period: Callable[..., Period],
     bare_period_error: Callable[..., str],
     parse_binding_override: Callable[[str], tuple[str, str]],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
@@ -114,16 +114,14 @@ def _resolve_discovery_year_period(
     if year is None:
         return None
     assert period is not None
-    raw_period = period.strip()
-    declared = {token.upper(): token for token in declared_modelo_period_tokens(modelo)}
     try:
-        typed_period = Period.from_year_and_code(year, raw_period)
-    except PeriodError as exc:
-        registry_token = declared.get(raw_period.upper())
-        if registry_token is not None:
-            return year, registry_token
+        typed_period = deps.resolve_year_period(year, period, modelo=modelo)
+    except typer.BadParameter:
+        raise
+    except Exception as exc:
         fallback = f"period must be a bare registry token; got {period!r}"
         raise typer.BadParameter(deps.bare_period_error(modelo, period, fallback=fallback)) from exc
+    declared = {token.upper(): token for token in declared_modelo_period_tokens(modelo)}
     return typed_period.year, declared.get(typed_period.registry_token.upper(), typed_period.registry_token)
 
 
@@ -373,12 +371,12 @@ def _bindings_report_for_target(
     deps: _DiscoveryDeps,
 ):
     if year is not None and period is not None:
-        resolved_year, resolved_period = deps.resolve_year_period(year, period, modelo=target)
+        typed_period = deps.resolve_year_period(year, period, modelo=target)
         return _run_query(
             lambda: registry_bindings_for_scope(
                 target,
-                filing_year=resolved_year,
-                period=resolved_period,
+                filing_year=typed_period.year,
+                period=typed_period.registry_token,
                 as_of=_as_of(as_of),
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
@@ -537,12 +535,12 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
         assert year is not None
         assert period is not None
         overrides = dict(deps.parse_binding_override(spec) for spec in (binding or ()))
-        resolved_year, resolved_period = deps.resolve_year_period(year, period, modelo=modelo)
+        typed_period = deps.resolve_year_period(year, period, modelo=modelo)
         report = _run_query(
             lambda: registry_bindings_for_scope(
                 modelo,
-                filing_year=resolved_year,
-                period=resolved_period,
+                filing_year=typed_period.year,
+                period=typed_period.registry_token,
                 as_of=_as_of(as_of),
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
