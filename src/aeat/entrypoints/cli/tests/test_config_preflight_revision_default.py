@@ -29,6 +29,7 @@ from click.testing import CliRunner, Result
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....core.resources import resources
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app as root_app
@@ -79,7 +80,7 @@ def _active_revision_for(modelo: str, *, filing_year: int, period: str) -> str:
     return resolve_registry_revision_for_work_target(
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         registry_revision_id=None,
     )
 

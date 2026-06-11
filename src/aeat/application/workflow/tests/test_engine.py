@@ -87,7 +87,7 @@ def _registry_schema_version(*, modelo: str = "130", period: Period | None = Non
     target_period = period or _period(2026, "1T")
     provider = build_runtime_schema_provider(
         filing_year=target_period.filing_year,
-        period=target_period.registry_token,
+        period=target_period,
         modelos=(modelo,),
     )
     return provider.get_subview(modelo).schema_version

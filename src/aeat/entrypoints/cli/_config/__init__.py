@@ -20,6 +20,7 @@ from ....application.operator_surface import render_help_text as _render_help_te
 from ....application.wizard import build_wizard_command as _build_wizard_command
 from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
 from ....application.workflow import read_profile_bucket as _read_profile_bucket
+from ....core import Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
 from ....core.external_constants import OutputLanguage
@@ -473,10 +474,17 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
     )
 
     try:
+        filing_period = Period.from_year_and_code(filing_year, period)
+    except ValueError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+        ) from exc
+    try:
         return resolve_registry_revision_for_work_target(
             modelo=modelo,
             filing_year=filing_year,
-            period=period,
+            period=filing_period,
             registry_revision_id=revision_id,
         )
     except AmbiguousRevisionSelectionError as exc:
@@ -558,21 +566,21 @@ def config_profile_preflight(
         period=period,
         revision_id=revision_id,
     )
+    filing_period = Period.from_year_and_code(filing_year, period)
     from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
 
     report = ProfilePreflightService(schema=load_user_profile_schema()).report(
         record=record,
         modelo=modelo,
         revision_id=resolved_revision_id,
-        filing_year=filing_year,
-        period=period,
+        period=filing_period,
     )
     result = ConfigProfilePreflightResult(
         profile_id=report.profile_id,
         modelo=report.modelo,
         revision_id=report.revision_id,
         filing_year=report.filing_year,
-        period=report.period,
+        period=report.period.registry_token,
         ready=report.ready,
         missing=[
             ProfilePreflightMissingPayload(
@@ -589,7 +597,7 @@ def config_profile_preflight(
         f"modelo\t{report.modelo}",
         f"revision_id\t{report.revision_id}",
         f"filing_year\t{report.filing_year}",
-        f"period\t{report.period}",
+        f"period\t{report.period.registry_token}",
     ]
     for requirement in report.missing:
         lines.append(f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}")

@@ -134,7 +134,7 @@ class _RevisionDraftBuilder:
         self._clock = clock
         self._schema_provider = build_runtime_schema_provider(
             filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
+            period=work_unit.period,
             modelos=(work_unit.modelo,),
         )
 

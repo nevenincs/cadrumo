@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
+from ...core import Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -112,7 +113,7 @@ def import_external_filing_evidence(
         evidence_reference_id=cleaned_reference,
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        period=work_unit.period,
         expected_tax_id=expected_tax_id,
         justificante_repository=justificante_repository or JustificanteRepository(),
     )
@@ -273,7 +274,7 @@ def _require_bound_justificante_artifact(
     evidence_reference_id: str,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     expected_tax_id: str | None,
     justificante_repository: JustificanteRepository,
 ) -> None:
@@ -310,7 +311,7 @@ def _require_bound_justificante_artifact(
                 "evidence_reference_id": evidence_reference_id,
                 "modelo": modelo,
                 "filing_year": str(filing_year),
-                "period": period,
+                "period": period.registry_token,
             },
         )
 
@@ -320,12 +321,18 @@ def _justificante_matches_import_target(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     expected_tax_id: str,
 ) -> bool:
+    justificante_period = getattr(justificante, "period", None)
+    if not isinstance(justificante_period, Period):
+        try:
+            justificante_period = Period.from_year_and_code(filing_year, str(justificante_period or ""))
+        except ValueError:
+            return False
     return (
         str(getattr(justificante, "modelo", "")).strip() == modelo
         and str(getattr(justificante, "ejercicio", "") or "").strip() == str(filing_year)
-        and str(getattr(justificante, "period", "")).strip().upper() == period.strip().upper()
+        and justificante_period == period
         and str(getattr(justificante, "tax_id", "") or "").strip() == expected_tax_id
     )
