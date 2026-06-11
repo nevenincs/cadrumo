@@ -28,6 +28,7 @@ from ....application.storage.calc_sheets import (
     RelationValues,
     build_export_plan,
 )
+from ....core import Period
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
@@ -80,7 +81,17 @@ def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     return credentials, root_folder_id
 
 
-def _load_snapshot(modelo: str, period: str, year: int):
+def _filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
+    try:
+        return Period.from_year_and_code(year, period)
+    except ValueError as exc:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.export.snapshot_failure",
+            context={"modelo": modelo, "period": period, "year": year, "detail": str(exc)},
+        ) from exc
+
+
+def _load_snapshot(modelo: str, period: Period):
     authority = _bundled_authority()
     if modelo not in {candidate.id for candidate in authority.modelos}:
         available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
@@ -89,11 +100,16 @@ def _load_snapshot(modelo: str, period: str, year: int):
             context={"modelo": modelo, "available": available},
         )
     try:
-        return authority.snapshot(modelo, filing_year=year, period=period)
+        return authority.snapshot(modelo, filing_year=period.filing_year, period=period.registry_token)
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.google.sync.calc.export.snapshot_failure",
-            context={"modelo": modelo, "period": period, "year": year, "detail": str(exc)},
+            context={
+                "modelo": modelo,
+                "period": period.registry_token,
+                "year": period.filing_year,
+                "detail": str(exc),
+            },
         ) from exc
 
 
@@ -122,7 +138,8 @@ def google_sync_calc_export(
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    snapshot = _load_snapshot(modelo, period, year)
+    filing_period = _filing_period_or_refusal(modelo=modelo, period=period, year=year)
+    snapshot = _load_snapshot(modelo, filing_period)
     if prefill_relations:
         plan = build_export_plan(
             snapshot,
@@ -220,7 +237,7 @@ def google_sync_calc_verify(
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    snapshot = _load_snapshot(modelo, period, year)
+    snapshot = _load_snapshot(modelo, _filing_period_or_refusal(modelo=modelo, period=period, year=year))
 
     if scenario_path is None:
         scenario = OperatorInputScenario(scenario_label="empty-defaults")
@@ -323,7 +340,7 @@ def google_sync_calc_pull(
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    snapshot = _load_snapshot(modelo, period, year)
+    snapshot = _load_snapshot(modelo, _filing_period_or_refusal(modelo=modelo, period=period, year=year))
 
     try:
         result: PullResult = pull_operator_edits(

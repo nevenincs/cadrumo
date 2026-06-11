@@ -453,7 +453,7 @@ def config_profile_show(
         raise typer.Exit(code=2)
 
 
-def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str, revision_id: str | None) -> str:
+def _resolve_preflight_revision_id(*, modelo: str, period: Period, revision_id: str | None) -> str:
     """Resolve the registry revision a preflight check is assessed against.
 
     When ``revision_id`` is supplied it is an explicit override and is
@@ -474,17 +474,10 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
     )
 
     try:
-        filing_period = Period.from_year_and_code(filing_year, period)
-    except ValueError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.preflight_revision_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
-        ) from exc
-    try:
         return resolve_registry_revision_for_work_target(
             modelo=modelo,
-            filing_year=filing_year,
-            period=filing_period,
+            filing_year=period.filing_year,
+            period=period,
             registry_revision_id=revision_id,
         )
     except AmbiguousRevisionSelectionError as exc:
@@ -493,14 +486,14 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
         # refusal lists them without parsing the human-readable message.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_ambiguous",
-            context={"modelo": modelo, "period": period, "candidates": ", ".join(exc.candidate_ids)},
+            context={"modelo": modelo, "period": period.registry_token, "candidates": ", ".join(exc.candidate_ids)},
         ) from exc
     except NoRevisionForPeriodError as exc:
         # The natural key resolved no revision. Point the operator at the
         # discovery command rather than emitting a bare unresolved error.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+            context={"modelo": modelo, "filing_year": period.filing_year, "period": period.registry_token},
         ) from exc
     except RegistrySnapshotError as exc:
         # Any residual snapshot failure not modelled by the two typed
@@ -508,7 +501,7 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
         # pointer rather than surfacing a bare error to the operator.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+            context={"modelo": modelo, "filing_year": period.filing_year, "period": period.registry_token},
         ) from exc
     except _ModeloWorkRegistryYearMismatchError as exc:
         # An explicit ``--revision-id`` override that is unknown to the
@@ -516,7 +509,7 @@ def _resolve_preflight_revision_id(*, modelo: str, filing_year: int, period: str
         # revisions so the operator can correct the override.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_override_invalid",
-            context={"modelo": modelo, "filing_year": filing_year, "detail": str(exc)},
+            context={"modelo": modelo, "filing_year": period.filing_year, "detail": str(exc)},
         ) from exc
 
 
@@ -560,13 +553,18 @@ def config_profile_preflight(
             translated_message="cli.config.profile.unknown_profile",
             context={"name": pointer.label or pointer.bucket_id},
         ) from exc
+    try:
+        filing_period = Period.from_year_and_code(filing_year, period)
+    except ValueError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.preflight_revision_unresolved",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+        ) from exc
     resolved_revision_id = _resolve_preflight_revision_id(
         modelo=modelo,
-        filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
     )
-    filing_period = Period.from_year_and_code(filing_year, period)
     from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
 
     report = ProfilePreflightService(schema=load_user_profile_schema()).report(
