@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#secure-storage-production-hardening'
-date: '2026-06-06'
+date: '2026-06-11'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S01]]'
   - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S02]]'
@@ -864,6 +864,7 @@ related:
   - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research]]'
   - '[[2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit]]'
   - '[[2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S399]]'
 ---
 
 # `secure-storage-production-hardening` feature index
@@ -1734,6 +1735,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-06-secure-storage-production-hardening-W20-P40-S460` - W20.P40.S460 - Close stale custody guidance drift
 - `2026-06-06-secure-storage-production-hardening-W20-P41-S455` - W20.P41.S455 inbound provenance privacy
 - `2026-06-06-secure-storage-production-hardening-W20-P42-S456` - W20.P42.S456 central redaction enrollment
+- `2026-06-11-secure-storage-production-hardening-W13-P28-S399` - W13.P28.S399 secure-storage persona retests
 
 ### plan
 
