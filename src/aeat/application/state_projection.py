@@ -53,7 +53,6 @@ from ..domain.modelos._calculation_repository import CalculationRevisionCatalogu
 from ..domain.modelos._repository import WorkUnitCatalogueRepository
 from ..domain.modelos._work_unit import WorkUnitState
 from ..domain.transactions import TransactionCatalogueRepository
-from .aggregation import Period as _LedgerPeriod
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
@@ -618,10 +617,7 @@ def _build_modelo_readiness(
                 ledger_preflight_required=ledger_report is not None,
                 ledger_ready=ledger_report.ready if ledger_report is not None else None,
                 ledger_period=(
-                    # LedgerPreflightReport.period is the aggregation Period;
-                    # project it to a core.Period via its _as_core_period()
-                    # helper so the typed field is homogeneous.
-                    ledger_report.period._as_core_period()
+                    ledger_report.period
                     if ledger_report is not None
                     else None
                 ),
@@ -661,20 +657,15 @@ def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
     return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
 
 
-def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> _LedgerPeriod:
+def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Period:
     """Return the typed ledger period for the ledger preflight.
 
-    Converts the typed :class:`~aeat.core.Period` on the request to the
-    aggregation :class:`~aeat.application.aggregation.Period` used by
-    :func:`preflight_ledger_tax_readiness`. When the request carries no period
-    the annual ``0A`` fallback is returned.
+    Returns the typed :class:`~aeat.core.Period` on the request directly.
+    When the request carries no period the annual ``0A`` fallback is returned.
     """
     if request.period is None:
-        code = "0A"
-        return _LedgerPeriod.from_year_and_token(year=request.filing_year, token=code)
-    code = request.period.registry_token
-    year = request.period.year
-    return _LedgerPeriod.from_year_and_token(year=year, token=code)
+        return Period.from_year_and_code(request.filing_year, "0A")
+    return request.period
 
 
 def build_operator_state_projection(
