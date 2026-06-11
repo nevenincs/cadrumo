@@ -110,7 +110,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
         if self.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:
             if not self.remote_mirror_requires_revision or not self.remote_mirror_requires_integrity_manifest:
                 raise NamespaceRegistryError(
-                    "ciphertext remote mirror namespaces require revision and integrity metadata"
+                    "ciphertext remote mirror namespaces require revision and integrity metadata",
                 )
         elif self.remote_mirror_requires_revision or self.remote_mirror_requires_integrity_manifest:
             raise NamespaceRegistryError("local-only and test-only namespaces must not require remote mirror metadata")
@@ -732,6 +732,15 @@ DOMAIN_NAMESPACE_DEFINITIONS = (
         schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
         object_key_grammar="catalogue",
         default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
+        scope=StorageNamespaceScope.PROFILE_LOCAL,
+    ),
+    SecureObjectNamespaceDefinition(
+        key="transaction_participation_index",
+        namespace="aeat.domain.modelos.participation_index",
+        owner="aeat.domain.modelos",
+        sensitivity=SensitivityClass.FINANCIAL,
+        schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+        object_key_grammar="{transaction_id}",
         scope=StorageNamespaceScope.PROFILE_LOCAL,
     ),
 )

@@ -39,6 +39,16 @@ from ._filing_record import (
     derive_filing_record_id,
 )
 from ._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
+from ._participation_index import (
+    PARTICIPATION_INDEX_NAMESPACE,
+    PARTICIPATION_INDEX_SCHEMA_VERSION,
+    TransactionParticipationIndexPersistenceError,
+    TransactionParticipationIndexRepository,
+    TransactionRevisionParticipation,
+    TransactionRevisionParticipationIndex,
+    derive_participation_index_id,
+    upsert_transaction_participation,
+)
 from ._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -67,6 +77,8 @@ from ._verification_repository import VerificationReportCatalogueRepository, ups
 from ._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
 __all__ = (
+    "PARTICIPATION_INDEX_NAMESPACE",
+    "PARTICIPATION_INDEX_SCHEMA_VERSION",
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
@@ -92,6 +104,10 @@ __all__ = (
     "VerificationCompletenessStatus",
     "VerificationReport",
     "VerificationReportCatalogue",
+    "TransactionParticipationIndexPersistenceError",
+    "TransactionParticipationIndexRepository",
+    "TransactionRevisionParticipation",
+    "TransactionRevisionParticipationIndex",
     "VerificationReportCatalogueRepository",
     "VerificationReportCatalogueRepositoryProtocol",
     "WorkUnit",
@@ -100,10 +116,12 @@ __all__ = (
     "WorkUnitCatalogueRepositoryProtocol",
     "derive_calculation_revision_id",
     "derive_filing_record_id",
+    "derive_participation_index_id",
     "derive_verification_report_id",
     "derive_work_unit_id",
     "upsert_calculation_revision",
     "upsert_filing_record",
+    "upsert_transaction_participation",
     "upsert_verification_report",
     "upsert_work_unit",
     "validate_m349_nif_format",
