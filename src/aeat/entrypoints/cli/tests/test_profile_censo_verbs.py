@@ -51,14 +51,14 @@ def _seed_active_profile(*, without_taxpayer_axes: bool = False) -> None:
                 "taxpayer_type.entity_type": "",
                 "taxpayer_type.irpf_income_categories": "",
                 "irpf.estimation_regime": "",
-            }
+            },
         )
     repo.update(
         lambda state: register_minimal_profile(
             state,
             profile_id="default",
             overrides=overrides,
-        )
+        ),
     )
 
 
@@ -89,7 +89,7 @@ def test_censo_help_lists_four_verbs(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(profile_app, ["censo", "--help"])
 
     assert result.exit_code == 0
-    for verb in ("refresh", "show", "compare", "apply"):
+    for verb in ("pull", "show", "compare", "apply"):
         assert verb in result.output
 
 
@@ -108,7 +108,7 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
     _seed_active_profile()
 
     with override_settings(aeat_live_tests_enabled=""):
-        result = cli_runner.invoke(profile_app, ["censo", "refresh"])
+        result = cli_runner.invoke(profile_app, ["censo", "pull"])
 
     assert result.exit_code != 0
     haystack = (result.output + " " + str(result.exception or "")).lower()

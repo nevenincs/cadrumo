@@ -173,7 +173,7 @@ _INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS = (
 
 @pytest.mark.parametrize("count_key", _INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS)
 def test_registry_inspect_cli_reports_non_zero_count(
-    _registry_inspect_payload: RegistryTreeReport, count_key: str
+    _registry_inspect_payload: RegistryTreeReport, count_key: str,
 ) -> None:
     count = getattr(_registry_inspect_payload, count_key)
     assert count > 0, f"{count_key}={count!r}"
@@ -229,7 +229,7 @@ _REVISION_COUNT_PAIRS = (
 
 @pytest.mark.parametrize(("count_key", "ids_key"), _REVISION_COUNT_PAIRS)
 def test_registry_inspect_cli_first_revision_count_matches_id_list(
-    _registry_inspect_payload: RegistryTreeReport, count_key: str, ids_key: str
+    _registry_inspect_payload: RegistryTreeReport, count_key: str, ids_key: str,
 ) -> None:
     revision = _registry_inspect_payload.revision_details[0]
     assert getattr(revision, count_key) == len(getattr(revision, ids_key))
@@ -504,7 +504,7 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
             "ejercicio": 2025,
             "declaration_copy_link_text": None,
             "declaration_copy_cell_index": None,
-        }
+        },
     )
 
     listed = filed_data_listing_row(row)
@@ -560,7 +560,7 @@ def test_verify_filed_state_cli_loads_secure_observation_refs(tmp_path: Path) ->
             str(bundled_path()),
             "--casilla",
             "19",
-        ]
+        ],
     )
 
     assert result.exit_code == 0, result.output
@@ -614,7 +614,7 @@ def test_verify_filed_state_cli_help_resolves_locale_keys() -> None:
 
 def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -> None:
     result = invoke_cached_cli(
-        ["app", "live", "filed", "capture-sources", "--help"],
+        ["app", "live", "filed", "pull-sources", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
@@ -635,7 +635,7 @@ def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -
 
 def test_live_filed_capture_all_cli_help_resolves() -> None:
     result = invoke_cached_cli(
-        ["app", "live", "filed", "capture-all", "--help"],
+        ["app", "live", "filed", "pull-all", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
@@ -651,7 +651,7 @@ def test_live_filed_capture_all_cli_help_resolves() -> None:
     assert live_group is not None
     filed_group = _child(live_group, "filed")
     assert filed_group is not None
-    capture_all = _child(filed_group, "capture-all")
+    capture_all = _child(filed_group, "pull-all")
     assert capture_all is not None
     help_text = (capture_all.help or "").lower()
     assert "read-only" in help_text or "solo lectura" in help_text
@@ -680,7 +680,7 @@ def test_live_notifications_latest_cli_help_resolves() -> None:
 
 def test_live_expedientes_capture_all_cli_help_resolves() -> None:
     result = invoke_cached_cli(
-        ["app", "live", "expedientes", "capture-all", "--help"],
+        ["app", "live", "expedientes", "pull-all", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
@@ -696,7 +696,7 @@ def test_live_expedientes_capture_all_cli_help_resolves() -> None:
     assert live_group is not None
     expedientes_group = _child(live_group, "expedientes")
     assert expedientes_group is not None
-    capture_all = _child(expedientes_group, "capture-all")
+    capture_all = _child(expedientes_group, "pull-all")
     assert capture_all is not None
     assert hasattr(capture_all, "callback")
 
@@ -711,7 +711,7 @@ def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
     capture_history = invoke_cached_cli(
-        ["app", "live", "iva-wallet", "capture-history", "--help"],
+        ["app", "live", "iva-wallet", "pull-history", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
     history = invoke_cached_cli(
@@ -728,7 +728,7 @@ def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
     assert "own-name" in pull.output or "nombre propio" in pull.output
     assert (
         "No AEAT filing or wallet form choices are submitted" in capture_history.output
-        or "No se envian opciones" in capture_history.output
+        or "No se envia ninguna declaracion" in capture_history.output
     )
     assert "--as-of-year" in history.output
 
@@ -879,7 +879,7 @@ def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path:
             "app",
             "live",
             "filed",
-            "capture",
+            "pull",
             "--modelo",
             _first_registry_modelo(),
             "--year",
@@ -918,7 +918,7 @@ def test_capture_iva_history_cli_requires_live_gate_before_local_writes(tmp_path
             "app",
             "live",
             "iva-wallet",
-            "capture-history",
+            "pull-history",
             "--from-year",
             "2024",
             "--to-year",
@@ -957,7 +957,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
                 output_root=output_root,
                 registry_root=_REGISTRY_ROOT,
                 source_root=bundled_path(),
-            )
+            ),
         )
 
     assert not output_root.exists()

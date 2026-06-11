@@ -51,19 +51,19 @@ def _run_auth_preflight() -> None:
 
 
 @justificante_app.command(
-    "capture",
+    "pull",
     help=tr(
-        "cli.app.live.justificante.capture_help",
-        default="Live-pull the AEAT justificante for a filed period and persist it as official evidence.",
+        "cli.app.live.justificante.pull_help",
+        default="Pull the AEAT justificante for a filed period and persist it as official evidence.",
     ),
 )
-def justificante_capture(
+def justificante_pull(
     ctx: typer.Context,
     modelo: Annotated[
-        str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help", default="Modelo code (e.g. 130)."))
+        str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help", default="Modelo code (e.g. 130).")),
     ],
     year: Annotated[
-        int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year."))
+        int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year.")),
     ],
     period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help", default="Period (e.g. 1T)."))],
 ) -> None:

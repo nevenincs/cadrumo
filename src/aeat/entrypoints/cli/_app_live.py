@@ -215,7 +215,7 @@ def iva_wallet_pull_cmd(
             target_year=year,
             target_period=period,
             taxpayer_nif=taxpayer_nif,
-        )
+        ),
     )
     from ._app_live_payloads import IvaWalletPullResult
 
@@ -366,9 +366,9 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                         f"final_result={row.final_result_amount}",
                         f"generated={row.generated_amount}",
                         f"available_end={row.available_end_amount}",
-                    )
+                    ),
                 ),
-            )
+            ),
         )
     for lot in report.carry_forward_lots:
         lines.append(
@@ -385,9 +385,9 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                         f"expiry_review_state={lot.expiry_review_state}",
                         f"source={lot.source_observation_key}",
                         f"taxpayer_ref={lot.taxpayer_ref}",
-                    )
+                    ),
                 ),
-            )
+            ),
         )
     for decision in report.authority_decisions:
         lines.append(
@@ -406,23 +406,23 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                         f"blocked={decision.blocked}",
                         f"stale_wallet={decision.stale_wallet}",
                         f"taxpayer_ref={decision.taxpayer_ref}",
-                    )
+                    ),
                 ),
-            )
+            ),
         )
         for source in decision.authority_sources:
             lines.append(
-                _metric_line("authority_source", f"{decision.target_year}\t{decision.target_period}\t{source}")
+                _metric_line("authority_source", f"{decision.target_year}\t{decision.target_period}\t{source}"),
             )
     return tuple(lines)
 
 
 @iva_wallet_app.command(
-    "capture-history",
+    "pull-history",
     help=tr(
-        "cli.app.live.iva_wallet.capture_history_help",
+        "cli.app.live.iva_wallet.pull_history_help",
         default=(
-            "Live-capture filed Modelo 303 history and persist secure IVA compensation state. "
+            "Pull filed Modelo 303 history and persist secure IVA compensation state. "
             "No AEAT filing or wallet form choices are submitted."
         ),
     ),
@@ -457,7 +457,7 @@ def iva_wallet_capture_history_cmd(
             year_from=year_from,
             year_to=year_to,
             output_root=output_root,
-        )
+        ),
     )
     lines = (
         *_IVA_WALLET_LIVE_SAFETY_LINES,
@@ -482,11 +482,11 @@ def iva_wallet_capture_history_cmd(
 
 
 @iva_wallet_app.command(
-    "capture-remote-state",
+    "pull-remote-state",
     help=tr(
-        "cli.app.live.iva_wallet.capture_remote_state_help",
+        "cli.app.live.iva_wallet.pull_remote_state_help",
         default=(
-            "Live-capture filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one "
+            "Pull filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one "
             "typed read-only acquisition."
         ),
     ),
@@ -542,7 +542,7 @@ def iva_wallet_capture_remote_state_cmd(
                 output_root=output_root,
             ),
             timeout_ms=_live_iva_remote_state_command_timeout_ms(year_from=year_from, year_to=year_to),
-        )
+        ),
     )
     from ._app_live_payloads import (
         IvaWalletCaptureRemoteStateResult,
@@ -628,9 +628,9 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
                         f"failure_context={_compact_failure_context(outcome.failure_context)}",
                         f"captured_count={outcome.captured_count if outcome.captured_count is not None else ''}",
                         f"calculation_observation_count={calculation_count}",
-                    )
+                    ),
                 ),
-            )
+            ),
         )
     return tuple(lines)
 
@@ -719,7 +719,7 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
             if powershell is None:
                 return ()
             script = "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
-            completed = subprocess.run(  # noqa: S603 - fixed process-inventory command
+            completed = subprocess.run(
                 [powershell, "-NoProfile", "-Command", script],
                 check=True,
                 capture_output=True,
@@ -741,7 +741,7 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
         ps = shutil.which("ps")
         if ps is None:
             return ()
-        completed = subprocess.run(  # noqa: S603 - fixed process-inventory command
+        completed = subprocess.run(
             [ps, "-axo", "pid=,args="],
             check=True,
             capture_output=True,
@@ -842,7 +842,7 @@ def filed_list_cmd(
                 modelo=code,
                 year_from=resolved_from,
                 year_to=resolved_to,
-            )
+            ),
         )
         total_count += report.row_count
         all_rows.extend(report.rows)
@@ -864,9 +864,9 @@ def filed_list_cmd(
                         f"submitted_file={row.has_submitted_file}",
                         f"declaration_copy={row.has_declaration_copy}",
                         f"justificante={row.has_justificante}",
-                    )
+                    ),
                 ),
-            )
+            ),
         )
     result = FiledListResult(
         modelo_filter=modelo,
@@ -891,7 +891,7 @@ def filed_list_cmd(
     _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
 
 
-@filed_app.command("capture", help=tr("cli.app.live.filed.capture_help"))
+@filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
 def filed_capture_cmd(
     ctx: typer.Context,
     modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
@@ -922,7 +922,7 @@ def filed_capture_cmd(
             period=period,
             expediente_id=expediente_id,
             limit=limit,
-        )
+        ),
     )
     lines = (
         _metric_line("captured_count", report.captured_count),
@@ -947,11 +947,11 @@ def filed_capture_cmd(
 
 
 @filed_app.command(
-    "capture-all",
+    "pull-all",
     help=tr(
-        "cli.app.live.filed.capture_all_help",
+        "cli.app.live.filed.pull_all_help",
         default=(
-            "Live-capture filed declarations and justificantes for every requested registry modelo "
+            "Pull filed declarations and justificantes for every requested registry modelo "
             "across a year range. Read-only; reports per-modelo failures explicitly."
         ),
     ),
@@ -997,7 +997,7 @@ def filed_capture_all_cmd(
             year_to=year_to,
             output_root=output_root,
             modelos=tuple(modelos) if modelos else None,
-        )
+        ),
     )
     lines = (
         _metric_line("modelo_count", len(report.modelos)),
@@ -1021,7 +1021,7 @@ def filed_capture_all_cmd(
                         failure.expediente_id or "",
                         failure.error_type,
                         failure.message,
-                    )
+                    ),
                 ),
             )
             for failure in report.failures
@@ -1054,7 +1054,7 @@ def filed_capture_all_cmd(
     _emit_envelope(ctx, command="app.live.filed.capture_all", result=result, lines=lines)
 
 
-@filed_app.command("capture-sources", help=tr("cli.app.live.filed.capture_sources_help"))
+@filed_app.command("pull-sources", help=tr("cli.app.live.filed.pull_sources_help"))
 def filed_capture_sources_cmd(
     ctx: typer.Context,
     modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
@@ -1103,7 +1103,7 @@ def filed_capture_sources_cmd(
             output_root=output_root,
             registry_root=registry_root,
             source_root=source_root,
-        )
+        ),
     )
     lines = (
         _metric_line("captured_count", report.captured_count),

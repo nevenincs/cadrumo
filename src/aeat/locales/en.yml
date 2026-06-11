@@ -1075,7 +1075,7 @@ cli:
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices a customer owes you
-        invoice_date_help: Invoice issue date (YYYY-MM-DD)
+        invoice_date_help: 'Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.'
         invoice_id_help: Invoice id (or unambiguous prefix)
         list_help: List registered collectible invoices
         operation_type_help: 'M349 operation type: E supply of goods, S services,
@@ -1091,7 +1091,7 @@ cli:
         add_help: Register purchase invoice evidence from a PDF or image
         evidence_id_help: Evidence id (exact match)
         group_help: Purchase invoice evidence in PDF or image form
-        invoice_date_help: Invoice issue date (YYYY-MM-DD)
+        invoice_date_help: 'Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.'
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount
         iva_rate_help: Applied IVA rate as a decimal
@@ -1131,7 +1131,7 @@ cli:
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices you owe a supplier
-        invoice_date_help: Invoice issue date (YYYY-MM-DD)
+        invoice_date_help: 'Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.'
         invoice_id_help: Invoice id (or unambiguous prefix)
         list_help: List registered payable invoices
         operation_type_help: 'M349 operation type: E supply of goods, S services,
@@ -1191,16 +1191,16 @@ cli:
         capture_all_modelo_help: Limit capture-all to this modelo.
         latest_help: Show the most recent expediente snapshot
         list_help: List saved expediente snapshots
-        pull_all_help: cli.app.live.expedientes.pull_all_help
-        pull_help: cli.app.live.expedientes.pull_help
+        pull_all_help: 'Pull the AEAT declaration register for every requested registry modelo across a year range and persist bucket-scoped snapshots.'
+        pull_help: 'Pull the AEAT declaration register and persist a bucket-scoped snapshot.'
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
       filed:
         capture_all_modelo_help: Limit capture-all to this modelo.
         list_help: List filed declaration rows without downloading artefacts
-        pull_all_help: cli.app.live.filed.pull_all_help
-        pull_help: cli.app.live.filed.pull_help
-        pull_sources_help: cli.app.live.filed.pull_sources_help
+        pull_all_help: 'Pull filed declarations and justificantes for every requested registry modelo across a year range. Read-only; reports per-modelo failures explicitly.'
+        pull_help: 'Pull filed-declaration data from the authenticated AEAT register.'
+        pull_sources_help: 'Pull the filed observations required by a target filing''s dependencies.'
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
@@ -1225,14 +1225,14 @@ cli:
         pull_help: Live-fetch and persist AEAT's IVA compensation wallet. The only
           AEAT form action allowed is the guarded wallet read query; representation
           gates only continue in own-name mode.
-        pull_history_help: cli.app.live.iva_wallet.pull_history_help
-        pull_remote_state_help: cli.app.live.iva_wallet.pull_remote_state_help
+        pull_history_help: 'Pull filed Modelo 303 history and persist secure IVA compensation state. No AEAT filing or wallet form choices are submitted.'
+        pull_remote_state_help: 'Pull filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one typed read-only acquisition.'
         taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
       justificante:
         app_help: 'AEAT justificante captures (read-only): pull a filed receipt and
           reconcile against it.'
         list_help: List persisted justificante captures in the active profile.
-        pull_help: cli.app.live.justificante.pull_help
+        pull_help: 'Pull the AEAT justificante for a filed period and persist it as official evidence.'
         snapshot_id_help: Snapshot id (or unambiguous prefix).
         view_help: View one justificante capture.
       limit_help: Maximum rows to capture
@@ -1241,7 +1241,7 @@ cli:
         app_help: Read-only DEHú notification snapshots
         latest_help: Show the most recent DEHU notification snapshot.
         list_help: List saved DEHú notification snapshots
-        pull_help: cli.app.live.notifications.pull_help
+        pull_help: 'Pull DEHu notifications and persist a bucket-scoped snapshot.'
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show a DEHú notification snapshot
       output_root_help: Directory for captured filed-declaration observations
@@ -1816,12 +1816,9 @@ cli:
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
-      invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
+      invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD) is required.'
       no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
-      period_filter_unrecognised: 'Unrecognized filter period ''{raw}''. Use a year-qualified
-        AEAT token in the filter clause: period=2024-1T (quarters), period=2024-0A
-        (annual), period=2024-03 (months).'
       period_missing_year: Period token '{token}' needs a year on this command. Add
         --year (e.g. --period {token} --year 2024).
       period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token: 1T-4T
@@ -2041,7 +2038,7 @@ cli:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field
         help: Sync AEAT 036 censo data with this profile
-        pull_help: cli.config.profile.censo.pull_help
+        pull_help: 'Pull your latest censo from AEAT into this profile''s snapshot store.'
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
@@ -2307,7 +2304,7 @@ cli:
   ledger:
     add:
       actor_help: Operator name recorded on the bucket event
-      amount_help: Signed transaction amount in the transaction currency
+      amount_help: 'Transaction amount in the transaction currency (decimal, e.g. 1200.50).'
       attachment_help: Supplementary attachment id (repeatable)
       business_pct_help: Business-use share from 0 to 1 (only when classification
         is MIXED)
@@ -2467,7 +2464,7 @@ cli:
       id_prefix_unknown: 'Unexpected transaction id prefix error: %{message}'
       invalid_category: 'Unknown spending category ''{category}''. Known categories:
         {known}. Run ''aeat app ledger categories'' for valid --category-id values.'
-      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
+      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.'
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
@@ -2497,7 +2494,7 @@ cli:
       dry_run_preview: 'Dry run: no rows were saved. The counts above are a preview
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
-      file_help: cli.ledger.import.file_help
+      file_help: 'Original file used to verify imported rows.'
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
         already in the ledger but have a different description - a likely duplicate
@@ -2582,10 +2579,7 @@ cli:
       invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
-      filter_help: Filter rows by status, period (a year-qualified AEAT token, e.g.
-        period=2024-1T), classification, issue, import, direction (ingreso/gasto),
-        or text. To filter by organisational group label use the separate --group
-        option.
+      filter_help: 'Filter rows by status, period (a bare AEAT token, e.g. period=1T) plus year (e.g. year=2026), classification, issue, import, direction (ingreso/gasto), or text. To filter by organisational group label use the separate --group option.'
       footer_truncated: Showing rows {start}-{end} of {total} (offset {offset}). Use
         --offset/--limit to page.
       group_filter_help: Show only rows in this group label.
@@ -2633,8 +2627,7 @@ cli:
       reason_help: Reason recorded in lifecycle history
       yes_help: Confirm restoring the ledger transaction to active
     review:
-      filter_help: Filter rows by status, period, issue, import, classification, text,
-        or direction
+      filter_help: 'Filter rows by status, period (a bare AEAT token, e.g. period=1T) plus year (e.g. year=2026), issue, import, classification, text, or direction'
       header: ACCOUNTING LEDGER REVIEW SESSION
       help: Interactive review and validation of ledger entries
       id_help: Identifier of the specific entry to review
