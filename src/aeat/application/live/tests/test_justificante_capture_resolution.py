@@ -50,7 +50,7 @@ _PERIOD_3T = Period.from_year_and_code(_YEAR, "3T")
 
 def _declaration(
     *,
-    period: str,
+    period: Period,
     expediente_id: str,
     presented_at: datetime,
     estado: str = "ALTA",
@@ -76,8 +76,8 @@ def _expediente(*, expediente_id: str) -> Expediente:
 
 
 _DECLARATIONS = (
-    _declaration(period="1T", expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC)),
-    _declaration(period="2T", expediente_id=_EXP_2T, presented_at=datetime(2026, 7, 18, 9, 0, tzinfo=UTC)),
+    _declaration(period=_PERIOD_1T, expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC)),
+    _declaration(period=_PERIOD_2T, expediente_id=_EXP_2T, presented_at=datetime(2026, 7, 18, 9, 0, tzinfo=UTC)),
 )
 _EXPEDIENTES = (_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=_EXP_2T))
 
@@ -131,9 +131,9 @@ def test_declaration_with_expediente_absent_from_tree_refuses() -> None:
 
 
 def test_refiled_period_resolves_to_the_latest_active_filing() -> None:
-    early = _declaration(period="1T", expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC))
+    early = _declaration(period=_PERIOD_1T, expediente_id=_EXP_1T, presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC))
     refile_exp = "202613000010099Z"
-    late = _declaration(period="1T", expediente_id=refile_exp, presented_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC))
+    late = _declaration(period=_PERIOD_1T, expediente_id=refile_exp, presented_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC))
     resolved = resolve_period_expediente(
         declarations=(early, late),
         expedientes=(_expediente(expediente_id=_EXP_1T), _expediente(expediente_id=refile_exp)),
@@ -150,14 +150,14 @@ def test_later_cancellation_does_not_win_over_earlier_active_filing() -> None:
     row's expediente and pull the wrong-state receipt.
     """
     accepted = _declaration(
-        period="1T",
+        period=_PERIOD_1T,
         expediente_id=_EXP_1T,
         presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
         estado="ALTA",
     )
     cancelled_exp = "202613000010088Y"
     cancelled = _declaration(
-        period="1T",
+        period=_PERIOD_1T,
         expediente_id=cancelled_exp,
         presented_at=datetime(2026, 5, 10, 9, 0, tzinfo=UTC),
         estado="Anulada",
