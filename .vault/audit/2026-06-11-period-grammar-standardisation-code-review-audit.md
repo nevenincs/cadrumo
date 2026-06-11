@@ -162,3 +162,17 @@ the production projection path.
 
 Verification reported by the reviewer: the no-period annual fallback regression
 and the explicit-period ledger preflight blocker test passed with `2 passed`.
+
+## PERIOD-012 | INFO | No findings in aggregation wrapper deletion
+
+Review of the S35 aggregation cleanup found no issues. The application-layer
+period wrapper, wrapper-only constructor, `Quarter`, and `PeriodType` are removed
+from `_models.py`; aggregation exports now re-export `core.Period` and
+`core.PeriodKind`; ledger pipelines import the core type directly; and
+`aggregation_period_for_modelo` builds `core.Period` through
+`from_year_and_code`, refuses non-span tokens with `has_date_span()`, and
+translates `PeriodError` into the existing aggregation validation error.
+
+Verification reported by the reviewer: ruff passed for the touched files,
+focused aggregation and tax-fact tests passed with `243 passed`, and CLI import
+smoke printed `OK`.

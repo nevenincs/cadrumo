@@ -21,10 +21,10 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from .._errors import AggregationPeriodError
-from .._models import Period
 from .._renta_ledger import (
     _bounded_detail,
     _business_amount,
@@ -41,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_token(year=year, token=code)
+    return Period.from_year_and_code(year, code)
 
 
 def test_resolve_annual_period_accepts_annual_period_instance() -> None:

@@ -21,12 +21,12 @@ import inspect
 
 import pytest
 
-from ....core import StandardPeriodCode
+from ....core import Period, StandardPeriodCode
 from ....entrypoints.cli._common import (
     _canonical_period,
     _filter_canonical_period,
 )
-from .. import Period, aggregation_period_for_modelo
+from .. import aggregation_period_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,10 +79,10 @@ def test_cli_and_calc_engine_produce_an_identical_period(token: str, year: int) 
     assert command_period == filter_period == engine_period
 
     # And to the same fully-closed [start, end] span (the boundary authority).
-    assert command_period.start == engine_period.start
-    assert command_period.end == engine_period.end
-    assert command_period.contains(command_period.start)
-    assert command_period.contains(command_period.end)
+    assert command_period.start_date == engine_period.start_date
+    assert command_period.end_date == engine_period.end_date
+    assert command_period.contains(command_period.start_date)
+    assert command_period.contains(command_period.end_date)
 
 
 def test_both_transports_route_through_one_period_boundary() -> None:

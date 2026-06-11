@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period as CorePeriod
+from ....core import Period
 from ....core.resources import resources
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
@@ -43,15 +43,12 @@ from .. import (
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
-from .. import (
-    Period as AggregationPeriod,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _period(year: int, code: str) -> AggregationPeriod:
-    return AggregationPeriod.from_year_and_token(year=year, token=code)
+def _period(year: int, code: str) -> Period:
+    return Period.from_year_and_code(year, code)
 
 
 _ANNUAL_2025 = _period(2025, "0A")
@@ -251,7 +248,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
             bucket_id="test",
             modelo="100",
             filing_year=2025,
-            period=CorePeriod.from_year_and_code(2025, "0A"),
+            period=Period.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
         ),
     )

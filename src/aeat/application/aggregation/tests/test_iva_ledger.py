@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
@@ -30,7 +31,6 @@ from .. import (
     IvaLedgerAggregationIssueReason,
     IvaLedgerCandidate,
     IvaLedgerInputKind,
-    Period,
     aggregate_iva_ledger_candidate_bindings,
     aggregate_iva_ledger_candidates,
     aggregate_iva_ledger_observations,
@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_token(year=year, token=code)
+    return Period.from_year_and_code(year, code)
 
 
 _Q2_2023 = _period(2023, "2T")

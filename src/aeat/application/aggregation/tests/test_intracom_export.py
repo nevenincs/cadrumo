@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -37,14 +38,14 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import IvaLedgerAggregationIssueReason, Period, aggregate_iva_ledger_observations
+from .. import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
 from .._iva_ledger import casilla_59_base_imponible, casilla_60_base_imponible
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_token(year=year, token=code)
+    return Period.from_year_and_code(year, code)
 
 
 _PERIOD = _period(2026, "2T")

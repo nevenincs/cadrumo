@@ -26,6 +26,7 @@ Major declarations:
 
 from __future__ import annotations
 
+from ...core import Period, PeriodKind
 from ...core.aggregation import ForeignAssetClass, OperationKind347, OperationKind349, RetencionScheme
 from ._counterpart import (
     CounterpartAggregation,
@@ -79,7 +80,7 @@ from ._modelo_bindings import (
     ModeloLedgerBindingAggregation,
     aggregation_period_for_modelo,
 )
-from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind, Quarter
+from ._models import CasillaAggregation, CasillaProvenance
 from ._oss_ioss import (
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
@@ -194,7 +195,6 @@ __all__ = [
     "ProfileSourceResolver",
     "ProrrataAggregation",
     "ProrrataLedgerReference",
-    "Quarter",
     "RentaLedgerAggregationIssue",
     "RentaLedgerAggregationIssueReason",
     "RentaLedgerExpenseAggregation",

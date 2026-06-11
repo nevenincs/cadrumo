@@ -23,7 +23,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo
+from ...core import Modelo, Period, PeriodKind
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
 from ...domain.invoices import (
@@ -56,7 +56,7 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
+from ._models import CasillaAggregation, CasillaProvenance
 
 _LEDGER_CATALOGUE_ID = "ledger"
 

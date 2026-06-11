@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import StandardPeriodCode
-from .. import Period, aggregation_period_for_modelo
+from ....core import Period, StandardPeriodCode
+from .. import aggregation_period_for_modelo
 from .._errors import AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -62,7 +62,7 @@ _DELETED_ALIASES = (
 
 
 def _period(code: str, *, year: int = 2025) -> Period:
-    return Period.from_year_and_token(year=year, token=code)
+    return Period.from_year_and_code(year, code)
 
 
 @pytest.mark.parametrize("token", _LEDGER_SPAN_TOKENS, ids=[c.value for c in _LEDGER_SPAN_TOKENS])

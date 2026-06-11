@@ -26,6 +26,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.categories import SpendingCategory
 from ....domain.renta import (
@@ -36,7 +37,6 @@ from ....domain.renta import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
 )
-from .._models import Period
 from .._renta_ledger import _casilla_aggregation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -67,7 +67,7 @@ def _observation(
 
 
 def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_token(year=year, token=code)
+    return Period.from_year_and_code(year, code)
 
 
 _PERIOD_2025 = _period(2025, "0A")
