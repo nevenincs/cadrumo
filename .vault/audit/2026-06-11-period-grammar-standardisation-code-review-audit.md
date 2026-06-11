@@ -540,3 +540,22 @@ Verification after the change: ruff passed for the touched calculation files;
 the focused cross-period clean-state suite passed with `23 passed`;
 core/domain Period gates passed with `31 passed`; and CLI import smoke printed
 `OK`.
+
+## PERIOD-031 | INFO | External import justificante Period match reviewed
+
+Review of the external filing import matcher found no issues in the focused
+scope. The matcher now accepts the repository-returned `Justificante` contract
+directly and compares its typed `period` field against the target
+`core.Period`; the prior fallback that rebuilt a `Period` from a generic string
+attribute has been removed.
+
+The focused import-flow tests already persist real justificante metadata
+through the real repository and cover matching, missing, wrong-period, and
+wrong-taxpayer paths. The reviewer noted adjacent parser-corpus annual fixtures
+still need broader cleanup, but those failures are outside this matcher and do
+not require keeping a string fallback here.
+
+Verification after the change: ruff passed for the touched import action and
+test file; the focused external import flow suite passed with `25 passed`;
+core/domain Period gates passed with `31 passed`; and CLI import smoke printed
+`OK`.
