@@ -2,19 +2,26 @@
 
 from __future__ import annotations
 
-import pytest
+from datetime import date
+from decimal import Decimal
 
-from ._registry_schema_support import (
+import pytest
+from pydantic import ValidationError
+
+from .....core import Period
+from .....core.resources import bundled_path
+from .._errors import RegistryValidationError
+from .._schema import (
     ConvenioRateRow,
-    Decimal,
+    DeadlineWindowDefinition,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
     ModeloRevision,
     ParameterDefinition,
-    RegistryValidationError,
-    RegistryValidator,
-    ValidationError,
     VerificationPredicateDefinition,
+)
+from .._validate import RegistryValidator
+from ._registry_schema_support import (
     _as_communication_revision,
     _committed_modelo,
     _committed_registry,
@@ -22,8 +29,6 @@ from ._registry_schema_support import (
     _keyed_bracket,
     _revision,
     _with_revision,
-    bundled_path,
-    date,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -452,6 +457,28 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
 
     with pytest.raises(ValueError, match="any-mode requires applicability conditions"):
         type(window).model_validate(payload)
+
+
+@pytest.mark.parametrize("authored_period", ("2026Q1", "2026-1T"))
+def test_deadline_window_hydrates_combined_toml_periods_at_schema_boundary(authored_period: str) -> None:
+    window = DeadlineWindowDefinition.model_validate(
+        {
+            "id": f"test-window-{authored_period.lower()}",
+            "filing_year": 2026,
+            "period": authored_period,
+            "period_kind": "quarterly",
+            "opens_on": date(2026, 4, 1),
+            "closes_on": date(2026, 4, 20),
+            "legal_refs": ("test-law:art-1",),
+            "source_refs": ("test-source",),
+        },
+    )
+
+    assert window.period == Period.from_year_and_code(2026, "1T")
+    assert window.model_dump()["period"] == {"filing_year": 2026, "code": "1T"}
+    assert window.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
+    assert '"period":"2026' not in window.model_dump_json()
+    assert DeadlineWindowDefinition.model_validate(window.model_dump()).period == Period.from_year_and_code(2026, "1T")
 
 
 def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
