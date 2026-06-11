@@ -445,7 +445,7 @@ def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
     revision = _revision(modelo)
     binding = revision.bindings[0].model_copy(
         update={
-            "source": "invoice",
+            "source": "collectible_invoice",
             "selector": {"claves": ("E",)},
             "aggregation": {"op": "sum"},
         },
@@ -478,7 +478,7 @@ def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
     revision = _revision(modelo)
     binding = revision.bindings[0].model_copy(
         update={
-            "source": "invoice",
+            "source": "collectible_invoice",
             "selector": {"fact": "operator_count", "claves": ("E",)},
             "aggregation": {"op": "sum"},
         },
@@ -495,7 +495,7 @@ def test_validator_rejects_invoice_rectification_delta_without_rectification_sco
     revision = _revision(modelo)
     binding = revision.bindings[0].model_copy(
         update={
-            "source": "invoice",
+            "source": "collectible_invoice",
             "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
             "aggregation": {"op": "sum"},
         },
@@ -512,7 +512,7 @@ def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> 
     revision = _revision(modelo)
     binding = revision.bindings[0].model_copy(
         update={
-            "source": "invoice",
+            "source": "collectible_invoice",
             "selector": {
                 "fact": "row_field",
                 "row_field": "base_imponible",

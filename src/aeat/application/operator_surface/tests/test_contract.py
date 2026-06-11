@@ -289,26 +289,15 @@ def test_source_kind_is_a_constrained_slice_of_aggregation_source_kind() -> None
     """operator-surface SourceKind must stay a subset of core AggregationSourceKind.
 
     DB-10: SourceKind is the operator-facing source-kind taxonomy. It is a
-    deliberate constraint-divergent subset of the canonical
-    :class:`AggregationSourceKind` — it accepts every aggregation source kind
-    EXCEPT ``INVOICE`` (the operator surface routes invoice evidence through the
-    purchase/payable/collectible kinds, not the bare ``invoice`` kind). This
-    invariant test enforces the single-source-of-truth relationship without
-    duplicating the taxonomy: every SourceKind value must be a real
-    AggregationSourceKind value, and the set difference must be exactly
-    ``{INVOICE}`` so neither enum can silently drift from the other.
+    canonical :class:`AggregationSourceKind`. The retired bare invoice alias is
+    gone, so the operator surface and core aggregation taxonomy must now match
+    exactly.
     """
     operator_values = {member.value for member in SourceKind}
     canonical_values = {member.value for member in AggregationSourceKind}
 
-    # Every operator source kind is a genuine canonical aggregation source kind.
-    assert operator_values <= canonical_values, (
-        f"SourceKind values {sorted(operator_values - canonical_values)} are not "
-        "valid AggregationSourceKind members — the operator taxonomy has drifted"
-    )
-
-    # The exclusion is exactly INVOICE — a deliberate, asserted constraint.
-    assert canonical_values - operator_values == {AggregationSourceKind.INVOICE.value}, (
-        "operator SourceKind must be exactly AggregationSourceKind minus INVOICE; "
-        f"unexpected difference: {sorted(canonical_values - operator_values)}"
+    assert operator_values == canonical_values, (
+        "operator SourceKind must exactly mirror AggregationSourceKind; "
+        f"unexpected operator-only={sorted(operator_values - canonical_values)} "
+        f"core-only={sorted(canonical_values - operator_values)}"
     )

@@ -13,36 +13,17 @@ _log = get_logger(__name__)
 class AggregationSourceKind(StrEnum):
     """Accepted source-kind taxonomy for per-modelo aggregation providers.
 
-    Consumer search (C4 / ledger-invoice-unification, recorded 2026-06-11) of
-    every ``AggregationSourceKind.INVOICE`` site established that the bare
-    ``invoice`` member is NOT a dead alias safe to delete in this pass — it is
-    the named token of a *contradictory dual-state* validation surface that a
-    clean retirement must first reconcile:
+    The retired bare invoice alias was removed during C4 invoice unification.
+    Registry bindings and aggregation observations must use one of the
+    load-bearing source kinds below; invoice-shaped validators route through the
+    canonical payable / collectible / purchase-evidence taxonomy rather than a
+    standalone alias.
 
-    * It is a member of the ``DataBindingDefinition.source`` ``Literal`` in
-      ``_schema.py``, so a binding may be *constructed* with ``source="invoice"``
-      (several registry tests rely on ``model_validate({"source": "invoice"})``
-      / ``model_copy(update={"source": "invoice"})`` to build the fixture).
-    * ``_validate_record_sections.py`` routes ``invoice`` to
-      ``validate_invoice_binding_definition`` (a *positive* validator), and
-      ``test_export.py`` + ``test_registry_schema_part1.py`` depend on that
-      route firing the invoice-selector / aggregation guards.
-    * ``_bindings.py`` (``validate_binding_selector_shape``) and
-      ``_retenciones.py`` simultaneously *reject* ``invoice`` as "retired", and
-      ``test_selector_shape.py`` asserts that rejection text.
-
-    Removing the member therefore breaks the schema ``Literal`` construction
-    path that ~6 registry test files exercise as a positive fixture; the
-    operator-facing CLI unification (the C4 deliverable) is orthogonal and does
-    not require it. The retirement is deferred to a dedicated registry-validation
-    reconciliation that migrates those fixtures onto a real source kind
-    (e.g. ``collectible_invoice``) and collapses the dual-state to a single
-    reject path. The bare ``invoice`` member carries no production binding
-    today (no registry TOML declares ``source = "invoice"``); it survives only
-    as the guard token until that reconciliation lands.
+    Consumer search across ``src/aeat`` on 2026-06-11 found no remaining
+    ``AggregationSourceKind.INVOICE`` references after the migration; residual
+    ``source="invoice"`` literals are rejection tests only.
     """
 
-    INVOICE = "invoice"
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     PAYABLE_INVOICE = "payable_invoice"
@@ -55,12 +36,7 @@ type CounterpartSourceKind = Literal[
     AggregationSourceKind.PAYABLE_INVOICE,
     AggregationSourceKind.COLLECTIBLE_INVOICE,
 ]
-"""Canonical source-kind subset accepted by counterpart aggregation.
-
-The retired bare ``invoice`` alias remains in :class:`AggregationSourceKind`
-for persisted-registry validation and explicit rejection, but it is not a
-valid counterpart observation or binding source.
-"""
+"""Canonical source-kind subset accepted by counterpart aggregation."""
 
 COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
     {

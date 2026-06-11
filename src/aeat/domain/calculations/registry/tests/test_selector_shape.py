@@ -23,6 +23,7 @@ This file pins:
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .._bindings import (
     _BINDING_SELECTOR_REGISTRY,
@@ -58,7 +59,6 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
     expected = {
         "previous_filing",
         "relation_prefill",
-        "invoice",
         # counterpart-aggregation family shares _InvoiceSelector
         "ledger_transaction",
         "purchase_invoice_evidence",
@@ -457,22 +457,18 @@ def test_collectible_invoice_rejects_lowercase_clave() -> None:
     assert "bad-collectible" in failures[0]
 
 
-def test_invoice_selector_rejects_retired_source_kind() -> None:
-    """A retired bare ``invoice`` source fails before selector validation."""
+def test_bare_invoice_source_kind_is_not_constructible() -> None:
+    """The retired bare ``invoice`` alias is outside the binding schema."""
 
-    binding = _binding(
-        source="invoice",
-        selector={
-            "fact": "base_sum",
-            "claves": ("E",),
-        },
-        binding_id="bad-invoice",
-    )
-    failures = validate_binding_selector_shape(binding)
-    assert failures, "retired invoice source must be flagged"
-    assert "bad-invoice" in failures[0]
-    assert "source 'invoice' is retired" in failures[0]
-    assert "collectible_invoice" in failures[0]
+    with pytest.raises(ValidationError, match="Input should be"):
+        _binding(
+            source="invoice",
+            selector={
+                "fact": "base_sum",
+                "claves": ("E",),
+            },
+            binding_id="bad-invoice",
+        )
 
 
 def test_previous_filing_selector_rejects_removed_relation_field() -> None:

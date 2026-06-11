@@ -52,7 +52,7 @@ class TestObservationContract:
     def test_observation_rejects_bare_invoice_source_kind(self) -> None:
         from pydantic import ValidationError
 
-        with pytest.raises(ValidationError, match="bare 'invoice'"):
+        with pytest.raises(ValidationError, match="unsupported"):
             RetencionObservation(
                 source_kind="invoice",
                 source_object_id="x",

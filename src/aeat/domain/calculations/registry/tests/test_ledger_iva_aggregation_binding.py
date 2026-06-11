@@ -191,7 +191,7 @@ def test_validate_rejects_unknown_fact() -> None:
 
 
 def test_validate_rejects_wrong_source_kind() -> None:
-    binding = _binding().model_copy(update={"source": "invoice"})
+    binding = _binding().model_copy(update={"source": "manual_input"})
     with pytest.raises(RegistryValidationError, match="not a ledger_iva_aggregation"):
         validate_ledger_iva_aggregation_binding_definition(binding)
 

@@ -5,6 +5,7 @@ tags:
   - '#ledger-invoice-unification'
 date: '2026-06-11'
 related:
+  - '[[2026-06-10-ledger-invoice-unification-P01-S01]]'
   - '[[2026-06-10-ledger-invoice-unification-P01-S02]]'
   - '[[2026-06-10-ledger-invoice-unification-P01-S03]]'
   - '[[2026-06-10-ledger-invoice-unification-P01-S04]]'
@@ -22,6 +23,12 @@ related:
   - '[[2026-06-10-ledger-invoice-unification-P04-S16]]'
   - '[[2026-06-10-ledger-invoice-unification-P04-S17]]'
   - '[[2026-06-10-ledger-invoice-unification-P04-S18]]'
+  - '[[2026-06-10-ledger-invoice-unification-P04-S19]]'
+  - '[[2026-06-10-ledger-invoice-unification-P04-S20]]'
+  - '[[2026-06-10-ledger-invoice-unification-P04-S21]]'
+  - '[[2026-06-10-ledger-invoice-unification-P04-S22]]'
+  - '[[2026-06-10-ledger-invoice-unification-P04-S23]]'
+  - '[[2026-06-10-ledger-invoice-unification-P04-S24]]'
   - '[[2026-06-10-ledger-invoice-unification-P05-S25]]'
   - '[[2026-06-10-ledger-invoice-unification-P05-S26]]'
   - '[[2026-06-10-ledger-invoice-unification-P05-S27]]'
@@ -31,6 +38,7 @@ related:
   - '[[2026-06-10-ledger-invoice-unification-adr]]'
   - '[[2026-06-10-ledger-invoice-unification-plan]]'
   - '[[2026-06-10-ledger-invoice-unification-research]]'
+  - '[[2026-06-11-ledger-invoice-unification-code-review-audit]]'
 ---
 
 # `ledger-invoice-unification` feature index
@@ -43,8 +51,13 @@ Auto-generated index of all documents tagged with `#ledger-invoice-unification`.
 
 - `2026-06-10-ledger-invoice-unification-adr` - `ledger-invoice-unification` adr: `Unify invoice CLI to invoice --kind (supersedes 2026-05-12)` | (**status:** `accepted`)
 
+### audit
+
+- `2026-06-11-ledger-invoice-unification-code-review-audit` - `ledger-invoice-unification` Code Review
+
 ### exec
 
+- `2026-06-10-ledger-invoice-unification-P01-S01` - Invoice Source Alias Consumer Search
 - `2026-06-10-ledger-invoice-unification-P01-S02` - Invoice Direction Mapping Contract
 - `2026-06-10-ledger-invoice-unification-P01-S03` - Invoice Direction Mapping Export
 - `2026-06-10-ledger-invoice-unification-P01-S04` - Invoice Application Collection
@@ -62,6 +75,12 @@ Auto-generated index of all documents tagged with `#ledger-invoice-unification`.
 - `2026-06-10-ledger-invoice-unification-P04-S16` - Invoice Mutation Verbs
 - `2026-06-10-ledger-invoice-unification-P04-S17` - Invoice List Both Kinds
 - `2026-06-10-ledger-invoice-unification-P04-S18` - Invoice App Mount
+- `2026-06-10-ledger-invoice-unification-P04-S19` - Aggregation Source Invoice Alias Retirement
+- `2026-06-10-ledger-invoice-unification-P04-S20` - Registry Source Alias Routing Removal
+- `2026-06-10-ledger-invoice-unification-P04-S21` - Operator Source Kind Contract Update
+- `2026-06-10-ledger-invoice-unification-P04-S22` - Enum Inventory Gate Update
+- `2026-06-10-ledger-invoice-unification-P04-S23` - API Stub Scaffold
+- `2026-06-10-ledger-invoice-unification-P04-S24` - Full Collect-Only Gate
 - `2026-06-10-ledger-invoice-unification-P05-S25` - Unified Invoice CLI Tests
 - `2026-06-10-ledger-invoice-unification-P05-S26` - Invoice List No-Kind Guard
 - `2026-06-10-ledger-invoice-unification-P05-S27` - Invoice Roundtrip Equality

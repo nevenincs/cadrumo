@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core import Period
 from ....core.aggregation import AggregationSourceKind, CounterpartSourceKind, RowSetGroupingKind
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._bindings_previous_filing import (
@@ -195,9 +196,35 @@ class RegistryModeloObservation(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str = Field(min_length=1, max_length=8)
+    filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _hydrate_filing_period(cls, data: object) -> object:
+        if not isinstance(data, Mapping) or "filing_period" in data:
+            return data
+        filing_year = data.get("filing_year")
+        period = data.get("period")
+        if not isinstance(filing_year, int) or not isinstance(period, str):
+            return data
+        try:
+            filing_period = Period.from_year_and_code(filing_year, period)
+        except ValueError:
+            return data
+        return {**data, "filing_period": filing_period}
+
+    @model_validator(mode="after")
+    def _validate_filing_period_consistency(self) -> RegistryModeloObservation:
+        if self.filing_period is None:
+            return self
+        if self.filing_period.filing_year != self.filing_year:
+            raise RegistryValidationError("observation filing_period year must match filing_year")
+        if self.filing_period.registry_token != self.period:
+            raise RegistryValidationError("observation filing_period code must match period")
+        return self
 
     @property
     def casilla_values(self) -> Mapping[str, Decimal]:
@@ -474,7 +501,6 @@ def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelect
 _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "previous_filing": _PreviousModeloSelector,
     "relation_prefill": _RelationPrefillSelector,
-    AggregationSourceKind.INVOICE: _InvoiceSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
     # optional row_field / grouping / record) is validated against
@@ -527,11 +553,6 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     Sources NOT in the registry are intentionally free-form today;
     those bindings short-circuit with an empty failure list.
     """
-    if binding.source == AggregationSourceKind.INVOICE:
-        return [
-            f"binding {binding.id!r} source 'invoice' is retired; use "
-            "collectible_invoice / payable_invoice / purchase_invoice_evidence",
-        ]
     selector_model = _BINDING_SELECTOR_REGISTRY.get(binding.source)
     if binding.source == RowSetGroupingKind.WITHHOLDING:
         return validate_withholding_binding_selector_shape(binding)
