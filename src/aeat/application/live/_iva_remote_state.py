@@ -324,7 +324,7 @@ def _failed_declaration_ref(declaration: _Declaracion, exc: BaseException) -> st
 def _history_row(state: _IvaCompensationPeriodState) -> IvaCompensationHistoryRow:
     return IvaCompensationHistoryRow(
         year=state.filing_year,
-        period=state.period,
+        period=state.period.registry_token,
         status=state.status,
         presented_at=state.presented_at,
         prior_pending_amount=_decimal_text(state.prior_pending_amount),
@@ -341,7 +341,7 @@ def _carry_forward_lot_row(lot: _IvaCompensationCarryForwardLot) -> IvaCompensat
     return IvaCompensationCarryForwardLotRow(
         taxpayer_ref=_taxpayer_ref(lot.taxpayer_nif),
         source_filing_year=lot.source_filing_year,
-        source_period=lot.source_period,
+        source_period=lot.source_period.registry_token,
         generated_amount=str(lot.generated_amount),
         applied_amount=str(lot.applied_amount),
         remaining_amount=str(lot.remaining_amount),

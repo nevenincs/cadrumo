@@ -558,7 +558,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
     assert observed.observation == observation_a
     assert decisions == (decision_a,)
     assert decision_history == (decision_a,)
-    assert tuple(state.period for state in iva_periods) == ("1TA",)
+    assert tuple(state.period for state in iva_periods) == (Period.from_year_and_code(2026, "1T"),)
     assert usage == usage_a
 
 

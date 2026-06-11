@@ -511,11 +511,11 @@ def _history(label: str) -> ModeloHistory:
 
 
 def _iva_state(label: str) -> IvaCompensationPeriodState:
-    period = "1TA" if label.endswith("a") else "1TB"
+    period = "1T" if label.endswith("a") else "2T"
     return IvaCompensationPeriodState(
         taxpayer_nif="00000000T",
         filing_year=2026,
-        period=period,
+        period=_Period.from_year_and_code(2026, period),
         expediente_id="202610013522456T",
         status="presentada",
         presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),

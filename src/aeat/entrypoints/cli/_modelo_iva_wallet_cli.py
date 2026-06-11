@@ -17,6 +17,7 @@ from ...application.modelo import (
     correct_iva_compensation_period_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
+from ...core import Period
 from ...core.i18n import tr
 from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 from ._common import _emit_envelope
@@ -218,7 +219,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
 
         seed_result = IvaWalletSeedResult(
             filing_year=state.filing_year,
-            period=state.period,
+            period=state.period.registry_token,
             taxpayer_nif=state.taxpayer_nif,
             amount=str(state.available_end_amount),
             status=str(state.status),
@@ -226,7 +227,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
         lines = [
             "operation\tmodelo.iva-wallet.seed",
             f"filing_year\t{state.filing_year}",
-            f"period\t{state.period}",
+            f"period\t{state.period.registry_token}",
             f"taxpayer_nif\t{state.taxpayer_nif}",
             f"amount\t{state.available_end_amount}",
             f"status\t{state.status}",
@@ -393,7 +394,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
 
         correct_result = IvaWalletCorrectResult(
             filing_year=state.filing_year,
-            period=state.period,
+            period=state.period.registry_token,
             taxpayer_nif=state.taxpayer_nif,
             previous_amount=str(previous_state.available_end_amount) if previous_state is not None else "",
             amount=str(state.available_end_amount),
@@ -403,7 +404,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
         lines = [
             "operation\tmodelo.iva-wallet.correct",
             f"filing_year\t{state.filing_year}",
-            f"period\t{state.period}",
+            f"period\t{state.period.registry_token}",
             f"taxpayer_nif\t{state.taxpayer_nif}",
             f"previous_amount\t{previous_state.available_end_amount if previous_state is not None else ''}",
             f"amount\t{state.available_end_amount}",
@@ -418,7 +419,7 @@ def _load_existing_seeded_period(bucket_id: str, filing_year: int, period: str):
     from ...application.calculations import IvaCompensationHistoryRepository
 
     del bucket_id  # repository is profile-active scoped; bucket binding is implicit
-    return IvaCompensationHistoryRepository().load_period(filing_year, period)
+    return IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(filing_year, period))
 
 
 __all__ = ["register_iva_wallet_commands"]

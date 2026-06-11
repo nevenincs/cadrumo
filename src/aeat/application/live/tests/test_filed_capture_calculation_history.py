@@ -111,7 +111,7 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
             IvaCompensationPeriodState(
                 taxpayer_nif=_SYNTHETIC_PROFILE_ID,
                 filing_year=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
                 expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
@@ -159,7 +159,7 @@ def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_p
             ),
         )
 
-        history = IvaCompensationHistoryRepository().load_period(2026, "1T")
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
 
         assert keys == ("303:2026:1T",)
         assert history is not None
@@ -238,7 +238,7 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
             ),
         )
 
-        history = IvaCompensationHistoryRepository().load_period(2026, "1T")
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
 
         assert key == "303:2026:1T"
         assert history is not None
@@ -279,7 +279,7 @@ def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: P
             ),
         )
 
-        history = IvaCompensationHistoryRepository().load_period(2026, "1T")
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
         stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
 
         assert key == "303:2026:1T"

@@ -17,6 +17,7 @@ from ....adapters.outbound.aeat.sede._schema import (
     IvaCompensationWalletRow,
     ObservedCasillaValue,
 )
+from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
@@ -63,7 +64,7 @@ def _state(
     return IvaCompensationPeriodState(
         taxpayer_nif=_TAXPAYER_REF,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         expediente_id=f"EXP-{filing_year}-{period}",
         status="filed",
         presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
@@ -112,7 +113,10 @@ def test_iva_compensation_carry_forward_report_tracks_source_age_application_and
     )
 
     assert report.unallocated_applied_amount == Decimal("0")
-    assert [(lot.source_filing_year, lot.source_period) for lot in report.lots] == [(2022, "4T"), (2024, "1T")]
+    assert [(lot.source_filing_year, lot.source_period) for lot in report.lots] == [
+        (2022, Period.from_year_and_code(2022, "4T")),
+        (2024, Period.from_year_and_code(2024, "1T")),
+    ]
     first, second = report.lots
     assert first.applied_amount == Decimal("31.00")
     assert first.remaining_amount == Decimal("82.00")
@@ -432,10 +436,10 @@ def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path
         "303:2026:1T:20263031T000001",
     )
     assert [(state.filing_year, state.period) for state in reloaded] == [
-        (2024, "4T"),
-        (2025, "2T"),
-        (2025, "4T"),
-        (2026, "1T"),
+        (2024, Period.from_year_and_code(2024, "4T")),
+        (2025, Period.from_year_and_code(2025, "2T")),
+        (2025, Period.from_year_and_code(2025, "4T")),
+        (2026, Period.from_year_and_code(2026, "1T")),
     ]
     assert [
         (
@@ -448,8 +452,22 @@ def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path
         )
         for lot in report.lots
     ] == [
-        (2024, "4T", Decimal("100.00"), Decimal("60.00"), Decimal("40.00"), IvaCompensationExpiryReviewState.ACTIVE),
-        (2025, "4T", Decimal("75.00"), Decimal("0"), Decimal("75.00"), IvaCompensationExpiryReviewState.ACTIVE),
+        (
+            2024,
+            Period.from_year_and_code(2024, "4T"),
+            Decimal("100.00"),
+            Decimal("60.00"),
+            Decimal("40.00"),
+            IvaCompensationExpiryReviewState.ACTIVE,
+        ),
+        (
+            2025,
+            Period.from_year_and_code(2025, "4T"),
+            Decimal("75.00"),
+            Decimal("0"),
+            Decimal("75.00"),
+            IvaCompensationExpiryReviewState.ACTIVE,
+        ),
     ]
     assert report.unallocated_applied_amount == Decimal("0")
 
@@ -479,7 +497,7 @@ def test_iva_compensation_carry_forward_lot_rejects_unbalanced_amounts() -> None
         IvaCompensationCarryForwardLot(
             taxpayer_nif=_TAXPAYER_REF,
             source_filing_year=2026,
-            source_period="1T",
+            source_period=Period.from_year_and_code(2026, "1T"),
             generated_amount=Decimal("100.00"),
             applied_amount=Decimal("20.00"),
             remaining_amount=Decimal("90.00"),
@@ -639,7 +657,7 @@ def test_iva_compensation_state_from_filed_observation_raises_for_non_303_modelo
 
 def test_iva_compensation_period_key_raises_localized_year_range_error() -> None:
     with pytest.raises(IvaCompensationYearRangeError) as excinfo:
-        iva_compensation_period_key(1999, "1T")
+        iva_compensation_period_key(Period.from_year_and_code(1999, "1T"))
 
     assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_year_range"
     assert excinfo.value.context == {"filing_year": 1999, "min_year": 2000, "max_year": 2099}

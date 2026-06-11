@@ -18,6 +18,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -49,7 +50,7 @@ class IvaCompensationPeriodState(BaseModel):
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    period: Period
     expediente_id: str = Field(min_length=1, max_length=32)
     status: str = Field(min_length=1, max_length=32)
     presented_at: datetime
@@ -63,6 +64,12 @@ class IvaCompensationPeriodState(BaseModel):
     source_observation_key: str = Field(min_length=1, max_length=96)
     source_artefact_sha256: str | None = Field(default=None, min_length=64, max_length=64)
 
+    @model_validator(mode="after")
+    def _period_year_matches(self) -> IvaCompensationPeriodState:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("period.filing_year must match filing_year")
+        return self
+
 
 class IvaCompensationCarryForwardLot(BaseModel):
     """One generated IVA compensation balance tracked from its source period."""
@@ -71,7 +78,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     source_filing_year: int = Field(ge=2000, le=2099)
-    source_period: str = Field(min_length=1, max_length=8)
+    source_period: Period
     generated_amount: Decimal = Field(ge=_ZERO)
     applied_amount: Decimal = Field(ge=_ZERO)
     remaining_amount: Decimal = Field(ge=_ZERO)
@@ -81,6 +88,8 @@ class IvaCompensationCarryForwardLot(BaseModel):
 
     @model_validator(mode="after")
     def _amounts_balance(self) -> IvaCompensationCarryForwardLot:
+        if self.source_period.filing_year != self.source_filing_year:
+            raise ValueError("source_period.filing_year must match source_filing_year")
         if self.applied_amount + self.remaining_amount != self.generated_amount:
             raise ValueError("applied_amount + remaining_amount must equal generated_amount")
         return self
@@ -102,7 +111,7 @@ class _WorkingCarryForwardLot:
 
     taxpayer_nif: str
     source_filing_year: int
-    source_period: str
+    source_period: Period
     generated_amount: Decimal
     applied_amount: Decimal
     remaining_amount: Decimal
@@ -219,13 +228,13 @@ def enforce_iva_compensation_four_year_window(
         first = expired[0]
         raise IvaCompensationCarryForwardPolicyError(
             "IVA compensation carry-forward contains expired remaining balance "
-            f"from {first.source_filing_year}/{first.source_period}",
+            f"from {first.source_filing_year}/{first.source_period.registry_token}",
         )
     return report
 
 
-def _period_sort_key(period: str) -> tuple[int, str]:
-    upper = period.upper()
+def _period_sort_key(period: Period) -> tuple[int, str]:
+    upper = period.registry_token
     if upper.endswith("T") and upper[:-1].isdigit():
         return (int(upper[:-1]), upper)
     if upper.isdigit():

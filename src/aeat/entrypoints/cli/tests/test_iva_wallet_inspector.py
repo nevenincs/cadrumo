@@ -26,6 +26,7 @@ from ....application.calculations._iva_wallet_balance import query_iva_wallet_ba
 # trigger these imports (only ``aeat config`` does).
 from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
+from ....core import Period
 from ....domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
@@ -73,7 +74,7 @@ def _state(
     return IvaCompensationPeriodState(
         taxpayer_nif=_NIF,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         expediente_id=f"EXP-{filing_year}-{period}",
         status="filed",
         presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
@@ -250,7 +251,7 @@ def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> 
         )
 
         repo = IvaCompensationHistoryRepository()
-        loaded = repo.load_period(2024, "4T")
+        loaded = repo.load_period(Period.from_year_and_code(2024, "4T"))
 
     assert loaded is not None
     assert loaded.available_end_amount == Decimal("1200.00")
@@ -395,7 +396,7 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
         )
 
         repo = IvaCompensationHistoryRepository()
-        stored = repo.load_period(2024, "4T")
+        stored = repo.load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code == 0, result.output
     payload = _unwrap_envelope(json.loads(result.output))
@@ -461,7 +462,7 @@ def test_carry_forward_lot_rejects_unbalanced_amounts_anti_tautology() -> None:
         IvaCompensationCarryForwardLot(
             taxpayer_nif=_NIF,
             source_filing_year=2024,
-            source_period="1T",
+            source_period=Period.from_year_and_code(2024, "1T"),
             generated_amount=Decimal("1200.00"),
             applied_amount=Decimal("800.00"),  # should be 800, remaining should be 400
             remaining_amount=Decimal("500.00"),  # but 800+500 != 1200 → validator fires
@@ -731,7 +732,7 @@ def test_cli_correct_verb_happy_path_overwrites_seed(tmp_path: Path) -> None:
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
 
-        stored = IvaCompensationHistoryRepository().load_period(2024, "4T")
+        stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code == 0, result.output
     payload = _unwrap_envelope(json.loads(result.output))

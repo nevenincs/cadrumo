@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -203,7 +204,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
             IvaCompensationPeriodState(
                 taxpayer_nif="12345678Z",
                 filing_year=2025,
-                period="4T",
+                period=Period.from_year_and_code(2025, "4T"),
                 expediente_id="30320254T0000000000",
                 status="presentada",
                 presented_at=datetime(2026, 1, 20, 10, 0, tzinfo=UTC),
