@@ -126,6 +126,18 @@ class LedgerTransactionParticipationEntryPayload(OutputSchema):
     justificante_reference: str | None = None
 
 
+class LedgerImportTransactionRefPayload(OutputSchema):
+    """One bucket-qualified transaction reference nested in the import result (D2).
+
+    Mirrors :class:`aeat.domain.transactions.BucketTransactionRef`'s
+    ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]``
+    on the imported / skipped / likely-duplicate ref lists.
+    """
+
+    bucket_id: str
+    transaction_id: str
+
+
 class LedgerImportValidationPayload(OutputSchema):
     """Source-file validation details nested in import result."""
 
@@ -499,6 +511,27 @@ class LedgerStatusResult(OutputSchema):
     ready: bool | None = None
 
 
+class LedgerHistoryEventPayload(OutputSchema):
+    """One bucket event nested in ``aeat app ledger history`` (D2).
+
+    Mirrors :class:`aeat.domain.buckets.BucketEvent`'s ``model_dump(mode="json")``
+    — replaces the former bare ``dict[str, object]`` event shape. The
+    ``payload`` mapping stays a typed ``dict[str, str]`` (the append-only event's
+    free-form short-string detail, per the bucket-event contract), not a bare
+    ``object`` map.
+    """
+
+    event_id: str
+    bucket_id: str
+    event_type: str
+    occurred_at: str
+    actor: str
+    object_type: str
+    object_id: str
+    payload_version: int
+    payload: dict[str, str] = {}
+
+
 @register_schema("ledger.history")
 class LedgerHistoryResult(OutputSchema):
     """JSON envelope for ``aeat app ledger history``."""
@@ -506,7 +539,7 @@ class LedgerHistoryResult(OutputSchema):
     bucket_id: str
     transaction_id: str
     event_count: int
-    events: list[dict[str, object]]
+    events: list[LedgerHistoryEventPayload]
 
 
 @register_schema("ledger.categories")
@@ -585,9 +618,9 @@ class LedgerImportPayload(OutputSchema):
     bucket_id: str | None = None
     import_batch_id: str | None = None
     bucket_event_ids: list[str] = []
-    imported_transaction_refs: list[dict[str, object]] = []
-    skipped_transaction_refs: list[dict[str, object]] = []
-    likely_duplicate_transaction_refs: list[dict[str, object]] = []
+    imported_transaction_refs: list[LedgerImportTransactionRefPayload] = []
+    skipped_transaction_refs: list[LedgerImportTransactionRefPayload] = []
+    likely_duplicate_transaction_refs: list[LedgerImportTransactionRefPayload] = []
     validation: LedgerImportValidationPayload
     source: LedgerImportSourcePayload
     diagnostics: list[LedgerImportDiagnosticPayload] = []

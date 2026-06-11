@@ -19,6 +19,9 @@ from .._ledger_payloads import (
     LedgerClassifyLlmSaturateResult,
     LedgerClassifyLlmSuggestResult,
     LedgerClassifySingleResult,
+    LedgerHistoryEventPayload,
+    LedgerHistoryResult,
+    LedgerImportTransactionRefPayload,
     LedgerLinkEvidenceUpdatePayload,
     LedgerLinkResult,
     LedgerListRowPayload,
@@ -174,6 +177,37 @@ def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
     assert row.created_at == "2024-04-10T09:30:00+00:00"
     assert row.group_label == "Proyecto Acme"
     assert LedgerListRowPayload.model_validate(row.model_dump(mode="json")) == row
+
+
+def test_history_events_are_typed_not_bare_dicts() -> None:
+    """D2: ledger history events are a typed list, not list[dict[str, object]]."""
+    event = {
+        "event_id": "e" * 64,
+        "bucket_id": "default",
+        "event_type": "LEDGER_TRANSACTION_CREATED",
+        "occurred_at": "2024-04-10T09:30:00+00:00",
+        "actor": "operator",
+        "object_type": "LEDGER_TRANSACTION",
+        "object_id": "a" * 64,
+        "payload_version": 1,
+        "payload": {"source_command": "aeat app ledger add"},
+    }
+    result = LedgerHistoryResult.model_validate(
+        {"bucket_id": "default", "transaction_id": "a" * 64, "event_count": 1, "events": [event]},
+    )
+    assert isinstance(result.events[0], LedgerHistoryEventPayload)
+    assert result.events[0].payload == {"source_command": "aeat app ledger add"}
+    assert LedgerHistoryResult.model_validate(result.model_dump(mode="json")) == result
+
+
+def test_import_transaction_refs_are_typed() -> None:
+    """D2: import transaction-ref lists are typed, not list[dict[str, object]]."""
+    ref = LedgerImportTransactionRefPayload.model_validate(
+        {"bucket_id": "default", "transaction_id": "a" * 64},
+    )
+    assert ref.bucket_id == "default"
+    assert ref.transaction_id == "a" * 64
+    assert LedgerImportTransactionRefPayload.model_validate(ref.model_dump(mode="json")) == ref
 
 
 def test_transaction_payload_carries_d6_timestamps() -> None:
