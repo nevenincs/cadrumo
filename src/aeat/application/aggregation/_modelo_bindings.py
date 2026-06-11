@@ -69,7 +69,7 @@ class ModeloLedgerBindingAggregation(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2100)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     iva_issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
@@ -158,7 +158,7 @@ class LedgerIvaAggregationSourceResolver:
                 bucket_id=context.bucket_id,
                 period=aggregation_period_for_modelo(
                     filing_year=context.filing_year,
-                    period=context.period.registry_token,
+                    code=context.period.registry_token,
                 ),
                 transaction_repository=self._transaction_repository,
             )
@@ -254,7 +254,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
                 bucket_id=context.bucket_id,
                 period=aggregation_period_for_modelo(
                     filing_year=context.filing_year,
-                    period=context.period.registry_token,
+                    code=context.period.registry_token,
                 ),
                 transaction_repository=self._transaction_repository,
                 invoice_repository=self._invoice_repository,
@@ -310,7 +310,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
 
         aggregation_period = aggregation_period_for_modelo(
             filing_year=context.filing_year,
-            period=context.period.registry_token,
+            code=context.period.registry_token,
         )
         try:
             aggregation = aggregate_renta_income_ledger_from_repositories(
@@ -354,7 +354,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         )
 
 
-def aggregation_period_for_modelo(*, filing_year: int, period: str) -> Period:
+def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
     """Translate a canonical ``StandardPeriodCode`` token to a core period.
 
     Accepts only the span-shaped canonical AEAT tokens the calc engine and the
@@ -363,18 +363,18 @@ def aggregation_period_for_modelo(*, filing_year: int, period: str) -> Period:
     :class:`Period` consumed by ledger filters. Any other token raises
     :class:`AggregationValidationError`.
     """
-    normalized = period.strip().upper()
+    normalized = code.strip().upper()
     try:
         resolved = Period.from_year_and_code(filing_year, normalized)
     except PeriodError as exc:
         raise AggregationValidationError(
             t("aggregation.modelo_bindings.errors.unsupported_period"),
-            context={"filing_year": str(filing_year), "period": period},
+            context={"filing_year": str(filing_year), "period": code},
         ) from exc
     if not resolved.has_date_span():
         raise AggregationValidationError(
             t("aggregation.modelo_bindings.errors.unsupported_period"),
-            context={"filing_year": str(filing_year), "period": period},
+            context={"filing_year": str(filing_year), "period": code},
         )
     return resolved
 

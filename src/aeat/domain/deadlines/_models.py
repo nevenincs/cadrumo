@@ -266,21 +266,6 @@ class CrossPeriodGroupMemberRoster(BaseModel):
     period: Period
     member_nifs: tuple[str, ...] = Field(min_length=1)
 
-    @model_validator(mode="before")
-    @classmethod
-    def _coerce_period_from_profile_token(cls, data: object) -> object:
-        if not isinstance(data, dict):
-            return data
-        period = data.get("period")
-        if isinstance(period, Period) or isinstance(period, dict):
-            return data
-        filing_year = data.get("filing_year")
-        if isinstance(filing_year, int) and isinstance(period, str):
-            coerced = dict(data)
-            coerced["period"] = Period.from_year_and_code(filing_year, period)
-            return coerced
-        return data
-
     @field_validator("member_nifs", mode="before")
     @classmethod
     def _coerce_member_nifs(cls, value: object) -> object:

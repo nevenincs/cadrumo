@@ -70,28 +70,28 @@ def test_canonical_span_token_maps_to_typed_period(
     token: StandardPeriodCode,
 ) -> None:
     """Every canonical ledger-span token yields an aggregation Period."""
-    period = aggregation_period_for_modelo(filing_year=_FILING_YEAR, period=token.value)
+    period = aggregation_period_for_modelo(filing_year=_FILING_YEAR, code=token.value)
 
     assert period.year == _FILING_YEAR
 
 
 def test_canonical_tokens_map_to_expected_typed_periods() -> None:
     """The three canonical shapes resolve to their typed aggregation periods."""
-    assert aggregation_period_for_modelo(filing_year=2025, period="1T") == _period("1T")
-    assert aggregation_period_for_modelo(filing_year=2025, period="4T") == _period("4T")
-    assert aggregation_period_for_modelo(filing_year=2025, period="0A") == _period("0A")
-    assert aggregation_period_for_modelo(filing_year=2025, period="03") == _period("03")
-    assert aggregation_period_for_modelo(filing_year=2025, period="12") == _period("12")
+    assert aggregation_period_for_modelo(filing_year=2025, code="1T") == _period("1T")
+    assert aggregation_period_for_modelo(filing_year=2025, code="4T") == _period("4T")
+    assert aggregation_period_for_modelo(filing_year=2025, code="0A") == _period("0A")
+    assert aggregation_period_for_modelo(filing_year=2025, code="03") == _period("03")
+    assert aggregation_period_for_modelo(filing_year=2025, code="12") == _period("12")
 
 
 @pytest.mark.parametrize("alias", _DELETED_ALIASES)
 def test_deleted_alias_tokens_now_raise(alias: str) -> None:
     """Each purged legacy alias raises instead of silently translating."""
     with pytest.raises(AggregationValidationError):
-        aggregation_period_for_modelo(filing_year=_FILING_YEAR, period=alias)
+        aggregation_period_for_modelo(filing_year=_FILING_YEAR, code=alias)
 
 
 def test_lowercase_canonical_token_is_normalised_not_an_alias() -> None:
     """A lowercase canonical token still resolves (case-fold), not via an alias branch."""
-    assert aggregation_period_for_modelo(filing_year=2025, period="1t") == _period("1T")
-    assert aggregation_period_for_modelo(filing_year=2025, period="0a") == _period("0A")
+    assert aggregation_period_for_modelo(filing_year=2025, code="1t") == _period("1T")
+    assert aggregation_period_for_modelo(filing_year=2025, code="0a") == _period("0A")
