@@ -4,7 +4,7 @@ Some forms can't be filled from a single period's records alone. A yearly summar
 
 If you want how a single period's figures are built from your records, see [How your records become tax figures](from-records-to-figures.md). This page is about the connections *between* filings.
 
-A quick note on terms. A *modelo* is one of the agency's tax forms. AEAT is the Spanish tax agency (Agencia Estatal de Administración Tributaria). A *casilla* is a numbered box on a form. *IVA* is value-added tax; *IRPF* is personal income tax; *RENTA* is the annual income-tax return (Modelo 100). A *justificante* is the receipt the agency issues when you file.
+For any term you are unsure of - {term}`modelo 100`, {term}`casilla`, {term}`justificante`, {term}`AEAT`, IVA, IRPF, or RENTA - look it up in the {doc}`glossary </_generated/glossary>`.
 
 ## Why a later form needs earlier figures
 

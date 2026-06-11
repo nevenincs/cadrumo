@@ -151,7 +151,7 @@ If the deadline has passed, file late through AEAT's own channels; consult AEAT 
 
 ## Where to get help
 
-If a report or an error message does not match what this guide describes, see [Diagnose and repair](troubleshooting.md). Unfamiliar terms are defined in the [glossary](../glossary.md). Before you share command output to ask for help, remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
+If a report or an error message does not match what this guide describes, see [Diagnose and repair](troubleshooting.md). Unfamiliar terms are defined in the {doc}`glossary </_generated/glossary>`. Before you share command output to ask for help, remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
 
 ## Next steps
 

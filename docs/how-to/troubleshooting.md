@@ -198,7 +198,7 @@ Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), names, ad
 
 Take the request to the [project issue tracker](https://github.com/wgergely/aeat/issues).
 
-If a term in an error message is unfamiliar, look it up in the [glossary](../glossary.md).
+If a term in an error message is unfamiliar, look it up in the {doc}`glossary </_generated/glossary>`.
 
 ## Next steps
 

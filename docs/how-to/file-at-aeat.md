@@ -134,7 +134,7 @@ explanation.
 
 For diagnosing problems on your machine - refused commands, export errors,
 verification failures - see [troubleshooting](troubleshooting.md). Unfamiliar
-terms are defined in the [glossary](../glossary.md). Before you share command
+terms are defined in the {doc}`glossary </_generated/glossary>`. Before you share command
 output to ask for help, remove personal tax identifiers such as your NIF, CIF,
 DNI, NIE, or NII.
 

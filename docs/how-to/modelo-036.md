@@ -102,7 +102,7 @@ profile with the censo pull, compare, and apply commands - see
 ## Where to get help
 
 - If a command fails, see [troubleshooting](troubleshooting.md).
-- For unfamiliar terms, see the [glossary](../glossary.md).
+- For unfamiliar terms, see the {doc}`glossary </_generated/glossary>`.
 - Before sharing command output with anyone, strip tax identifiers such as NIF, CIF,
   DNI, NIE, or NII.
 
