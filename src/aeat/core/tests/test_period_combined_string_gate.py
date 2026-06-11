@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import struct
 from dataclasses import dataclass
 from pathlib import Path
 from re import Pattern
@@ -86,11 +87,23 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="external HTML/PDF corpus and fixture generation material preserves official/source labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/inbound/declaracion/tests/"),
+        path=_path(
+            r"^src/aeat/adapters/inbound/declaracion/tests/(?:"
+            r"_parser_boundary_support|_verification_chain_support|"
+            r"test_m303_primitive_anti_tautology|test_parser_boundary_part1|"
+            r"test_parser_boundary_part2|test_parser_boundary_part3|"
+            r"test_parser_synthetic_fixtures|test_verification_chain_part1|"
+            r"test_verification_chain_part2|test_verification_chain_part3"
+            r")\.py$"
+        ),
         reason="declaracion parser corpus tests pin external justificante fixture filenames and source labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/inbound/(?:justificante|pdf)/tests/"),
+        path=_path(r"^src/aeat/adapters/inbound/justificante/tests/test_parser\.py$"),
+        reason="justificante parser tests preserve external PDF fixture filenames",
+    ),
+    AllowlistRule(
+        path=_path(r"^src/aeat/adapters/inbound/pdf/tests/test_scrub\.py$"),
         reason="inbound parser and scrub tests preserve external justificante/PDF fixture filenames",
     ),
     AllowlistRule(
@@ -186,7 +199,12 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="artifact/cache/export tests preserve external filename and object-key labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/live/tests/"),
+        path=_path(
+            r"^src/aeat/application/live/tests/test_(?:"
+            r"filed_capture_calculation_history|iva_remote_state_acquisition|"
+            r"iva_wallet_capture_backend|justificante_reconcile_from_persisted"
+            r")\.py$"
+        ),
         reason="live capture tests preserve AEAT expediente, observation, and secure-object labels",
     ),
     AllowlistRule(
@@ -272,9 +290,55 @@ def test_repo_has_no_unallowlisted_combined_period_strings() -> None:
 
 def _tracked_text_files() -> list[Path]:
     paths: list[Path] = []
-    for root in SCAN_ROOTS:
-        paths.extend(path for path in (REPOSITORY_ROOT / root).rglob("*") if _should_scan(path))
+    for relative_path in _tracked_repository_paths():
+        if not any(relative_path == root or relative_path.startswith(f"{root}/") for root in SCAN_ROOTS):
+            continue
+        path = REPOSITORY_ROOT / relative_path
+        if _should_scan(path):
+            paths.append(path)
     return sorted(paths)
+
+
+def _tracked_repository_paths() -> tuple[str, ...]:
+    """Return paths tracked by Git without spawning a shell command."""
+    git_dir = _git_dir()
+    index_path = git_dir / "index"
+    data = index_path.read_bytes()
+    if data[:4] != b"DIRC":
+        raise AssertionError(f"unexpected git index header in {index_path}")
+    version, entry_count = struct.unpack(">II", data[4:12])
+    if version not in (2, 3):
+        raise AssertionError(f"unsupported git index version {version}; update the period gate reader")
+
+    offset = 12
+    paths: list[str] = []
+    for _ in range(entry_count):
+        entry_start = offset
+        flags = struct.unpack(">H", data[offset + 60 : offset + 62])[0]
+        offset += 62
+        if flags & 0x4000:
+            offset += 2
+        path_end = data.index(b"\x00", offset)
+        tracked_path = data[offset:path_end].decode("utf-8")
+        offset = path_end + 1
+        while (offset - entry_start) % 8:
+            offset += 1
+        paths.append(tracked_path)
+    return tuple(paths)
+
+
+def _git_dir() -> Path:
+    git_marker = REPOSITORY_ROOT / ".git"
+    if git_marker.is_dir():
+        return git_marker
+    marker_text = git_marker.read_text(encoding="utf-8").strip()
+    prefix = "gitdir: "
+    if not marker_text.startswith(prefix):
+        raise AssertionError(f"unsupported .git marker: {marker_text!r}")
+    git_dir = Path(marker_text[len(prefix) :])
+    if not git_dir.is_absolute():
+        git_dir = (git_marker.parent / git_dir).resolve()
+    return git_dir
 
 
 def _should_scan(path: Path) -> bool:
