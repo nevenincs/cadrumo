@@ -972,8 +972,17 @@ S398 classifies the unresolved testimonial findings after S396 reconciliation an
 Run fresh persona retests only after ownership is explicit, then add or execute secure-storage-owned repair rows with isolated scratch roots and CLI-only operator paths.
 
 - [x] `W13.P28.S399` - Dispatch fresh persona retests for secure-storage-owned workflows with isolated scratch roots; `.vault/exec`.
-- [ ] `W13.P28.S400` - Adopt secure-storage-owned testimonial repairs into plan rows before implementation; `.vault/plan`.
+- [x] `W13.P28.S400` - Adopt secure-storage-owned testimonial repairs into plan rows before implementation; `.vault/plan`.
 - [ ] `W13.P28.S401` - Persist testimonial retest synthesis and final finding dispositions; `.vault/audit`.
+
+#### S400 repair-adoption register
+
+S400 adopts no new secure-storage repair rows from the S399 retest pass. The focused secure-storage-owned findings remain covered by existing implementation and regression gates:
+
+| Finding | S399 evidence | S400 decision |
+|---|---|---|
+| FRESH-011 undecryptable stored draft readiness blocker | Clean Modelo 111 readiness passes with explicit preflight scope; unreadable secure-object rows surface through metadata-only repair integrity diagnostics; backend unreadable-row grouping/listing tests pass. | No new repair row. Keep S401 synthesis as final disposition and reopen only if a future retest shows readiness consumes degraded storage silently or repair diagnostics leak private data. |
+| REPAIR-PROFILE-PRIVACY-001 repair-profile identifier leakage | Repair profile, integrity objects, quarantine dry-run, and fresh-root repair bootstrap gates pass with real isolated fixtures. | No new repair row. Treat as remediated regression coverage in S401. |
 
 ## Wave `W14` - ModeloDraft roundtrip fixture hardening
 
