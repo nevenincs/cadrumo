@@ -22,14 +22,14 @@ related:
 - Verified prior landings `1a9d1608c` and `7d69fdee9` for the curation-backlog ratchet code and tests before changing plan state.
 - Kept the committed ratchet baseline at 75 draft concepts and 75 empty `short_description` concepts, sourced from `python -m aeat.terminology audit`.
 - Exposed the standing gate through `check_curation_backlog_ratchet()` and `python -m aeat.terminology audit --ratchet-check`.
-- Regenerated generated API stubs so `aeat.terminology._ratchet` is represented in the API reference toctree.
-- Ran focused terminology gates and API-stub drift checks before closing the step.
+- Confirmed generated API stubs include `aeat.terminology._ratchet` and the API-stub tree has no drift.
+- Ran focused terminology gates, API-stub drift checks, and plan checks before closing the step.
 
 ## Outcome
 
-S29 is satisfied. The terminology audit now has an executable ratchet that fails on any increase in draft concepts or placeholder/empty short descriptions relative to the committed baseline, while allowing curation progress. The real bundled handbook currently reports 75 draft concepts and 75 empty short descriptions, exactly matching the baseline, and the CLI reports the ratchet as clean.
+S29 is satisfied. The terminology audit has an executable ratchet that fails on any increase in draft concepts or placeholder/empty short descriptions relative to the committed baseline, while allowing curation progress. The real bundled handbook currently reports 75 draft concepts and 75 empty short descriptions, exactly matching the baseline, and the CLI reports the ratchet as clean.
 
-Files touched for this closeout: `src/aeat/_data/terminology/curation-ratchet.json`, `src/aeat/terminology/_ratchet.py`, `docs/api/aeat.terminology.rst`, `docs/api/aeat.terminology._ratchet.rst`, and this exec record.
+Implementation and generated API-doc files are present in HEAD: `src/aeat/_data/terminology/curation-ratchet.json`, `src/aeat/terminology/_ratchet.py`, `docs/api/aeat.terminology.rst`, and `docs/api/aeat.terminology._ratchet.rst`. This pickup changed only the plan checkbox and this exec record.
 
 ## Notes
 
