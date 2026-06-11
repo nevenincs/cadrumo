@@ -67,8 +67,7 @@ the right source - the portal is theirs, not the tool's.
 
 ## Step 4: save the justificante
 
-Immediately after submitting, download the justificante (the official receipt
-AEAT issues). AEAT usually offers it as a PDF.
+Immediately after submitting, download the {term}`justificante`. AEAT usually offers it as a PDF.
 
 Keep it with your tax records. You'll use it in step 6 to reconcile AEAT's
 record against your local one.

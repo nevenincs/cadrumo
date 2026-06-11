@@ -56,7 +56,7 @@ Before you commit to a form, you can review every figure and trace it back to th
 
 ## Recording a filing, after you upload it yourself
 
-The tool stops at the file. You upload it through the agency's portal, and the agency hands you a *justificante* - the receipt that proves you filed. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
+The tool stops at the file. You upload it through the agency's portal, and the agency hands you a {term}`justificante`. Back in the tool, you record that the filing is done, so your own history stays accurate. See [Recording a filing, and why the tool never files for you](recording-a-filing-and-the-boundary.md).
 
 ---
 
