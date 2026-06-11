@@ -7,6 +7,7 @@ from decimal import Decimal, InvalidOperation
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from ....domain.filing._errors import ModeloBuilderError
 from ....domain.filing._schema import ModeloDraft, ModeloValueKind
 from ....domain.submission import ModeloDraftStatus
@@ -38,12 +39,13 @@ def _valid_bindings() -> dict[str, Decimal]:
 def test_builds_frozen_draft_through_registry_runtime() -> None:
     draft = build_registry_filing_draft(
         modelo="130",
-        period="2026Q1",
+        period="1T",
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
     )
 
     assert isinstance(draft, ModeloDraft)
+    assert draft.period == Period.from_year_and_code(2026, "1T")
     assert draft.schema_version.startswith("registry:130:")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         draft.status = ModeloDraftStatus.BORRADOR
@@ -62,6 +64,66 @@ def test_approved_status_uses_application_approval_path() -> None:
     assert draft.approved_by == "registry"
     assert draft.approval_basis is not None
     assert draft.review_checksum is not None
+
+
+def test_typed_period_input_is_passed_to_draft_without_string_roundtrip() -> None:
+    period = Period.from_year_and_code(2026, "1T")
+
+    draft = build_registry_filing_draft(
+        modelo="130",
+        period=period,
+        casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
+        status=ModeloDraftStatus.BORRADOR,
+    )
+
+    assert draft.period == period
+    assert draft.snapshot_ref is not None
+    assert draft.snapshot_ref.modelo_year == period.year
+    assert draft.snapshot_ref.period == period.registry_token
+
+
+def test_bare_period_input_uses_explicit_filing_year() -> None:
+    draft = build_registry_filing_draft(
+        modelo="130",
+        period="1T",
+        filing_year=2024,
+        casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
+        status=ModeloDraftStatus.BORRADOR,
+    )
+
+    assert draft.period == Period.from_year_and_code(2024, "1T")
+    assert draft.snapshot_ref is not None
+    assert draft.snapshot_ref.modelo_year == 2024
+    assert draft.snapshot_ref.period == "1T"
+
+
+def test_combined_period_input_remains_transitional_inbound_only() -> None:
+    draft = build_registry_filing_draft(
+        modelo="130",
+        period="2026Q1",
+        casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
+        status=ModeloDraftStatus.BORRADOR,
+    )
+
+    assert draft.period == Period.from_year_and_code(2026, "1T")
+
+
+def test_combined_period_input_uses_embedded_year_not_default_year() -> None:
+    draft = build_registry_filing_draft(
+        modelo="130",
+        period="2024Q1",
+        casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
+        status=ModeloDraftStatus.BORRADOR,
+    )
+
+    assert draft.period == Period.from_year_and_code(2024, "1T")
+    assert draft.snapshot_ref is not None
+    assert draft.snapshot_ref.modelo_year == 2024
+    assert draft.snapshot_ref.period == "1T"
 
 
 def test_non_approved_status_clears_approval_fields() -> None:
