@@ -40,15 +40,15 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._participation_index import (
-    TransactionParticipationIndexRepository,
-    TransactionRevisionParticipation,
-    upsert_transaction_participation,
-)
 from ...domain.modelos._ledger_filing_snapshot import (
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
     ManualFactBasisEntry,
+)
+from ...domain.modelos._participation_index import (
+    TransactionParticipationIndexRepository,
+    TransactionRevisionParticipation,
+    upsert_transaction_participation,
 )
 from ...domain.modelos._protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
