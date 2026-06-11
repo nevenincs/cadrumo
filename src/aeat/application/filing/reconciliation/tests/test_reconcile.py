@@ -169,6 +169,7 @@ class TestReconcileMatch:
         assert report.mismatches == ()
         assert report.justificante is not None
         assert report.justificante.csv == justificante.csv
+        assert report.draft_ref.period == _P_2024_Q1
         assert report.reconciled_at == _FIXED_NOW
         assert report.mode == "read"
 
