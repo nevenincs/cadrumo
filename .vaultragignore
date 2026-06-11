@@ -15,6 +15,16 @@ docs/_build/
 docs/cli/
 docs/api/
 
+# Raw BOE normatives HTML: the article-split preprocessor emits clean
+# per-article *.extracted.md sidecars for these, which rank far better than
+# the raw markup (the raw HTML polluted the low-score tail with TOC link
+# farms and tag noise). Exclude only the raw .html here so the clean
+# *.extracted.md sidecars remain the sole index entry for this corpus. The
+# pattern matches *.html but not *.html.extracted.md (different suffix), and
+# is scoped to normatives/html so other raw HTML without a sidecar stays
+# indexable.
+src/aeat/_data/corpus/normatives/html/*.html
+
 # Local caches, reports, and ad-hoc execution output that may appear before
 # .gitignore pruning catches up.
 .import_linter_cache/
