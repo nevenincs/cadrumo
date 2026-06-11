@@ -30,7 +30,7 @@ def _build_filing(
     values: tuple[tuple[str, Decimal], ...],
     warnings: tuple[ExtractionWarning, ...] = (),
     modelo: str = "130",
-    period: str = "2025Q1",
+    period: str = "1T",
     ejercicio: str = "2025",
 ) -> DeclaracionObservation:
     """Build a parsed declaration boundary object for verification."""
@@ -130,7 +130,7 @@ def test_verify_declaracion_classifies_registry_divergence() -> None:
 def test_verify_declaracion_uses_modelo_115_registry_snapshot() -> None:
     filing = _build_filing(
         modelo="115",
-        period="2026Q1",
+        period="1T",
         ejercicio="2026",
         values=(
             ("01", Decimal("1")),
@@ -153,7 +153,7 @@ def test_verify_declaracion_uses_modelo_115_registry_snapshot() -> None:
 def test_verify_declaracion_uses_modelo_123_current_registry_snapshot() -> None:
     filing = _build_filing(
         modelo="123",
-        period="2026Q1",
+        period="1T",
         ejercicio="2026",
         values=(
             ("01", Decimal("2")),
@@ -185,7 +185,7 @@ def test_verify_declaracion_uses_modelo_123_current_registry_snapshot() -> None:
 def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> None:
     filing = _build_filing(
         modelo="123",
-        period="2023Q1",
+        period="1T",
         ejercicio="2023",
         values=(
             ("01-legacy", Decimal("2")),
@@ -218,7 +218,7 @@ def test_verify_declaracion_fails_without_registry_snapshot() -> None:
     assert error.translated_message == "application.verification.errors.registry_snapshot_invalid"
     assert error.context == {
         "modelo": "999",
-        "period": "2025Q1",
+        "period": "1T",
         "ejercicio": "2025",
         "error_type": "RegistrySnapshotError",
     }
@@ -246,7 +246,7 @@ def test_verify_declaracion_reports_missing_registry_bindings_as_locale_error() 
         ),
         "count": 3,
         "modelo": "130",
-        "period": "2025Q1",
+        "period": "1T",
     }
 
 
