@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...core.identity import BucketId
 from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
@@ -55,7 +56,7 @@ class Modelo100BorradorBindingCommand(BaseModel):
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=1900, le=9999)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     caller_binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
     caller_enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
@@ -216,7 +217,7 @@ class Modelo100BorradorSourceResolver:
                     bucket_id=context.bucket_id,
                     modelo=context.modelo,
                     filing_year=context.filing_year,
-                    period=context.period.registry_token,
+                    period=context.period,
                     borrador_snapshot_id=self._borrador_snapshot_id,
                     caller_binding_values=self._caller_binding_values,
                     caller_enum_binding_values=self._caller_enum_binding_values,
@@ -257,11 +258,11 @@ def _assert_same_axis(
     *,
     bucket_id: str,
     filing_year: int,
-    period: str,
+    period: Period,
     snapshot: Borrador100Snapshot,
 ) -> None:
     expected_bucket = bucket_id.strip()
-    expected_period = period.strip()
+    expected_period = period.registry_token
     if snapshot.bucket_id != expected_bucket:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_bucket_mismatch",
@@ -291,14 +292,17 @@ def _assert_registry_snapshot_axis(
                 "command_modelo": command.modelo.strip(),
             },
         )
-    if registry_snapshot.filing_year != command.filing_year or registry_snapshot.period != command.period.strip():
+    if (
+        registry_snapshot.filing_year != command.filing_year
+        or registry_snapshot.period != command.period.registry_token
+    ):
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.registry_snapshot_axis_mismatch",
             context={
                 "snapshot_year": registry_snapshot.filing_year,
                 "snapshot_period": registry_snapshot.period,
                 "filing_year": command.filing_year,
-                "period": command.period.strip(),
+                "period": command.period.registry_token,
             },
         )
 
