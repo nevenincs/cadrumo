@@ -433,7 +433,7 @@ def _parse_typed_cli_observations[ObservationT: BaseModel](
                     "cli.app.modelo.aggregate.json_validation_error",
                     flag=flag,
                     details=details,
-                )
+                ),
             ) from exc
     return tuple(parsed)
 
@@ -501,7 +501,7 @@ def aggregate_modelo(
     source_kinds = ", ".join(source_kind.value for source_kind in result.source_kinds) or "-"
     aggregate_result = ModeloAggregateResult(
         modelo=result.modelo,
-        period=result.period,
+        period=result.period.registry_token,
         provider=result.provider.value,
         observation_count=result.log_fields.observation_count,
         source_kinds=[sk.value for sk in result.source_kinds],
@@ -510,7 +510,7 @@ def aggregate_modelo(
     lines = [
         "operation\tmodelo.aggregate",
         f"modelo\t{result.modelo}",
-        f"period\t{result.period}",
+        f"period\t{result.period.registry_token}",
         f"provider\t{result.provider.value}",
         f"observation_count\t{result.log_fields.observation_count}",
         f"source_kinds\t{source_kinds}",
@@ -534,7 +534,7 @@ _MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
         "errors.calc.bound_casilla_binding_value_missing",
         "errors.calc.enum_binding_value_missing",
         "errors.calc.relation_value_missing",
-    }
+    },
 )
 
 
@@ -689,7 +689,7 @@ def work_compare_taxation(
                 "cli.app.modelo.work.compare_taxation_work_unit_not_found",
                 work_unit_id=work_unit_id or "",
                 default="Work unit {work_unit_id} not found; check 'aeat app modelo work list'.",
-            )
+            ),
         ) from exc
     except TaxationComparisonError as exc:
         raise typer.BadParameter(
@@ -697,7 +697,7 @@ def work_compare_taxation(
                 "cli.app.modelo.work.compare_taxation_error",
                 detail=str(exc),
                 default="Taxation comparison failed: {detail}",
-            )
+            ),
         ) from exc
 
     from ._modelo_payloads import WorkCompareTaxationResult
@@ -853,7 +853,7 @@ def work_history(
 
 
 def _calculation_revision_not_found_bad_parameter_wide(
-    calculation_revision_id: str, exc: BaseException
+    calculation_revision_id: str, exc: BaseException,
 ) -> typer.BadParameter:
     """Widen the exc parameter to BaseException for the register_work_verification_commands contract."""
     assert isinstance(exc, CalculationRevisionNotFoundError)
@@ -916,7 +916,7 @@ def _required_amendment_inputs(
             tr(
                 "cli.app.modelo.work.amend_missing_options",
                 missing=", ".join(missing),
-            )
+            ),
         )
     assert from_filing_record_id is not None
     assert kind is not None
@@ -933,7 +933,7 @@ def _parse_amendment_kind(kind: str) -> CalculationRevisionAmendmentKind:
                 "cli.app.modelo.work.invalid_amendment_kind",
                 choices=", ".join(repr(k.value) for k in CalculationRevisionAmendmentKind),
                 kind=kind,
-            )
+            ),
         ) from exc
 
 
@@ -1024,7 +1024,7 @@ def work_amend(
             "amendment_kind": amendment_kind.value,
             "amends_filing_record_id": from_filing_record_id,
             **_filing_record_payload(record).model_dump(mode="python"),
-        }
+        },
     )
     lines = [
         "operation\tmodelo.work.amend",

@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from .._retenciones import (
     RetencionesAggregation,
     RetencionObservation,
@@ -17,6 +18,9 @@ from .._retenciones import (
     aggregate_retenciones_190,
     aggregate_retenciones_193,
 )
+
+_P_2025_Q1 = Period.from_year_and_code(2025, "1T")
+_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -67,9 +71,9 @@ class TestObservationContract:
 
 class TestAggregate111:
     def test_empty_observations_produces_zero_totals(self) -> None:
-        result = aggregate_retenciones_111((), period="2025-Q1")
+        result = aggregate_retenciones_111((), period=_P_2025_Q1)
         assert result.modelo == "111"
-        assert result.period == "2025-Q1"
+        assert result.period == _P_2025_Q1
         assert result.rollups == ()
         assert result.total_perceptors == 0
         assert result.total_taxable_base == Decimal("0")
@@ -83,7 +87,7 @@ class TestAggregate111:
             base="1000.00",
             retencion="150.00",
         )
-        result = aggregate_retenciones_111((obs,), period="2025-Q1")
+        result = aggregate_retenciones_111((obs,), period=_P_2025_Q1)
         assert len(result.rollups) == 1
         row = result.rollups[0]
         assert row.perceptor_nif == "B12345678"
@@ -109,7 +113,7 @@ class TestAggregate111:
             retencion="105.00",
             source_id="tx-2",
         )
-        result = aggregate_retenciones_111((obs_a, obs_b), period="2025-Q1")
+        result = aggregate_retenciones_111((obs_a, obs_b), period=_P_2025_Q1)
         assert len(result.rollups) == 1
         assert result.rollups[0].observations_count == 2
         assert result.rollups[0].total_taxable_base == Decimal("1200.00")
@@ -130,7 +134,7 @@ class TestAggregate111:
             retencion="105.00",
             source_id="tx-2",
         )
-        result = aggregate_retenciones_111((obs_work, obs_econ), period="2025-Q1")
+        result = aggregate_retenciones_111((obs_work, obs_econ), period=_P_2025_Q1)
         assert len(result.rollups) == 2
         schemes = {row.scheme for row in result.rollups}
         assert schemes == {RetencionScheme.WORK_INCOME, RetencionScheme.ECONOMIC_ACTIVITY}
@@ -143,7 +147,7 @@ class TestAggregate111:
             _obs(nif="A2", scheme=RetencionScheme.WORK_INCOME, base="200", retencion="30", source_id="t2"),
             _obs(nif="A3", scheme=RetencionScheme.WORK_INCOME, base="300", retencion="45", source_id="t3"),
         )
-        result = aggregate_retenciones_111(observations, period="2025-Q1")
+        result = aggregate_retenciones_111(observations, period=_P_2025_Q1)
         assert result.total_perceptors == 3
         assert result.total_taxable_base == Decimal("600")
         assert result.total_retencion == Decimal("90")
@@ -154,7 +158,7 @@ class TestAggregate111:
             _obs(nif="A1", scheme=RetencionScheme.ECONOMIC_ACTIVITY, base="200", retencion="30", source_id="t2"),
             _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="300", retencion="45", source_id="t3"),
         )
-        result = aggregate_retenciones_111(observations, period="2025-Q1")
+        result = aggregate_retenciones_111(observations, period=_P_2025_Q1)
         keys = [(row.perceptor_nif, row.scheme.value) for row in result.rollups]
         assert keys == sorted(keys)
 
@@ -163,8 +167,8 @@ class TestAggregate111:
             _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),
             _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="200", retencion="30", source_id="t2"),
         )
-        forward = aggregate_retenciones_111(observations, period="2025-Q1")
-        reverse = aggregate_retenciones_111(tuple(reversed(observations)), period="2025-Q1")
+        forward = aggregate_retenciones_111(observations, period=_P_2025_Q1)
+        reverse = aggregate_retenciones_111(tuple(reversed(observations)), period=_P_2025_Q1)
         assert forward.model_dump_json() == reverse.model_dump_json()
 
     def test_unregistered_modelo_raises_domain_error(self) -> None:
@@ -189,7 +193,7 @@ class TestAggregate123:
             _obs(nif="B1", scheme=RetencionScheme.CAPITAL_DIVIDEND, base="1000", retencion="190", source_id="c2"),
             _obs(nif="B1", scheme=RetencionScheme.WORK_INCOME, base="999", retencion="150", source_id="c3"),
         )
-        result = aggregate_retenciones_123(observations, period="2025-Q1")
+        result = aggregate_retenciones_123(observations, period=_P_2025_Q1)
         assert result.modelo == "123"
         # WORK_INCOME observation is filtered out (not in 123 catalogue)
         assert len(result.rollups) == 2
@@ -200,7 +204,7 @@ class TestAggregate123:
         observations = (
             _obs(nif="B1", scheme=RetencionScheme.CAPITAL_OTHER, base="300", retencion="57", source_id="c1"),
         )
-        result = aggregate_retenciones_123(observations, period="2025-Q1")
+        result = aggregate_retenciones_123(observations, period=_P_2025_Q1)
         assert len(result.rollups) == 1
         assert result.rollups[0].scheme is RetencionScheme.CAPITAL_OTHER
 
@@ -211,9 +215,9 @@ class TestAggregate180190193:
             _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="2000", retencion="380", source_id="r1"),
             _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="2000", retencion="380", source_id="r2"),
         )
-        result = aggregate_retenciones_180(observations, period="2025")
+        result = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)
         assert result.modelo == "180"
-        assert result.period == "2025"
+        assert result.period == _P_2025_ANNUAL
         assert result.total_taxable_base == Decimal("4000")
         assert result.total_retencion == Decimal("760")
 
@@ -222,7 +226,7 @@ class TestAggregate180190193:
             _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="1000", retencion="150", source_id="t1"),
             _obs(nif="A2", scheme=RetencionScheme.PROFESSIONAL, base="500", retencion="75", source_id="t2"),
         )
-        result = aggregate_retenciones_190(observations, period="2025")
+        result = aggregate_retenciones_190(observations, period=_P_2025_ANNUAL)
         assert result.modelo == "190"
         assert result.total_perceptors == 2
 
@@ -231,7 +235,7 @@ class TestAggregate180190193:
             _obs(nif="B1", scheme=RetencionScheme.CAPITAL_DIVIDEND, base="800", retencion="152", source_id="c1"),
             _obs(nif="B2", scheme=RetencionScheme.CAPITAL_INTEREST, base="200", retencion="38", source_id="c2"),
         )
-        result = aggregate_retenciones_193(observations, period="2025")
+        result = aggregate_retenciones_193(observations, period=_P_2025_ANNUAL)
         assert result.modelo == "193"
         assert result.total_perceptors == 2
         assert result.total_retencion == Decimal("190")
@@ -243,7 +247,7 @@ class TestAggregate115:
             _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="800", retencion="152", source_id="r1"),
             _obs(nif="L1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="r2"),
         )
-        result = aggregate_retenciones_115(observations, period="2025-Q1")
+        result = aggregate_retenciones_115(observations, period=_P_2025_Q1)
         assert result.modelo == "115"
         assert len(result.rollups) == 1
         row = result.rollups[0]
@@ -257,7 +261,7 @@ class TestAggregate115:
             _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="500", retencion="95", source_id="r2"),
             _obs(nif="L2", scheme=RetencionScheme.URBAN_RENTAL, base="700", retencion="133", source_id="r3"),
         )
-        result = aggregate_retenciones_115(observations, period="2025-Q1")
+        result = aggregate_retenciones_115(observations, period=_P_2025_Q1)
         assert result.total_perceptors == 2
         l1 = next(row for row in result.rollups if row.perceptor_nif == "L1")
         assert l1.observations_count == 2
@@ -265,7 +269,7 @@ class TestAggregate115:
         assert l1.total_retencion == Decimal("190")
 
     def test_115_empty_input_returns_zero_totals(self) -> None:
-        result = aggregate_retenciones_115((), period="2025-Q1")
+        result = aggregate_retenciones_115((), period=_P_2025_Q1)
         assert result.modelo == "115"
         assert result.rollups == ()
         assert result.total_perceptors == 0
@@ -278,7 +282,7 @@ class TestAggregationInvariants:
         with pytest.raises(ValidationError, match="does not match"):
             RetencionesAggregation(
                 modelo="111",
-                period="2025-Q1",
+                period=_P_2025_Q1,
                 rollups=(),
                 total_perceptors=0,
                 total_taxable_base=Decimal("999"),
@@ -290,12 +294,12 @@ class TestAggregationInvariants:
 
         row = aggregate_retenciones_111(
             (_obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),),
-            period="2025-Q1",
+            period=_P_2025_Q1,
         ).rollups[0]
         with pytest.raises(ValidationError, match="distinct perceptor"):
             RetencionesAggregation(
                 modelo="111",
-                period="2025-Q1",
+                period=_P_2025_Q1,
                 rollups=(row,),
                 total_perceptors=99,
                 total_taxable_base=row.total_taxable_base,
