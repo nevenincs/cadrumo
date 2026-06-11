@@ -173,7 +173,7 @@ def available_llm_providers() -> tuple[LLMProviderAvailability, ...]:
                 cli_binary=binary,
                 available=resolved is not None,
                 resolved_path=resolved,
-            )
+            ),
         )
     return tuple(listings)
 
