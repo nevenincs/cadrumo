@@ -619,6 +619,11 @@ def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: 
         )
         from ._ledger_payloads import LedgerTrackResult
 
+        participated_in = _ledger_track_participated_in(
+            transaction_id=result.ref.transaction_id,
+            bucket_id=transaction_repository.bucket_id,
+        )
+
         _emit_envelope(
             ctx,
             command="ledger.track",
@@ -627,10 +632,46 @@ def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: 
                     "bucket_id": result.ref.bucket_id,
                     "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
                     "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
+                    "participated_in": participated_in,
                 },
             ),
             lines=_ledger_track_lines(result.ref.transaction_id, result.transaction),
         )
+
+
+def _ledger_track_participated_in(
+    *,
+    transaction_id: str,
+    bucket_id: str | None,
+) -> list[dict[str, object]] | None:
+    """Return the finalized-revision participations for ``transaction_id``, or ``None``.
+
+    Surfaces the inverse audit trail on the ``ledger track`` lineage output:
+    every finalized modelo revision and filing that consumed this transaction.
+    Returns ``None`` when the transaction appears in no finalized revision so the
+    field is omitted from the JSON for transactions with no declarations.
+    """
+    from ...application.ledger import get_transaction_participation
+    from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
+
+    index = get_transaction_participation(transaction_id=transaction_id, bucket_id=bucket_id)
+    if not index.participations:
+        return None
+    return [
+        LedgerTransactionParticipationEntryPayload.model_validate(
+            {
+                "calculation_revision_id": participation.calculation_revision_id,
+                "work_unit_id": participation.work_unit_id,
+                "modelo": str(participation.modelo),
+                "filing_year": participation.filing_year,
+                "period": participation.period,
+                "revision_state": participation.revision_state,
+                "filing_record_id": participation.filing_record_id,
+                "justificante_reference": participation.justificante_reference,
+            },
+        ).model_dump(mode="json")
+        for participation in index.participations
+    ]
 
 
 def _history_object_ids(
