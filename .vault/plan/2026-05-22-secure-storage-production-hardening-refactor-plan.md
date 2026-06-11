@@ -973,7 +973,7 @@ Run fresh persona retests only after ownership is explicit, then add or execute 
 
 - [x] `W13.P28.S399` - Dispatch fresh persona retests for secure-storage-owned workflows with isolated scratch roots; `.vault/exec`.
 - [x] `W13.P28.S400` - Adopt secure-storage-owned testimonial repairs into plan rows before implementation; `.vault/plan`.
-- [ ] `W13.P28.S401` - Persist testimonial retest synthesis and final finding dispositions; `.vault/audit`.
+- [x] `W13.P28.S401` - Persist testimonial retest synthesis and final finding dispositions; `.vault/audit`.
 
 #### S400 repair-adoption register
 

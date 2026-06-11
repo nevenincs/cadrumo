@@ -866,6 +866,8 @@ related:
   - '[[2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit]]'
   - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S399]]'
   - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S400]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S401]]'
+  - '[[2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit]]'
 ---
 
 # `secure-storage-production-hardening` feature index
@@ -1263,6 +1265,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-06-secure-storage-production-hardening-w13-p27-s396-persona-readiness-reconciliation-audit` - S396 persona readiness ownership reconciliation
 - `2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit` - S455 provenance path audit
 - `2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit` - S456 redaction enrollment audit
+- `2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit` - S401 testimonial retest synthesis and final dispositions
 
 ### exec
 
@@ -1738,6 +1741,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-06-secure-storage-production-hardening-W20-P42-S456` - W20.P42.S456 central redaction enrollment
 - `2026-06-11-secure-storage-production-hardening-W13-P28-S399` - W13.P28.S399 secure-storage persona retests
 - `2026-06-11-secure-storage-production-hardening-W13-P28-S400` - W13.P28.S400 testimonial repair adoption
+- `2026-06-11-secure-storage-production-hardening-W13-P28-S401` - W13.P28.S401 testimonial synthesis
 
 ### plan
 

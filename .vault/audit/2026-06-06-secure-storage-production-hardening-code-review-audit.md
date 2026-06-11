@@ -69,6 +69,12 @@ Review checked the S400 plan register against the S399 retest record. The regist
 
 Status: no action required.
 
+## S401-001 | INFO | Testimonial synthesis review passed
+
+Review checked the S401 synthesis against the S396-S400 evidence chain. The final dispositions match the classification and retest results: FRESH-004 and FRESH-007 remain external CLI workflow or capability work, while FRESH-011 and REPAIR-PROFILE-PRIVACY-001 are secure-storage-owned but covered by current passing regression gates.
+
+Status: no action required.
+
 ## S460-002 | MEDIUM | Operator-surface contract under-declared root custody verbs
 
 The accepted operator-surface contract only declared `config unlock` while the CLI mounted first-class `config lock`, `config unlock`, `config rekey`, `config recover`, `config show-recovery`, and `config verify-recovery`. S460 now adds an explicit custody domain and mounted command-family rows for each root-level custody child.
