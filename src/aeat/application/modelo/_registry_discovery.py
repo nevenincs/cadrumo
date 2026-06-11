@@ -37,6 +37,11 @@ def registry_describe_modelo(modelo: str, *, period: str | None = None, as_of: d
     return _service().describe_modelo(modelo, period=period, as_of=as_of)
 
 
+def registry_describe_modelo_for_scope(modelo: str, *, filing_year: int, period: str, as_of: date | None = None):
+    """Return the registry modelo description report for an exact filing scope."""
+    return _service().describe_modelo_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of)
+
+
 def registry_casillas(
     modelo: str,
     *,
@@ -49,6 +54,28 @@ def registry_casillas(
     """Return the registry casilla report."""
     return _service().casillas(
         modelo,
+        period=period,
+        as_of=as_of,
+        input_kind=input_kind,
+        required=required,
+        form_number=form_number,
+    )
+
+
+def registry_casillas_for_scope(
+    modelo: str,
+    *,
+    filing_year: int,
+    period: str,
+    as_of: date | None = None,
+    input_kind: InputKind | None = None,
+    required: bool | None = None,
+    form_number: str | None = None,
+):
+    """Return the registry casilla report for an exact filing scope."""
+    return _service().casillas_for_scope(
+        modelo,
+        filing_year=filing_year,
         period=period,
         as_of=as_of,
         input_kind=input_kind,
@@ -77,14 +104,22 @@ def registry_formulas(modelo: str, *, period: str | None = None, as_of: date | N
     return _service().formulas(modelo, period=period, as_of=as_of)
 
 
+def registry_formulas_for_scope(modelo: str, *, filing_year: int, period: str, as_of: date | None = None):
+    """Return the registry formulas report for an exact filing scope."""
+    return _service().formulas_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of)
+
+
 __all__ = [
     "declared_modelo_period_tokens",
     "registry_bindings",
     "registry_bindings_for_scope",
     "registry_bindings_for_year",
     "registry_casillas",
+    "registry_casillas_for_scope",
     "registry_describe_modelo",
+    "registry_describe_modelo_for_scope",
     "registry_formulas",
+    "registry_formulas_for_scope",
     "registry_list_modelos",
     "registry_modelo_codes",
 ]

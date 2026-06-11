@@ -409,9 +409,24 @@ def test_registry_verification_gate_is_registered_under_app_surface() -> None:
 
 def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
     listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", "2026"])
-    described = _invoke(["--format", "json", "app", "modelo", "describe", "303", "--period", "2026Q1"])
+    described = _invoke(
+        ["--format", "json", "app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"],
+    )
     casillas = _invoke(
-        ["--format", "json", "app", "modelo", "casillas", "303", "--period", "2026Q1", "--input-kind", "computed"],
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "casillas",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--input-kind",
+            "computed",
+        ],
     )
     bindings = _invoke(
         [
@@ -426,10 +441,12 @@ def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
             "--year",
             "2026",
             "--period",
-            "Q1",
+            "1T",
         ],
     )
-    formulas = _invoke(["--format", "json", "app", "modelo", "formulas", "303", "--period", "2026Q1"])
+    formulas = _invoke(
+        ["--format", "json", "app", "modelo", "formulas", "303", "--year", "2026", "--period", "1T"],
+    )
 
     assert listed.exit_code == 0, listed.output
     assert described.exit_code == 0, described.output
