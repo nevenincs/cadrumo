@@ -45,6 +45,18 @@ from ._search_record import (
     SearchRecordBase,
     SearchRecordKind,
 )
+from ._sweep import (
+    DEFAULT_MAX_RESULTS,
+    RagSearchClient,
+    ServiceRagSearchClient,
+    SweepError,
+    SweepQuery,
+    SweepResult,
+    TermRelevanceMapping,
+    TermTargetRef,
+    enumerate_query_vocabulary,
+    run_sweep,
+)
 from ._unified_record import (
     RankingTier,
     SearchRecord,
@@ -64,6 +76,7 @@ from ._wrangle import (
 )
 
 __all__ = [
+    "DEFAULT_MAX_RESULTS",
     "STRONG_SIGNAL_SCORE_FLOOR",
     "CasillaProjectionStats",
     "CasillaSearchRecord",
@@ -81,6 +94,7 @@ __all__ = [
     "GroundingSurface",
     "LegalGroundingLink",
     "LocalisedDefinition",
+    "RagSearchClient",
     "RankingTier",
     "ResolutionResult",
     "ResolvedTarget",
@@ -88,9 +102,16 @@ __all__ = [
     "SearchRecordBase",
     "SearchRecordKind",
     "SearchRecordMetadata",
+    "ServiceRagSearchClient",
+    "SweepError",
+    "SweepQuery",
+    "SweepResult",
     "TargetResolver",
     "TermAlias",
+    "TermRelevanceMapping",
+    "TermTargetRef",
     "WrangledResult",
+    "enumerate_query_vocabulary",
     "kind_base_weight",
     "normalise_ranking_weight",
     "project_casilla_search_records",
@@ -99,6 +120,7 @@ __all__ = [
     "project_modelo_casillas",
     "read_clusters",
     "resolve_chunk_hits",
+    "run_sweep",
     "to_search_record",
     "wrangle",
 ]

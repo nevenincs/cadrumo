@@ -47,6 +47,7 @@ from aeat.core.external_constants import OutputLanguage
 from aeat.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
 
 from ._casilla_projection import project_casilla_search_records
+from ._concept_cards import ConceptCardRecord
 from ._search_record import SearchRecordKind
 from ._unified_record import SearchRecord, to_search_record
 
@@ -65,13 +66,20 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class GroundingSurface(StrEnum):
-    """The five grounding surfaces a chunk hit can resolve onto (ADR D6)."""
+    """The grounding surfaces a chunk hit can resolve onto (ADR D6).
+
+    The five operator-named surfaces (casilla, legal/BOE, codebase, docs, CLI)
+    plus the Handbook concept surface: a sweep hit landing on a concept
+    authoring fragment resolves to that concept's card, the first-class palette
+    result.
+    """
 
     CASILLA = "casilla"
     LEGAL = "legal"
     CODEBASE = "codebase"
     DOCS = "docs"
     CLI = "cli"
+    CONCEPT = "concept"
 
 
 class DropReason(StrEnum):
@@ -146,6 +154,9 @@ class ResolutionResult:
 # Path rules
 # ---------------------------------------------------------------------------
 
+_CONCEPT_TOML_RE = re.compile(
+    r"^src/aeat/_data/terminology/concepts/(?P<concept_id>[^/]+)\.toml$",
+)
 _CASILLA_PATH_RE = re.compile(
     r"^src/aeat/_data/registry/aeat/modelos/(?P<modelo>[^/]+)/revisions/[^/]+/casillas/.+\.toml$",
 )
@@ -210,12 +221,21 @@ class TargetResolver:
         # The set of legal ids the authority knows, for cross-checking a
         # file-declared id against the validated catalogue.
         self._known_legal_ids: frozenset[str] = frozenset(self._authority.catalogues.legal)
+        # Index the Handbook concept cards by concept_id (the fragment stem), so
+        # a sweep hit on a concept authoring fragment resolves to its card.
+        self._concept_by_id: dict[str, SearchRecord] = {}
+        for card in _load_concept_cards():
+            self._concept_by_id[card.concept_id] = to_search_record(card)
 
     def resolve(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
         """Resolve one chunk hit to a typed target, or drop and report it."""
         path = hit.posix_path.as_posix()
         if self._is_excluded(hit):
             return DroppedHit(hit=hit, reason=DropReason.EXCLUDED_SURFACE, detail=f"excluded surface: {path}")
+
+        concept_match = _CONCEPT_TOML_RE.match(path)
+        if concept_match:
+            return self._resolve_concept(hit, concept_match.group("concept_id"))
 
         casilla_match = _CASILLA_PATH_RE.match(path) or _DISENO_PATH_RE.match(path)
         if casilla_match:
@@ -242,6 +262,17 @@ class TargetResolver:
 
     def _is_excluded(self, hit: ChunkHit) -> bool:
         return any(part in _EXCLUDED_SEGMENTS for part in hit.posix_path.parts)
+
+    def _resolve_concept(self, hit: ChunkHit, concept_id: str) -> ResolvedTarget | DroppedHit:
+        record = self._concept_by_id.get(concept_id)
+        if record is None:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"no concept card for fragment {concept_id!r}",
+            )
+        reweighted = record.model_copy(update={"ranking_weight": _reweight(SearchRecordKind.CONCEPT, hit.score)})
+        return ResolvedTarget(surface=GroundingSurface.CONCEPT, record=reweighted, source_hit=hit)
 
     def _resolve_casilla(self, hit: ChunkHit, modelo: str) -> ResolvedTarget | DroppedHit:
         records = self._casillas_by_modelo.get(modelo)
@@ -427,6 +458,13 @@ def _reweight(kind: SearchRecordKind, score: float) -> float:
     from ._unified_record import normalise_ranking_weight
 
     return normalise_ranking_weight(kind, score)
+
+
+def _load_concept_cards() -> tuple[ConceptCardRecord, ...]:
+    from ._concept_cards import project_concept_cards
+
+    cards, _stats = project_concept_cards()
+    return cards
 
 
 def _to_corpus_relative(origin_path: str) -> str | None:
