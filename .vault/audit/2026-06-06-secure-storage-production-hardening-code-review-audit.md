@@ -63,6 +63,12 @@ Review checked the S399 retest scope against the S398 classification register an
 
 Status: no action required for S399. S400 should not add repair rows unless a later retest contradicts these focused pass results.
 
+## S400-001 | INFO | Testimonial repair-adoption register review passed
+
+Review checked the S400 plan register against the S399 retest record. The register adopts no new repair rows because the secure-storage-owned testimonial findings passed current focused CLI and backend gates, and it preserves a reopen condition for any future degraded-storage consumption or repair-output leakage.
+
+Status: no action required.
+
 ## S460-002 | MEDIUM | Operator-surface contract under-declared root custody verbs
 
 The accepted operator-surface contract only declared `config unlock` while the CLI mounted first-class `config lock`, `config unlock`, `config rekey`, `config recover`, `config show-recovery`, and `config verify-recovery`. S460 now adds an explicit custody domain and mounted command-family rows for each root-level custody child.
