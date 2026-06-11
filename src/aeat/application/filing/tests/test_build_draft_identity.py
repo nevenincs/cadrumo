@@ -19,8 +19,9 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
-from .. import build_draft, build_runtime_schema_provider
+from .. import _filing_period_date, build_draft, build_runtime_schema_provider
 from ..testing import ModeloTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -80,3 +81,11 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     assert draft.snapshot_ref.revision_id == snapshot.revision.id
     assert draft.snapshot_ref.modelo_year == 2026
     assert draft.snapshot_ref.period == "1T"
+
+
+def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:
+    """Typed non-standard registry periods still supply the calculation date axis."""
+
+    assert _filing_period_date(Period.from_year_and_code(2025, "EXT-1T")) == date(2025, 3, 31)
+    assert _filing_period_date(Period.from_year_and_code(2025, "EXT-4T")) == date(2025, 12, 31)
+    assert _filing_period_date(Period.from_year_and_code(2025, "AD-HOC")) == date(2025, 12, 31)

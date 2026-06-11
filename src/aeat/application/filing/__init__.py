@@ -311,7 +311,12 @@ def _registry_period(period: str | _Period) -> tuple[int, str]:
 
 def _filing_period_date(period: str | _Period) -> date:
     filing_year, registry_period = _registry_period(period)
-    return _period_end_date(filing_year, registry_period)
+    if registry_period.startswith("EXT-") and registry_period.endswith("T"):
+        return _period_end_date(filing_year, registry_period.removeprefix("EXT-"))
+    try:
+        return _period_end_date(filing_year, registry_period)
+    except _PeriodValidationError:
+        return date(filing_year, 12, 31)
 
 
 def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
