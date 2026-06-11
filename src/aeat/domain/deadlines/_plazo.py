@@ -14,8 +14,10 @@ from functools import lru_cache
 
 from ...core import Period
 
+_ANNUAL_REGISTRY_CODE = Period.from_year_and_code(2000, "0A").registry_token
 
-def resolve_filing_closes_on(modelo: str, filing_year: int, period: str) -> date | None:
+
+def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> date | None:
     """Return the close date of the plazo voluntario for a modelo+year+period.
 
     Queries the validated registry authority for ``filing_year`` and
@@ -45,12 +47,11 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: str) -> date
 
 
 @lru_cache(maxsize=256)
-def _resolve_closes_on_cached(modelo: str, filing_year: int, period: str) -> date | None:
+def _resolve_closes_on_cached(modelo: str, filing_year: int, period: Period) -> date | None:
     from ...core.resources import resources
     from ..calculations.registry import RegistryError
 
     authority = resources().modelos.authority
-    registry_period = _normalise_work_unit_period_token(period)
 
     # Annual-period modelos (e.g. M100) are registered under the calendar year
     # in which the return is actually filed (filing_year + 1 in the TOML), while
@@ -70,18 +71,11 @@ def _resolve_closes_on_cached(modelo: str, filing_year: int, period: str) -> dat
             # == filing_year, registry year == filing_year + 1 for annual modelos).
             wp = window.period
             year_matches = wp.filing_year == filing_year or (
-                wp.registry_token == "0A" and wp.filing_year == filing_year + 1
+                wp.registry_token == _ANNUAL_REGISTRY_CODE and wp.filing_year == filing_year + 1
             )
-            if year_matches and wp.registry_token == registry_period:
+            if year_matches and wp.registry_token == period.registry_token:
                 return window.closes_on
     return None
-
-
-def _normalise_work_unit_period_token(period: str) -> str:
-    try:
-        return Period.from_year_and_code(2000, period).registry_token
-    except ValueError:
-        return ""
 
 
 __all__ = ["resolve_filing_closes_on"]

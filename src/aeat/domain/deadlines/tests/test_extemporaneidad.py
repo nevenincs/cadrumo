@@ -119,7 +119,7 @@ def test_resolve_filing_closes_on_m130_2026_q1_returns_date() -> None:
     windows for 2026 registered in the canonical TOML.  The resolver
     must return a non-None date for the Q1 window.
     """
-    closes_on = resolve_filing_closes_on("130", 2026, "1T")
+    closes_on = resolve_filing_closes_on("130", 2026, Period.from_year_and_code(2026, "1T"))
     assert closes_on is not None
     assert isinstance(closes_on, date)
     # M130 Q1 2026: typically closes on 2026-04-20 (AEAT plazo trimestral).
@@ -129,19 +129,19 @@ def test_resolve_filing_closes_on_m130_2026_q1_returns_date() -> None:
 
 def test_resolve_filing_closes_on_unknown_modelo_returns_none() -> None:
     """A modelo with no registry deadline windows returns None gracefully."""
-    result = resolve_filing_closes_on("999", 2026, "1T")
+    result = resolve_filing_closes_on("999", 2026, Period.from_year_and_code(2026, "1T"))
     assert result is None
 
 
 def test_resolve_filing_closes_on_wrong_period_returns_none() -> None:
     """A period not registered for this modelo+year returns None."""
-    result = resolve_filing_closes_on("130", 2026, "ZZ")
+    result = resolve_filing_closes_on("130", 2026, Period.from_year_and_code(2026, "1P"))
     assert result is None
 
 
 def test_resolve_filing_closes_on_annual_period() -> None:
     """M100 annual period '0A' resolves to a date in the correct year."""
-    closes_on = resolve_filing_closes_on("100", 2024, "0A")
+    closes_on = resolve_filing_closes_on("100", 2024, Period.from_year_and_code(2024, "0A"))
     assert closes_on is not None
     # M100 2024 anual plazo: AEAT opens April, closes June 30 2025.
     assert closes_on.year == 2025
