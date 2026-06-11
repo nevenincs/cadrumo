@@ -11,6 +11,7 @@ import hashlib
 from datetime import date
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...core import Period
 from ...domain.calculations.registry import InvoiceObservation, resolve_invoice_binding_values
 from ...domain.invoices import Invoice, InvoiceCatalogueRepository
 from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
@@ -98,29 +99,11 @@ def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozense
 def _invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> bool:
     if invoice.bucket_id != context.bucket_id:
         return False
-    return _date_in_period(invoice.issued_at, filing_year=context.filing_year, period=context.period.registry_token)
+    return _date_in_period(invoice.issued_at, period=context.period)
 
 
-def _date_in_period(value: date, *, filing_year: int, period: str) -> bool:
-    if value.year != filing_year:
-        return False
-    normalized = period.strip().upper()
-    if normalized in {"0A", "A", "ANUAL", "ANNUAL"}:
-        return True
-    quarter_months = {
-        "1T": range(1, 4),
-        "Q1": range(1, 4),
-        "2T": range(4, 7),
-        "Q2": range(4, 7),
-        "3T": range(7, 10),
-        "Q3": range(7, 10),
-        "4T": range(10, 13),
-        "Q4": range(10, 13),
-    }
-    months = quarter_months.get(normalized)
-    if months is not None:
-        return value.month in months
-    return False
+def _date_in_period(value: date, *, period: Period) -> bool:
+    return period.contains(value)
 
 
 def _invoice_source_kind(invoice: Invoice) -> str:
