@@ -261,3 +261,16 @@ Residual note: the full overview calendar test file was not used as the review
 signal because it currently carries unrelated peer WIP whose helpers still pass
 raw strings into typed models. The focused projection test covering this cleanup
 passed in the coordinator verification.
+
+## PERIOD-017 | INFO | No findings in overview Period terminology cleanup
+
+Review of commit `e5b0b7fba` found no issues in the scoped docstring cleanup.
+The reviewer confirmed that the `OverviewCalendarEntry.period` and
+`SuppressedCalendarEntry.period` attribute descriptions now match the actual
+`aeat.core.Period` field types instead of describing a combined canonical string.
+
+Verification before the commit: stale `Canonical period string` / `2026Q1`
+matches were gone from `src/aeat/application/overview/_calendar.py`; ruff passed
+for that file; `git diff --check` reported no whitespace errors on the scoped
+file; the focused overview typed-period assertion and the combined-string gate
+passed with `2 passed`.
