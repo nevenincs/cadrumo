@@ -40,6 +40,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -55,6 +56,8 @@ _MODELO = "036"
 #: event belongs to (Orden EHA/1274/2007 art. 1).
 _YEAR_N = 2025  # alta — earliest valid year for the 2025-02-03 revision
 _YEAR_N_PLUS_1 = 2026  # modificacion (period abbreviated to fit 8-char RegistryModeloObservation limit)
+_ALTA_FILING_PERIOD = Period.from_year_and_code(_YEAR_N, "EVENT-1")
+_MODIFICACION_FILING_PERIOD = Period.from_year_and_code(_YEAR_N_PLUS_1, "EVENT-2")
 
 #: Context label for the EnrollmentRecorder (non-calculation / threshold-continuity mode).
 _CONTEXT_LABEL = "036-censal-alta-modificacion-two-annual-contexts"
@@ -96,6 +99,7 @@ def _alta_observation() -> RegistryModeloObservation:
     """
     return RegistryModeloObservation(
         modelo=_MODELO,
+        filing_period=_ALTA_FILING_PERIOD,
         filing_year=_YEAR_N,
         period="alta",
         observations=(
@@ -116,6 +120,7 @@ def _modificacion_observation() -> RegistryModeloObservation:
     """
     return RegistryModeloObservation(
         modelo=_MODELO,
+        filing_period=_MODIFICACION_FILING_PERIOD,
         filing_year=_YEAR_N_PLUS_1,
         period="modif",
         observations=(
@@ -238,6 +243,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     obs_n = _alta_observation()
     obs_n_no_event_kind = RegistryModeloObservation(
         modelo=_MODELO,
+        filing_period=_ALTA_FILING_PERIOD,
         filing_year=_YEAR_N,
         period="alta",
         observations=tuple(o for o in obs_n.observations if o.casilla_id != "decl.event-kind"),
