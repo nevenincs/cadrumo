@@ -33,8 +33,14 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
-from ...core import require_active_bucket_id, resolve_active_bucket_id
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import (
+    STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
+)
+from ...core import (
+    Period,
+    require_active_bucket_id,
+    resolve_active_bucket_id,
+)
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ..auth._models import AuthState
@@ -153,7 +159,7 @@ class DeclaracionPointer(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str
-    period: str
+    period: Period
     draft_id: str | None = None
     status: str | None = None
     exported_path: str | None = None
@@ -187,13 +193,20 @@ class ProfileBucketPointer(BaseModel):
         return trimmed
 
 
-def declaration_key(modelo: str, period: str) -> str:
+def _period_identity_segment(period: Period) -> str:
+    """Return the stable non-combined identity segment for ``period``."""
+    if not isinstance(period, Period):
+        raise TypeError(f"period must be aeat.core.Period, got {type(period).__name__}")
+    return f"{period.filing_year}:{period.registry_token}"
+
+
+def declaration_key(modelo: str, period: Period) -> str:
     """Return the canonical state-store key for a ``(modelo, period)`` pair.
 
-    The period segment is upper-cased so a lowercase token (``2025q1``) and its
-    uppercase form (``2025Q1``) resolve to the same key.
+    The period segment is stored as ``filing_year:registry_token`` so
+    declaration state never keys by a combined token such as ``2025Q1``.
     """
-    return f"{modelo.strip()}:{period.strip().upper()}"
+    return f"{modelo.strip()}:{_period_identity_segment(period)}"
 
 
 class WorkflowState(BaseModel):
@@ -285,7 +298,7 @@ def update_declaration_pointer(
     state: WorkflowState,
     *,
     modelo: str,
-    period: str,
+    period: Period,
     draft_id: str | None = None,
     status: str | None = None,
     exported_path: str | None = None,
@@ -507,9 +520,10 @@ def compute_run_id(
     *,
     tax_id: str,
     modelo: str,
-    period: str,
+    period: Period | None,
     started_at: datetime,
 ) -> str:
     """Return a stable 16-char hex hash for a workflow run."""
-    payload = "|".join([tax_id, modelo, period, started_at.isoformat()])
+    period_segment = _period_identity_segment(period) if period is not None else "-"
+    payload = "|".join([tax_id, modelo, period_segment, started_at.isoformat()])
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]

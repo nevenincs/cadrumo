@@ -20,7 +20,6 @@ from ....application.workflow import (
 )
 from ....core import Period, resolve_active_bucket_id
 from ....domain.deadlines import ModeloDeadline, ObligationStatus
-from ....domain.period import parse_canonical_period
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._modelo import work_app
 
@@ -39,11 +38,11 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 
 
-def _obligation(modelo: str = "130", period: str = "2026Q1") -> ModeloDeadline:
-    year, token = parse_canonical_period(period)
+def _obligation(modelo: str = "130", period: Period | None = None) -> ModeloDeadline:
+    target_period = period or Period.from_year_and_code(2026, "1T")
     return ModeloDeadline(
         modelo=modelo,
-        period=Period.from_year_and_code(year, token),
+        period=target_period,
         opens_on=date(2026, 4, 1),
         closes_on=date(2026, 4, 20),
         status=ObligationStatus.UPCOMING,

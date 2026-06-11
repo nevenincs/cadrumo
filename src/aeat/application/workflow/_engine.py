@@ -330,8 +330,8 @@ class WorkflowEngine:
         self._run_target_period = None
         self._run_obligation = None
         modelo_for_hash = target_modelo or (obligation.modelo if obligation is not None else "-")
-        _period_raw: Period | None = target_period or (obligation.period if obligation is not None else None)
-        period_for_hash = str(_period_raw) if _period_raw is not None else "-"
+        period_for_hash: Period | None = target_period or (obligation.period if obligation is not None else None)
+        period_for_summary = str(period_for_hash) if period_for_hash is not None else "-"
         run_id = compute_run_id(
             tax_id=profile.tax_id,
             modelo=modelo_for_hash,
@@ -341,7 +341,7 @@ class WorkflowEngine:
 
         summary: str
         if final_stage is WorkflowStage.DONE:
-            summary = _summary_text(f"Workflow completed: modelo={modelo_for_hash} period={period_for_hash}")
+            summary = _summary_text(f"Workflow completed: modelo={modelo_for_hash} period={period_for_summary}")
         elif abort_summary is not None:
             summary = abort_summary
         else:
@@ -1108,8 +1108,7 @@ class WorkflowEngine:
             return None
         obligation = self._run_obligation
         modelo = self._run_target_modelo or (obligation.modelo if obligation is not None else "-")
-        _p_raw: Period | None = self._run_target_period or (obligation.period if obligation is not None else None)
-        period = str(_p_raw) if _p_raw is not None else "-"
+        period: Period | None = self._run_target_period or (obligation.period if obligation is not None else None)
         return compute_run_id(
             tax_id=self._run_tax_id,
             modelo=modelo,
