@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import Period
 from .._review_payloads import (
     ReviewQueueResult,
     ReviewQueueRowPayload,
@@ -36,7 +37,7 @@ def _populated_row(item_id: str = "review-001") -> ReviewQueueRowPayload:
         affected_object_id="draft-abc",
         bucket_id="b" * 32,
         modelo="303",
-        period="2025Q1",
+        period=str(Period.from_year_and_code(2025, "1T")),
         severity="HIGH",
         state="PENDING",
         blocking=True,

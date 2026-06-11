@@ -20,7 +20,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede import Declaracion, Expediente, JustificanteRef, SedeCapture
-from ....core import Modelo
+from ....core import Modelo, Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.justificante import JustificanteRepository
 from ....domain.modelos import (
@@ -75,11 +75,12 @@ def _active_bucket_id() -> str:
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     bucket_id = _active_bucket_id()
     revision_id = "r" + "0" * 63
+    filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
     )
     work_unit = WorkUnit(
@@ -87,7 +88,7 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=filing_period,
         revision_id=revision_id,
         name=f"{modelo}-{filing_year}-{period}",
         created_at=datetime.now(UTC),
@@ -167,6 +168,7 @@ def test_reconcile_from_malformed_capture_raises_without_leaking_temp_path() -> 
 def _seed_unverified_filing(*, work_unit_id: str, modelo: str, filing_year: int, period: str) -> None:
     bucket_id = _active_bucket_id()
     revision_id = hashlib.sha256(f"rev:{work_unit_id}".encode()).hexdigest()
+    filing_period = Period.from_year_and_code(filing_year, period)
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
@@ -184,7 +186,7 @@ def _seed_unverified_filing(*, work_unit_id: str, modelo: str, filing_year: int,
                 bucket_id=bucket_id,
                 modelo=ModeloCode(modelo),
                 filing_year=filing_year,
-                period=period,
+                period=filing_period,
                 filed_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
                 filed_by="operator",
                 aeat_accepted=False,
@@ -316,7 +318,12 @@ def test_capture_orchestrator_stamps_evidence_when_period_is_filed() -> None:
     filing = (
         ModeloRecordCatalogueRepository()
         .load()
-        .current_for(bucket_id=bucket_id, modelo="130", filing_year=2026, period="1T")
+        .current_for(
+            bucket_id=bucket_id,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+        )
     )
     assert filing is not None
     assert filing.external_evidence is not None

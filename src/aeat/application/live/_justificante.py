@@ -51,8 +51,8 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ...core import Modelo
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo, Period
 from ...core.identity import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -611,7 +611,7 @@ def register_capture_as_filing_evidence(
         bucket_id=snapshot.bucket_id,
         modelo=snapshot.modelo,
         filing_year=snapshot.filing_year,
-        period=snapshot.period,
+        period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
     )
     if current is None:
         raise LiveApplicationInputError(
