@@ -13,6 +13,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, Literal
 
+from ....core import Period
 from ....core.i18n import tr
 from ....domain.calculations.registry import (
     CasillaDefinition,
@@ -108,7 +109,7 @@ def _stamp_registry_metadata(snapshot: RegistrySnapshot) -> SheetExportMetadata:
         modelo_id=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
         filing_year=snapshot.filing_year,
-        period=snapshot.period,
+        period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
         engine_version=_ENGINE_VERSION,
         registry_sha=registry_sha(snapshot),
         exported_at=_utc_now(),

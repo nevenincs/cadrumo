@@ -48,6 +48,7 @@ from ....application.storage.calc_sheets import collect_row_sets, registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Period
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
 from ....core.time._utc import coerce_utc_aware
@@ -210,7 +211,7 @@ class PullMetadata(BaseModel):
             modelo_id=self.modelo_id,
             revision_id=self.revision_id,
             filing_year=self.filing_year,
-            period=self.period,
+            period=Period.from_year_and_code(self.filing_year, self.period),
             engine_version=self.engine_version,
             registry_sha=self.registry_sha,
             exported_at=dt,
@@ -383,7 +384,7 @@ def _classify_metadata_match(
         metadata.modelo_id == snapshot.modelo.id
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
-        and metadata.period == snapshot.period
+        and metadata.period == Period.from_year_and_code(snapshot.filing_year, snapshot.period)
         and metadata.registry_sha == registry_sha(snapshot)
     )
     return (MetadataMatchState.MATCHES if matches else MetadataMatchState.STALE), metadata
@@ -868,6 +869,8 @@ def verify_pull_coverage(
     for field_name in ("modelo_id", "revision_id", "filing_year", "period", "registry_sha"):
         plan_value = getattr(plan_meta, field_name)
         pull_value = getattr(pull_meta, field_name)
+        if field_name == "period":
+            plan_value = plan_meta.period.registry_token
         if pull_value != plan_value:
             discrepancies.append(
                 PullCoverageDiscrepancy(
@@ -952,11 +955,15 @@ def compute_from_pull(
 def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> None:
     """Refuse to compute when the workbook metadata doesn't bind to the snapshot."""
     metadata = pull.metadata
+    try:
+        workbook_period = Period.from_year_and_code(metadata.filing_year, metadata.period)
+    except ValueError:
+        workbook_period = None
     metadata_matches_snapshot = (
         metadata.modelo_id == snapshot.modelo.id
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
-        and metadata.period == snapshot.period
+        and workbook_period == Period.from_year_and_code(snapshot.filing_year, snapshot.period)
         and metadata.registry_sha == registry_sha(snapshot)
     )
     if pull.metadata_match is MetadataMatchState.MATCHES and metadata_matches_snapshot:

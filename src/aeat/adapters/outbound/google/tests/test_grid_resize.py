@@ -16,6 +16,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import Period
 from .....application.storage.calc_sheets import (
     SheetCellAddress,
     SheetExportMetadata,
@@ -44,7 +45,7 @@ def _plan(
             modelo_id="100",
             revision_id="2025",
             filing_year=2025,
-            period="0A",
+            period=Period.from_year_and_code(2025, "0A"),
             engine_version="test/0.1",
             registry_sha="abcdef1234567890",
             exported_at=datetime.now(UTC),

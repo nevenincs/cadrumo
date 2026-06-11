@@ -152,7 +152,7 @@ class TestTaxpayerProfileProjection:
 
         assert [item.source_modelo for item in profile.cross_period_group_member_rosters] == ["322", "322"]
         assert [item.filing_year for item in profile.cross_period_group_member_rosters] == [2026, 2026]
-        assert [item.period for item in profile.cross_period_group_member_rosters] == ["11", "12"]
+        assert [item.period.registry_token for item in profile.cross_period_group_member_rosters] == ["11", "12"]
         assert profile.cross_period_group_member_rosters[0].member_nifs == ("C00000002", "D00000003")
         assert profile.cross_period_group_member_rosters[1].member_nifs == ("A00000000", "B00000001")
 

@@ -57,7 +57,7 @@ def _apply(
     _apply_iva_compensation_decision_binding(
         "303",
         2026,
-        "2T",
+        Period.from_year_and_code(2026, "2T"),
         bucket_id="operator",
         revision=_revision(),
         taxpayer_nif=taxpayer_nif,
@@ -92,7 +92,7 @@ def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() 
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "2T",
+            Period.from_year_and_code(2026, "2T"),
             bucket_id="operator",
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -109,7 +109,7 @@ def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "2T",
+            Period.from_year_and_code(2026, "2T"),
             bucket_id="operator",
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -127,7 +127,7 @@ def test_modelo_303_prior_compensation_binding_without_wallet_decision_is_refuse
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "2T",
+            Period.from_year_and_code(2026, "2T"),
             bucket_id="operator",
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -154,7 +154,7 @@ def test_modelo_303_prior_compensation_casilla_without_wallet_decision_is_refuse
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "2T",
+            Period.from_year_and_code(2026, "2T"),
             bucket_id="operator",
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -172,7 +172,7 @@ def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_i
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "2T",
+            Period.from_year_and_code(2026, "2T"),
             bucket_id="operator",
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -190,7 +190,7 @@ def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "2T",
+            Period.from_year_and_code(2026, "2T"),
             bucket_id="operator",
             revision=_revision(),
             taxpayer_nif=_OTHER_TAXPAYER_REF,
@@ -208,7 +208,7 @@ def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "2T",
+            Period.from_year_and_code(2026, "2T"),
             bucket_id="operator",
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,

@@ -52,6 +52,7 @@ if TYPE_CHECKING:
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Period
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry import (
@@ -107,7 +108,7 @@ class ParityReport(BaseModel):
 
     modelo_id: str
     revision_id: RevisionId
-    period: str
+    period: Period
     filing_year: int
     spreadsheet_id: str
     spreadsheet_url: str
@@ -394,7 +395,7 @@ def verify_modelo_parity(
     return ParityReport(
         modelo_id=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
-        period=snapshot.period,
+        period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
         filing_year=snapshot.filing_year,
         spreadsheet_id=apply_result.spreadsheet_id,
         spreadsheet_url=apply_result.spreadsheet_url,

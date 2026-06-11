@@ -23,6 +23,7 @@ from typing import Literal
 
 import pytest
 
+from .....core import Period
 from .....application.storage.calc_sheets import (
     SheetCellAddress,
     SheetCellConstraint,
@@ -208,7 +209,7 @@ def test_structural_cleanup_deletes_only_adapter_managed_metadata_and_protected_
             modelo_id="130",
             revision_id="2019-y-siguientes",
             filing_year=2025,
-            period="1T",
+            period=Period.from_year_and_code(2025, "1T"),
             engine_version="calc-sheets/0.1.0",
             registry_sha="da9952e1610f7db6",
             exported_at=datetime(2026, 6, 2, 17, 55, tzinfo=UTC),

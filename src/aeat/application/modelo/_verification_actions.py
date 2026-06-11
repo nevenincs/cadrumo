@@ -468,7 +468,7 @@ def _cross_period_expected_member_sets_from_profile(
         CrossPeriodExpectedMemberSet(
             source_modelo=roster.source_modelo,
             filing_year=roster.filing_year,
-            period=Period.from_year_and_code(roster.filing_year, roster.period),
+            period=roster.period,
             member_nifs=roster.member_nifs,
         )
         for roster in getattr(profile, "cross_period_group_member_rosters", ())

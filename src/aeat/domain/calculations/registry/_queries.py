@@ -17,6 +17,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core import Period
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, FormulaId
@@ -27,7 +28,7 @@ from ._runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from ._schema import InputKind, ModeloDefinition, ModeloRevision
+from ._schema import InputKind, ModeloDefinition, ModeloRevision, filing_period_from_scope
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
 #: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
@@ -38,6 +39,27 @@ _BARE_PERIOD_RE = re.compile(
     r"^(?:0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$",
     re.I,
 )
+_YEAR_PERIOD_RE = re.compile(
+    r"^(?P<year>\d{4})(?:[-_/]?(?P<period>0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+))?$",
+    re.I,
+)
+
+
+def parse_modelo_period(value: str) -> tuple[int, str]:
+    """Parse a year-qualified modelo period token.
+
+    A bare year denotes an annual declaration and therefore resolves to
+    ``0A``. Non-annual period tokens may be appended with an optional
+    separator, e.g. ``2024-1T`` or ``202401``.
+    """
+    candidate = value.strip()
+    match = _YEAR_PERIOD_RE.fullmatch(candidate)
+    if match is None:
+        raise RegistryValidationError(f"invalid modelo period {value!r}")
+    year = int(match.group("year"))
+    if year < 2000 or year > 2099:
+        raise RegistryValidationError(f"invalid modelo period year {year!r}")
+    return year, (match.group("period") or "0A").upper()
 
 
 class ModeloListRow(BaseModel):
@@ -143,6 +165,7 @@ class ModeloDescribeReport(BaseModel):
     discoverable up front rather than only after a failed guess.
     """
     filing_year: int | None
+    filing_period: Period | None = None
     period: str | None
     valid_from: date
     valid_to: date | None
@@ -233,6 +256,7 @@ class ModeloCasillasReport(BaseModel):
     code: str
     revision: str
     filing_year: int | None
+    filing_period: Period | None = None
     period: str | None
     rows: tuple[ModeloCasillaRow, ...]
 
@@ -320,6 +344,7 @@ class ModeloBindingsReport(BaseModel):
     code: str
     revision: str
     filing_year: int | None
+    filing_period: Period | None = None
     period: str | None
     rows: tuple[ModeloBindingRow, ...]
 
@@ -388,6 +413,7 @@ class ModeloFormulasReport(BaseModel):
     code: str
     revision: str
     filing_year: int | None
+    filing_period: Period | None = None
     period: str | None
     rows: tuple[ModeloFormulaRow, ...]
 
@@ -475,6 +501,7 @@ class RegistryQueryService:
                 )
             ),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             valid_from=revision.valid_from,
             valid_to=revision.valid_to,
@@ -520,6 +547,7 @@ class RegistryQueryService:
                 )
             ),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             valid_from=revision.valid_from,
             valid_to=revision.valid_to,
@@ -598,6 +626,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             rows=tuple(rows),
         )
@@ -646,6 +675,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             rows=tuple(rows),
         )
@@ -679,6 +709,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(snapshot.revision.id),
             filing_year=filing_year,
+            filing_period=filing_period_from_scope(filing_year, period),
             period=period,
             rows=_binding_rows(snapshot.revision),
         )
@@ -716,6 +747,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             rows=rows,
         )
@@ -755,6 +787,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=None,
             period=None,
             rows=_binding_rows(revision),
         )
@@ -792,6 +825,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             rows=_binding_rows(revision),
         )
@@ -842,6 +876,7 @@ class RegistryQueryService:
             code=str(definition.id),
             revision=str(revision.id),
             filing_year=filing_year,
+            filing_period=_query_filing_period(filing_year, registry_period),
             period=registry_period,
             rows=rows,
         )
@@ -914,7 +949,6 @@ class RegistryQueryService:
         )
         return definition, snapshot.revision, registry_period
 
-
 def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
     """Build the typed binding rows for one revision.
 
@@ -944,6 +978,12 @@ def _modelo_covers_year(modelo: ModeloDefinition, year: int) -> bool:
     return any(revision.period_selector.includes_year(year) for revision in modelo.revisions.values())
 
 
+def _query_filing_period(filing_year: int | None, period: str | None) -> Period | None:
+    if filing_year is None or period is None:
+        return None
+    return filing_period_from_scope(filing_year, period)
+
+
 def _public_mapping(value: Mapping[str, object]) -> dict[str, object]:
     return {str(key): _public_value(item) for key, item in value.items()}
 
@@ -971,4 +1011,5 @@ __all__ = [
     "ModeloListReport",
     "ModeloListRow",
     "RegistryQueryService",
+    "parse_modelo_period",
 ]

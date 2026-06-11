@@ -347,7 +347,7 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
-            "1T",
+            Period.from_year_and_code(2026, "1T"),
             bucket_id="bucket-1",
             # The unsupported-decision-type guard raises before the revision is read,
             # so an empty structural double suffices for this path.

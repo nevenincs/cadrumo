@@ -21,6 +21,7 @@ from ....application.storage.calc_sheets import (
     sheet_evidence_from_ledger_filing,
 )
 from ....application.storage.calc_sheets._errors import CalcSheetsEngineError
+from ....core import Period
 from ....domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -81,7 +82,7 @@ def _plan(evidence: SheetEvidenceFacet) -> SheetExportPlan:
             modelo_id="303",
             revision_id="2009-y-siguientes",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             engine_version="test",
             registry_sha="abcd1234",
             exported_at=_NOW,

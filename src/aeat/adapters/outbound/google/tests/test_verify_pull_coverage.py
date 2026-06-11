@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from .....core import Period
 from .....application.storage.calc_sheets._records import (
     SheetCellAddress,
     SheetExportMetadata,
@@ -41,7 +42,7 @@ def _plan_metadata() -> SheetExportMetadata:
         modelo_id="100",
         revision_id="2024-y-siguientes",
         filing_year=2024,
-        period="2024A",
+        period=Period.from_year_and_code(2024, "0A"),
         engine_version="v1.2.3",
         registry_sha="0123456789abcdef" * 4,
         exported_at=datetime(2025, 4, 15, 10, 30, 0, tzinfo=UTC),
@@ -53,7 +54,7 @@ def _pull_metadata_matching(plan_meta: SheetExportMetadata) -> PullMetadata:
         modelo_id=plan_meta.modelo_id,
         revision_id=plan_meta.revision_id,
         filing_year=plan_meta.filing_year,
-        period=plan_meta.period,
+        period=plan_meta.period.registry_token,
         engine_version=plan_meta.engine_version,
         registry_sha=plan_meta.registry_sha,
         exported_at=plan_meta.exported_at.isoformat(),

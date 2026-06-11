@@ -286,7 +286,7 @@ def calculate_modelo_revision(
     _apply_iva_compensation_decision_binding(
         work_unit.modelo,
         work_unit.filing_year,
-        work_unit.period.registry_token,
+        work_unit.period,
         bucket_id=work_unit.bucket_id,
         revision=snapshot.revision,
         taxpayer_nif=_taxpayer_nif_for_bucket(work_unit.bucket_id),
@@ -300,7 +300,7 @@ def calculate_modelo_revision(
         bucket_id=work_unit.bucket_id,
         snapshot=snapshot,
         filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        period=work_unit.period,
         casilla_inputs=casilla_inputs,
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
