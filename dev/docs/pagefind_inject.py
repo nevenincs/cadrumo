@@ -184,15 +184,15 @@ _PRIMARY_LANGUAGE = OutputLanguage.EN
 
 
 def _content_for(record: SearchRecord) -> str:
-    """Build the searchable content for a record: title + every description.
+    """Build the searchable content: title + aliases + every description.
 
-    Combining the title with all four language descriptions makes the record
-    findable by the Spanish term, the English gloss, and the Catalan/Hungarian
-    forms from the single loaded index - the cross-lingual matching the
-    four declared aliases were meant to deliver.
+    Combining the title, every declared term alias (the English "pro rata",
+    the Catalan/Hungarian forms, unaccented variants), and all four language
+    descriptions makes the record findable by any declared surface form from
+    the single loaded index - the cross-lingual matching the four declared
+    translations were meant to deliver.
     """
-    parts = [record.title]
-    parts.extend(record.descriptions.values())
+    parts = [record.title, *record.search_aliases, *record.descriptions.values()]
     seen: set[str] = set()
     unique: list[str] = []
     for part in parts:

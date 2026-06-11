@@ -73,7 +73,7 @@ def test_concept_card_funnels_to_a_search_record() -> None:
     assert record.kind is SearchRecordKind.CONCEPT
     assert record.id == "concept:prorrata"
     assert record.title == "prorrata"  # the es preferred label
-    assert record.target == "glossary.html#term-prorrata"
+    assert record.target == "_generated/glossary.html#term-prorrata"
     assert set(record.descriptions) == _FOUR_LANGUAGES
     assert record.metadata.concept_id == "prorrata"
     assert "ley-37-1992:art-104" in record.metadata.legal_refs
