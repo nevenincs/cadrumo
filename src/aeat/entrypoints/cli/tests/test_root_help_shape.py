@@ -51,7 +51,7 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
             setting_env("aeat_financial_txs_dir"): str(tmp_path / "txs"),
             setting_env("aeat_invoices_dir"): str(tmp_path / "invoices"),
             setting_env("aeat_drafts_dir"): str(tmp_path / "drafts"),
-        }
+        },
     )
     return env
 
@@ -97,7 +97,7 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert app_result.exit_code == 0, app_result.output
     assert "aeat app - operational tax work" in app_result.output
     assert "aeat app ledger import" in app_result.output
-    assert "aeat app live filed capture" in app_result.output
+    assert "aeat app live filed pull" in app_result.output
     assert "aeat app modelo bindings" in app_result.output
     assert "aeat app invoice" not in app_result.output
     assert "aeat app declaration" not in app_result.output

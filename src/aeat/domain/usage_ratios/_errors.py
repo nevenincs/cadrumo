@@ -57,7 +57,7 @@ class CensoRatioMismatchError(UsageRatioError):
     ratio.
 
     The fix is operator-driven: either refresh the censo via
-    ``aeat config profile censo refresh`` and ``apply``, or unset the
+    ``aeat config profile censo pull`` and ``apply``, or unset the
     diverging override via ``aeat app ledger ratios unset``. No
     automatic migration; no shim.
     """

@@ -65,7 +65,7 @@ class FiledListResult(OutputSchema):
 
 @register_schema("app.live.filed.pull")
 class FiledCaptureResult(OutputSchema):
-    """Payload for ``aeat app live filed capture``."""
+    """Payload for ``aeat app live filed pull``."""
 
     output_root: str
     modelo: str
@@ -80,7 +80,7 @@ class FiledCaptureResult(OutputSchema):
 
 @register_schema("app.live.filed.pull_all")
 class FiledCaptureAllResult(OutputSchema):
-    """Payload for ``aeat app live filed capture-all``."""
+    """Payload for ``aeat app live filed pull-all``."""
 
     output_root: str
     modelos: list[str]
@@ -98,7 +98,7 @@ class FiledCaptureAllResult(OutputSchema):
 
 @register_schema("app.live.filed.pull_sources")
 class FiledCaptureSourcesResult(OutputSchema):
-    """Payload for ``aeat app live filed capture-sources``."""
+    """Payload for ``aeat app live filed pull-sources``."""
 
     output_root: str
     target_modelo: str
@@ -207,7 +207,7 @@ class IvaWalletHistoryResult(OutputSchema):
 
 @register_schema("app.live.iva_wallet.pull_history")
 class IvaWalletCaptureHistoryResult(OutputSchema):
-    """Payload for ``aeat app live iva-wallet capture-history``."""
+    """Payload for ``aeat app live iva-wallet pull-history``."""
 
     output_root: str
     year_from: int
@@ -244,7 +244,7 @@ class LiveIvaAuthOutcomePayload(OutputSchema):
 
 @register_schema("app.live.iva_wallet.pull_remote_state")
 class IvaWalletCaptureRemoteStateResult(OutputSchema):
-    """Payload for ``aeat app live iva-wallet capture-remote-state``."""
+    """Payload for ``aeat app live iva-wallet pull-remote-state``."""
 
     output_root: str
     year_from: int
@@ -291,7 +291,7 @@ class NotificationSnapshotListingPayload(OutputSchema):
 
 @register_schema("app.live.notifications.pull")
 class NotificationsCaptureResult(OutputSchema):
-    """Payload for ``aeat app live notifications capture``."""
+    """Payload for ``aeat app live notifications pull``."""
 
     bucket_id: str
     snapshot_id: str
@@ -401,7 +401,7 @@ class ExpedienteSnapshotSummaryPayload(OutputSchema):
 
 @register_schema("app.live.expedientes.pull")
 class ExpedientesCaptureResult(OutputSchema):
-    """Payload for ``aeat app live expedientes capture``."""
+    """Payload for ``aeat app live expedientes pull``."""
 
     bucket_id: str
     snapshot_id: str
@@ -422,7 +422,7 @@ class ExpedientesCaptureFailurePayload(OutputSchema):
 
 @register_schema("app.live.expedientes.pull_all")
 class ExpedientesCaptureAllResult(OutputSchema):
-    """Payload for ``aeat app live expedientes capture-all``."""
+    """Payload for ``aeat app live expedientes pull-all``."""
 
     bucket_id: str
     modelos: list[str]
@@ -497,7 +497,7 @@ class VerifyObservationPayload(OutputSchema):
 
 @register_schema("app.live.justificante.pull")
 class JustificanteCaptureResult(OutputSchema):
-    """Payload for ``aeat app live justificante capture``."""
+    """Payload for ``aeat app live justificante pull``."""
 
     bucket_id: str
     snapshot_id: str

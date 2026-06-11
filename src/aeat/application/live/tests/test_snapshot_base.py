@@ -170,7 +170,7 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
                 "axis_label": kwargs["axis_label"],
                 "captured_at": kwargs["captured_at"].isoformat(),
                 "payload_text": kwargs["payload_text"],
-            }
+            },
         )
 
     @override
@@ -206,7 +206,7 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
             update={
                 "state": SnapshotLifecycleState.SUPERSEDED,
                 "superseded_by_snapshot_id": superseded_by,
-            }
+            },
         )
 
 
@@ -309,10 +309,10 @@ def test_derive_snapshot_id_is_deterministic() -> None:
 
 def test_derive_snapshot_id_is_order_independent() -> None:
     a = derive_snapshot_id_from_json(
-        {"axis_label": "renta-2025", "captured_at": _CAPTURED_AT.isoformat(), "payload_text": "alpha"}
+        {"axis_label": "renta-2025", "captured_at": _CAPTURED_AT.isoformat(), "payload_text": "alpha"},
     )
     b = derive_snapshot_id_from_json(
-        {"payload_text": "alpha", "captured_at": _CAPTURED_AT.isoformat(), "axis_label": "renta-2025"}
+        {"payload_text": "alpha", "captured_at": _CAPTURED_AT.isoformat(), "axis_label": "renta-2025"},
     )
     assert a == b
 
@@ -327,7 +327,7 @@ def test_derive_snapshot_id_changes_on_trivial_perturbation() -> None:
     assert base_id != derive_snapshot_id_from_json({**base, "payload_text": "alpha "})
     assert base_id != derive_snapshot_id_from_json({**base, "axis_label": "renta-2026"})
     assert base_id != derive_snapshot_id_from_json(
-        {**base, "captured_at": (_CAPTURED_AT + timedelta(seconds=1)).isoformat()}
+        {**base, "captured_at": (_CAPTURED_AT + timedelta(seconds=1)).isoformat()},
     )
 
 
@@ -465,9 +465,9 @@ def test_censo_snapshot_not_found_error_inherits_shared_base() -> None:
 def test_censo_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     error = CensoSnapshotNotFoundError(
         "censo snapshot 'abc' not found in bucket 'b1'",
-        suggestion="aeat config profile censo refresh",
+        suggestion="aeat config profile censo pull",
     )
-    assert error.suggestion == "aeat config profile censo refresh"
+    assert error.suggestion == "aeat config profile censo pull"
 
 
 # ---- SnapshotRepository structural-conformance gate (contract) -----------------
@@ -552,7 +552,7 @@ def test_secure_snapshot_repository_list_rejects_payload_bucket_mismatch(
         object_key=_probe_object_key,
         not_found_factory=lambda sid: LiveApplicationInputError(f"probe snapshot {sid!r} not found"),
         ambiguous_prefix_factory=lambda sid, ids: LiveApplicationInputError(
-            f"probe snapshot prefix {sid!r} is ambiguous"
+            f"probe snapshot prefix {sid!r} is ambiguous",
         ),
         domain_label="probe",
         objects=secure_objects,

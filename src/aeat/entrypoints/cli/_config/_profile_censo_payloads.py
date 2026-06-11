@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 @register_schema("config.profile.censo.pull")
 class CensoRefreshResult(OutputSchema):
-    """JSON envelope for ``aeat config profile censo refresh``."""
+    """JSON envelope for ``aeat config profile censo pull``."""
 
     snapshot_id: str
     profile_id: str

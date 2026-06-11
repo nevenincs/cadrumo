@@ -142,7 +142,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert payload["granted_verificado_completo"] is False
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
     assert (
-        "aeat app live filed capture-sources --modelo 130 --year 2025 --period 1T"
+        "aeat app live filed pull-sources --modelo 130 --year 2025 --period 1T"
         in payload["findings"][0]["next_action"]
     )
     assert "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in payload["findings"][0]["next_action"]

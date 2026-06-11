@@ -2859,9 +2859,8 @@ cli:
         ledger_status: Mostrar l'estat del llibre de transaccions.
         ledger_update: Actualitzar una entrada del llibre de transaccions.
         ledger_view: Veure el detall d'una entrada del llibre.
-        live_filed_capture: Capturar declaracions presentades en viu des de l'AEAT.
-        live_filed_capture_sources: Mostrar les fonts disponibles per a la captura
-          de declaracions en viu.
+        live_filed_capture: 'Descarregar declaracions presentades en viu des de l''AEAT.'
+        live_filed_capture_sources: 'Mostrar les fonts disponibles per a la descarrega.'
         live_filed_list: Llistar declaracions presentades capturades de l'AEAT.
         modelo_bindings: Gestionar les vinculacions d'un model fiscal.
         modelo_describe: Descriure l'estructura d'un model fiscal.

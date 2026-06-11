@@ -81,27 +81,27 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise ClassificationError(
                 f"usage-ratio profile object has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.FINANCIAL}"
+                f"consumer expected {SensitivityClass.FINANCIAL}",
             )
         if envelope.schema_version > _USAGE_RATIO_VERSION:
             raise EnvelopeVersionError(
                 f"usage-ratio profile object is at version {envelope.schema_version}; "
-                f"consumer supports up to {_USAGE_RATIO_VERSION}"
+                f"consumer supports up to {_USAGE_RATIO_VERSION}",
             )
     except ValidationError as exc:
         _LOGGER.error("usage-ratios object validation failed", exc_info=True)
         raise UsageRatioPersistenceError(
-            f"invalid usage-ratio profile object\n{_summarise_validation_errors(exc)}"
+            f"invalid usage-ratio profile object\n{_summarise_validation_errors(exc)}",
         ) from exc
     except UnicodeDecodeError as exc:
         _LOGGER.error("usage-ratios object payload is not UTF-8", exc_info=True)
         raise UsageRatioPersistenceError(
-            f"invalid usage-ratio profile object\n  - payload: invalid UTF-8: {exc}"
+            f"invalid usage-ratio profile object\n  - payload: invalid UTF-8: {exc}",
         ) from exc
     except (ClassificationError, EnvelopeVersionError) as exc:
         _LOGGER.error("usage-ratios object integrity error", exc_info=True)
         raise UsageRatioPersistenceError(
-            f"usage-ratio profile object integrity error: {exc.__class__.__name__}: {exc}"
+            f"usage-ratio profile object integrity error: {exc.__class__.__name__}: {exc}",
         ) from exc
     profile = envelope.payload
     _LOGGER.info("loaded %s usage ratios from secure database bucket_id=%s", len(profile.ratios), bucket_id)
@@ -162,7 +162,7 @@ def save_usage_ratios(
     except OSError as exc:
         _LOGGER.error("usage-ratios database write failed", exc_info=True)
         raise UsageRatioPersistenceError(
-            f"unable to write usage-ratio profile: {exc.__class__.__name__}: {exc}"
+            f"unable to write usage-ratio profile: {exc.__class__.__name__}: {exc}",
         ) from exc
     _LOGGER.info("saved %s usage ratios to secure database bucket_id=%s", len(profile.ratios), bucket_id)
 
@@ -200,7 +200,7 @@ def load_usage_ratios_with_censo_guard(
     (calculate / verify / file / build_draft / approve_draft /
     export_draft) must therefore surface the underlying
     :exc:`CensoRatioMismatchError` to the operator so they can
-    re-run ``aeat config profile censo refresh + apply`` or unset
+    re-run ``aeat config profile censo pull + apply`` or unset
     the diverging override.
 
     Args:
@@ -231,7 +231,7 @@ def load_usage_ratios_with_censo_guard(
     if raw_afectacion_ratio is None:
         offending = sorted(c.value for c in persisted_home_office)
         raise CensoRatioMismatchError(
-            f"persisted HOME_OFFICE overrides require an applied censo; offending categories: {offending}"
+            f"persisted HOME_OFFICE overrides require an applied censo; offending categories: {offending}",
         )
     derived = derive_home_office_ratios_from_censo(raw_afectacion_ratio, year=year)
     mismatches = {
