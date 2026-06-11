@@ -17,7 +17,6 @@ reasons and :class:`ReconciliationReport` for the returned record shape.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
@@ -65,13 +64,6 @@ class _RegistryReconciliationProvider(Protocol):
 # Shared with aeat.application.verification: "one cent" is the operator-visible
 # rounding floor on every monetary comparison across the CLI.
 _TOLERANCE: Final[Decimal] = Decimal("0.01")
-_QUARTER_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$", re.IGNORECASE)
-_ANNUAL_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})A$", re.IGNORECASE)
-_REMOTE_QUARTER_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<quarter>[1-4])T$", re.IGNORECASE)
-_REMOTE_ANNUAL_RE: Final[re.Pattern[str]] = re.compile(r"^0A$", re.IGNORECASE)
-_REMOTE_YEAR_RE: Final[re.Pattern[str]] = re.compile(r"^\d{4}$")
-
-
 def reconcile(
     draft: ModeloDraft,
     justificante: Justificante | None,
@@ -328,79 +320,18 @@ def _summarise_justificante(justificante: Justificante) -> JustificanteRefSummar
 
 def _periods_match(
     draft_period: Period,
-    remote_period: Period | str,
+    remote_period: Period,
     *,
     supported_periods: set[str],
     ejercicio: str | None,
 ) -> bool:
-    if isinstance(remote_period, Period):
-        return (
-            remote_period == draft_period
-            and remote_period.registry_token in supported_periods
-            and draft_period.registry_token in supported_periods
-        )
-    draft_period_code = draft_period.registry_token
-    draft_year_str = str(draft_period.filing_year)
-    if draft_period_code.endswith("T") and draft_period_code[0] in "1234":
-        draft_normalised = f"{draft_year_str}q{draft_period_code[0]}"
-    elif draft_period_code == "0A":
-        draft_normalised = f"{draft_year_str}a"
-    else:
-        draft_normalised = f"{draft_year_str}-{draft_period_code}"
-    return draft_normalised == _normalise_period(
-        remote_period,
-        ejercicio=ejercicio or draft_year_str,
-        supported_periods=supported_periods,
+    if ejercicio is not None and str(remote_period.filing_year) != ejercicio:
+        return False
+    return (
+        remote_period == draft_period
+        and remote_period.registry_token in supported_periods
+        and draft_period.registry_token in supported_periods
     )
-
-
-def _normalise_period(
-    period: str,
-    *,
-    ejercicio: str | None = None,
-    supported_periods: set[str],
-) -> str:
-    """Lower-case and strip a period label for tolerant comparison.
-
-    AEAT can print quarterly tokens, annual tokens, or only the fiscal
-    year on annual receipts. This helper maps those receipt tokens to
-    the same canonical labels used by filing drafts when the ejercicio
-    is available.
-
-    Args:
-        period: Raw period label from either side of the compare.
-        ejercicio: Optional fiscal year from the AEAT-side justificante.
-        supported_periods: Set of canonical period tokens declared by
-            the active registry snapshot for the modelo under comparison.
-
-    Returns:
-        The stripped, lower-cased period label.
-    """
-    stripped = period.strip()
-    if match := _QUARTER_RE.fullmatch(stripped):
-        token = f"{match.group('quarter')}T"
-        if token not in supported_periods:
-            return stripped.lower()
-        return f"{match.group('year')}q{match.group('quarter')}"
-    if match := _ANNUAL_RE.fullmatch(stripped):
-        if "0A" not in supported_periods:
-            return stripped.lower()
-        return f"{match.group('year')}a"
-    if ejercicio is not None and (match := _REMOTE_QUARTER_RE.fullmatch(stripped)):
-        token = f"{match.group('quarter')}T"
-        if token not in supported_periods:
-            return stripped.lower()
-        return f"{ejercicio}q{match.group('quarter')}"
-    if ejercicio is not None and _REMOTE_ANNUAL_RE.fullmatch(stripped) and "0A" in supported_periods:
-        return f"{ejercicio}a"
-    if (
-        ejercicio is not None
-        and _REMOTE_YEAR_RE.fullmatch(stripped)
-        and stripped == ejercicio
-        and "0A" in supported_periods
-    ):
-        return f"{ejercicio}a"
-    return stripped.lower()
 
 
 def _canonical_tax_id(value: str) -> str:

@@ -42,8 +42,8 @@ class Justificante(BaseModel):
             used to verify the document on the Sede electrónica.
         modelo: String ID of the modelo the receipt belongs to. References
             the modelo catalogue in :mod:`aeat.domain.modelos`.
-        period: AEAT period token as printed on the receipt, typically a
-            bare registry token such as ``"1T"`` or ``"0A"``.
+        period: Typed filing period resolved from the AEAT period token
+            printed on the receipt and ``ejercicio``.
         ejercicio: Four-digit tax year as printed on the receipt, when
             present. ``None`` for legacy receipts that omit the label.
         presentation_id: AEAT's internal ``Número de justificante`` if
@@ -70,7 +70,7 @@ class Justificante(BaseModel):
     csv: str = Field(..., min_length=4, max_length=64)
     modelo: str = Field(..., min_length=1, max_length=16)
     ejercicio: str | None = Field(default=None, max_length=8)
-    period: Period | str
+    period: Period
     presentation_id: str | None = Field(default=None, max_length=64)
     presented_at: datetime
     tax_id: str = Field(..., min_length=4, max_length=32)
