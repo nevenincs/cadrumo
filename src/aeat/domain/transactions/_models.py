@@ -256,7 +256,7 @@ def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) ->
     """Reject negative monetary or percentage values when supplied."""
     if value is not None and value < Decimal("0"):
         raise TransactionValidationError(
-            _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative")
+            _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative"),
         )
     return value
 
@@ -311,10 +311,11 @@ def _coerce_transaction_decimal_fields(payload: dict[str, object]) -> None:
 
 
 def _coerce_transaction_temporal_fields(payload: dict[str, object]) -> None:
-    """Parse the single str-typed datetime field via the shared helper."""
-    classified_at = payload.get("classified_at")
-    if isinstance(classified_at, str):
-        payload["classified_at"] = _parse_datetime(classified_at)
+    """Parse the str-typed datetime fields via the shared helper."""
+    for key in ("classified_at", "created_at", "modified_at"):
+        value = payload.get(key)
+        if isinstance(value, str):
+            payload[key] = _parse_datetime(value)
 
 
 def _normalize_transaction_optional_strings(payload: dict[str, object]) -> None:
@@ -636,7 +637,7 @@ class SplitLineage(BaseModel):
                 int(trimmed, 16)
             except ValueError as exc:
                 raise TransactionValidationError(
-                    "sibling_transaction_ids entries must be lowercase hex digests"
+                    "sibling_transaction_ids entries must be lowercase hex digests",
                 ) from exc
             if trimmed != trimmed.lower():
                 raise TransactionValidationError("sibling_transaction_ids entries must be lowercase")
@@ -774,6 +775,11 @@ class Transaction(BaseModel):
             the Art. 93 LIRPF Beckham filter (impatriado IRPF base
             excludes foreign-source rows). ``None`` grandfathers rows
             authored before the axis was introduced.
+        created_at: UTC-aware timestamp stamped once at ``ledger add`` and
+            carried verbatim through every later edit. ``None`` for rows
+            authored before the axis existed.
+        modified_at: UTC-aware timestamp re-stamped on every mutating edit.
+            ``None`` for rows authored before the axis existed.
     """
 
     model_config = _STRICT_FROZEN
@@ -827,6 +833,17 @@ class Transaction(BaseModel):
     # over thousands of rows. ``None`` means ungrouped. Length-bounded so a
     # grouped display stays legible.
     group_label: str | None = Field(default=None, max_length=64)
+    # Persistence-record lifecycle timestamps (ledger-interface-contract D6).
+    # ``created_at`` is stamped once by the application layer at ``ledger add``
+    # and is carried verbatim through every later edit; ``modified_at`` is
+    # re-stamped on every mutating edit (update/classify/allocate/attach/
+    # doclink/archive/stash/restore/link/split/merge). They make
+    # ``--sort-by created_at|modified_at`` honest for hand-added rows, which
+    # otherwise carry no creation timestamp (only imported rows have
+    # ``raw.provenance.ingested_at``). Both are UTC-aware. ``None`` orders
+    # last under a temporal sort for rows authored before the axis existed.
+    created_at: datetime | None = None
+    modified_at: datetime | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -898,10 +915,10 @@ class Transaction(BaseModel):
         """Restrict ``classified_by`` to the approved shapes."""
         return _validate_classified_by_shape(value)
 
-    @field_validator("classified_at")
+    @field_validator("classified_at", "created_at", "modified_at")
     @classmethod
     def _require_aware_timestamp(cls, value: datetime | None) -> datetime | None:
-        """Reject naive classification timestamps; ``None`` remains valid here."""
+        """Reject naive classification/lifecycle timestamps; ``None`` remains valid here."""
         if value is None:
             return None
         return _require_aware_datetime(value)
@@ -933,7 +950,7 @@ class Transaction(BaseModel):
         normalised = value.strip()
         if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
             raise TransactionValidationError(
-                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code"
+                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code",
             )
         return normalised
 
@@ -997,7 +1014,7 @@ class Transaction(BaseModel):
             if reconstituted != expected:
                 raise TransactionValidationError(
                     "taxable_base must equal the gross to the cent for self-assessed IVA: "
-                    f"{self.taxable_base} != {expected}"
+                    f"{self.taxable_base} != {expected}",
                 )
             return self
         expected = round_to_cents(abs(self.raw.amount))
@@ -1005,7 +1022,7 @@ class Transaction(BaseModel):
         if reconstituted != expected:
             raise TransactionValidationError(
                 "taxable_base + iva_amount must equal the gross to the cent: "
-                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}"
+                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}",
             )
         return self
 
@@ -1068,7 +1085,7 @@ class TransactionCatalogue(BaseModel):
         for key, transaction in self.transactions.items():
             if key != transaction.transaction_id:
                 raise TransactionValidationError(
-                    f"catalogue key {key!r} does not match transaction_id {transaction.transaction_id!r}"
+                    f"catalogue key {key!r} does not match transaction_id {transaction.transaction_id!r}",
                 )
         return self
 

@@ -293,6 +293,8 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         source_jurisdiction=transaction.source_jurisdiction,
         value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
         fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
+        created_at=transaction.created_at.isoformat() if transaction.created_at is not None else None,
+        modified_at=transaction.modified_at.isoformat() if transaction.modified_at is not None else None,
     )
 
 
@@ -331,6 +333,8 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
         source_jurisdiction=transaction.source_jurisdiction,
         value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
         fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
+        created_at=transaction.created_at.isoformat() if transaction.created_at is not None else None,
+        modified_at=transaction.modified_at.isoformat() if transaction.modified_at is not None else None,
     )
 
 
@@ -359,7 +363,7 @@ def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTrans
 def summarize_manual_transactions(
     *,
     bucket_id: str,
-    period: str | None = None,
+    period: Period | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> LedgerStatusReport:
     """Return a read-only :class:`LedgerStatusReport` for one bucket's ledger transactions."""
@@ -389,7 +393,7 @@ def summarize_manual_transactions(
     # Money roll-up over active business/mixed rows (period-filtered when given):
     # the year-end / readiness money picture the personas asked for. Gross EUR
     # (value_in_eur for foreign rows), not a registry calculation.
-    money_period = Period.model_validate(period) if period else None
+    money_period = period
     income_total = Decimal("0")
     expense_total = Decimal("0")
     for item in transactions:
@@ -522,6 +526,8 @@ def _prepare_manual_transaction_update(
         lifecycle_state=current.lifecycle_state,
         lifecycle_lineage=current.lifecycle_lineage,
         import_fingerprint=current.import_fingerprint,
+        created_at=current.created_at if current.created_at is not None else now,
+        modified_at=now,
     )
     if _mutation_signature(current) == _mutation_signature(replacement):
         return None
@@ -573,6 +579,8 @@ def _prepare_manual_transaction_update(
         bucket_event_id=primary_event_id,
         evidence_event_ids=evidence_event_ids,
         import_fingerprint=current.import_fingerprint,
+        created_at=current.created_at if current.created_at is not None else now,
+        modified_at=now,
     )
     return replacement, events
 
@@ -658,7 +666,7 @@ def _command_from_patch(
     direction = _required_patched(patch, patch_fields, "direction", current.direction)
     description = _required_patched(patch, patch_fields, "description", raw.description)
     business_classification = _required_patched(
-        patch, patch_fields, "business_classification", current.business_classification
+        patch, patch_fields, "business_classification", current.business_classification,
     )
     business_pct = _optional_patched(patch, patch_fields, "business_pct", current.business_pct)
     category_id = _optional_patched(patch, patch_fields, "category_id", current.category_id)
@@ -685,7 +693,7 @@ def _command_from_patch(
     attachment_ids = _required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     iva_category = _optional_patched(patch, patch_fields, "iva_category", current.iva_category)
     counterparty_eu_member_state = _optional_patched(
-        patch, patch_fields, "counterparty_eu_member_state", current.counterparty_eu_member_state
+        patch, patch_fields, "counterparty_eu_member_state", current.counterparty_eu_member_state,
     )
     group_label = _optional_patched(patch, patch_fields, "group_label", current.group_label)
     return ManualLedgerTransactionCommand(
@@ -755,7 +763,7 @@ def _update_event_specs(
                 BucketEventObjectType.LEDGER_TRANSACTION,
                 replacement.transaction_id,
                 {**common_payload, "mutation_kind": "edit"},
-            )
+            ),
         )
     if _classification_changed(current, replacement):
         specs.append(
@@ -769,7 +777,7 @@ def _update_event_specs(
                     "category_id": replacement.category_id or "",
                     "mutation_kind": "classification",
                 },
-            )
+            ),
         )
     if _allocation_changed(current, replacement):
         specs.append(
@@ -784,7 +792,7 @@ def _update_event_specs(
                     "prorrata_reference": replacement.prorrata_reference or "",
                     "mutation_kind": "allocation",
                 },
-            )
+            ),
         )
     specs.extend(_evidence_event_specs(current=current, replacement=replacement, common_payload=common_payload))
     if not specs:
@@ -794,7 +802,7 @@ def _update_event_specs(
                 BucketEventObjectType.LEDGER_TRANSACTION,
                 replacement.transaction_id,
                 {**common_payload, "mutation_kind": "correction"},
-            )
+            ),
         )
     return tuple(specs)
 
@@ -842,7 +850,7 @@ def _evidence_event_specs(
                         "transaction_id": replacement.transaction_id,
                         "mutation_kind": "purchase_invoice_evidence_detached",
                     },
-                )
+                ),
             )
         if replacement.purchase_invoice_evidence_id is not None:
             specs.append(
@@ -859,7 +867,7 @@ def _evidence_event_specs(
                         "transaction_id": replacement.transaction_id,
                         "mutation_kind": "purchase_invoice_evidence_attached",
                     },
-                )
+                ),
             )
     current_attachments = set(current.attachment_ids)
     replacement_attachments = set(replacement.attachment_ids)
@@ -875,7 +883,7 @@ def _evidence_event_specs(
                     "linked": "true",
                     "mutation_kind": "attachment_linked",
                 },
-            )
+            ),
         )
     for attachment_id in sorted(current_attachments - replacement_attachments):
         specs.append(
@@ -889,7 +897,7 @@ def _evidence_event_specs(
                     "linked": "false",
                     "mutation_kind": "attachment_removed",
                 },
-            )
+            ),
         )
     return tuple(specs)
 
@@ -910,6 +918,8 @@ def _transaction_from_command(
     edit_lineage_entry: TransactionEditLineageEntry | None = None,
     evidence_event_ids: Mapping[tuple[str, str], str] | None = None,
     import_fingerprint: str | None = None,
+    created_at: datetime | None = None,
+    modified_at: datetime | None = None,
 ) -> Transaction:
     raw = RawTransaction(
         transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
@@ -964,6 +974,11 @@ def _transaction_from_command(
         "counterparty_eu_member_state": command.counterparty_eu_member_state,
         "source_jurisdiction": command.source_jurisdiction,
         "group_label": command.group_label,
+        # D6: created_at is stamped once (defaults to occurred_at on first
+        # construction) and carried verbatim through edits; modified_at
+        # re-stamps to occurred_at on every mutating construction.
+        "created_at": created_at if created_at is not None else occurred_at,
+        "modified_at": modified_at if modified_at is not None else occurred_at,
     }
     if command.business_classification is not BusinessClassification.NOT_YET_PROCESSED:
         payload.update(
@@ -972,7 +987,7 @@ def _transaction_from_command(
                 "classified_by": command.classified_by_override or CLASSIFIED_BY_MANUAL,
                 "classification_reason": command.source_command,
                 "classification_confidence": Decimal("1"),
-            }
+            },
         )
     return Transaction.model_validate(payload)
 
@@ -1006,7 +1021,7 @@ def _evidence_provenance(
                 source_command=command.source_command,
                 linked_at=occurred_at,
                 bucket_event_id=evidence_event_id,
-            )
+            ),
         )
     return (*retained, *created)
 
