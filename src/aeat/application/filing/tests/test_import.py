@@ -7,17 +7,20 @@ end-to-end against local justificante fixture PDFs under
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
 import pytest
 
+from ....core import Period
 from ....domain.filing import ModeloImportError
-from ....domain.justificante import JustificanteParseError
+from ....domain.justificante import Justificante, JustificanteParseError
 from ....tests import FIXTURES_DIR
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
-from .. import import_filing_from_justificante
-from .._import import RegistryImportSchemaProvider
+from .. import ModeloOperatorProfile, build_draft, import_filing_from_justificante
+from .._import import RegistryImportSchemaProvider, _build_submission_record, _normalise_period
 from ..runtime import RegistrySchemaProvider, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,6 +39,86 @@ def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
     casilla_19 = collection.get("19")
     assert casilla_19 is not None
     assert casilla_19.id == "19"
+
+
+def test_normalise_period_returns_core_period_for_printed_bare_token(
+    schema_provider: RegistrySchemaProvider,
+) -> None:
+    period = _normalise_period(
+        modelo="130",
+        ejercicio="2026",
+        raw_period="1T",
+        schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
+    )
+    assert period == Period.from_year_and_code(2026, "1T")
+    assert period.model_dump() == {"filing_year": 2026, "code": "1T"}
+
+
+def test_normalise_period_parses_combined_fixture_token_at_import_boundary(
+    schema_provider: RegistrySchemaProvider,
+) -> None:
+    period = _normalise_period(
+        modelo="130",
+        ejercicio="2026",
+        raw_period="2026Q1",
+        schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
+    )
+    assert period == Period.from_year_and_code(2026, "1T")
+
+
+def test_normalise_period_wraps_registry_tokens_outside_core_period(
+    schema_provider: RegistrySchemaProvider,
+) -> None:
+    with pytest.raises(ModeloImportError, match=r"core Period"):
+        _normalise_period(
+            modelo="036",
+            ejercicio="2025",
+            raw_period="alta",
+            schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
+        )
+
+
+def test_submission_record_preserves_typed_draft_period(
+    schema_provider: RegistrySchemaProvider,
+) -> None:
+    period = Period.from_year_and_code(2026, "1T")
+    draft = build_draft(
+        modelo="130",
+        period=period,
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Import submission test"),
+        inputs={
+            "01": Decimal("100"),
+            "02": Decimal("25"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+        schema_provider=schema_provider,
+    )
+    justificante = Justificante(
+        csv="ABCD1234EFGH5678",
+        modelo="130",
+        period="1T",
+        ejercicio="2026",
+        presentation_id="1302026ABCD1234",
+        presented_at=datetime(2026, 4, 10, 11, 23, 45),
+        tax_id="12345678Z",
+        total_a_ingresar=Decimal("10.00"),
+        verification_url=justificante_cotejo_url("ABCD1234EFGH5678"),
+        source_pdf_path=Path("var") / "justificantes" / "modelo_130_2026Q1.pdf",
+        source_pdf_sha256="a" * 64,
+        parsed_at=datetime(2026, 4, 10, 9, 25, tzinfo=UTC),
+    )
+
+    submission = _build_submission_record(justificante=justificante, draft=draft)
+
+    assert submission.period == period
+    assert submission.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
 
 
 class TestImportFromJustificante:
