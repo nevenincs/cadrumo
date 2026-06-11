@@ -492,7 +492,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
         snapshot = _authority_via_resources().snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except (FileNotFoundError, RegistrySnapshotError):
         return None
@@ -728,7 +728,7 @@ def _require_cross_period_clean_state(
         context={
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
+            "period": work_unit.period.registry_token,
             "finding_count": str(len(blocking_findings)),
         },
         suggestion=first.next_action,
@@ -1104,7 +1104,7 @@ def _emit_verification_bucket_event(
             "work_unit_id": target.work_unit_id,
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period,
+            "period": work_unit.period.registry_token,
             "completeness_status": completeness.value,
             "finding_count": str(finding_count),
             "missing_required_count": str(missing_required_count),
@@ -1144,7 +1144,7 @@ def _collect_revision_verification_findings(
         snapshot = authority.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except (FileNotFoundError, RegistrySnapshotError):
         findings.append(
@@ -1155,7 +1155,7 @@ def _collect_revision_verification_findings(
                     "application.modelo.findings.registry_snapshot_unresolved",
                     modelo=str(work_unit.modelo),
                     filing_year=str(work_unit.filing_year),
-                    period=str(work_unit.period),
+                    period=work_unit.period.registry_token,
                 ),
                 next_action="aeat app registry verify",
             ),

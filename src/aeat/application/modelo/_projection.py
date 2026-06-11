@@ -11,8 +11,8 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, Field
 
-from ...core import Modelo
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...core.resources import resources
@@ -212,8 +212,9 @@ def project_modelo_100_from_m130(
     m130_quarters: dict[str, CalculationRevision] = {}
     for unit in m130_units:
         revisions = list_calculation_revisions(work_unit_id=unit.work_unit_id)
-        if revisions and unit.period in quarters:
-            m130_quarters[unit.period] = revisions[-1]
+        period_token = unit.period.registry_token
+        if revisions and period_token in quarters:
+            m130_quarters[period_token] = revisions[-1]
 
     if not m130_quarters:
         raise ModeloProjectNoM130RevisionsError(
@@ -383,7 +384,7 @@ def _best_revision_for_compare(
             translated_message="cli.app.modelo.compare.no_work_units",
         )
 
-    period_by_unit = {unit.work_unit_id: unit.period for unit in units_for_year}
+    period_by_unit = {unit.work_unit_id: unit.period.registry_token for unit in units_for_year}
     all_revisions: list[CalculationRevision] = []
     for unit in units_for_year:
         all_revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id))

@@ -68,20 +68,21 @@ def _resident_profile() -> TaxpayerProfile:
 
 def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int = 2026) -> WorkUnit:
     bucket_id = "test-bucket"
+    typed_period = Period.from_year_and_code(filing_year, period)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
-            period=period,
+            period=typed_period,
             revision_id="r" + "0" * 63,
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id="r" + "0" * 63,
-        name=f"{modelo}-{filing_year}-{period}",
+        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=_T0,
         updated_at=_T0,
     )

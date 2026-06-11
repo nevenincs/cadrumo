@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -42,6 +43,7 @@ from ...aggregation._ledger_filing_snapshot import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
+_P_2026_1T = Period.from_year_and_code(2026, "1T")
 
 
 def _tx(
@@ -92,7 +94,7 @@ def _revision(
     source_ids: tuple[str, ...],
     snapshot: LedgerFilingSnapshot | None,
 ) -> CalculationRevision:
-    wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period="1T", revision_id="r1")
+    wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
         inputs_snapshot={},
@@ -156,7 +158,7 @@ def test_filed_revision_snapshot_is_immutable() -> None:
 def _verified_revision(
     modelo: str, *, source_ids: tuple[str, ...], snapshot: LedgerFilingSnapshot,
 ) -> CalculationRevision:
-    wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period="1T", revision_id="r1")
+    wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
         inputs_snapshot={},

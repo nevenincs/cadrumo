@@ -139,7 +139,7 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
     return CalculationResultSummary(
         modelo=str(work_unit.modelo),
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         rows=tuple(rows),
     )
 

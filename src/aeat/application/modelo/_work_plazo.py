@@ -42,7 +42,11 @@ def modelo_work_plazo_summary(
     from ...domain.deadlines._plazo import resolve_filing_closes_on
     from ...domain.deadlines._recargo import build_recovery_for_overdue
 
-    closes_on = resolve_filing_closes_on(str(work_unit.modelo), work_unit.filing_year, work_unit.period)
+    closes_on = resolve_filing_closes_on(
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period.registry_token,
+    )
     if closes_on is None:
         return None
 
@@ -58,7 +62,7 @@ def modelo_work_plazo_summary(
         recovery = build_recovery_for_overdue(
             days_late=days_overdue,
             modelo=str(work_unit.modelo),
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except DeadlineValidationError:
         _LOG.debug(
@@ -66,7 +70,7 @@ def modelo_work_plazo_summary(
             "modelo=%s filing_year=%s period=%s days_overdue=%s",
             work_unit.modelo,
             work_unit.filing_year,
-            work_unit.period,
+            work_unit.period.registry_token,
             days_overdue,
             exc_info=True,
         )

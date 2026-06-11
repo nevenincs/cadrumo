@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -61,7 +62,7 @@ def _seed_work_unit(
         bucket_id=bucket_id,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         repository=repository,
         clock=clock,
@@ -118,7 +119,12 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
         ),
     )
 
-    visible = ModeloVisibleFilingTarget(modelo="130", filing_year=2026, period="1T", bucket_id=bucket_id)
+    visible = ModeloVisibleFilingTarget(
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        bucket_id=bucket_id,
+    )
     exact = ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=bucket_id)
 
     assert resolve_modelo_work_unit_id(visible) == work_unit.work_unit_id
@@ -129,7 +135,7 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
     assert projected.short_work_unit_id == work_unit.work_unit_id[-12:]
     assert projected.modelo == "130"
     assert projected.filing_year == 2026
-    assert projected.period == "1T"
+    assert projected.period == Period.from_year_and_code(2026, "1T")
 
     current_pick = resolve_modelo_revision_pick(target=visible, pick=ModeloRevisionPick(default_for="verify"))
     assert current_pick.calculation_revision_id == draft.calculation_revision_id
@@ -171,7 +177,12 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
         created_at=_T0 + timedelta(minutes=3),
         output=Decimal("30"),
     )
-    visible = ModeloVisibleFilingTarget(modelo="130", filing_year=2026, period="1T", bucket_id=bucket_id)
+    visible = ModeloVisibleFilingTarget(
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        bucket_id=bucket_id,
+    )
     work_repository.save(
         upsert_work_unit(
             work_repository.load(),

@@ -221,7 +221,7 @@ def _blocking_modelo_references(
                 revision_state=revision.state.value,
                 modelo=work_unit.modelo,
                 filing_year=work_unit.filing_year,
-                period=work_unit.period,
+                period=work_unit.period.registry_token,
             ),
         )
     return tuple(
@@ -264,7 +264,7 @@ def _blockers_by_source_transaction_id(
             revision_state=revision.state.value,
             modelo=work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
         for txid in revision.source_transaction_ids:
             out.setdefault(txid, []).append(blocker)

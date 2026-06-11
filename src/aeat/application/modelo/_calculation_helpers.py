@@ -75,12 +75,16 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
         snapshot = authority.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(
             translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
-            context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
+            context={
+                "modelo": work_unit.modelo,
+                "filing_year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+            },
         ) from exc
     # D1 calc-time assertion: the law-determined revision must equal the
     # revision the work unit was created against.  The work unit's revision_id
@@ -89,7 +93,7 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
         raise WorkUnitRevisionDivergenceError(
             f"work unit {work_unit.work_unit_id!r} was created against registry revision "
             f"{work_unit.revision_id!r}, but the law-determined revision for "
-            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period!r} "
+            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period.registry_token!r} "
             f"is now {snapshot.revision.id!r}. "
             f"The registry's law-mapping was corrected after this work unit was created. "
             f"Re-create the work unit (discard this one and run `aeat app modelo work ensure`) "

@@ -21,6 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import SensitivityClass
+from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._codes import ModeloCode
 from .._repository import (
@@ -58,7 +59,7 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
     bucket_id = "b" * 32
     modelo = ModeloCode("303")
     filing_year = 2025
-    period = "1T"
+    period = Period.from_year_and_code(filing_year, "1T")
     revision_id = "2025-y-siguientes"
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
@@ -73,7 +74,7 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
         filing_year=filing_year,
         period=period,
         revision_id=revision_id,
-        name=f"IVA-{filing_year}-{period}-{name_suffix}",
+        name=f"IVA-{filing_year}-{period.registry_token}-{name_suffix}",
         created_at=now,
         updated_at=now,
         # Non-default lifecycle state so a save-drops-state regression
@@ -113,7 +114,7 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     loaded_unit = loaded.work_units[work_unit.work_unit_id]
     dumped_unit = loaded_unit.model_dump(mode="json")
     assert dumped_unit["filing_year"] == 2025
-    assert dumped_unit["period"] == "1T"
+    assert dumped_unit["period"] == {"filing_year": 2025, "code": "1T"}
     assert "2025Q1" not in loaded_unit.model_dump_json()
     database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
     assert b"2025Q1" not in database_bytes
@@ -125,7 +126,7 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     # non-default value).
     assert loaded_unit.modelo == "303"
     assert loaded_unit.filing_year == 2025
-    assert loaded_unit.period == "1T"
+    assert loaded_unit.period == Period.from_year_and_code(2025, "1T")
     assert loaded_unit.revision_id == "2025-y-siguientes"
     assert loaded_unit.state is WorkUnitState.DESCARTADO
     assert loaded_unit.work_unit_id == work_unit.work_unit_id

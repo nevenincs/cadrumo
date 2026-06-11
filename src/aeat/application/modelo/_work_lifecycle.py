@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from ...core import Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -20,9 +21,9 @@ from ._registry_resources import reject_unknown_period_for_revision, reject_unkn
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 
 
-def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
+def _default_name(*, modelo: str, filing_year: int, period: Period) -> str:
     """Return the default display name for a fresh work unit."""
-    return f"{modelo}-{filing_year}-{period}"
+    return f"{modelo}-{filing_year}-{period.registry_token}"
 
 
 def create_work_unit(
@@ -30,7 +31,7 @@ def create_work_unit(
     bucket_id: str,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     revision_id: str,
     name: str | None = None,
     actor: str = "system",
@@ -41,7 +42,9 @@ def create_work_unit(
 ) -> WorkUnit:
     """Create or load a :class:`WorkUnit` for the filing target key."""
     reject_unknown_revision(modelo=modelo, revision_id=revision_id)
-    reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
+    if period.filing_year != filing_year:
+        raise ValueError(f"filing_year {filing_year!r} does not match period year {period.filing_year!r}")
+    reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period.registry_token)
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repo.load()
@@ -80,7 +83,7 @@ def create_work_unit(
         payload={
             "modelo": str(unit.modelo),
             "filing_year": str(unit.filing_year),
-            "period": unit.period,
+            "period": unit.period.registry_token,
             "revision_id": unit.revision_id,
             "name": unit.name,
         },
@@ -110,7 +113,7 @@ def list_work_units(
                 u.bucket_id,
                 u.filing_year,
                 str(u.modelo),
-                u.period,
+                u.period.registry_token,
             ),
         ),
     )
@@ -174,7 +177,7 @@ def rename_work_unit(
         payload={
             "modelo": str(renamed.modelo),
             "filing_year": str(renamed.filing_year),
-            "period": renamed.period,
+            "period": renamed.period.registry_token,
             "previous_name": existing.name,
             "new_name": cleaned_name,
         },
@@ -229,7 +232,7 @@ def discard_work_unit(
         payload={
             "modelo": str(discarded.modelo),
             "filing_year": str(discarded.filing_year),
-            "period": discarded.period,
+            "period": discarded.period.registry_token,
             "reason": discarded.discard_reason or "",
         },
     )

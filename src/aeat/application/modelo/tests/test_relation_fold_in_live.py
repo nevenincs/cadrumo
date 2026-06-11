@@ -137,7 +137,7 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
         bucket_id=_BUCKET_ID,
         modelo="180",
         filing_year=_YEAR,
-        period="0A",
+        period=Period.from_year_and_code(_YEAR, "0A"),
         revision_id=snapshot_180.revision.id,
         repository=wu_repo,
         clock=_T0,

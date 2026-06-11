@@ -97,16 +97,17 @@ def _coerce_deadline_window_period(
 
 def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
     """Return the canonical :class:`~aeat.core.Period` consumed by the workflow engine."""
-    if work_unit.period.endswith("T") and len(work_unit.period) == 2:
+    registry_period = work_unit.period.registry_token
+    if registry_period.endswith("T") and len(registry_period) == 2:
         declared = _deadline_window_period_for_registry_period(
             modelo=work_unit.modelo,
             filing_year=work_unit.filing_year,
-            registry_period=work_unit.period,
+            registry_period=registry_period,
         )
         if declared is not None:
             return declared
-        return Period.from_year_and_code(work_unit.filing_year, work_unit.period)
-    return Period.from_year_and_code(work_unit.filing_year, work_unit.period)
+        return work_unit.period
+    return work_unit.period
 
 
 class _RevisionInputsProvider:
@@ -155,7 +156,7 @@ class _RevisionDraftBuilder:
         self._clock = clock
         self._schema_provider = build_runtime_schema_provider(
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
             modelos=(work_unit.modelo,),
         )
 

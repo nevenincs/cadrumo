@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -48,11 +49,12 @@ def _hex(seed: str) -> str:
 
 
 def _work_unit(*, modelo: str, period: str, revision_seed: str) -> WorkUnit:
+    typed_period = Period.from_year_and_code(2024, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=2024,
-        period=period,
+        period=typed_period,
         revision_id=revision_seed,
     )
     return WorkUnit(
@@ -60,7 +62,7 @@ def _work_unit(*, modelo: str, period: str, revision_seed: str) -> WorkUnit:
         bucket_id=_BUCKET_ID,
         modelo=modelo,
         filing_year=2024,
-        period=period,
+        period=typed_period,
         revision_id=revision_seed,
         name=f"{modelo}-2024-{period}",
         created_at=_T0,
@@ -147,7 +149,7 @@ def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record(
             bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=2024,
-            period="1T",
+            period=Period.from_year_and_code(2024, "1T"),
             filed_at=_T0 + timedelta(hours=2),
             filed_by="aeat.cli.modelo.file",
             status=ModeloRecordStatus.VIGENTE,

@@ -271,7 +271,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
         snapshot = authority.snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except (FileNotFoundError, RegistrySnapshotError) as exc:
         raise TaxationComparisonError(
@@ -298,7 +298,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
 
     period_date = period_end_date(
         filing_year=work_unit.filing_year,
-        registry_period=work_unit.period,
+        registry_period=work_unit.period.registry_token,
     )
 
     # Build resolved inputs the same way calculate_modelo_revision does,
@@ -307,7 +307,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     declaration_inputs = _resolve_declaration_period_inputs(
         snapshot.revision,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     )
     bound_inputs = resolve_bound_casilla_inputs_for_available_bindings(
         snapshot.revision,

@@ -137,16 +137,17 @@ def _seed_revision(
     state: CalculationRevisionState,
     modelo: str = "130",
     filing_year: int = 2026,
-    period: str = "Q1",
+    period: str = "1T",
 ) -> tuple[str, str]:
     revision_id_suffix = state.value.lower()[:3]
     base = revision_id_suffix + "0" * (63 - len(revision_id_suffix))
     revision_id = "r" + base
+    typed_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=revision_id,
     )
     now = datetime.now(UTC)
@@ -155,9 +156,9 @@ def _seed_revision(
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
-        period=period,
+        period=typed_period,
         revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
+        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
         created_at=now,
         updated_at=now,
     )
@@ -302,7 +303,7 @@ def _seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id=source_snapshot.revision.id,
         repository=work_unit_repository,
         bucket_event_repository=bucket_event_repository,
@@ -673,7 +674,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="2T",
+        period=Period.from_year_and_code(2026, "2T"),
         revision_id=snapshot.revision.id,
         repository=work_repo,
         bucket_event_repository=event_repo,
@@ -858,7 +859,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     assert (
         ModeloRecordCatalogueRepository()
         .load()
-        .current_for(bucket_id=bucket_id, modelo="303", filing_year=2026, period="2T")
+        .current_for(bucket_id=bucket_id, modelo="303", filing_year=2026, period=Period.from_year_and_code(2026, "2T"))
         is None
     )
     work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
@@ -876,7 +877,7 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
         bucket_id=bucket_id,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         repository=work_repo,
         clock=datetime(2026, 6, 4, 10, 0, tzinfo=UTC),

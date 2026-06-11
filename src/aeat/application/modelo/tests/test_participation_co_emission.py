@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from ....application.ledger._actions_common import _blocking_modelo_references
+from ....core import Period
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -59,7 +60,7 @@ def _seed_borrador(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2024,
-        period="2T",
+        period=Period.from_year_and_code(2024, "2T"),
         revision_id=revision_id_seed,
     )
     work_unit = WorkUnit(
@@ -67,7 +68,7 @@ def _seed_borrador(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2024,
-        period="2T",
+        period=Period.from_year_and_code(2024, "2T"),
         revision_id=revision_id_seed,
         name="303-2024-2T",
         created_at=_T0,
@@ -130,7 +131,7 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
         assert verified_entry.revision_state == "verificado_completo"
         assert verified_entry.modelo == "303"
         assert verified_entry.filing_year == 2024
-        assert verified_entry.period == "2T"
+        assert verified_entry.period == Period.from_year_and_code(2024, "2T")
         assert verified_entry.filing_record_id is None
 
         # --- FILE (replaces the verified entry in place, gaining filing_record_id) ---

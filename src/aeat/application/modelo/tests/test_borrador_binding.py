@@ -330,7 +330,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=_YEAR,
-        period=_PERIOD,
+        period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision_id="2025",
         repository=work_unit_repository,
     )
@@ -405,7 +405,7 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=_YEAR,
-        period=_PERIOD,
+        period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision_id="2025",
         repository=work_unit_repository,
     )

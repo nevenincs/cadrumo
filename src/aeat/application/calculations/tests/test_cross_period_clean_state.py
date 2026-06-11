@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
@@ -213,7 +214,7 @@ def _seed_member_322_filing(
                     bucket_id=_BUCKET_ID,
                     modelo=ModeloCode("322"),
                     filing_year=_M353_YEAR,
-                    period=_M353_PERIOD,
+                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
                     member_nif=member_nif,
                     filed_at=_CLOCK,
                     filed_by="aeat-import-test",
@@ -278,7 +279,7 @@ def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecor
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("130"),
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=_CLOCK,
         filed_by="aeat-live-capture-test",
         aeat_accepted=True,
@@ -351,7 +352,7 @@ def _seed_official_303_source_filings(
             bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=_M390_YEAR,
-            period=period,
+            period=Period.from_year_and_code(_M390_YEAR, period),
             revision_id=_M303_REVISION,
             clock=_CLOCK,
         )
@@ -800,7 +801,7 @@ def test_cross_period_clean_state_blocks_superseded_upstream_filing(
             bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=_M390_YEAR,
-            period="1T",
+            period=Period.from_year_and_code(_M390_YEAR, "1T"),
         )
         assert source_record is not None
         superseded_record = source_record.model_copy(
@@ -983,7 +984,7 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tm
             bucket_id=_BUCKET_ID,
             modelo="390",
             filing_year=_M390_YEAR,
-            period=_M390_PERIOD,
+            period=Period.from_year_and_code(_M390_YEAR, _M390_PERIOD),
             revision_id=_M390_REVISION,
             clock=_CLOCK,
         )

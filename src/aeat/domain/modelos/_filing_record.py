@@ -33,15 +33,12 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ...core import Period
 from ...core.identity import BucketId
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 
-_Period = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
-]
 ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
@@ -166,7 +163,7 @@ class ModeloRecord(BaseModel):
     bucket_id: BucketId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
-    period: _Period
+    period: Period
     member_nif: _MemberNif | None = None
     filed_at: datetime
     filed_by: ModeloActorLabel
@@ -196,6 +193,10 @@ class ModeloRecord(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_invariants(self) -> ModeloRecord:
+        if self.period.filing_year != self.filing_year:
+            raise ModeloValidationError(
+                f"filing_year {self.filing_year!r} does not match period year {self.period.filing_year!r}",
+            )
         derived = derive_filing_record_id(
             work_unit_id=self.work_unit_id,
             calculation_revision_id=self.calculation_revision_id,
@@ -245,7 +246,7 @@ class ModeloRecordCatalogue(BaseModel):
                     f"catalogue key {key!r} does not match filing_record_id {record.filing_record_id!r}",
                 )
         # Exactly one CURRENT record per (bucket, modelo, year, period, member) tuple.
-        currents: dict[tuple[str, str, int, str, str | None], str] = {}
+        currents: dict[tuple[str, str, int, Period, str | None], str] = {}
         for record in self.records.values():
             if record.status is not ModeloRecordStatus.VIGENTE:
                 continue
@@ -274,7 +275,7 @@ class ModeloRecordCatalogue(BaseModel):
         bucket_id: str,
         modelo: str,
         filing_year: int,
-        period: str,
+        period: Period,
         member_nif: str | None = None,
     ) -> ModeloRecord | None:
         """Return the current (non-superseded) :class:`ModeloRecord` for a filing tuple.
@@ -305,7 +306,7 @@ class ModeloRecordCatalogue(BaseModel):
         bucket_id: str,
         modelo: str,
         filing_year: int,
-        period: str,
+        period: Period,
         member_nif: str | None = None,
     ) -> tuple[ModeloRecord, ...]:
         """Return every filing record for a tuple, ordered by filed_at.

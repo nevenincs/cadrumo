@@ -13,7 +13,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from ...core import Period as _Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -280,7 +279,7 @@ def calculate_modelo_revision(
 
     period_date = filing_period_date or period_end_date(
         filing_year=work_unit.filing_year,
-        registry_period=work_unit.period,
+        registry_period=work_unit.period.registry_token,
     )
     caller_binding_values = dict(binding_values or {})
     caller_enum_binding_values = dict(enum_binding_values or {})
@@ -288,7 +287,7 @@ def calculate_modelo_revision(
     _apply_iva_compensation_decision_binding(
         work_unit.modelo,
         work_unit.filing_year,
-        work_unit.period,
+        work_unit.period.registry_token,
         bucket_id=work_unit.bucket_id,
         revision=snapshot.revision,
         taxpayer_nif=_taxpayer_nif_for_bucket(work_unit.bucket_id),
@@ -302,7 +301,7 @@ def calculate_modelo_revision(
         bucket_id=work_unit.bucket_id,
         snapshot=snapshot,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
         casilla_inputs=casilla_inputs,
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
@@ -442,8 +441,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
 
 
 def _ledger_preflight_period_for_work_unit(work_unit: WorkUnit) -> _LedgerPeriod:
-    code = work_unit.period.strip().upper()
-    return _LedgerPeriod.from_year_and_token(year=work_unit.filing_year, token=code)
+    return _LedgerPeriod.from_year_and_token(year=work_unit.period.year, token=work_unit.period.registry_token)
 
 
 def calculate_modelo_revision_from_bucket_aggregation(
@@ -532,7 +530,7 @@ def _resolve_bucket_source_mesh(
         bucket_id=work_unit.bucket_id,
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=_Period.from_year_and_code(work_unit.filing_year, work_unit.period),
+        period=work_unit.period,
         revision=snapshot.revision,
     )
     source_resolution = merge_source_resolutions(
@@ -659,7 +657,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         snapshot = authority.snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
-            period=work_unit.period,
+            period=work_unit.period.registry_token,
         )
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
@@ -669,7 +667,11 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(
             translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
-            context={"modelo": work_unit.modelo, "filing_year": work_unit.filing_year, "period": work_unit.period},
+            context={
+                "modelo": work_unit.modelo,
+                "filing_year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+            },
         ) from exc
     # D1 calc-time assertion: the law-determined revision must equal the
     # revision the work unit was created against.  The work unit's revision_id
@@ -679,7 +681,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         raise WorkUnitRevisionDivergenceError(
             f"work unit {work_unit.work_unit_id!r} was created against registry revision "
             f"{work_unit.revision_id!r}, but the law-determined revision for "
-            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period!r} "
+            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period.registry_token!r} "
             f"is now {snapshot.revision.id!r}. "
             f"The registry's law-mapping was corrected after this work unit was created. "
             f"Re-create the work unit (discard this one and run `aeat app modelo work ensure`) "

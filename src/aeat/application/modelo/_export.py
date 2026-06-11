@@ -391,23 +391,13 @@ def _compose_export_headers(
 
 
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
-    """Return a typed :class:`~aeat.core.Period` built directly from the work unit's bare registry token.
-
-    ``WorkUnit.period`` is always stored as a bare registry token
-    (``"1T"``, ``"0A"``, ``"03"``); ``WorkUnit.filing_year`` is the
-    four-digit year. :meth:`~aeat.core.Period.from_year_and_code`
-    validates and wraps them without constructing a combined string.
-
-    Raises:
-        ModeloExportError: When the token is not a recognised registry
-            period code.
-    """
+    """Return the typed :class:`~aeat.core.Period` carried by the work unit."""
     try:
-        return Period.from_year_and_code(work_unit.filing_year, work_unit.period)
+        return Period.from_year_and_code(work_unit.filing_year, work_unit.period.registry_token)
     except PeriodError as exc:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_period_unmappable",
-            context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period},
+            context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period.registry_token},
         ) from exc
 
 
@@ -581,7 +571,7 @@ def export_modelo_revision(
         "format": receipt.format.value,
         "modelo": work_unit.modelo,
         "filing_year": str(work_unit.filing_year),
-        "period": work_unit.period,
+        "period": work_unit.period.registry_token,
     }
     if iva_wallet_provenance is not None:
         event_payload.update(
