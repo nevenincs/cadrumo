@@ -135,7 +135,7 @@ Delete the combined-input regexes from parse_canonical_period; remove the round-
 Every how-to and reference teaches only --year --period <token>; a repo-wide grep gate confirms zero 2026Q1 / YYYY-nT / period=YYYY usage outside refusal-regression fixtures.
 
 - [x] `W01.P04.S13` - Sweep every how-to and reference doc to teach only --year --period <token>, removing every 2026Q1 / period=2026-1T / bare-year example; `docs/how-to, docs/reference`.
-- [ ] `W01.P04.S14` - Add a final repo-wide grep gate asserting zero 2026Q1 / YYYY-nT / period=YYYY usage in code, tests and docs outside the refusal-regression fixtures; `run the relevant suites green; `src/aeat, docs`.
+- [x] `W01.P04.S14` - Add a final repo-wide grep gate asserting zero 2026Q1 / YYYY-nT / period=YYYY usage in code, tests and docs outside the refusal-regression fixtures; `run the relevant suites green; `src/aeat, docs`.
 
 ### Phase `W01.P05` - DEEP LAYER: internal combined-token representation migration
 
@@ -143,7 +143,7 @@ Discovery: combined 2026Q1/2026-1T strings are load-bearing BELOW the operator s
 
 - [x] `W01.P05.S15` - Hydrate registry deadline-window TOML period strings into core.Period at the loader boundary, preserving free-form registry authoring input per aeat-registry-authority-flow while exposing the separated (filing_year, registry_token) model shape downstream; `src/aeat/_data/registry/aeat/modelos/**/deadline_windows, src/aeat/domain/calculations/registry`.
 - [x] `W01.P05.S16` - Replace the WorkflowEngine combined-token contract: have workflow_period_for_work_unit and the resume/gate paths carry (filing_year, registry_token) instead of composing 2026Q1/2026-1T, and migrate every dependent test assertion; `src/aeat/application/modelo/_workflow_gate.py, src/aeat/application/workflow/_resume.py`.
-- [ ] `W01.P05.S17` - OUTSTANDING — Once the deep layer is separated, delete the combined-input regexes from parse_canonical_period (unblocks P03.S08) and rewrite the source docstrings that cite 2026Q1 as the canonical token; `src/aeat/domain/period.py, src/aeat/application/workflow/_resume.py, src/aeat/domain/calculations/registry/_queries.py`.
+- [x] `W01.P05.S17` - OUTSTANDING — Once the deep layer is separated, delete the combined-input regexes from parse_canonical_period (unblocks P03.S08) and rewrite the source docstrings that cite 2026Q1 as the canonical token; `src/aeat/domain/period.py, src/aeat/application/workflow/_resume.py, src/aeat/domain/calculations/registry/_queries.py`.
 
 ## Wave `W02` - Core Period value object: implementation and backend rollout
 
