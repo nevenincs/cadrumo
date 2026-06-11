@@ -39,6 +39,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     calculate_registry_snapshot,
@@ -197,7 +198,8 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted(tmp_path: Path) 
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         report = aggregate_iva_ledger_observations(
-            TransactionCatalogue.from_transactions((_recargo_purchase(),)), period=f"{_YEAR}Q1",
+            TransactionCatalogue.from_transactions((_recargo_purchase(),)),
+            period=Period.from_year_and_code(_YEAR, _PERIOD),
         )
 
     # No declarable deducible observation was produced for the recargo purchase...
