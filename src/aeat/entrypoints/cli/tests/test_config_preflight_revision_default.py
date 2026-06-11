@@ -275,7 +275,11 @@ def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() ->
     authority._modelos_by_id["303"] = ambiguous
     try:
         with pytest.raises(CliRefusedBoundaryError) as excinfo:
-            _resolve_preflight_revision_id(modelo="303", filing_year=2026, period="1T", revision_id=None)
+            _resolve_preflight_revision_id(
+                modelo="303",
+                period=Period.from_year_and_code(2026, "1T"),
+                revision_id=None,
+            )
     finally:
         authority._modelos_by_id["303"] = original
 
