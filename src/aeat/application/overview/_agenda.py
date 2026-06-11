@@ -149,7 +149,7 @@ def build_overview_agenda(
     if future_or_today:
         next_due = min(
             future_or_today,
-            key=lambda entry: (entry.adjusted_closes_on, entry.modelo, entry.period),
+            key=lambda entry: (entry.adjusted_closes_on, entry.modelo, entry.period.year, entry.period.registry_token),
         )
 
     return OverviewAgenda(
