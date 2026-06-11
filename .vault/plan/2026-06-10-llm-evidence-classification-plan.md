@@ -20,6 +20,8 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
+<!-- RETIRED: W05 -->
+
 # `llm-evidence-classification` `Evidence-aware LLM ledger classification (Stage-3)` plan
 
 ## Wave `W01` - Foundation - secure-storage evidence byte read and cloud-consent posture
@@ -106,6 +108,20 @@ Update the classify how-to for the evidence-reading and split flow and pass the 
 - [x] `W03.P08.S30` - Update the classify how-to with the evidence-reading and evidence-driven split flow; `docs/how-to/classify-with-llm.md`.
 - [x] `W03.P08.S31` - Pass the documented-command-conformance gate for the new evidence and split flags; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
 - [ ] `W03.P08.S32` - Pass the nitpicky Sphinx docs-build gate; `dev/docs/tests/test_docs_build.py`.
+
+## Wave `W04` - Agent persona-driven manual pipeline rolling
+
+A fresh agent persona manually rolls the complete evidence-aware LLM classification pipeline against the real implementation using the environment's authenticated cloud CLIs (antigravity/agy and codex) — not automated tests, but hands-on operator rolling of profile setup, ledger import, evidence attach, classify, saturate, and evidence-driven split. Every confusion, wrong result, or gap is captured as a tracked finding. This is the binding fallback validation the plan depends on; it amplifies coverage no unit test reaches.
+
+### Phase `W04.P09` - Persona rolling of the evidence-aware pipeline with real cloud CLIs
+
+An operator persona drives the shipped pipeline end to end against real authenticated cloud CLIs (antigravity/agy, codex) and real evidence, recording a testimonial and surfacing every gap as a tracked finding.
+
+- [ ] `W04.P09.S34` - Persona setup: create a fresh profile, import a real-shaped bank statement, and attach a real purchase-invoice PDF as secure-storage evidence; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W04.P09.S35` - Roll classify --llm with a real cloud CLI (agy/codex) and --read-evidence --evidence-acknowledged; `confirm the model reads the invoice and the decision stamps llm provenance; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W04.P09.S36` - Roll classify --llm --saturate against a real cloud CLI; `confirm the model selects the IVA category, the system derives rate/base/amount, and the printed-vs-derived advisory behaves; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W04.P09.S37` - Roll split --llm --read-evidence --apply against a real multi-line invoice with a real cloud CLI; `confirm children sum to parent, registry-derived numbers, evidence links, and provenance; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [ ] `W04.P09.S38` - Capture the persona testimonial as a vault audit document and track every surfaced gap or confusion as a follow-up step with a verification gate; `.vault/audit/`.
 
 ## Description
 
