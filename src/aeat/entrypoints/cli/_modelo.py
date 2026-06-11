@@ -502,7 +502,7 @@ def aggregate_modelo(
     source_kinds = ", ".join(source_kind.value for source_kind in result.source_kinds) or "-"
     aggregate_result = ModeloAggregateResult(
         modelo=result.modelo,
-        period=result.period.registry_token,
+        period=result.period,
         provider=result.provider.value,
         observation_count=result.log_fields.observation_count,
         source_kinds=[sk.value for sk in result.source_kinds],

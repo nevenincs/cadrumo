@@ -219,7 +219,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
 
         seed_result = IvaWalletSeedResult(
             filing_year=state.filing_year,
-            period=state.period.registry_token,
+            period=state.period,
             taxpayer_nif=state.taxpayer_nif,
             amount=str(state.available_end_amount),
             status=str(state.status),
@@ -394,7 +394,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
 
         correct_result = IvaWalletCorrectResult(
             filing_year=state.filing_year,
-            period=state.period.registry_token,
+            period=state.period,
             taxpayer_nif=state.taxpayer_nif,
             previous_amount=str(previous_state.available_end_amount) if previous_state is not None else "",
             amount=str(state.available_end_amount),

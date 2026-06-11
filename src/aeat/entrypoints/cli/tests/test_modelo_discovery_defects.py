@@ -286,7 +286,7 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert _payload(result.output)["period"] == "1T"
+    assert _payload(result.output)["period"] == {"filing_year": 2024, "code": "1T"}
 
 
 # ---------------------------------------------------------------------------
@@ -409,7 +409,7 @@ def _create_202_work_unit(period: str) -> str:
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
-    assert payload["period"] == period
+    assert payload["period"] == {"filing_year": 2026, "code": period}
     return payload["work_unit_id"]
 
 

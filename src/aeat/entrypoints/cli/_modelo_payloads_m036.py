@@ -7,6 +7,7 @@ Each class is a strict :class:`OutputSchema` and is re-exported through
 
 from __future__ import annotations
 
+from ...core import Period
 from ...core.identity import BucketId
 from ...domain.modelos._ids import WorkUnitId
 from ._schemas import OutputSchema, register_schema
@@ -130,7 +131,7 @@ class IvaWalletCorrectResult(OutputSchema):
 
     operation: str = "modelo.iva_wallet.correct"
     filing_year: int
-    period: str
+    period: Period
     taxpayer_nif: str
     previous_amount: str
     amount: str

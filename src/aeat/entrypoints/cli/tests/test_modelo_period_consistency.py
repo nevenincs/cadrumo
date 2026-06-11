@@ -25,6 +25,10 @@ from .envelope_helpers import unwrap_schema_envelope as _payload
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _assert_payload_period(payload: dict[str, object], *, year: int, code: str) -> None:
+    assert payload["period"] == {"filing_year": year, "code": code}
+
+
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -55,7 +59,7 @@ def _create_202_work_unit(period: str) -> str:
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
-    assert payload["period"] == period
+    _assert_payload_period(payload, year=2026, code=period)
     return payload["work_unit_id"]
 
 
@@ -115,9 +119,9 @@ def test_create_calculate_verify_agree_on_period_token(period: str) -> None:
     """``work create``, ``work calculate``, and ``work verify`` all agree
     on the pago-fraccionado period token stored on the work unit.
 
-    The work unit created with ``--period 1P`` must carry ``period == "1P"``
-    through every workflow stage — no verb silently normalises the token
-    to a different form.
+    The work unit created with ``--period 1P`` must carry the same core period
+    through every workflow stage — no verb silently normalises the token to a
+    different form.
     """
 
     _create_profile()
@@ -146,4 +150,4 @@ def test_create_calculate_verify_agree_on_period_token(period: str) -> None:
     assert status_result.exit_code == 0, status_result.output
     status_payload = _payload(status_result.output)
     # The work unit period token is preserved end-to-end.
-    assert status_payload.get("period") == period, status_payload
+    _assert_payload_period(status_payload, year=2026, code=period)

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ...core import Period
 from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
@@ -103,7 +104,7 @@ class FiledCaptureSourcesResult(OutputSchema):
     output_root: str
     target_modelo: str
     target_year: int
-    target_period: str
+    target_period: Period
     captured_count: int
     observation_paths: list[str]
     artefact_refs: list[str]
@@ -129,7 +130,7 @@ class IvaCompensationHistoryRowPayload(OutputSchema):
     """One profile-local IVA compensation history row."""
 
     year: int
-    period: str
+    period: Period
     status: str
     presented_at: str
     prior_pending_amount: str | None
@@ -146,7 +147,7 @@ class IvaCompensationCarryForwardLotPayload(OutputSchema):
 
     taxpayer_ref: str
     source_filing_year: int
-    source_period: str
+    source_period: Period
     generated_amount: str
     applied_amount: str
     remaining_amount: str
@@ -160,7 +161,7 @@ class IvaWalletAuthorityDecisionPayload(OutputSchema):
 
     taxpayer_ref: str
     target_year: int
-    target_period: str
+    target_period: Period
     selected_authority: str
     selected_amount: str | None
     wallet_amount: str | None
@@ -178,7 +179,7 @@ class IvaWalletPullResult(OutputSchema):
 
     taxpayer_ref: str
     target_year: int
-    target_period: str
+    target_period: Period
     observation_path: str
     decision_key: str
     row_count: int
@@ -250,7 +251,7 @@ class IvaWalletCaptureRemoteStateResult(OutputSchema):
     year_from: int
     year_to: int
     target_year: int
-    target_period: str
+    target_period: Period
     acquisition_manifest_id: str
     auth: LiveIvaAuthOutcomePayload
     filed_history_succeeded: bool
