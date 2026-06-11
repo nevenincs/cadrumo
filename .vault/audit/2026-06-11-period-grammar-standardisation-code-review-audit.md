@@ -400,3 +400,28 @@ Verification after the change: ruff passed for
 `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`; the modelo registry CLI
 surface and registry query suites passed with `92 passed`; and CLI import smoke
 printed `OK`.
+
+## PERIOD-024 | INFO | No findings in typed binding readiness and instalment-token fix
+
+Review of the follow-up Period convergence fixes found no issues. The
+binding-readiness helper now accepts `core.Period | None` for explicit scopes
+and the CLI passes the report's `filing_period` value through, leaving
+`period.registry_token` decomposition at the registry snapshot boundary only.
+The helper also rejects contradictory typed coordinates before touching the
+registry.
+
+The review also checked the Modelo CLI resolver split from the ledger
+date-span gate. Ledger still uses `_canonical_period`, which intentionally
+refuses non-date-span instalment tokens, while modelo work/discovery resolves
+directly through `Period.from_year_and_code`, so Modelo 202 `1P`/`2P`/`3P`
+tokens are accepted consistently with the registry's declared token set.
+
+The IVA wallet reconciliation fix initializes the typed snapshot `Period`
+before the optional live-wallet branch, so first-period/no-wallet calculation
+paths can still pass the typed target period into the decision engine.
+
+Verification after the fixes: ruff passed for the touched CLI, application, and
+test files; focused resolver/binding/Modelo 202/IVA-wallet regressions passed
+with `14 passed`; the broader binding-readiness/discovery-registry CLI suite
+passed with `103 passed`; the broader modelo CLI plus registry query suites
+passed with `103 passed`; and CLI import smoke printed `OK`.
