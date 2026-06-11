@@ -110,3 +110,47 @@ addendum below.
   `ModeloDraft(period='2024A', ...)` construction sites in those 2 tests to fail
   with `ValidationError`; not caused by this cluster E work).
 - Commit: `550a19c10` — `refactor(submission): typed core.Period on ModeloPresentado with roundtrip proof (W02.P08 cluster E)`
+
+---
+
+## Cluster D addendum — `domain/filing/_schema.py` (ModeloDraft)
+
+### Changes
+
+- Re-typed `ModeloDraft.period` from `str` to `aeat.core.Period` (no coercion validator;
+  callers must pass a typed `Period` instance).
+- Updated `compute_modelo_draft_id` signature: `period: str` → `period: Period`; updated
+  hash payload from bare string to `{"filing_year": period.filing_year, "code": period.registry_token}`
+  for deterministic, unambiguous content addressing.
+- Updated `application/filing/__init__.py` `build_draft(period: str, ...)` (public
+  signature unchanged): constructs `Period.from_year_and_code(filing_year, registry_period)`
+  internally and passes the typed `Period` to both `ModeloDraft` and
+  `compute_modelo_draft_id`.
+- Updated `domain/filing/_validator.py`: `self._deadline_checker.check(draft.modelo, draft.period.registry_token)` — extracts bare token string for the `DeadlineChecker.check` protocol.
+- Updated `application/filing/_export.py`: `period=str(draft.period)` for `DeclaracionExportResult`; direct `period.filing_year` / `period.registry_token` access for year/code extraction.
+- Updated `application/filing/_calculate.py`: `period=str(draft.period)` for `DeclaracionCalculateSummary`.
+- Updated `application/filing/_import.py`: `period=str(draft.period)` for `ModeloPresentado` construction (coercion `BeforeValidator` handles the string on that model).
+- Updated `domain/submission/_preflight.py`: `is_window_open(draft.modelo, draft.period.registry_token, today)` and `str(draft.period)` in the context dict.
+- Updated `application/workflow/_engine.py`: `str(draft.period) != obligation.period` comparison.
+- Updated `application/filing/reconciliation/_reconcile.py`: uses `draft.period.registry_token` and `draft.period.filing_year` directly.
+- Migrated all `"2026Q1"` / `"2025Q1"` combined-string fixtures in test files to `Period.from_year_and_code(year, token)`:
+  - `domain/filing/tests/test_secure_storage_roundtrip.py`
+  - `domain/filing/tests/test_roundtrip_anti_tautology.py`
+  - `domain/filing/tests/test_amendment_roundtrip.py`
+  - `application/filing/tests/test_complementaria_repository.py`
+  - `application/filing/tests/test_repository.py`
+  - `adapters/persistence/storage/tests/_runtime_migrated_repositories_support.py`
+- Fixed `application/filing/tests/test_complementaria.py` `_draft()` helper to convert
+  incoming period strings via `parse_canonical_period` + `Period.from_year_and_code`.
+- Fixed `application/filing/tests/test_modelo_303_390.py` assertion:
+  `assert draft.period == Period.from_year_and_code(*_parse_canonical_period(period))`.
+- Fixed `application/filing/reconciliation/tests/test_reconcile.py` `TestRegistryGate`:
+  replaced `model_copy(update={"period": "2024A"})` with
+  `Period.from_year_and_code(2024, "0A")`.
+
+### Outcome
+
+- `ruff check` on all 26 changed files: all checks passed.
+- Full filing suite (domain + application): **272 passed** in 201.69s.
+- No new `"\d{4}Q[1-4]"` combined-string literals in production files.
+- Commit: `ff68ea22c` — `refactor(filing): typed core.Period on ModeloDraft with roundtrip proof (W02.P08 cluster D)`

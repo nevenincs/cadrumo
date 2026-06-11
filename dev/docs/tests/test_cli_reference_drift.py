@@ -60,7 +60,7 @@ def test_committed_cli_reference_matches_regenerated_output(tmp_path: Path) -> N
             drift.append(
                 f"docs/{relative_path} drifted from generator output "
                 f"(committed {len(committed)} chars; regenerated "
-                f"{len(rendered)} chars)\n{diff}"
+                f"{len(rendered)} chars)\n{diff}",
             )
 
     # Detect orphan pages (committed files the generator no longer emits).

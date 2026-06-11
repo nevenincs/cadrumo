@@ -695,11 +695,18 @@ application:
         one casilla value; the supplied mapping is empty.
       external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
         already exists in the catalogue; an identical import was already recorded.
+      external_import_justificante_mismatch: External-filing import evidence %{evidence_reference_id}
+        does not match modelo %{modelo}, filing year %{filing_year}, period %{period}.
+      external_import_justificante_missing: External-filing import evidence %{evidence_reference_id}
+        (%{evidence_kind}) is not registered as a persisted justificante artifact.
       external_import_registry_root_missing: Registry root %{registry_root} is missing;
         imported casilla ids cannot be validated.
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.
+      external_import_tax_id_missing: External-filing import evidence %{evidence_reference_id}
+        (%{evidence_kind}) requires the filing taxpayer tax id before it can be bound
+        to a justificante artifact.
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
@@ -1040,10 +1047,6 @@ application:
       no_active_profile_bucket: No active profile bucket.
       no_run_for_period: No persisted workflow run found for modelo {modelo} period
         {period}. Drive the workflow at least once before resuming.
-      period_registry_unmappable: Cannot map workflow period {period} to a registry
-        period.
-      period_registry_year_unresolvable: Cannot derive registry year from workflow
-        period {period}.
       profile_label_ambiguous: 'Profile label {label} is ambiguous: {count} active
         buckets carry it.'
       resume_refused_no_aborted_reason: Workflow run {run_id} is ABORTED without a
@@ -1653,6 +1656,8 @@ cli:
           in this CLI. Legal authority: Orden HFP/887/2023 and RD 1065/2007 Art. 42
           quater; the reporting threshold is 50,000 EUR at 31 December. File through
           AEAT Sede when legally required.'
+        dependencies_help: Show cross-period filing-history dependencies and current
+          clean-state blockers for a target filing
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -2416,13 +2421,13 @@ cli:
         prohibited with export_third_country_zero_rated
       evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
         uploads it off your machine (required by the consent gate).
-      from_csv_exclusive: --from-csv cannot be combined with --id or --classification.
+      from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
-      id_required: --id is required when --from-csv is not provided.
+      id_required: A transaction id is required when --from-csv is not provided.
       irpf_category_help: IRPF category for modelo calculations
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
@@ -2725,6 +2730,21 @@ cli:
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
+    modelo:
+      app_help: Manage modelo schema-local translations.
+      audit_help: Audit modelo schema translations.
+      coverage_help: Print modelo schema coverage.
+      field_help: Translation field.
+      key_help: Schema key.
+      locale_help: Locale code.
+      modelo_help: Modelo id.
+      registry_root_help: AEAT registry root override.
+      remove_help: Remove one modelo schema translation.
+      revision_help: Revision id.
+      scaffold_check_help: Check without writing.
+      scaffold_help: Scaffold modelo schema translation files.
+      set_help: Set one modelo schema translation.
+      value_help: Translated value.
     remove_key_help: Dotted locale key to remove.
     remove_locale_help: Locale code to update.
     scaffold_check_help: Report drift without writing locale files
@@ -4191,6 +4211,22 @@ locales:
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
       key_missing: '  missing %{key}'
+    modelo:
+      audit:
+        missing: missing locale=%{locale_code} modelo=%{modelo} revision=%{revision}
+          scope=%{scope} field=%{field} key=%{key}
+        stale: stale locale=%{locale_code} modelo=%{modelo} revision=%{revision} scope=%{scope}
+          field=%{field} key=%{key}
+      coverage:
+        row: locale=%{locale_code} modelo=%{modelo} revision=%{revision} labels=%{label_translated}/%{label_required}
+          help=%{help_translated}/%{help_required}
+      remove:
+        removed: Removed %{path} %{field} %{key}
+      scaffold:
+        no_changes: Modelo locale scaffold already aligned.
+        updated: Updated %{path}
+      set:
+        updated: Updated %{path} %{field} %{key}
     remove:
       removed: removed %{locale_file}:%{key}
     scaffold_updated: locale scaffold updated

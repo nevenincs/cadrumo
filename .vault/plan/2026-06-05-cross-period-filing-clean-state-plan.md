@@ -12,6 +12,15 @@ related:
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S03, S04, S05, S07, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20 -->
 
@@ -145,15 +154,15 @@ Strengthen clean-state proof so external-evidence references resolve to imported
 
 Resolve filing-record external evidence references through application ports instead of treating the reference metadata itself as sufficient proof.
 
-- [ ] `W06.P14.S49` - Add evidence-reference resolution inputs to clean-state evaluation; `src/aeat/application/calculations/_cross_period_clean_state.py`.
-- [ ] `W06.P14.S50` - Bind justificante and live-capture import artifacts to filing records; `src/aeat/application/modelo/_external_import_actions.py`.
+- [x] `W06.P14.S49` - Add evidence-reference resolution inputs to clean-state evaluation; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `W06.P14.S50` - Bind justificante and live-capture import artifacts to filing records; `src/aeat/application/modelo/_external_import_actions.py`.
 
 ### Phase `W06.P15` - evidence reconciliation tests
 
 Prove CSV-only, live-capture-only, missing-object, stale-object, and reconciled justificante states produce the expected clean-state verdicts.
 
-- [ ] `W06.P15.S51` - Cover evidence-reference blockers with real repository tests; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
-- [ ] `W06.P15.S52` - Cover import-to-filing evidence grounding in workflow tests; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+- [x] `W06.P15.S51` - Cover evidence-reference blockers with real repository tests; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+- [x] `W06.P15.S52` - Cover import-to-filing evidence grounding in workflow tests; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
 
 ## Wave `W07` - full matrix rollout gates
 
@@ -163,15 +172,15 @@ Turn the dependency inventory into operator-visible coverage and run sharded rea
 
 Expose the cross-period inventory and clean-state verdicts through CLI/operator surfaces so incomplete filing history is discoverable before filing.
 
-- [ ] `W07.P16.S53` - Expose cross-period dependency inventory in modelo CLI; `src/aeat/entrypoints/cli/_modelo_work_verification_cli.py`.
-- [ ] `W07.P16.S54` - Cover operator inventory and blocker output; `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
+- [x] `W07.P16.S53` - Expose cross-period dependency inventory in modelo CLI; `src/aeat/entrypoints/cli/_modelo_work_verification_cli.py`.
+- [x] `W07.P16.S54` - Cover operator inventory and blocker output; `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`.
 
 ### Phase `W07.P17` - matrix quality gates
 
 Replace the timed-out broad calculation run with explicit sharded gates covering every declared cross-period target family and final vault hygiene.
 
-- [ ] `W07.P17.S55` - Run sharded cross-period calculation family gates; `src/aeat/application/calculations/tests`.
-- [ ] `W07.P17.S56` - Run final feature index, plan check, doctor, and code-review audit; `quality gates`.
+- [x] `W07.P17.S55` - Run sharded cross-period calculation family gates; `src/aeat/application/calculations/tests`.
+- [x] `W07.P17.S56` - Run final feature index, plan check, doctor, and code-review audit; `quality gates`.
 
 ## Description
 

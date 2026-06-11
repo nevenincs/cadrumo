@@ -11,6 +11,15 @@ related:
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `live-censo-calendar-reconciliation` `implementation` plan
 
@@ -48,6 +57,19 @@ Verify that authenticated live censo evidence is the source of profile enrolment
 - [ ] `W03.P03.S06` - Reconcile live censo snapshot into profile-derived taxpayer model and obligation enrolment facts; `src/aeat/application/user_profile/_censo_sync.py`.
 - [ ] `W03.P03.S07` - Verify reconciled taxpayer obligations project to actual calendar entries with real filing dates; `src/aeat/application/overview/__init__.py`.
 - [x] `W03.P03.S08` - Verify calendar evidence includes live-backed filings messages and justificante states without conflating local filing readiness; `src/aeat/entrypoints/cli/_overview.py`.
+
+## Wave `W04` - live profile-store unlock and final calendar proof
+
+Resolve the encrypted-store unlock blocker, rerun authenticated Modelo 036/censo pull, apply the snapshot, and prove legal obligations plus live filing/message/justificante evidence in the calendar.
+
+### Phase `W04.P04` - profile-bound live verification
+
+Run the full profile-bound live CLI sequence after the encrypted secret store is unlocked non-interactively.
+
+- [ ] `W04.P04.S09` - Unlock profile-bound live storage with a non-interactive secret-store passphrase or keychain session; `env/.env`.
+- [ ] `W04.P04.S10` - Rerun live Modelo 036 censo pull, compare, apply, expedientes, notifications, filed history, and justificante pulls; `src/aeat/entrypoints/cli/_config/_profile_censo.py`.
+- [ ] `W04.P04.S11` - Prove the active profile calendar contains legal obligation rows reconciled with live submitted and justificante-verified evidence; `src/aeat/entrypoints/cli/_overview.py`.
+- [x] `W04.P04.S12` - Fail fast when profile-bound live CLI cannot prompt for secret-store passphrase; `src/aeat/adapters/persistence/storage/master_key/_master_key_io.py, src/aeat/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py`.
 
 ## Description
 

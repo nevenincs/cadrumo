@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#cross-period-filing-clean-state'
-date: '2026-06-05'
+date: '2026-06-11'
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-P01-S01]]'
   - '[[2026-06-05-cross-period-filing-clean-state-P01-S02]]'
@@ -48,6 +48,14 @@ related:
   - '[[2026-06-05-cross-period-filing-clean-state-plan]]'
   - '[[2026-06-05-cross-period-filing-clean-state-reference]]'
   - '[[2026-06-05-cross-period-filing-clean-state-research]]'
+  - '[[2026-06-11-cross-period-filing-clean-state-W06-P14-S49]]'
+  - '[[2026-06-11-cross-period-filing-clean-state-W06-P14-S50]]'
+  - '[[2026-06-11-cross-period-filing-clean-state-W06-P15-S51]]'
+  - '[[2026-06-11-cross-period-filing-clean-state-W06-P15-S52]]'
+  - '[[2026-06-11-cross-period-filing-clean-state-W07-P16-S53]]'
+  - '[[2026-06-11-cross-period-filing-clean-state-W07-P16-S54]]'
+  - '[[2026-06-11-cross-period-filing-clean-state-W07-P17-S55]]'
+  - '[[2026-06-11-cross-period-filing-clean-state-W07-P17-S56]]'
 ---
 
 # `cross-period-filing-clean-state` feature index
@@ -104,6 +112,14 @@ Auto-generated index of all documents tagged with `#cross-period-filing-clean-st
 - `2026-06-05-cross-period-filing-clean-state-W05-P12-S46` - `cross-period-filing-clean-state` `W05.P12.S46` exec - member-scoped filing identity
 - `2026-06-05-cross-period-filing-clean-state-W05-P13-S47` - `cross-period-filing-clean-state` `W05.P13.S47` exec - member-scoped group proof wiring
 - `2026-06-05-cross-period-filing-clean-state-W05-P13-S48` - `cross-period-filing-clean-state` `W05.P13.S48` exec - member-scoped workflow coverage
+- `2026-06-11-cross-period-filing-clean-state-W06-P14-S49` - `cross-period-filing-clean-state` `W06.P14.S49` exec - evidence reference resolution
+- `2026-06-11-cross-period-filing-clean-state-W06-P14-S50` - `cross-period-filing-clean-state` `W06.P14.S50` exec - import artifact binding
+- `2026-06-11-cross-period-filing-clean-state-W06-P15-S51` - `cross-period-filing-clean-state` `W06.P15.S51` exec - evidence reference blockers
+- `2026-06-11-cross-period-filing-clean-state-W06-P15-S52` - `cross-period-filing-clean-state` `W06.P15.S52` exec - workflow evidence grounding
+- `2026-06-11-cross-period-filing-clean-state-W07-P16-S53` - `cross-period-filing-clean-state` `W07.P16.S53` exec - CLI dependency inventory
+- `2026-06-11-cross-period-filing-clean-state-W07-P16-S54` - `cross-period-filing-clean-state` `W07.P16.S54` exec - operator inventory tests
+- `2026-06-11-cross-period-filing-clean-state-W07-P17-S55` - `cross-period-filing-clean-state` `W07.P17.S55` exec - calculation family shard
+- `2026-06-11-cross-period-filing-clean-state-W07-P17-S56` - `cross-period-filing-clean-state` `W07.P17.S56` exec - final quality gates
 
 ### plan
 

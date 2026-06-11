@@ -312,6 +312,15 @@ convention = "google"
 # `dev/` holds contributor-only developer tooling (quality gates, audits,
 # docs build); print() is the canonical CLI output surface for these.
 "dev/**/*.py" = ["T20"]
+# Developer quality/docs/audit runners invoke fixed tool argv or explicit
+# wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
+"dev/audit/complexity.py" = ["S603"]
+"dev/audit/semantic.py" = ["S603"]
+"dev/docs/build.py" = ["S603"]
+"dev/docs/serve.py" = ["S603"]
+"dev/quality/quiet.py" = ["S603"]
+"dev/quality/suite.py" = ["S603", "S607"]
+"dev/quality/types.py" = ["S603", "S607"]
 # `password_env_var` is an env-var NAME, not a password; S106 false-positives
 # on cert-auth tests. Test modules also commonly use assert and print.
 "src/aeat/adapters/outbound/aeat/auth/tests/test_*.py" = [

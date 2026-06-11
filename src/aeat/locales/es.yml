@@ -771,11 +771,18 @@ application:
         al menos un valor de casilla; el mapeo aportado está vacío.
       external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
         already exists in the catalogue; an identical import was already recorded.
+      external_import_justificante_mismatch: La evidencia de importación externa %{evidence_reference_id}
+        no coincide con el modelo %{modelo}, ejercicio %{filing_year}, periodo %{period}.
+      external_import_justificante_missing: La evidencia de importación externa %{evidence_reference_id}
+        (%{evidence_kind}) no está registrada como artefacto de justificante persistido.
       external_import_registry_root_missing: Registry root %{registry_root} is missing;
         imported casilla ids cannot be validated.
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.
+      external_import_tax_id_missing: La evidencia de importación externa %{evidence_reference_id}
+        (%{evidence_kind}) requiere el NIF del contribuyente antes de vincularse a
+        un artefacto de justificante.
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
@@ -1123,10 +1130,6 @@ application:
       no_active_profile_bucket: No hay un perfil activo.
       no_run_for_period: No se encontró ejecución de flujo de trabajo para el modelo
         {modelo} período {period}. Ejecute el flujo al menos una vez antes de reanudar.
-      period_registry_unmappable: No se puede asignar el período de flujo de trabajo
-        {period} a un período del registro.
-      period_registry_year_unresolvable: No se puede derivar el año del registro a
-        partir del período de flujo de trabajo {period}.
       profile_label_ambiguous: 'La etiqueta de perfil {label} es ambigua: {count}
         depósitos activos la comparten.'
       resume_refused_no_aborted_reason: La ejecución de flujo de trabajo {run_id}
@@ -1218,21 +1221,25 @@ cli:
         valuation_preview_help: Previsualiza existencias finales y coste de ventas
         year_help: Ejercicio fiscal
       invoice:
-        add_help: 'Registra una nueva factura de negocio'
-        country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones intracomunitarias UE)'
-        eu_iva_id_help: 'NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)'
-        group_help: 'Registros de facturas de negocio (emitidas o recibidas)'
-        invoice_date_help: 'Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD), p. ej. 2026-01-15.'
-        invoice_id_help: 'Identificador de la factura (o prefijo no ambiguo)'
-        kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes a un proveedor)'
-        list_help: 'Lista las facturas de negocio (ambos tipos salvo que --kind filtre)'
-        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular, R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
+        add_help: Registra una nueva factura de negocio
+        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
+          intracomunitarias UE)
+        eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
+        group_help: Registros de facturas de negocio (emitidas o recibidas)
+        invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
+          p. ej. 2026-01-15.
+        invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
+        kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
+          a un proveedor)'
+        list_help: Lista las facturas de negocio (ambos tipos salvo que --kind filtre)
+        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
+          R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
-        remove_help: 'Elimina una factura de negocio'
-        update_help: 'Actualiza los datos de una factura de negocio'
-        view_help: 'Muestra una factura de negocio'
-        yes_help: 'Confirma la eliminación de la factura'
-        yes_required: 'Debes pasar --yes para eliminar una factura'
+        remove_help: Elimina una factura de negocio
+        update_help: Actualiza los datos de una factura de negocio
+        view_help: Muestra una factura de negocio
+        yes_help: Confirma la eliminación de la factura
+        yes_required: Debes pasar --yes para eliminar una factura
       ratios:
         category_help: Id de categoría de gasto (p. ej. USAGE_RATIO_VEHICLE)
         eligible_help: Lista las categorías que admiten proporción específica
@@ -1778,6 +1785,8 @@ cli:
           unidades de trabajo en este CLI. Autoridad legal: Orden HFP/887/2023 y RD
           1065/2007 Art. 42 quáter; el umbral informativo es 50.000 EUR a 31 de diciembre.
           Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
+        dependencies_help: Muestra dependencias de historial de presentaciones entre
+          modelos y los bloqueos clean-state actuales para una presentación objetivo
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
@@ -2588,13 +2597,14 @@ cli:
         intra_community_supply, prohibido con export_third_country_zero_rated
       evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
         en la nube la sube fuera de tu equipo (lo exige la verificacion de consentimiento).
-      from_csv_exclusive: --from-csv no puede combinarse con --id ni --classification.
+      from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
+        ni --classification.
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, taxable_base, iva_rate, iva_amount].
       from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
-      id_required: --id es obligatorio cuando no se usa --from-csv.
+      id_required: Se requiere un id de transacción cuando no se usa --from-csv.
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
@@ -2902,6 +2912,21 @@ cli:
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
+    modelo:
+      app_help: Gestiona traducciones locales de esquemas de modelo.
+      audit_help: Audita traducciones de esquemas de modelo.
+      coverage_help: Muestra cobertura de esquema de modelo.
+      field_help: Campo de traduccion.
+      key_help: Clave del esquema.
+      locale_help: Codigo de locale.
+      modelo_help: Id del modelo.
+      registry_root_help: Raiz del registro AEAT alternativa.
+      remove_help: Elimina una traduccion de esquema de modelo.
+      revision_help: Id de la revision.
+      scaffold_check_help: Comprueba sin escribir.
+      scaffold_help: Genera archivos de traduccion de esquemas de modelo.
+      set_help: Establece una traduccion de esquema de modelo.
+      value_help: Valor traducido.
     remove_key_help: Clave de locale con puntos que se eliminará.
     remove_locale_help: Código de locale a actualizar.
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
@@ -4474,6 +4499,22 @@ locales:
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
       key_missing: '  missing %{key}'
+    modelo:
+      audit:
+        missing: faltante locale=%{locale_code} modelo=%{modelo} revision=%{revision}
+          ambito=%{scope} campo=%{field} clave=%{key}
+        stale: obsoleta locale=%{locale_code} modelo=%{modelo} revision=%{revision}
+          ambito=%{scope} campo=%{field} clave=%{key}
+      coverage:
+        row: locale=%{locale_code} modelo=%{modelo} revision=%{revision} etiquetas=%{label_translated}/%{label_required}
+          ayuda=%{help_translated}/%{help_required}
+      remove:
+        removed: Eliminado %{path} %{field} %{key}
+      scaffold:
+        no_changes: El scaffold de locales de modelo ya esta alineado.
+        updated: Actualizado %{path}
+      set:
+        updated: Actualizado %{path} %{field} %{key}
     remove:
       removed: removed %{locale_file}:%{key}
     scaffold_updated: locale scaffold updated

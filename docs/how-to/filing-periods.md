@@ -34,6 +34,20 @@ Every command takes the year separately with `--year` and the period as one
 of these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026` are not
 accepted; pass `--year 2026 --period 1T` instead.
 
+## Period filters on ledger lists
+
+The `ledger list` and `ledger review` commands filter by period through
+`--filter` clauses. The period token and the year travel as two separate
+clauses, using the same AEAT tokens:
+
+```bash
+aeat app ledger list --filter period=1T --filter year=2026
+```
+
+Pass the bare token to `period=` and the year to `year=`. The two clauses go
+together: `--filter period=1T` without `--filter year=2026` is refused. Combined
+forms such as `period=2026-1T` or `period=2026Q1` are not accepted.
+
 ## Year-end
 
 For local planning, year-end is December 31 of the filing year. Annual period

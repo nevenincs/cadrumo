@@ -21,6 +21,7 @@ Submodules
    aeat.terminology._loader
    aeat.terminology._scaffold
    aeat.terminology._schema
+   aeat.terminology._seed_import
    aeat.terminology._serialize
    aeat.terminology._validators
    aeat.terminology.cli
