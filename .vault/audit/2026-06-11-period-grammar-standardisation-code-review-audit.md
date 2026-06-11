@@ -614,3 +614,26 @@ test file; the focused overview calendar suite passed with `52 passed`;
 core/domain Period gates passed with `31 passed`; CLI import smoke printed
 `OK`; and the period plan check reported only the existing `PLAN022` ordering
 warning.
+
+## PERIOD-035 | INFO | Workflow resume target Period cleanup reviewed
+
+Review of the workflow resume target cleanup found no implementation defects in
+the focused scope. `WorkflowResumeTargetResolution` no longer stores a redundant
+`registry_period` string alongside the typed `period`; the CLI derives its
+human-readable `registry_period` line from `result.period.registry_token` at the
+output boundary.
+
+The reviewer noted a residual assertion gap for that CLI output line. The CLI
+resume test now asserts `registry_period\t1T`, and the work-unit test helper
+constructs its period with `Period.from_year_and_code` instead of passing a bare
+string into the backend.
+
+The reviewer attempted the mandated vaultspec-rag query for this seam, but the
+service was unavailable with `local_store_locked`; the review was grounded with
+`rg` and direct source inspection instead.
+
+Verification after the change: ruff passed for the touched workflow and CLI
+files; the focused workflow resume suite passed with `22 passed`; the CLI work
+resume suite passed with `12 passed`; core/domain Period gates passed with
+`31 passed`; CLI import smoke printed `OK`; and the period plan check reported
+only the existing `PLAN022` ordering warning.
