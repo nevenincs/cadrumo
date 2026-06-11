@@ -12,7 +12,11 @@ from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ...core.time import now
-from ._calculation_revision import CalculationRevision, CalculationRevisionCatalogue
+from ._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    assert_revision_snapshot_evidence_coverage,
+)
 from ._errors import ModeloError
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
@@ -148,6 +152,12 @@ class CalculationRevisionCatalogueRepository:
                     "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
                 },
             )
+        # Post-roundtrip coverage gate: every loaded revision's bundled
+        # ledger evidence must cover the same contributor set as its
+        # fingerprint snapshot. A row silently dropped after persistence
+        # surfaces here on load rather than shipping an unexplainable casilla.
+        for revision in envelope.payload.values():
+            assert_revision_snapshot_evidence_coverage(revision)
         return envelope.payload
 
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
