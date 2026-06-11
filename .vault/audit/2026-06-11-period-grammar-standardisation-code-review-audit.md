@@ -294,3 +294,29 @@ the declaration parser boundary/synthetic suite passed with `102 passed`; CLI
 import smoke printed `OK`; the combined-string gate passed with `1 passed`; and
 `git diff --check` reported no whitespace errors on the scoped files. The
 follow-up reviewer reported no findings.
+
+## PERIOD-019 | INFO | No findings in invoice/live Period seam cleanup
+
+Review of commits `9c30fbf80`, `9798dc210`, and `1c32a6fe3` found no
+remaining code issues in the reviewed slice. The residual deadline roster
+string bridge was removed, `ModeloLedgerBindingAggregation.period` now carries
+`core.Period`, aggregation period construction takes an explicit registry
+`code`, invoice match projections carry `core.Period`, invoice source filtering
+uses `Period.contains` instead of a local alias table, and live filed-observation
+promotion passes typed periods through the IVA compensation history seam.
+
+The reviewer also confirmed that `parse_modelo_period` / `_YEAR_PERIOD_RE`
+remain absent from production code after a shared-worktree reintroduction was
+neutralised; only the architecture-boundary forbidden-name sentinel still names
+`parse_modelo_period`.
+
+Verification after the fixes: CLI import smoke printed `OK`; the Period plan
+suite passed with `84 passed`; documented-command, educational-docs, and
+JSON-schema conformance passed with `198 passed`; the touched invoice, live,
+verification, calculation, aggregation, deadline, and wizard suites passed with
+`159 passed`; and ruff passed for the touched implementation/test files.
+
+Residual note: production `period: str` text still exists in registry-authoring
+selectors, external Sede/Google payload boundaries, review-filter raw CLI
+clauses, and IVA prorrata's separate vocabulary. These are not combined-string
+storage adapters in the reviewed Period rollout slice.
