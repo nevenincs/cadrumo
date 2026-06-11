@@ -171,10 +171,35 @@ def _sort_key(weight: float) -> str:
     return f"{round(weight * _SORT_SCALE):08d}"
 
 
-def _content_for(record: SearchRecord, language: OutputLanguage, description: str) -> str:
-    """Build the searchable content for one language section of a record."""
-    parts = [record.title, description]
-    return "\n".join(part for part in parts if part)
+#: The docs build pins the page language to English (conf.py), so Pagefind
+#: loads only the English index on a reader's page. A custom record must be
+#: injected into THAT index to be discoverable from a page; a record placed in
+#: a non-loaded language index (es/ca/hu) is invisible to the palette. So every
+#: record is injected once, into this primary language, with its content
+#: carrying the title plus EVERY language's description - the Spanish term, the
+#: English gloss, and the Catalan/Hungarian forms all become matchable tokens
+#: in the one loaded index, giving cross-lingual term matching without relying
+#: on a separately-loaded language index.
+_PRIMARY_LANGUAGE = OutputLanguage.EN
+
+
+def _content_for(record: SearchRecord) -> str:
+    """Build the searchable content for a record: title + every description.
+
+    Combining the title with all four language descriptions makes the record
+    findable by the Spanish term, the English gloss, and the Catalan/Hungarian
+    forms from the single loaded index - the cross-lingual matching the
+    four declared aliases were meant to deliver.
+    """
+    parts = [record.title]
+    parts.extend(record.descriptions.values())
+    seen: set[str] = set()
+    unique: list[str] = []
+    for part in parts:
+        if part and part not in seen:
+            seen.add(part)
+            unique.append(part)
+    return "\n".join(unique)
 
 
 def _meta_for(record: SearchRecord, weight: float) -> dict[str, str]:
@@ -222,19 +247,23 @@ async def _inject_records(
         meta = _meta_for(record, weight)
         filters = _filters_for(record)
         sort = {"weight": _sort_key(weight)}
-        for language, description in record.descriptions.items():
-            if not description:
-                continue
-            await index.add_custom_record(
-                url=record.target,
-                content=_content_for(record, language, description),
-                language=language.value,
-                meta=meta,
-                filters=filters,
-                sort=sort,
-            )
-            written += 1
-            languages.add(language.value)
+        # Inject once, into the primary (page) language index, with content
+        # carrying every language's description so the record is discoverable
+        # from a reader's English page yet matchable by the Spanish term and
+        # the other-language forms.
+        content = _content_for(record)
+        if not content:
+            continue
+        await index.add_custom_record(
+            url=record.target,
+            content=content,
+            language=_PRIMARY_LANGUAGE.value,
+            meta=meta,
+            filters=filters,
+            sort=sort,
+        )
+        written += 1
+        languages.add(_PRIMARY_LANGUAGE.value)
     return InjectionStats(
         concepts=materialised.concepts,
         casillas=materialised.casillas,

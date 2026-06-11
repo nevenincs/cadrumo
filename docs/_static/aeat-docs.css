@@ -1300,6 +1300,42 @@ a.sd-card:any-link,
   color: var(--color-brand-content);
 }
 
+/* Pagefind term-card tiers: a kind badge on the crumb and a one-line excerpt
+ * of the matched description. The badge colour distinguishes the surface
+ * (term / casilla / command) at a glance. */
+.aeat-palette-item-excerpt {
+  color: var(--color-foreground-muted);
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 0.12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aeat-palette-item--concept .aeat-palette-item-crumb::before,
+.aeat-palette-item--casilla .aeat-palette-item-crumb::before,
+.aeat-palette-item--cli .aeat-palette-item-crumb::before {
+  border-radius: var(--aeat-radius-s);
+  content: "";
+  display: inline-block;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  width: 0.5rem;
+}
+
+.aeat-palette-item--concept .aeat-palette-item-crumb::before {
+  background: var(--color-brand-content);
+}
+
+.aeat-palette-item--casilla .aeat-palette-item-crumb::before {
+  background: var(--color-foreground-secondary);
+}
+
+.aeat-palette-item--cli .aeat-palette-item-crumb::before {
+  background: var(--color-foreground-muted);
+}
+
 .aeat-palette-empty {
   color: var(--color-foreground-muted);
   font-size: 0.85rem;
