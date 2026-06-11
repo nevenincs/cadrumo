@@ -11,10 +11,9 @@ from .._crud_contract import (
 from .._crud_registry import (
     APODERADO,
     BUILTIN_CRUD_CATALOGUE,
-    COLLECTIBLE_INVOICE,
     EVIDENCE,
     INVENTORY,
-    PAYABLE_INVOICE,
+    INVOICE,
     USAGE_RATIOS,
     get_builtin_catalogue,
 )
@@ -26,12 +25,22 @@ class TestCatalogueShape:
     def test_catalogue_lists_every_registered_noun_group(self) -> None:
         assert BUILTIN_CRUD_CATALOGUE.entries == (
             EVIDENCE,
-            PAYABLE_INVOICE,
-            COLLECTIBLE_INVOICE,
+            INVOICE,
             USAGE_RATIOS,
             INVENTORY,
             APODERADO,
         )
+
+    def test_old_split_invoice_contracts_are_gone(self) -> None:
+        # The payable / collectible split collapsed into one INVOICE contract.
+        import aeat.application.operator_surface._crud_registry as registry
+
+        assert not hasattr(registry, "PAYABLE_INVOICE")
+        assert not hasattr(registry, "COLLECTIBLE_INVOICE")
+        nouns = {entry.noun for entry in BUILTIN_CRUD_CATALOGUE.entries}
+        assert "payable_invoice" not in nouns
+        assert "collectible_invoice" not in nouns
+        assert "invoice" in nouns
 
     def test_get_builtin_catalogue_returns_same_instance(self) -> None:
         assert get_builtin_catalogue() is BUILTIN_CRUD_CATALOGUE
@@ -42,15 +51,11 @@ class TestCanonicalCrudEntries:
         assert EVIDENCE.exception is NounGroupExceptionKind.STRICT_CRUD
         assert EVIDENCE.crud_verbs == CANONICAL_CRUD_VERBS
 
-    def test_payable_invoice_declares_strict_crud_with_link_axis(self) -> None:
-        assert PAYABLE_INVOICE.exception is NounGroupExceptionKind.STRICT_CRUD
-        assert PAYABLE_INVOICE.crud_verbs == CANONICAL_CRUD_VERBS
-        verbs = PAYABLE_INVOICE.all_verb_names()
-        assert "link" in verbs
-
-    def test_collectible_invoice_declares_strict_crud_with_link_axis(self) -> None:
-        assert COLLECTIBLE_INVOICE.exception is NounGroupExceptionKind.STRICT_CRUD
-        verbs = COLLECTIBLE_INVOICE.all_verb_names()
+    def test_invoice_declares_strict_crud_with_link_axis(self) -> None:
+        assert INVOICE.exception is NounGroupExceptionKind.STRICT_CRUD
+        assert INVOICE.crud_verbs == CANONICAL_CRUD_VERBS
+        assert INVOICE.noun == "invoice"
+        verbs = INVOICE.all_verb_names()
         assert "link" in verbs
 
 
@@ -99,9 +104,10 @@ class TestRequiredAuditClosure:
     """Every mutating noun-group exposed by the operator surface has a
     corresponding catalogue entry."""
 
-    def test_invoice_decoupling_is_represented(self) -> None:
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger payable-invoice") is not None
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger collectible-invoice") is not None
+    def test_invoice_noun_group_is_represented(self) -> None:
+        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger invoice") is not None
+        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger payable-invoice") is None
+        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger collectible-invoice") is None
 
     def test_apoderado_subgroup_is_represented(self) -> None:
         assert BUILTIN_CRUD_CATALOGUE.find("aeat config auth apoderado") is not None
