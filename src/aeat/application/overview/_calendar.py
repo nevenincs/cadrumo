@@ -41,6 +41,7 @@ from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineVa
 from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
 
 if TYPE_CHECKING:
+    from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ..live._expedientes import PersistedExpedientesSnapshot
     from ..live._notifications import PersistedNotificationsSnapshot
@@ -615,7 +616,7 @@ def calendar_filing_evidence_from_sources(
     observed_events: tuple[OverviewCalendarEvent, ...] = (),
     filed_declaration_observations: tuple[object, ...] = (),
     calculation_observations: tuple[object, ...] = (),
-    justificantes: tuple[object, ...] = (),
+    justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarFilingEvidence, ...]:
     """Build :class:`OverviewCalendarFilingEvidence` tuples from local records and AEAT observations.
@@ -669,11 +670,11 @@ def calendar_filing_evidence_from_sources(
     return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))
 
 
-def _justificantes_by_csv(justificantes: tuple[object, ...]) -> dict[str, object]:
+def _justificantes_by_csv(justificantes: tuple[Justificante, ...]) -> dict[str, Justificante]:
     """Index loaded justificante metadata by CSV/reference identifier."""
-    by_csv: dict[str, object] = {}
+    by_csv: dict[str, Justificante] = {}
     for justificante in justificantes:
-        csv = str(getattr(justificante, "csv", "") or "").strip()
+        csv = justificante.csv.strip()
         if csv:
             by_csv[csv] = justificante
     return by_csv
@@ -682,7 +683,7 @@ def _justificantes_by_csv(justificantes: tuple[object, ...]) -> dict[str, object
 def _filing_evidence_from_modelo_record(
     record: ModeloRecord,
     *,
-    justificantes_by_csv: Mapping[str, object],
+    justificantes_by_csv: Mapping[str, Justificante],
     expected_tax_id: str | None,
 ) -> OverviewCalendarFilingEvidence | None:
     """Project one local Modelo filing record into calendar evidence."""
@@ -741,7 +742,7 @@ def _modelo_record_has_verified_justificante(
     filing_year: int,
     period: _Period,
     reference_id: str,
-    justificantes_by_csv: Mapping[str, object],
+    justificantes_by_csv: Mapping[str, Justificante],
     expected_tax_id: str | None,
 ) -> bool:
     """Return whether a Modelo record's external reference resolves to matching justificante metadata."""
@@ -751,17 +752,13 @@ def _modelo_record_has_verified_justificante(
     justificante = justificantes_by_csv.get(reference_id.strip())
     if justificante is None:
         return False
-    if str(getattr(justificante, "tax_id", "") or "").strip() != expected:
+    if justificante.tax_id.strip() != expected:
         return False
-    if str(getattr(justificante, "modelo", "") or "").strip() != modelo:
+    if justificante.modelo.strip() != modelo:
         return False
-    if str(getattr(justificante, "ejercicio", "") or "").strip() != str(filing_year):
+    if str(justificante.ejercicio or "").strip() != str(filing_year):
         return False
-    observed = getattr(justificante, "period", None)
-    if isinstance(observed, _Period):
-        return observed == period
-    observed_period = str(observed or "").strip().upper()
-    return observed_period == period.registry_token.upper()
+    return justificante.period == period
 
 
 def _filing_evidence_from_observed_event(
