@@ -380,3 +380,23 @@ reported no whitespace errors; and the production residual sweep for
 `Period | str`, `str | Period`, `parse_canonical_period`,
 `normalize_modelo_work_period`, `_to_canonical_period`, and
 `_period_to_canonical_str` returned no matches.
+
+## PERIOD-023 | INFO | No findings in modelo discovery Period facade boundary
+
+Review of the modelo discovery boundary cleanup found no issues. The CLI
+already resolves explicit `--year --period` input into `core.Period`; the
+application registry-discovery facades now accept that typed value object and
+only decompose it at the lower registry query service boundary that still
+selects snapshots by `(filing_year, registry_token)`.
+
+The review checked that no touched CLI discovery call site still passes a
+separate `filing_year` argument or a decomposed `typed_period.registry_token`
+into the application facade. This leaves raw `period: str` on the no-year
+registry-introspection path, where it is a bare declared token filter rather
+than a filing-period value object.
+
+Verification after the change: ruff passed for
+`src/aeat/application/modelo/_registry_discovery.py` and
+`src/aeat/entrypoints/cli/_modelo_discovery_cli.py`; the modelo registry CLI
+surface and registry query suites passed with `92 passed`; and CLI import smoke
+printed `OK`.
