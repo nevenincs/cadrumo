@@ -6,11 +6,15 @@ Use of :class:`CasillaObservation` for compliance.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
+    FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
+    ObservedCasillaValue,
     SedeParseError,
     registry_observation_from_filed_declaration,
 )
@@ -48,7 +52,9 @@ def persist_filed_calculation_observation(
         stamped_revision_id=stamped_revision_id,
     )
     if observation.modelo == Modelo.M303:
-        IvaCompensationHistoryRepository().save_period(iva_compensation_state_from_filed_observation(observation))
+        IvaCompensationHistoryRepository().save_period(
+            iva_compensation_state_from_filed_observation(_calculation_observation(observation))
+        )
     return observation_key(
         registry_observation.modelo,
         Period.from_year_and_code(registry_observation.filing_year, registry_observation.period),
@@ -59,7 +65,7 @@ def persist_latest_filed_calculation_observations(
     observations: tuple[FiledDeclaracionObservation, ...],
 ) -> tuple[str, ...]:
     """Persist only the latest captured observation per modelo/year/period."""
-    latest: dict[tuple[str, int, str], FiledDeclaracionObservation] = {}
+    latest: dict[tuple[str, int, Period], FiledDeclaracionObservation] = {}
     for observation in observations:
         key = (observation.modelo, observation.ejercicio, observation.period)
         current = latest.get(key)
@@ -70,7 +76,10 @@ def persist_latest_filed_calculation_observations(
             latest[key] = observation
     return tuple(
         key
-        for _key, observation in sorted(latest.items())
+        for _key, observation in sorted(
+            latest.items(),
+            key=lambda item: (item[0][0], item[0][1], item[0][2].registry_token),
+        )
         for key in _persist_filed_calculation_observation_if_extractable(observation)
     )
 
@@ -79,7 +88,7 @@ def persist_iva_compensation_history_observations_strict(
     observations: tuple[FiledDeclaracionObservation, ...],
 ) -> tuple[str, ...]:
     """Persist latest Modelo 303 observations and verify each history row reloads."""
-    latest: dict[tuple[int, str], FiledDeclaracionObservation] = {}
+    latest: dict[tuple[int, Period], FiledDeclaracionObservation] = {}
     for observation in observations:
         if observation.modelo != Modelo.M303:
             raise LiveApplicationInputError(
@@ -96,18 +105,21 @@ def persist_iva_compensation_history_observations_strict(
 
     keys: list[str] = []
     history_repo = IvaCompensationHistoryRepository()
-    for (_year, _period), observation in sorted(latest.items()):
+    for (_year, _period), observation in sorted(
+        latest.items(),
+        key=lambda item: (item[0][0], item[0][1].registry_token),
+    ):
         try:
             key = persist_filed_calculation_observation(observation)
         except SedeParseError as exc:
             raise LiveApplicationError(
-                f"filed Modelo 303 {observation.ejercicio}/{observation.period} "
+                f"filed Modelo 303 {observation.period!s} "
                 "could not be promoted into IVA compensation history",
             ) from exc
-        if history_repo.load_period(Period.from_year_and_code(observation.ejercicio, observation.period)) is None:
+        if history_repo.load_period(observation.period) is None:
             raise LiveApplicationError(
                 f"secure IVA compensation history did not reload after persisting "
-                f"Modelo 303 {observation.ejercicio}/{observation.period}",
+                f"Modelo 303 {observation.period!s}",
             )
         keys.append(key)
     return tuple(keys)
@@ -128,8 +140,8 @@ def latest_declarations_by_period(declarations: tuple[Declaracion, ...]) -> tupl
     return tuple(latest[key] for key in sorted(latest, key=_history_period_sort_key))
 
 
-def _history_period_sort_key(period: str) -> tuple[int, str]:
-    upper = period.upper()
+def _history_period_sort_key(period: str | Period) -> tuple[int, str]:
+    upper = period.registry_token if isinstance(period, Period) else period.upper()
     if upper.endswith("T") and upper[:-1].isdigit():
         return (int(upper[:-1]), upper)
     if upper.isdigit():
@@ -144,6 +156,39 @@ def _persist_filed_calculation_observation_if_extractable(
         return (persist_filed_calculation_observation(observation),)
     except SedeParseError:
         return ()
+
+
+@dataclass(frozen=True)
+class _FiledDeclaracionCalculationObservation:
+    modelo: str
+    ejercicio: int
+    period_token: str
+    expediente_id: str
+    status: str
+    presented_at: datetime
+    authenticated_identity: str
+    artefacts: tuple[FiledDeclaracionArtefact, ...]
+    casillas: tuple[ObservedCasillaValue, ...]
+
+    @property
+    def period(self) -> str:
+        return self.period_token
+
+
+def _calculation_observation(
+    observation: FiledDeclaracionObservation,
+) -> _FiledDeclaracionCalculationObservation:
+    return _FiledDeclaracionCalculationObservation(
+        modelo=observation.modelo,
+        ejercicio=observation.ejercicio,
+        period_token=observation.period.registry_token,
+        expediente_id=observation.expediente_id,
+        status=observation.status,
+        presented_at=observation.presented_at,
+        authenticated_identity=observation.authenticated_identity,
+        artefacts=observation.artefacts,
+        casillas=observation.casillas,
+    )
 
 
 def _with_derived_303_compensation_available(
@@ -192,7 +237,7 @@ def _casilla_decimal(values: Mapping[str, Decimal], *casilla_ids: str) -> Decima
     return None
 
 
-def _resolve_stamped_revision_id(modelo: str, filing_year: int, period: str) -> str | None:
+def _resolve_stamped_revision_id(modelo: str, filing_year: int, period: str | Period) -> str | None:
     """Resolve the registry revision id for (modelo, filing_year, period) for provenance stamping.
 
     Returns the revision id from the law-determined :func:`select_revision` result
@@ -200,7 +245,8 @@ def _resolve_stamped_revision_id(modelo: str, filing_year: int, period: str) -> 
     on resolution failure so the stamp is never blocking at write time.
     """
     try:
-        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+        period_token = period.registry_token if isinstance(period, Period) else period
+        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period_token)
         return snapshot.revision.id
     except Exception:
         return None

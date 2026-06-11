@@ -93,7 +93,7 @@ class JustificanteRefSummary(BaseModel):
 
     csv: str = Field(min_length=8, max_length=32)
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period | str
     ejercicio: str | None = Field(default=None, min_length=4, max_length=4)
     tax_id: str = Field(min_length=4, max_length=32)
     presented_at: datetime

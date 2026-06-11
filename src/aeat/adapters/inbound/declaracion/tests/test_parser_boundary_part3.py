@@ -9,6 +9,7 @@ from ._parser_boundary_support import (
     _MODELO_193_SYNTHETIC_FIXTURE,
     _MODELO_369_SYNTHETIC_FIXTURE,
     Decimal,
+    _expected_period,
     parse_declaracion,
 )
 
@@ -47,7 +48,7 @@ def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "180"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "180"
@@ -117,7 +118,7 @@ def test_parser_extracts_modelo_193_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "193"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "193"
@@ -194,7 +195,7 @@ def test_parser_extracts_modelo_369_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "369"
-    assert filing.period == "1T"
+    assert filing.period == _expected_period(2024, "1T")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "369"

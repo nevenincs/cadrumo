@@ -32,8 +32,8 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ...core import Modelo
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo, Period
 from ...core.identity import BucketId
 from ...core.time import now
 from ._errors import LiveApplicationInputError
@@ -71,7 +71,7 @@ class Borrador100Snapshot(BaseModel):
     bucket_id: BucketId
     modelo: str = Field(pattern=f"^{Modelo.M100.value}$")
     filing_year: int = Field(ge=1900, le=9999)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     captured_at: datetime
     source_url: str = Field(min_length=1, max_length=2048)
     state: SnapshotLifecycleState
@@ -110,7 +110,7 @@ def borrador_100_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
 def derive_borrador_100_snapshot_id(
     *,
     filing_year: int,
-    period: str,
+    period: Period,
     captured_at: datetime,
     source_url: str,
     binding_values: Mapping[str, _BorradorValue],
@@ -125,7 +125,7 @@ def derive_borrador_100_snapshot_id(
         {
             "modelo": Modelo.M100.value,
             "filing_year": filing_year,
-            "period": period.strip(),
+            "period": period.registry_token,
             "captured_at": captured_at.isoformat(),
             "source_url": source_url,
             "binding_values": {
@@ -265,13 +265,11 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
         resolved_repository = repository or Borrador100SnapshotRepository(bucket_id=bucket_id)
         super().__init__(bucket_id=bucket_id, repository=resolved_repository)
 
-    # ---- public API (signatures unchanged for external callers) ----------
-
     def capture(
         self,
         *,
         filing_year: int,
-        period: str,
+        period: Period,
         captured_at: datetime,
         source_url: str,
         binding_values: Mapping[str, _BorradorValue],
@@ -304,11 +302,11 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
     def show(self, snapshot_id: str) -> Borrador100Snapshot:
         return self.resolve_snapshot(snapshot_id)
 
-    def latest_for_year(self, *, filing_year: int, period: str | None = None) -> Borrador100Snapshot | None:
+    def latest_for_year(self, *, filing_year: int, period: Period | None = None) -> Borrador100Snapshot | None:
         snapshots = [
             snapshot
             for snapshot in self.list_snapshots(filing_year=filing_year)
-            if period is None or snapshot.period == period.strip()
+            if period is None or snapshot.period == period
         ]
         if not snapshots:
             return None
@@ -339,7 +337,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
             bucket_id=self._repository.bucket_id,
             modelo=Modelo.M100.value,
             filing_year=kwargs["filing_year"],
-            period=kwargs["period"].strip(),
+            period=kwargs["period"],
             captured_at=kwargs["captured_at"],
             source_url=kwargs["source_url"],
             state=SnapshotLifecycleState.ACTIVE,

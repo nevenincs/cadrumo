@@ -7,6 +7,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core import Period
 from ._errors import LiveIvaAcquisitionFailureMode
 
 
@@ -33,7 +34,7 @@ class FiledDataCaptureFailureRow(BaseModel):
 
     modelo: str
     year: int
-    period: str | None = None
+    period: Period | None = None
     expediente_id: str | None = None
     error_type: str
     message: str
@@ -92,7 +93,7 @@ class SourceFiledDataCaptureReport(BaseModel):
     output_root: str
     target_modelo: str
     target_year: int
-    target_period: str
+    target_period: Period
     captured_count: int
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
@@ -108,7 +109,7 @@ class IvaWalletCaptureReport(BaseModel):
 
     taxpayer_ref: str
     target_year: int
-    target_period: str
+    target_period: Period
     observation_path: str
     decision_key: str
     row_count: int
@@ -127,7 +128,7 @@ class IvaCompensationHistoryRow(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     year: int
-    period: str
+    period: Period
     status: str
     presented_at: datetime
     prior_pending_amount: str | None
@@ -146,7 +147,7 @@ class IvaCompensationCarryForwardLotRow(BaseModel):
 
     taxpayer_ref: str
     source_filing_year: int
-    source_period: str
+    source_period: Period
     generated_amount: str
     applied_amount: str
     remaining_amount: str
@@ -162,7 +163,7 @@ class IvaWalletAuthorityDecisionRow(BaseModel):
 
     taxpayer_ref: str
     target_year: int
-    target_period: str
+    target_period: Period
     selected_authority: str
     selected_amount: str | None
     wallet_amount: str | None
@@ -199,7 +200,7 @@ class StoredIvaWalletObservationRow(BaseModel):
 
     taxpayer_ref: str
     target_year: int
-    target_period: str
+    target_period: Period
     row_count: int
     total_pending: str
     captured_at: datetime
@@ -223,7 +224,7 @@ class StoredIvaRemoteStateAcquisitionRow(BaseModel):
     year_from: int
     year_to: int
     target_year: int
-    target_period: str
+    target_period: Period
     filed_history_succeeded: bool
     wallet_succeeded: bool
     surfaces: tuple[str, ...]
@@ -315,7 +316,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
     year_from: int
     year_to: int
     target_year: int
-    target_period: str
+    target_period: Period
     auth: LiveIvaAuthOutcome = LiveIvaAuthOutcome(
         status=LiveIvaReadStatus.FAILED,
         outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
@@ -374,7 +375,7 @@ class IvaRemoteStateAcquisitionManifest(BaseModel):
     year_from: int
     year_to: int
     target_year: int
-    target_period: str
+    target_period: Period
     auth: LiveIvaAuthOutcome = LiveIvaAuthOutcome(
         status=LiveIvaReadStatus.FAILED,
         outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,

@@ -14,9 +14,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Period, PeriodError
 from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef
 from ..pdf._shared import ExtractedCasilla
 
@@ -95,8 +96,8 @@ class DeclaracionObservation(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
     ejercicio: str = Field(min_length=4, max_length=4)
+    period: Period | str = Field()
     tax_id: str = Field(min_length=4, max_length=32)
     template_revision: TemplateRevision
     registry_snapshot_ref: RegistrySnapshotRef | None = None
@@ -115,3 +116,18 @@ class DeclaracionObservation(BaseModel):
     source_pdf_path: Path
     source_pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     parsed_at: datetime
+
+    @field_validator("period", mode="before")
+    @classmethod
+    def _coerce_filing_period(cls, raw_period: object, info: ValidationInfo) -> object:
+        ejercicio = info.data.get("ejercicio")
+        if not isinstance(raw_period, str):
+            return raw_period
+        if not isinstance(ejercicio, str) or not ejercicio.isdigit():
+            return raw_period
+
+        period_code = "0A" if raw_period == ejercicio else raw_period
+        try:
+            return Period.from_year_and_code(int(ejercicio), period_code)
+        except PeriodError:
+            return raw_period

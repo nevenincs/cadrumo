@@ -104,7 +104,7 @@ def _persist_capture(*, pdf_bytes: bytes, modelo: str, filing_year: int, period:
     return JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         expediente_id="202613000010001A",
         csv="ABCD1234EFGH5678",
         pdf_bytes=pdf_bytes,
@@ -306,7 +306,7 @@ def test_capture_orchestrator_stamps_evidence_when_period_is_filed() -> None:
             bucket_id=bucket_id,
             modelo="130",
             year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             session_provider=session,
             declarations_provider=declarations,
             expedientes_provider=expedientes,
@@ -314,7 +314,7 @@ def test_capture_orchestrator_stamps_evidence_when_period_is_filed() -> None:
         ),
     )
 
-    assert persisted.period == "1T"
+    assert persisted.period == Period.from_year_and_code(2026, "1T")
     filing = (
         ModeloRecordCatalogueRepository()
         .load()
@@ -347,7 +347,7 @@ def test_capture_orchestrator_skips_stamp_when_period_not_filed() -> None:
             bucket_id=bucket_id,
             modelo="130",
             year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             session_provider=session,
             declarations_provider=declarations,
             expedientes_provider=expedientes,

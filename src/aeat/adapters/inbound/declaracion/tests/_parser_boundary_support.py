@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,12 +11,61 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from .....core import Period
+from .....core.errors import AeatError
 from .....core.resources import resources
+from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
+from ...pdf._utils import source_pdf_reference_path
+from .. import parse_declaracion
+from .._errors import DeclaracionParseError, TemplateNotDetectedError
+from .._parser import _extract_pages_words
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
+]
+
+__all__ = [
+    "A4",
+    "FIXTURES_DIR",
+    "_MODELO_036_SYNTHETIC_FIXTURE",
+    "_MODELO_111_EXPECTED_TARGETS",
+    "_MODELO_115_SYNTHETIC_FIXTURE",
+    "_MODELO_123_2023_SYNTHETIC_FIXTURE",
+    "_MODELO_123_2024_SYNTHETIC_FIXTURE",
+    "_MODELO_123_CURRENT_EXPECTED_TARGETS",
+    "_MODELO_123_HISTORICAL_EXPECTED_TARGETS",
+    "_MODELO_130_EXPECTED_TARGETS",
+    "_MODELO_131_SYNTHETIC_FIXTURE",
+    "_MODELO_180_SYNTHETIC_FIXTURE",
+    "_MODELO_184_SYNTHETIC_FIXTURE",
+    "_MODELO_193_SYNTHETIC_FIXTURE",
+    "_MODELO_232_2016_SYNTHETIC_FIXTURE",
+    "_MODELO_232_2018_SYNTHETIC_FIXTURE",
+    "_MODELO_347_SYNTHETIC_FIXTURE",
+    "_MODELO_349_SYNTHETIC_FIXTURE",
+    "_MODELO_369_SYNTHETIC_FIXTURE",
+    "_MODELO_720_SYNTHETIC_FIXTURE",
+    "_MODELO_840_SYNTHETIC_FIXTURE",
+    "_REAL_DECLARATION_COPY",
+    "_REAL_MODELO_190_DECLARATION_COPY",
+    "_REAL_MODELO_303_DECLARATION_COPY",
+    "AeatError",
+    "Decimal",
+    "DeclaracionParseError",
+    "Path",
+    "PdfModeloImportError",
+    "TemplateNotDetectedError",
+    "_expected_period",
+    "_extract_pages_words",
+    "_modelo_130_snapshot",
+    "_modelo_snapshot",
+    "_write_declaration_pdf",
+    "canvas",
+    "logging",
+    "parse_declaracion",
+    "source_pdf_reference_path",
 ]
 
 _REAL_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
@@ -99,6 +149,10 @@ def _modelo_130_snapshot():
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
     return resources().modelos.authority.snapshot(modelo_id, filing_year=filing_year, period=period)
+
+
+def _expected_period(filing_year: int, period: str) -> Period:
+    return Period.from_year_and_code(filing_year, period)
 
 
 def _write_declaration_pdf(

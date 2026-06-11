@@ -33,6 +33,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
+from .....core import Period
 from .....core.config import Settings, load_settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
@@ -842,10 +843,11 @@ async def _capture_filed_declaration_observation_from_row(
         )
     snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
     read_policy = _read_guard_policy_from_snapshot(snapshot)
+    filing_period = Period.from_year_and_code(declaration.ejercicio, declaration.period)
     observation_key = (
         declaration.modelo,
         declaration.ejercicio,
-        declaration.period,
+        filing_period,
         declaration.expediente_id,
     )
     listing_url = AnyHttpUrl(f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}")
@@ -951,7 +953,7 @@ async def _capture_filed_declaration_observation_from_row(
     return FiledDeclaracionObservation(
         modelo=declaration.modelo,
         ejercicio=declaration.ejercicio,
-        period=declaration.period,
+        period=filing_period,
         expediente_id=declaration.expediente_id,
         status=declaration.estado,
         presented_at=declaration.presented_at,
@@ -969,7 +971,7 @@ async def capture_previous_filing_observations(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    period: str,
+    period: Period,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
@@ -988,14 +990,18 @@ async def capture_previous_filing_observations(
     """
     observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
-        for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
+        for requirement in previous_filing_observation_requirements(
+            revision,
+            filing_year=filing_year,
+            period=period.registry_token,
+        ):
             rows = await register.walk(modelo=requirement.modelo, ejercicio=requirement.filing_year)
             matches = tuple(row for row in rows if row.period == requirement.period)
             declaration = _select_authoritative_declaration(
                 matches,
                 modelo=requirement.modelo,
                 ejercicio=requirement.filing_year,
-                period=requirement.period,
+                period_token=requirement.period,
                 context="previous-filing requirement",
             )
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
@@ -1016,7 +1022,7 @@ async def capture_relation_source_observations(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    period: str,
+    period: Period,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
@@ -1034,7 +1040,7 @@ async def capture_relation_source_observations(
         artefact_sink: Optional callable storing each captured artefact.
     """
     required_outputs: dict[tuple[str, int, str], set[str]] = {}
-    for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
+    for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period.registry_token):
         for source_period in requirement.periods:
             key = (requirement.source_modelo, requirement.filing_year, source_period)
             required_outputs.setdefault(key, set()).add(requirement.source_output)
@@ -1048,7 +1054,7 @@ async def capture_relation_source_observations(
                 matches,
                 modelo=modelo,
                 ejercicio=source_year,
-                period=source_period,
+                period_token=source_period,
                 context="relation source requirement",
             )
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
@@ -1069,12 +1075,12 @@ def _select_authoritative_declaration(
     *,
     modelo: str,
     ejercicio: int,
-    period: str,
+    period_token: str,
     context: str,
 ) -> Declaracion:
     """Select the latest accepted register row for one filed period."""
     if not declarations:
-        raise SedeParseError(f"{context} {modelo!r}/{ejercicio}/{period!r} found no filed declaration")
+        raise SedeParseError(f"{context} {modelo!r}/{ejercicio}/{period_token!r} found no filed declaration")
     active = tuple(row for row in declarations if row.estado.upper() == "ALTA")
     candidates = active or declarations
     return max(candidates, key=lambda row: (row.presented_at, row.expediente_id))

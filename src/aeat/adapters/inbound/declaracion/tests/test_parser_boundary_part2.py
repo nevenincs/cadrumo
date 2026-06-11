@@ -14,6 +14,7 @@ from ._parser_boundary_support import (
     Decimal,
     DeclaracionParseError,
     Path,
+    _expected_period,
     _modelo_130_snapshot,
     _write_declaration_pdf,
     parse_declaracion,
@@ -121,7 +122,7 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     )
 
     assert filing.modelo == "303"
-    assert filing.period == period
+    assert filing.period == _expected_period(year, period)
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
@@ -254,7 +255,7 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
     )
 
     assert filing.modelo == "303"
-    assert filing.period == period
+    assert filing.period == _expected_period(year, period)
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
@@ -298,7 +299,7 @@ def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy(
     )
 
     assert filing.modelo == "190"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert {value.casilla_id: value.printed_value for value in filing.values} == {
         "decl.total-percepciones": Decimal("1"),
@@ -368,7 +369,7 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
     )
 
     assert filing.modelo == "390"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(year, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "390"
@@ -425,7 +426,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     )
 
     assert filing.modelo == "100"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(year, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "100"
@@ -579,7 +580,7 @@ def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "349"
-    assert filing.period == "1T"
+    assert filing.period == _expected_period(2024, "1T")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "349"
@@ -658,7 +659,7 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     )
 
     assert filing.modelo == "840"
-    assert filing.period == "0A"
+    assert filing.period == _expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "840"

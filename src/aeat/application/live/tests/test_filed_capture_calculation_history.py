@@ -340,14 +340,21 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
 
         assert keys == ("303:2025:4T", "303:2026:1T", "303:2026:2T")
         assert history.row_count == 3
-        assert set(rows_by_period) == {(2025, "4T"), (2026, "1T"), (2026, "2T")}
-        assert Decimal(rows_by_period[(2025, "4T")].generated_amount) == Decimal("100.00")
-        assert Decimal(rows_by_period[(2026, "1T")].generated_amount) == Decimal("50.00")
-        assert Decimal(rows_by_period[(2026, "2T")].generated_amount) == Decimal("0")
-        assert Decimal(rows_by_period[(2026, "2T")].available_end_amount) == Decimal("100.00")
+        period_2025_4t = Period.from_year_and_code(2025, "4T")
+        period_2026_1t = Period.from_year_and_code(2026, "1T")
+        period_2026_2t = Period.from_year_and_code(2026, "2T")
+        assert set(rows_by_period) == {
+            (2025, period_2025_4t),
+            (2026, period_2026_1t),
+            (2026, period_2026_2t),
+        }
+        assert Decimal(rows_by_period[(2025, period_2025_4t)].generated_amount) == Decimal("100.00")
+        assert Decimal(rows_by_period[(2026, period_2026_1t)].generated_amount) == Decimal("50.00")
+        assert Decimal(rows_by_period[(2026, period_2026_2t)].generated_amount) == Decimal("0")
+        assert Decimal(rows_by_period[(2026, period_2026_2t)].available_end_amount) == Decimal("100.00")
         assert history.carry_forward_lot_count == 2
-        assert Decimal(lots_by_period[(2025, "4T")].remaining_amount) == Decimal("50.00")
-        assert Decimal(lots_by_period[(2026, "1T")].remaining_amount) == Decimal("50.00")
+        assert Decimal(lots_by_period[(2025, period_2025_4t)].remaining_amount) == Decimal("50.00")
+        assert Decimal(lots_by_period[(2026, period_2026_1t)].remaining_amount) == Decimal("50.00")
         assert Decimal(history.unallocated_applied_amount) == Decimal("0")
         assert remote_state.history.row_count == history.row_count
         assert remote_state.history.carry_forward_lot_count == history.carry_forward_lot_count
@@ -385,6 +392,7 @@ def _parsed_303_submitted_file_observation(
     casilla_69: str,
     casilla_71: str,
 ) -> FiledDeclaracionObservation:
+    observation_period = Period.from_year_and_code(year, period)
     body = _modelo_303_page_03_payload(
         casilla_110=casilla_110,
         casilla_78=casilla_78,
@@ -424,7 +432,7 @@ def _parsed_303_submitted_file_observation(
     return FiledDeclaracionObservation(
         modelo="303",
         ejercicio=year,
-        period=period,
+        period=observation_period,
         expediente_id=expediente_id,
         status="ALTA",
         presented_at=presented_at,
@@ -469,13 +477,14 @@ def _prior_303_observation(
     presented_at: datetime = _CAPTURED_AT,
     semantic_compensation_ids: bool = False,
 ) -> FiledDeclaracionObservation:
+    observation_period = Period.from_year_and_code(year, period)
     body = f"303-{year}-{period}-submitted-file".encode("ascii")
     external = load_external_constants().aeat
     declarations_url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
     return FiledDeclaracionObservation(
         modelo="303",
         ejercicio=year,
-        period=period,
+        period=observation_period,
         expediente_id=expediente_id,
         status="ALTA",
         presented_at=presented_at,

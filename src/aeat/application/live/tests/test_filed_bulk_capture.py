@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.sede import Declaracion
+from ....core import Period
 from .. import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
@@ -41,7 +42,7 @@ def test_bulk_failure_row_preserves_declaration_coordinates() -> None:
     assert row == FiledDataCaptureFailureRow(
         modelo="303",
         year=2025,
-        period="1T",
+        period=Period.from_year_and_code(2025, "1T"),
         expediente_id="12345678901234567890",
         error_type="ValueError",
         message="AEAT row did not expose a justificante link",
