@@ -583,13 +583,11 @@ def _build_modelo_readiness(
     reports: list[ProjectionModeloReadiness] = []
     for request in requests:
         readiness_period = _ledger_period_for_modelo_readiness(request)
-        period_token = readiness_period.registry_token
         profile_report = service.report(
             record=record,
             modelo=request.modelo,
             revision_id=request.revision_id,
-            filing_year=request.filing_year,
-            period=period_token,
+            period=readiness_period,
         )
         ledger_report = None
         if _modelo_requires_ledger_preflight(request):
@@ -597,22 +595,13 @@ def _build_modelo_readiness(
                 bucket_id=pointer.bucket_id,
                 period=readiness_period,
             )
-        # Bridge profile_report.period (bare registry token str) back to a
-        # typed Period using the report's own filing_year.
-        try:
-            report_period = Period.from_year_and_code(profile_report.filing_year, profile_report.period)
-        except ValueError:
-            # Graceful degradation: if the preflight report carries an
-            # unrecognised period token, fall back to the request period or
-            # the annual token so the projection is never None.
-            report_period = request.period or Period.from_year_and_code(profile_report.filing_year, "0A")
         reports.append(
             ProjectionModeloReadiness(
                 profile_id=profile_report.profile_id,
                 modelo=profile_report.modelo,
                 revision_id=profile_report.revision_id,
                 filing_year=profile_report.filing_year,
-                period=report_period,
+                period=profile_report.period,
                 missing=profile_report.missing,
                 profile_ready=profile_report.ready,
                 ledger_preflight_required=ledger_report is not None,

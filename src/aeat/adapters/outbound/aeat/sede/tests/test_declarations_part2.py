@@ -23,6 +23,7 @@ from ._declarations_support import (
     InputKind,
     ObservedCasillaValue,
     Path,
+    Period,
     RegistryValidationError,
     SedeParseError,
     _assert_read_browser_action,
@@ -30,6 +31,7 @@ from ._declarations_support import (
     _declaration_pdf_payload,
     _exported_modelo_123_payload,
     _filed_observation,
+    _isolate_secure_object_backend,
     _modelo_130_snapshot,
     _modelo_snapshot,
     _observed_casillas_from_declaration_pdf,
@@ -48,7 +50,11 @@ from ._declarations_support import (
     resolve_previous_filing_bindings_from_filed_declarations,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_outbound_adapter,
+    pytest.mark.usefixtures(_isolate_secure_object_backend.__name__),
+]
 
 
 class TestSubmittedFileObservation:
@@ -359,7 +365,7 @@ class TestSubmittedFileObservation:
         observation = FiledDeclaracionObservation(
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
-            period=declaration.period,
+            period=Period.from_year_and_code(declaration.ejercicio, declaration.period),
             expediente_id=declaration.expediente_id,
             status=declaration.estado,
             presented_at=declaration.presented_at,
@@ -452,7 +458,7 @@ class TestSubmittedFileObservation:
         observation = FiledDeclaracionObservation(
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
-            period=declaration.period,
+            period=Period.from_year_and_code(declaration.ejercicio, declaration.period),
             expediente_id=declaration.expediente_id,
             status=declaration.estado,
             presented_at=declaration.presented_at,

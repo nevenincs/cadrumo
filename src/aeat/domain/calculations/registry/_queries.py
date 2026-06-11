@@ -39,8 +39,6 @@ _BARE_PERIOD_RE = re.compile(
     r"^(?:0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$",
     re.I,
 )
-
-
 class ModeloListRow(BaseModel):
     """One entry in a ``modelo`` catalogue listing.
 

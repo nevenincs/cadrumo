@@ -49,9 +49,6 @@ from ._engine_helpers import (
     registry_filing_year as _registry_filing_year,
 )
 from ._engine_helpers import (
-    registry_period_token as _registry_period_token,
-)
-from ._engine_helpers import (
     summary_text as _summary_text,
 )
 from ._engine_recording import record_site_unavailable, record_unhandled
@@ -876,10 +873,9 @@ class WorkflowEngine:
         )
 
     def _active_registry_schema_version(self, obligation: ModeloDeadline) -> str:
-        filing_year, registry_period = _registry_period_token(obligation.period)
         provider = build_runtime_schema_provider(
-            filing_year=filing_year,
-            period=registry_period,
+            filing_year=obligation.period.filing_year,
+            period=obligation.period,
             modelos=(obligation.modelo,),
         )
         return provider.get_subview(obligation.modelo).schema_version

@@ -412,7 +412,7 @@ def _approve_export_draft(
     period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=period.filing_year,
-        period=period.registry_token,
+        period=period,
         modelos=(work_unit.modelo,),
     )
     inputs: filing_domain.ModeloInputs = {
