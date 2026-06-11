@@ -49,6 +49,7 @@ from ....application.filing import (
     build_runtime_schema_provider,
     export_draft,
 )
+from ....core import Period
 from ....domain.filing import ModeloInputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -152,7 +153,7 @@ def test_modelo_720_golden_sha_fichero_boe(tmp_path: Path) -> None:
     provider = build_runtime_schema_provider(modelos=("720",))
     draft = build_draft(
         modelo="720",
-        period="2024A",
+        period=Period.from_year_and_code(int(_EJERCICIO), "0A"),
         profile=ModeloOperatorProfile(
             tax_id=_NIF,
             display_name=_NOMBRE,
