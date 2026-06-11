@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core import Period
 from ...domain.calculations.registry import (
     InputKind,
     ModeloRevision,
@@ -34,7 +35,7 @@ def reject_incomplete_amendment_casillas(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     casilla_values: Mapping[str, Decimal],
 ) -> None:
     """Mirror the verify-modelo-revision required-manual gate on amend."""
@@ -42,7 +43,7 @@ def reject_incomplete_amendment_casillas(
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
             f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
-            f"period={period!r}; cannot verify amendment completeness",
+            f"period={period.registry_token!r}; cannot verify amendment completeness",
             translated_message="application.modelo.errors.amendment_verification_refused_no_snapshot",
         )
     required, _ = required_optional
@@ -50,7 +51,8 @@ def reject_incomplete_amendment_casillas(
     if missing:
         raise AmendmentVerificationRefusedError(
             f"amendment is incomplete: required casilla id(s) {missing!r} are not present "
-            f"in the corrected map for modelo={modelo!r} filing_year={filing_year} period={period!r}",
+            f"in the corrected map for modelo={modelo!r} filing_year={filing_year} "
+            f"period={period.registry_token!r}",
             translated_message="application.modelo.errors.amendment_verification_refused_missing_casillas",
         )
 
@@ -73,7 +75,7 @@ def reject_unknown_override_casillas(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     overrides: Mapping[str, Decimal],
 ) -> None:
     """Refuse override casilla ids the registry does not declare for the modelo / year / period."""
@@ -91,11 +93,11 @@ def reject_unknown_override_casillas(
         ) from exc
 
     try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError as exc:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_registry_snapshot_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+            context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         ) from exc
 
     known = {str(casilla.id) for casilla in snapshot.revision.casillas}
@@ -103,7 +105,12 @@ def reject_unknown_override_casillas(
     if unknown:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_unknown_casillas",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period, "casillas": unknown},
+            context={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period": period.registry_token,
+                "casillas": unknown,
+            },
         )
 
 
@@ -111,7 +118,7 @@ def reject_unknown_import_casillas(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     casilla_values: Mapping[str, Decimal],
 ) -> RegistrySnapshot:
     """Refuse imported casilla ids the registry does not declare and return the resolved :class:`RegistrySnapshot`."""
@@ -126,11 +133,11 @@ def reject_unknown_import_casillas(
         ) from exc
 
     try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_snapshot_unresolved",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+            context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         ) from exc
 
     known = {str(casilla.id) for casilla in snapshot.revision.casillas}
@@ -138,7 +145,12 @@ def reject_unknown_import_casillas(
     if unknown:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_unknown_casillas",
-            context={"modelo": modelo, "filing_year": filing_year, "period": period, "casillas": unknown},
+            context={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period": period.registry_token,
+                "casillas": unknown,
+            },
         )
     return snapshot
 
@@ -147,7 +159,7 @@ def required_input_casillas_for_revision(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
 ) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
     """Resolve the registry's required and informational input casillas."""
     from ...domain.calculations.registry import RegistrySnapshotError
@@ -158,7 +170,7 @@ def required_input_casillas_for_revision(
         return None
 
     try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError:
         return None
 
@@ -177,7 +189,7 @@ def verification_predicates_for_revision(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
 ) -> tuple[VerificationPredicateDefinition, ...]:
     """Return a tuple of :class:`VerificationPredicateDefinition` records for the registry revision, or empty tuple."""
     from ...domain.calculations.registry import RegistrySnapshotError
@@ -188,7 +200,7 @@ def verification_predicates_for_revision(
         return ()
 
     try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError:
         return ()
 
