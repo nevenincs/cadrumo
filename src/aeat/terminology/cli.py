@@ -23,6 +23,7 @@ written.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -37,7 +38,15 @@ from ._curation import (
     set_term,
 )
 from ._enums import TermStatus
+from ._errors import TerminologyError
 from ._scaffold import ScaffoldAction, ScaffoldPlan, scaffold_handbook
+from ._seed_import import (
+    SeedEntry,
+    SeedSource,
+    apply_seed_entries,
+    parse_iate_tbx,
+    parse_ubterm_csv,
+)
 
 app = typer.Typer(name="terminology", help="Terminology Handbook maintenance.", no_args_is_help=True)
 
@@ -123,7 +132,7 @@ def audit() -> None:
         "audit: "
         f"{report.total_concepts} concepts "
         f"({report.draft_count} draft, {report.approved_count} approved, "
-        f"{report.deprecated_count} deprecated, {report.retired_count} retired)"
+        f"{report.deprecated_count} deprecated, {report.retired_count} retired)",
     )
     typer.echo(f"  seed provenance: {report.seeded_count} seeded, {report.hand_authored_count} hand-authored")
     if report.empty_short_description:
@@ -140,6 +149,63 @@ def audit() -> None:
         raise typer.Exit(code=1)
 
 
+@app.command("seed")
+def seed(
+    source: Annotated[SeedSource, typer.Argument(help="Tier-A source: iate | ubterm (eurovoc once verified).")],
+    export_path: Annotated[Path, typer.Argument(help="Path to the downloaded source export file.")],
+    min_reliability: Annotated[
+        int,
+        typer.Option("--min-reliability", help="IATE: minimum reliability code to keep (>= 3)."),
+    ] = 3,
+    domain: Annotated[
+        list[str] | None,
+        typer.Option("--domain", help="IATE: subject-field allow-set (repeatable)."),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Report what would be seeded without writing."),
+    ] = False,
+) -> None:
+    """Import a Tier-A external seed export, stamping provenance on every value.
+
+    Parses the downloaded source file into typed seed entries, maps each onto
+    an existing concept by its Spanish preferred label, and adds the
+    missing-language translations / aliases while stamping the licence-required
+    attribution. An excluded (ND / NC / unlicensed) source is refused; a seed
+    never overwrites curated prose and never auto-approves a draft.
+    """
+    try:
+        if source is SeedSource.IATE:
+            domains = frozenset(domain) if domain else None
+            entries: tuple[SeedEntry, ...] = parse_iate_tbx(
+                export_path,
+                min_reliability=min_reliability,
+                domains=domains,
+            )
+        elif source is SeedSource.UBTERM:
+            entries = parse_ubterm_csv(export_path)
+        else:
+            # EuroVoc and the excluded sources are refused by the licence gate
+            # the moment apply attempts an attribution lookup; surface it early
+            # with the gate's reason rather than a half-parse.
+            from ._seed_import import assert_source_ingestible
+
+            assert_source_ingestible(source)
+            raise typer.BadParameter(f"no parser wired for source {source.value!r}")
+        result = apply_seed_entries(entries, today=None, write=not dry_run)
+    except TerminologyError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    mode = "would seed" if dry_run else "seeded"
+    typer.echo(
+        f"{mode} from {source.value}: {result.applied_count} concept(s) matched, "
+        f"{len(result.unmatched_keys)} unmatched key(s), "
+        f"{result.languages_added} language(s) + {result.aliases_added} alias(es) added",
+    )
+    for key in result.unmatched_keys:
+        typer.echo(f"  ? unmatched: {key}")
+
+
 def _report_plan(plan: ScaffoldPlan) -> None:
     counts = plan.counts
     typer.echo(
@@ -147,7 +213,7 @@ def _report_plan(plan: ScaffoldPlan) -> None:
         f"{counts[ScaffoldAction.PRESERVE]} preserved, "
         f"{counts[ScaffoldAction.SCAFFOLD_EMPTY]} new drafts, "
         f"{counts[ScaffoldAction.RETIRE]} retired, "
-        f"{counts[ScaffoldAction.UNCHANGED]} unchanged"
+        f"{counts[ScaffoldAction.UNCHANGED]} unchanged",
     )
     for entry in plan.by_action(ScaffoldAction.SCAFFOLD_EMPTY):
         typer.echo(f"  + {entry.concept_id} (draft)")
