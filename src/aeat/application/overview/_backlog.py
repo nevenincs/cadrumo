@@ -122,7 +122,9 @@ def build_overview_backlog(
     for entry in calendar.entries:
         if entry.adjusted_closes_on < resolved_as_of and entry.user_state is OverviewPeriodState.LATE:
             items.append(entry)
-    items.sort(key=lambda entry: (entry.adjusted_closes_on, entry.modelo, entry.period))
+    items.sort(
+        key=lambda entry: (entry.adjusted_closes_on, entry.modelo, entry.period.year, entry.period.registry_token)
+    )
 
     return OverviewBacklog(
         range=window,
