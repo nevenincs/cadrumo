@@ -7,6 +7,7 @@ to obtain snapshots and evaluate formulas against official AEAT workbooks.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -14,6 +15,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ....core import Period
 from ....core.time import now
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
@@ -43,6 +45,7 @@ class ParityScenario(ParityTapeModel):
     id: str
     modelo: str
     revision: str
+    filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str
     workbook_path: Path
@@ -59,6 +62,21 @@ class ParityScenario(ParityTapeModel):
     tolerance: Decimal = Decimal("0")
     notes: tuple[str, ...] = ()
 
+    @model_validator(mode="before")
+    @classmethod
+    def _hydrate_filing_period(cls, data: object) -> object:
+        if not isinstance(data, Mapping) or "filing_period" in data:
+            return data
+        filing_year = data.get("filing_year")
+        period = data.get("period")
+        if not isinstance(filing_year, int) or not isinstance(period, str):
+            return data
+        try:
+            filing_period = Period.from_year_and_code(filing_year, period)
+        except ValueError:
+            return data
+        return {**data, "filing_period": filing_period}
+
     @model_validator(mode="after")
     def _validate_scenario(self) -> ParityScenario:
         if self.synthetic_input.modelo != self.modelo:
@@ -73,6 +91,10 @@ class ParityScenario(ParityTapeModel):
             raise RegistryValidationError("scenario registry outputs must target unique casillas")
         if self.period.strip() != self.period:
             raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
+        if self.filing_period is not None and (
+            self.filing_period.filing_year != self.filing_year or self.filing_period.registry_token != self.period
+        ):
+            raise RegistryValidationError("scenario filing_period must match filing_year and period")
         return self
 
 

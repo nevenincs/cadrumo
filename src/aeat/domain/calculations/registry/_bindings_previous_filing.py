@@ -11,9 +11,10 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core import Period
 from ._errors import RegistryValidationError
 from ._period_offset_math import apply_period_offset
-from ._schema import DataBindingDefinition, ModeloRevision
+from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
 
 
 class _RegistryModeloObservationLike(Protocol):
@@ -31,6 +32,7 @@ class RegistryModeloObservationRequirement(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str = Field(min_length=1, max_length=8)
+    filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
     binding_ids: tuple[str, ...] = Field(min_length=1)
@@ -70,6 +72,7 @@ def previous_filing_observation_requirements(
     return tuple(
         RegistryModeloObservationRequirement(
             modelo=modelo,
+            filing_period=filing_period_from_scope(expected_year, required_period),
             filing_year=expected_year,
             period=required_period,
             binding_ids=tuple(sorted(values["binding_ids"])),
