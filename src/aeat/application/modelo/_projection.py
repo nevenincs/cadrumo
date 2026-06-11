@@ -12,7 +12,7 @@ from decimal import Decimal, InvalidOperation
 from pydantic import BaseModel, Field
 
 from ...core import Modelo
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...core.resources import resources
@@ -241,7 +241,7 @@ def project_modelo_100_from_m130(
 
     if quarters_filed < 4:
         projected_rendimiento_neto = (total_rendimiento_neto * Decimal(4) / Decimal(quarters_filed)).quantize(
-            Decimal("0.01")
+            Decimal("0.01"),
         )
         is_extrapolated = True
     else:
@@ -465,7 +465,7 @@ def compare_modelo_years(
                 formula_id=observation.formula_id if observation is not None else None,
                 legal_refs=tuple(observation.legal_refs) if observation is not None else (),
                 source_refs=tuple(observation.source_refs) if observation is not None else (),
-            )
+            ),
         )
 
     sections_seen: list[str] = []

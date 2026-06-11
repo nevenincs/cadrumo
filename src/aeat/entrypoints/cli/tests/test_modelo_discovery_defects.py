@@ -49,7 +49,7 @@ def _create_profile() -> None:
             "--tax-id", "12345678Z",
             "--name", "Operator",
             "--activity", "design",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
 
@@ -61,7 +61,7 @@ def _create_303_work_unit() -> str:
             "app", "modelo", "work", "create",
             "--modelo", "303", "--year", "2025", "--period", "1T",
             "--revision", "2023-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -76,7 +76,7 @@ def _create_111_work_unit() -> str:
             "app", "modelo", "work", "create",
             "--modelo", "111", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -108,7 +108,7 @@ def test_work_calculate_accepts_registry_number_as_casilla_alias() -> None:
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "regularizacion-inversiones=10.00",
-        ]
+        ],
     )  # fmt: skip
     # The alias was resolved: the calculation succeeded with a draft revision.
     # An alias-rejection regression would produce "unknown casilla" before reaching the engine.
@@ -132,7 +132,7 @@ def test_work_calculate_rejects_a_genuinely_unknown_casilla_number() -> None:
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "9999=10.00",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
@@ -235,7 +235,7 @@ def test_work_create_accepts_censo_period_tokens(token: str) -> None:
             "app", "modelo", "work", "create",
             "--modelo", "036", "--year", "2025", "--period", token,
             "--revision", "2025-02-03-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert _payload(result.output)["period"] == token
@@ -260,7 +260,7 @@ def test_work_create_still_rejects_an_undeclared_censo_token() -> None:
             "app", "modelo", "work", "create",
             "--modelo", "036", "--year", "2025", "--period", "bogus",
             "--revision", "2025-02-03-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
@@ -278,7 +278,7 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
             "app", "modelo", "work", "create",
             "--modelo", "303", "--year", "2024", "--period", "1T",
             "--revision", "2023-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert _payload(result.output)["period"] == "1T"
@@ -327,7 +327,7 @@ def test_modelo_readiness_names_preflight_scope() -> None:
             "2026",
             "--period",
             "1T",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
     assert "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness" in result.output
@@ -396,7 +396,7 @@ def _create_202_work_unit(period: str) -> str:
             "app", "modelo", "work", "create",
             "--modelo", "202", "--year", "2026", "--period", period,
             "--revision", "2025-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)

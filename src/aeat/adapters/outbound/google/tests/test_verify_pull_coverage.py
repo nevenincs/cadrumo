@@ -177,5 +177,5 @@ def test_pull_coverage_discrepancy_model_is_strict_frozen_forbid_extras() -> Non
                 "kind": "metadata_mismatch",
                 "detail": "x",
                 "extra_unknown_key": "boom",
-            }
+            },
         )

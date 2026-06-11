@@ -127,7 +127,7 @@ def work_unit_list_lines(units, *, bucket_id: str | None, include_discarded: boo
                 short_id(unit.current_calculation_revision_id) or "",
                 short_id(unit.filed_calculation_revision_id) or "",
                 unit.name,
-            )
+            ),
         )
         for unit in units
     )
@@ -147,7 +147,7 @@ def work_unit_plazo_lines(unit) -> list[str]:
                 "cli.app.modelo.work.plazo_days_remaining",
                 default="days_remaining\t{days_remaining}",
                 days_remaining=summary.days_remaining,
-            )
+            ),
         )
         return out
 
@@ -163,7 +163,7 @@ def work_unit_plazo_lines(unit) -> list[str]:
                     "AVISO: plazo voluntario vencido. Presenta con recargo "
                     "Art. 27 LGT antes de recibir requerimiento de la AEAT."
                 ),
-            )
+            ),
         )
         return out
 
@@ -180,7 +180,7 @@ def work_unit_plazo_lines(unit) -> list[str]:
                     "Art. 27 LGT antes de recibir requerimiento de la AEAT."
                 ),
             ),
-        ]
+        ],
     )
     return out
 
@@ -392,8 +392,8 @@ def verification_report_lines(report) -> list[str]:
                     casilla,
                     finding.message,
                     next_action,
-                )
-            )
+                ),
+            ),
         )
         if finding.legal_refs:
             lines.append(f"finding_legal_refs\t{casilla}\t{', '.join(finding.legal_refs)}")
@@ -402,6 +402,6 @@ def verification_report_lines(report) -> list[str]:
     if not report.granted_verificado_completo:
         lines.append(
             "next_action\taeat app modelo verification-report list "
-            f"--calculation-revision-id {report.calculation_revision_id}"
+            f"--calculation-revision-id {report.calculation_revision_id}",
         )
     return lines

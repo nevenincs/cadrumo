@@ -222,7 +222,7 @@ async def capture_filed_data_bulk(
             unsupported_reason = _filed_capture_unsupported_reason(modelo=code, year=year)
             if unsupported_reason is not None:
                 failures.append(
-                    _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason)
+                    _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason),
                 )
                 continue
             query_pairs.append((code, year))
@@ -272,7 +272,7 @@ async def capture_filed_data_bulk(
                             year=year,
                             declaration=declaration,
                             error=exc,
-                        )
+                        ),
                     )
                     continue
                 manifest_path = store.persist_observation(observation)

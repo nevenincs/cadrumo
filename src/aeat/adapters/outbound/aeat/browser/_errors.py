@@ -46,7 +46,6 @@ class BrowserValidationError(BrowserError, ValueError):
     remaining catchable under the package's unified error hierarchy.
     """
 
-    pass
 
 
 class BrowserEvasionError(BrowserError):

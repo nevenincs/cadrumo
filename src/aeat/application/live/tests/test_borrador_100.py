@@ -215,7 +215,7 @@ def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot(
     assert service.list_snapshots() == (newer,)
     assert service.list_snapshots(state=None) == (
         older.model_copy(
-            update={"state": SnapshotLifecycleState.SUPERSEDED, "superseded_by_snapshot_id": newer.snapshot_id}
+            update={"state": SnapshotLifecycleState.SUPERSEDED, "superseded_by_snapshot_id": newer.snapshot_id},
         ),
         newer,
     )

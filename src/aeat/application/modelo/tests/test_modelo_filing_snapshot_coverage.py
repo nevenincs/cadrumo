@@ -82,7 +82,7 @@ def _tx(
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -123,7 +123,7 @@ def test_ledger_fed_modelo_carries_nonempty_snapshot() -> None:
 
 def test_non_ledger_modelo_carries_empty_uniform_snapshot() -> None:
     snap = compute_ledger_filing_snapshot(
-        source_transaction_ids=(), catalogue=TransactionCatalogue.from_transactions(()), captured_at=_NOW
+        source_transaction_ids=(), catalogue=TransactionCatalogue.from_transactions(()), captured_at=_NOW,
     )
     rev = _revision("347", source_ids=(), snapshot=snap)
     assert rev.ledger_filing_snapshot is not None
@@ -154,11 +154,15 @@ def test_filed_revision_snapshot_is_immutable() -> None:
 
 
 def _verified_revision(
-    modelo: str, *, source_ids: tuple[str, ...], snapshot: LedgerFilingSnapshot
+    modelo: str, *, source_ids: tuple[str, ...], snapshot: LedgerFilingSnapshot,
 ) -> CalculationRevision:
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period="1T", revision_id="r1")
     rid = derive_calculation_revision_id(
-        work_unit_id=wid, inputs_snapshot={}, binding_overrides={}, casilla_values={}, source_transaction_ids=source_ids
+        work_unit_id=wid,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values={},
+        source_transaction_ids=source_ids,
     )
     return CalculationRevision(
         calculation_revision_id=rid,

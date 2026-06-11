@@ -13,7 +13,7 @@ _SYNTHETIC_TAX_IDS: Final[frozenset[str]] = frozenset(
         "Z0000000T",
         "Y0000000Z",
         "B00000000",
-    }
+    },
 )
 
 

@@ -15,7 +15,8 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core._tax_domain import TaxDomain
+from ....core import Period
+from ....core import TaxDomain
 from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -283,7 +284,7 @@ class LegalReference(RegistryModel):
             raise RegistryValidationError("legal reference required_text entries must be unique")
         if "#" not in self.corpus_ref:
             raise RegistryValidationError(
-                f"legal reference {self.id!r} corpus_ref must be of the form 'path#anchor' (got {self.corpus_ref!r})"
+                f"legal reference {self.id!r} corpus_ref must be of the form 'path#anchor' (got {self.corpus_ref!r})",
             )
         path_part, _, anchor_part = self.corpus_ref.partition("#")
         if not path_part or not anchor_part:
@@ -327,7 +328,7 @@ class SourceReference(RegistryModel):
                     f"{self.corpus_path!r} has unsupported extension {extension!r}; the record-design "
                     f"extractor accepts only .pdf / .xls / .xlsx / .xlsm — reclassify the source "
                     f"(e.g. kind='form_spec' for an AEAT/BOE landing page HTML) or ingest the real "
-                    f"Diseño workbook"
+                    f"Diseño workbook",
                 )
         return self
 
@@ -500,7 +501,7 @@ class ExtractionProfileDefinition(RegistryModel):
     @field_validator("target_casillas")
     @classmethod
     def _target_casillas_unique(
-        cls, value: tuple[ExtractionTargetDefinition, ...]
+        cls, value: tuple[ExtractionTargetDefinition, ...],
     ) -> tuple[ExtractionTargetDefinition, ...]:
         casilla_ids = [t.casilla_id for t in value]
         if len(set(casilla_ids)) != len(casilla_ids):
@@ -572,7 +573,7 @@ class LiveCrossReferenceDecision(RegistryModel):
             if not (char.islower() and char.isascii()) and not char.isdigit() and char != "-":
                 raise RegistryValidationError(
                     f"oracle_id contains unsupported character {char!r}; "
-                    f"only lowercase ASCII letters, digits, and hyphens are permitted"
+                    f"only lowercase ASCII letters, digits, and hyphens are permitted",
                 )
         return value
 
@@ -600,18 +601,18 @@ class LiveCrossReferenceDecision(RegistryModel):
             and self.evidence_tier != "executable_parity_evidence"
         ):
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} live surface requires executable parity evidence"
+                f"cross-reference {self.id!r} live surface requires executable parity evidence",
             )
         if (
             self.surface in {"public_read_surface", "authenticated_read_surface"}
             and self.evidence_tier == "executable_parity_evidence"
         ):
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} read surface is observation evidence, not parity"
+                f"cross-reference {self.id!r} read surface is observation evidence, not parity",
             )
         if self.surface == "static_official_documentation" and self.evidence_tier == "executable_parity_evidence":
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} static documentation is not executable parity evidence"
+                f"cross-reference {self.id!r} static documentation is not executable parity evidence",
             )
 
     def _validate_allowed_hosts_declared(self) -> None:
@@ -640,19 +641,19 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise RegistryValidationError(f"cross-reference {self.id!r} open simulator must not require authentication")
         if self.surface == "public_read_surface" and self.requires_authentication:
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} public read surface must not require authentication"
+                f"cross-reference {self.id!r} public read surface must not require authentication",
             )
         if self.surface == "authenticated_read_surface" and not self.requires_authentication:
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} authenticated read surface must require authentication"
+                f"cross-reference {self.id!r} authenticated read surface must require authentication",
             )
         if self.surface == "authenticated_read_surface" and not self.requires_aeat_authorization:
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} authenticated read surface must require authorization"
+                f"cross-reference {self.id!r} authenticated read surface must require authorization",
             )
         if self.surface == "authenticated_simulator" and not self.requires_authentication:
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} authenticated simulator must require authentication"
+                f"cross-reference {self.id!r} authenticated simulator must require authentication",
             )
 
     def _validate_synthetic_data_constraints(self) -> None:
@@ -670,7 +671,7 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise RegistryValidationError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
         if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} static documentation cannot accept synthetic data"
+                f"cross-reference {self.id!r} static documentation cannot accept synthetic data",
             )
         if self.synthetic_data_allowed:
             aeat_host = first_aeat_host(self.allowed_hosts)
@@ -678,7 +679,7 @@ class LiveCrossReferenceDecision(RegistryModel):
                 raise RegistryValidationError(
                     f"cross-reference {self.id!r} declares synthetic_data_allowed = true "
                     f"on AEAT-hosted allowed host {aeat_host!r}; synthetic data is prohibited "
-                    f"on AEAT-hosted live surfaces"
+                    f"on AEAT-hosted live surfaces",
                 )
 
     def _validate_allowed_method(self, method: str) -> None:
@@ -691,7 +692,7 @@ class LiveCrossReferenceDecision(RegistryModel):
             "OPTIONS",
         }:
             raise RegistryValidationError(
-                f"cross-reference {self.id!r} read surface method {method!r} is not read-only"
+                f"cross-reference {self.id!r} read surface method {method!r} is not read-only",
             )
         # authenticated_simulator declares the AEAT-prescribed query
         # method (POST is the GROI / IXVI form-submit mechanism). The
@@ -701,7 +702,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         if self.surface == "authenticated_simulator" and method not in {"GET", "HEAD", "OPTIONS", "POST"}:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} authenticated simulator method "
-                f"{method!r} not in (GET, HEAD, OPTIONS, POST)"
+                f"{method!r} not in (GET, HEAD, OPTIONS, POST)",
             )
 
 
@@ -726,7 +727,7 @@ class WorkbookParityReference(RegistryModel):
             raise RegistryValidationError(f"workbook parity reference {self.id!r} requires output_cells")
         if self.workbook_source not in self.source_refs:
             raise RegistryValidationError(
-                f"workbook parity reference {self.id!r} source_refs must include workbook_source"
+                f"workbook parity reference {self.id!r} source_refs must include workbook_source",
             )
         return self
 
@@ -898,7 +899,7 @@ class DependencyClassificationDefinition(RegistryModel):
         if self.treatment == "non_dependency":
             if self.target_constructs or self.relation_refs:
                 raise RegistryValidationError(
-                    f"non-dependency classification {self.id!r} must not declare target members"
+                    f"non-dependency classification {self.id!r} must not declare target members",
                 )
             return self
         if not self.target_constructs:
@@ -908,10 +909,38 @@ class DependencyClassificationDefinition(RegistryModel):
         return self
 
 
+def _parse_deadline_window_period(value: object) -> Period:
+    """Hydrate a free-form TOML deadline-window period string into a typed :class:`~aeat.core.Period`.
+
+    Accepts the two-plus dialects used in the registry TOML authoring tree
+    (``"2026Q1"``, ``"2026-1T"``, ``"2026-0A"``, ``"2026-03"``, ``"2026-1P"``,
+    ``"2026-EXT-1T"``, bare ``"2026"``). A :class:`~aeat.core.Period`
+    instance is returned as-is (idempotent).
+    """
+    if isinstance(value, Period):
+        return value
+    if not isinstance(value, str):
+        raise ValueError(f"deadline window period must be a string or Period, got {type(value).__name__}")
+    from ....domain.period import PeriodValidationError, parse_canonical_period
+    token = value.strip().upper()
+    try:
+        year, code = parse_canonical_period(token)
+        return Period.from_year_and_code(year, code)
+    except PeriodValidationError as canonical_exc:
+        if len(token) > 5 and token[:4].isdigit() and token[4] == "-":
+            try:
+                return Period.from_year_and_code(int(token[:4]), token[5:])
+            except ValueError as exc:
+                raise ValueError(f"invalid deadline window period {value!r}: {exc}") from exc
+        raise ValueError(f"invalid deadline window period {value!r}: {canonical_exc}") from canonical_exc
+    except ValueError as exc:
+        raise ValueError(f"invalid deadline window period {value!r}: {exc}") from exc
+
+
 class DeadlineWindowDefinition(RegistryModel):
     id: DeadlineWindowId
     filing_year: int = Field(ge=1900, le=2999)
-    period: str = Field(min_length=1)
+    period: Annotated[Period, BeforeValidator(_parse_deadline_window_period)]
     period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
     opens_on: date
     closes_on: date
@@ -1004,7 +1033,7 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "cap_le_when_positive",
         "implies_nonzero",
         "profile_field_required",
-    }
+    },
 )
 
 

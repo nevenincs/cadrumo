@@ -112,7 +112,7 @@ def test_update_manual_transaction_persists_replacement_transaction_id(secure_ob
 
 @pytest.mark.parametrize(("attr_path", "expected"), _UPDATED_FIELD_EXPECTATIONS)
 def test_update_manual_transaction_replaces_field(
-    secure_objects: SecureObjectRepository, attr_path: str, expected: object
+    secure_objects: SecureObjectRepository, attr_path: str, expected: object,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     actual: object = outcome.updated.transaction
@@ -123,7 +123,7 @@ def test_update_manual_transaction_replaces_field(
 
 @pytest.mark.parametrize("attr", _PRESERVED_CREATE_AUDIT_FIELDS)
 def test_update_manual_transaction_preserves_original_audit_field(
-    secure_objects: SecureObjectRepository, attr: str
+    secure_objects: SecureObjectRepository, attr: str,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert getattr(outcome.updated.transaction, attr) == getattr(outcome.created.transaction, attr)
@@ -155,7 +155,7 @@ def test_update_manual_transaction_links_update_events_to_result(secure_objects:
 
 @pytest.mark.parametrize(("event_index", "payload_key", "expected"), _POST_UPDATE_EVENT_PAYLOADS)
 def test_update_manual_transaction_event_payload_marks_mutation_kind(
-    secure_objects: SecureObjectRepository, event_index: int, payload_key: str, expected: str
+    secure_objects: SecureObjectRepository, event_index: int, payload_key: str, expected: str,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.events[event_index].payload[payload_key] == expected
@@ -461,7 +461,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
 
     assert tuple(transaction_repository.load().transactions) == (created.ref.transaction_id,)
     assert [event.event_type for event in event_repository.load().for_bucket("bucket-a")] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED
+        BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
 

@@ -104,7 +104,7 @@ def _validate_filing_year(year: int) -> None:
                 year=year,
                 minimum=_FILING_YEAR_MIN,
                 maximum=_FILING_YEAR_MAX,
-            )
+            ),
         )
 
 
@@ -293,7 +293,7 @@ def _emit_work_create_result(
             "name_applied": name_applied,
             "applicability_guard_bypassed": allow_not_applicable,
             **work_unit_payload(unit).model_dump(mode="python"),
-        }
+        },
     )
     lines = [
         f"operation\t{operation}",
@@ -398,7 +398,7 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
                 "include_discarded": include_discarded,
                 "work_unit_count": len(units),
                 "work_units": [work_unit_payload(unit) for unit in units],
-            }
+            },
         )
         lines = work_unit_list_lines(units, bucket_id=bucket_id, include_discarded=include_discarded)
         _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines)
@@ -561,7 +561,7 @@ def _register_work_discard_command(work_app: typer.Typer, deps: _LifecycleDeps) 
                 tr(
                     "cli.app.modelo.work.discard_requires_yes",
                     work_unit_id=target_label,
-                )
+                ),
             )
         deps.require_active_profile()
         unit = deps.resolve_work_unit_for_cli(

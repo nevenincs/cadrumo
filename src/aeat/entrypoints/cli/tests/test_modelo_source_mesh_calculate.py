@@ -50,7 +50,7 @@ def _create_profile() -> None:
             "Operator",
             "--activity",
             "design",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
 
@@ -72,7 +72,7 @@ def _create_303_work_unit() -> dict[str, object]:
             "1T",
             "--revision",
             "2023-y-siguientes",
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
     return _payload(result.output)
@@ -179,7 +179,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
         )
 
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((sale, purchase))
+            TransactionCatalogue.from_transactions((sale, purchase)),
         )
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
@@ -207,7 +207,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
@@ -307,7 +307,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     )
     with profile_storage_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((domestic_sale, cuota_less_supply))
+            TransactionCatalogue.from_transactions((domestic_sale, cuota_less_supply)),
         )
     _seed_zero_iva_wallet_decision(bucket_id)
 
@@ -320,7 +320,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
 
@@ -341,7 +341,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-        ]
+        ],
     )
     assert text_result.exit_code == 0, text_result.output
     assert "ADVISORY:" not in text_result.output
@@ -373,7 +373,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     )
     with profile_storage_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions((domestic_sale,))
+            TransactionCatalogue.from_transactions((domestic_sale,)),
         )
     _seed_zero_iva_wallet_decision(bucket_id)
 
@@ -386,7 +386,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-        ]
+        ],
     )
     assert result.exit_code == 0, result.output
 
@@ -402,7 +402,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-        ]
+        ],
     )
     assert text_result.exit_code == 0, text_result.output
     assert "ADVISORY:" not in text_result.output

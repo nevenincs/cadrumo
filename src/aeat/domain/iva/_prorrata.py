@@ -253,7 +253,7 @@ class ProrrataReference(_ProrrataStrictFrozen):
         )
         if self.reference_id != expected:
             raise ProrrataInputError(
-                f"prorrata reference {self.reference_id!r} does not match canonical value {expected!r}"
+                f"prorrata reference {self.reference_id!r} does not match canonical value {expected!r}",
             )
         return self
 
@@ -311,7 +311,7 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
         raise ProrrataInputError(
             "prorrata_reference must use canonical shape "
             "'prorrata:{year}:{kind}:{regime}' or "
-            "'prorrata:{year}:{kind}:{regime}:{sector_id}'"
+            "'prorrata:{year}:{kind}:{regime}:{sector_id}'",
         )
     try:
         year = int(parts[1])

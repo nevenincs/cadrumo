@@ -18,7 +18,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId as _ProfileId
 from ...core.parsing._dates import _parse_iso8601_date
@@ -183,7 +183,7 @@ class UserProfileRecord(BaseModel):
                 "status": UserProfileStatus.TOMBSTONED,
                 "updated_at": instant,
                 "removed_at": instant,
-            }
+            },
         )
 
 
@@ -223,7 +223,7 @@ class UserProfileSnapshot(BaseModel):
             raise UserProfileValidationError(
                 f"canonical_hash {self.canonical_hash!r} does not match "
                 f"the derived hash {derived!r} for profile "
-                f"{self.profile_id!r}; facts or hash drifted post-save"
+                f"{self.profile_id!r}; facts or hash drifted post-save",
             )
         return self
 
@@ -259,7 +259,7 @@ class UserProfileSnapshot(BaseModel):
                     fact.valid_to or date.max,
                     _canonical_payload(fact.model_dump(mode="json")),
                 ),
-            )
+            ),
         )
         digest = _derive_canonical_hash(
             schema_id=profile.schema_id,
@@ -300,7 +300,7 @@ def _derive_canonical_hash(
             "schema_version": schema_version,
             "profile_id": profile_id,
             "facts": [fact.model_dump(mode="json") for fact in facts],
-        }
+        },
     )
     return hashlib.sha256(payload).hexdigest()
 

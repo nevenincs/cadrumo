@@ -15,6 +15,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
+from ....core import Period
 from .. import (
     IVARegime,
     ModeloDeadline,
@@ -27,6 +28,7 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_P_2026_1T = Period.from_year_and_code(2026, "1T")
 
 
 def _profile() -> TaxpayerProfile:
@@ -61,7 +63,7 @@ class TestTaxpayerProfile:
                     "third_party_transactions_above_347_threshold": False,
                     "bienes_extranjero_above_threshold": False,
                     "extra_field": "nope",
-                }
+                },
             )
 
     def test_frozen(self) -> None:
@@ -82,7 +84,7 @@ class TestTaxpayerProfile:
                     "does_intracomunitario": False,
                     "third_party_transactions_above_347_threshold": False,
                     "bienes_extranjero_above_threshold": False,
-                }
+                },
             )
 
     def test_iva_regime_must_be_known(self) -> None:
@@ -98,7 +100,7 @@ class TestTaxpayerProfile:
                     "does_intracomunitario": False,
                     "third_party_transactions_above_347_threshold": False,
                     "bienes_extranjero_above_threshold": False,
-                }
+                },
             )
 
     def test_mapping_projection_preserves_enrollment_and_schedule_facts(self) -> None:
@@ -139,7 +141,7 @@ class TestModeloDeadline:
         with pytest.raises(ValidationError, match=r"opens_on .* is after closes_on"):
             ModeloDeadline(
                 modelo="303",
-                period="2026Q1",
+                period=_P_2026_1T,
                 opens_on=date(2026, 4, 21),
                 closes_on=date(2026, 4, 20),
                 payment_cutoff_on=None,
@@ -151,7 +153,7 @@ class TestModeloDeadline:
         with pytest.raises(ValidationError, match=r"payment_cutoff_on .* is after closes_on"):
             ModeloDeadline(
                 modelo="303",
-                period="2026Q1",
+                period=_P_2026_1T,
                 opens_on=date(2026, 4, 1),
                 closes_on=date(2026, 4, 20),
                 payment_cutoff_on=date(2026, 4, 25),
@@ -166,7 +168,7 @@ class TestScheduleRoundTrip:
     def test_round_trip_equality(self) -> None:
         obligation = ModeloDeadline(
             modelo="303",
-            period="2026Q1",
+            period=_P_2026_1T,
             opens_on=date(2026, 4, 1),
             closes_on=date(2026, 4, 20),
             payment_cutoff_on=date(2026, 4, 15),

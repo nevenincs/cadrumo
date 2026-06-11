@@ -17,6 +17,7 @@ from typing import cast
 
 import pytest
 
+from ....core import Period
 from ....domain.calculations.registry import InputKind
 from ....domain.calculations.registry._schema import ModeloRevision, VerificationPredicateDefinition
 from ....domain.deadlines import IVARegime, TaxpayerProfile
@@ -133,7 +134,7 @@ def test_workflow_period_resolves_modelo_130_quarter_from_registry_deadline_shap
 
     work_unit = _minimal_work_unit(modelo="130", period="1T", filing_year=2026)
 
-    assert workflow_period_for_work_unit(work_unit) == "2026Q1"
+    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")
 
 
 def test_workflow_period_resolves_modelo_303_quarter_from_registry_deadline_shape() -> None:
@@ -141,7 +142,7 @@ def test_workflow_period_resolves_modelo_303_quarter_from_registry_deadline_shap
 
     work_unit = _minimal_work_unit(modelo="303", period="1T", filing_year=2026)
 
-    assert workflow_period_for_work_unit(work_unit) == "2026-1T"
+    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +167,7 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     )
     # Both casillas are zero — predicate is violated.
     findings = _evaluate_verification_predicates(
-        (predicate,), {"0001": Decimal(0), "0002": Decimal(0)}, _resident_profile()
+        (predicate,), {"0001": Decimal(0), "0002": Decimal(0)}, _resident_profile(),
     )
 
     assert len(findings) == 1
@@ -187,7 +188,7 @@ def test_cross_casilla_invariant_next_action_is_localised() -> None:
         finding_kind="BLOCKING_RULE",
     )
     findings = _evaluate_verification_predicates(
-        (predicate,), {"0003": Decimal(0), "0004": Decimal(0)}, _resident_profile()
+        (predicate,), {"0003": Decimal(0), "0004": Decimal(0)}, _resident_profile(),
     )
 
     assert len(findings) == 1
@@ -461,14 +462,14 @@ class TestWorkflowInputMismatchError:
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
                 modelo="303",
-                period="2026-2T",
+                period=Period.from_year_and_code(2026, "2T"),
                 profile=self._stub_profile(),
             )
 
         exc = exc_info.value
         assert exc.context is not None
-        assert exc.context["expected_period"] == "2026-1T"
-        assert exc.context["requested_period"] == "2026-2T"
+        assert exc.context["expected_period"] == "2026 1T"
+        assert exc.context["requested_period"] == "2026 2T"
 
     def test_error_is_core_validation_error_and_value_error(self) -> None:
         """WorkflowInputMismatchError is a CoreValidationError and ValueError subclass."""

@@ -31,7 +31,7 @@ _REMOVED_WRITE_FLAG_NAMES: frozenset[str] = frozenset(
     {
         "no-dry-run",
         "no_dry_run",
-    }
+    },
 )
 
 

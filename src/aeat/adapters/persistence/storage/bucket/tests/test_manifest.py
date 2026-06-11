@@ -56,7 +56,7 @@ def test_round_trip_preserves_salt_bytes() -> None:
             parallelism=1,
             salt=salt,
             output_length=32,
-        )
+        ),
     )
     blob = manifest.model_dump_json()
     revived = BucketManifest.model_validate_json(blob)
@@ -75,7 +75,7 @@ def test_rejects_unknown_keys() -> None:
                 "recovery_enrolled": False,
                 "schema_version": 1,
                 "unexpected": "nope",
-            }
+            },
         )
 
 
@@ -89,7 +89,7 @@ def test_rejects_missing_bucket_id() -> None:
                 "kdf_params": _kdf(),
                 "recovery_enrolled": False,
                 "schema_version": 1,
-            }
+            },
         )
 
 

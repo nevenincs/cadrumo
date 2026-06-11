@@ -440,7 +440,7 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
                 str(period_year),
                 f"renta-{period_year}-rental-joven-tenant-age-min",
                 date_context=ctx,
-            )
+            ),
         )
     except RegistryValidationError:
         _logger.debug(
@@ -455,7 +455,7 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
                 str(period_year),
                 f"renta-{period_year}-rental-joven-tenant-age-max",
                 date_context=ctx,
-            )
+            ),
         )
     except RegistryValidationError:
         _logger.debug(

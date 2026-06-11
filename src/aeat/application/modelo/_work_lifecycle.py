@@ -112,7 +112,7 @@ def list_work_units(
                 str(u.modelo),
                 u.period,
             ),
-        )
+        ),
     )
 
 
@@ -215,7 +215,7 @@ def discard_work_unit(
             "discarded_by": actor.strip(),
             "discard_reason": reason.strip() if reason else None,
             "updated_at": now,
-        }
+        },
     )
     repo.save(upsert_work_unit(catalogue, discarded))
     _emit_bucket_event(

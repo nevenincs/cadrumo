@@ -64,7 +64,7 @@ _HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md5", 
 _SCAN_EXCLUDES: frozenset[str] = frozenset(
     {
         "core/external_constants.py",
-    }
+    },
 )
 
 # Known pre-existing violating files (ratchet history/ratchet history backlog, to be cleaned up
@@ -152,7 +152,7 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "locales/_ast_scanner.py",
         "tests/_env_loader.py",
         "tests/fixtures/justificantes/_generate.py",
-    }
+    },
 )
 
 
@@ -223,7 +223,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
             "Hash/HMAC sites (hashlib, hmac, sha*) are allowlisted.\n"
             f"Scanned {len(production_files)} production files; "
             f"{len(_KNOWN_VIOLATING_FILES)} are ratcheted as known backlog.\n"
-            "Do NOT add this file to _KNOWN_VIOLATING_FILES — fix it instead."
+            "Do NOT add this file to _KNOWN_VIOLATING_FILES — fix it instead.",
         )
 
 
@@ -310,5 +310,5 @@ def test_no_bare_utf8_literals_in_dev() -> None:
             "Hash/HMAC sites (hashlib, hmac, sha*) are allowlisted.\n"
             f"Scanned {len(dev_files)} dev/ files; "
             f"{len(_DEV_KNOWN_VIOLATING)} are ratcheted as known backlog.\n"
-            "Do NOT add a file to _DEV_KNOWN_VIOLATING — fix it instead."
+            "Do NOT add a file to _DEV_KNOWN_VIOLATING — fix it instead.",
         )

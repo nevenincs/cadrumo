@@ -144,7 +144,7 @@ class EvidenceValidator:
         for citation in citations_tuple:
             if citation.source_ref not in refs_set:
                 failures.append(
-                    f"{scope}: {owner} source citation {citation.source_ref!r} is not listed in source_refs"
+                    f"{scope}: {owner} source citation {citation.source_ref!r} is not listed in source_refs",
                 )
                 continue
             source = self._sources.get(citation.source_ref)
@@ -152,7 +152,7 @@ class EvidenceValidator:
                 continue
             if source.evidence_tier != required_tier:
                 failures.append(
-                    f"{scope}: {owner} source citation {citation.source_ref!r} is not {required_tier} evidence"
+                    f"{scope}: {owner} source citation {citation.source_ref!r} is not {required_tier} evidence",
                 )
                 continue
             if self._source_root is None:
@@ -165,7 +165,7 @@ class EvidenceValidator:
             for required in citation.required_text:
                 if _normalise_required_text(required) not in source_text:
                     failures.append(
-                        f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}"
+                        f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}",
                     )
         return failures
 

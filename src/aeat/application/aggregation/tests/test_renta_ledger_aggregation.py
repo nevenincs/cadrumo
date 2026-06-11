@@ -137,7 +137,7 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
     The total under 0199 sums BOTH categories, but provenance has TWO
     rows so the audit trail preserves per-category attribution."""
     obs_contable = _observation(
-        "tx-contable", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00")
+        "tx-contable", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00"),
     )
     obs_fiscal = _observation("tx-fiscal", category=SpendingCategory.ASESORIA_FISCAL, gross_amount=Decimal("79.00"))
 
@@ -214,7 +214,7 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
     casilla, regardless of category. Asserts the aggregator's
     casilla_values entry matches Python's sum() over the same inputs."""
     obs_contable = _observation(
-        "tx-contable", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00")
+        "tx-contable", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00"),
     )
     obs_fiscal = _observation("tx-fiscal", category=SpendingCategory.ASESORIA_FISCAL, gross_amount=Decimal("79.00"))
 

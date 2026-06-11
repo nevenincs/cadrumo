@@ -74,7 +74,7 @@ def _validate_required_role_declarations(
                             f"{modelo.id}.{revision.id}.{casilla.id} label "
                             f"{casilla.label!r} matches pattern {pattern.pattern!r} "
                             f"but declares no semantic_role (expected "
-                            f"{expected_role!r})"
+                            f"{expected_role!r})",
                         )
                     elif casilla.semantic_role != expected_role:
                         failures.append(
@@ -83,7 +83,7 @@ def _validate_required_role_declarations(
                             f"{casilla.label!r} matches pattern {pattern.pattern!r} "
                             f"but declares semantic_role "
                             f"{casilla.semantic_role!r} (expected "
-                            f"{expected_role!r})"
+                            f"{expected_role!r})",
                         )
     return tuple(failures)
 

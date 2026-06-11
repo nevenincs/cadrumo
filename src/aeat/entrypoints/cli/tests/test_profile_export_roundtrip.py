@@ -106,7 +106,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
             "design",
             "--output-language",
             "en",
-        ]
+        ],
     )
     assert r.exit_code == 0, r.output
 
@@ -349,7 +349,7 @@ def test_v2_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
         # The mutated JSON has "MUTATED-legal-ref" in the first observation's
         # legal_refs; the original had "Ley 37/1992 art. 78".
         (original_bundle_revision,) = tuple(
-            UserProfilePortableExport.model_validate_json(bundle_path.read_text(encoding="utf-8")).calculation_revisions
+            UserProfilePortableExport.model_validate_json(bundle_path.read_text(encoding="utf-8")).calculation_revisions,
         )
         (mutated_revision,) = tuple(mutated_bundle.calculation_revisions)
         # The two bundles must differ somewhere in their observations.
@@ -402,7 +402,7 @@ def test_import_label_collision_different_uuid_is_refused(tmp_path: Path) -> Non
                 "87654321X",
                 "--activity",
                 "consulting",
-            ]
+            ],
         )
         assert r_create.exit_code == 0, r_create.output
 

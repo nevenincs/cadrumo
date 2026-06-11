@@ -719,7 +719,7 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
             if powershell is None:
                 return ()
             script = "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
-            completed = subprocess.run(
+            completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
                 [powershell, "-NoProfile", "-Command", script],
                 check=True,
                 capture_output=True,
@@ -741,7 +741,7 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
         ps = shutil.which("ps")
         if ps is None:
             return ()
-        completed = subprocess.run(
+        completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
             [ps, "-axo", "pid=,args="],
             check=True,
             capture_output=True,

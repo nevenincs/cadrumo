@@ -243,7 +243,7 @@ def _non_relation_zero_bindings() -> dict[str, Decimal]:
             "ledger_oss_aggregation",
             "collectible_invoice",
             "payable_invoice",
-        }
+        },
     )
     return {
         str(binding.id): Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _AUTO_RESOLVED

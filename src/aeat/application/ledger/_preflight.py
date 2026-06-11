@@ -13,7 +13,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ...domain.iva import IvaCategory
@@ -33,7 +33,7 @@ _CLASSIFIED_TAX_STATES = frozenset(
         BusinessClassification.BUSINESS,
         BusinessClassification.MIXED,
         BusinessClassification.PERSONAL,
-    }
+    },
 )
 
 
@@ -154,7 +154,7 @@ def _sorted_transactions(transactions: TransactionCatalogue) -> tuple[Transactio
                 transaction.raw.value_date or transaction.raw.booked_date,
                 transaction.transaction_id,
             ),
-        )
+        ),
     )
 
 
@@ -228,7 +228,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 **common,
                 reason=LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY,
                 detail=f"transaction currency {transaction.raw.currency!r} is not supported for modelo aggregation",
-            )
+            ),
         )
         return tuple(issues)
     if _transaction_needs_expense_category(transaction) and transaction.category_id is None:
@@ -237,7 +237,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 **common,
                 reason=LedgerPreflightIssueReason.MISSING_CATEGORY,
                 detail="deductible-expense ledger transaction has no category_id",
-            )
+            ),
         )
     if transaction.business_classification is BusinessClassification.MIXED and transaction.usage_ratio_id is None:
         issues.append(
@@ -245,7 +245,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 **common,
                 reason=LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
                 detail="mixed ledger transaction has no usage_ratio_id proportionality reference",
-            )
+            ),
         )
     # Trabajo (nómina) incoming rows are IVA-exempt by definition: an
     # employer-paid wage/salary carries no taxable_base / iva_rate /
@@ -261,7 +261,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
                 **common,
                 reason=_preflight_reason_for_iva_issue(reason),
                 detail=_preflight_detail_for_iva_issue(reason),
-            )
+            ),
         )
     return tuple(issues)
 

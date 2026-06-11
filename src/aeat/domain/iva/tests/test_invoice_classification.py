@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
     ],
 )
 def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido(
-    iva_rate: IvaRate, expected_category: IvaCategory, expected_kind: IvaRateKind
+    iva_rate: IvaRate, expected_category: IvaCategory, expected_kind: IvaRateKind,
 ) -> None:
     classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED)
     assert classification.category is expected_category
@@ -103,7 +103,7 @@ def test_classification_record_validates_settlement_sides_against_flow() -> None
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             settlement_sides=frozenset(
-                {IvaSettlementSide.DEDUCIBLE}  # ← doesn't match REPERCUTIDO
+                {IvaSettlementSide.DEDUCIBLE},  # ← doesn't match REPERCUTIDO
             ),
         )
 

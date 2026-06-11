@@ -221,7 +221,7 @@ def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> Regist
         update={
             "bindings": (*snapshot.revision.bindings, binding),
             "formulas": (*snapshot.revision.formulas, formula),
-        }
+        },
     )
     return snapshot.model_copy(update={"revision": revision})
 
@@ -319,7 +319,7 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
         update={
             "bindings": (*snapshot.revision.bindings, binding),
             "formulas": (*snapshot.revision.formulas, formula),
-        }
+        },
     )
     return snapshot.model_copy(update={"revision": revision})
 

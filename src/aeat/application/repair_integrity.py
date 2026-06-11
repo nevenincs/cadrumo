@@ -380,7 +380,7 @@ def repair_remediation_decision_id(
         "likely_origin": likely_origin.strip(),
         "replacement_evidence_requirements": tuple(sorted(item.strip() for item in replacement_evidence_requirements)),
         "verified_replacement_evidence_refs": tuple(
-            sorted(item.strip() for item in verified_replacement_evidence_refs)
+            sorted(item.strip() for item in verified_replacement_evidence_refs),
         ),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -471,7 +471,7 @@ class RepairRemediationDecisionRepository:
                 _REPAIR_DECISION_NAMESPACE,
                 expected_class=REPAIR_DECISION_STORAGE_NAMESPACE.sensitivity,
                 max_supported_version=REPAIR_DECISION_STORAGE_NAMESPACE.schema_version,
-            )
+            ),
         )
         decisions: list[RepairRemediationDecision] = []
         for record in records:

@@ -14,7 +14,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from .....core._toml import parse_toml_text
+from .....core import parse_toml_text
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
 from .._namespace_registry import BUCKET_MANIFEST_FILENAME

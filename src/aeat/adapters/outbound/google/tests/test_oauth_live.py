@@ -53,7 +53,7 @@ def _skip_unless_live_and_client_registered() -> None:
     if load_client(profile) is None:
         pytest.skip(
             f"no OAuth client registered for profile {profile!r}; "
-            f"run `aeat config google register --client-json <path> --profile {profile}` first"
+            f"run `aeat config google register --client-json <path> --profile {profile}` first",
         )
 
 
@@ -90,7 +90,7 @@ def test_status_round_trips_persisted_metadata() -> None:
     if metadata is None:
         pytest.skip(
             "no persisted OAuth metadata; run the login test first or "
-            f"`aeat config google login --profile {profile}` manually"
+            f"`aeat config google login --profile {profile}` manually",
         )
     assert metadata.account_email
     assert metadata.reauth_required is False

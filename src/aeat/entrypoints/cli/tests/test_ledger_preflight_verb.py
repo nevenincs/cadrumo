@@ -75,7 +75,7 @@ def test_status_period_readiness_issues_include_tax_diagnostic_fields(cli_runner
             "--date",
             "2026-05-02",
             "--amount",
-            "-121.00",
+            "121.00",
             "--direction",
             "OUTGOING",
             "--description",

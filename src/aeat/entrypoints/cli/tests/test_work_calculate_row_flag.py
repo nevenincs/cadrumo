@@ -65,7 +65,7 @@ class TestParseRowSpecValid:
         """Full vinculada spec with all optional fields."""
         result = _parse_row_spec(
             "vinculada nif=B87654321 nombre=EntidadSL pais=DE "
-            "tipo_vinculacion=2 tipo_operacion=05 metodo=TNMM importe=75000"
+            "tipo_vinculacion=2 tipo_operacion=05 metodo=TNMM importe=75000",
         )
         assert isinstance(result, Modelo232VinculadaRow)
         assert result.nif == "B87654321"
@@ -204,7 +204,7 @@ class TestParseRowSpecM349:
         """operador spec with optional razon_social round-trips."""
         result = _parse_row_spec(
             "operador codigo_pais=FR nif_comunitario=FR12345678901 "
-            "razon_social=EntidadFR clave_operacion=S importe=30000"
+            "razon_social=EntidadFR clave_operacion=S importe=30000",
         )
         assert isinstance(result, Modelo349OperadorRow)
         assert result.razon_social == "EntidadFR"
@@ -245,7 +245,7 @@ class TestParseRowSpecM347:
         result = _parse_row_spec(
             "contraparte nif=12345678A nombre=ProveedorSL "
             "importe_Q1=3000 importe_Q2=2000 importe_Q3=1500 importe_Q4=1000 "
-            "clave_operacion=B"
+            "clave_operacion=B",
         )
         assert isinstance(result, Modelo347ContraparteRow)
         assert result.importe_total == Decimal("7500")

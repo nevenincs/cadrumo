@@ -52,8 +52,8 @@ def auth_diagnostics_list(
                     f"phone_state={row.phone_state or '-'}",
                     f"html={row.html_captured}",
                     f"screenshot={row.screenshot_captured}",
-                )
-            )
+                ),
+            ),
         )
     list_result = AuthDiagnosticsListResult.model_validate(report.model_dump(mode="json"))
     _emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)

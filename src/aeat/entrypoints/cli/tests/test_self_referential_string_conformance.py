@@ -132,7 +132,7 @@ def _locale_command_strings() -> Iterator[tuple[str, str]]:
 # word that is none of these (``for``, ``or``, ``the``) ends the command span:
 # the rest of the string is sentence prose, not part of the cited invocation.
 _COMMAND_TOKEN_RE = re.compile(
-    r"^(?:--?[A-Za-z0-9][A-Za-z0-9._=,/-]*|<[^>]+>|[A-Z][A-Z0-9_,/-]*|[a-z0-9][a-z0-9-]*=?\S*)$"
+    r"^(?:--?[A-Za-z0-9][A-Za-z0-9._=,/-]*|<[^>]+>|[A-Z][A-Z0-9_,/-]*|[a-z0-9][a-z0-9-]*=?\S*)$",
 )
 _SENTENCE_END_RE = re.compile(r"[.;:]$")
 
@@ -302,7 +302,7 @@ _DOCLINK_ACCEPTED_SOURCES: frozenset[str] = frozenset(
         AttachmentSource.GMAIL.value,
         AttachmentSource.GOOGLE_DRIVE.value,
         AttachmentSource.URL.value,
-    }
+    },
 )
 
 
@@ -316,7 +316,7 @@ _VERIFY_SELECT_ACCEPTED: frozenset[str] = frozenset(
         ModeloCalculationRevisionSelector.CURRENT.value,
         ModeloCalculationRevisionSelector.LATEST_DRAFT.value,
         ModeloCalculationRevisionSelector.EXPLICIT.value,
-    }
+    },
 )
 
 

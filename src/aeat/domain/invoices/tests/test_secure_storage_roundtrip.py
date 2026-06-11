@@ -54,7 +54,7 @@ def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
             "payment_status": PaymentStatus.PENDING,
             "linked_transaction_ids": ("a" * 64,),
             "notes": "Test invoice for roundtrip coverage.",
-        }
+        },
     )
 
 

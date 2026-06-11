@@ -20,7 +20,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry import (
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,

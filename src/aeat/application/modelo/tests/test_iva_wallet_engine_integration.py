@@ -164,7 +164,7 @@ def _store_operator_profile_with_tax_id(tax_id: str) -> None:
             facts=(UserProfileFact(path="identity.tax_id", value=tax_id),),
             created_at=_DECIDED_AT,
             updated_at=_DECIDED_AT,
-        )
+        ),
     )
 
 
@@ -255,7 +255,7 @@ def _save_wallet_gate_decision(*, amount: Decimal, blocked: bool = False) -> Non
             reason="wallet gate decision fixture",
             wallet_captured_at=_DECIDED_AT,
             decided_at=_DECIDED_AT,
-        )
+        ),
     )
 
 

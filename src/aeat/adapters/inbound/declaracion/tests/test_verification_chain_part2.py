@@ -130,7 +130,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
             f"RegistryValidationError — a required binding is missing.\n"
             f"  error: {exc}\n"
             f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}"
+            f"  binding_values supplied: {sorted(binding_values)}",
         )
 
     engine_values = dict(result.values)
@@ -295,7 +295,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
         pytest.fail(
             f"BINDING-GAP [M180/2024-0A engine]: resolve_relation_values_from_observations raised "
             f"RegistryValidationError — M115→M180 relation chain is structurally broken.\n"
-            f"  error: {exc}"
+            f"  error: {exc}",
         )
 
     # Run the calculation engine.
@@ -311,7 +311,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             f"BINDING-GAP [M180/2024-0A engine]: calculate_registry_snapshot raised "
             f"RegistryValidationError — engine could not recompute from supplied relation_values.\n"
             f"  error: {exc}\n"
-            f"  relation_values keys: {sorted(relation_values)}"
+            f"  relation_values keys: {sorted(relation_values)}",
         )
 
     # Assert engine closure values match AEAT-grounded extracted values.
@@ -426,7 +426,7 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
     except RegistryValidationError as exc:
         pytest.fail(
             f"BINDING-GAP [M115/2024-1T]: calculate_registry_snapshot raised "
-            f"RegistryValidationError.\n  error: {exc}\n  inputs: {sorted(inputs)}"
+            f"RegistryValidationError.\n  error: {exc}\n  inputs: {sorted(inputs)}",
         )
 
     engine_values = dict(result.values)
@@ -513,7 +513,7 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
     except RegistryValidationError as exc:
         pytest.fail(
             f"BINDING-GAP [M123/{pdf_stem}]: calculate_registry_snapshot raised "
-            f"RegistryValidationError.\n  error: {exc}\n  inputs: {sorted(inputs)}"
+            f"RegistryValidationError.\n  error: {exc}\n  inputs: {sorted(inputs)}",
         )
 
     engine_values = dict(result.values)
@@ -577,7 +577,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
         detail = exc.translated_message or str(exc) or type(exc).__name__
         context = exc.context if exc.context else {}
         pytest.fail(
-            f"PARSER-GAP [M131/2024-1T.pdf/yr=2026]: parse_declaracion raised.\n  error: {detail} (context={context})"
+            f"PARSER-GAP [M131/2024-1T.pdf/yr=2026]: parse_declaracion raised.\n  error: {detail} (context={context})",
         )
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
@@ -604,7 +604,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
         pytest.fail(
             f"BINDING-GAP [M131/yr=2026-1T]: calculate_registry_snapshot raised "
             f"RegistryValidationError.\n  error: {exc}\n"
-            f"  inputs: {sorted(inputs)}\n  binding_values: {sorted(binding_values)}"
+            f"  inputs: {sorted(inputs)}\n  binding_values: {sorted(binding_values)}",
         )
 
     engine_values = dict(result.values)
@@ -738,7 +738,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
         pytest.fail(
             f"BINDING-GAP [M193/2024-0A engine]: resolve_relation_values_from_observations raised "
             f"RegistryValidationError — M123→M193 relation chain is structurally broken.\n"
-            f"  error: {exc}"
+            f"  error: {exc}",
         )
 
     try:
@@ -753,7 +753,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
             f"BINDING-GAP [M193/2024-0A engine]: calculate_registry_snapshot raised "
             f"RegistryValidationError — engine could not recompute from supplied relation_values.\n"
             f"  error: {exc}\n"
-            f"  relation_values keys: {sorted(relation_values)}"
+            f"  relation_values keys: {sorted(relation_values)}",
         )
 
     engine_values = dict(result.values)

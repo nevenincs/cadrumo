@@ -1,6 +1,5 @@
 """Shared support for split adapter tests."""
 
-# ruff: noqa: F401
 
 from __future__ import annotations
 
@@ -11,11 +10,8 @@ import pytest
 
 from .....core.resources import resources
 from .....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
     RegistryValidationError,
     calculate_registry_snapshot,
-    resolve_relation_values_from_observations,
 )
 from .....tests import FIXTURES_DIR
 from .. import DeclaracionParseError, parse_declaracion
@@ -26,7 +22,7 @@ pytestmark = [
 ]
 
 _COMPUTED_CASILLAS_M130 = frozenset(
-    {"03", "04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo"}
+    {"03", "04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo"},
 )
 
 _COMPUTED_CASILLAS_M111 = frozenset({"28", "30"})
@@ -50,7 +46,7 @@ _COMPUTED_CASILLAS_M303 = frozenset(
         "71",  # resultado final (69 - 70 + 109) — Orden HAC/819/2024 art. 1
         "iva.compensacion-generada-periodo",
         "iva.compensacion-disponible-fin-periodo",
-    }
+    },
 )
 
 _M303_2023_ONWARDS_PARAMS = [
@@ -121,13 +117,13 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
             f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised RegistryValidationError.\n"
             f"  error: {exc}\n"
             f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}"
+            f"  binding_values supplied: {sorted(binding_values)}",
         )
     return extracted, dict(result.values), inputs
 
 
 _COMPUTED_CASILLAS_M390 = frozenset(
-    {"iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"}
+    {"iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"},
 )
 
 _M390_PREVIOUS_FILING_BINDING_IDS = (

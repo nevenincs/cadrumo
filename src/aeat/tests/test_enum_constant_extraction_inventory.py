@@ -37,7 +37,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
         # OracleEnvironment StrEnum definition + match validator
         _SRC_ROOT / "domain" / "calculations" / "registry" / "_live_parity.py",
         _SRC_ROOT / "application" / "registry" / "__init__.py",
-    ]
+    ],
 )
 
 

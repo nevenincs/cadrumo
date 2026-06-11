@@ -28,7 +28,7 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
         "datos_economicos",
         "rootnode",
         "root_node",
-    }
+    },
 )
 
 _FORBIDDEN_TEST_NARRATIVE = (
@@ -84,7 +84,7 @@ _VALIDATOR_TEST_ALLOWLIST = frozenset(
         "test_selector_shape.py",
         "test_semantic_role.py",
         "test_year_data_type.py",
-    }
+    },
 )
 
 
@@ -103,7 +103,7 @@ def test_no_duplicate_casilla_ids_within_a_revision() -> None:
             duplicates = {casilla_id: count for casilla_id, count in counts.items() if count > 1}
             for casilla_id, count in duplicates.items():
                 offences.append(
-                    f"modelo {modelo.id} revision {revision_id} declares casilla id {casilla_id!r} {count} times"
+                    f"modelo {modelo.id} revision {revision_id} declares casilla id {casilla_id!r} {count} times",
                 )
     assert not offences, "duplicate casilla ids per revision:\n  " + "\n  ".join(offences)
 
@@ -129,7 +129,7 @@ def test_no_duplicate_casilla_numbers_within_a_revision() -> None:
             for (segmento, number), count in duplicates.items():
                 offences.append(
                     f"modelo {modelo.id} revision {revision_id} declares casilla number "
-                    f"{number!r} under segmento {segmento!r} {count} times"
+                    f"{number!r} under segmento {segmento!r} {count} times",
                 )
     assert not offences, "duplicate casilla (segmento, number) identities per revision:\n  " + "\n  ".join(offences)
 
@@ -143,7 +143,7 @@ def test_section_paths_are_non_empty() -> None:
             for casilla in revision.casillas:
                 if not casilla.section:
                     offences.append(
-                        f"modelo {modelo.id} revision {revision_id} casilla {casilla.id!r} has empty section path"
+                        f"modelo {modelo.id} revision {revision_id} casilla {casilla.id!r} has empty section path",
                     )
     assert not offences, "empty section paths:\n  " + "\n  ".join(offences)
 
@@ -159,7 +159,7 @@ def test_section_parts_are_snake_case() -> None:
                     if not _SECTION_PART_PATTERN.match(part):
                         offences.append(
                             f"modelo {modelo.id} revision {revision_id} casilla {casilla.id!r} "
-                            f"has non-snake_case section part {part!r}"
+                            f"has non-snake_case section part {part!r}",
                         )
     assert not offences, "non-snake_case section parts:\n  " + "\n  ".join(offences)
 
@@ -174,7 +174,7 @@ def test_section_paths_do_not_leak_xml_root_containers() -> None:
                 if casilla.section and casilla.section[0] in _FORBIDDEN_XML_ROOT_TOKENS:
                     offences.append(
                         f"modelo {modelo.id} revision {revision_id} casilla {casilla.id!r} "
-                        f"has XML root container {casilla.section[0]!r} as section[0]"
+                        f"has XML root container {casilla.section[0]!r} as section[0]",
                     )
     assert not offences, "XML root containers leaked into section paths:\n  " + "\n  ".join(offences)
 
@@ -329,7 +329,7 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
     if captured and uncovered:
         raise AssertionError(
             "Renta chain scenarios without Renta WEB Open replay payload "
-            "(capture via AEAT_LIVE_TESTS_ENABLED=1):\n  " + "\n  ".join(uncovered)
+            "(capture via AEAT_LIVE_TESTS_ENABLED=1):\n  " + "\n  ".join(uncovered),
         )
 
 
@@ -408,7 +408,7 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     # capture set covers the cuota chain (#81 follow-up).
     if captured_targets and not grounded:
         raise AssertionError(
-            "Renta WEB Open replay payloads exist but cover zero formula targets — payload schema mismatch?"
+            "Renta WEB Open replay payloads exist but cover zero formula targets — payload schema mismatch?",
         )
 
 

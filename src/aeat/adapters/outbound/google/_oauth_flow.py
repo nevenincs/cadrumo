@@ -194,7 +194,7 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
             "token_uri": client.token_uri,
             "auth_provider_x509_cert_url": client.auth_provider_x509_cert_url,
             "redirect_uris": list(client.redirect_uris) or ["http://localhost"],
-        }
+        },
     }
     try:
         flow = InstalledAppFlow.from_client_config(client_config, scopes=list(REQUIRED_SCOPES))

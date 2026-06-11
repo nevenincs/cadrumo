@@ -13,7 +13,6 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...core.aggregation import PeriodKind
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...core.time import now
@@ -185,7 +184,7 @@ class DeadlineEngine:
             )
             if obligation is not None:
                 obligations.append(obligation)
-        obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
+        obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period.year, o.period.registry_token))
         if not obligations and not self._has_deadline_windows(year):
             raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
         if obligations:
@@ -276,7 +275,7 @@ class DeadlineEngine:
         ]
         if not windows:
             raise NoDeadlineWindowsError(
-                f"No registry deadline windows registered for modelo {modelo!r} in year {selected_year}"
+                f"No registry deadline windows registered for modelo {modelo!r} in year {selected_year}",
             )
         condition_text = self._evaluate_conditions(
             profile,
@@ -378,7 +377,7 @@ def _overdue_recovery_or_none(
         _logger.debug(
             "no overdue recovery registry entry for modelo=%s period=%s days_late=%d: %s",
             modelo,
-            window.period,
+            str(window.period),
             days_late,
             exc,
         )
@@ -386,22 +385,16 @@ def _overdue_recovery_or_none(
 
 
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:
-    if window.period_kind == PeriodKind.QUARTERLY and "Q" in window.period:
-        return f"{window.period.rsplit('Q', 1)[1]}T"
-    if window.period_kind == PeriodKind.QUARTERLY and window.period.endswith("T"):
-        return window.period.rsplit("-", 1)[-1]
-    if window.period_kind == PeriodKind.QUARTERLY and window.period.endswith("P"):
-        # Pago-fraccionado periods use the YYYY-NP form (e.g. 2025-1P,
-        # 2025-2P, 2025-3P). The filing schedule's ``periods`` list carries
-        # just the ordinal suffix (``1P``, ``2P``, ``3P``), so strip the
-        # year prefix so the period filter in ``applicable_filing_schedules``
-        # can match.
-        return window.period.rsplit("-", 1)[-1]
-    if window.period_kind == PeriodKind.MONTHLY and "-" in window.period:
-        return window.period.rsplit("-", 1)[1]
-    if window.period_kind == PeriodKind.ANNUAL:
-        return "0A"
-    return window.period
+    """Return the bare registry period token for the deadline window.
+
+    :class:`~aeat.domain.calculations.registry.DeadlineWindowDefinition`
+    ``period`` may be a typed :class:`~aeat.core.Period` or a legacy string
+    token while active registry migrations are in flight.
+    """
+    token = getattr(window.period, "registry_token", str(window.period)).strip().upper()
+    if token.startswith(f"{window.filing_year} "):
+        token = token.split(maxsplit=1)[1]
+    return token
 
 
 def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadline | None:
@@ -422,7 +415,7 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
     upcoming = [o for o in schedule.obligations if o.closes_on >= reference_today]
     if not upcoming:
         return None
-    upcoming.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
+    upcoming.sort(key=lambda o: (o.closes_on, o.modelo, o.period.year, o.period.registry_token))
     return upcoming[0]
 
 

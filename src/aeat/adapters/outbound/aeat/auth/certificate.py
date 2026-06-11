@@ -377,7 +377,7 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
 
     if loaded.is_expired():
         raise CertificateExpiredError(
-            f"certificate for subject {loaded.subject!r} expired at {loaded.not_after.isoformat()}"
+            f"certificate for subject {loaded.subject!r} expired at {loaded.not_after.isoformat()}",
         )
 
     log.info(
@@ -452,7 +452,7 @@ def evaluate_loaded_certificate_health(
         raise AuthValidationError(f"critical_days must be positive, got {critical_days}")
     if warn_days <= critical_days:
         raise AuthValidationError(
-            f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})"
+            f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})",
         )
     evaluated_at = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     delta_seconds = (cert.not_after - evaluated_at).total_seconds()
@@ -537,7 +537,7 @@ def health(
             parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode(UTF_8_ENCODING))
         except (OSError, ValueError) as exc:
             raise CertificateLoadError(
-                f"could not re-decode PKCS#12 bundle at {path} for expired-cert health report: {exc}"
+                f"could not re-decode PKCS#12 bundle at {path} for expired-cert health report: {exc}",
             ) from exc
         if parsed.cert is None or parsed.cert.certificate is None:  # pragma: no cover - defended above
             raise
@@ -634,7 +634,7 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
             raise CertificateNifParseError(
                 f"subject serialNumber {candidate!r} looks like a CIF "
                 "(legal-entity). This project supports autónomo "
-                "(persona física) certificates only."
+                "(persona física) certificates only.",
             )
         if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
             return candidate
@@ -649,7 +649,7 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     raise CertificateNifParseError(
         f"cannot parse a DNI or NIE from certificate subject "
         f"{subject!r}; expected serialNumber or CN to carry "
-        "a valid persona-física identifier"
+        "a valid persona-física identifier",
     )
 
 

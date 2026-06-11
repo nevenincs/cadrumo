@@ -58,7 +58,7 @@ def test_importing_application_user_profile_does_not_load_registry() -> None:
             or name.startswith("aeat.domain.calculations.registry.")
         )
         print("\\n".join(leaked))
-        """
+        """,
     )
 
     assert completed.returncode == 0, completed.stderr

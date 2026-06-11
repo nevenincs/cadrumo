@@ -95,10 +95,7 @@ def _transaction(
     # pin an explicit amount and both tax fields are present, derive the
     # IVA-inclusive gross magnitude from them; flow is carried by ``direction``.
     if amount is None:
-        if taxable_base is not None and iva_amount is not None:
-            amount = taxable_base + iva_amount
-        else:
-            amount = Decimal("121.00")
+        amount = taxable_base + iva_amount if taxable_base is not None and iva_amount is not None else Decimal("121.00")
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(
@@ -118,7 +115,7 @@ def _transaction(
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 

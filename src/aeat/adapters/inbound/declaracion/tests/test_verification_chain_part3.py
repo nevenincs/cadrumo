@@ -59,7 +59,7 @@ def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> N
             "0595",
             "0610",
             "0670",
-        }
+        },
     )
 
     for year in (2021, 2022, 2023):
@@ -154,7 +154,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
             "0546",
             "0585",
             "0586",
-        }
+        },
     )
 
     inputs: dict[str, Decimal] = {
@@ -190,7 +190,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
             f"BINDING-GAP [M100/{year}-0A corpus-limited]: calculate_registry_snapshot raised "
             f"RegistryValidationError — a required binding is missing.\n"
             f"  error: {exc}\n"
-            f"  inputs: {sorted(inputs)}"
+            f"  inputs: {sorted(inputs)}",
         )
 
     engine_values = dict(result.values)

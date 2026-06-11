@@ -1,10 +1,8 @@
 """Shared support for split adapter tests."""
 
-# ruff: noqa: F401
 
 from __future__ import annotations
 
-import logging
 from decimal import Decimal
 from pathlib import Path
 
@@ -12,13 +10,8 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from .....core.errors import AeatError
 from .....core.resources import resources
-from .....domain.justificante._errors import PdfModeloImportError
 from .....tests import FIXTURES_DIR
-from ...pdf._utils import source_pdf_reference_path
-from .. import DeclaracionParseError, TemplateNotDetectedError, parse_declaracion
-from .._parser import _extract_pages_words
 
 pytestmark = [
     pytest.mark.unit,

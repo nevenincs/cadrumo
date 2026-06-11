@@ -466,8 +466,8 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
                 *AEAT_LITERAL_SCAN_TOKENS,
                 "agenciatributaria.es",
                 "clave.gob.es",
-            )
-        )
+            ),
+        ),
     )
 
     checked_paths = sorted(
@@ -475,7 +475,7 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
             *aeat_root.rglob("test_*.py"),
             *aeat_root.rglob("*_test.py"),
             *aeat_root.rglob("conftest.py"),
-        }
+        },
     )
     offenders: list[str] = []
     for path in checked_paths:

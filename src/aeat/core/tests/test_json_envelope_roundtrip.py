@@ -92,7 +92,7 @@ def test_schema_envelope_full_roundtrip_via_json_dump_and_load() -> None:
                 severity=NoticeSeverity.WARNING,
                 code="modelo.formulas.deprecated_format",
                 message="deprecated: --format text",
-            )
+            ),
         ],
     )
 
@@ -234,5 +234,5 @@ def test_schema_envelope_rejects_unknown_outer_keys() -> None:
                 },
                 "notices": [],
                 "metadata": {"hidden": "extra"},  # not in the envelope schema
-            }
+            },
         )

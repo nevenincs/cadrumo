@@ -33,7 +33,7 @@ class WizardCatalogueNotRegisteredError(CoreError):
         super().__init__(
             "Wizard catalogue has not been registered. "
             "Call register_wizard_catalogue() at application startup before "
-            "any domain module accesses SETUP_FLOW or WIZARD_FLOWS."
+            "any domain module accesses SETUP_FLOW or WIZARD_FLOWS.",
         )
 
 
@@ -82,7 +82,7 @@ def register_wizard_catalogue(
             return
         raise WizardCatalogueAlreadyRegisteredError(
             "register_wizard_catalogue() called a second time with different objects. "
-            "The catalogue must be registered exactly once."
+            "The catalogue must be registered exactly once.",
         )
     _SETUP_FLOW_SLOT.append(setup_flow)
     _WIZARD_FLOWS_SLOT.append(wizard_flows)

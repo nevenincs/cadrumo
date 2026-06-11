@@ -52,7 +52,7 @@ def _field(
             "signed": False,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-303-2025",),
-        }
+        },
     )
 
 
@@ -64,7 +64,7 @@ def _binding(selector: dict[str, Any]) -> DataBindingDefinition:
             "selector": selector,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-303-2025",),
-        }
+        },
     )
 
 

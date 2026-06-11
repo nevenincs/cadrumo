@@ -24,7 +24,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId

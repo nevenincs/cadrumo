@@ -37,7 +37,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...core.parsing._dates import _parse_iso8601_date
@@ -438,7 +438,7 @@ def resolve_profile_sourced_bindings(
 
 
 def _resolve_one(
-    binding: DataBindingDefinition, fact_index: Mapping[str, UserProfileFactValue]
+    binding: DataBindingDefinition, fact_index: Mapping[str, UserProfileFactValue],
 ) -> UserProfileFactValue | None:
     """Return the typed profile fact value for one profile binding, or None if absent."""
     for selector in profile_binding_selectors(binding.selector):

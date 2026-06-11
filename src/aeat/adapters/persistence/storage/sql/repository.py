@@ -140,7 +140,7 @@ class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
                 raise RepositoryError(f"modelo id={record.id} not found for update")
         else:
             row = self._session.execute(
-                select(_orm.ModeloRow).where(_orm.ModeloRow.identifier == record.identifier)
+                select(_orm.ModeloRow).where(_orm.ModeloRow.identifier == record.identifier),
             ).scalar_one_or_none()
         if row is None:
             row = _orm.ModeloRow(identifier=record.identifier, name=record.name)
@@ -202,7 +202,7 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
                 raise RepositoryError(f"portal id={record.id} not found for update")
         else:
             row = self._session.execute(
-                select(_orm.PortalOrmRow).where(_orm.PortalOrmRow.identifier == record.identifier)
+                select(_orm.PortalOrmRow).where(_orm.PortalOrmRow.identifier == record.identifier),
             ).scalar_one_or_none()
         if row is None:
             row = _orm.PortalOrmRow(
@@ -290,7 +290,7 @@ class CorpusArtifactRepository(SqlRecordRepository[CorpusArtifactRecord]):
                     _orm.CorpusArtifactRow.year == record.year,
                     _orm.CorpusArtifactRow.modelo_id == record.modelo_id,
                     _orm.CorpusArtifactRow.file_path == record.file_path,
-                )
+                ),
             ).scalar_one_or_none()
         if row is None:
             row = _orm.CorpusArtifactRow(

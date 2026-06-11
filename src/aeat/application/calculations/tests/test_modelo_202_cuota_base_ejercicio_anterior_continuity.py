@@ -125,7 +125,7 @@ def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: Calc
 
 
 def _seed_m202_1p(
-    *, filing_year: int, pago: Decimal, base: Decimal, obs_repo: CalculationObservationRepository
+    *, filing_year: int, pago: Decimal, base: Decimal, obs_repo: CalculationObservationRepository,
 ) -> None:
     """Record the same-year M202 1P filing the 2P self-pago relation cumulates.
 
@@ -180,7 +180,7 @@ def _calculate_202_2p(
 
 
 def _resolve_202_relations(
-    *, filing_year: int, period: str = "2P", obs_repo: CalculationObservationRepository
+    *, filing_year: int, period: str = "2P", obs_repo: CalculationObservationRepository,
 ) -> dict[str, Decimal]:
     snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period=period)
     prefill = resolve_relations_from_local_store(snapshot, repository=obs_repo)
@@ -298,18 +298,18 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
         # cross-year self-pago contamination would surface).
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         _seed_m202_1p(
-            filing_year=_TARGET_YEAR_N_PLUS_1, pago=Decimal("6200.00"), base=Decimal("63000.00"), obs_repo=obs_repo
+            filing_year=_TARGET_YEAR_N_PLUS_1, pago=Decimal("6200.00"), base=Decimal("63000.00"), obs_repo=obs_repo,
         )
 
         resolved_n = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
         result_n, produced_n = _calculate_202_2p(
-            filing_year=_TARGET_YEAR_N, relation_values=resolved_n, casilla_02=Decimal("0")
+            filing_year=_TARGET_YEAR_N, relation_values=resolved_n, casilla_02=Decimal("0"),
         )
         recorder.record_calculation_year(filing_year=_TARGET_YEAR_N, produced_value_count=produced_n)
 
         resolved_n1 = _resolve_202_relations(filing_year=_TARGET_YEAR_N_PLUS_1, obs_repo=obs_repo)
         result_n1, produced_n1 = _calculate_202_2p(
-            filing_year=_TARGET_YEAR_N_PLUS_1, relation_values=resolved_n1, casilla_02=Decimal("0")
+            filing_year=_TARGET_YEAR_N_PLUS_1, relation_values=resolved_n1, casilla_02=Decimal("0"),
         )
         recorder.record_calculation_year(filing_year=_TARGET_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 

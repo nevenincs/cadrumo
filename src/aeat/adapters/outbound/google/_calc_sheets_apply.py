@@ -87,7 +87,7 @@ _MANAGED_DEVELOPER_METADATA_KEYS: Final[frozenset[str]] = frozenset(
         "aeat_filing_year",
         "aeat_period",
         "aeat_exported_at",
-    }
+    },
 )
 
 
@@ -360,12 +360,12 @@ def _build_number_format_requests(
                             "numberFormat": {
                                 "type": _NUMBER_FORMAT_TYPE[number_format.data_type],
                                 "pattern": number_format.pattern,
-                            }
-                        }
+                            },
+                        },
                     },
                     "fields": "userEnteredFormat.numberFormat",
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -399,8 +399,8 @@ def _build_emphasis_format_requests(
                     },
                     "cell": {"userEnteredFormat": {"textFormat": {"bold": True}}},
                     "fields": "userEnteredFormat.textFormat.bold",
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -434,8 +434,8 @@ def _build_base_font_requests(
                     "range": {"sheetId": sheet_id},
                     "cell": {"userEnteredFormat": {"textFormat": {"fontFamily": family}}},
                     "fields": "userEnteredFormat.textFormat.fontFamily",
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -489,8 +489,8 @@ def _build_styled_range_requests(
                     },
                     "cell": {"userEnteredFormat": user_format},
                     "fields": ",".join(fields),
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -517,8 +517,8 @@ def _build_column_width_requests(
                     },
                     "properties": {"pixelSize": width.width * _PIXELS_PER_WIDTH_UNIT},
                     "fields": "pixelSize",
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -545,8 +545,8 @@ def _build_frozen_view_requests(
                         },
                     },
                     "fields": "gridProperties.frozenRowCount,gridProperties.frozenColumnCount",
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -572,10 +572,10 @@ def _build_auto_filter_requests(
                             "endRowIndex": filter_range.end_row,
                             "startColumnIndex": filter_range.start_column - 1,
                             "endColumnIndex": filter_range.end_column,
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         )
     return requests
 
@@ -644,8 +644,8 @@ def _build_grid_resize_requests(
                         },
                     },
                     "fields": "gridProperties.rowCount,gridProperties.columnCount",
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -674,9 +674,9 @@ def _build_protected_range_requests(
                         "description": region.description,
                         "warningOnly": False,
                         "editors": {"users": []},
-                    }
-                }
-            }
+                    },
+                },
+            },
         )
     return requests
 
@@ -724,8 +724,8 @@ def _build_cell_constraint_requests(
                         "strict": True,
                         "showCustomUi": True,
                     },
-                }
-            }
+                },
+            },
         )
         requests.append(
             {
@@ -733,8 +733,8 @@ def _build_cell_constraint_requests(
                     "range": cell_range,
                     "rows": [{"values": [{"note": _input_message_for_constraint(constraint)}]}],
                     "fields": "note",
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -821,7 +821,7 @@ def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:
                 (
                     f"aeat_relation:{relation.relation}",
                     "; ".join(f"{k}={v}" for k, v in payload.items() if v),
-                )
+                ),
             )
     return pairs
 
@@ -837,8 +837,8 @@ def _build_developer_metadata_requests(
                     "metadataValue": value,
                     "location": {"spreadsheet": True},
                     "visibility": "DOCUMENT",
-                }
-            }
+                },
+            },
         }
         for key, value in _developer_metadata_pairs(plan)
     ]
@@ -881,10 +881,10 @@ def _build_developer_metadata_cleanup_requests(
                     "dataFilter": {
                         "developerMetadataLookup": {
                             "metadataId": metadata_id,
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         )
     return requests
 
@@ -954,8 +954,8 @@ def _build_cell_note_requests(
                     },
                     "rows": [{"values": [{"note": cell.note}]}],
                     "fields": "note",
-                }
-            }
+                },
+            },
         )
     return requests
 
@@ -1022,9 +1022,9 @@ def _force_spreadsheet_locale(*, sheets: Any, spreadsheet_id: str) -> None:
                         "updateSpreadsheetProperties": {
                             "properties": {"locale": "en_US"},
                             "fields": "locale",
-                        }
-                    }
-                ]
+                        },
+                    },
+                ],
             },
         ),
         action="sheets.spreadsheets.batchUpdate.locale",

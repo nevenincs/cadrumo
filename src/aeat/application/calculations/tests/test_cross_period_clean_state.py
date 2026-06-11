@@ -154,6 +154,7 @@ def _seed_member_322_filing(
     *,
     member_nif: str,
     source_casillas: tuple[str, ...],
+    justificante_tax_id: str | None = None,
 ) -> None:
     values = _member_source_values(member_nif, source_casillas)
     work_unit_id = hashlib.sha256(f"322:{_M353_YEAR}:{_M353_PERIOD}:{member_nif}".encode()).hexdigest()
@@ -181,7 +182,7 @@ def _seed_member_322_filing(
     calculation_repository = CalculationRevisionCatalogueRepository()
     calculation_catalogue = calculation_repository.load()
     calculation_repository.save(
-        CalculationRevisionCatalogue(revisions={**dict(calculation_catalogue.revisions), revision_id: revision})
+        CalculationRevisionCatalogue(revisions={**dict(calculation_catalogue.revisions), revision_id: revision}),
     )
 
     evidence_reference_id = f"JUST-322-{member_nif}"
@@ -190,6 +191,7 @@ def _seed_member_322_filing(
         modelo="322",
         period=_M353_PERIOD,
         filing_year=_M353_YEAR,
+        tax_id=justificante_tax_id or member_nif,
     )
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
@@ -222,8 +224,8 @@ def _seed_member_322_filing(
                         imported_at=_CLOCK,
                     ),
                 ),
-            }
-        )
+            },
+        ),
     )
     _save_member_322_observation(
         observation_repository,
@@ -232,7 +234,14 @@ def _seed_member_322_filing(
     )
 
 
-def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing_year: int) -> None:
+def _persist_justificante_metadata(
+    csv: str,
+    *,
+    modelo: str,
+    period: str,
+    filing_year: int,
+    tax_id: str = "X1234567L",
+) -> None:
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
     JustificanteRepository().save(
         Justificante(
@@ -242,14 +251,14 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing
             ejercicio=str(filing_year),
             presentation_id=None,
             presented_at=_CLOCK,
-            tax_id="X1234567L",
+            tax_id=tax_id,
             total_a_ingresar=None,
             total_a_devolver=None,
             verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
             source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
             source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
             parsed_at=_CLOCK,
-        )
+        ),
     )
 
 
@@ -288,10 +297,16 @@ def test_live_capture_evidence_clears_justificante_verification(tmp_path: Path) 
         _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _filing_external_evidence_blockers(filing, "app_filing", JustificanteRepository())
+        blockers = _filing_external_evidence_blockers(
+            filing,
+            "app_filing",
+            JustificanteRepository(),
+            "X1234567L",
+        )
 
         assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers
+        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
 
 
 def test_csv_register_evidence_still_requires_justificante_verification(tmp_path: Path) -> None:
@@ -302,7 +317,12 @@ def test_csv_register_evidence_still_requires_justificante_verification(tmp_path
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         filing = _live_capture_filing(csv="CSVREG130ABCD01", kind=ExternalEvidenceKind.AEAT_CSV_REGISTER)
 
-        blockers = _filing_external_evidence_blockers(filing, "aeat_csv_register", JustificanteRepository())
+        blockers = _filing_external_evidence_blockers(
+            filing,
+            "aeat_csv_register",
+            JustificanteRepository(),
+            "X1234567L",
+        )
 
         assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION in blockers
 
@@ -322,10 +342,10 @@ def _seed_official_303_source_filings(
     for period, source_casillas in sorted(source_casillas_by_period.items()):
         evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
         evidence_reference_id = f"JUST-{period}"
-        if (
-            evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
-            and period not in skip_justificante_metadata_periods
-        ):
+        if evidence_kind in {
+            ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+        } and period not in skip_justificante_metadata_periods:
             _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -336,19 +356,97 @@ def _seed_official_303_source_filings(
             clock=_CLOCK,
         )
         values = _source_values(period, tuple(sorted(source_casillas)))
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_values=values,
-            evidence_kind=evidence_kind,
-            evidence_reference_id=evidence_reference_id,
-            actor="aeat-import-test",
-            clock=_CLOCK,
-        )
+        if evidence_kind in {
+            ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+        } and period in skip_justificante_metadata_periods:
+            _seed_legacy_source_filing_record(
+                work_unit=work_unit,
+                casilla_values=values,
+                evidence_kind=evidence_kind,
+                evidence_reference_id=evidence_reference_id,
+            )
+        else:
+            import_external_filing_evidence(
+                work_unit_id=work_unit.work_unit_id,
+                casilla_values=values,
+                evidence_kind=evidence_kind,
+                evidence_reference_id=evidence_reference_id,
+                actor="aeat-import-test",
+                expected_tax_id="X1234567L",
+                clock=_CLOCK,
+            )
         _save_source_observation(
             observation_repository,
             period=period,
             source_values=values,
         )
+
+
+def _seed_legacy_source_filing_record(
+    *,
+    work_unit: object,
+    casilla_values: dict[str, Decimal],
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+) -> None:
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        casilla_values=casilla_values,
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+        verified_at=_CLOCK,
+        verified_by="aeat-import-test",
+        filed_at=_CLOCK,
+        filed_by="aeat-import-test",
+    )
+    calculation_repository = CalculationRevisionCatalogueRepository()
+    calculation_catalogue = calculation_repository.load()
+    calculation_repository.save(
+        CalculationRevisionCatalogue(revisions={**dict(calculation_catalogue.revisions), revision_id: revision}),
+    )
+
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=_CLOCK,
+        filed_by="aeat-import-test",
+    )
+    filing_repository = ModeloRecordCatalogueRepository()
+    filing_catalogue = filing_repository.load()
+    filing_repository.save(
+        ModeloRecordCatalogue(
+            records={
+                **dict(filing_catalogue.records),
+                filing_id: ModeloRecord(
+                    filing_record_id=filing_id,
+                    work_unit_id=work_unit.work_unit_id,
+                    calculation_revision_id=revision_id,
+                    bucket_id=work_unit.bucket_id,
+                    modelo=ModeloCode(str(work_unit.modelo)),
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period,
+                    filed_at=_CLOCK,
+                    filed_by="aeat-import-test",
+                    aeat_accepted=True,
+                    status=ModeloRecordStatus.VIGENTE,
+                    external_evidence=ExternalEvidence(
+                        kind=evidence_kind,
+                        reference_id=evidence_reference_id,
+                        imported_at=_CLOCK,
+                    ),
+                ),
+            },
+        ),
+    )
 
 
 def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path: Path) -> None:
@@ -623,6 +721,73 @@ def test_cross_period_clean_state_accepts_member_scoped_group_filing_records(
     assert len(member_evidence.member_calculation_revision_ids) == 2
 
 
+def test_cross_period_clean_state_blocks_member_filing_with_wrong_tax_id_justificante(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        requirement = _member_fan_in_requirement()
+        _seed_member_322_filing(
+            observation_repository,
+            member_nif=_GROUP_MEMBER_A,
+            justificante_tax_id=_GROUP_MEMBER_B,
+            source_casillas=requirement.source_casillas,
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_353(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            expected_member_sets=(
+                CrossPeriodExpectedMemberSet(
+                    source_modelo="322",
+                    filing_year=_M353_YEAR,
+                    period=_M353_PERIOD,
+                    member_nifs=(_GROUP_MEMBER_A,),
+                ),
+            ),
+        )
+
+    member_evidence = next(evidence for evidence in verdict.dependencies if evidence.requirement.requires_member_fan_in)
+    assert verdict.clean is False
+    assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in member_evidence.blockers
+
+
+def test_cross_period_clean_state_blocks_taxpayer_filing_with_wrong_tax_id_justificante(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            skip_justificante_metadata_periods={"1T"},
+        )
+        _persist_justificante_metadata(
+            "JUST-1T",
+            modelo="303",
+            period="1T",
+            filing_year=_M390_YEAR,
+            tax_id="B12345678",
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="X1234567L",
+        )
+
+    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    assert verdict.clean is False
+    assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
+
 def test_cross_period_clean_state_blocks_superseded_upstream_filing(
     tmp_path: Path,
 ) -> None:
@@ -643,15 +808,15 @@ def test_cross_period_clean_state_blocks_superseded_upstream_filing(
                 "status": ModeloRecordStatus.SUPERSEDIDO,
                 "superseded_at": _CLOCK,
                 "superseded_by_filing_record_id": "f" * 64,
-            }
+            },
         )
         filing_repository.save(
             ModeloRecordCatalogue(
                 records={
                     **dict(catalogue.records),
                     source_record.filing_record_id: superseded_record,
-                }
-            )
+                },
+            ),
         )
 
         verdict = evaluate_cross_period_clean_state(
@@ -736,12 +901,36 @@ def test_cross_period_clean_state_blocks_csv_register_without_justificante_verif
     assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION in first_quarter.blockers
 
 
+def test_cross_period_clean_state_accepts_live_capture_with_matching_justificante_metadata(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            evidence_kind_by_period={"1T": ExternalEvidenceKind.AEAT_LIVE_CAPTURE},
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+        )
+
+    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    assert first_quarter.external_evidence_kind == "aeat_live_capture"
+    assert first_quarter.blockers == ()
+    assert verdict.clean is True
+
+
 def test_cross_period_clean_state_blocks_live_capture_without_justificante_verification(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
         _seed_official_303_source_filings(
             observation_repository=observation_repository,
             evidence_kind_by_period={"1T": ExternalEvidenceKind.AEAT_LIVE_CAPTURE},
+            skip_justificante_metadata_periods={"1T"},
         )
 
         verdict = evaluate_cross_period_clean_state(
@@ -763,6 +952,29 @@ def test_cross_period_clean_state_blocks_live_capture_without_justificante_verif
     # The safety intent — a live capture without justificante backing cannot clear a
     # dependent period — is preserved; only the blocker classification changed.
     assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
+
+def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            skip_justificante_metadata_periods={"1T"},
+        )
+        _persist_justificante_metadata("JUST-1T", modelo="303", period="2T", filing_year=_M390_YEAR)
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+        )
+
+    first_quarter = next(evidence for evidence in verdict.dependencies if evidence.requirement.period == "1T")
+    assert verdict.clean is False
+    assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
 
 def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tmp_path: Path) -> None:

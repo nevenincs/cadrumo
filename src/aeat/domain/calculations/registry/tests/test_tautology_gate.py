@@ -71,7 +71,7 @@ def _evaluate_expression(expr: dict[str, object] | None, casilla_values: dict[st
     op = expr.get("op")
     args_val = expr.get("args")
     args_list: list[dict[str, object] | None] = cast(
-        list[dict[str, object] | None], args_val if isinstance(args_val, list) else []
+        list[dict[str, object] | None], args_val if isinstance(args_val, list) else [],
     )
     raw_values = [_evaluate_expression(a, casilla_values) for a in args_list]
     if any(v is None for v in raw_values):
@@ -350,7 +350,7 @@ def _scan_function_for_hand_sums(node: ast.FunctionDef, path: Path) -> list[str]
         flagged.append(
             f"{waiver_key} "
             f"line {assertion.lineno}: target {target} equals sum of "
-            f"{len(hit_combo)} earlier literals {hit_combo} — hand-summed pattern"
+            f"{len(hit_combo)} earlier literals {hit_combo} — hand-summed pattern",
         )
     return flagged
 
@@ -463,7 +463,7 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         "src/aeat/domain/calculations/registry/tests/test_modelo_200_base_determination.py::test_reserva_and_bin_reduce_base_with_non_negative_clamp",
         "src/aeat/domain/iva/tests/test_saturation.py::test_split_gross_at_21_pct_matches_worked_example",
         "src/aeat/domain/transactions/tests/test_gross_invariant.py::test_invariant_uses_native_raw_amount_not_value_in_eur",
-    }
+    },
 )
 """Functions whose hand-summed pattern is documented as legitimate.
 

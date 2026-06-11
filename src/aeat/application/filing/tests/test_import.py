@@ -54,16 +54,16 @@ def test_normalise_period_returns_core_period_for_printed_bare_token(
     assert period.model_dump() == {"filing_year": 2026, "code": "1T"}
 
 
-def test_normalise_period_parses_combined_fixture_token_at_import_boundary(
+def test_normalise_period_rejects_combined_fixture_token_at_import_boundary(
     schema_provider: RegistrySchemaProvider,
 ) -> None:
-    period = _normalise_period(
-        modelo="130",
-        ejercicio="2026",
-        raw_period="2026Q1",
-        schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-    )
-    assert period == Period.from_year_and_code(2026, "1T")
+    with pytest.raises(ModeloImportError, match=r"period token '2026Q1'"):
+        _normalise_period(
+            modelo="130",
+            ejercicio="2026",
+            raw_period="2026Q1",
+            schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
+        )
 
 
 def test_normalise_period_wraps_registry_tokens_outside_core_period(
@@ -143,7 +143,7 @@ class TestImportFromJustificante:
     ) -> None:
         pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
 
-        with pytest.raises(ModeloImportError, match="period token '0A'"):
+        with pytest.raises(ModeloImportError, match="period token '2026'"):
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
     def test_missing_pdf_raises_parse_error(

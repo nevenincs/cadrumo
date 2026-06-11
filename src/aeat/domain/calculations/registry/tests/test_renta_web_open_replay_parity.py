@@ -80,7 +80,7 @@ def _load_expected(payload_path: Path) -> Mapping[str, Decimal]:
     if "expected" not in document or not isinstance(document["expected"], dict):
         raise AssertionError(
             f"replay payload {payload_path.name!r} must declare an 'expected' object "
-            f"that names the casilla values the registry must produce"
+            f"that names the casilla values the registry must produce",
         )
     expected: dict[str, Decimal] = {}
     for casilla_id, value in document["expected"].items():

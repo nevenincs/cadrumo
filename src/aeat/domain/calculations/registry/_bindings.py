@@ -345,7 +345,7 @@ class _ProfileSelector(BaseModel):
         if shape_count != 1:
             raise RegistryValidationError(
                 "profile selector must declare exactly one of profile_key (scalar), "
-                "profile_keys (composite), or profile_model (collection)"
+                "profile_keys (composite), or profile_model (collection)",
             )
         if has_composite and self.format is None:
             raise RegistryValidationError("profile composite selector (profile_keys) requires a format renderer")
@@ -363,7 +363,7 @@ class _ProfileSelector(BaseModel):
         # required_when_* must be paired
         if (self.required_when_profile_key is None) != (self.required_when_value is None):
             raise RegistryValidationError(
-                "profile selector required_when_profile_key and required_when_value must be declared together"
+                "profile selector required_when_profile_key and required_when_value must be declared together",
             )
         return self
 
@@ -432,7 +432,7 @@ class _ManualInputSelector(BaseModel):
         has_record_shape = any(getattr(self, key) is not None for key in record_shape_keys)
         if has_casilla and has_record_shape:
             raise RegistryValidationError(
-                "manual_input selector must declare either the casilla shape or the record-field shape, not both"
+                "manual_input selector must declare either the casilla shape or the record-field shape, not both",
             )
         if not has_casilla and not has_record_shape:
             raise RegistryValidationError("manual_input selector must declare a casilla or a record-field shape")
@@ -440,14 +440,14 @@ class _ManualInputSelector(BaseModel):
             missing = [key for key in record_shape_keys if getattr(self, key) is None]
             if missing:
                 raise RegistryValidationError(
-                    f"manual_input record-field selector is missing required keys: {sorted(missing)!r}"
+                    f"manual_input record-field selector is missing required keys: {sorted(missing)!r}",
                 )
         # Boolean casilla shape always pairs the data_type with explicit
         # true_value / false_value strings so the on-wire encoding is
         # deterministic.
         if has_casilla and self.data_type == "boolean" and (self.true_value is None or self.false_value is None):
             raise RegistryValidationError(
-                "manual_input boolean-casilla selector must declare true_value and false_value"
+                "manual_input boolean-casilla selector must declare true_value and false_value",
             )
         return self
 
@@ -530,7 +530,7 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     if binding.source == AggregationSourceKind.INVOICE:
         return [
             f"binding {binding.id!r} source 'invoice' is retired; use "
-            "collectible_invoice / payable_invoice / purchase_invoice_evidence"
+            "collectible_invoice / payable_invoice / purchase_invoice_evidence",
         ]
     selector_model = _BINDING_SELECTOR_REGISTRY.get(binding.source)
     if binding.source == RowSetGroupingKind.WITHHOLDING:
@@ -541,7 +541,7 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
         selector_model.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         return [
-            f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: {exc}"
+            f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: {exc}",
         ]
     # Counterpart-source bindings get the additional fact/op
     # invariants that ``_validated_counterpart_selector`` runs at

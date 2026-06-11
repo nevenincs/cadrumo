@@ -54,7 +54,7 @@ BANNED_LIVE_IMPORTS: frozenset[str] = frozenset(
         "vcrpy",
         "freezegun",
         "time_machine",
-    }
+    },
 )
 """Import targets that may never appear in a file containing a live-marked test."""
 

@@ -157,7 +157,7 @@ class IvaInvoiceClassification(BaseModel):
             raise _invoice_validation_error(
                 f"settlement_sides {sorted(s.value for s in self.settlement_sides)!r} "
                 f"does not match flow_direction {self.flow_direction.value!r} "
-                f"(expected {sorted(s.value for s in expected)!r})"
+                f"(expected {sorted(s.value for s in expected)!r})",
             )
         return self
 
@@ -227,7 +227,7 @@ def classify_invoice_line_for_iva(
         raise _invoice_validation_error(
             "classify_invoice_line_for_iva does not handle IvaRate.NOT_SUBJECT — "
             "operations outside the scope of IVA must construct "
-            "IvaInvoiceClassification directly with IvaCategory.OPERACION_NO_SUJETA"
+            "IvaInvoiceClassification directly with IvaCategory.OPERACION_NO_SUJETA",
         )
 
     category = _iva_rate_to_domestic_category()[iva_rate]

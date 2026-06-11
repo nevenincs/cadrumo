@@ -30,8 +30,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core._toml import freeze_toml, read_toml, to_str_keyed_dict
+from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core import freeze_toml, read_toml, to_str_keyed_dict
 from ..core.resources import bundled_path
 from ._errors import TerminologyLoadError, TerminologyValidationError
 from ._schema import ConceptRecord
@@ -145,7 +145,7 @@ def _compile_records(concepts_dir: str) -> tuple[ConceptRecord, ...]:
         prior = seen.get(record.concept_id)
         if prior is not None:
             raise TerminologyValidationError(
-                f"duplicate concept_id {record.concept_id!r}: {prior.name} and {fragment.name}"
+                f"duplicate concept_id {record.concept_id!r}: {prior.name} and {fragment.name}",
             )
         seen[record.concept_id] = fragment
         records.append(record)
@@ -155,7 +155,7 @@ def _compile_records(concepts_dir: str) -> tuple[ConceptRecord, ...]:
 
 def _compile_fragment(fragment: Path) -> ConceptRecord:
     data = freeze_toml(
-        read_toml(fragment, error_factory=lambda message: TerminologyLoadError(f"{fragment}: {message}"))
+        read_toml(fragment, error_factory=lambda message: TerminologyLoadError(f"{fragment}: {message}")),
     )
     raw_concept = data.get(_CONCEPT_TABLE)
     if not isinstance(raw_concept, dict):

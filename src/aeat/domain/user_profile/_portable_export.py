@@ -16,7 +16,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now as utc_now
 from ..modelos._calculation_revision import CalculationRevision as _CalculationRevision
 from ..modelos._filing_record import ModeloRecord as _ModeloRecord

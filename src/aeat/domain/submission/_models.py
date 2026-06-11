@@ -15,8 +15,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core._period import Period
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...domain.period import parse_canonical_period as _parse_canonical_period
 from ._errors import SubmissionValidationError
 

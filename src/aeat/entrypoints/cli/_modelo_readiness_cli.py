@@ -10,7 +10,7 @@ from ...application.state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
 )
-from ...core._period import Period
+from ...core import Period
 from ...core.i18n import tr
 from ...domain.user_profile import ProfileNotFoundError
 from ._common import _emit_envelope

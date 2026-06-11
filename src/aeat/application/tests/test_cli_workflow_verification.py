@@ -49,5 +49,5 @@ def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
     assert ("auth.provider.configured", "operator", "certificate") in events
     assert ("auth.provider.cleared", "operator", "certificate") in events
     assert events.index(("auth.provider.configured", "operator", "certificate")) < events.index(
-        ("auth.provider.cleared", "operator", "certificate")
+        ("auth.provider.cleared", "operator", "certificate"),
     )

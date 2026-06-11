@@ -76,7 +76,7 @@ def _tx(
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _CAPTURED,
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -103,7 +103,7 @@ def test_snapshot_roundtrips_through_strict_model() -> None:
     a = _tx("row-a")
     cat = _catalogue(a)
     snap = compute_ledger_filing_snapshot(
-        source_transaction_ids=[a.transaction_id], catalogue=cat, captured_at=_CAPTURED
+        source_transaction_ids=[a.transaction_id], catalogue=cat, captured_at=_CAPTURED,
     )
     reloaded = LedgerFilingSnapshot.model_validate_json(snap.model_dump_json())
     assert reloaded == snap
@@ -117,7 +117,7 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
     )
     catalogue = _catalogue(tx)
     snapshot = compute_ledger_filing_snapshot(
-        source_transaction_ids=[tx.transaction_id], catalogue=catalogue, captured_at=_CAPTURED
+        source_transaction_ids=[tx.transaction_id], catalogue=catalogue, captured_at=_CAPTURED,
     )
     manual_entry = ManualFactBasisEntry(casilla="00501", value="140000.00", note="resultado contable")
 
@@ -152,7 +152,7 @@ def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
             "00501": "140000.00",
             "00502": " ",
             "00503": "",
-        }
+        },
     )
 
     assert entries == (ManualFactBasisEntry(casilla="00501", value="140000.00"),)
@@ -162,7 +162,7 @@ def test_evidence_coverage_guard_refuses_missing_contributor() -> None:
     tx = _tx("row-covered")
     catalogue = _catalogue(tx)
     snapshot = compute_ledger_filing_snapshot(
-        source_transaction_ids=[tx.transaction_id], catalogue=catalogue, captured_at=_CAPTURED
+        source_transaction_ids=[tx.transaction_id], catalogue=catalogue, captured_at=_CAPTURED,
     )
     missing = LedgerFilingEvidence(
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
@@ -196,7 +196,7 @@ def test_unchanged_ledger_is_not_stale() -> None:
     a, b = _tx("row-a"), _tx("row-b")
     cat = _catalogue(a, b)
     snap = compute_ledger_filing_snapshot(
-        source_transaction_ids=[a.transaction_id, b.transaction_id], catalogue=cat, captured_at=_CAPTURED
+        source_transaction_ids=[a.transaction_id, b.transaction_id], catalogue=cat, captured_at=_CAPTURED,
     )
     verdict = evaluate_ledger_filing_staleness(snap, cat)
     assert verdict.is_stale is False
@@ -206,7 +206,7 @@ def test_unchanged_ledger_is_not_stale() -> None:
 def test_material_change_to_contributor_is_detected_stale() -> None:
     original = _tx("row-a", taxable_base=Decimal("100.00"), iva_amount=Decimal("21.00"))
     snap = compute_ledger_filing_snapshot(
-        source_transaction_ids=[original.transaction_id], catalogue=_catalogue(original), captured_at=_CAPTURED
+        source_transaction_ids=[original.transaction_id], catalogue=_catalogue(original), captured_at=_CAPTURED,
     )
     # Operator later re-splits the base/iva of the same 121.00 gross: same row
     # id, material change to a casilla input -> detected as changed, not removed.
@@ -234,7 +234,7 @@ def test_anti_tautology_tampered_fingerprint_surfaces_mismatch() -> None:
     a = _tx("row-a")
     cat = _catalogue(a)
     snap = compute_ledger_filing_snapshot(
-        source_transaction_ids=[a.transaction_id], catalogue=cat, captured_at=_CAPTURED
+        source_transaction_ids=[a.transaction_id], catalogue=cat, captured_at=_CAPTURED,
     )
     tampered = snap.model_copy(update={"rows": (snap.rows[0].model_copy(update={"fingerprint": "0" * 64}),)})
     verdict = evaluate_ledger_filing_staleness(tampered, cat)

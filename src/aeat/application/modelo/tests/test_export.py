@@ -19,7 +19,7 @@ import pytest
 
 from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core._period import Period
+from ....core import Period
 from ....core.config import Settings, override_settings
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
@@ -77,6 +77,7 @@ from .._export import (
     export_modelo_revision,
 )
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
+from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -272,6 +273,7 @@ def _modelo_303_engine_inputs() -> dict[str, Decimal]:
 def _seed_modelo_303_1t_clean_state(
     *,
     bucket_id: str,
+    taxpayer_tax_id: str = "taxpayerdefault",
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -288,6 +290,14 @@ def _seed_modelo_303_1t_clean_state(
     assert source_casillas, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
     source_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    persist_justificante_metadata(
+        "JUST-303-2026-1T",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        captured_at=datetime(2026, 5, 21, 11, 0, tzinfo=UTC),
+        tax_id=taxpayer_tax_id,
+    )
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
@@ -308,6 +318,7 @@ def _seed_modelo_303_1t_clean_state(
         calculation_repository=calculation_repository,
         filing_repository=ModeloRecordCatalogueRepository(),
         bucket_event_repository=bucket_event_repository,
+        expected_tax_id=taxpayer_tax_id,
         clock=datetime(2026, 5, 21, 11, 1, tzinfo=UTC),
     )
     CalculationObservationRepository().save_observation(
@@ -689,6 +700,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     )
     _seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
+        taxpayer_tax_id=taxpayer_nif,
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,

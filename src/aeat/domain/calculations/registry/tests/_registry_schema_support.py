@@ -1,42 +1,27 @@
 """Shared support for split calculation-registry tests."""
 
-# ruff: noqa: F401
 
 from __future__ import annotations
 
-import re
 from datetime import date
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .. import (
-    ExtractionProfileDefinition,
     RegistryCatalogues,
-    RegistryLoadError,
-    RegistryValidationError,
-    build_model_law_coverage_ledger,
     build_snapshot,
-    load_modelo_file,
 )
 from .._loader import load_registry_tree
 from .._schema import (
-    CasillaContinuidadEvolutionDefinition,
-    CasillaDefinition,
     ConvenioRateRow,
     ExportFieldDefinition,
-    ExtractionTargetDefinition,
-    FormulaExpression,
     KeyedBracketEntry,
     ModeloDefinition,
     ModeloRevision,
-    ParameterDefinition,
-    SupportRemovalDecisionDefinition,
-    VerificationPredicateDefinition,
 )
 from .._validate import RegistryValidator
 
@@ -80,7 +65,7 @@ def _as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
             "id": f"{filing_link.id}-communication",
             "surface": "communication",
             "consumer": "aeat.application.modelo",
-        }
+        },
     )
     application_links = tuple(
         communication_link if link.id == filing_link.id else link
@@ -95,7 +80,7 @@ def _as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
                     for link_id in construct.application_links
                 ),
                 "filing_schedules": (),
-            }
+            },
         )
         for construct in revision.constructs
     )
@@ -104,7 +89,7 @@ def _as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
             "application_links": application_links,
             "filing_schedules": (),
             "constructs": constructs,
-        }
+        },
     )
 
 
@@ -116,7 +101,7 @@ def _copy_committed_modelo(path: Path) -> None:
             item
             for item in revision_dir.rglob("*.toml")
             if item.name != "revision.toml" and not any(part == "locales" for part in item.parts)
-        )
+        ),
     )
     text = _MODELO_130_DIR.joinpath("manifest.toml").read_text(encoding="utf-8")
     text += "".join(fragment.read_text(encoding="utf-8") for fragment in fragments)
@@ -162,7 +147,7 @@ _REQUIRED_APPLICATION_LINKS = frozenset(
         "modelo-130-filing",
         "modelo-130-portal-cross-reference",
         "modelo-130-verification",
-    }
+    },
 )
 
 

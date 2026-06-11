@@ -16,7 +16,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._enums import ExpenseCategory, UseType
 from ._errors import FincaValidationError
 

@@ -170,6 +170,7 @@ def _seed_303_cross_period_sources(
             calculation_repository=calculation_repository,
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
+            expected_tax_id="X1234567L",
             clock=_CLOCK,
         )
         observation_repository.save_observation(
@@ -263,6 +264,12 @@ def _clean_state_repair_verdict(
         ),
         (
             (CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,),
+            ("aeat app modelo reconcile file WORK_UNIT_ID --file PATH",),
+            (),
+            (),
+        ),
+        (
+            (CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,),
             ("aeat app modelo reconcile file WORK_UNIT_ID --file PATH",),
             (),
             (),

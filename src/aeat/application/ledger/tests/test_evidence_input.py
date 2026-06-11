@@ -64,7 +64,7 @@ def pdf_file(tmp_path: Path) -> Path:
 
 
 def _added_record(
-    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
 ) -> PurchaseInvoiceEvidence:
     svc = PurchaseInvoiceEvidenceService(
         settings=isolated_settings,
@@ -74,7 +74,7 @@ def _added_record(
 
 
 def test_add_stores_bytes_in_secure_storage_under_attachment_id(
-    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
 ) -> None:
     record = _added_record(isolated_settings, secure_objects, pdf_file)
     # The bytes now live in the encrypted attachment store, content-addressed.
@@ -85,7 +85,7 @@ def test_add_stores_bytes_in_secure_storage_under_attachment_id(
 
 
 def test_resolve_purchase_invoice_evidence_reads_secure_storage_into_memory(
-    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
 ) -> None:
     record = _added_record(isolated_settings, secure_objects, pdf_file)
     store = AttachmentStore(objects=secure_objects)
@@ -102,7 +102,7 @@ def test_resolve_purchase_invoice_evidence_reads_secure_storage_into_memory(
 
 
 def test_resolve_attachment_evidence_input_round_trips_bytes(
-    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
 ) -> None:
     record = _added_record(isolated_settings, secure_objects, pdf_file)
     store = AttachmentStore(objects=secure_objects)
@@ -133,7 +133,7 @@ def test_resolve_refuses_record_without_in_store_attachment(
 
 
 def test_evidence_input_refuses_persistence(
-    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
 ) -> None:
     record = _added_record(isolated_settings, secure_objects, pdf_file)
     resolved = resolve_purchase_invoice_evidence_input(record, store=AttachmentStore(objects=secure_objects))
@@ -151,7 +151,7 @@ def test_evidence_input_refuses_persistence(
 
 
 def test_nested_serialization_cannot_leak_evidence_bytes(
-    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+    isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
 ) -> None:
     # The realistic leak path: EvidenceInput embedded in another model that is dumped.
     # The model serializer must refuse so the bytes never serialize through the parent.

@@ -40,11 +40,11 @@ _MODELO_IN_LABEL: Final[re.Pattern[str]] = re.compile(r"\bModelo\s+(?P<modelo>\d
 
 _IRPF_ENDPOINT: Final[re.Pattern[str]] = re.compile(
     rf"{re.escape(_SEDE_PATHS.irpf_expediente_detail_year_prefix)}(?P<year>\d{{4}})"
-    rf"{re.escape(_SEDE_PATHS.irpf_expediente_detail_year_suffix)}"
+    rf"{re.escape(_SEDE_PATHS.irpf_expediente_detail_year_suffix)}",
 )
 
 _COTEJO_CSV: Final[re.Pattern[str]] = re.compile(
-    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]{{8,32}})"
+    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]{{8,32}})",
 )
 
 
@@ -157,7 +157,7 @@ def parse_expediente_detail(
     if match is None:
         raise SedeParseError(
             f"expediente {expediente_id!r}: no /CotejoIdSv?CSV= link on detail page; "
-            "session may have expired or the modelo exposes a different verifier"
+            "session may have expired or the modelo exposes a different verifier",
         )
     csv = match.group("csv")
     cotejo_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_query}?CSV={csv}")

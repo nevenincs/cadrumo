@@ -40,7 +40,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...domain.invoices import numeric_iva_rate_percentages
 from ._errors import EditParseError

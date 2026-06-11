@@ -18,7 +18,6 @@ _SANITIZER_SOURCE_LABEL = "<input-pdf>"
 class SanitizationError(AeatError):
     """Base error for the :mod:`aeat.adapters.inbound.sanitizer` subpackage."""
 
-    pass
 
 
 class SanitizerValidationError(SanitizationError, ValueError):
@@ -30,7 +29,6 @@ class SanitizerValidationError(SanitizationError, ValueError):
     unified error hierarchy.
     """
 
-    pass
 
 
 class SanitizerSourceParseError(SanitizationError):
@@ -78,7 +76,6 @@ class SignaturePresentError(SanitizationError):
     escalate to human review.
     """
 
-    pass
 
 
 class AlreadySanitizedError(SanitizationError):
@@ -114,5 +111,3 @@ class UnknownSurfaceError(SanitizationError):
     the relevant ``drop_*`` flag off and accepting the resulting
     warning.
     """
-
-    pass

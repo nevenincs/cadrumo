@@ -33,7 +33,7 @@ class _ObservedGeminiRequest(BaseHTTPRequestHandler):
                 "path": self.path,
                 "api_key_header": self.headers.get("x-goog-api-key"),
                 "body": json.loads(body.decode("utf-8")),
-            }
+            },
         )
         payload = {
             "candidates": [{"content": {"parts": [{"text": " Gemini response "}]}}],

@@ -80,7 +80,7 @@ _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
         "aeat_revision_id",
         "aeat_filing_year",
         "aeat_period",
-    }
+    },
 )
 
 # A single batch-get value-range entry from the Sheets API.
@@ -465,11 +465,11 @@ def pull_operator_edits(
     casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     cursor = 0
     operator_edits, cursor, casilla_cells_read = _decode_operator_edits(
-        value_ranges, cursor, operator_input_ids, casilla_by_id
+        value_ranges, cursor, operator_input_ids, casilla_by_id,
     )
     binding_edits, cursor, binding_cells_read = _decode_binding_edits(value_ranges, cursor, binding_ids)
     relation_edits, cursor, relation_cells_read = _decode_relation_edits(
-        value_ranges, cursor, relation_ids, metadata_pairs
+        value_ranges, cursor, relation_ids, metadata_pairs,
     )
 
     # Read row-set detail rows from the Detalle tab. Each row-set
@@ -568,7 +568,7 @@ def _decode_operator_edits(
                 casilla_number=casilla.number,
                 label=casilla.label,
                 value=coerced,
-            )
+            ),
         )
     return tuple(edits), cursor, cells_read
 
@@ -621,7 +621,7 @@ def _decode_relation_edits(
         if coerced is not None:
             cells_read += 1
         provenance, source_filing_year, source_periods, resolved_at = _parse_relation_metadata(
-            metadata_pairs.get(f"aeat_relation:{relation_id}", "")
+            metadata_pairs.get(f"aeat_relation:{relation_id}", ""),
         )
         edits.append(
             RelationEdit(
@@ -631,7 +631,7 @@ def _decode_relation_edits(
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
                 resolved_at=resolved_at,
-            )
+            ),
         )
     return tuple(edits), cursor, cells_read
 
@@ -875,7 +875,7 @@ def verify_pull_coverage(
                     detail=f"metadata field {field_name!r} differs between plan and pull",
                     expected=str(plan_value),
                     observed=str(pull_value),
-                )
+                ),
             )
 
     # Row-set coverage: every grouping declared in the plan should
@@ -890,7 +890,7 @@ def verify_pull_coverage(
                 detail=f"row-set grouping {missing!r} is declared by the plan but absent from the pull",
                 expected=missing,
                 observed="",
-            )
+            ),
         )
     for extra in sorted(pulled_groupings - planned_groupings):
         discrepancies.append(
@@ -899,7 +899,7 @@ def verify_pull_coverage(
                 detail=f"row-set grouping {extra!r} appears in the pull but is not declared by the plan",
                 expected="",
                 observed=extra,
-            )
+            ),
         )
 
     return tuple(discrepancies)

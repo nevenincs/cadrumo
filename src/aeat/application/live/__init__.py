@@ -198,7 +198,7 @@ async def capture_expedientes_bulk(
                             year=year,
                             error_type=exc.__class__.__name__,
                             message=_bounded_context_text(exc),
-                        )
+                        ),
                     )
                     continue
                 successful_query_count += 1

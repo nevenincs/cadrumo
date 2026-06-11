@@ -20,7 +20,7 @@ from ._schema import ProfileSchemaDefinition
 if TYPE_CHECKING:
     from ..calculations.registry import ModeloDefinition, ModeloRevision
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class UserProfileRegistryContractSeverity(StrEnum):
@@ -167,7 +167,7 @@ def _binding_issues(
                     construct_id=binding.id,
                     selector="<unresolved>",
                     message="profile binding does not declare a supported profile selector",
-                )
+                ),
             )
             continue
         for selector in selectors:
@@ -181,7 +181,7 @@ def _binding_issues(
                         construct_id=binding.id,
                         selector=selector,
                         message="profile binding selector is not declared by user-profile schema",
-                    )
+                    ),
                 )
     return tuple(issues)
 
@@ -204,7 +204,7 @@ def _schedule_issues(
                         construct_id=schedule.id,
                         selector=condition.field,
                         message="filing schedule predicate is not declared by user-profile schema",
-                    )
+                    ),
                 )
     return tuple(issues)
 
@@ -227,7 +227,7 @@ def _deadline_issues(
                         construct_id=window.id,
                         selector=condition.field,
                         message="deadline applicability predicate is not declared by user-profile schema",
-                    )
+                    ),
                 )
     return tuple(issues)
 
@@ -250,7 +250,7 @@ def _cross_reference_applicability_issues(
                         construct_id=cross_reference.id,
                         selector=predicate.field,
                         message="cross-reference applicability predicate is not declared by user-profile schema",
-                    )
+                    ),
                 )
     return tuple(issues)
 
@@ -278,7 +278,7 @@ def _export_issues(
                             construct_id=f"{layout.id}.{record.id}.{field.id}",
                             selector="profile_tax_id",
                             message="profile_tax_id draft attribute is not declared by user-profile schema",
-                        )
+                        ),
                     )
                 if field.kind == "header" and field.header_key not in index.export_headers:
                     issues.append(
@@ -290,7 +290,7 @@ def _export_issues(
                             construct_id=f"{layout.id}.{record.id}.{field.id}",
                             selector=field.header_key or "<missing>",
                             message="export header is not yet classified by user-profile schema",
-                        )
+                        ),
                     )
     return tuple(issues)
 

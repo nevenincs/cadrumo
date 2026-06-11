@@ -9,7 +9,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator, Field
 
-from ....core._period import StandardPeriodCode
+from ....core import StandardPeriodCode
 from ....core.decimal import coerce_decimal
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ._errors import RegistryValidationError
@@ -167,7 +167,7 @@ def _validate_country_code(value: object) -> object:
         raise RegistryValidationError(f"country_code value must be a string, got {type(value).__name__}")
     if not _COUNTRY_CODE_RE.match(value):
         raise RegistryValidationError(
-            f"country_code value {value!r} must be a two-character uppercase ISO alpha-2 code"
+            f"country_code value {value!r} must be a two-character uppercase ISO alpha-2 code",
         )
     return value
 
@@ -250,7 +250,7 @@ def _validate_nif_iva_string(value: object) -> object:
     if not _NIF_IVA_RE.match(canonical):
         raise RegistryValidationError(
             f"nif_iva value {value!r} must start with a two-letter country code "
-            "followed by 2-12 alphanumeric characters"
+            "followed by 2-12 alphanumeric characters",
         )
     return canonical
 
@@ -280,7 +280,7 @@ _CCAA_CODES = frozenset(
         "17",
         "18",
         "19",
-    }
+    },
 )
 
 
@@ -290,7 +290,7 @@ def _validate_ccaa_code(value: object) -> object:
         raise RegistryValidationError(f"ccaa_code value must be a string, got {type(value).__name__}")
     if value not in _CCAA_CODES:
         raise RegistryValidationError(
-            f"ccaa_code value {value!r} is not in the supported AEAT autonomous-community set"
+            f"ccaa_code value {value!r} is not in the supported AEAT autonomous-community set",
         )
     return value
 
@@ -308,7 +308,7 @@ def _validate_province_code(value: object) -> object:
         raise RegistryValidationError(f"province_code value must be a string, got {type(value).__name__}")
     if not _PROVINCE_CODE_RE.match(value):
         raise RegistryValidationError(
-            f"province_code value {value!r} must be a two-digit Spanish province code (01-52)"
+            f"province_code value {value!r} must be a two-digit Spanish province code (01-52)",
         )
     return value
 

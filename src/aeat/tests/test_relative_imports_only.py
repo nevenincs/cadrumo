@@ -59,5 +59,5 @@ def test_no_absolute_self_imports_in_aeat_package() -> None:
     if violations:
         pytest.fail(
             f"{len(violations)} absolute intra-aeat imports found; use relative imports "
-            "(from . / .. / ...):\n" + "\n".join(violations)
+            "(from . / .. / ...):\n" + "\n".join(violations),
         )

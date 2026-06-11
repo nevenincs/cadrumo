@@ -33,7 +33,7 @@ _CANONICAL_MODULES: frozenset[str] = frozenset(
     {
         "_dates.py",
         "_utils.py",
-    }
+    },
 )
 
 
@@ -182,7 +182,7 @@ def test_no_bare_date_fromisoformat(
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} bare date.fromisoformat() call(s) found in production code:\n  {joined}\n\n"
-            "Replace with _parse_iso8601_date() or _parse_ddmmyyyy_date() from aeat.core.parsing._dates."
+            "Replace with _parse_iso8601_date() or _parse_ddmmyyyy_date() from aeat.core.parsing._dates.",
         )
 
 
@@ -197,5 +197,5 @@ def test_no_inline_bool_lower_comparison() -> None:
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} inline bool-parsing pattern(s) found in production code:\n  {joined}\n\n"
-            "Replace with _parse_bool() from aeat.core.parsing._utils."
+            "Replace with _parse_bool() from aeat.core.parsing._utils.",
         )

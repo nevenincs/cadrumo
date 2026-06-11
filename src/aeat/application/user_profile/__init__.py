@@ -161,7 +161,7 @@ _COMMAND_NAMES: frozenset[str] = frozenset(
         "RegisterProfileCommand",
         "RemoveProfileCommand",
         "RenameProfileCommand",
-    }
+    },
 )
 
 _DOMAIN_RECORD_NAMES: frozenset[str] = frozenset(
@@ -170,7 +170,7 @@ _DOMAIN_RECORD_NAMES: frozenset[str] = frozenset(
         "UserProfileFactValue",
         "UserProfileRecord",
         "UserProfileStatus",
-    }
+    },
 )
 
 

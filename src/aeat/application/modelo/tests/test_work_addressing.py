@@ -115,7 +115,7 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
         upsert_work_unit(
             work_repository.load(),
             work_unit.model_copy(update={"current_calculation_revision_id": draft.calculation_revision_id}),
-        )
+        ),
     )
 
     visible = ModeloVisibleFilingTarget(modelo="130", filing_year=2026, period="1T", bucket_id=bucket_id)
@@ -179,9 +179,9 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
                 update={
                     "current_calculation_revision_id": draft.calculation_revision_id,
                     "filed_calculation_revision_id": filed.calculation_revision_id,
-                }
+                },
             ),
-        )
+        ),
     )
 
     verify_pick = resolve_modelo_revision_pick(target=visible, pick=ModeloRevisionPick(default_for="verify"))
@@ -197,9 +197,9 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
                 update={
                     "current_calculation_revision_id": verified.calculation_revision_id,
                     "filed_calculation_revision_id": None,
-                }
+                },
             ),
-        )
+        ),
     )
 
     file_pick = resolve_modelo_revision_pick(target=visible, pick=ModeloRevisionPick(default_for="file"))

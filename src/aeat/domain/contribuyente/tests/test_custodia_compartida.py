@@ -172,10 +172,10 @@ def test_advisory_returns_string_when_custodia_present() -> None:
 def test_advisory_antitautology_custodia_vs_no_custodia() -> None:
     """The advisory differs between a custodia and a non-custodia profile."""
     with_custodia = RentaFamilyProfile(
-        descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),)
+        descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),),
     )
     without_custodia = RentaFamilyProfile(
-        descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),)
+        descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),),
     )
     assert with_custodia.custodia_compartida_advisory(FILING_YEAR) is not None
     assert without_custodia.custodia_compartida_advisory(FILING_YEAR) is None

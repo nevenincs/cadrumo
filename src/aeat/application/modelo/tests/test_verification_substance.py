@@ -808,13 +808,13 @@ _M130_CASILLA_02_LEGAL_REFS = frozenset(
         "orden-eha-672-2007:art-1",
         "ley-35-2006:art-99",
         "rd-439-2007:art-95",
-    }
+    },
 )
 _M130_CASILLA_02_SOURCE_REFS = frozenset(
     {
         "aeat-dr-130-2019-v12",
         "aeat-modelo-130-instructions",
-    }
+    },
 )
 
 

@@ -17,7 +17,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.properties import PageSetupProperties
 from pydantic import BaseModel, Field
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import UTF_8_ENCODING
 from ._records import (
     SheetAutoFilter,

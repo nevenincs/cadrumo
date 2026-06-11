@@ -123,7 +123,7 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
                 available_end_amount=Decimal("13.22"),
                 source_observation_key=f"303:2026:1T:{_SYNTHETIC_EXPEDIENTE_ID}",
                 source_artefact_sha256=hashlib.sha256(b"synthetic-submitted-file").hexdigest(),
-            )
+            ),
         )
 
         target_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
@@ -155,7 +155,7 @@ def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_p
                     expediente_id="200030300000005Z",
                     presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
-            )
+            ),
         )
 
         history = IvaCompensationHistoryRepository().load_period(2026, "1T")
@@ -187,7 +187,7 @@ def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> Non
                 estado="ALTA",
                 presented_at=datetime(2026, 7, 20, 10, 0, 0, tzinfo=UTC),
             ),
-        )
+        ),
     )
 
     assert tuple(row.period for row in selected) == ("1T", "2T")
@@ -210,7 +210,7 @@ def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(
                     pending_compensation=Decimal("1200.00"),
                     presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
-            )
+            ),
         )
 
         stored = repository.load_observation("303", 2026, "1T")
@@ -234,7 +234,7 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
                 result=period_result,
                 final_result=final_result,
                 expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
-            )
+            ),
         )
 
         history = IvaCompensationHistoryRepository().load_period(2026, "1T")
@@ -275,7 +275,7 @@ def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: P
                 result=period_result,
                 final_result=period_result,
                 semantic_compensation_ids=True,
-            )
+            ),
         )
 
         history = IvaCompensationHistoryRepository().load_period(2026, "1T")

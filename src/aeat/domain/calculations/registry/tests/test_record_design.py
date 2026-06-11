@@ -484,7 +484,7 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     closure = frozenset(
         (casilla.segmento, casilla.number)
         for casilla in derive_calculation_completeness_casillas(
-            revision, modelo_200.id, multi_segment=True, diseno_path=corpus_path
+            revision, modelo_200.id, multi_segment=True, diseno_path=corpus_path,
         )
     )
     # The closure may legitimately contain app-internal computed casillas
@@ -673,7 +673,7 @@ def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_b
     sheets = {
         sheet.name: sheet
         for sheet in extract_record_design_workbook(
-            _MODELO_131_WORKBOOK_ROOT / "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx"
+            _MODELO_131_WORKBOOK_ROOT / "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
         )
     }
     bindings = {

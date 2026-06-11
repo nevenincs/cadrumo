@@ -323,7 +323,7 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
                 bad_binding if decision.id == bad_binding.id else decision
                 for decision in revision.live_cross_references
             ),
-        }
+        },
     )
     bad_modelo: ModeloDefinition = modelo_349.model_copy(update={"revisions": {"2020-y-siguientes": bad_revision}})
     assert isinstance(bad_revision, ModeloRevision)

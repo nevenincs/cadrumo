@@ -113,7 +113,7 @@ _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
         # AEAT IVA-ID consult surfaces (GROI today, IXVI under cert auth) are
         # callable verification surfaces gated on cl@ve-movil / certificate.
         ("authenticated_simulator", "iva_id_check"),
-    }
+    },
 )
 
 
@@ -323,12 +323,12 @@ class LiveParityCatalogue:
         if environment == "both":
             raise RegistryValidationError(
                 f"oracle_id {oracle_id!r} declared environment {declared!r}; "
-                f"caller asked for unrestricted 'both' which the catalogue does not vend"
+                f"caller asked for unrestricted 'both' which the catalogue does not vend",
             )
         if declared != environment:
             raise RegistryValidationError(
                 f"oracle_id {oracle_id!r} declared environment {declared!r} is not available "
-                f"under requested environment {environment!r}"
+                f"under requested environment {environment!r}",
             )
         return oracle
 
@@ -364,7 +364,13 @@ class LiveParityCatalogue:
         if environment is None:
             return tuple(sorted(self._oracles))
         return tuple(
-            sorted(oracle_id for oracle_id, declared in self._environments.items() if declared in {"both", environment})
+            sorted(
+                [
+                    oracle_id
+                    for oracle_id, declared in self._environments.items()
+                    if declared in {"both", environment}
+                ],
+            ),
         )
 
 
@@ -547,13 +553,13 @@ def resolve_cross_reference_oracle(
             unmet = ", ".join(applicability.unmet_predicate_fields) or "<unmet>"
             raise RegistryValidationError(
                 f"cross-reference {cross_reference_id!r} is not applicable to the supplied "
-                f"profile: unmet predicate fields ({unmet})"
+                f"profile: unmet predicate fields ({unmet})",
             )
     try:
         return catalogue.lookup(oracle_id, environment=environment)
     except RegistryValidationError as exc:
         raise RegistryValidationError(
-            f"cross-reference {cross_reference_id!r} bound oracle {oracle_id!r}: {exc}"
+            f"cross-reference {cross_reference_id!r} bound oracle {oracle_id!r}: {exc}",
         ) from exc
 
 
@@ -595,14 +601,14 @@ def audit_oracle_bindings(
             except RegistryValidationError as exc:
                 failures.append(
                     f"modelo {modelo.id} revision {revision.id} cross-reference "
-                    f"{cross_reference.id} bound oracle {oracle_id!r}: {exc}"
+                    f"{cross_reference.id} bound oracle {oracle_id!r}: {exc}",
                 )
                 continue
             if (cross_reference.surface, oracle.surface_kind) not in _COMPATIBLE_SURFACE_PAIRS:
                 failures.append(
                     f"modelo {modelo.id} revision {revision.id} cross-reference "
                     f"{cross_reference.id} surface {cross_reference.surface!r} is not "
-                    f"compatible with oracle {oracle_id!r} surface_kind {oracle.surface_kind!r}"
+                    f"compatible with oracle {oracle_id!r} surface_kind {oracle.surface_kind!r}",
                 )
     return tuple(failures)
 
@@ -653,7 +659,7 @@ def collect_applicability_declarations(
                         predicate_fields=tuple(
                             predicate.field for predicate in cross_reference.applicability_predicates
                         ),
-                    )
+                    ),
                 )
     return tuple(declarations)
 

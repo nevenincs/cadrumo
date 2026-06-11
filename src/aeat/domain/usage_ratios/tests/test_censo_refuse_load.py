@@ -87,7 +87,7 @@ def test_accepts_when_persisted_matches_censo_derived_value() -> None:
             ratios={
                 SpendingCategory.IBI_VIVIENDA_AFECTO: raw,
                 SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO: raw,
-            }
+            },
         ),
         bucket_id="b1",
     )

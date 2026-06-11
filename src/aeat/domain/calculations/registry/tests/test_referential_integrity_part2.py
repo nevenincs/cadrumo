@@ -39,7 +39,7 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
     target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
-        update={"input_kind": "computed", "formula": "test.formula"}
+        update={"input_kind": "computed", "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
@@ -192,7 +192,7 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
 
     manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
     revision = _minimal_revision(casillas=(_minimal_casilla("01"), _minimal_casilla("02"))).model_copy(
-        update={"completeness_manifest": manifest}
+        update={"completeness_manifest": manifest},
     )
     modelo = _minimal_modelo(revision)
     # A clean return proves the extra accounting casilla does not fail.
@@ -209,10 +209,10 @@ def test_completeness_gate_fails_on_missing_required_casilla() -> None:
     from .._validate import RegistryValidator
 
     manifest = _completeness_manifest(
-        (CalculationCompletenessCasilla(number="01"), CalculationCompletenessCasilla(number="02"))
+        (CalculationCompletenessCasilla(number="01"), CalculationCompletenessCasilla(number="02")),
     )
     revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(
-        update={"completeness_manifest": manifest}
+        update={"completeness_manifest": manifest},
     )
     modelo = _minimal_modelo(revision)
     with pytest.raises(
@@ -282,7 +282,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     )
     manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
     revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(
-        update={"completeness_manifest": manifest, "casillas": (ungrounded,)}
+        update={"completeness_manifest": manifest, "casillas": (ungrounded,)},
     )
     modelo = _minimal_modelo(revision)
     failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)

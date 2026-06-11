@@ -76,7 +76,7 @@ def parse_iva_compensation_wallet_html(
         if allow_empty_wallet_shell and _looks_like_executed_empty_wallet_page(soup):
             raise SedeParseError(
                 "executed IVA wallet shell does not contain AEAT's explicit zero aggregate; "
-                "refusing to persist a synthetic zero wallet observation"
+                "refusing to persist a synthetic zero wallet observation",
             )
         raise SedeParseError("captured page does not contain a recognizable IVA compensation wallet table")
 
@@ -84,7 +84,7 @@ def parse_iva_compensation_wallet_html(
     if summary_total is not None and rows and summary_total != row_sum:
         raise SedeParseError(
             f"IVA wallet summary total {summary_total} does not equal the sum of Cuota Disponible rows {row_sum}; "
-            "refusing to persist an inconsistent wallet observation"
+            "refusing to persist an inconsistent wallet observation",
         )
     total_pending = summary_total if summary_total is not None else row_sum
     return IvaCompensationWalletObservation(
@@ -156,11 +156,11 @@ def _assert_wallet_result_target_matches(soup: BeautifulSoup, *, target_year: in
     rendered_year, rendered_period = _parse_wallet_result_target(soup)
     if rendered_year is not None and rendered_year != target_year:
         raise SedeParseError(
-            f"IVA wallet result exercise {rendered_year} does not match requested exercise {target_year}"
+            f"IVA wallet result exercise {rendered_year} does not match requested exercise {target_year}",
         )
     if rendered_period is not None and rendered_period != target_period.strip().upper():
         raise SedeParseError(
-            f"IVA wallet result period {rendered_period!r} does not match requested period {target_period!r}"
+            f"IVA wallet result period {rendered_period!r} does not match requested period {target_period!r}",
         )
 
 
@@ -348,7 +348,7 @@ def _wallet_execute_gate_status(html: str, *, expected_path: str) -> str:
     if action_path != expected_path:
         return "unexpected-wallet-form"
     submit = form.select_one(_PRE303.wallet_execute_submit_selector) or soup.select_one(
-        _PRE303.wallet_execute_submit_selector
+        _PRE303.wallet_execute_submit_selector,
     )
     if submit is None:
         return "no-wallet-execute-submit"
@@ -569,7 +569,7 @@ def _normalised_display_text(value: str) -> str:
 
 def _looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:
     title_and_heading = _normalised_text(
-        f"{_normalised_title(soup)} {' '.join(node.get_text(' ') for node in soup.find_all(['h1', 'h2']))}"
+        f"{_normalised_title(soup)} {' '.join(node.get_text(' ') for node in soup.find_all(['h1', 'h2']))}",
     )
     if not all(token in title_and_heading for token in _PRE303.iva_wallet_empty_page_tokens):
         return False

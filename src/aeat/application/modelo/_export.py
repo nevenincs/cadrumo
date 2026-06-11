@@ -23,8 +23,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core._period import Period, PeriodError
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period, PeriodError
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.time import now as _utc_now
@@ -549,6 +549,7 @@ def export_modelo_revision(
             workflow_profile,
             cross_period_expected_member_sets,
         ),
+        taxpayer_tax_id=workflow_profile.tax_id,
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 

@@ -122,7 +122,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
         (
             "sede_artefact",
             lambda: FiledDeclaracionObservationStore(Path("sede-cache")).load_artefact(
-                "secure-object:financial:" + "a" * 64
+                "secure-object:financial:" + "a" * 64,
             ),
         ),
         (
@@ -194,7 +194,7 @@ def test_migrated_runtime_defaults_refuse_missing_session(
         (
             "sede_artefact",
             lambda: FiledDeclaracionObservationStore(Path("sede-cache")).load_artefact(
-                "secure-object:financial:" + "a" * 64
+                "secure-object:financial:" + "a" * 64,
             ),
         ),
         (
@@ -453,7 +453,7 @@ def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None
 
     with _active_runtime(tmp_path, "bucket-a"):
         WorkUnitCatalogueRepository(bucket_id="bucket-a").save(
-            WorkUnitCatalogue(work_units={work_a.work_unit_id: work_a})
+            WorkUnitCatalogue(work_units={work_a.work_unit_id: work_a}),
         )
         CalculationRevisionCatalogueRepository(bucket_id="bucket-a").save(calc_a)
         ModeloRecordCatalogueRepository(bucket_id="bucket-a").save(filing_a)
@@ -465,7 +465,7 @@ def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None
         assert ModeloRecordCatalogueRepository(bucket_id="bucket-b").load().records == {}
         assert VerificationReportCatalogueRepository(bucket_id="bucket-b").load().reports == {}
         WorkUnitCatalogueRepository(bucket_id="bucket-b").save(
-            WorkUnitCatalogue(work_units={work_b.work_unit_id: work_b})
+            WorkUnitCatalogue(work_units={work_b.work_unit_id: work_b}),
         )
         CalculationRevisionCatalogueRepository(bucket_id="bucket-b").save(calc_b)
         ModeloRecordCatalogueRepository(bucket_id="bucket-b").save(filing_b)
@@ -614,7 +614,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         inventory = load_inventory()
         amortizacion = load_amortizacion_ledger()
         loaded_body = FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(
-            stored_a.storage_ref or ""
+            stored_a.storage_ref or "",
         )
         assert google_session_store.load_client(profile) == google_a[0]
         assert google_session_store.load_token(profile) == google_a[1]

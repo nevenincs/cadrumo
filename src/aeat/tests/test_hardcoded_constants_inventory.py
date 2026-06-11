@@ -26,7 +26,7 @@ _CANONICAL_DEFINITIONS: frozenset[Path] = frozenset(
     [
         _SRC_ROOT / "adapters" / "outbound" / "aeat" / "sede" / "_browser_constants.py",
         _SRC_ROOT / "core" / "external_constants.py",
-    ]
+    ],
 )
 
 # ---------------------------------------------------------------------------

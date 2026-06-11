@@ -121,7 +121,7 @@ def test_superseded_capture_survives_roundtrip(tmp_path: Path) -> None:
             update={
                 "state": SnapshotLifecycleState.SUPERSEDED,
                 "superseded_by_snapshot_id": successor.snapshot_id,
-            }
+            },
         )
         repo.save(predecessor)
         loaded = repo.load(predecessor.snapshot_id)
@@ -142,7 +142,7 @@ def test_discarded_capture_survives_roundtrip(tmp_path: Path) -> None:
                 "discarded_at": datetime(2026, 8, 1, 9, 0, 0, tzinfo=UTC),
                 "discarded_by": "operator-1",
                 "discard_reason": "superseded by a corrected filing",
-            }
+            },
         )
         repo.save(discarded)
         loaded = repo.load(discarded.snapshot_id)
@@ -184,7 +184,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
             update={
                 "state": SnapshotLifecycleState.SUPERSEDED,
                 "superseded_by_snapshot_id": successor.snapshot_id,
-            }
+            },
         )
         repo.save(predecessor)
 

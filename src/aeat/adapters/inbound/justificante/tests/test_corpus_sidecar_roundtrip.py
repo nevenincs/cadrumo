@@ -84,7 +84,7 @@ _PERIOD_EQUALS_EJERCICIO: frozenset[tuple[str, str]] = frozenset(
         ("347", "2024-0A"),
         ("720", "2024-0A"),
         ("840", "2024-0A"),
-    }
+    },
 )
 
 

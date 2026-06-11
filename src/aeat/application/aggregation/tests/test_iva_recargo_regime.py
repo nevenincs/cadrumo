@@ -65,7 +65,7 @@ def _tx(provider_id: str, *, iva_category: IvaCategory) -> Transaction:
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
-        }
+        },
     )
 
 

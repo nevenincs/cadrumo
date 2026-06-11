@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core._bucket_pointer_io import read_pointer
+from ....core import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root

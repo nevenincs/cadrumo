@@ -655,7 +655,7 @@ class TestFiledObservationBindings:
         )
 
         assert resolved == {
-            "irpf.previous_year_economic_activity_net_income": sum(casilla_values.values(), Decimal("0"))
+            "irpf.previous_year_economic_activity_net_income": sum(casilla_values.values(), Decimal("0")),
         }
 
     def test_encrypted_filed_observation_roundtrip_supplies_previous_filing_binding(self, tmp_path: Path) -> None:
@@ -688,7 +688,7 @@ class TestFiledObservationBindings:
         )
 
         assert resolved == {
-            "irpf.previous_year_economic_activity_net_income": sum(casilla_values.values(), Decimal("0"))
+            "irpf.previous_year_economic_activity_net_income": sum(casilla_values.values(), Decimal("0")),
         }
 
     def test_justificante_values_rejected_for_registry_binding_input(self) -> None:
@@ -748,8 +748,8 @@ class TestFiledObservationBindings:
                         source_locator="field:0224",
                         confidence=1.0,
                     ),
-                )
-            }
+                ),
+            },
         )
 
         with pytest.raises(SedeParseError, match="contradictory values"):

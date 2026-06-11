@@ -19,7 +19,7 @@ def _production_modules() -> tuple[Path, ...]:
             path
             for path in _REGISTRY_PACKAGE.glob("*.py")
             if not path.name.startswith("test_") and path.name != "conftest.py"
-        )
+        ),
     )
 
 

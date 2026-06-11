@@ -37,7 +37,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...core.time import now
@@ -528,7 +528,7 @@ def _derive_profile_facts_from_censo(
                 path="taxpayer_type.entity_type",
                 value="natural_person",
                 source=CENSO_DERIVED_SOURCE_TAG,
-            )
+            ),
         )
     iae_epigraph = (censo_facts.get("activities.iae_epigraph") or "").strip()
     if is_natural_person and iae_epigraph:
@@ -537,7 +537,7 @@ def _derive_profile_facts_from_censo(
                 path="taxpayer_type.irpf_income_categories",
                 value="actividad_economica",
                 source=CENSO_DERIVED_SOURCE_TAG,
-            )
+            ),
         )
     return tuple(derived)
 

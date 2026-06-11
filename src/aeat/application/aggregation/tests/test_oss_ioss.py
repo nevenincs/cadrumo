@@ -123,7 +123,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
                 "base_amount": Decimal("100"),
                 "iva_amount": Decimal("19"),
                 "unknown_axis": "extra-value",
-            }
+            },
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         candidate.base_amount = Decimal("200")

@@ -93,7 +93,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         pytest.fail(
             f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised DeclaracionParseError — "
             f"extraction coverage failure prevents engine recomputation.\n"
-            f"  error: {exc}"
+            f"  error: {exc}",
         )
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
@@ -160,7 +160,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
             f"RegistryValidationError — a required binding is missing.\n"
             f"  error: {exc}\n"
             f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}"
+            f"  binding_values supplied: {sorted(binding_values)}",
         )
 
     # Verify engine computes casilla 03 = 01 - 02.
@@ -210,7 +210,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     ],
 )
 def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
-    pdf_stem: str, year: int, period: str
+    pdf_stem: str, year: int, period: str,
 ) -> None:
     """Engine recomputes casilla 28 (total retenciones) and 30 (resultado) from leaf inputs.
 
@@ -278,7 +278,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
             f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
             f"RegistryValidationError — a required binding is missing.\n"
             f"  error: {exc}\n"
-            f"  inputs supplied: {sorted(inputs)}"
+            f"  inputs supplied: {sorted(inputs)}",
         )
 
     engine_values = dict(result.values)
@@ -357,7 +357,7 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
         )
     except DeclaracionParseError as exc:
         pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 2023+ extraction failed.\n  error: {exc}"
+            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 2023+ extraction failed.\n  error: {exc}",
         )
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
@@ -413,7 +413,7 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
     ],
 )
 def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
-    pdf_stem: str, year: int, period: str
+    pdf_stem: str, year: int, period: str,
 ) -> None:
     """Engine resultado-regimen-general matches the extracted printed box 46.
 
@@ -495,7 +495,7 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
             f"RegistryValidationError — a required binding is missing.\n"
             f"  error: {exc}\n"
             f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}"
+            f"  binding_values supplied: {sorted(binding_values)}",
         )
 
     engine_values = dict(result.values)
@@ -531,7 +531,7 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
-    pdf_stem: str, year: int, period: str
+    pdf_stem: str, year: int, period: str,
 ) -> None:
     """Engine box 64 (suma de resultados) matches the extracted printed value.
 
@@ -563,7 +563,7 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
-    pdf_stem: str, year: int, period: str
+    pdf_stem: str, year: int, period: str,
 ) -> None:
     """Engine box 66 (atribuible Administración del Estado) matches the extracted printed value.
 
@@ -596,7 +596,7 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidacion(
-    pdf_stem: str, year: int, period: str
+    pdf_stem: str, year: int, period: str,
 ) -> None:
     """Engine box 69 (resultado autoliquidación) matches the extracted printed value.
 
@@ -629,7 +629,7 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
-    pdf_stem: str, year: int, period: str
+    pdf_stem: str, year: int, period: str,
 ) -> None:
     """Engine box 71 (resultado final) matches the extracted printed value.
 
@@ -673,7 +673,7 @@ def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
     ],
 )
 def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_general(
-    pdf_stem: str, year: int, period: str
+    pdf_stem: str, year: int, period: str,
 ) -> None:
     """Engine resultado-regimen-general matches the extracted printed box 46 (legacy revision).
 
@@ -700,7 +700,7 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
         )
     except DeclaracionParseError as exc:
         pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 legacy extraction failed.\n  error: {exc}"
+            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 legacy extraction failed.\n  error: {exc}",
         )
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
@@ -742,7 +742,7 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
             f"RegistryValidationError — a required binding is missing.\n"
             f"  error: {exc}\n"
             f"  inputs supplied: {sorted(inputs)}\n"
-            f"  binding_values supplied: {sorted(binding_values)}"
+            f"  binding_values supplied: {sorted(binding_values)}",
         )
 
     engine_values = dict(result.values)

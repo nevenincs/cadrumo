@@ -90,7 +90,7 @@ def _inbound_tx(
             "iva_category": iva_category,
             "counterparty_eu_member_state": counterparty_eu_member_state,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-        }
+        },
     )
 
 

@@ -9,7 +9,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from .....adapters.inbound.justificante import parse_justificante
-from .....core._period import Period
+from .....core import Period
 from .....domain.filing import ModeloBuilderError, ModeloDraft
 from .....domain.justificante import Justificante
 from .....domain.submission import ModeloDraftStatus

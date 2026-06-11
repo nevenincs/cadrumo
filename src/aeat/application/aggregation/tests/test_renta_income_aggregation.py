@@ -105,7 +105,7 @@ def _income_transaction(
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -131,7 +131,7 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
     issue_ids = {i.transaction_id for i in result.issues}
     assert apr.transaction_id in issue_ids
     assert result.casilla_aggregation.casilla_values["01"] == sum(
-        (tx.raw.amount for tx in (jan, feb, mar)), Decimal("0")
+        (tx.raw.amount for tx in (jan, feb, mar)), Decimal("0"),
     )
 
 
@@ -208,7 +208,7 @@ def test_outgoing_transaction_excluded_with_reason() -> None:
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
@@ -268,7 +268,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     assert len(result_q1.issues) == 1
     assert result_q1.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
     assert result_q1.casilla_aggregation.casilla_values["01"] == sum(
-        (tx.raw.amount for tx in (q1_tx1, q1_tx2)), Decimal("0")
+        (tx.raw.amount for tx in (q1_tx1, q1_tx2)), Decimal("0"),
     )
     observation_ids_q1 = {o.transaction_id for o in result_q1.observations}
     assert observation_ids_q1 == {q1_tx1.transaction_id, q1_tx2.transaction_id}
@@ -282,7 +282,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
     assert result_q2.issues == ()
     assert result_q2.casilla_aggregation.casilla_values["01"] == sum(
-        (tx.raw.amount for tx in (q1_tx1, q1_tx2, q2_only)), Decimal("0")
+        (tx.raw.amount for tx in (q1_tx1, q1_tx2, q2_only)), Decimal("0"),
     )
     observation_ids_q2 = {o.transaction_id for o in result_q2.observations}
     assert observation_ids_q2 == {q1_tx1.transaction_id, q1_tx2.transaction_id, q2_only.transaction_id}
@@ -342,7 +342,7 @@ def _actividad_transaction(
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
-        }
+        },
     )
 
 
@@ -448,7 +448,7 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
 
     # Scenario A: one actividad + one trabajo — only actividad should flow
     actividad = _actividad_transaction(
-        "ae-a", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+        "ae-a", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica",
     )
     trabajo = _actividad_transaction(
         "trab-a",
@@ -462,10 +462,10 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
 
     # Scenario B: both transactions as actividad — both should flow
     actividad_b1 = _actividad_transaction(
-        "ae-b1", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+        "ae-b1", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica",
     )
     actividad_b2 = _actividad_transaction(
-        "ae-b2", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+        "ae-b2", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica",
     )
     catalogue_b = TransactionCatalogue.from_transactions((actividad_b1, actividad_b2))
     result_b = aggregate_renta_income_ledger(catalogue_b, bucket_id="test", period="2024Q1")
@@ -517,7 +517,7 @@ def _actividad_transaction_with_source(
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
             "source_jurisdiction": source_jurisdiction,
-        }
+        },
     )
 
 

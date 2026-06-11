@@ -113,7 +113,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
                     state,
                     profile_id="operator",
                     overrides={"identity.tax_id": "12345678Z"},
-                )
+                ),
             )
             try:
                 yield
@@ -142,7 +142,7 @@ def _assertion(valid: bool = True) -> object:
 
 def _factory(providers: list[_Provider]):
     def build(
-        kind: AuthProviderKind, settings: Settings, browser_session_factory: BrowserSessionFactory | None
+        kind: AuthProviderKind, settings: Settings, browser_session_factory: BrowserSessionFactory | None,
     ) -> _Provider:
         del kind, settings, browser_session_factory
         return providers.pop(0)

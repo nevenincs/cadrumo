@@ -77,7 +77,7 @@ def _create_profile() -> None:
             "--tax-id", "12345678Z",
             "--name", "Operator",
             "--activity", "design",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
 
@@ -89,7 +89,7 @@ def _create_work_unit() -> str:
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -106,7 +106,7 @@ def _create_calculable_work_unit() -> str:
             "app", "modelo", "work", "create",
             "--modelo", "111", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
@@ -142,9 +142,7 @@ def test_first_work_calculate_binding_error_guides_the_operator(_isolated_cli_ba
     _create_profile()
     work_unit_id = _create_work_unit()
 
-    result = _invoke(
-        ["app", "modelo", "work", "calculate", work_unit_id, "--casilla", "01=10000"],
-    )
+    result = _invoke(["app", "modelo", "work", "calculate", work_unit_id])
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     # A missing binding id is named in the error. The exact identifier
@@ -185,7 +183,7 @@ def test_work_status_resolves_a_visible_filing_target(_isolated_cli_backend: Pat
             "--format", "json",
             "app", "modelo", "work", "status",
             "--modelo", "130", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
@@ -233,7 +231,7 @@ def test_work_revisions_resolves_a_visible_filing_target(_isolated_cli_backend: 
             "--format", "json",
             "app", "modelo", "work", "revisions",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
@@ -252,7 +250,7 @@ def test_work_calculate_resolves_a_visible_filing_target(_isolated_cli_backend: 
             "--format", "json",
             "app", "modelo", "work", "calculate",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
@@ -270,7 +268,7 @@ def test_work_verify_defaults_to_current_draft_for_visible_target(_isolated_cli_
             "--format", "json",
             "app", "modelo", "work", "calculate",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
     revision_id = _payload(calculated.output)["calculation_revision_id"]
@@ -280,7 +278,7 @@ def test_work_verify_defaults_to_current_draft_for_visible_target(_isolated_cli_
             "--format", "json",
             "app", "modelo", "work", "verify",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
@@ -302,7 +300,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli
             "--format", "json",
             "app", "modelo", "work", "calculate",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
 
@@ -311,7 +309,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli
             "--format", "json",
             "app", "modelo", "work", "verify",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
     revision_id = _payload(verified.output)["calculation_revision_id"]
@@ -320,7 +318,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli
             "--format", "json",
             "app", "modelo", "work", "status",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["current_calculation_revision_id"] == revision_id
@@ -329,11 +327,69 @@ def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli
         [
             "app", "modelo", "work", "file",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0
     assert "file requires a verified-complete revision" not in result.output
     assert "filing-obligation window is not open" in result.output or "NO_PENDING_OBLIGATION" in result.output
+
+
+def test_work_dependencies_lists_cross_period_inventory(_isolated_cli_backend: Path) -> None:
+    """`work dependencies` exposes the registry-derived filing-history inventory."""
+
+    _create_profile()
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "dependencies",
+            "--year", "2025", "--modelo", "390",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+
+    assert payload["operation"] == "modelo.work.dependencies"
+    assert payload["filing_year"] == 2025
+    assert payload["modelo_filter"] == "390"
+    assert payload["target_modelos"] == ["390"]
+    assert "303" in payload["source_modelos"]
+    assert payload["target_count"] >= 1
+    annual = next(item for item in payload["items"] if item["target_period"] == "0A")
+    assert annual["target_modelo"] == "390"
+    assert annual["dependency_count"] >= 4
+    assert {dependency["source_modelo"] for dependency in annual["dependencies"]} == {"303"}
+
+
+def test_work_dependencies_surfaces_current_clean_state_blockers(_isolated_cli_backend: Path) -> None:
+    """A target read includes concrete blocker codes for missing upstream filings."""
+
+    _create_profile()
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "dependencies",
+            "--year", "2025", "--modelo", "390", "--period", "0A",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    clean_state = payload["clean_state"]
+
+    assert clean_state["target_modelo"] == "390"
+    assert clean_state["target_filing_year"] == 2025
+    assert clean_state["target_period"] == "0A"
+    assert clean_state["requires_clean_state"] is True
+    assert clean_state["clean"] is False
+    assert "missing_current_filing_record" in clean_state["blockers"]
+    assert "missing_observation" in clean_state["blockers"]
+    assert any(
+        dependency["source_modelo"] == "303"
+        and dependency["period"] == "1T"
+        and "missing_current_filing_record" in dependency["blockers"]
+        for dependency in clean_state["dependencies"]
+    )
 
 
 def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path) -> None:
@@ -407,7 +463,7 @@ def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> No
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes", "--name", "First",
-        ]
+        ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
     first_payload = _payload(first.output)
@@ -421,7 +477,7 @@ def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> No
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes", "--name", "First",
-        ]
+        ],
     )  # fmt: skip
     assert second.exit_code == 0, second.output
     second_payload = _payload(second.output)
@@ -441,7 +497,7 @@ def test_work_create_without_revision_resumes_existing_visible_target(_isolated_
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes",
-        ]
+        ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
     first_payload = _payload(first.output)
@@ -451,7 +507,7 @@ def test_work_create_without_revision_resumes_existing_visible_target(_isolated_
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
-        ]
+        ],
     )  # fmt: skip
     assert second.exit_code == 0, second.output
     second_payload = _payload(second.output)
@@ -471,7 +527,7 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_bac
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes", "--name", "Original",
-        ]
+        ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
 
@@ -481,7 +537,7 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_bac
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", "2025", "--period", "1T",
             "--revision", "2019-y-siguientes", "--name", "Renamed Unit",
-        ]
+        ],
     )  # fmt: skip
     assert renamed.exit_code == 0, renamed.output
     payload = _payload(renamed.output)
@@ -506,7 +562,7 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(_isolated_cli_b
             "app", "ledger", "add",
             "--date", "2025-01-15", "--amount", "1000.00",
             "--direction", "INCOMING", "--description", "Factura cliente A",
-        ]
+        ],
     )  # fmt: skip
     assert added.exit_code == 0, added.output
 
@@ -539,7 +595,7 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
             "app", "modelo", "work", "create",
             "--modelo", "131", "--year", "2024", "--period", "2T",
             "--revision", "2026",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0
     assert "Traceback" not in result.output
@@ -580,7 +636,7 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(
             "app", "modelo", "work", "create",
             "--modelo", "100", "--year", "2024", "--period", "anual",
             "--revision", "2024",
-        ]
+        ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
@@ -589,7 +645,7 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "0001=38000",
-        ]
+        ],
     )  # fmt: skip
     assert result.exit_code != 0
     assert "Traceback" not in result.output

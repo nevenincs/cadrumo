@@ -25,7 +25,8 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...core._toml import read_toml
+from ...core import Period
+from ...core import read_toml
 from ...core.decimal import coerce_decimal
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
@@ -89,7 +90,7 @@ def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> 
                     surcharge_pct=_required_decimal(row.get("surcharge_pct")),
                     interest_applies=bool(row.get("interest_applies", False)),
                     legal_ref=str(row.get("legal_ref")),
-                )
+                ),
             )
         bands = tuple(built)
     except (ArithmeticError, KeyError, TypeError, ValueError, ValidationError) as exc:
@@ -126,7 +127,7 @@ def build_recovery_for_overdue(
     *,
     days_late: int,
     modelo: str,
-    period: str,
+    period: Period,
     bands: Sequence[RecargoBand] | None = None,
 ) -> Recovery:
     """Resolve the :class:`Recovery` payload for an OVERDUE obligation.
@@ -134,7 +135,7 @@ def build_recovery_for_overdue(
     Args:
         days_late: Days past the filing window's close date.
         modelo: Modelo identifier the operator must still file.
-        period: Canonical period string (e.g. ``"2026Q1"``).
+        period: Typed filing period for the overdue obligation.
         bands: Optional pre-loaded bracket table; when ``None``, the
             canonical TOML is loaded once.
 

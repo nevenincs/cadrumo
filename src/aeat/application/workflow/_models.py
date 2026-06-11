@@ -34,7 +34,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 
 from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core import require_active_bucket_id, resolve_active_bucket_id
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ..auth._models import AuthState

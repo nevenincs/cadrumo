@@ -123,7 +123,7 @@ def test_rejects_unknown_keys() -> None:
                 "hkdf_info": "aeat-recovery-v1",
                 "created_at": datetime.now(tz=UTC),
                 "unexpected": "nope",
-            }
+            },
         )
 
 

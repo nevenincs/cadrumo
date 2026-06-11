@@ -34,7 +34,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ValidationError
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..bucket._errors import RecoveryVerificationError
 from ..crypto._crypto import EncryptedBlob

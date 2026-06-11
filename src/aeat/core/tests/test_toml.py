@@ -1,4 +1,4 @@
-"""Behaviour tests for the shared TOML helpers in :mod:`aeat.core._toml`."""
+"""Behaviour tests for the shared TOML helpers exported by :mod:`aeat.core`."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .._toml import freeze_toml, parse_toml_text, read_toml, to_str_keyed_dict
+from .. import freeze_toml, parse_toml_text, read_toml, to_str_keyed_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

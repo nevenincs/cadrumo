@@ -33,7 +33,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core import Modelo
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ...core.time import now
 from ._errors import LiveApplicationInputError
@@ -132,7 +132,7 @@ def derive_borrador_100_snapshot_id(
                 key: format(value, "f") if isinstance(value, Decimal) else value
                 for key, value in sorted(binding_values.items())
             },
-        }
+        },
     )
 
 
@@ -188,12 +188,12 @@ class Borrador100SnapshotRepository:
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
                 f"borrador snapshot payload bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}"
+                f"does not match repository bucket {self._bucket_id!r}",
             )
         if snapshot.snapshot_id != snapshot_id:
             raise LiveApplicationInputError(
                 f"borrador snapshot payload id={snapshot.snapshot_id!r} "
-                f"does not match requested snapshot {snapshot_id!r}"
+                f"does not match requested snapshot {snapshot_id!r}",
             )
         return snapshot
 
@@ -235,7 +235,7 @@ class Borrador100SnapshotRepository:
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
                 f"borrador snapshot bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}"
+                f"does not match repository bucket {self._bucket_id!r}",
             )
         envelope = Envelope[Borrador100Snapshot](
             schema_version=_BORRADOR_100_SNAPSHOT_VERSION,
@@ -368,7 +368,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
             update={
                 "state": SnapshotLifecycleState.SUPERSEDED,
                 "superseded_by_snapshot_id": superseded_by,
-            }
+            },
         )
 
 

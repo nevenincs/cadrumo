@@ -1,4 +1,4 @@
-"""Gate tests for :class:`aeat.core._modelo.Modelo`.
+"""Gate tests for :class:`aeat.core.Modelo`.
 
 These tests bind the canonical :class:`Modelo` StrEnum to the registry authority
 and the domain-level shape validator, ensuring the enum cannot drift from the
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._modelo import NON_REGISTRY_MODELOS, Modelo
+from .. import NON_REGISTRY_MODELOS, Modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

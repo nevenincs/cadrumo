@@ -5,7 +5,7 @@ Asserts that:
     ``in {"failed", "timeout"}``) comparisons survive in
     ``_workbook_parity.py`` — all sites must use ``WorkbookScanStatus``
     enum members.
-(b) ``STRICT_FROZEN_CONFIG`` from ``aeat.core._models`` is used everywhere
+(b) ``STRICT_FROZEN_CONFIG`` from ``aeat.core`` is used everywhere
     a local ``_STRICT_FROZEN = ConfigDict(...)`` would otherwise be
     declared; the two relevant persistence-layer files use the canonical
     constant.
@@ -43,7 +43,7 @@ _UTF8_ALLOWLIST: frozenset[Path] = frozenset(
     [
         # canonical constant definition — the ONLY place the literal must appear
         _UTF8_CONSTANT_DEFINITION,
-    ]
+    ],
 )
 
 
@@ -107,7 +107,7 @@ def test_no_bare_scan_status_scanned_comparison() -> None:
 # ---------------------------------------------------------------------------
 # No local _STRICT_FROZEN = ConfigDict(...) definition in the two
 # persistence-layer files; both must import STRICT_FROZEN_CONFIG from
-# core._models
+# aeat.core
 # ---------------------------------------------------------------------------
 
 _LAYOUT_FILE = _SRC_ROOT / "adapters" / "persistence" / "storage" / "bucket" / "_layout.py"
@@ -117,10 +117,10 @@ _RE_LOCAL_STRICT_FROZEN_DEF = re.compile(r"_STRICT_FROZEN\s*=\s*ConfigDict\s*\("
 
 
 def test_layout_uses_canonical_strict_frozen_config() -> None:
-    """_layout.py must import STRICT_FROZEN_CONFIG from core._models, not define locally."""
+    """_layout.py must import STRICT_FROZEN_CONFIG from aeat.core, not define locally."""
     assert _LAYOUT_FILE.is_file(), f"_layout.py not found: {_LAYOUT_FILE}"
     text = _LAYOUT_FILE.read_text(encoding="utf-8")
-    assert "STRICT_FROZEN_CONFIG" in text, "_layout.py does not import STRICT_FROZEN_CONFIG from core._models"
+    assert "STRICT_FROZEN_CONFIG" in text, "_layout.py does not import STRICT_FROZEN_CONFIG from aeat.core"
     assert not _RE_LOCAL_STRICT_FROZEN_DEF.search(text), (
         "_layout.py still defines a local _STRICT_FROZEN = ConfigDict(...); "
         "remove it and use the canonical STRICT_FROZEN_CONFIG import"
@@ -128,10 +128,10 @@ def test_layout_uses_canonical_strict_frozen_config() -> None:
 
 
 def test_secure_objects_uses_canonical_strict_frozen_config() -> None:
-    """secure_objects.py must import STRICT_FROZEN_CONFIG from core._models, not define locally."""
+    """secure_objects.py must import STRICT_FROZEN_CONFIG from aeat.core, not define locally."""
     assert _SECURE_OBJECTS_FILE.is_file(), f"secure_objects.py not found: {_SECURE_OBJECTS_FILE}"
     text = _SECURE_OBJECTS_FILE.read_text(encoding="utf-8")
-    assert "STRICT_FROZEN_CONFIG" in text, "secure_objects.py does not import STRICT_FROZEN_CONFIG from core._models"
+    assert "STRICT_FROZEN_CONFIG" in text, "secure_objects.py does not import STRICT_FROZEN_CONFIG from aeat.core"
     assert not _RE_LOCAL_STRICT_FROZEN_DEF.search(text), (
         "secure_objects.py still defines a local _STRICT_FROZEN = ConfigDict(...); "
         "remove it and use the canonical STRICT_FROZEN_CONFIG import"

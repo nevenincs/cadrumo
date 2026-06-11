@@ -83,7 +83,7 @@ class TestPersistenceRoundTrip:
 
     def test_save_rejects_traversal_id(self, tmp_path: Path) -> None:
         escaped = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)).model_copy(
-            update={"run_id": "../escape"}
+            update={"run_id": "../escape"},
         )
         with pytest.raises(WorkflowError) as excinfo:
             save_run(escaped, runs_dir=tmp_path)

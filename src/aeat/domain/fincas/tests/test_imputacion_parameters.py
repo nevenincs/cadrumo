@@ -34,13 +34,13 @@ def test_lirpf_art_85_parameters_match_registry_toml_values() -> None:
     raw = _load_irpf_toml()["parameters"]
 
     assert load_imputacion_parameters().recent_revision_rate == Decimal(
-        raw["lirpf-art-85:imputacion-rate-recent-revision"]["value"]
+        raw["lirpf-art-85:imputacion-rate-recent-revision"]["value"],
     )
     assert load_imputacion_parameters().old_or_no_revision_rate == Decimal(
-        raw["lirpf-art-85:imputacion-rate-old-or-no-revision"]["value"]
+        raw["lirpf-art-85:imputacion-rate-old-or-no-revision"]["value"],
     )
     assert load_imputacion_parameters().catastral_revision_lookback_years == int(
-        raw["lirpf-art-85:catastral-revision-lookback-years"]["value"]
+        raw["lirpf-art-85:catastral-revision-lookback-years"]["value"],
     )
 
 

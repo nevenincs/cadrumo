@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pytest
 
-from .._modelo import Modelo
+from .. import Modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

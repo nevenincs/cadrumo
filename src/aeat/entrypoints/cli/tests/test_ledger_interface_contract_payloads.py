@@ -105,7 +105,7 @@ def test_classify_branches_are_distinct_discriminated_shapes() -> None:
 
 def test_bulk_result_rejects_extra_field() -> None:
     """The strict OutputSchema base forbids unknown keys on the bulk branch."""
-    with pytest.raises(ValueError):  # noqa: PT011 - pydantic ValidationError is a ValueError subclass
+    with pytest.raises(ValueError):
         LedgerClassifyBulkResult.model_validate(
             {"total": 1, "applied": 1, "skipped": 0, "failures": [], "bogus": "x"},
         )

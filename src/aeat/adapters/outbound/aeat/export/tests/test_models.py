@@ -50,7 +50,7 @@ class TestSubmissionAttempt:
                     "ended_at": datetime(2026, 4, 12, 10, 0, 1, tzinfo=UTC),
                     "status": "SUBMITTED",
                     "extra": "nope",
-                }
+                },
             )
 
     def test_frozen(self) -> None:
@@ -78,7 +78,7 @@ class TestSubmissionAttempt:
                     "started_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "ended_at": datetime(2026, 4, 12, 10, 0, 1, tzinfo=UTC),
                     "status": "WHATEVER",
-                }
+                },
             )
 
 
@@ -120,7 +120,7 @@ class TestModeloPresentado:
                     "submitted_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "attempts": [_attempt().model_dump()],
                     "extra": "nope",
-                }
+                },
             )
 
     def test_attempts_must_be_nonempty(self) -> None:

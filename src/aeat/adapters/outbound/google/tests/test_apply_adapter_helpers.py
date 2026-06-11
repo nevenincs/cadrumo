@@ -236,7 +236,7 @@ def test_structural_cleanup_deletes_only_adapter_managed_metadata_and_protected_
                         "description": "operator protected range",
                     },
                 ],
-            }
+            },
         ],
     }
 
@@ -248,22 +248,22 @@ def test_structural_cleanup_deletes_only_adapter_managed_metadata_and_protected_
                 "dataFilter": {
                     "developerMetadataLookup": {
                         "metadataId": 101,
-                    }
-                }
-            }
+                    },
+                },
+            },
         },
         {
             "deleteDeveloperMetadata": {
                 "dataFilter": {
                     "developerMetadataLookup": {
                         "metadataId": 103,
-                    }
-                }
-            }
+                    },
+                },
+            },
         },
         {
             "deleteProtectedRange": {
                 "protectedRangeId": 201,
-            }
+            },
         },
     ]

@@ -35,7 +35,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing

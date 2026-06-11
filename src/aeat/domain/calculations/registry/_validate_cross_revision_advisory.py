@@ -84,11 +84,11 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
                     for divergence in divergences
                     for continuidad_id in (divergence.left_continuidad_id, divergence.right_continuidad_id)
                     if continuidad_id is not None
-                }
-            )
+                },
+            ),
         )
         evolution_kinds = tuple(
-            sorted({divergence.evolution_kind for divergence in divergences if divergence.evolution_kind is not None})
+            sorted({divergence.evolution_kind for divergence in divergences if divergence.evolution_kind is not None}),
         )
         covered_by_evolution_count = sum(1 for divergence in divergences if divergence.evolution_covers_field)
         summaries.append(
@@ -103,6 +103,6 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
                 evolution_kinds=evolution_kinds,
                 covered_by_evolution_count=covered_by_evolution_count,
                 uncovered_count=len(divergences) - covered_by_evolution_count,
-            )
+            ),
         )
     return tuple(summaries)

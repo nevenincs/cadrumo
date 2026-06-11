@@ -55,7 +55,7 @@ def decimal_from_string(
         return Decimal(value.strip())
     except (InvalidOperation, ValueError) as exc:
         raise error_factory(
-            f"{pipeline_label} for numeric binding {binding_id!r} must be decimal-compatible; got {value!r}"
+            f"{pipeline_label} for numeric binding {binding_id!r} must be decimal-compatible; got {value!r}",
         ) from exc
 
 

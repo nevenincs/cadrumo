@@ -22,7 +22,7 @@ from .....application.repair_integrity import (
     repair_remediation_decision_id,
 )
 from .....application.workflow import DeclaracionPointer, WorkflowResult, WorkflowStage, WorkflowState, WorkflowStep
-from .....core._period import Period as _Period
+from .....core import Period as _Period
 from .....core.config import override_settings
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....domain._identifiers import ModeloIdentifier

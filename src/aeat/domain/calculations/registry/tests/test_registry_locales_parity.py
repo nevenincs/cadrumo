@@ -66,7 +66,22 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     m303 = next(m for m in modelos if str(m.id) == "303")
     rev303 = m303.revisions["2023-y-siguientes"]
     casilla_303_gen = next(c for c in rev303.casillas if c.id == "iva.repercutido.general")
-    assert casilla_303_gen.get_label("en") == "Output IVA quota at general rate (21%)"
+    assert casilla_303_gen.get_label("en") == "Output VAT amount at the standard rate (21%)"
     assert casilla_303_gen.get_label("ca") == "Quota IVA repercutit al tipus general (21%)"
     assert casilla_303_gen.get_label("hu") == "Felszámított ÁFA összeg általános kulccsal (21%)"
-    assert casilla_303_gen.get_help("en") == "Total output VAT calculated at the standard rate of 21%."
+    assert casilla_303_gen.get_help("en") == "Total output VAT calculated at the standard 21% rate."
+
+
+def test_modelo_130_all_casillas_have_schema_localized_labels_and_help() -> None:
+    """Modelo 130 is the complete small-model exemplar for schema-local translations."""
+    root = bundled_path("registry", "aeat")
+    modelos, _catalogues = load_registry_tree(root)
+
+    m130 = next(m for m in modelos if str(m.id) == "130")
+    revision = m130.revisions["2019-y-siguientes"]
+    assert len(revision.casillas) == 20
+
+    for casilla in revision.casillas:
+        for locale in ("en", "ca", "hu"):
+            assert casilla.get_label(locale) != casilla.label, (casilla.id, locale)
+            assert casilla.get_help(locale), (casilla.id, locale)

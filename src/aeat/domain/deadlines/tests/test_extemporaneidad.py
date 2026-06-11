@@ -20,6 +20,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
 from .._plazo import resolve_filing_closes_on
 from .._recargo import build_recovery_for_overdue, load_recargo_bands, resolve_recargo_band
 
@@ -60,7 +61,7 @@ def test_after_12_months_overdue_yields_15_pct_plus_interest() -> None:
 
 def test_after_12_months_recovery_payload() -> None:
     """build_recovery_for_overdue with 543 days produces a fully-populated Recovery."""
-    recovery = build_recovery_for_overdue(days_late=543, modelo="303", period="2024Q4")
+    recovery = build_recovery_for_overdue(days_late=543, modelo="303", period=Period.from_year_and_code(2024, "4T"))
     assert recovery.still_filable is True
     assert recovery.recargo_band.id == "after_12_months"
     assert recovery.recargo_band.interest_applies is True
@@ -118,7 +119,7 @@ def test_resolve_filing_closes_on_m130_2026_q1_returns_date() -> None:
     windows for 2026 registered in the canonical TOML.  The resolver
     must return a non-None date for the Q1 window.
     """
-    closes_on = resolve_filing_closes_on("130", 2026, "Q1")
+    closes_on = resolve_filing_closes_on("130", 2026, "1T")
     assert closes_on is not None
     assert isinstance(closes_on, date)
     # M130 Q1 2026: typically closes on 2026-04-20 (AEAT plazo trimestral).
@@ -128,7 +129,7 @@ def test_resolve_filing_closes_on_m130_2026_q1_returns_date() -> None:
 
 def test_resolve_filing_closes_on_unknown_modelo_returns_none() -> None:
     """A modelo with no registry deadline windows returns None gracefully."""
-    result = resolve_filing_closes_on("999", 2026, "Q1")
+    result = resolve_filing_closes_on("999", 2026, "1T")
     assert result is None
 
 

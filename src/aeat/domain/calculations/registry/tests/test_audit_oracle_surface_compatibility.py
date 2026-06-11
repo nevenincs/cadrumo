@@ -94,7 +94,7 @@ def test_static_official_documentation_surface_rejects_every_oracle() -> None:
 
 def test_authenticated_read_surface_rejects_open_simulator_oracle() -> None:
     modelo = _bind_first_cross_reference(
-        _modelo_130(), oracle_id="modelo-100-renta-web-open", surface="authenticated_read_surface"
+        _modelo_130(), oracle_id="modelo-100-renta-web-open", surface="authenticated_read_surface",
     )
 
     failures = audit_oracle_bindings(modelo, _build_catalogue(), environment=OracleEnvironment.PRODUCTION)
@@ -149,7 +149,7 @@ def test_compatibility_allow_list_matches_documented_pairs() -> None:
                 ("public_read_surface", "file_validator"),
                 ("authenticated_read_surface", "pre_filing_validator"),
                 ("authenticated_simulator", "iva_id_check"),
-            }
+            },
         )
         == _COMPATIBLE_SURFACE_PAIRS
     )

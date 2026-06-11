@@ -252,7 +252,7 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
         {
             "observed": {"0180": "12345.67", "0224": "0.00"},
             "raw_evidence_locator": "corpus/aeat_official/renta_web_open/sample.json",
-        }
+        },
     ).encode()
 
     # Direct schema validation — strict, frozen, extra=forbid.

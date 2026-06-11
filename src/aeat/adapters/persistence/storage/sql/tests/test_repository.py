@@ -54,7 +54,7 @@ def test_modelo_repository_crud_round_trip(tmp_path: Path) -> None:
             assert repo.list_all() == [created]
 
             updated = repo.upsert(
-                ModeloCatalogueRecord(id=created.id, identifier="MODELO_130", name="Pagos fraccionados IRPF")
+                ModeloCatalogueRecord(id=created.id, identifier="MODELO_130", name="Pagos fraccionados IRPF"),
             )
             assert updated.name.endswith("IRPF")
 
@@ -80,7 +80,7 @@ def test_portal_repository_preserves_enum(tmp_path: Path) -> None:
                     auth_method=PortalAuthMethod.CERTIFICATE,
                     modelo_id=modelo.id,
                     label="Sede electrónica",
-                )
+                ),
             )
             assert created.auth_method is PortalAuthMethod.CERTIFICATE
             assert created.id is not None
@@ -95,7 +95,7 @@ def test_corpus_artifact_repository_round_trip(tmp_path: Path) -> None:
     try:
         with session_scope(engine) as session:
             modelo = ModeloRepository(session).upsert(
-                ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos fraccionados")
+                ModeloCatalogueRecord(identifier="MODELO_130", name="Pagos fraccionados"),
             )
             assert modelo.id is not None
             repo = CorpusArtifactRepository(session)
@@ -107,7 +107,7 @@ def test_corpus_artifact_repository_round_trip(tmp_path: Path) -> None:
                     sha256="a" * 64,
                     source_url=sede_pdf_url(PDF_MODELO_130_2024_PATH_FIXTURE),
                     fetched_at=datetime(2026, 4, 12, tzinfo=UTC),
-                )
+                ),
             )
             assert created.id is not None
             listed = repo.list_all()

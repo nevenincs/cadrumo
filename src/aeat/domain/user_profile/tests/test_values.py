@@ -42,7 +42,7 @@ def test_profile_record_rejects_invalid_lifecycle_state() -> None:
                 "profile_id": "removed",
                 "display_name": "Removed",
                 "status": "tombstoned",
-            }
+            },
         )
 
     with pytest.raises(ValidationError, match="active profiles must not carry removed_at"):

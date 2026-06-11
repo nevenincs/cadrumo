@@ -15,7 +15,7 @@ from typing import Self, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId
 from ...core.time._utc import validate_utc_aware
@@ -275,7 +275,7 @@ class AttachmentCatalogue(BaseModel):
         for key, attachment in self.attachments.items():
             if key != attachment.attachment_id:
                 raise AttachmentValidationError(
-                    f"catalogue key {key!r} does not match attachment_id {attachment.attachment_id!r}"
+                    f"catalogue key {key!r} does not match attachment_id {attachment.attachment_id!r}",
                 )
         return self
 

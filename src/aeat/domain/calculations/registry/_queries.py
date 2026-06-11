@@ -754,7 +754,7 @@ class RegistryQueryService:
                 declared = sorted(declared_by_revision)
                 raise RegistryValidationError(
                     f"period {period!r} is not declared by any revision of modelo "
-                    f"{definition.id}; declared periods: {', '.join(declared)}"
+                    f"{definition.id}; declared periods: {', '.join(declared)}",
                 )
             revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
             # Return the registry's own casing for the period token.

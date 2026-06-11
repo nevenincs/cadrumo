@@ -134,7 +134,7 @@ def register_export_commands(
                 tr(
                     "cli.app.modelo.export.errors.output_required",
                     default="Supply --output PATH for the fichero-BOE artefact.",
-                )
+                ),
             )
 
         try:

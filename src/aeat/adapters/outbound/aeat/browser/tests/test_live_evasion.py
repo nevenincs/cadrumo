@@ -65,7 +65,7 @@ def _driver_descendants(driver_pid: int) -> tuple[_ProcessInfo, ...]:
               $result | ConvertTo-Json -Depth 3 -Compress
             }}
             Get-Descendants {driver_pid}
-            """
+            """,
         ).strip()
         completed = subprocess.run(
             [_require_executable("powershell"), "-NoProfile", "-Command", script],

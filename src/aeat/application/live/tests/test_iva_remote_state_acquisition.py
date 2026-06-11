@@ -404,16 +404,16 @@ def test_live_surface_timeout_suppresses_playwright_target_closed_loop_noise() -
                 loop.call_exception_handler(
                     {
                         "exception": TargetClosedError(
-                            "Target page, context or browser has been closed\nCall log:\n  - navigating"
-                        )
-                    }
+                            "Target page, context or browser has been closed\nCall log:\n  - navigating",
+                        ),
+                    },
                 )
                 loop.call_exception_handler(
                     {
                         "exception": PlaywrightError(
-                            "net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating"
-                        )
-                    }
+                            "net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating",
+                        ),
+                    },
                 )
                 loop.call_exception_handler({"exception": RuntimeError("unrelated live exception")})
         finally:
@@ -441,7 +441,11 @@ def test_live_surface_timeout_can_keep_cancellation_handler_until_loop_shutdown(
                 pass
 
             loop.call_exception_handler(
-                {"exception": PlaywrightError("net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating")}
+                {
+                    "exception": PlaywrightError(
+                        "net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating",
+                    ),
+                },
             )
             loop.call_exception_handler({"exception": RuntimeError("unrelated live exception")})
         finally:
@@ -639,7 +643,7 @@ def test_legacy_acquisition_manifest_without_auth_outcome_still_loads() -> None:
                 {"surface": "filed_history", "status": "failed", "failure_type": "MissingSurfaceReport"},
                 {"surface": "wallet_cartera", "status": "failed", "failure_type": "MissingSurfaceReport"},
             ],
-        }
+        },
     )
 
     assert legacy.auth.failure_type == "MissingAuthResult"

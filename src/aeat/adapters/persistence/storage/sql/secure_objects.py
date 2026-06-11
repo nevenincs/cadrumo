@@ -259,7 +259,7 @@ class SecureObjectRepository:
                 select(_orm.SecureObjectRow.id).where(
                     _orm.SecureObjectRow.namespace == namespace,
                     _orm.SecureObjectRow.object_key == object_key,
-                )
+                ),
             ).scalar_one_or_none()
             return row_id is not None
 
@@ -281,7 +281,7 @@ class SecureObjectRepository:
                 select(_orm.SecureObjectRow.id).where(
                     _orm.SecureObjectRow.namespace == namespace,
                     _orm.SecureObjectRow.object_key == hashed_object_key,
-                )
+                ),
             ).scalar_one_or_none()
             return row_id is not None
 
@@ -313,7 +313,7 @@ class SecureObjectRepository:
                 "written_at, payload, revision_id, previous_revision_id, revision_ancestor_ids, previous_payload_hash, "
                 "payload_hash, ciphertext_hash, revision_written_at "
                 "FROM secure_objects "
-                "ORDER BY namespace, object_key"
+                "ORDER BY namespace, object_key",
             ).execution_options(yield_per=batch_size)
             for raw in session.execute(stmt):
                 written_at_raw = raw.written_at
@@ -372,7 +372,7 @@ class SecureObjectRepository:
         with session_scope(self._engine) as session:
             rows = (
                 session.execute(
-                    select(_orm.SecureObjectRow.namespace).distinct().order_by(_orm.SecureObjectRow.namespace)
+                    select(_orm.SecureObjectRow.namespace).distinct().order_by(_orm.SecureObjectRow.namespace),
                 )
                 .scalars()
                 .all()
@@ -442,7 +442,7 @@ class SecureObjectRepository:
             rows = session.execute(
                 select(_orm.SecureObjectRow.object_key)
                 .where(_orm.SecureObjectRow.namespace == namespace)
-                .order_by(_orm.SecureObjectRow.object_key)
+                .order_by(_orm.SecureObjectRow.object_key),
             ).scalars()
             return tuple(bytes(row).hex() for row in rows)
 
@@ -542,7 +542,7 @@ class SecureObjectRepository:
                     "SELECT id, object_key, classification, schema_version, "
                     "written_at, payload "
                     "FROM secure_objects WHERE namespace = :namespace "
-                    "ORDER BY object_key"
+                    "ORDER BY object_key",
                 )
                 .bindparams(bindparam("namespace", value=namespace))
                 .columns(
@@ -666,7 +666,7 @@ class SecureObjectRepository:
                 select(_orm.SecureObjectRow).where(
                     _orm.SecureObjectRow.namespace == namespace,
                     _orm.SecureObjectRow.object_key == object_key,
-                )
+                ),
             ).scalar_one_or_none()
             if row is None:
                 return None
@@ -863,7 +863,7 @@ class SecureObjectRepository:
             select(_orm.SecureObjectRow.id).where(
                 _orm.SecureObjectRow.namespace == namespace,
                 _orm.SecureObjectRow.object_key == key,
-            )
+            ),
         ).scalar_one_or_none()
         if row_id is not None:
             previous_metadata = session.execute(
@@ -872,7 +872,7 @@ class SecureObjectRepository:
                     _orm.SecureObjectRow.revision_ancestor_ids,
                     _orm.SecureObjectRow.payload_hash,
                     _orm.SecureObjectRow.payload,
-                ).where(_orm.SecureObjectRow.id == row_id)
+                ).where(_orm.SecureObjectRow.id == row_id),
             ).one()
             previous_revision_id = previous_metadata.revision_id
             previous_revision_ancestor_ids = self._parse_revision_ancestor_ids(previous_metadata.revision_ancestor_ids)
@@ -913,12 +913,12 @@ class SecureObjectRepository:
                             schema_version=schema_version,
                             written_at=written_at,
                             payload=payload,
-                        )
+                        ),
                     ),
                 )
                 if expected_revision_id is not None and result.rowcount != 1:
                     current_revision_id = session.execute(
-                        select(_orm.SecureObjectRow.revision_id).where(_orm.SecureObjectRow.id == row_id)
+                        select(_orm.SecureObjectRow.revision_id).where(_orm.SecureObjectRow.id == row_id),
                     ).scalar_one_or_none()
                     raise self._revision_conflict(
                         namespace=namespace,
@@ -969,7 +969,7 @@ class SecureObjectRepository:
         raw = session.execute(
             text("SELECT object_key, payload FROM secure_objects WHERE id = :row_id").bindparams(
                 bindparam("row_id", value=row_id),
-            )
+            ),
         ).one()
         object_key = raw.object_key if isinstance(raw.object_key, bytes) else bytes(raw.object_key)
         ciphertext = raw.payload if isinstance(raw.payload, bytes) else bytes(raw.payload)
@@ -1003,7 +1003,7 @@ class SecureObjectRepository:
                 write_provenance=write_provenance,
                 source_event_id=source_event_id,
                 conflict_policy=conflict_policy,
-            )
+            ),
         )
 
     def _revision_conflict(
@@ -1040,13 +1040,13 @@ class SecureObjectRepository:
                 select(_orm.SecureObjectRow.id).where(
                     _orm.SecureObjectRow.namespace == namespace,
                     _orm.SecureObjectRow.object_key == object_key,
-                )
+                ),
             ).scalar_one_or_none()
             if row_id is None:
                 return None
             stmt = (
                 text(
-                    "SELECT classification, schema_version, written_at, payload FROM secure_objects WHERE id = :row_id"
+                    "SELECT classification, schema_version, written_at, payload FROM secure_objects WHERE id = :row_id",
                 )
                 .bindparams(bindparam("row_id", value=int(row_id)))
                 .columns(
@@ -1077,7 +1077,7 @@ class SecureObjectRepository:
                     delete(_orm.SecureObjectRow).where(
                         _orm.SecureObjectRow.namespace == namespace,
                         _orm.SecureObjectRow.object_key == object_key,
-                    )
+                    ),
                 ),
             )
             return bool(result.rowcount and result.rowcount > 0)

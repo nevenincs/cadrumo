@@ -42,7 +42,7 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
                 display_name=command.profile_name,
                 facts=tuple(facts),
                 routing_profile_id=routing_profile_id,
-            )
+            ),
         )
 
     # 2. Configure auth

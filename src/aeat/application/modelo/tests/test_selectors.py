@@ -162,7 +162,7 @@ def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkU
             "discarded_by": "operator",
             "discard_reason": "abandoned draft",
             "updated_at": _T0 + timedelta(minutes=1),
-        }
+        },
     )
     work_repo.save(upsert_work_unit(work_repo.load(), discarded))
 
@@ -311,7 +311,7 @@ def test_revision_selectors_cover_current_latest_filed_and_explicit(
             "current_calculation_revision_id": latest_draft.calculation_revision_id,
             "filed_calculation_revision_id": filed.calculation_revision_id,
             "updated_at": _T0 + timedelta(minutes=5),
-        }
+        },
     )
     wu_repo.save(upsert_work_unit(wu_repo.load(), work_unit))
 
@@ -379,7 +379,7 @@ def test_current_command_specific_revision_selectors_enforce_state(
     )
     draft_current = work_unit.model_copy(update={"current_calculation_revision_id": draft.calculation_revision_id})
     verified_current = work_unit.model_copy(
-        update={"current_calculation_revision_id": verified.calculation_revision_id}
+        update={"current_calculation_revision_id": verified.calculation_revision_id},
     )
 
     assert select_current_draft_revision(draft_current, calculation_repository=cr_repo).revision == draft
@@ -411,10 +411,10 @@ def test_exportable_revision_prefers_filed_then_current_verified(
         output=Decimal("30"),
     )
     current_verified = work_unit.model_copy(
-        update={"current_calculation_revision_id": verified.calculation_revision_id}
+        update={"current_calculation_revision_id": verified.calculation_revision_id},
     )
     current_and_filed = current_verified.model_copy(
-        update={"filed_calculation_revision_id": filed.calculation_revision_id}
+        update={"filed_calculation_revision_id": filed.calculation_revision_id},
     )
 
     assert select_exportable_revision(current_verified, calculation_repository=cr_repo).revision == verified
@@ -490,7 +490,7 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         update={
             "current_calculation_revision_id": draft.calculation_revision_id,
             "filed_calculation_revision_id": filed.calculation_revision_id,
-        }
+        },
     )
     wu_repo.save(upsert_work_unit(wu_repo.load(), current_draft))
     address = ModeloWorkAddress(modelo="130", filing_year=2026, period="1T")

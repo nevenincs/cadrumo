@@ -39,7 +39,7 @@ def validate_cross_reference_section(
                 owner,
                 cross_reference.source_refs,
                 cross_reference.evidence_tier,
-            )
+            ),
         )
         if cross_reference.oracle_id is not None:
             prior = oracle_bindings.get(cross_reference.oracle_id)
@@ -47,7 +47,7 @@ def validate_cross_reference_section(
                 failures.append(
                     f"{prefix}: cross-references {prior!r} and {cross_reference.id!r} "
                     f"both bind oracle_id {cross_reference.oracle_id!r}; "
-                    f"each oracle id may be bound by at most one cross-reference per revision"
+                    f"each oracle id may be bound by at most one cross-reference per revision",
                 )
             else:
                 oracle_bindings[cross_reference.oracle_id] = cross_reference.id
@@ -67,18 +67,19 @@ def validate_workbook_parity_section(
         failures.extend(_missing_refs(prefix, owner, workbook.source_refs, source_refs, "source"))
         if workbook.workbook_source not in source_refs:
             failures.append(
-                f"{prefix}: workbook parity {workbook.id!r} references unknown source {workbook.workbook_source!r}"
+                f"{prefix}: workbook parity {workbook.id!r} references unknown source {workbook.workbook_source!r}",
             )
             continue
         source = source_refs[workbook.workbook_source]
         if workbook.formula_coverage == "formula_form" and source.evidence_tier != "executable_parity_evidence":
             failures.append(
-                f"{prefix}: workbook parity {workbook.id!r} formula workbook requires executable parity evidence source"
+                f"{prefix}: workbook parity {workbook.id!r} formula workbook "
+                "requires executable parity evidence source",
             )
         if workbook.formula_coverage != "formula_form" and source.evidence_tier == "executable_parity_evidence":
             failures.append(
                 f"{prefix}: workbook parity {workbook.id!r} non-formula workbook must not use "
-                "executable parity evidence source"
+                "executable parity evidence source",
             )
 
 
@@ -116,11 +117,11 @@ def validate_verification_expectation_section(
         for total_kind, casilla_id in expectation.reconciliation_totals.items():
             if casilla_id not in casillas:
                 failures.append(
-                    f"{prefix}: {owner} reconciliation total {total_kind!r} references unknown casilla {casilla_id!r}"
+                    f"{prefix}: {owner} reconciliation total {total_kind!r} references unknown casilla {casilla_id!r}",
                 )
             if casilla_id not in expectation.computed_casillas:
                 failures.append(
-                    f"{prefix}: {owner} reconciliation total {total_kind!r} must be one of computed_casillas"
+                    f"{prefix}: {owner} reconciliation total {total_kind!r} must be one of computed_casillas",
                 )
 
     for predicate in revision.verification_predicates:
@@ -130,12 +131,12 @@ def validate_verification_expectation_section(
         if op_name is None:
             failures.append(
                 f"{prefix}: {owner} expression {predicate.expression!r} is not a recognised "
-                "DSL call (missing operator name or opening paren)"
+                "DSL call (missing operator name or opening paren)",
             )
         elif op_name not in KNOWN_VERIFICATION_PREDICATE_OPERATORS:
             failures.append(
                 f"{prefix}: {owner} expression uses unknown operator {op_name!r}; known operators: "
-                f"{sorted(KNOWN_VERIFICATION_PREDICATE_OPERATORS)!r}"
+                f"{sorted(KNOWN_VERIFICATION_PREDICATE_OPERATORS)!r}",
             )
 
 

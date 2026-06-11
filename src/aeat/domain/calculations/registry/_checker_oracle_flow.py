@@ -66,7 +66,7 @@ def decode_replay_observation[ObservationT: _CheckerBaseModel](
     """Decode replay JSON into the requested observation model."""
     document = decode_replay_json_payload(payload, surface_label=surface_label)
     return observation_type.model_validate(
-        {"values": dict(document.observed), "raw_evidence_locator": document.raw_evidence_locator}
+        {"values": dict(document.observed), "raw_evidence_locator": document.raw_evidence_locator},
     )
 
 

@@ -138,7 +138,7 @@ class AeatAccessGate:
             raise AeatLiveReadNotEnabledError(
                 f"pytest live AEAT reads require {_LIVE_READ_TEST_OPT_IN_ENV_VAR} set to the literal "
                 f"value 1 (the exact string '1', not 'true'/'yes'/'on'); "
-                f"current value: {self.settings.aeat_live_tests_enabled!r}"
+                f"current value: {self.settings.aeat_live_tests_enabled!r}",
             )
 
     def require_live_write(self) -> None:

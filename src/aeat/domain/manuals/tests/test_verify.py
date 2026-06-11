@@ -72,9 +72,9 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
                     {
                         "section_id": "sec1",
                         "relative_path": "structure/sections/cap1/sec1.json",
-                    }
+                    },
                 ],
-            }
+            },
         ],
     )
     _write_json(

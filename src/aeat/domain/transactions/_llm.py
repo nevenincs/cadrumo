@@ -40,7 +40,7 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ..categories import SpendingCategory, resolve_category_profiles

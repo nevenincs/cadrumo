@@ -26,10 +26,10 @@ def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
         previous = revisions[index - 1]
         previous_to = previous.valid_to
         if (previous_to is None or previous_to >= current.valid_from) and period_selectors_overlap(
-            previous.period_selector, current.period_selector
+            previous.period_selector, current.period_selector,
         ):
             failures.append(
-                f"modelo {modelo.id}: revisions {previous.id!r} and {current.id!r} overlap on period selector"
+                f"modelo {modelo.id}: revisions {previous.id!r} and {current.id!r} overlap on period selector",
             )
     return failures
 
@@ -47,18 +47,18 @@ def validate_informative_class_invariant(modelo: ModeloDefinition) -> list[str]:
         prefix = f"modelo {modelo.id} revision {revision.id}"
         if revision.formulas:
             failures.append(
-                f"{prefix}: informative modelo must not declare calculation formulas (got {len(revision.formulas)})"
+                f"{prefix}: informative modelo must not declare calculation formulas (got {len(revision.formulas)})",
             )
         if revision.relations:
             failures.append(
-                f"{prefix}: informative modelo must not declare cross-model relations (got {len(revision.relations)})"
+                f"{prefix}: informative modelo must not declare cross-model relations (got {len(revision.relations)})",
             )
         for casilla in revision.casillas:
             if casilla.input_kind not in {InputKind.INFORMATIONAL, InputKind.MANUAL}:
                 failures.append(
                     f"{prefix}: informative modelo casilla {casilla.id!r} "
                     f"has input_kind={casilla.input_kind!r}; "
-                    "only 'informational' and 'manual' are permitted"
+                    "only 'informational' and 'manual' are permitted",
                 )
     return failures
 
@@ -173,7 +173,7 @@ def validate_bracket_table_temporal_coverage(scope: str, revision: ModeloRevisio
             failures.append(
                 f"{scope}: bracket_table parameter {parameter.id!r} has no bracket "
                 f"covering [{gap_start.isoformat()}, {gap_end.isoformat()}] "
-                f"within revision date range starting {revision.valid_from.isoformat()}"
+                f"within revision date range starting {revision.valid_from.isoformat()}",
             )
     return failures
 
@@ -187,7 +187,7 @@ def validate_reconciliation_total_closure(scope: str, revision: ModeloRevision) 
             if previous is not None and previous != casilla_id:
                 failures.append(
                     f"{scope}: reconciliation total {total_kind!r} is declared by multiple casillas "
-                    f"{previous!r} and {casilla_id!r}"
+                    f"{previous!r} and {casilla_id!r}",
                 )
             declared[total_kind] = casilla_id
     return failures

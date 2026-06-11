@@ -441,7 +441,7 @@ def google_sync_calc_pull(
             lines.append(f"row_set\t{rs.grouping}\t{c.row_index}\t{c.binding}\t{c.value}")
     for assembled in assembled_groupings:
         lines.append(
-            f"assembled\t{assembled['grouping']}\t{assembled['source_kind']}\t{assembled['observation_count']}"
+            f"assembled\t{assembled['grouping']}\t{assembled['source_kind']}\t{assembled['observation_count']}",
         )
     for entry in computed_casillas:
         lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
@@ -479,7 +479,7 @@ def _assemble_pull_observations(
                 "source_kind": source_kind,
                 "observation_count": len(observations),
                 "observations": [obs.model_dump(mode="json") for obs in observations],
-            }
+            },
         )
     return groupings, total
 

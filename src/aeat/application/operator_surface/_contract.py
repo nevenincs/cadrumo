@@ -299,7 +299,7 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
             ModeloLifecycleStep.CALCULATE,
             ModeloLifecycleStep.VERIFY,
             ModeloLifecycleStep.FILE,
-        )
+        ),
     )
     log_fields = OperatorSurfaceLogFields(
         root_count=len(ACCEPTED_ROOTS),

@@ -26,7 +26,7 @@ from ...core.resources import bundled_path as _bundled_path
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain import renta as _renta_snapshot_checks  # noqa: F401  # snapshot-check registration side effect
+from ...domain import renta as _renta_snapshot_checks  # noqa: F401 - snapshot-check registration side effect
 from ...domain.calculations.registry import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
 from ...domain.calculations.registry import (
     CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
@@ -422,7 +422,7 @@ def verify_filed_state(
             "filing_period": _period_end_date(
                 filing_year=filed_observation.ejercicio,
                 registry_period=filed_observation.period,
-            )
+            ),
         },
         binding_values=binding_values,
         relation_values=relation_values,
@@ -454,7 +454,7 @@ def verify_registry_workbooks(
     previous_report = None
     if resume_from is not None:
         previous_report = _WorkbookBackendVerificationReport.model_validate_json(
-            resume_from.read_text(encoding=_UTF_8_ENCODING)
+            resume_from.read_text(encoding=_UTF_8_ENCODING),
         )
     report = _verify_workbook_backend(
         root,
@@ -555,16 +555,16 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
                     relation_ids=tuple(str(relation.id) for relation in revision.relations),
                     relation_count=len(revision.relations),
                     relation_dependency_roles=tuple(
-                        sorted({relation.dependency_role for relation in revision.relations})
+                        sorted({relation.dependency_role for relation in revision.relations}),
                     ),
                     filing_schedule_ids=tuple(str(schedule.id) for schedule in revision.filing_schedules),
                     filing_schedule_count=len(revision.filing_schedules),
                     portal_guard_policy_ids=tuple(
-                        sorted({decision.guard_policy_id for decision in revision.live_cross_references})
+                        sorted({decision.guard_policy_id for decision in revision.live_cross_references}),
                     ),
                     workbook_parity=workbook_parity,
                     support_removal_decision_count=len(revision.support_removal_decisions),
-                )
+                ),
             )
     return tuple(reports)
 

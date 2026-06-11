@@ -89,7 +89,7 @@ def test_value_cell_within_default_grid_yields_default_dimensions() -> None:
                 value=Decimal("100"),
                 role="operator_input",
             ),
-        )
+        ),
     )
     requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
 
@@ -111,7 +111,7 @@ def test_value_cell_beyond_default_grid_grows_row_count() -> None:
                 value=Decimal("100"),
                 role="operator_input",
             ),
-        )
+        ),
     )
     requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
 
@@ -162,7 +162,7 @@ def test_resize_skips_tabs_without_a_sheet_id() -> None:
                 value=Decimal("100"),
                 role="operator_input",
             ),
-        )
+        ),
     )
     # Drop the Entradas tab from the map.
     sheet_ids = {tab: sid for tab, sid in _SHEET_IDS.items() if tab != "Entradas"}
@@ -185,7 +185,7 @@ def test_formula_cell_address_extends_grid_bound() -> None:
                 casilla="test.casilla",
                 rounding_rule="money",
             ),
-        )
+        ),
     )
     requests = _build_grid_resize_requests(plan, sheet_id_by_tab=_SHEET_IDS)
 

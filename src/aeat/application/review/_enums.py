@@ -47,7 +47,7 @@ _SEVERITY_RANK: Mapping[ReviewSeverity, int] = MappingProxyType(
         ReviewSeverity.HIGH: 2,
         ReviewSeverity.NORMAL: 1,
         ReviewSeverity.INFO: 0,
-    }
+    },
 )
 
 
@@ -81,7 +81,7 @@ _RESERVED_KINDS: Mapping[str, str] = MappingProxyType(
     {
         "classification": "classification decisions are not emitted review items",
         "approval-stale": ("represented by --kind finding when drafts emit ModeloDraftStatus.APROBACION_CADUCADA rows"),
-    }
+    },
 )
 
 

@@ -182,14 +182,14 @@ def test_saved_profile_has_canonical_key_order() -> None:
             SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),
             SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA: Decimal("0.21"),
             SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
-        }
+        },
     )
     reverse = UsageRatioProfile(
         ratios={
             SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
             SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA: Decimal("0.21"),
             SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),
-        }
+        },
     )
     assert forward.model_dump_json() == reverse.model_dump_json()
     # And the canonical order is lexicographic by category value:
@@ -228,7 +228,7 @@ def test_validate_usage_ratio_reference_rejects_category_mismatch() -> None:
         ratios={
             SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60"),
             SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.30"),
-        }
+        },
     )
 
     with pytest.raises(UsageRatioValidationError, match="must match"):

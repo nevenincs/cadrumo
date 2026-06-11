@@ -97,7 +97,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "madrid",  # tax-residence-ccaa (visible: resident)
             # ── notes ──────────────────────────────
             "",  # notes
-        ]
+        ],
     )
 
 
@@ -234,7 +234,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             # country-of-fiscal-residence + representante-fiscal-* SKIPPED (resident)
             "madrid",  # tax-residence-ccaa
             "",  # notes
-        ]
+        ],
     )
     prompter = ScriptedPrompter(answers_deque)
     answers = run_flow(SETUP_FLOW, prompter)

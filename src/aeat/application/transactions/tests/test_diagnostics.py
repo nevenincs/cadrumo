@@ -90,5 +90,5 @@ def test_diagnostic_rejects_unknown_kind() -> None:
                 "kind": "fictional-kind",
                 "severity": "error",
                 "message": _message(),
-            }
+            },
         )

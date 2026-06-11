@@ -175,7 +175,7 @@ class TestRentaFamilyProfileDerivedProperties:
             descendientes=(
                 DescendantInfo(birth_date=date(2018, 6, 1)),
                 DescendantInfo(birth_date=date(2021, 3, 15)),
-            )
+            ),
         )
         assert p.descendientes_count == 2
 
@@ -184,7 +184,7 @@ class TestRentaFamilyProfileDerivedProperties:
             descendientes=(
                 DescendantInfo(birth_date=date(2023, 1, 15)),  # age 1 at year-end 2024
                 DescendantInfo(birth_date=date(2019, 6, 1)),  # age 5 at year-end 2024
-            )
+            ),
         )
         assert p.descendientes_menores_3_year_end(2024) == 1
 
@@ -194,7 +194,7 @@ class TestRentaFamilyProfileDerivedProperties:
                 DescendantInfo(birth_date=date(2000, 1, 1)),  # age 24, eligible
                 DescendantInfo(birth_date=date(1999, 1, 1)),  # age 25, not eligible
                 DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33),  # disabled, eligible
-            )
+            ),
         )
         assert p.descendientes_eligible_minimum(2024) == 2
 
@@ -203,7 +203,7 @@ class TestRentaFamilyProfileDerivedProperties:
             descendientes=(
                 DescendantInfo(birth_date=date(2023, 1, 15)),  # before 1-July, full year
                 DescendantInfo(birth_date=date(2024, 9, 1)),  # after 1-July, half year
-            )
+            ),
         )
         assert p.descendientes_full_year_minimum(2024) == 1
 
@@ -357,7 +357,7 @@ class TestParseDescendienteFlag:
 
     def test_full_flag(self) -> None:
         d = parse_descendiente_flag(
-            "NACIMIENTO=2020-03-15,ADOPCION=2024-05-12,DISCAPACIDAD=33,CONVIVENCIA=false,NIF=TAXIDABCD"
+            "NACIMIENTO=2020-03-15,ADOPCION=2024-05-12,DISCAPACIDAD=33,CONVIVENCIA=false,NIF=TAXIDABCD",
         )
         assert d.birth_date == date(2020, 3, 15)
         assert d.adoption_date == date(2024, 5, 12)

@@ -124,7 +124,7 @@ def test_importing_cli_package_does_not_import_registry() -> None:
             if any(name == p or name.startswith(p + ".") for p in forbidden)
         )
         print("\\n".join(leaked))
-        """
+        """,
     )
 
     assert completed.returncode == 0, completed.stderr
@@ -162,7 +162,7 @@ def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
             if any(name == p or name.startswith(p + ".") for p in forbidden)
         )
         print("\\n".join(leaked))
-        """
+        """,
     )
 
     assert completed.returncode == 0, completed.stderr
@@ -193,7 +193,7 @@ def test_dispatching_a_subcommand_loads_its_module() -> None:
         result = CliRunner().invoke(command, ["app", "modelo", "--help"])
         assert result.exit_code == 0, result.output
         print("loaded" if "aeat.entrypoints.cli._modelo" in sys.modules else "missing")
-        """
+        """,
     )
 
     assert completed.returncode == 0, completed.stderr

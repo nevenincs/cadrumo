@@ -72,7 +72,7 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # `python -m` entry point; not pytest-importable surface.
         # locales/__main__ dispatches into locales/scaffold.py.
         "src/aeat/locales/__main__.py",
-    }
+    },
 )
 
 # `COVERAGE_GAPS` allowlist retired 2026-06-01: the AST import-graph

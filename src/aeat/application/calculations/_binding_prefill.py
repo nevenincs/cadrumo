@@ -61,7 +61,7 @@ def _selector_periods(value: object) -> tuple[str, ...]:
     if isinstance(value, tuple) and all(isinstance(item, str) for item in value):
         return tuple(str(item) for item in value)
     raise BindingPrefillTypeError(
-        f"binding selector 'source_periods' must be str|tuple[str,...], got {type(value).__name__}"
+        f"binding selector 'source_periods' must be str|tuple[str,...], got {type(value).__name__}",
     )
 
 
@@ -158,7 +158,7 @@ def _merge_gathered_observations(
     overlay_key = (overlay.observation.modelo, overlay.observation.filing_year, overlay.observation.period)
     if primary_key != overlay_key:
         raise BindingPrefillTypeError(
-            "cannot merge previous_filing observations with different modelo/year/period keys"
+            "cannot merge previous_filing observations with different modelo/year/period keys",
         )
 
     observations_by_casilla = {item.casilla_id: item for item in primary.observation.observations}
@@ -296,7 +296,7 @@ def _gather_single_key_observation(
     app-filing observation (when both exist) so neither source shadows the other.
     """
     gathered = _gathered_from_payload(
-        repository.load_observation(requirement_modelo, requirement_filing_year, requirement_period)
+        repository.load_observation(requirement_modelo, requirement_filing_year, requirement_period),
     )
     if requirement_modelo == Modelo.M303.value and iva_history_repository is not None:
         state = iva_history_repository.load_period(requirement_filing_year, requirement_period)
@@ -622,7 +622,7 @@ def resolve_bindings_from_local_store(
                 source_periods=source_periods,
                 resolved_at=when,
                 unstamped_revision_advisory=unstamped_advisory,
-            )
+            ),
         )
     return BindingPrefillReport(
         prefilled=tuple(prefilled),

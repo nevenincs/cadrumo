@@ -36,7 +36,7 @@ from ...adapters.persistence.storage.bucket._manifest import (
 )
 from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core._period import Period
+from ...core import Period
 from ...core.config import SecretStoreBackend, override_settings
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ...tests.secure_sql import dev_test_database_password

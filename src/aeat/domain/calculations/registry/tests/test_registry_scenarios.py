@@ -11,7 +11,6 @@ from .....core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
-from .... import renta as _renta_snapshot_checks  # noqa: F401  # snapshot-check registration side effect
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._scenarios import (
     RegistryCalculationScenario,
@@ -76,7 +75,7 @@ def _estimacion_objetiva_modulos_archetype_scenario() -> RegistryCalculationScen
     return _normal_direct_estimation_payments_scenario().model_copy(
         update={
             "id": "modelo-100-2025-estimacion-objetiva-modulos-archetype-passthrough",
-        }
+        },
     )
 
 
@@ -85,7 +84,7 @@ def _tributacion_conjunta_family_joint_archetype_scenario() -> RegistryCalculati
     return _normal_direct_estimation_payments_scenario().model_copy(
         update={
             "id": "modelo-100-2025-tributacion-conjunta-family-joint-archetype-passthrough",
-        }
+        },
     )
 
 
@@ -94,7 +93,7 @@ def _minimo_familiar_descendientes_discapacidad_archetype_scenario() -> Registry
     return _normal_direct_estimation_payments_scenario().model_copy(
         update={
             "id": "modelo-100-2025-minimo-familiar-descendientes-discapacidad-archetype-passthrough",
-        }
+        },
     )
 
 
@@ -107,8 +106,8 @@ def test_registry_scenario_reports_trace_contract_mismatches() -> None:
                     value=Decimal("2000.00"),
                     operand_refs=("0180", "missing-operand"),
                 ),
-            )
-        }
+            ),
+        },
     )
 
     report = run_registry_calculation_scenario(

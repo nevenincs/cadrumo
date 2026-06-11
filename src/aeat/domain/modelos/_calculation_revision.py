@@ -435,7 +435,8 @@ class CalculationRevisionCatalogue(BaseModel):
         for key, revision in self.revisions.items():
             if key != revision.calculation_revision_id:
                 raise ModeloValidationError(
-                    f"catalogue key {key!r} does not match calculation_revision_id {revision.calculation_revision_id!r}",
+                    f"catalogue key {key!r} does not match "
+                    f"calculation_revision_id {revision.calculation_revision_id!r}",
                 )
         return self
 

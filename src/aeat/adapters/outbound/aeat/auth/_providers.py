@@ -190,7 +190,7 @@ class CertificateContextProvisioner:
             "client_certificates": build_client_certificates_kwarg(
                 self._cert,
                 self._origin,
-            )
+            ),
         }
 
     def annotate_context(self, context: BrowserContextLike) -> None:

@@ -27,7 +27,7 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
             "data_type": "money",
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
-        }
+        },
     )
     revision = ModeloRevision.model_validate(
         {
@@ -37,7 +37,7 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": (casilla,),
-        }
+        },
     )
     return ModeloDefinition.model_validate(
         {
@@ -50,7 +50,7 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "revisions": {"2025": revision},
-        }
+        },
     )
 
 

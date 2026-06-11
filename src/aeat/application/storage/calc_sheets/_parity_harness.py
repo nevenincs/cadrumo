@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, Field
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry import (

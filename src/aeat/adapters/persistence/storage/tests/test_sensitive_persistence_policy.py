@@ -401,7 +401,7 @@ class _FileWriteVisitor(ast.NodeVisitor):
                     self.path.relative_to(_ROOT).as_posix(),
                     self.function_stack[-1] if self.function_stack else "<module>",
                     dotted or name or "<unknown>",
-                )
+                ),
             )
         self.generic_visit(node)
 

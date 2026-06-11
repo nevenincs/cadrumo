@@ -394,7 +394,7 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
         if opt not in valid_options:
             violations.append(
                 f"`{cited.raw}` cites option `{opt}`, which is not a parameter of "
-                f"`aeat {' '.join(resolved.resolved_path)}` (nor a global option)"
+                f"`aeat {' '.join(resolved.resolved_path)}` (nor a global option)",
             )
 
     # Missing-required-positional (the ``profile create`` shape) is

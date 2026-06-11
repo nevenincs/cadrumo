@@ -47,7 +47,7 @@ _OFFICIAL_SOURCE_KINDS: Final = frozenset(
         "aeat_sede_justificante",
         "aeat_sede_live_capture",
         "aeat_csv_register",
-    }
+    },
 )
 _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
     {
@@ -57,7 +57,7 @@ _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
         # download and import as aeat_justificante_pdf), so it satisfies the
         # justificante-verification gate. See the live-justificante-reconcile ADR.
         "aeat_live_capture",
-    }
+    },
 )
 
 
@@ -97,6 +97,7 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     MISSING_AEAT_ACCEPTANCE = "missing_aeat_acceptance"
     MISSING_EXTERNAL_EVIDENCE = "missing_external_evidence"
     MISSING_EXTERNAL_EVIDENCE_RECORD = "missing_external_evidence_record"
+    MISMATCHED_EXTERNAL_EVIDENCE_RECORD = "mismatched_external_evidence_record"
     MISSING_JUSTIFICANTE_VERIFICATION = "missing_justificante_verification"
     OBSERVATION_REVISION_VALUE_DIVERGENCE = "observation_revision_value_divergence"
     OPERATOR_MANUAL_SOURCE = "operator_manual_source"
@@ -311,7 +312,7 @@ def cross_period_dependency_inventory(
                         target_filing_year=snapshot.filing_year,
                         target_period=snapshot.period,
                         dependencies=dependencies,
-                    )
+                    ),
                 )
     return CrossPeriodDependencyInventory(
         filing_year=filing_year,
@@ -323,7 +324,7 @@ def cross_period_dependency_inventory(
                     item.target_revision_id,
                     item.target_period,
                 ),
-            )
+            ),
         ),
     )
 
@@ -338,6 +339,7 @@ def evaluate_cross_period_clean_state(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepository | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
+    taxpayer_tax_id: str | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a :class:`CrossPeriodCleanStateVerdict`.
 
@@ -357,8 +359,9 @@ def evaluate_cross_period_clean_state(
             calculation_catalogue=calculation_catalogue,
             verification_catalogue=verification_catalogue,
             justificante_repository=resolved_justificante_repository,
+            taxpayer_tax_id=taxpayer_tax_id,
             expected_member_set=expected_member_sets_by_key.get(
-                (requirement.source_modelo, requirement.filing_year, requirement.period)
+                (requirement.source_modelo, requirement.filing_year, requirement.period),
             ),
         )
         for requirement in cross_period_dependency_requirements(snapshot)
@@ -599,6 +602,7 @@ def _aggregate_member_history(
     calculation_catalogue: CalculationRevisionCatalogue,
     verification_catalogue: VerificationReportCatalogue,
     justificante_repository: JustificanteRepository,
+    taxpayer_tax_id: str | None,
     observation_source_kind: str | None,
     value_member_payloads: tuple[_ObservationPayload, ...],
     expected_member_nifs: tuple[str, ...],
@@ -623,6 +627,7 @@ def _aggregate_member_history(
             calculation_catalogue=calculation_catalogue,
             verification_catalogue=verification_catalogue,
             justificante_repository=justificante_repository,
+            taxpayer_tax_id=taxpayer_tax_id,
             observation_source_kind=observation_source_kind,
             observation_values=member_values,
             member_nif=member_nif,
@@ -656,11 +661,12 @@ def _evaluate_requirement(
     calculation_catalogue: CalculationRevisionCatalogue,
     verification_catalogue: VerificationReportCatalogue,
     justificante_repository: JustificanteRepository,
+    taxpayer_tax_id: str | None,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
 ) -> CrossPeriodDependencyEvidence:
     source = _resolve_cross_period_source(requirement, observation_repository, expected_member_set)
     observation_source_kind, observation_values, value_blockers = _resolve_observation_values(
-        requirement, source.value_member_payloads, source.payload
+        requirement, source.value_member_payloads, source.payload,
     )
     blockers: list[CrossPeriodCleanStateBlocker] = [*source.blockers, *value_blockers]
 
@@ -672,6 +678,7 @@ def _evaluate_requirement(
             calculation_catalogue=calculation_catalogue,
             verification_catalogue=verification_catalogue,
             justificante_repository=justificante_repository,
+            taxpayer_tax_id=taxpayer_tax_id,
             observation_source_kind=observation_source_kind,
             value_member_payloads=source.value_member_payloads,
             expected_member_nifs=source.expected_member_nifs,
@@ -702,6 +709,7 @@ def _evaluate_requirement(
         calculation_catalogue=calculation_catalogue,
         verification_catalogue=verification_catalogue,
         justificante_repository=justificante_repository,
+        taxpayer_tax_id=taxpayer_tax_id,
         observation_source_kind=observation_source_kind,
         observation_values=observation_values,
         member_nif=None,
@@ -730,6 +738,7 @@ def _filing_external_evidence_blockers(
     filing: ModeloRecord,
     observation_source_kind: str | None,
     justificante_repository: JustificanteRepository,
+    taxpayer_tax_id: str | None,
 ) -> list[CrossPeriodCleanStateBlocker]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     if filing.status is not ModeloRecordStatus.VIGENTE:
@@ -742,9 +751,30 @@ def _filing_external_evidence_blockers(
             blockers.append(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE)
     elif filing.external_evidence.kind.value not in _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS:
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION)
-    elif justificante_repository.load(filing.external_evidence.reference_id) is None:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
+    else:
+        justificante = justificante_repository.load(filing.external_evidence.reference_id)
+        if justificante is None:
+            blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
+        elif not _justificante_matches_filing(filing, justificante, taxpayer_tax_id=taxpayer_tax_id):
+            blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
     return blockers
+
+
+def _justificante_matches_filing(
+    filing: ModeloRecord,
+    justificante: object,
+    *,
+    taxpayer_tax_id: str | None,
+) -> bool:
+    modelo = str(getattr(justificante, "modelo", "")).strip()
+    ejercicio = str(getattr(justificante, "ejercicio", "") or "").strip()
+    period = str(getattr(justificante, "period", "")).strip().upper()
+    tax_id = str(getattr(justificante, "tax_id", "") or "").strip()
+    filing_period = str(getattr(filing.period, "code", filing.period)).strip().upper()
+    period_matches = period == filing_period or (filing_period == "0A" and period == str(filing.filing_year))
+    expected_tax_id = filing.member_nif or taxpayer_tax_id
+    tax_id_matches = expected_tax_id is None or tax_id == expected_tax_id.strip()
+    return modelo == str(filing.modelo) and ejercicio == str(filing.filing_year) and period_matches and tax_id_matches
 
 
 def _filing_revision_blockers(
@@ -809,6 +839,7 @@ def _evaluate_filing_history(
     calculation_catalogue: CalculationRevisionCatalogue,
     verification_catalogue: VerificationReportCatalogue,
     justificante_repository: JustificanteRepository,
+    taxpayer_tax_id: str | None,
     observation_source_kind: str | None,
     observation_values: Mapping[str, object],
     member_nif: str | None,
@@ -832,9 +863,16 @@ def _evaluate_filing_history(
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD)
         return _FilingHistory(None, None, None, None, None, None, blockers)
 
-    blockers.extend(_filing_external_evidence_blockers(filing, observation_source_kind, justificante_repository))
+    blockers.extend(
+        _filing_external_evidence_blockers(
+            filing,
+            observation_source_kind,
+            justificante_repository,
+            taxpayer_tax_id,
+        ),
+    )
     revision_state, revision_blockers = _filing_revision_blockers(
-        filing, requirement, calculation_catalogue, observation_values
+        filing, requirement, calculation_catalogue, observation_values,
     )
     blockers.extend(revision_blockers)
     verification_status, verification_blockers = _filing_verification_blockers(filing, verification_catalogue)

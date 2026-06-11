@@ -86,6 +86,19 @@ class SpendingCategoryFamilyPayload(OutputSchema):
     category_ids: list[str]
 
 
+class LedgerPeriodPayload(OutputSchema):
+    """Typed filing-period projection nested in ledger envelopes (D2).
+
+    Mirrors :class:`aeat.core.Period`'s ``model_dump(mode="json")`` —
+    replaces the former bare ``dict[str, object]`` ``period`` shape on the
+    status, import, and preflight envelopes. ``code`` is the AEAT period token
+    (``1T``..``4T``, ``0A``, ``01``..``12``, ...) bound to its ``filing_year``.
+    """
+
+    filing_year: int
+    code: str
+
+
 class LedgerReviewRowPayload(OutputSchema):
     """One ledger review row."""
 
@@ -556,6 +569,46 @@ class LedgerCategoriesResult(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
+class LedgerExportRowPayload(OutputSchema):
+    """One serialised ledger row nested in ``aeat app ledger export`` (D2).
+
+    Mirrors :class:`aeat.application.ledger.LedgerExportRow`'s
+    ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]``
+    export-row shape. The flow stays the non-negative ``amount`` magnitude plus
+    the ``direction`` authority (money shape fixed by C1); every other column is
+    a string the serializer already emits ("" for an absent optional column).
+    """
+
+    bucket_id: str
+    transaction_id: str
+    lifecycle_state: str
+    booked_date: str
+    value_date: str = ""
+    effective_date: str
+    amount: str
+    currency: str
+    direction: str
+    counterparty: str = ""
+    description: str
+    business_classification: str
+    business_pct: str = ""
+    category_id: str = ""
+    taxable_base: str = ""
+    iva_rate: str = ""
+    iva_amount: str = ""
+    irpf_category: str = ""
+    usage_ratio_id: str = ""
+    prorrata_reference: str = ""
+    purchase_invoice_evidence_id: str = ""
+    attachment_ids: str = ""
+    notes: str = ""
+    created_by: str = ""
+    created_source_command: str = ""
+    source_jurisdiction: str = ""
+    value_in_eur: str = ""
+    fx_rate: str = ""
+
+
 @register_schema("ledger.export")
 class LedgerExportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger export``.
@@ -576,7 +629,7 @@ class LedgerExportPayload(OutputSchema):
     byte_size: int
     sha256: str
     fieldnames: list[str]
-    rows: list[dict[str, object]]
+    rows: list[LedgerExportRowPayload]
     bucket_event_ids: list[str] = []
     output_path: str
 
@@ -681,6 +734,67 @@ class LedgerParticipationRebuildResult(OutputSchema):
     revision_count: int
 
 
+class LedgerTrackingProvenancePayload(OutputSchema):
+    """One evidence-link lineage entry nested in ``ledger track`` (D2).
+
+    Mirrors :class:`aeat.domain.transactions.TransactionEvidenceProvenanceEntry`'s
+    JSON dump; ``linked_at`` is the ISO-8601 timestamp.
+    """
+
+    evidence_id: str
+    evidence_kind: str
+    actor: str
+    source_command: str
+    linked_at: str
+    bucket_event_id: str | None = None
+
+
+class LedgerTrackingEditPayload(OutputSchema):
+    """One manual-correction lineage entry nested in ``ledger track`` (D2).
+
+    Mirrors :class:`aeat.domain.transactions.TransactionEditLineageEntry`'s JSON
+    dump; ``edited_at`` is the ISO-8601 timestamp.
+    """
+
+    previous_transaction_id: str
+    actor: str
+    source_command: str
+    edited_at: str
+    bucket_event_id: str | None = None
+
+
+class LedgerTrackingLifecyclePayload(OutputSchema):
+    """One lifecycle-transition lineage entry nested in ``ledger track`` (D2).
+
+    Mirrors :class:`aeat.domain.transactions.TransactionLifecycleLineageEntry`'s
+    JSON dump; ``changed_at`` is the ISO-8601 timestamp.
+    """
+
+    previous_state: str
+    state: str
+    actor: str
+    source_command: str
+    changed_at: str
+    reason: str = ""
+    bucket_event_id: str | None = None
+
+
+class LedgerTrackingPayload(OutputSchema):
+    """Durable event-lineage projection for one transaction (D2).
+
+    Mirrors :class:`aeat.application.ledger.LedgerTransactionTrackingPayload`'s
+    JSON dump — replaces the former bare ``dict[str, object]`` ``tracking`` field
+    on :class:`LedgerTrackResult`.
+    """
+
+    transaction_id: str
+    created_event_id: str | None = None
+    evidence_provenance: list[LedgerTrackingProvenancePayload] = []
+    edit_lineage: list[LedgerTrackingEditPayload] = []
+    lifecycle_state: str
+    lifecycle_lineage: list[LedgerTrackingLifecyclePayload] = []
+
+
 @register_schema("ledger.track")
 class LedgerTrackResult(OutputSchema):
     """JSON envelope for ``aeat app ledger track``.
@@ -692,7 +806,7 @@ class LedgerTrackResult(OutputSchema):
 
     bucket_id: str
     transaction: TransactionPayload
-    tracking: dict[str, object]
+    tracking: LedgerTrackingPayload
     participated_in: list[LedgerTransactionParticipationEntryPayload] | None = None
 
 

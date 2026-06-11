@@ -95,7 +95,7 @@ def test_report_is_strict_frozen_pydantic_v2() -> None:
                 "login_ready": False,
                 "next_action": "x",
                 "unknown_field": "rejected",
-            }
+            },
         )
 
 

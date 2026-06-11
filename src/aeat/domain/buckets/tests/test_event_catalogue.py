@@ -116,7 +116,7 @@ def test_catalogue_for_bucket_returns_chronological_order() -> None:
             later.event_id: later,
             earlier.event_id: earlier,
             middle.event_id: middle,
-        }
+        },
     )
     rows = catalogue.for_bucket(_BUCKET_A)
     assert tuple(e.occurred_at for e in rows) == (_T0, _T1, _T2)
@@ -262,7 +262,7 @@ def test_catalogue_filters_ledger_events_by_approved_event_type() -> None:
             created.event_id: created,
             removed.event_id: removed,
             evidence_detached.event_id: evidence_detached,
-        }
+        },
     )
 
     rows = catalogue.for_bucket(_BUCKET_A, event_types=(BucketEventType.LEDGER_TRANSACTION_REMOVED,))
@@ -297,7 +297,7 @@ def test_catalogue_for_object_returns_events_for_one_object() -> None:
             fr_created.event_id: fr_created,
             other_fr.event_id: other_fr,
             fr_amended.event_id: fr_amended,
-        }
+        },
     )
     rows = catalogue.for_object(object_type=BucketEventObjectType.FILING_RECORD, object_id="fr-1")
     assert tuple(e.event_id for e in rows) == (fr_created.event_id, fr_amended.event_id)

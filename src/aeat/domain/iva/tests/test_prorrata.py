@@ -382,7 +382,7 @@ def test_inputs_is_frozen_and_forbids_extras() -> None:
                 "operaciones_con_derecho_deduccion": Decimal("100"),
                 "operaciones_sin_derecho_deduccion": Decimal("50"),
                 **extra_kwargs,
-            }
+            },
         )
 
 

@@ -34,7 +34,7 @@ __all__ = [
 
 
 _USER_RATIO_KINDS: frozenset[ProportionalityKind] = frozenset(
-    {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}
+    {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL},
 )
 
 
@@ -193,12 +193,12 @@ def validate_usage_ratio_reference(
         ratio_category = SpendingCategory(usage_ratio_id)
     except ValueError as exc:
         raise UsageRatioValidationError(
-            f"usage_ratio_id {usage_ratio_id!r} must be a concrete eligible spending category"
+            f"usage_ratio_id {usage_ratio_id!r} must be a concrete eligible spending category",
         ) from exc
     if ratio_category is not category:
         raise UsageRatioValidationError(
             "usage_ratio_id must match the ledger transaction category_id because "
-            "usage-ratio profiles are category-keyed"
+            "usage-ratio profiles are category-keyed",
         )
     if ratio_category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
         raise UsageRatioValidationError(f"usage_ratio_id {usage_ratio_id!r} is not eligible for usage ratios")
@@ -207,6 +207,6 @@ def validate_usage_ratio_reference(
         raise UsageRatioValidationError(f"usage_ratio_id {usage_ratio_id!r} is not configured in the active bucket")
     if business_pct is not None and business_pct != ratio:
         raise UsageRatioValidationError(
-            f"business_pct {business_pct} does not match usage_ratio_id {usage_ratio_id!r} ratio {ratio}"
+            f"business_pct {business_pct} does not match usage_ratio_id {usage_ratio_id!r} ratio {ratio}",
         )
     return UsageRatioReference(usage_ratio_id=usage_ratio_id, category=ratio_category, ratio=ratio)

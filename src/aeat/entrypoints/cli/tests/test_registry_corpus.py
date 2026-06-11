@@ -69,12 +69,12 @@ def _write_valid_normative(root: Path) -> None:
                         "titulo": {"es": "Reducciones"},
                         "summary": {"es": "Resumen."},
                         "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
-                    }
+                    },
                 ],
                 "tags": ["irpf"],
                 "last_reviewed_at": "2026-04-12",
                 "reviewed_by": "wgergely",
-            }
+            },
         ),
         encoding="utf-8",
     )
@@ -140,7 +140,7 @@ def test_citations_list_propagates_corpus_load_failures_through_error_boundary(t
                 "tags": [],
                 "last_reviewed_at": "2026-04-12",
                 "reviewed_by": "wgergely",
-            }
+            },
         ),
         encoding="utf-8",
     )

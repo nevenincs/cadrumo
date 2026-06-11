@@ -62,7 +62,7 @@ def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str
             "design",
             "--output-language",
             "en",
-        ]
+        ],
     )
     assert r.exit_code == 0, r.output
 
@@ -164,7 +164,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
                 "87654321X",
                 "--activity",
                 "consulting",
-            ]
+            ],
         )
         assert r_local.exit_code == 0, r_local.output
 
@@ -192,7 +192,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
                 str(bundle_path),
                 "--label",
                 "idempotency-test-imported",
-            ]
+            ],
         )
         assert r_free.exit_code == 0, r_free.output
         free_payload = assert_public_profile_payload_redacted(r_free.output, exported_id)
@@ -249,7 +249,7 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
                 str(mutated_bundle_path),
                 "--label",
                 "idempotency-test-mutated",
-            ]
+            ],
         )
         assert r_mut.exit_code == 0, r_mut.output
         mut_payload = assert_public_profile_payload_redacted(r_mut.output, mutated_id)

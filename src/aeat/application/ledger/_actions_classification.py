@@ -119,7 +119,7 @@ def bulk_classify_from_csv(
                     # coercing silently.
                     {k: (v.strip() or None if v is not None else v) for k, v in raw_row.items()},
                     strict=False,
-                )
+                ),
             )
         except (ValidationError, ValueError, KeyError) as exc:
             parse_failures.append(
@@ -127,7 +127,7 @@ def bulk_classify_from_csv(
                     row_index=idx,
                     transaction_id=raw_row.get("transaction_id", ""),
                     reason=str(exc),
-                )
+                ),
             )
 
     apply_failures: list[BulkClassifyFailure] = []
@@ -205,7 +205,7 @@ def bulk_classify_from_csv(
                     row_index=idx,
                     transaction_id=row.transaction_id,
                     reason=str(exc),
-                )
+                ),
             )
 
     if all_events:
@@ -363,7 +363,7 @@ def apply_classification_rules(
                 transaction_id=tx.transaction_id,
                 matched_rule_id=rule_matched.rule_id,
                 classification=rule_matched.classification,
-            )
+            ),
         )
 
     return ApplyRulesResult(

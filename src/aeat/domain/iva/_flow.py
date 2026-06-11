@@ -122,7 +122,7 @@ _REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-    }
+    },
 )
 """IVA categories that route to ``INVERSION_SUJETO_PASIVO`` regardless of the
 invoice direction. The substrate's classifier emits these values from

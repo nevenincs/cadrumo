@@ -50,7 +50,7 @@ def validate_formula_expression(
             if dispatched not in parameters:
                 failures.append(
                     f"{scope}: formula {formula_id!r} dispatch_table[{key!r}] "
-                    f"references unknown parameter {dispatched!r}"
+                    f"references unknown parameter {dispatched!r}",
                 )
     if expression.relation is not None and expression.relation not in relations:
         failures.append(f"{scope}: formula {formula_id!r} references unknown relation {expression.relation!r}")
@@ -64,6 +64,6 @@ def validate_formula_expression(
                 bindings=bindings,
                 parameters=parameters,
                 relations=relations,
-            )
+            ),
         )
     return failures

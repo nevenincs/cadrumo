@@ -53,7 +53,7 @@ _DYNAMIC_TRANSLATION_ROOTS = frozenset(
         "sheets",
         "topic",
         "wizard",
-    }
+    },
 )
 """Top-level roots that can legitimately identify dynamic i18n namespaces.
 

@@ -26,7 +26,7 @@ from ._schema import (
 
 _MONEY_SCALE = Decimal("100")
 _DICTIONARY_LINE_RE = re.compile(
-    r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$"
+    r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$",
 )
 
 
@@ -150,7 +150,7 @@ def _parse_xml_dictionary_payload(
                     raw=raw,
                     value=_parse_xml_dictionary_value(entry.data_type, raw),
                     source_locator=f"{layout.id}:{entry.path}:{index}",
-                )
+                ),
             )
     casillas = tuple(value for value in parsed if value.casilla_id is not None)
     return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
@@ -169,7 +169,7 @@ def _load_xml_dictionary_entries(
     source = sources.get(str(layout.dictionary_source_ref))
     if source is None:
         raise RegistryValidationError(
-            f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}"
+            f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}",
         )
     dictionary_path = source_root / Path(source.corpus_path)
     entries: list[_XmlDictionaryEntry] = []
@@ -187,7 +187,7 @@ def _load_xml_dictionary_entries(
                 path=match["path"].strip(),
                 data_type=match["type"].strip(),
                 casilla_id=casilla_id,
-            )
+            ),
         )
     if not entries:
         raise RegistryValidationError(f"XML export layout {layout.id!r} dictionary has no parseable entries")
@@ -266,7 +266,8 @@ def _read_record(
     record_bytes = payload[cursor : cursor + record_length]
     if len(record_bytes) != record_length:
         raise RegistryValidationError(
-            f"payload ended before export record {record.id!r}; expected {record_length} bytes, got {len(record_bytes)}"
+            f"payload ended before export record {record.id!r}; "
+            f"expected {record_length} bytes, got {len(record_bytes)}",
         )
     try:
         record_text = record_bytes.decode(record.encoding)
@@ -355,7 +356,7 @@ def _parse_record_fields(
                 raw=raw,
                 value=value,
                 source_locator=f"{layout_id}:{record_id}:{field.id}:{field.offset}:{field.length}",
-            )
+            ),
         )
     return tuple(parsed)
 

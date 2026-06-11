@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 
 from ....core import resolve_active_bucket_id
-from ....core._bucket_pointer import BucketPointer
-from ....core._bucket_pointer_io import write_pointer
+from ....core import BucketPointer
+from ....core import write_pointer
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
 from ....tests.secure_sql import isolated_runtime_profile

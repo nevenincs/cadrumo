@@ -327,7 +327,7 @@ def google_status(
                 f"last_refresh_at\t{metadata.last_refresh_at.isoformat()}",
                 f"reauth_required\t{metadata.reauth_required}",
                 *tuple(f"scope\t{scope}" for scope in metadata.granted_scopes),
-            )
+            ),
         )
     _emit_envelope(ctx, command="config.google.status", result=typed_status, lines=tuple(lines))
 

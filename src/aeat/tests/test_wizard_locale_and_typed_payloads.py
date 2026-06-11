@@ -173,7 +173,7 @@ def test_oauth_client_wrapper_accepts_valid_desktop_payload() -> None:
             "redirect_uris": ["http://localhost"],
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
-        }
+        },
     }
     wrapper = _OAuthClientWrapper.model_validate(valid)
     assert wrapper.installed["client_id"] == "123-abc.apps.googleusercontent.com"
@@ -225,8 +225,8 @@ def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
                 "currency": "EUR",
                 "counterparty_name": "Acme SL",
                 "counterparty_tax_id": "B12345678",
-            }
-        ]
+            },
+        ],
     )
     rows = _decode_invoice_payload(raw)
     assert len(rows) == 1
@@ -261,9 +261,9 @@ def test_parse_invoice_payload_end_to_end_json() -> None:
                     "subtotal": "100.00",
                     "iva_rate": "RATE_21",
                     "iva_amount": "21.00",
-                }
+                },
             ],
-        }
+        },
     )
     invoices = parse_invoice_payload(raw, default_kind="received")
     assert len(invoices) == 1

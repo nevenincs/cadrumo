@@ -61,7 +61,7 @@ def test_r03_electronics_reverse_charge() -> None:
         _criteria(
             kind=TransactionKind.ELECTRONICS_REVERSE_CHARGE,
             customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-        )
+        ),
     )
     assert result.category is IvaCategory.DOMESTIC_REVERSE_CHARGE
     assert result.matched_rule_id == "R03_electronics_reverse_charge"
@@ -73,7 +73,7 @@ def test_r03_electronics_b2c_does_not_trigger_reverse_charge() -> None:
         _criteria(
             kind=TransactionKind.ELECTRONICS_REVERSE_CHARGE,
             customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-        )
+        ),
     )
     assert result.matched_rule_id != "R03_electronics_reverse_charge"
 
@@ -83,7 +83,7 @@ def test_r04_immovable_b2c_exempt() -> None:
         _criteria(
             kind=TransactionKind.IMMOVABLE_PROPERTY,
             customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-        )
+        ),
     )
     assert result.category is IvaCategory.DOMESTIC_EXEMPT
     assert result.matched_rule_id == "R04_immovable_property_exempt"
@@ -118,7 +118,7 @@ def test_r10_intra_community_supply_goods() -> None:
             customer_member_state=EUMemberState.DE,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
-        )
+        ),
     )
     assert result.category is IvaCategory.INTRA_COMMUNITY_SUPPLY
     assert result.matched_rule_id == "R10_intra_community_supply"
@@ -132,7 +132,7 @@ def test_r11_intra_community_acquisition_goods() -> None:
             customer_residency=IvaTerritorialScope.ES_MAINLAND,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.RECEIVED,
-        )
+        ),
     )
     assert result.category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
     assert result.requires_reverse_charge is True
@@ -145,7 +145,7 @@ def test_r12_services_b2b_eu_outbound_is_not_subject_in_es() -> None:
             customer_member_state=EUMemberState.FR,
             kind=TransactionKind.SERVICES_GENERAL,
             direction=InvoiceKind.ISSUED,
-        )
+        ),
     )
     assert result.category is IvaCategory.DOMESTIC_NOT_SUBJECT
     assert result.matched_rule_id == "R12_services_b2b_eu_outbound"
@@ -159,7 +159,7 @@ def test_r13_services_b2b_eu_inbound_reverse_charge() -> None:
             customer_residency=IvaTerritorialScope.ES_MAINLAND,
             kind=TransactionKind.SERVICES_GENERAL,
             direction=InvoiceKind.RECEIVED,
-        )
+        ),
     )
     assert result.category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
     assert result.matched_rule_id == "R13_services_b2b_eu_inbound"
@@ -173,7 +173,7 @@ def test_r14_digital_b2c_oss() -> None:
             customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
             kind=TransactionKind.SERVICES_DIGITAL_B2C_OSS,
             direction=InvoiceKind.ISSUED,
-        )
+        ),
     )
     assert result.category is IvaCategory.DOMESTIC_NOT_SUBJECT
     assert result.matched_rule_id == "R14_digital_b2c_oss"
@@ -185,7 +185,7 @@ def test_r20_export_goods() -> None:
             customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
-        )
+        ),
     )
     assert result.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
     assert result.matched_rule_id == "R20_export_goods"
@@ -198,7 +198,7 @@ def test_r21_import_goods() -> None:
             customer_residency=IvaTerritorialScope.ES_MAINLAND,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.RECEIVED,
-        )
+        ),
     )
     assert result.category is IvaCategory.IMPORT_THIRD_COUNTRY
 
@@ -209,7 +209,7 @@ def test_r22_services_outbound_third_country() -> None:
             customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
             kind=TransactionKind.SERVICES_GENERAL,
             direction=InvoiceKind.ISSUED,
-        )
+        ),
     )
     assert result.category is IvaCategory.OPERACION_NO_SUJETA
     assert result.matched_rule_id == "R22_services_outbound_third_country"
@@ -231,7 +231,7 @@ def test_r99_fallthrough_returns_unknown() -> None:
             customer_member_state=EUMemberState.FR,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
-        )
+        ),
     )
     assert result.category is IvaCategory.UNKNOWN
     assert result.matched_rule_id == "R99_fallthrough"
@@ -329,7 +329,7 @@ def test_classification_rate_resolution_uses_transaction_date() -> None:
         _criteria(
             transaction_date=date(2024, 6, 15),
             rate_tier=IvaRateKind.GENERAL,
-        )
+        ),
     )
     assert result.rate is not None
     assert result.rate.effective_from == date(2024, 1, 1)
@@ -343,6 +343,6 @@ def test_classification_rate_resolution_returns_none_for_export() -> None:
             customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
-        )
+        ),
     )
     assert result.rate is None

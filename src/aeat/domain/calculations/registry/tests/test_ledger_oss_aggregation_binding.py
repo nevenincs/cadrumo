@@ -111,7 +111,7 @@ def test_validate_rejects_unknown_invoice_direction() -> None:
 def test_validate_rejects_unknown_transaction_kind() -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
         validate_ledger_oss_aggregation_binding_definition(
-            _with_selector(_binding(), transaction_kinds=("ill-defined",))
+            _with_selector(_binding(), transaction_kinds=("ill-defined",)),
         )
 
 

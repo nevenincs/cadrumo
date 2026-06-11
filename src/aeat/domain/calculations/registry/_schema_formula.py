@@ -221,7 +221,7 @@ class ConvenioRateRow(RegistryModel):
                 Decimal(self.rate)
             except (ArithmeticError, ValueError) as exc:
                 raise RegistryValidationError(
-                    f"convenio_rate_row rate must be a parseable Decimal or 'NOT_YET_AUTHORED'; got {self.rate!r}"
+                    f"convenio_rate_row rate must be a parseable Decimal or 'NOT_YET_AUTHORED'; got {self.rate!r}",
                 ) from exc
         return self
 
@@ -306,7 +306,7 @@ class ParameterDefinition(RegistryModel):
             if _brackets_overlap_in_same_window(prev, current):
                 raise RegistryValidationError(
                     f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
-                    f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
+                    f"and {current.lower_bound}-{current.upper_bound} overlap within the same window",
                 )
 
     def _validate_keyed_bracket_table_shape(self) -> None:
@@ -322,7 +322,7 @@ class ParameterDefinition(RegistryModel):
         """
         if not self.keyed_brackets:
             raise RegistryValidationError(
-                f"parameter {self.id!r} declares keyed_bracket_table but has no keyed_brackets"
+                f"parameter {self.id!r} declares keyed_bracket_table but has no keyed_brackets",
             )
         if self.values:
             raise RegistryValidationError(f"parameter {self.id!r} cannot mix keyed_bracket_table and dated values")
@@ -335,7 +335,7 @@ class ParameterDefinition(RegistryModel):
             pair = (row.key, row.valid_from)
             if pair in seen:
                 raise RegistryValidationError(
-                    f"parameter {self.id!r} keyed_brackets contains duplicate (key, valid_from) pair {pair!r}"
+                    f"parameter {self.id!r} keyed_brackets contains duplicate (key, valid_from) pair {pair!r}",
                 )
             seen.add(pair)
 
@@ -354,7 +354,7 @@ class ParameterDefinition(RegistryModel):
         """
         if not self.convenio_rates:
             raise RegistryValidationError(
-                f"parameter {self.id!r} declares convenio_rate_table but has no convenio_rates"
+                f"parameter {self.id!r} declares convenio_rate_table but has no convenio_rates",
             )
         if self.values:
             raise RegistryValidationError(f"parameter {self.id!r} cannot mix convenio_rate_table and dated values")
@@ -368,7 +368,7 @@ class ParameterDefinition(RegistryModel):
             if triple in seen:
                 raise RegistryValidationError(
                     f"parameter {self.id!r} convenio_rates contains duplicate "
-                    f"(country_code, tipo_renta, valid_from) triple {triple!r}"
+                    f"(country_code, tipo_renta, valid_from) triple {triple!r}",
                 )
             seen.add(triple)
 
@@ -376,17 +376,17 @@ class ParameterDefinition(RegistryModel):
         """Reject brackets / keyed_brackets / convenio_rates / bracket_axis on a non-bracket-table parameter."""
         if self.brackets:
             raise RegistryValidationError(
-                f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
+                f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'",
             )
         if self.keyed_brackets:
             raise RegistryValidationError(
                 f"parameter {self.id!r} declares keyed_brackets but data_type is {self.data_type!r}; "
-                "use 'keyed_bracket_table'"
+                "use 'keyed_bracket_table'",
             )
         if self.convenio_rates:
             raise RegistryValidationError(
                 f"parameter {self.id!r} declares convenio_rates but data_type is {self.data_type!r}; "
-                "use 'convenio_rate_table'"
+                "use 'convenio_rate_table'",
             )
         if self.bracket_axis is not None:
             raise RegistryValidationError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")

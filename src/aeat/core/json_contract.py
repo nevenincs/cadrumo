@@ -294,7 +294,7 @@ def emit_json_success(
             "status": derive_status(resolved_notices).value,
             "result": _jsonable_payload(result),
             "notices": [_jsonable_payload(notice) for notice in resolved_notices],
-        }
+        },
     )
     emit_json_document(
         envelope_payload,
@@ -341,16 +341,16 @@ def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
             is_output_schema = issubclass(schema, (OutputSchema, OutputRootSchema))
         except TypeError as error:
             raise OutputSchemaError(
-                f"registered schema for {normalized_path!r} must be an OutputSchema or OutputRootSchema subclass"
+                f"registered schema for {normalized_path!r} must be an OutputSchema or OutputRootSchema subclass",
             ) from error
         if not is_output_schema:
             raise OutputSchemaError(
-                f"registered schema for {normalized_path!r} must inherit from OutputSchema or OutputRootSchema"
+                f"registered schema for {normalized_path!r} must inherit from OutputSchema or OutputRootSchema",
             )
         existing = SCHEMA_REGISTRY.get(normalized_path)
         if existing is not None and existing is not schema:
             raise OutputSchemaError(
-                f"duplicate schema registration for {normalized_path!r}: {existing.__module__}.{existing.__name__}"
+                f"duplicate schema registration for {normalized_path!r}: {existing.__module__}.{existing.__name__}",
             )
         SCHEMA_REGISTRY[normalized_path] = schema
         return schema

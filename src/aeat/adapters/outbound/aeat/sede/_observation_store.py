@@ -170,7 +170,7 @@ class FiledDeclaracionObservationStore:
             sorted(
                 observations,
                 key=lambda item: (item.modelo, item.ejercicio, item.period, item.presented_at, item.expediente_id),
-            )
+            ),
         )
 
     def persist_iva_wallet_observation(self, observation: IvaCompensationWalletObservation) -> Path:
@@ -211,7 +211,7 @@ class FiledDeclaracionObservationStore:
         if record is None:
             raise ExpedienteNotFoundError(f"IVA wallet observation not found: {object_key}")
         envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(
-            record.payload.decode(_UTF_8_ENCODING)
+            record.payload.decode(_UTF_8_ENCODING),
         )
         if envelope.classification is not _OBSERVATION_CLASSIFICATION:
             raise ClassificationError(
@@ -236,7 +236,7 @@ class FiledDeclaracionObservationStore:
             )
         for record in records:
             envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(
-                record.payload.decode(_UTF_8_ENCODING)
+                record.payload.decode(_UTF_8_ENCODING),
             )
             if envelope.classification is not _OBSERVATION_CLASSIFICATION:
                 raise ClassificationError(
@@ -253,7 +253,7 @@ class FiledDeclaracionObservationStore:
             sorted(
                 observations,
                 key=lambda item: (item.target_year, item.target_period, item.captured_at),
-            )
+            ),
         )
 
     def _observation_key(
@@ -269,7 +269,7 @@ class FiledDeclaracionObservationStore:
                 str(ejercicio),
                 _safe_segment(period),
                 _safe_segment(expediente_id),
-            )
+            ),
         )
         return hashlib.sha256(key.encode(_UTF_8_ENCODING)).hexdigest()
 
@@ -289,7 +289,7 @@ class FiledDeclaracionObservationStore:
                 str(target_year),
                 _safe_segment(target_period),
                 captured_at,
-            )
+            ),
         )
         return hashlib.sha256(key.encode(_UTF_8_ENCODING)).hexdigest()
 

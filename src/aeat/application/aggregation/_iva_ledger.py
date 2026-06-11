@@ -22,7 +22,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry import (
     IvaLedgerObservation,
     ModeloRevision,

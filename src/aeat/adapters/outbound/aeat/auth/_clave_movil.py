@@ -186,7 +186,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         async with self._lock:
             if self._active_session is not None:
                 raise AeatLoginAssertionError(
-                    "ClaveMovilAuthProvider already has an active session; call close() first"
+                    "ClaveMovilAuthProvider already has an active session; call close() first",
                 )
             storage_state_path = self._storage_state_path()
             if not _session_store.exists(storage_state_path):
@@ -244,14 +244,14 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                         update={
                             "authenticated_at": assertion.attempted_at,
                             "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
-                        }
+                        },
                     )
                     self._active_session = refreshed
                     refreshed_metadata = metadata.model_copy(
                         update={
                             "authenticated_at": refreshed.authenticated_at,
                             "idle_deadline": refreshed.idle_deadline,
-                        }
+                        },
                     )
                     try:
                         self._persist_session(
@@ -541,7 +541,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             "certificate_password_configured": self._settings.aeat_certificate_password_secret is not None,
             "certificate_backend": self._settings.aeat_certificate_backend.value,
             "certificate_file_present": bool(
-                self._settings.aeat_certificate_path is not None and self._settings.aeat_certificate_path.is_file()
+                self._settings.aeat_certificate_path is not None and self._settings.aeat_certificate_path.is_file(),
             ),
             "certificate_path_fingerprint": _diagnostic_fingerprint(self._settings.aeat_certificate_path),
         }
@@ -640,7 +640,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 "ClaveMovilAuthProvider was constructed without a browser "
                 "session factory; pass one via select_provider(..., "
                 "browser_session_factory=...) or provide a live "
-                "BrowserSessionLike to authenticate()."
+                "BrowserSessionLike to authenticate().",
             )
         session = await self._browser_session_factory(self._settings)
         return session, True
@@ -996,20 +996,20 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil resume failed live verification: "
-                    f"status={assertion.status_code} error={assertion.error_message!r}"
+                    f"status={assertion.status_code} error={assertion.error_message!r}",
                 )
             refreshed = session.model_copy(
                 update={
                     "authenticated_at": assertion.attempted_at,
                     "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
-                }
+                },
             )
             self._active_session = refreshed
             refreshed_metadata = metadata.model_copy(
                 update={
                     "authenticated_at": refreshed.authenticated_at,
                     "idle_deadline": refreshed.idle_deadline,
-                }
+                },
             )
             self._persist_session(
                 storage_state_path,
