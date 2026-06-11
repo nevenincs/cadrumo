@@ -371,6 +371,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
 
     payload = result.model_dump(mode="json")
 
+    assert payload["period"] == {"filing_year": 2026, "code": "1T"}
     assert payload["casilla_provenance"] == [
         {
             "casilla_id": "03",
@@ -409,6 +410,7 @@ def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp
 
     payload = result.model_dump(mode="json")
 
+    assert payload["period"] == {"filing_year": 2026, "code": "2T"}
     assert payload["iva_wallet_decision_provenance"] == {
         "decision_ref": "sha256:" + "1" * 64,
         "selected_authority": "aeat_wallet",
@@ -736,8 +738,10 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     assert provenance.authority_source_refs[0].startswith("sha256:")
 
     event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
+    assert event.payload["period"] == "2T"
     assert event.payload["iva_wallet_selected_authority"] == "aeat_wallet"
     assert event.payload["iva_wallet_divergence"] == "wallet_only"
+    assert event.payload["iva_wallet_target_period"] == "2T"
     result_json = result.model_dump_json()
     event_json = event.model_dump_json()
     exported_text = output_path.read_text(encoding="utf-8")
