@@ -2722,8 +2722,8 @@ cli:
         ledger_status: Show ledger health and counts.
         ledger_update: Update a ledger transaction.
         ledger_view: Inspect one transaction.
-        live_filed_capture: Capture a read-only observation from AEAT.
-        live_filed_capture_sources: List capture source options.
+        live_filed_capture: 'Pull a read-only observation from AEAT.'
+        live_filed_capture_sources: 'List the sources a filed pull can read.'
         live_filed_list: List locally captured filed-return observations.
         modelo_bindings: Inspect registry binding coverage.
         modelo_describe: Describe one modelo revision.

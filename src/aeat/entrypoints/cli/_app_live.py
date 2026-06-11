@@ -478,7 +478,7 @@ def iva_wallet_capture_history_cmd(
         calculation_observation_count=report.calculation_observation_count,
         reloaded_history_count=report.reloaded_history_count,
     )
-    _emit_envelope(ctx, command="app.live.iva_wallet.capture_history", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.iva_wallet.pull_history", result=result, lines=lines)
 
 
 @iva_wallet_app.command(
@@ -584,7 +584,7 @@ def iva_wallet_capture_remote_state_cmd(
     )
     _emit_envelope(
         ctx,
-        command="app.live.iva_wallet.capture_remote_state",
+        command="app.live.iva_wallet.pull_remote_state",
         result=result,
         lines=_iva_remote_state_capture_lines(report),
     )
@@ -943,7 +943,7 @@ def filed_capture_cmd(
         calculation_observation_count=report.calculation_observation_count,
         calculation_observation_keys=list(report.calculation_observation_keys),
     )
-    _emit_envelope(ctx, command="app.live.filed.capture", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.filed.pull", result=result, lines=lines)
 
 
 @filed_app.command(
@@ -1051,7 +1051,7 @@ def filed_capture_all_cmd(
             for failure in report.failures
         ],
     )
-    _emit_envelope(ctx, command="app.live.filed.capture_all", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.filed.pull_all", result=result, lines=lines)
 
 
 @filed_app.command("pull-sources", help=tr("cli.app.live.filed.pull_sources_help"))
@@ -1125,7 +1125,7 @@ def filed_capture_sources_cmd(
         calculation_observation_count=report.calculation_observation_count,
         calculation_observation_keys=list(report.calculation_observation_keys),
     )
-    _emit_envelope(ctx, command="app.live.filed.capture_sources", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.filed.pull_sources", result=result, lines=lines)
 
 
 def _active_bucket_id() -> str:

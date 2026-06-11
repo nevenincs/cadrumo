@@ -98,7 +98,7 @@ def justificante_pull(
         f"source_kind\t{persisted.source_kind}",
         f"captured_at\t{persisted.captured_at.isoformat()}",
     ]
-    _emit_envelope(ctx, command="app.live.justificante.capture", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.justificante.pull", result=result, lines=lines)
 
 
 @justificante_app.command(

@@ -99,7 +99,7 @@ def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path
         ("app ledger rule add --description-pattern fuel --classification expense", True),
         ("app ledger rule apply --dry-run", True),
         ("app modelo work file abc", True),
-        ("config profile censo refresh", True),
+        ("config profile censo pull", True),
         ("config switch operator", False),
         ("app ledger list", False),
         ("app registry legal view ley-37-1992:art-99", False),

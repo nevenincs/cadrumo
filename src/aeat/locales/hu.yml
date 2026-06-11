@@ -2842,8 +2842,8 @@ cli:
         ledger_status: A főkönyv állapotának és számláinak megjelenítése.
         ledger_update: Főkönyvi tranzakció frissítése.
         ledger_view: Egyetlen tranzakció megtekintése.
-        live_filed_capture: Csak olvasható megfigyelés rögzítése az AEAT-ból.
-        live_filed_capture_sources: Rögzítési forráslehetőségek listázása.
+        live_filed_capture: 'Csak olvashato megfigyeles letoltese az AEAT-bol.'
+        live_filed_capture_sources: 'Letoltesi forraslehetosegek listazasa.'
         live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
         modelo_bindings: Nyilvántartási kötésfedettség vizsgálata.
         modelo_describe: Egy nyomtatvány-revízió leírása.

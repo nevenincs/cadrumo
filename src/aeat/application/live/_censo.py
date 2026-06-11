@@ -162,7 +162,7 @@ def derive_censo_snapshot_id(
             "captured_at": captured_at.isoformat(),
             "source_url": source_url,
             "censo_facts": dict(sorted(censo_facts.items())),
-        }
+        },
     )
 
 
@@ -266,7 +266,7 @@ class CensoSnapshotRepository:
         if record is None:
             raise CensoSnapshotNotFoundError(
                 f"censo snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
-                suggestion="aeat config profile censo refresh",
+                suggestion="aeat config profile censo pull",
             )
         snapshot = _snapshot_from_record(record, requested_snapshot_id=snapshot_id)
         if snapshot.bucket_id != self._bucket_id:
@@ -333,7 +333,7 @@ class CensoSnapshotRepository:
         if not matches:
             raise CensoSnapshotNotFoundError(
                 f"censo snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
-                suggestion="aeat config profile censo refresh",
+                suggestion="aeat config profile censo pull",
             )
         if len(matches) > 1:
             raise CensoSnapshotNotFoundError(
@@ -564,7 +564,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             update={
                 "state": SnapshotLifecycleState.SUPERSEDED,
                 "superseded_by_snapshot_id": superseded_by,
-            }
+            },
         )
 
 

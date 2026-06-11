@@ -27,12 +27,21 @@ command. An operator could not transfer knowledge from one verb to the next, and
 `2026-06-10-cli-pull-file-standard-adr` collapsed the surface onto two words:
 `pull` always means "go read this from AEAT", `--file` always means "here is the
 one local file". A single learned verb and a single learned flag now generalise
-across the whole CLI, and the documented-command conformance gate
-(`test_documented_command_conformance.py`) plus the how-to guides assert the
-canonical names so the vocabulary cannot drift back. This is the CLI-surface
-companion to `aeat-architecture-boundaries` (the CLI gate is the operator's first
-instructive surface) and to `aeat-locales-cli` (the help text for these verbs is
-authored only through the locale CLI).
+across the whole CLI. The documented-command conformance gate
+(`test_documented_command_conformance.py`) prevents the how-to docs from citing a
+non-canonical or dead verb, and `test_json_schema_conformance.py` keeps every CLI
+leaf's `command` envelope identifier bound to a registered schema — but neither
+scans production `suggestion` / `next_action` / curated-help strings, so a verb
+rename MUST be swept by hand through the runtime write-policy allowlist
+(`storage_write_policy.py`), the error-registry `default_suggestion` fields, the
+cross-period `next_action` builders, the curated operator help surface
+(`operator_surface/_help.py`), and the envelope `command=` identifiers. A
+rename that updates only the verb registrations leaves dead operator instructions
+and — critically — drops the verb out of the profile-bound write guard
+(fail-open). This is the CLI-surface companion to `aeat-architecture-boundaries`
+(the CLI gate is the operator's first instructive surface) and to
+`aeat-locales-cli` (the help text for these verbs is authored only through the
+locale CLI).
 
 ## How
 
