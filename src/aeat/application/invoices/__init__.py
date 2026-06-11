@@ -64,7 +64,7 @@ from ._reconciliation import (
     reconcile_invoice_catalogues,
     reconcile_invoice_repositories,
 )
-from ._source_resolver import InvoiceCatalogueSourceResolver
+from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 
 __all__ = [
     "InvoiceCatalogueSourceResolver",
@@ -81,6 +81,7 @@ __all__ = [
     "find_unmatched",
     "get_invoice_from_repository",
     "import_invoices_from_path",
+    "invoice_direction_to_source_kind",
     "invoice_display_amounts",
     "invoice_review_status",
     "link_invoice_transaction_catalogues",

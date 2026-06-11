@@ -21,9 +21,26 @@ from ..aggregation._source_mesh import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
+from ..ledger import BusinessOperationInvoiceSourceKind
 
 _OWNED_SOURCES = ("collectible_invoice", "payable_invoice")
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+
+
+def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvoiceSourceKind:
+    """Map an invoice direction to its settlement source kind.
+
+    The single contractual home for the direction↔settlement relationship,
+    consumed by both :class:`InvoiceCatalogueSourceResolver` and the operator
+    ``aeat app ledger invoice`` CLI. An *issued* invoice (we billed a customer)
+    is *collectible*; a *received* invoice (a vendor billed us) is *payable*.
+
+    Returns:
+        The :class:`BusinessOperationInvoiceSourceKind` settling ``kind``.
+    """
+    if kind is InvoiceKind.ISSUED:
+        return BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE
+    return BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
 
 
 class InvoiceCatalogueSourceResolver:
@@ -66,7 +83,9 @@ class InvoiceCatalogueSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=resolve_invoice_binding_values(context.revision, observations),
             source_transaction_ids=tuple(
-                sorted({transaction_id for invoice, _ in observed for transaction_id in invoice.linked_transaction_ids})
+                sorted(
+                    {transaction_id for invoice, _ in observed for transaction_id in invoice.linked_transaction_ids},
+                ),
             ),
             provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in observed),
         )
@@ -105,7 +124,7 @@ def _date_in_period(value: date, *, filing_year: int, period: str) -> bool:
 
 
 def _invoice_source_kind(invoice: Invoice) -> str:
-    return "collectible_invoice" if invoice.kind is InvoiceKind.ISSUED else "payable_invoice"
+    return invoice_direction_to_source_kind(invoice.kind).value
 
 
 def _invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
@@ -146,4 +165,4 @@ def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> Ca
     )
 
 
-__all__ = ["InvoiceCatalogueSourceResolver"]
+__all__ = ["InvoiceCatalogueSourceResolver", "invoice_direction_to_source_kind"]

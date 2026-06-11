@@ -22,9 +22,36 @@ from ....domain.invoices import (
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
-from .. import InvoiceCatalogueSourceResolver
+from ....application.ledger import BusinessOperationInvoiceSourceKind
+from .. import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+class TestInvoiceDirectionToSourceKind:
+    """The single contractual direction→settlement mapping consumed by the
+    resolver and the unified operator invoice CLI."""
+
+    def test_issued_maps_to_collectible(self) -> None:
+        assert (
+            invoice_direction_to_source_kind(InvoiceKind.ISSUED)
+            is BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE
+        )
+
+    def test_received_maps_to_payable(self) -> None:
+        assert (
+            invoice_direction_to_source_kind(InvoiceKind.RECEIVED)
+            is BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
+        )
+
+    def test_mapping_is_total_over_invoice_kind(self) -> None:
+        # Anti-tautology: the function must resolve every InvoiceKind member to a
+        # distinct source kind, never collapse the two directions onto one.
+        resolved = {invoice_direction_to_source_kind(kind) for kind in InvoiceKind}
+        assert resolved == {
+            BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE,
+            BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE,
+        }
 
 _BUCKET_ID = "bucket-invoices"
 _OTHER_BUCKET_ID = "bucket-other"
@@ -122,7 +149,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
             filing_year=2026,
             period="1T",
             revision=snapshot.revision,
-        )
+        ),
     )
 
     assert resolution.owned_sources == ("collectible_invoice", "payable_invoice")
@@ -152,5 +179,5 @@ def test_invoice_catalogue_source_resolver_fails_closed_when_context_bucket_is_n
                     filing_year=2026,
                     period="1T",
                     revision=snapshot.revision,
-                )
+                ),
             )
