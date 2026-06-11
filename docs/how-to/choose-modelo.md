@@ -92,7 +92,7 @@ These commands read your local profile and the built-in rules only. They do not 
 
 ## Where to get help
 
-If a verdict looks wrong or a command fails, see the [troubleshooting guide](troubleshooting.md). Unfamiliar terms are defined in the [glossary](../glossary.md). Before you share command output to ask for help, remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
+If a verdict looks wrong or a command fails, see the [troubleshooting guide](troubleshooting.md). Unfamiliar terms are defined in the {doc}`glossary </_generated/glossary>`. Before you share command output to ask for help, remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
 
 ## Next steps
 

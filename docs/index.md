@@ -127,7 +127,7 @@ explanation/index
 :caption: Project
 
 updates
-glossary
+_generated/glossary
 disclaimer
 architecture
 authoring-guide

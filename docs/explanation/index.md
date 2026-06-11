@@ -12,22 +12,6 @@ The tool runs entirely on your own computer. It prepares your filing for you, bu
 
 ---
 
-## The plain words you'll meet
-
-A few Spanish tax words appear throughout this cluster. Here's what each one means:
-
-- **Modelo** - an official tax form, named by a number (for example, *Modelo 130* or *Modelo 303*).
-- **Casilla** - a numbered box on the form. Each box holds one figure, such as an income total or a tax rate.
-- **IVA** - value-added tax, the sales tax you charge and pay on goods and services.
-- **IRPF** - personal income tax.
-- **RENTA** - the annual income-tax return.
-- **Justificante** - the receipt the agency gives you after you file, as proof of submission.
-- **The official upload file** - the exact text-file layout the agency's portal accepts. The tool produces this file for you; you upload it.
-
-For a fuller list, see the [glossary](../glossary.md).
-
----
-
 ## The journey at a glance
 
 Your data moves one way through the tool. Bank movements come in, get sorted and made tax-ready, pass a readiness check, become the numbered boxes of a form, get edited and double-checked, turn into a file you can upload, and finally get recorded once you've filed it yourself.
@@ -89,7 +73,7 @@ These two ideas are covered in depth in [Editing and verifying a calculation](ed
 
 ## How to use this cluster
 
-Read straight through for the whole picture, or jump to the stage you're working on. Every member links to the how-to guide that performs its task and back to the [glossary](../glossary.md) for any word you're unsure of.
+Read straight through for the whole picture, or jump to the stage you're working on. Every member links to the how-to guide that performs its task and back to the {doc}`glossary </_generated/glossary>` for any word you're unsure of.
 
 When something goes wrong, see [Troubleshooting](../how-to/troubleshooting.md). For a step-by-step walkthrough of a full filing, follow the [Quickstart](../how-to/quickstart.md) or the [Tutorial](../tutorials/index.md).
 
