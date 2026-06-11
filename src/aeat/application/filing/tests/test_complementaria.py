@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core._period import Period
+from ....core import Period
 from ....domain.filing import (
     ModeloAmendmentError,
     ModeloBuilderError,
