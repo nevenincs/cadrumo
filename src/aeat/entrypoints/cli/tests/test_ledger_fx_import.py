@@ -109,7 +109,8 @@ def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
 
     assert (
         _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"],
+            app,
+            ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"],
         ).exit_code
         == 0
     )
@@ -146,7 +147,8 @@ def test_view_single_eur_row_keeps_fx_fields_null() -> None:
 
     assert (
         _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"],
+            app,
+            ["app", "ledger", "import", str(_CORPUS / "revolut-multi.csv"), "--provider", "csv"],
         ).exit_code
         == 0
     )
@@ -178,7 +180,19 @@ def test_export_period_filters_to_the_quarter(tmp_path: Path) -> None:
     assert full_res.exit_code == 0, full_res.output
     r = _RUNNER.invoke(
         app,
-        ["app", "ledger", "export", "--output", str(q1), "--export-format", "csv", "--period", "2025Q1"],
+        [
+            "app",
+            "ledger",
+            "export",
+            "--output",
+            str(q1),
+            "--export-format",
+            "csv",
+            "--period",
+            "1T",
+            "--year",
+            "2025",
+        ],
     )
     assert r.exit_code == 0, r.output
     full_rows = list(csv.DictReader(full.read_text(encoding="utf-8").splitlines()))
@@ -249,7 +263,8 @@ def test_status_surfaces_income_expense_net_rollup() -> None:
 
     assert (
         _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
+            app,
+            ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
         ).exit_code
         == 0
     )
@@ -271,7 +286,8 @@ def test_review_filter_text_search() -> None:
 
     assert (
         _RUNNER.invoke(
-            app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
+            app,
+            ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
         ).exit_code
         == 0
     )

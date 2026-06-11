@@ -350,7 +350,7 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
 
 def _assert_ledger_status_one_ready_row(bucket_id: str) -> None:
     """After one reviewed transaction the status verb reports a single ready row."""
-    status = _run_ledger_cli_json(["app", "ledger", "status", "--period", "2026-05"])
+    status = _run_ledger_cli_json(["app", "ledger", "status", "--period", "05", "--year", "2026"])
     assert bucket_id not in json.dumps(status, sort_keys=True)
     assert status["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert status["total_count"] == 1
@@ -391,10 +391,10 @@ def _assert_ledger_review_returns_transaction(transaction_id: str) -> None:
 def _assert_ledger_review_filtered_by_period_returns_empty(transaction_id: str) -> None:
     """Review with a period filter that doesn't match returns an empty rows list."""
     filtered_out = _run_ledger_cli_json(
-        ["app", "ledger", "review", transaction_id, "--filter", "period=2026-06"],
+        ["app", "ledger", "review", transaction_id, "--filter", "period=06", "--filter", "year=2026"],
     )
     assert filtered_out["rows"] == []
-    assert filtered_out["filters"] == ["period=2026-06", f"id={transaction_id}"]
+    assert filtered_out["filters"] == ["period=2026 06", f"id={transaction_id}"]
 
 
 def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
@@ -433,7 +433,9 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     transaction_id = cast(str, allocated["transaction_id"])
     _assert_ledger_status_one_ready_row(bucket_id)
     _assert_ledger_track_returns_lineage(
-        transaction_id, expected_created_event_id=created_event_id, bucket_id=bucket_id,
+        transaction_id,
+        expected_created_event_id=created_event_id,
+        bucket_id=bucket_id,
     )
     _assert_ledger_review_returns_transaction(transaction_id)
     _assert_ledger_review_filtered_by_period_returns_empty(transaction_id)

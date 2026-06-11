@@ -32,14 +32,14 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 def test_preflight_requires_period_flag(cli_runner: CliRunner) -> None:
     """The verb requires --period; missing it surfaces as a Typer usage error."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "preflight"])
+    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--year", "2026"])
     assert result.exit_code != 0, result.output
 
 
 def test_preflight_empty_catalogue_is_ready(cli_runner: CliRunner) -> None:
     """An active bucket with no transactions reports ready=true and 0 issues."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "2026Q1"])
+    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
     assert result.exit_code == 0, result.output
     assert "checked\t0" in result.output
     assert "issues\t0" in result.output
@@ -50,7 +50,7 @@ def test_preflight_rejects_malformed_period(cli_runner: CliRunner) -> None:
     """A period that does not match the canonical regex is rejected
     before the application service is reached."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "not-a-period"])
+    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "not-a-period", "--year", "2026"])
     assert result.exit_code != 0, result.output
 
 
@@ -88,7 +88,7 @@ def test_status_period_readiness_issues_include_tax_diagnostic_fields(cli_runner
     )
     assert add.exit_code == 0, add.output
 
-    result = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "2026-05"])
+    result = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "05", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     assert "Ready\tFalse" in result.output or "ready\tFalse" in result.output
