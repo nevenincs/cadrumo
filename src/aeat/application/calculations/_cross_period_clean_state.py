@@ -27,7 +27,7 @@ from ...domain.calculations.registry import (
     previous_filing_observation_requirements,
     relation_source_requirements,
 )
-from ...domain.justificante import JustificanteRepository
+from ...domain.justificante import Justificante, JustificanteRepository
 from ...domain.modelos import (
     CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -787,32 +787,18 @@ def _filing_external_evidence_blockers(
 
 def _justificante_matches_filing(
     filing: ModeloRecord,
-    justificante: object,
+    justificante: Justificante,
     *,
     taxpayer_tax_id: str | None,
 ) -> bool:
-    modelo = str(getattr(justificante, "modelo", "")).strip()
-    ejercicio = str(getattr(justificante, "ejercicio", "") or "").strip()
-    observed_period = getattr(justificante, "period", "")
-    tax_id = str(getattr(justificante, "tax_id", "") or "").strip()
-    filing_period = filing.period if isinstance(filing.period, Period) else None
-    if isinstance(observed_period, Period) and filing_period is not None:
-        period_matches = observed_period == filing_period
-    else:
-        period = (
-            observed_period.registry_token
-            if isinstance(observed_period, Period)
-            else str(observed_period).strip().upper()
-        )
-        filing_period_token = (
-            filing_period.registry_token
-            if filing_period is not None
-            else str(getattr(filing.period, "code", filing.period)).strip().upper()
-        )
-        period_matches = period == filing_period_token
     expected_tax_id = filing.member_nif or taxpayer_tax_id
-    tax_id_matches = expected_tax_id is None or tax_id == expected_tax_id.strip()
-    return modelo == str(filing.modelo) and ejercicio == str(filing.filing_year) and period_matches and tax_id_matches
+    tax_id_matches = expected_tax_id is None or justificante.tax_id.strip() == expected_tax_id.strip()
+    return (
+        justificante.modelo.strip() == str(filing.modelo)
+        and str(justificante.ejercicio or "").strip() == str(filing.filing_year)
+        and justificante.period == filing.period
+        and tax_id_matches
+    )
 
 
 def _filing_revision_blockers(
