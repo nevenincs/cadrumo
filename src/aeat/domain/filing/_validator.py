@@ -88,7 +88,7 @@ class ModeloValidator:
     # ── individual rules ─────────────────────────────────────────
 
     def _validate_schema_version(
-        self, draft: ModeloDraft, collection: CasillaCollection
+        self, draft: ModeloDraft, collection: CasillaCollection,
     ) -> list[ModeloValidationFinding]:
         if draft.schema_version == collection.schema_version:
             return []
@@ -99,7 +99,7 @@ class ModeloValidator:
                 code="filing-schema-version-mismatch",
                 message=tr("filing.validation.schema_mismatch"),
                 references_rules=(),
-            )
+            ),
         ]
 
     def _validate_required(self, draft: ModeloDraft, collection: CasillaCollection) -> list[ModeloValidationFinding]:
@@ -117,7 +117,7 @@ class ModeloValidator:
                         code="casilla-required-missing",
                         message=tr("filing.validation.required_missing"),
                         references_rules=(),
-                    )
+                    ),
                 )
         return out
 
@@ -147,7 +147,7 @@ class ModeloValidator:
         )
 
     def _validate_formula_traces(
-        self, draft: ModeloDraft, collection: CasillaCollection
+        self, draft: ModeloDraft, collection: CasillaCollection,
     ) -> list[ModeloValidationFinding]:
         out: list[ModeloValidationFinding] = []
         for value in draft.values:
@@ -185,7 +185,7 @@ class ModeloValidator:
         if self._deadline_checker is None:
             _logger.debug("deadline check skipped: no deadline_checker provided for modelo=%s", draft.modelo)
             return []
-        status = self._deadline_checker.check(draft.modelo, draft.period)
+        status = self._deadline_checker.check(draft.modelo, draft.period.registry_token)
         if not status.is_overdue:
             return []
         return [
@@ -195,7 +195,7 @@ class ModeloValidator:
                 code="filing-deadline-missed",
                 message=tr("filing.validation.deadline_missed"),
                 references_rules=(),
-            )
+            ),
         ]
 
 
@@ -218,7 +218,7 @@ def apply_validation(
             "findings": findings,
             "status": new_status,
             "updated_at": now(),
-        }
+        },
     )
 
 

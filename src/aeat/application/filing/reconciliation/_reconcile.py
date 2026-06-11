@@ -111,7 +111,7 @@ def reconcile(
     draft_ref = ModeloDraftRef(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
-        period=draft.period,
+        period=str(draft.period),
         profile_tax_id=draft.profile_tax_id,
     )
 
@@ -130,7 +130,7 @@ def reconcile(
                 FieldMismatch(
                     kind=ModeloDivergenceKind.FILING_NOT_YET_FOUND,
                     field_name="justificante",
-                    draft_value=f"modelo={draft.modelo} period={draft.period}",
+                    draft_value=f"modelo={draft.modelo} period={draft.period!s}",
                     remote_value="<no record>",
                 ),
             ),
@@ -148,22 +148,33 @@ def reconcile(
                 field_name="modelo",
                 draft_value=draft.modelo,
                 remote_value=remote.modelo,
-            )
+            ),
         )
 
     supported_periods = set(subview.period_selector_periods)
-    if _normalise_period(draft.period, supported_periods=supported_periods) != _normalise_period(
+    # For the draft side, use registry_token directly from the typed Period so the
+    # comparison is normalised against the same token that _normalise_period produces
+    # for the remote's "<quarter>T" / "0A" forms when an ejercicio is available.
+    draft_period_code = draft.period.registry_token
+    _draft_year_str = str(draft.period.filing_year)
+    if draft_period_code.endswith("T") and draft_period_code[0] in "1234":
+        _draft_normalised = f"{_draft_year_str}q{draft_period_code[0]}"
+    elif draft_period_code == "0A":
+        _draft_normalised = f"{_draft_year_str}a"
+    else:
+        _draft_normalised = f"{_draft_year_str}-{draft_period_code}"
+    if _draft_normalised != _normalise_period(
         remote.period,
-        ejercicio=remote.ejercicio,
+        ejercicio=remote.ejercicio or _draft_year_str,
         supported_periods=supported_periods,
     ):
         mismatches.append(
             FieldMismatch(
                 kind=ModeloDivergenceKind.PERIOD_MISMATCH,
                 field_name="period",
-                draft_value=draft.period,
+                draft_value=str(draft.period),
                 remote_value=remote.period,
-            )
+            ),
         )
 
     if _canonical_tax_id(draft.profile_tax_id) != _canonical_tax_id(remote.tax_id):
@@ -173,7 +184,7 @@ def reconcile(
                 field_name="tax_id",
                 draft_value=draft.profile_tax_id,
                 remote_value=remote.tax_id,
-            )
+            ),
         )
 
     # Total mismatches are only surfaced when the draft itself records
@@ -191,7 +202,7 @@ def reconcile(
                 field_name="total_a_ingresar",
                 draft_value=format_decimal(draft_totals.ingresar),
                 remote_value=format_decimal(remote.total_a_ingresar),
-            )
+            ),
         )
     if (
         draft_totals.devolver is not None
@@ -204,7 +215,7 @@ def reconcile(
                 field_name="total_a_devolver",
                 draft_value=format_decimal(draft_totals.devolver),
                 remote_value=format_decimal(remote.total_a_devolver),
-            )
+            ),
         )
 
     if mismatches:
@@ -309,7 +320,7 @@ def _require_registry_reconciliation_surface(
         raise ModeloBuilderError("reconciliation requires a draft built from the active registry snapshot")
     if not subview.verification_expectation_ids:
         raise ModeloBuilderError("reconciliation requires registry verification expectations")
-    registry_token = _canonical_draft_period_token(draft.period)
+    registry_token = draft.period.registry_token
     if registry_token not in subview.period_selector_periods:
         raise ModeloBuilderError("reconciliation requires a draft period declared by the active registry snapshot")
     return subview

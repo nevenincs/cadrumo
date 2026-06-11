@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core._period import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry._schema import RegistrySnapshotRef
 from .._amendment import (
@@ -48,7 +49,7 @@ def _populated_amended_draft() -> ModeloDraft:
     return ModeloDraft(
         draft_id="d" * 64,
         modelo="303",
-        period="2025Q1",
+        period=Period.from_year_and_code(2025, "1T"),
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
         snapshot_ref=RegistrySnapshotRef(

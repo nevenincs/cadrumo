@@ -16,6 +16,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core._period import Period
 from ....domain.filing._amendment import CasillaChange, ModeloComplementaria
 from ....domain.filing._complementaria_repository import (
     ModeloAmendmentRepository,
@@ -41,16 +42,17 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
             source="test correction",
         ),
     )
+    _period = Period.from_year_and_code(2026, "1T")
     amended_draft = ModeloDraft(
         draft_id=compute_modelo_draft_id(
             modelo="130",
-            period="2026Q1",
+            period=_period,
             profile_tax_id="00000000T",
             schema_version="test-schema-v1",
             values=values,
         ),
         modelo="130",
-        period="2026Q1",
+        period=_period,
         profile_tax_id="00000000T",
         status=ModeloDraftStatus.VALIDADO,
         values=values,

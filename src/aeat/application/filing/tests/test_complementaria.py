@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core._period import Period
 from ....domain.filing import (
     ModeloAmendmentError,
     ModeloBuilderError,
@@ -14,6 +15,7 @@ from ....domain.filing import (
     ModeloValue,
     ModeloValueKind,
 )
+from ....domain.period import parse_canonical_period as _parse_canonical_period
 from ....domain.submission import ModeloDraftStatus, ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from .. import (
     build_complementaria,
@@ -78,10 +80,11 @@ def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> ModeloDraf
         )
         for casilla_id, value in sorted(casillas.items())
     )
+    typed_period = Period.from_year_and_code(*_parse_canonical_period(period))
     return ModeloDraft(
         draft_id=f"unsupported-{modelo}-{period}",
         modelo=modelo,
-        period=period,
+        period=typed_period,
         profile_tax_id="00000000T",
         status=ModeloDraftStatus.PRESENTADA,
         values=values,
@@ -122,7 +125,7 @@ class TestBuildComplementaria:
                 # binding-id fix from #71/#95.
                 "16": Decimal("0"),
                 "18": Decimal("0"),
-            }
+            },
         )
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft)
@@ -155,7 +158,7 @@ class TestBuildComplementaria:
                 "01": Decimal("10000"),
                 "02": Decimal("4000"),
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            }
+            },
         )
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, justificante_csv="")
@@ -174,7 +177,7 @@ class TestBuildComplementaria:
                 "01": Decimal("10000"),
                 "02": Decimal("4000"),
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            }
+            },
         ).model_copy(update={"schema_version": "registry:130:wrong-revision"})
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft)

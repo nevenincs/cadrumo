@@ -83,7 +83,7 @@ def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_defau
         EphemeralMasterKeyProvider(key=_MASTER_KEY),
     ):
         TransactionCatalogueRepository(bucket_id="ephemeral").save(
-            TransactionCatalogue.from_transactions((_transaction("initial"),))
+            TransactionCatalogue.from_transactions((_transaction("initial"),)),
         )
         approved = approve_draft(
             draft,
@@ -93,7 +93,7 @@ def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_defau
         )
 
         TransactionCatalogueRepository(bucket_id="ephemeral").save(
-            TransactionCatalogue.from_transactions((_transaction("changed"),))
+            TransactionCatalogue.from_transactions((_transaction("changed"),)),
         )
         reasons = approval_stale_reasons(
             approved,

@@ -9,6 +9,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from .....adapters.inbound.justificante import parse_justificante
+from .....core._period import Period
 from .....domain.filing import ModeloBuilderError, ModeloDraft
 from .....domain.justificante import Justificante
 from .....domain.submission import ModeloDraftStatus
@@ -288,7 +289,9 @@ class TestRegistryGate:
             reconcile(draft, None, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
     def test_reconcile_requires_period_declared_by_registry_snapshot(self) -> None:
-        draft = _draft_for_130().model_copy(update={"period": "2024A"})
+        # Inject an annual period into a quarterly draft to force the registry gate.
+        annual_period = Period.from_year_and_code(2024, "0A")
+        draft = _draft_for_130().model_copy(update={"period": annual_period})
 
         with pytest.raises(ModeloBuilderError, match="draft period declared"):
             reconcile(draft, None, schema_provider=_provider_for(draft), now=_FIXED_NOW)
