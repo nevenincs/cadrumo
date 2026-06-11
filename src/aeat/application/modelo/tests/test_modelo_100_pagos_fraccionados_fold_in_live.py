@@ -47,7 +47,6 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
-    RegistryValidationError,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -86,12 +85,13 @@ _M131_SOURCE_OUTPUT = "15"
 _M100_ANNUAL_PERIOD = "0A"
 _M100_PAGOS_CASILLA = "0604"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+_M130_PAGOS_RELATION_ID = "renta-2024-rel-130-pagos-fraccionados"
 
 # The M100 0604 formula references BOTH the M130 and M131 pagos-fraccionados
-# relations directly (``sum(relation 130, relation 131)``); the engine raises
-# ``RegistryValidationError: relation '...' has no supplied value`` for any
-# relation the resolver leaves unresolved (an unseeded prior filing resolves to
-# ``None``, not zero). So the M131 leg must also be present for 0604 to compute.
+# relations directly (``sum(relation 130, relation 131)``); unresolved prior
+# filings now leave the computed casilla blank and surface source diagnostics
+# instead of zero-contributing. So the M131 leg must also be present for 0604 to
+# compute.
 # This persona has no estimación-objetiva (M131) activity, so its four c15
 # quarters are a true zero — folded as 0 into 0604, leaving 0604 == the M130 sum.
 _M131_C15_QUARTERS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
@@ -292,41 +292,35 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(secure_objects:
     )
 
 
-def test_m100_partial_prior_m130_filings_current_behaviour(secure_objects: SecureObjectRepository) -> None:
-    """Document the CURRENT live behaviour when only 1T+2T M130 are filed.
-
-    The M100 0604 formula references both pagos relations directly, and each
-    relation requires ONE observation per declared source period (1T-4T). With
-    only 1T+2T M130 present, the M130 relation resolves operator-manual
-    (``value=None`` — a partial set is NOT partial-folded), so no value reaches
-    the engine's relation channel for it and ``calculate_registry_snapshot``
-    RAISES ``RegistryValidationError: relation '...' has no supplied value``.
-
-    This pins the OBSERVED current behaviour: a partial prior filing does NOT
-    silently partial-fold; it raises. The blank-vs-zero-vs-raise decision (should
-    a partial or absent prior filing yield a blank cell, a zero contribution, or a
-    hard raise) is a coordinator adjudication tracked as a separate finding.
-    No engine semantics are changed here; this test only documents the status quo
-    and fails loudly if it drifts. (xfail/skip-free per the testing mandate.)
-    """
+def test_m100_partial_prior_m130_filings_leave_0604_unresolved_with_diagnostic(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A partial prior M130 set leaves 0604 blank and names the missing relation."""
     obs_repo = CalculationObservationRepository()
     _seed_m130_quarters(obs_repo=obs_repo, periods=("1T", "2T"))
     _seed_m131_zero_quarters(obs_repo=obs_repo)
 
-    with pytest.raises(RegistryValidationError, match="has no supplied value"):
-        _calculate_m100_annual(secure_objects)
+    result = _calculate_m100_annual(secure_objects)
+
+    assert _M100_PAGOS_CASILLA not in result.revision.casilla_values
+    assert any(
+        diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+        and diagnostic.relation_id == _M130_PAGOS_RELATION_ID
+        and diagnostic.reason == "source_issue"
+        for diagnostic in result.source_diagnostics
+    ), result.source_diagnostics
 
 
-def test_m100_no_prior_m130_filing_current_behaviour(secure_objects: SecureObjectRepository) -> None:
-    """Document the CURRENT live behaviour with ZERO prior pagos filings.
+def test_m100_no_prior_m130_filing_leaves_0604_unresolved_with_diagnostic(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """An absent prior M130 set leaves 0604 blank and names the missing relation."""
+    result = _calculate_m100_annual(secure_objects)
 
-    With no M130 or M131 observation in the store, both pagos relations resolve
-    operator-manual (``value=None``); the 0604 formula references them directly,
-    so ``calculate_registry_snapshot`` RAISES ``RegistryValidationError: relation
-    '...' has no supplied value`` — the same shape confirmed for M190 in a
-    different harness. The live mesh does NOT silently materialise an absent
-    relation as zero. The blank-vs-zero-vs-raise decision is a coordinator
-    adjudication (separate finding); this test only pins the status quo.
-    """
-    with pytest.raises(RegistryValidationError, match="has no supplied value"):
-        _calculate_m100_annual(secure_objects)
+    assert _M100_PAGOS_CASILLA not in result.revision.casilla_values
+    assert any(
+        diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+        and diagnostic.relation_id == _M130_PAGOS_RELATION_ID
+        and diagnostic.reason == "source_issue"
+        for diagnostic in result.source_diagnostics
+    ), result.source_diagnostics

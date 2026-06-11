@@ -27,7 +27,7 @@ from ...core.decimal import coerce_decimal
 from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.parsing._dates import _parse_iso8601_date
 from .._identifiers import canonical_decimal_string
-from ..iva import EUMemberState, InvoiceKind, IvaCategory
+from ..iva import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
 from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import InvoiceValidationError
 from ._ids import InvoiceId
@@ -125,6 +125,24 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
                 raise InvoiceValidationError("iva_category must be an IvaCategory") from exc
         else:
             payload["iva_category"] = None
+    if "oss_ioss_regime" in payload and isinstance(payload["oss_ioss_regime"], str):
+        stripped = payload["oss_ioss_regime"].strip()
+        if stripped:
+            try:
+                payload["oss_ioss_regime"] = OssIossRegime(stripped)
+            except ValueError as exc:
+                raise InvoiceValidationError("oss_ioss_regime must be an OssIossRegime") from exc
+        else:
+            payload["oss_ioss_regime"] = None
+    if "oss_transaction_kind" in payload and isinstance(payload["oss_transaction_kind"], str):
+        stripped = payload["oss_transaction_kind"].strip()
+        if stripped:
+            try:
+                payload["oss_transaction_kind"] = TransactionKind(stripped)
+            except ValueError as exc:
+                raise InvoiceValidationError("oss_transaction_kind must be a TransactionKind") from exc
+        else:
+            payload["oss_transaction_kind"] = None
     return payload
 
 
@@ -262,6 +280,7 @@ class InvoiceLine(BaseModel):
     iva_rate: IvaRate
     iva_amount: Decimal
     category_id: str | None = None
+    oss_rate_kind: IvaRateKind | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -277,6 +296,9 @@ class InvoiceLine(BaseModel):
                 payload[key] = coerce_decimal(payload[key])
         if "iva_rate" in payload and isinstance(payload["iva_rate"], str):
             payload["iva_rate"] = IvaRate(payload["iva_rate"])
+        if "oss_rate_kind" in payload and isinstance(payload["oss_rate_kind"], str):
+            stripped = payload["oss_rate_kind"].strip()
+            payload["oss_rate_kind"] = IvaRateKind(stripped) if stripped else None
         return payload
 
     @field_validator("description")
@@ -317,6 +339,8 @@ class InvoiceLine(BaseModel):
         if abs(self.subtotal - expected_subtotal) > _LINE_TOLERANCE:
             raise InvoiceValidationError("subtotal must equal quantity * unit_price within 1 cent")
         rate = iva_rate_percentage(self.iva_rate)
+        if self.oss_rate_kind is not None:
+            return self
         if rate is None:
             if self.iva_amount != Decimal("0"):
                 raise InvoiceValidationError("iva_amount must be zero for EXEMPT / NOT_SUBJECT lines")
@@ -349,6 +373,8 @@ class Invoice(BaseModel):
     linked_transaction_ids: tuple[str, ...] = ()
     notes: str = ""
     iva_category: IvaCategory | None = None
+    oss_ioss_regime: OssIossRegime | None = None
+    oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None
     retention_amount: Decimal | None = None
     payment_id: str | None = None
@@ -409,6 +435,36 @@ class Invoice(BaseModel):
                 raise InvoiceValidationError(
                     "grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT",
                 )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_oss_ioss_axes(self) -> Self:
+        """Validate the optional OSS/IOSS projection axes used by Modelo 369."""
+        has_oss_line_rate = any(line.oss_rate_kind is not None for line in self.lines)
+        if self.oss_ioss_regime is None and self.oss_transaction_kind is None:
+            if has_oss_line_rate:
+                raise InvoiceValidationError("oss_rate_kind requires invoice-level OSS/IOSS axes")
+            return self
+        if self.oss_ioss_regime is None or self.oss_transaction_kind is None:
+            raise InvoiceValidationError("oss_ioss_regime and oss_transaction_kind must be supplied together")
+        if self.kind is not InvoiceKind.ISSUED:
+            raise InvoiceValidationError("OSS/IOSS invoice projection only applies to issued invoices")
+        if self.counterparty_eu_member_state is None:
+            raise InvoiceValidationError("OSS/IOSS invoice projection requires an EU destination member state")
+
+        allowed_kinds_by_regime: Mapping[OssIossRegime, frozenset[TransactionKind]] = {
+            OssIossRegime.EXTERNAL_SCHEME: frozenset({TransactionKind.EXTERNAL_SCHEME_SERVICES}),
+            OssIossRegime.UNION_SCHEME: frozenset(
+                {
+                    TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+                    TransactionKind.OSS_UNION_GOODS_INTERFACE_FACILITATED,
+                    TransactionKind.OSS_UNION_SERVICES,
+                },
+            ),
+            OssIossRegime.IMPORT_SCHEME: frozenset({TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE}),
+        }
+        if self.oss_transaction_kind not in allowed_kinds_by_regime[self.oss_ioss_regime]:
+            raise InvoiceValidationError("oss_transaction_kind is not valid for the supplied oss_ioss_regime")
         return self
 
     @property
