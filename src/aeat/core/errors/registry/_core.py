@@ -356,6 +356,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.locales._modelo_manager.ModeloLocaleError",
+        ErrorCode(
+            code="FAIL_MODELO_LOCALE_MANAGER",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_modelo_locale_manager",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.resources._errors.ResourceLoadError",
         ErrorCode(
             code="ERROR_RESOURCES_LOAD",

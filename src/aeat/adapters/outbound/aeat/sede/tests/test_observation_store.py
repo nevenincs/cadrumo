@@ -11,6 +11,7 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
+from ......core import Period
 from ......core.config import Settings
 from ......tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._observation_store import FiledDeclaracionObservationStore
@@ -41,7 +42,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     observation = FiledDeclaracionObservation(
         modelo="130",
         ejercicio=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         expediente_id="202610013522222A",
         status="ALTA",
         presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),

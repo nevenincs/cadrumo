@@ -84,3 +84,24 @@ Tracking: this is an outbound AEAT auth test fixture issue, not a ledger hardeni
 ### OPEN - Repository-wide type harness remains baseline red
 
 `just check-types` currently reports `769 diagnostics` (`407 ty`, `362 pyright`) concentrated in calculation/modelo test surfaces. Focused type checks over the C5 ledger CLI payload and emit files are clean, so the global red is tracked as shared factory baseline rather than a ledger-interface-contract regression.
+
+## Pass 5 Update
+
+### RESOLVED - Early full-lane blockers repaired
+
+Four repository-wide blockers that prevented the close sweep from reaching ledger were repaired in this pass:
+
+- `PeriodError` now participates in the registered `AeatError` hierarchy while preserving `ValueError` compatibility.
+- The private unresolved-formula sentinel is explicitly documented in the exception-hygiene allowlist because it is caught inside the formula runtime and never crosses a public boundary.
+- `ModeloLocaleError` is registered as a locale-manager AEAT error while preserving `ValueError` compatibility.
+- The IVA wallet no-auth path refuses before touching typed period fields, preserving the translated no-auth error contract.
+- Sede observation-store tests now construct real `Period` values instead of string periods.
+- Google pull metadata matching compares period token to period token, so aligned workbook metadata classifies as `matches`.
+
+Focused verification passed after these repairs: exception hygiene / registry / period / modelo-locale tests passed `100/100`; the Sede auth-state no-session test passed `1/1`; Sede observation-store tests passed `2/2`; Google pull adapter helper tests passed `19/19`; and the C5 ledger completion gate remained green at `79/79`.
+
+### OPEN - Explicit integration-or-not full lane now blocks in storage runtime migration
+
+After the repairs above, `uv run --no-sync pytest src/aeat -m "integration or not integration" -q -x` advances to `2570 passed, 32 skipped` before failing in `src/aeat/adapters/persistence/storage/tests/test_runtime_migrated_repositories_part1.py::test_workflow_state_default_isolates_active_profile_writes`. The assertion still expects declaration key `303:bucket-b`, while the loaded workflow state now carries the canonical period-qualified key `303:2026:1T`.
+
+Tracking: this is a storage/workflow runtime-migration test expectation drift, not a ledger hardening implementation issue. It is now the first known repository-wide closeout blocker after the ledger and early shared blockers are cleared.
