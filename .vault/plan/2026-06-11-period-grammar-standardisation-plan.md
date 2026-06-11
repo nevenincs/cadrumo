@@ -153,9 +153,9 @@ Promote a fundamental core.Period value object (filing_year + StandardPeriodCode
 
 The coordinator authors core.Period in core/_period.py composing filing_year + StandardPeriodCode, with accessors, canonical __str__/__repr__, value semantics, full token coverage, and a from_year_and_code constructor; with a strict unit test suite. Not delegated.
 
-- [ ] `W02.P06.S18` - Author core.Period composing filing_year:int + code:StandardPeriodCode, with read-only accessors (year, registry_token, start_date, end_date, contains, kind), a canonical __str__/__repr__ and pydantic serialiser, value semantics (frozen, hashable, equality by (year, code)), and a from_year_and_code constructor covering span shapes, instalment claves and extended union members; `src/aeat/core/_period.py`.
-- [ ] `W02.P06.S19` - Write strict core.Period unit tests: construction per token kind, accessor correctness, str-repr stability, equality/hash as a dict key, has_date_span for non-span periods, and refusal on malformed inputs; `src/aeat/core/tests/test_period.py`.
-- [ ] `W02.P06.S20` - Re-export core.Period from core __all__ and confirm CLI import smoke and the core test suite pass; `src/aeat/core/__init__.py`.
+- [x] `W02.P06.S18` - Author core.Period composing filing_year:int + code:StandardPeriodCode, with read-only accessors (year, registry_token, start_date, end_date, contains, kind), a canonical __str__/__repr__ and pydantic serialiser, value semantics (frozen, hashable, equality by (year, code)), and a from_year_and_code constructor covering span shapes, instalment claves and extended union members; `src/aeat/core/_period.py`.
+- [x] `W02.P06.S19` - Write strict core.Period unit tests: construction per token kind, accessor correctness, str-repr stability, equality/hash as a dict key, has_date_span for non-span periods, and refusal on malformed inputs; `src/aeat/core/tests/test_period.py`.
+- [x] `W02.P06.S20` - Re-export core.Period from core __all__ and confirm CLI import smoke and the core test suite pass; `src/aeat/core/__init__.py`.
 
 ### Phase `W02.P07` - Re-seat aggregation Period and ledger on core.Period (sonnet)
 
