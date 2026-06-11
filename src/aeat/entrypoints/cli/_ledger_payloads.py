@@ -104,6 +104,24 @@ class LedgerRemovalBlockerPayload(OutputSchema):
     period: str
 
 
+class LedgerTransactionParticipationEntryPayload(OutputSchema):
+    """One finalized-revision participation recorded against a ledger transaction (nested).
+
+    Surfaces the inverse of the forward ``source_transaction_ids`` link:
+    a finalized modelo revision (and, where filed, its filing record and
+    justificante reference) that consumed the transaction.
+    """
+
+    calculation_revision_id: str
+    work_unit_id: str
+    modelo: str
+    filing_year: int
+    period: str
+    revision_state: str
+    filing_record_id: str | None = None
+    justificante_reference: str | None = None
+
+
 class LedgerImportValidationPayload(OutputSchema):
     """Source-file validation details nested in import result."""
 
@@ -520,6 +538,18 @@ class LedgerImportPayload(OutputSchema):
         return cls.model_validate(data)
 
 
+@register_schema("ledger.participation")
+class LedgerTransactionParticipationPayload(OutputSchema):
+    """JSON envelope for ``aeat app ledger participation <transaction-id>``.
+
+    Carries the full participation set for one ledger transaction: every
+    finalized modelo revision and filing that consumed it.
+    """
+
+    transaction_id: str
+    participations: list[LedgerTransactionParticipationEntryPayload]
+
+
 @register_schema("ledger.participation.rebuild")
 class LedgerParticipationRebuildResult(OutputSchema):
     """JSON envelope for ``aeat app ledger participation rebuild``.
@@ -535,11 +565,17 @@ class LedgerParticipationRebuildResult(OutputSchema):
 
 @register_schema("ledger.track")
 class LedgerTrackResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger track``."""
+    """JSON envelope for ``aeat app ledger track``.
+
+    ``participated_in`` carries the finalized-revision participations that
+    consumed this transaction (the inverse audit trail), or ``None`` when the
+    transaction appears in no finalized revision.
+    """
 
     bucket_id: str
     transaction: TransactionPayload
     tracking: dict[str, object]
+    participated_in: list[LedgerTransactionParticipationEntryPayload] | None = None
 
 
 @register_schema("ledger.review")
