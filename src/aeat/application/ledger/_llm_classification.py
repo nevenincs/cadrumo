@@ -64,6 +64,7 @@ from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rat
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassifier,
+    LLMSplitProposer,
     Transaction,
     TransactionLifecycleState,
     TransactionNotFoundError,
@@ -71,6 +72,7 @@ from ...domain.transactions import (
     prompt_spec_with_every_spending_category,
     prompt_spec_with_saturation_fields,
     resolve_classifier,
+    resolve_split_proposer,
     set_classification,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
@@ -81,6 +83,7 @@ from ._actions_common import (
     _transaction_repository,
 )
 from ._actions_manual import update_manual_transaction_fields
+from ._actions_split_merge import split_transaction
 from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_advisory import printed_iva_advisory
 from ._evidence_input import (
@@ -88,8 +91,9 @@ from ._evidence_input import (
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
+from ._evidence_split import derive_child_amounts
 from ._evidence_textlayer import extract_evidence_text
-from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
+from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
 
 _logger = get_logger(__name__)
 
@@ -719,15 +723,327 @@ def apply_saturated_llm_classification(
     return result
 
 
+# ── stage-3b: evidence-driven N-way split ─────────────────────────
+
+
+class LLMSplitChildSuggestion(BaseModel):
+    """One reviewed child of an evidence-driven split, with derived numbers.
+
+    The model proposed a *proportion* of the parent and selected the child's
+    expense :class:`SpendingCategory` and :class:`aeat.domain.iva.IvaCategory`;
+    this record carries the system-DERIVED euro ``amount`` (from the parent gross
+    and the proportion) and the system-DERIVED regulated substrate
+    (``iva_rate`` / ``taxable_base`` / ``iva_amount``) looked up from the registry.
+    The model never emits a euro amount or a regulated number
+    (``llm-selects-system-derives-tax-numbers``).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    proportion: Decimal
+    amount: Decimal
+    description: str = Field(min_length=1)
+    category: SpendingCategory | None = None
+    iva_category: IvaCategory | None = None
+    iva_rate: Decimal | None = None
+    taxable_base: Decimal | None = None
+    iva_amount: Decimal | None = None
+    rate_derivable: bool = False
+    derivation_note: str = ""
+    evidence_citation: str = ""
+
+
+class LLMSplitSuggestion(BaseModel):
+    """An evidence-driven N-way split proposal with derived child amounts.
+
+    Produced by :func:`suggest_evidence_split` (persists nothing); consumed for
+    review and, on accept, by :func:`apply_evidence_split`. The child amounts sum
+    exactly to ``parent_amount`` to the cent.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1)
+    provider: LLMProvider
+    provenance: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    parent_amount: Decimal
+    children: tuple[LLMSplitChildSuggestion, ...]
+    evidence_id: str | None = None
+
+
+class LLMSplitApplyResult(BaseModel):
+    """Outcome of applying a reviewed evidence-driven split."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1)
+    parent_transaction_id: str = Field(min_length=1)
+    split_group_id: str = Field(min_length=1)
+    child_transaction_ids: tuple[str, ...]
+    provenance: str = Field(min_length=1)
+    classified_child_count: int
+
+
+def _resolve_default_split_proposer(provider: LLMProvider) -> LLMSplitProposer:
+    """Resolve the production split proposer for ``provider`` with the saturation prompt.
+
+    Uses :func:`aeat.domain.transactions.prompt_spec_with_saturation_fields` so each
+    proposed child carries the same allow-list-guarded expense-category and
+    IVA-category selections the saturate path uses.
+    """
+    return resolve_split_proposer(provider.value, spec=prompt_spec_with_saturation_fields())
+
+
+def _split_child_description(child_index: int, *, citation: str, category: SpendingCategory | None) -> str:
+    """Build a distinct, operator-facing description for one split child.
+
+    The 1-based ordinal prefix guarantees distinct child descriptions (hence
+    distinct split-child ids) even when two children share an amount and a
+    category; the label prefers the model's evidence citation, then the expense
+    category, then a neutral fallback.
+    """
+    label = citation.strip() or (category.value if category is not None else "línea")
+    return f"{child_index + 1}. {label}"
+
+
+def suggest_evidence_split(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    provider: LLMProvider,
+    proposer: LLMSplitProposer | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    on_date: date | None = None,
+    read_evidence: bool = True,
+    evidence_acknowledged: bool = False,
+    settings: Settings | None = None,
+) -> LLMSplitSuggestion:
+    """Propose an evidence-driven N-way split for one transaction.
+
+    Loads the transaction, runs the injected proposer (default-resolved from
+    ``provider`` with the saturation prompt spec) over the optional on-host
+    evidence text, DERIVES each child's euro amount from the parent gross and the
+    model's proportion (summing exactly to the parent), and DERIVES each child's
+    regulated tax substrate from the registry rate for the model-selected IVA
+    category. **Persists nothing** — this is the suggest step.
+
+    Args:
+        bucket_id: Active profile bucket id.
+        transaction_id: Stable id of the transaction to split.
+        provider: Subprocess provider to resolve when ``proposer`` is None.
+        proposer: Injected split proposer (dependency injection for tests). When
+            None, resolved via :func:`resolve_split_proposer` for ``provider``.
+        transaction_repository: Injected catalogue repository.
+        on_date: Effective date used to resolve each child's registry rate;
+            defaults to the transaction's value date (or booked date).
+        read_evidence: When True (default for splitting), resolve the
+            transaction's linked evidence, extract its text on-host, and inject it
+            into the prompt.
+        evidence_acknowledged: Per-invocation acknowledgement that sending the
+            evidence to a cloud model is accepted; required by the cloud-upload
+            consent gate when ``read_evidence`` is set and evidence is linked.
+        settings: Injected settings; defaults to ``load_settings()``.
+
+    Returns:
+        A :class:`LLMSplitSuggestion` whose child amounts sum exactly to the parent.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        LLMClassifierError: When the proposer fails (provider CLI unavailable,
+            hallucinated out-of-allow-list value, or a malformed split response).
+    """
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    transaction = repository.load().get(transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+    resolved_proposer = proposer if proposer is not None else _resolve_default_split_proposer(provider)
+    evidence_text, evidence_reference = (
+        _resolve_evidence_text(
+            transaction,
+            bucket_id=bucket_id,
+            settings=settings if settings is not None else load_settings(),
+            evidence_acknowledged=evidence_acknowledged,
+        )
+        if read_evidence
+        else (None, None)
+    )
+    response = resolved_proposer.propose_split(transaction, evidence_text=evidence_text)
+    proportions = tuple(child.proportion for child in response.children)
+    amounts = derive_child_amounts(transaction.raw.amount, proportions)
+    effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
+    children: list[LLMSplitChildSuggestion] = []
+    for index, (child, amount) in enumerate(zip(response.children, amounts, strict=True)):
+        iva_rate: Decimal | None = None
+        taxable_base: Decimal | None = None
+        iva_amount: Decimal | None = None
+        rate_derivable = False
+        derivation_note = ""
+        if child.iva_category is not None:
+            iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _derive_iva_substrate(
+                child.iva_category,
+                gross=amount,
+                on_date=effective_date,
+            )
+        children.append(
+            LLMSplitChildSuggestion(
+                proportion=child.proportion,
+                amount=amount,
+                description=_split_child_description(index, citation=child.evidence_citation, category=child.category),
+                category=child.category,
+                iva_category=child.iva_category,
+                iva_rate=iva_rate,
+                taxable_base=taxable_base,
+                iva_amount=iva_amount,
+                rate_derivable=rate_derivable,
+                derivation_note=derivation_note,
+                evidence_citation=child.evidence_citation,
+            ),
+        )
+    _logger.info(
+        "llm split suggest: transaction=%s provider=%s children=%d",
+        transaction_id,
+        provider.value,
+        len(children),
+    )
+    return LLMSplitSuggestion(
+        transaction_id=transaction_id,
+        provider=provider,
+        provenance=resolved_proposer.decided_by,
+        reason=response.reason,
+        parent_amount=transaction.raw.amount,
+        children=tuple(children),
+        evidence_id=evidence_reference,
+    )
+
+
+def apply_evidence_split(
+    suggestion: LLMSplitSuggestion,
+    *,
+    bucket_id: str,
+    actor: str = "operator",
+    source_command: str = "aeat app ledger split --llm --apply",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> LLMSplitApplyResult:
+    """Apply a reviewed evidence-driven split through the single-writer split path.
+
+    Composes the established single writers rather than re-implementing them
+    (``composition-service-no-parallel-write-path``): first
+    :func:`split_transaction` redistributes the parent into children whose
+    magnitudes sum exactly to the parent, then for each child
+    :func:`update_manual_transaction_fields` stamps the model-selected expense
+    category and IVA category, the registry-DERIVED regulated numbers, the parent
+    invoice's evidence link, and the ``llm:<model>`` provenance.
+
+    The split path enforces children-sum-to-parent and the non-negative-magnitude
+    invariant; the per-child write enforces the
+    ``gross == taxable_base + iva_amount`` invariant. The LLM never supplies a
+    persisted euro amount or regulated number.
+
+    Args:
+        suggestion: The accepted :class:`LLMSplitSuggestion`.
+        bucket_id: Active profile bucket id.
+        actor: Operator identity for the audit events.
+        source_command: Source-command label recording the operator's verb.
+        transaction_repository: Injected catalogue repository.
+        bucket_event_repository: Injected audit-event repository.
+        occurred_at: Override clock for deterministic tests.
+
+    Returns:
+        An :class:`LLMSplitApplyResult` naming the split group and its children.
+
+    Raises:
+        TransactionNotFoundError: When the parent transaction id is unknown.
+        TransactionValidationError: When the split invariants are violated.
+    """
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    parent = repository.load().get(suggestion.transaction_id)
+    if parent is None:
+        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+
+    commands = tuple(
+        SplitChildCommand(amount=child.amount, description=child.description) for child in suggestion.children
+    )
+    split_result = split_transaction(
+        bucket_id=bucket_id,
+        transaction_id=suggestion.transaction_id,
+        children=commands,
+        actor=actor,
+        source_command=source_command,
+        reason=suggestion.reason,
+        transaction_repository=repository,
+        bucket_event_repository=bucket_event_repository,
+        occurred_at=occurred_at,
+    )
+
+    evidence_link: dict[str, object] = {}
+    if parent.purchase_invoice_evidence_id is not None:
+        evidence_link["purchase_invoice_evidence_id"] = parent.purchase_invoice_evidence_id
+    elif parent.attachment_ids:
+        evidence_link["attachment_ids"] = parent.attachment_ids
+
+    classified = 0
+    for child_txn, child in zip(split_result.child_transactions, suggestion.children, strict=True):
+        patch_fields: dict[str, object] = {
+            "business_classification": BusinessClassification.BUSINESS,
+            **evidence_link,
+        }
+        if child.category is not None:
+            patch_fields["category_id"] = child.category.value
+        if child.iva_category is not None:
+            patch_fields["iva_category"] = child.iva_category
+        if child.rate_derivable:
+            patch_fields["taxable_base"] = child.taxable_base
+            patch_fields["iva_rate"] = child.iva_rate
+            patch_fields["iva_amount"] = child.iva_amount
+        patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
+        update_manual_transaction_fields(
+            bucket_id=bucket_id,
+            transaction_id=child_txn.transaction_id,
+            patch=patch,
+            actor=actor,
+            source_command=source_command,
+            classified_by_override=suggestion.provenance,
+            transaction_repository=repository,
+            bucket_event_repository=bucket_event_repository,
+            occurred_at=occurred_at,
+        )
+        classified += 1
+
+    _logger.info(
+        "llm split apply: parent=%s split_group=%s children=%d classified=%d classified_by=%s",
+        split_result.parent_transaction_id,
+        split_result.split_group_id,
+        len(split_result.child_transaction_ids),
+        classified,
+        suggestion.provenance,
+    )
+    return LLMSplitApplyResult(
+        bucket_id=bucket_id,
+        parent_transaction_id=split_result.parent_transaction_id,
+        split_group_id=split_result.split_group_id,
+        child_transaction_ids=split_result.child_transaction_ids,
+        provenance=suggestion.provenance,
+        classified_child_count=classified,
+    )
+
+
 __all__ = [
     "LLMClassificationSuggestion",
     "LLMProvider",
     "LLMProviderAvailability",
     "LLMSaturatedSuggestion",
+    "LLMSplitApplyResult",
+    "LLMSplitChildSuggestion",
+    "LLMSplitSuggestion",
+    "apply_evidence_split",
     "apply_llm_classification",
     "apply_saturated_llm_classification",
     "available_llm_providers",
     "is_llm_provider_available",
     "saturate_llm_classification",
+    "suggest_evidence_split",
     "suggest_llm_classification",
 ]

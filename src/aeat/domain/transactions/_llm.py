@@ -1068,6 +1068,33 @@ def resolve_classifier(
         return builder(model=model, spec=spec)
 
 
+def resolve_split_proposer(provider: str, *, spec: PromptSpec | None = None) -> LLMSplitProposer:
+    """Resolve the production split proposer for ``provider``.
+
+    Resolves the provider's classifier (via :func:`resolve_classifier`) and
+    narrows it to an :class:`LLMSplitProposer`. The subprocess classifiers are
+    the only production proposers; a registered classifier that does not also
+    propose splits is refused instructively.
+
+    Args:
+        provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``.
+        spec: Optional prompt spec override (the category + IVA-category
+            saturation spec is the natural choice so split children carry the
+            same allow-list-guarded selections).
+
+    Returns:
+        An :class:`LLMSplitProposer` for ``provider``.
+
+    Raises:
+        LLMClassifierError: If ``provider`` resolves to a classifier that does
+            not support evidence-driven splitting.
+    """
+    classifier = resolve_classifier(provider, spec=spec)
+    if not isinstance(classifier, SubprocessLLMClassifier):
+        raise LLMClassifierError(f"provider {provider!r} does not support evidence-driven splitting")
+    return classifier
+
+
 def register_classifier(name: str, builder: Callable[..., LLMClassifier]) -> None:
     """Register a classifier builder under ``name``.
 
@@ -1107,5 +1134,6 @@ __all__ = [
     "prompt_spec_with_saturation_fields",
     "register_classifier",
     "resolve_classifier",
+    "resolve_split_proposer",
     "unregister_classifier",
 ]
