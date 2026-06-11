@@ -33,7 +33,7 @@ _SEALED_REVISION_STATES = frozenset(
 )
 
 
-def _period_order_key(period: str) -> tuple[int, str]:
+def _period_order_key(period: Period) -> tuple[int, str]:
     """Order a filing period within its year for the at-or-after seed guard.
 
     Quarterly tokens (``1T``..``4T``) sort by quarter, monthly tokens by month,
@@ -41,7 +41,7 @@ def _period_order_key(period: str) -> tuple[int, str]:
     within a year so a sealed Modelo 303 at the seeded period or any later one
     is recognised as having consumed the seeded carry-forward basis.
     """
-    upper = period.upper()
+    upper = period.registry_token
     if upper.endswith("T") and upper[:-1].isdigit():
         return (int(upper[:-1]), upper)
     if upper.isdigit():
@@ -95,8 +95,7 @@ class ModeloIvaWalletCorrectionSealedError(ModeloIvaWalletSeedError):
 def seed_iva_compensation_period_for_bucket(
     *,
     bucket_id: str,
-    filing_year: int,
-    period: str,
+    period: Period,
     amount: Decimal,
 ) -> IvaCompensationPeriodState:
     """Seed IVA compensation history and return an :class:`IvaCompensationPeriodState`."""
@@ -113,7 +112,6 @@ def seed_iva_compensation_period_for_bucket(
         )
     return seed_iva_compensation_period(
         taxpayer_nif=taxpayer_nif,
-        filing_year=filing_year,
         period=period,
         amount=amount,
     )
@@ -122,8 +120,7 @@ def seed_iva_compensation_period_for_bucket(
 def _sealed_modelo_303_blocker_for_period(
     *,
     bucket_id: str,
-    filing_year: int,
-    period: str,
+    period: Period,
 ) -> tuple[str, str, int, str] | None:
     """Return the first sealed Modelo 303 revision at or after the seeded period.
 
@@ -139,7 +136,7 @@ def _sealed_modelo_303_blocker_for_period(
     from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ...domain.modelos._repository import WorkUnitCatalogueRepository
 
-    seeded_key = (filing_year, _period_order_key(period))
+    seeded_key = (period.filing_year, _period_order_key(period))
     work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
     revisions = CalculationRevisionCatalogueRepository(bucket_id=bucket_id).load()
     candidates: list[tuple[tuple[int, tuple[int, str]], str, str, int, str]] = []
@@ -151,12 +148,12 @@ def _sealed_modelo_303_blocker_for_period(
             continue
         if work_unit.modelo != Modelo.M303.value:
             continue
-        consuming_key = (work_unit.filing_year, _period_order_key(work_unit.period.registry_token))
+        consuming_key = (work_unit.period.filing_year, _period_order_key(work_unit.period))
         if consuming_key < seeded_key:
             continue
         candidates.append(
             (
-                (work_unit.filing_year, _period_order_key(work_unit.period.registry_token)),
+                (work_unit.period.filing_year, _period_order_key(work_unit.period)),
                 work_unit.work_unit_id,
                 revision.calculation_revision_id,
                 work_unit.filing_year,
@@ -172,8 +169,7 @@ def _sealed_modelo_303_blocker_for_period(
 def correct_iva_compensation_period_for_bucket(
     *,
     bucket_id: str,
-    filing_year: int,
-    period: str,
+    period: Period,
     amount: Decimal,
     reason: str,
 ) -> IvaCompensationPeriodState:
@@ -218,17 +214,15 @@ def correct_iva_compensation_period_for_bucket(
     from ..calculations import IvaCompensationHistoryRepository
 
     repository = IvaCompensationHistoryRepository()
-    filing_period = Period.from_year_and_code(filing_year, period)
-    existing = repository.load_period(filing_period)
+    existing = repository.load_period(period)
     if existing is None:
         raise ModeloIvaWalletCorrectionNoRecordError(
             translated_message="application.modelo.iva_wallet.correct_no_record",
-            context={"filing_year": filing_year, "period": period},
+            context={"filing_year": period.filing_year, "period": period.registry_token},
         )
 
     blocker = _sealed_modelo_303_blocker_for_period(
         bucket_id=bucket_id,
-        filing_year=filing_year,
         period=period,
     )
     if blocker is not None:
@@ -236,8 +230,8 @@ def correct_iva_compensation_period_for_bucket(
         raise ModeloIvaWalletCorrectionSealedError(
             translated_message="application.modelo.iva_wallet.correct_sealed_blocked",
             context={
-                "filing_year": filing_year,
-                "period": period,
+                "filing_year": period.filing_year,
+                "period": period.registry_token,
                 "blocking_work_unit_id": work_unit_id,
                 "blocking_calculation_revision_id": revision_id,
                 "blocking_filing_year": blocker_year,
@@ -247,7 +241,6 @@ def correct_iva_compensation_period_for_bucket(
 
     state = correct_iva_compensation_period(
         taxpayer_nif=taxpayer_nif,
-        filing_year=filing_year,
         period=period,
         amount=amount,
         repository=repository,
@@ -256,7 +249,6 @@ def correct_iva_compensation_period_for_bucket(
     _emit_iva_wallet_corrected_event(
         bucket_id=bucket_id,
         taxpayer_nif=taxpayer_nif,
-        filing_year=filing_year,
         period=period,
         previous_amount=existing.available_end_amount,
         new_amount=state.available_end_amount,
@@ -270,8 +262,7 @@ def _emit_iva_wallet_corrected_event(
     *,
     bucket_id: str,
     taxpayer_nif: str,
-    filing_year: int,
-    period: str,
+    period: Period,
     previous_amount: Decimal,
     new_amount: Decimal,
     reason: str,
@@ -288,11 +279,11 @@ def _emit_iva_wallet_corrected_event(
     )
 
     occurred_at = now()
-    object_id = f"303:{filing_year}:{period}"
+    object_id = f"303:{period.filing_year}:{period.registry_token}"
     payload = {
         "taxpayer_nif": taxpayer_nif,
-        "filing_year": str(filing_year),
-        "period": period,
+        "filing_year": str(period.filing_year),
+        "period": period.registry_token,
         "previous_amount": str(previous_amount),
         "new_amount": str(new_amount),
         "reason": reason,

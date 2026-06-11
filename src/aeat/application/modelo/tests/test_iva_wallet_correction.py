@@ -61,6 +61,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "operator"
 _SEED_YEAR = 2024
 _SEED_PERIOD = "4T"
+_SEED_FILING_PERIOD = Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD)
 
 
 @pytest.fixture(autouse=True)
@@ -84,8 +85,7 @@ def _taxpayer_nif() -> str:
 def _seed(amount: Decimal) -> None:
     seed_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
-        filing_year=_SEED_YEAR,
-        period=_SEED_PERIOD,
+        period=_SEED_FILING_PERIOD,
         amount=amount,
     )
 
@@ -160,8 +160,7 @@ def test_correction_overwrites_balance_and_emits_audit_event() -> None:
 
     state = correct_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
-        filing_year=_SEED_YEAR,
-        period=_SEED_PERIOD,
+        period=_SEED_FILING_PERIOD,
         amount=Decimal("1200.50"),
         reason="typo in opening balance",
     )
@@ -190,8 +189,7 @@ def test_correction_refuses_when_no_record_exists() -> None:
     with pytest.raises(ModeloIvaWalletCorrectionNoRecordError):
         correct_iva_compensation_period_for_bucket(
             bucket_id=_BUCKET_ID,
-            filing_year=_SEED_YEAR,
-            period=_SEED_PERIOD,
+            period=_SEED_FILING_PERIOD,
             amount=Decimal("100.00"),
             reason="no record yet",
         )
@@ -203,8 +201,7 @@ def test_correction_refuses_negative_amount() -> None:
     with pytest.raises(ModeloIvaWalletSeedNegativeAmountError):
         correct_iva_compensation_period_for_bucket(
             bucket_id=_BUCKET_ID,
-            filing_year=_SEED_YEAR,
-            period=_SEED_PERIOD,
+            period=_SEED_FILING_PERIOD,
             amount=Decimal("-1.00"),
             reason="negative",
         )
@@ -234,8 +231,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
     with pytest.raises(ModeloIvaWalletCorrectionSealedError) as excinfo:
         correct_iva_compensation_period_for_bucket(
             bucket_id=_BUCKET_ID,
-            filing_year=_SEED_YEAR,
-            period=_SEED_PERIOD,
+            period=_SEED_FILING_PERIOD,
             amount=Decimal("1200.50"),
             reason="should be blocked",
         )
@@ -268,8 +264,7 @@ def test_correction_allowed_when_only_a_draft_303_exists() -> None:
 
     state = correct_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
-        filing_year=_SEED_YEAR,
-        period=_SEED_PERIOD,
+        period=_SEED_FILING_PERIOD,
         amount=Decimal("1200.50"),
         reason="draft does not block",
     )

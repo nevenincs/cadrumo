@@ -157,7 +157,7 @@ class IvaCompensationWalletObservationProtocol(Protocol):
     @property
     def target_year(self) -> int: ...
     @property
-    def target_period(self) -> str: ...
+    def target_period(self) -> Period: ...
     @property
     def total_pending(self) -> Decimal: ...
     @property
@@ -209,7 +209,7 @@ def reconcile_iva_compensation_wallet(
     *,
     taxpayer_nif: str,
     target_year: int,
-    target_period: str,
+    target_period: Period,
     wallet: IvaCompensationWalletObservationProtocol | None,
     local_recurrence_amount: Decimal | None,
     local_recurrence_source: IvaCompensationAuthoritySource | None = None,
@@ -219,19 +219,18 @@ def reconcile_iva_compensation_wallet(
     is_first_iva_period: bool = False,
 ) -> IvaCompensationReconciliationDecision:
     """Return the :class:`IvaCompensationReconciliationDecision` for casilla ``110``."""
-    target_filing_period = Period.from_year_and_code(target_year, target_period)
     if wallet is not None:
         validate_wallet_matches_snapshot(
             wallet,
             taxpayer_nif=taxpayer_nif,
             target_year=target_year,
-            target_period=target_filing_period,
+            target_period=target_period,
         )
     when = decided_at if decided_at is not None else now()
     ctx = _ReconciliationContext(
         taxpayer_nif=taxpayer_nif,
         target_year=target_year,
-        target_period=target_filing_period,
+        target_period=target_period,
         wallet_amount=wallet.total_pending if wallet is not None else None,
         local_recurrence_amount=local_recurrence_amount,
         override=override,
@@ -574,7 +573,7 @@ def validate_wallet_matches_snapshot(
         raise IvaCompensationReconciliationInputError(
             "IVA wallet observation taxpayer does not match the requested taxpayer",
         )
-    if wallet.target_year != target_year or wallet.target_period != target_period.registry_token:
+    if wallet.target_year != target_year or wallet.target_period != target_period:
         raise IvaCompensationReconciliationInputError(
             "IVA wallet observation target does not match the Modelo 303 snapshot",
         )

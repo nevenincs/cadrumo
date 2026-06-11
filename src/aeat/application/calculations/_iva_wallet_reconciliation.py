@@ -180,7 +180,7 @@ def reconcile_modelo_303_iva_compensation(
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=taxpayer_nif,
         target_year=snapshot.filing_year,
-        target_period=snapshot.period,
+        target_period=snapshot_period,
         wallet=wallet,
         local_recurrence_amount=local_recurrence_amount,
         local_recurrence_source=local_recurrence_authority_source(recurrence),

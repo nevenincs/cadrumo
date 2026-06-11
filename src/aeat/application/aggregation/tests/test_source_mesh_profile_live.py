@@ -60,11 +60,11 @@ def _wallet(amount: Decimal) -> IvaCompensationWalletObservation:
         taxpayer_nif="12345678Z",
         authenticated_identity="12345678Z",
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         rows=(
             IvaCompensationWalletRow(
                 generation_year=2026,
-                generation_period="1T",
+                generation_period=Period.from_year_and_code(2026, "1T"),
                 generated_amount=amount,
                 applied_amount=Decimal("0"),
                 pending_amount=amount,
@@ -161,7 +161,7 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif="12345678Z",
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("1200"),
         decided_at=_CLOCK,

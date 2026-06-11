@@ -11,6 +11,8 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
+from ...core import Period
+
 
 @runtime_checkable
 class FiledDeclaracionArtefactProtocol(Protocol):
@@ -69,8 +71,8 @@ class FiledDeclaracionObservationProtocol(Protocol):
         ...
 
     @property
-    def period(self) -> str:
-        """Period within the ejercicio (e.g. '1T', '01', '0A')."""
+    def period(self) -> Period:
+        """Typed filing period for the declaration."""
         ...
 
     @property
