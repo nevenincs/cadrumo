@@ -124,7 +124,7 @@ def test_manual_match_projection_records_payment_and_matches_existing_transactio
     transactions = TransactionCatalogue.from_transactions([transaction])
 
     projection = project_invoice_payment_matches(
-        period="2026Q1",
+        period="2026 1T",
         catalogue=catalogue,
         transactions=transactions,
         state=state,

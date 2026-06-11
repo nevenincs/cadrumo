@@ -490,7 +490,7 @@ class TestWorkflowInputMismatchError:
         try:
             provider.load_inputs(
                 modelo="999",
-                period="2026",
+                period=Period.from_year_and_code(2026, "0A"),
                 profile=self._stub_profile(),
             )
         except WorkflowInputMismatchError as exc:
