@@ -22,6 +22,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core import Period
 from ._kind import ModeloDivergenceKind
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
@@ -63,7 +64,7 @@ class ModeloDraftRef(BaseModel):
 
     draft_id: str = Field(min_length=1, max_length=128)
     modelo: str = Field(min_length=1, max_length=8)
-    period: str = Field(min_length=1, max_length=16)
+    period: Period
     profile_tax_id: str = Field(min_length=4, max_length=32)
     mode: Literal["read"] = "read"
 

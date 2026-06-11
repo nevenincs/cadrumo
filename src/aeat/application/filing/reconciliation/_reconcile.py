@@ -111,7 +111,7 @@ def reconcile(
     draft_ref = ModeloDraftRef(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
-        period=str(draft.period),
+        period=draft.period,
         profile_tax_id=draft.profile_tax_id,
     )
 
