@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "unsupported_text",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/fx/eurofxref-bundled.xml",
+  "source_sha256": "11d5ea7ae0f40d4a27578f5fa12f976418dbe595412e86595bdf92f2ce00051b",
+  "preprocessor_id": "unsupported-text",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT) / Boletin Oficial del Estado (BOE). Reused with attribution.",
+  "units": [
+    {
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gesmes:Envelope xmlns:gesmes=\"http://www.gesmes.org/xml/2002-08-01\" xmlns=\"http://www.ecb.int/vocabulary/2002-08-01/eurofxref\">\n  <gesmes:subject>Reference rates</gesmes:subject>\n  <gesmes:Sender><gesmes:name>European Central Bank</gesmes:name></gesmes:Sender>\n  <Cube>\n    <Cube time=\"2026-06-01\">\n      <Cube currency=\"USD\" rate=\"1.1850\"/>\n      <Cube currency=\"GBP\" rate=\"0.8380\"/>\n    </Cube>\n    <Cube time=\"2026-05-04\">\n      <Cube currency=\"USD\" rate=\"1.1900\"/>\n      <Cube currency=\"GBP\" rate=\"0.8400\"/>\n    </Cube>\n    <Cube time=\"2026-04-01\">\n      <Cube currency=\"USD\" rate=\"1.1720\"/>\n      <Cube currency=\"GBP\" rate=\"0.8450\"/>\n    </Cube>\n    <Cube time=\"2026-03-02\">\n      <Cube currency=\"USD\" rate=\"1.1800\"/>\n      <Cube currency=\"GBP\" rate=\"0.8480\"/>\n    </Cube>\n    <Cube time=\"2026-02-02\">\n      <Cube currency=\"USD\" rate=\"1.1550\"/>\n      <Cube currency=\"GBP\" rate=\"0.8520\"/>\n    </Cube>\n    <Cube time=\"2026-01-02\">\n      <Cube currency=\"USD\" rate=\"1.1700\"/>\n      <Cube currency=\"GBP\" rate=\"0.8600\"/>\n    </Cube>\n    <Cube time=\"2025-12-01\">\n      <Cube currency=\"USD\" rate=\"1.1620\"/>\n      <Cube currency=\"GBP\" rate=\"0.8650\"/>\n    </Cube>\n    <Cube time=\"2025-11-03\">\n      <Cube currency=\"USD\" rate=\"1.1520\"/>\n      <Cube currency=\"GBP\" rate=\"0.8780\"/>\n    </Cube>\n    <Cube time=\"2025-10-01\">\n      <Cube currency=\"USD\" rate=\"1.1730\"/>\n      <Cube currency=\"GBP\" rate=\"0.8720\"/>\n    </Cube>\n    <Cube time=\"2025-09-01\">\n      <Cube currency=\"USD\" rate=\"1.1700\"/>\n      <Cube currency=\"GBP\" rate=\"0.8650\"/>\n    </Cube>\n    <Cube time=\"2025-08-01\">\n      <Cube currency=\"USD\" rate=\"1.1420\"/>\n      <Cube currency=\"GBP\" rate=\"0.8650\"/>\n    </Cube>\n    <Cube time=\"2025-07-01\">\n      <Cube currency=\"USD\" rate=\"1.1780\"/>\n      <Cube currency=\"GBP\" rate=\"0.8580\"/>\n    </Cube>\n    <Cube time=\"2025-06-02\">\n      <Cube currency=\"USD\" rate=\"1.1400\"/>\n      <Cube currency=\"GBP\" rate=\"0.8420\"/>\n    </Cube>\n    <Cube time=\"2025-05-02\">\n      <Cube currency=\"USD\" rate=\"1.1300\"/>\n      <Cube currency=\"GBP\" rate=\"0.8480\"/>\n    </Cube>\n    <Cube time=\"2025-04-01\">\n      <Cube currency=\"USD\" rate=\"1.0810\"/>\n      <Cube currency=\"GBP\" rate=\"0.8350\"/>\n    </Cube>\n    <Cube time=\"2025-03-03\">\n      <Cube currency=\"USD\" rate=\"1.0480\"/>\n      <Cube currency=\"GBP\" rate=\"0.8270\"/>\n    </Cube>\n    <Cube time=\"2025-02-03\">\n      <Cube currency=\"USD\" rate=\"1.0280\"/>\n      <Cube currency=\"GBP\" rate=\"0.8330\"/>\n    </Cube>\n    <Cube time=\"2025-01-02\">\n      <Cube currency=\"USD\" rate=\"1.0350\"/>\n      <Cube currency=\"GBP\" rate=\"0.8290\"/>\n    </Cube>\n  </Cube>\n</gesmes:Envelope>",
+      "title": "eurofxref-bundled.xml",
+      "section": "eurofxref-bundled.xml",
+      "anchor": null
+    }
+  ]
+}
