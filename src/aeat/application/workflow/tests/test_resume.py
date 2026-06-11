@@ -407,7 +407,7 @@ def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Pat
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -421,11 +421,16 @@ def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Pat
     resolved = resolve_modelo_visible_workflow_run_for_resume(
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         bucket_id=_BUCKET_ID,
     )
     via_target = resolve_modelo_workflow_run_for_resume(
-        ModeloVisibleFilingTarget(modelo="130", filing_year=2026, period="1T", bucket_id=_BUCKET_ID),
+        ModeloVisibleFilingTarget(
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            bucket_id=_BUCKET_ID,
+        ),
     )
 
     assert resolved.run_id == run.run_id
@@ -437,7 +442,7 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -458,7 +463,7 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
         resolve_modelo_visible_workflow_run_for_resume(
             modelo="130",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             bucket_id=_BUCKET_ID,
         )
 
@@ -470,7 +475,7 @@ def test_exact_modelo_work_target_preserves_latest_run_resume_compatibility(tmp_
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -501,7 +506,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -515,7 +520,7 @@ def test_unified_resume_target_resolves_visible_modelo_target_with_projection(tm
     resolved = resolve_modelo_workflow_resume_target(
         modelo="130",
         year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         bucket_id=_BUCKET_ID,
     )
 
@@ -532,7 +537,7 @@ def test_unified_resume_target_preserves_legacy_work_unit_id_latest_run(tmp_path
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)
@@ -562,7 +567,7 @@ def test_unified_resume_target_routes_revision_selector_through_modelo_addressin
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     calculation_revision_id = _seed_current_revision(work_unit.work_unit_id)
@@ -593,7 +598,7 @@ def test_unified_resume_target_refuses_ambiguous_visible_modelo_runs_with_work_g
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
     workflow_period = workflow_period_for_work_unit(work_unit)

@@ -66,32 +66,10 @@ def _deadline_window_period_for_registry_period(
     except RegistrySnapshotError:
         return None
 
+    target = Period.from_year_and_code(filing_year, registry_period)
     for window in snapshot.revision.deadline_windows:
-        declared = _coerce_deadline_window_period(
-            window.period,
-            filing_year=filing_year,
-            registry_period=registry_period,
-        )
-        if declared is not None:
-            return declared
-    return None
-
-
-def _coerce_deadline_window_period(
-    value: object,
-    *,
-    filing_year: int,
-    registry_period: str,
-) -> Period | None:
-    if isinstance(value, Period):
-        if value.year == filing_year and value.registry_token == registry_period:
-            return value
-        return None
-    token = str(value).strip().upper()
-    if token.startswith(f"{filing_year} "):
-        token = token.split(maxsplit=1)[1]
-    if token == registry_period.strip().upper():
-        return Period.from_year_and_code(filing_year, registry_period)
+        if window.period == target:
+            return window.period
     return None
 
 

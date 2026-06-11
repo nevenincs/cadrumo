@@ -190,7 +190,7 @@ def resolve_modelo_workflow_resume_target(
     calculation_revision_id: str | None = None,
     modelo: str | None = None,
     year: int | None = None,
-    period: str | None = None,
+    period: Period | str | None = None,
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
     selector: object | None = None,
@@ -294,17 +294,18 @@ def _resolve_resume_from_visible_target(
     *,
     modelo: str,
     year: int,
-    period: str,
+    period: Period | str,
     registry_revision_id: str | None,
     bucket_id: str | None,
     selector: object | None,
 ) -> WorkflowResumeTargetResolution:
     from ..modelo import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget, resolve_modelo_work_address_unit
 
+    filing_period = _resolve_visible_period(modelo=modelo, year=year, period=period)
     target = ModeloVisibleFilingTarget(
         modelo=modelo,
         filing_year=year,
-        period=period,
+        period=filing_period,
         registry_revision_id=registry_revision_id,
         bucket_id=bucket_id,
     )
@@ -345,6 +346,26 @@ def _resolve_revision_for_resume_target(
             context={"selector": str(selector)},
         ) from exc
     return resolve_modelo_revision_pick(target=target, pick=ModeloRevisionPick(selector=revision_selector))
+
+
+def _resolve_visible_period(*, modelo: str, year: int, period: Period | str) -> Period:
+    if isinstance(period, Period):
+        if period.filing_year != year:
+            raise WorkflowError(
+                translated_message="application.workflow.errors.resume_visible_target_incomplete",
+                context={"modelo": modelo, "year": str(year), "period": str(period)},
+            )
+        return period
+
+    from ..modelo import normalize_modelo_work_period
+
+    try:
+        return normalize_modelo_work_period(year, period, modelo=modelo)
+    except ValueError as exc:
+        raise WorkflowError(
+            translated_message="application.workflow.errors.resume_target_invalid",
+            context={"target": period},
+        ) from exc
 
 
 def find_latest_run_for_period(*, modelo: str, period: Period) -> WorkflowResult:
@@ -447,7 +468,7 @@ def resolve_modelo_visible_workflow_run_for_resume(
     *,
     modelo: str,
     filing_year: int,
-    period: str,
+    period: Period,
     registry_revision_id: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkflowResumeTargetResolution:
@@ -504,7 +525,7 @@ def _resolve_resume_from_work_unit(
         modelo=projection.modelo,
         period=workflow_period,
         filing_year=projection.filing_year,
-        registry_period=projection.period,
+        registry_period=projection.period.registry_token,
         work_unit_id=projection.work_unit_id,
         short_work_unit_id=projection.short_work_unit_id,
         calculation_revision_id=calculation_revision_id,

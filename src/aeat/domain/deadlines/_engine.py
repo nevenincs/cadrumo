@@ -385,16 +385,8 @@ def _overdue_recovery_or_none(
 
 
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:
-    """Return the bare registry period token for the deadline window.
-
-    :class:`~aeat.domain.calculations.registry.DeadlineWindowDefinition`
-    ``period`` may be a typed :class:`~aeat.core.Period` or a legacy string
-    token while active registry migrations are in flight.
-    """
-    token = getattr(window.period, "registry_token", str(window.period)).strip().upper()
-    if token.startswith(f"{window.filing_year} "):
-        token = token.split(maxsplit=1)[1]
-    return token
+    """Return the bare registry period token for the deadline window."""
+    return window.period.registry_token
 
 
 def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadline | None:
