@@ -17,6 +17,7 @@ from ....adapters.persistence.storage.runtime_repository import secure_object_re
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
@@ -64,6 +65,8 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 # ── shared helpers ────────────────────────────────────────────────
@@ -372,7 +375,7 @@ def _draft(
     *,
     draft_id: str,
     modelo: str = "130",
-    period: str = "2026Q1",
+    period: Period = _PERIOD,
     status: ModeloDraftStatus = ModeloDraftStatus.LISTO_PARA_PRESENTAR,
     findings: tuple[ModeloValidationFinding, ...] = (),
 ) -> ModeloDraft:

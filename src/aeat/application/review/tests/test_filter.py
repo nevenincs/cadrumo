@@ -77,7 +77,7 @@ def test_parse_filter_clause_rejects_blank_value() -> None:
 
 
 def test_parse_filter_clauses_preserves_order() -> None:
-    clauses = parse_filter_clauses(["status=pending", "period=2026-Q1"])
+    clauses = parse_filter_clauses(["status=pending", "period=1T"])
     assert [c.key for c in clauses] == ["status", "period"]
 
 
@@ -244,7 +244,7 @@ def test_invoice_spec_case_folds_kind() -> None:
 
 def test_invoice_spec_rejects_unknown_key() -> None:
     with pytest.raises(FilterParseError, match=r"unknown-key-invoice") as exc:
-        InvoiceReviewFilterSpec.from_strings(["period=2026-Q1"])
+        InvoiceReviewFilterSpec.from_strings(["period=1T"])
     assert exc.value.reason == "unknown-key-invoice"
 
 
@@ -278,7 +278,7 @@ def test_declaration_spec_supports_every_status_value() -> None:
 
 def test_declaration_spec_rejects_unknown_key() -> None:
     with pytest.raises(FilterParseError, match=r"unknown-key-declaration") as exc:
-        DeclaracionReviewFilterSpec.from_strings(["period=2026-Q1"])
+        DeclaracionReviewFilterSpec.from_strings(["period=1T"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
@@ -298,7 +298,7 @@ def test_ledger_spec_is_frozen() -> None:
 
     spec = LedgerReviewFilterSpec.from_strings([])
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        spec.period = "2026-Q1"
+        spec.period = "1T"
 
 
 def test_ledger_spec_rejects_inconsistent_construction() -> None:
