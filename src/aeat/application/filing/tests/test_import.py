@@ -78,6 +78,18 @@ def test_normalise_period_wraps_registry_tokens_outside_core_period(
         )
 
 
+def test_normalise_period_maps_annual_year_only_receipt_to_annual_token(
+    schema_provider: RegistrySchemaProvider,
+) -> None:
+    period = _normalise_period(
+        modelo="390",
+        ejercicio="2021",
+        raw_period="2021",
+        schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
+    )
+    assert period == Period.from_year_and_code(2021, "0A")
+
+
 def test_submission_record_preserves_typed_draft_period(
     schema_provider: RegistrySchemaProvider,
 ) -> None:
@@ -143,7 +155,7 @@ class TestImportFromJustificante:
     ) -> None:
         pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
 
-        with pytest.raises(ModeloImportError, match="period token '2026'"):
+        with pytest.raises(ModeloImportError, match="period token '0A'"):
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
     def test_missing_pdf_raises_parse_error(
