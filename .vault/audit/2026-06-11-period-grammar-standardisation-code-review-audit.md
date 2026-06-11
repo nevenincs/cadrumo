@@ -320,3 +320,23 @@ Residual note: production `period: str` text still exists in registry-authoring
 selectors, external Sede/Google payload boundaries, review-filter raw CLI
 clauses, and IVA prorrata's separate vocabulary. These are not combined-string
 storage adapters in the reviewed Period rollout slice.
+
+## PERIOD-020 | INFO | No findings in justificante import Period bridge removal
+
+Review of commit `3129234ad` found no behavioral issues in the scoped
+justificante import cleanup. The private `_normalise_period` helper now accepts
+only `core.Period`, verifies any printed `ejercicio` against the typed filing
+year, and validates the registry token against the active registry periods
+instead of preserving a dead raw-string compatibility branch.
+
+The reviewer noted one residual test-fixture gap: `test_import.py` still built a
+`Justificante` with `period="1T"` in a submission-record helper even though that
+field is not read by `_build_submission_record`. Commit `f2e82a658` aligned the
+fixture with the typed contract by passing the existing `Period` value object.
+
+Verification for the import cleanup: ruff passed for
+`src/aeat/application/filing/_import.py` and
+`src/aeat/application/filing/tests/test_import.py`; the import and justificante
+parser suites passed with `90 passed`. Verification for the follow-up fixture
+alignment: ruff passed for `test_import.py`, and the focused import suite passed
+with `10 passed`.
