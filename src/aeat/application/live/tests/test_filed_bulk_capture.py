@@ -24,7 +24,7 @@ def _declaration() -> Declaracion:
     return Declaracion(
         modelo="303",
         ejercicio=2025,
-        period="1T",
+        period=Period.from_year_and_code(2025, "1T"),
         expediente_id="12345678901234567890",
         estado="ALTA",
         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
