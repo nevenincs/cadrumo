@@ -60,8 +60,7 @@ class CurationBacklogRatchetResult:
         found: list[str] = []
         if self.draft_delta > 0:
             found.append(
-                "draft_count grew from "
-                f"{self.baseline.draft_count} to {self.report.draft_count}",
+                f"draft_count grew from {self.baseline.draft_count} to {self.report.draft_count}",
             )
         if self.empty_short_description_delta > 0:
             found.append(

@@ -19,6 +19,7 @@ Submodules
    aeat.terminology._enums
    aeat.terminology._errors
    aeat.terminology._loader
+   aeat.terminology._ratchet
    aeat.terminology._scaffold
    aeat.terminology._schema
    aeat.terminology._seed_import

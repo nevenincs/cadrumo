@@ -208,6 +208,7 @@ def calculate_modelo_revision(
     ledger_preflight_transaction_repository: TransactionCatalogueRepository | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
+    unresolved_relation_ids: tuple[str, ...] = (),
     source_transaction_ids: tuple[str, ...] = (),
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -324,6 +325,7 @@ def calculate_modelo_revision(
         binding_values=resolved_bindings,
         enum_binding_values=resolved_enum_bindings,
         relation_values=resolved_relations,
+        unresolved_relation_ids=unresolved_relation_ids,
         date_binding_values=resolved_date_bindings or None,
     )
 
@@ -438,6 +440,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
         suggestion=f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.year}",
     )
 
+
 def calculate_modelo_revision_from_bucket_aggregation(
     work_unit_id: str,
     *,
@@ -538,12 +541,11 @@ def _resolve_bucket_source_mesh(
             LedgerRentaIncomeAggregationSourceResolver(
                 transaction_repository=transaction_repository,
             ).resolve(context),
-            # M369 OSS/IOSS (ledger_oss_aggregation).  Candidates are substrate-
-            # classified lines; on the pure-ledger calculate path they come in empty —
-            # the resolver returns an empty resolution without penalty so no casilla
-            # blanks silently.  Pre-classified callers (Sheets calc-sync) pass
-            # candidates via the OssIossLedgerSourceResolver constructor directly.
-            OssIossLedgerSourceResolver(candidates=()).resolve(context),
+            # M369 OSS/IOSS (ledger_oss_aggregation).  The live path projects
+            # OSS/IOSS-tagged issued invoices into validated ledger candidates;
+            # pre-classified callers can still pass candidates directly through
+            # the resolver constructor.
+            OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(context),
             # M349 collectible / payable invoices (collectible_invoice,
             # payable_invoice).  Loads the encrypted invoice catalogue and resolves
             # binding values for intra-community transactions in scope.
@@ -738,6 +740,17 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     # wins (precedence ladder step 4, D2 carve-out for relation carries): an
     # operator override of an auto-carried relation value is legitimate.
     merged_relation_values = {**source_resolution.relation_values, **dict(relation_values or {})}
+    caller_relation_ids = frozenset((relation_values or {}).keys())
+    unresolved_relation_ids = tuple(
+        relation_id
+        for relation_id in source_resolution.unresolved_relation_ids
+        if relation_id not in caller_relation_ids
+    )
+    source_diagnostics = tuple(
+        diagnostic
+        for diagnostic in source_resolution.diagnostics
+        if diagnostic.relation_id is None or diagnostic.relation_id not in caller_relation_ids
+    )
     revision = calculate_modelo_revision(
         work_unit_id,
         actor=actor,
@@ -751,6 +764,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=merged_relation_values,
+        unresolved_relation_ids=unresolved_relation_ids,
         source_transaction_ids=tuple(source_resolution.source_transaction_ids),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
@@ -762,7 +776,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     )
     return BucketAggregationCalculationResult(
         revision=revision,
-        source_diagnostics=tuple(source_resolution.diagnostics),
+        source_diagnostics=source_diagnostics,
     )
 
 

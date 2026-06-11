@@ -207,7 +207,7 @@ def _emit_work_resume(
         f"modelo\t{result.modelo}",
         f"period\t{result.period!s}",
         f"filing_year\t{resolution.filing_year or ''}",
-        f"registry_period\t{resolution.registry_period or ''}",
+        f"registry_period\t{result.period.registry_token}",
         f"short_work_unit_id\t{resolution.short_work_unit_id or ''}",
         f"work_unit_id\t{resolution.work_unit_id or ''}",
         f"short_calculation_revision_id\t{resolution.short_calculation_revision_id or ''}",

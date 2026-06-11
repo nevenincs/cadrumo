@@ -30,24 +30,10 @@ Chains:
   count. PROVEN LIVE.
 
 * M369 OSS/IOSS (``ledger_oss_aggregation``, :class:`OssIossLedgerSourceResolver`):
-  STOPGAP. The resolver folds real ``OssIossLedgerCandidate`` substrate correctly
-  (proven here at the resolver-mesh boundary), but the live calculate path
-  hard-wires ``OssIossLedgerSourceResolver(candidates=())`` — there is NO
-  ledger/transaction -> OSS-candidate projection anywhere in the codebase
-  (``OssIossLedgerCandidate`` is only constructed in tests and the Sheets
-  calc-sync caller). The projection is INFEASIBLE from any current live source:
-  neither the :class:`~aeat.domain.invoices.Invoice` / ``InvoiceLine`` model nor
-  the :class:`~aeat.domain.transactions.Transaction` model carries the OSS
-  ``regime`` axis (union / import / exterior) or the goods-vs-services
-  ``transaction_kind`` axis (``oss_union_services`` vs
-  ``oss_union_goods_distance_sale`` / ``oss_union_goods_interface_facilitated``)
-  the binding selectors require, and ``IvaCategory`` has no OSS member at all (its
-  ``INTRA_COMMUNITY_SUPPLY`` is the B2B clave-E M349 path, a different regime).
-  Rather than let every OSS cuota resolve to a SILENT claimed-zero, the resolver
-  now surfaces a non-blocking ``oss_no_live_source`` advisory per declared OSS
-  binding so an operator with OSS sales is told the cuotas are not
-  auto-computed and must be supplied manually. The advisory proof and the proven
-  resolver fold are both pinned below.
+  live OSS-tagged issued invoices project into
+  :class:`OssIossLedgerCandidate` rows, validate against the destination Member
+  State rate, and fold into M369 bound cuotas. The mesh-boundary candidate proof
+  and the live invoice-catalogue proof are both pinned below.
 
 Anti-tautological + real-adapter (no-tautological-calculation-tests,
 aeat-quality-gates): every seed set uses DISTINCT non-equal known values; each
@@ -453,7 +439,7 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
 
 
 # ---------------------------------------------------------------------------
-# Chain 2 — M369 OSS/IOSS (ledger_oss_aggregation): STOPGAP advisory (no live source)
+# Chain 2 — M369 OSS/IOSS (ledger_oss_aggregation): live invoice projection
 # ---------------------------------------------------------------------------
 
 _M369_BUCKET = "bucket-m369-oss-fold"
@@ -544,30 +530,97 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
     assert "ledger_oss_aggregation" in resolution.owned_sources
 
 
-def test_m369_live_path_surfaces_oss_no_live_source_advisory_not_silent_zero(
+def _m369_invoice(
+    *,
+    invoice_number: str,
+    issued_at: date,
+    counterparty_name: str,
+    counterparty_tax_id: str,
+    counterparty_country: str,
+    transaction_kind: TransactionKind,
+    base_amount: Decimal,
+    iva_amount: Decimal,
+) -> Invoice:
+    line = InvoiceLine(
+        description=f"OSS supply {invoice_number}",
+        quantity=Decimal("1"),
+        unit_price=base_amount,
+        subtotal=base_amount,
+        iva_rate=IvaRate.RATE_21,
+        oss_rate_kind=IvaRateKind.GENERAL,
+        iva_amount=iva_amount,
+    )
+    invoice_id = derive_invoice_id(
+        kind=InvoiceKind.ISSUED,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
+        counterparty_tax_id=counterparty_tax_id,
+        currency="EUR",
+        grand_total=base_amount + iva_amount,
+    )
+    return Invoice(
+        invoice_id=invoice_id,
+        kind=InvoiceKind.ISSUED,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
+        counterparty_name=counterparty_name,
+        counterparty_tax_id=counterparty_tax_id,
+        counterparty_country=counterparty_country,
+        base_total=base_amount,
+        iva_total=iva_amount,
+        grand_total=base_amount + iva_amount,
+        currency="EUR",
+        lines=(line,),
+        payment_status=PaymentStatus.PAID,
+        oss_ioss_regime=OssIossRegime.UNION_SCHEME,
+        oss_transaction_kind=transaction_kind,
+    )
+
+
+def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
     m369_objects: SecureObjectRepository,
 ) -> None:
-    """STOPGAP: a live M369 calculate surfaces the OSS no-live-source advisory.
-
-    ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` hard-wires
-    ``OssIossLedgerSourceResolver(candidates=())`` because no bucket substrate can
-    be projected into an ``OssIossLedgerCandidate`` (neither the invoice nor the
-    transaction model carries the OSS ``regime`` or goods/services
-    ``transaction_kind`` axis the selectors require; ``IvaCategory`` has no OSS
-    member). The OSS cuotas therefore still resolve to zero on the live path — but
-    the resolver now surfaces a non-blocking ``oss_no_live_source`` advisory per
-    declared OSS binding so the zero is NOT silent: an operator with OSS sales is
-    told the cuotas are not auto-computed and must be supplied manually
-    (no-silent-under-declaration; parity with the deferred-detalle-kinds advisory).
-
-    This is the stopgap pending an invoice/transaction-model OSS axis that would
-    make the substrate projection feasible. The resolver fold itself is already
-    sound (companion test above) — only the live-path candidate source is absent.
-    """
+    """Live M369 calculate projects real OSS-tagged invoices into cuotas."""
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=m369_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
+    invoice_repo.save(
+        InvoiceCatalogue.from_invoices(
+            (
+                _m369_invoice(
+                    invoice_number="OSS-DE-SERV-001",
+                    issued_at=date(2026, 2, 15),
+                    counterparty_name="DE Consumer",
+                    counterparty_tax_id="DE123456789",
+                    counterparty_country="DE",
+                    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                    base_amount=Decimal("100.00"),
+                    iva_amount=Decimal("19.00"),
+                ),
+                _m369_invoice(
+                    invoice_number="OSS-FR-SERV-001",
+                    issued_at=date(2026, 2, 16),
+                    counterparty_name="FR Consumer",
+                    counterparty_tax_id="FR12345678901",
+                    counterparty_country="FR",
+                    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                    base_amount=Decimal("200.00"),
+                    iva_amount=Decimal("40.00"),
+                ),
+                _m369_invoice(
+                    invoice_number="OSS-DE-GOODS-001",
+                    issued_at=date(2026, 2, 17),
+                    counterparty_name="DE Consumer Goods",
+                    counterparty_tax_id="DE987654321",
+                    counterparty_country="DE",
+                    transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+                    base_amount=Decimal("300.00"),
+                    iva_amount=Decimal("57.00"),
+                ),
+            ),
+        ),
+    )
 
     work_unit = create_work_unit(
         bucket_id=_M369_BUCKET,
@@ -588,28 +641,12 @@ def test_m369_live_path_surfaces_oss_no_live_source_advisory_not_silent_zero(
     )
 
     assert isinstance(result, BucketAggregationCalculationResult)
-    # The OSS cuotas are still zero on the live path — nothing folds because no
-    # candidate projection exists. The STOPGAP makes that zero non-silent.
-    assert Decimal(result.revision.casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]) == Decimal("0")
-    assert Decimal(result.revision.casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == Decimal("0")
-
-    # The stopgap advisory fires: one oss_no_live_source diagnostic per declared
-    # OSS binding (the three esquema-union bindings), each naming its binding id.
-    oss_advisories = [
-        diag
+    assert Decimal(result.revision.casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]) == Decimal("19.00")
+    assert Decimal(result.revision.casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == Decimal("116.00")
+    assert not any(
+        diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
         for diag in result.source_diagnostics
-        if diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
-    ]
-    advised_bindings = {diag.binding_id for diag in oss_advisories}
-    assert advised_bindings == {
-        _M369_DE_SERVICES_BINDING,
-        _M369_FR_SERVICES_BINDING,
-        _M369_DE_GOODS_BINDING,
-    }, f"expected an oss_no_live_source advisory per OSS binding; got {advised_bindings}"
-    assert all(diag.message for diag in oss_advisories)
-    # The source is OWNED (resolver enrolled) — the silent-zero failure mode would
-    # be the unhandled_binding_source advisory NOT firing AND no oss_no_live_source
-    # advisory either; assert the boundary advisory is not the one that fired.
+    )
     assert not any(
         diag.source_kind == "ledger_oss_aggregation" and diag.reason == "unhandled_binding_source"
         for diag in result.source_diagnostics
@@ -655,7 +692,9 @@ def test_deferred_detalle_kinds_emit_unhandled_advisory_not_silent_blank(
     )
     handled = frozenset({"relation_prefill", "profile", "borrador", "iva_wallet_decision"})
     unhandled = collect_unhandled_source_diagnostics(
-        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"}),
+        revision,
+        handled_sources=handled,
+        manual_sources=frozenset({"manual_input"}),
     )
     advisories = [d for d in unhandled if d.source_kind == deferred_kind and d.reason == "unhandled_binding_source"]
     assert advisories, (

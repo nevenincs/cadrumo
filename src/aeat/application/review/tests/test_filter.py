@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import Period
 from ....core.i18n import tr
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import BusinessClassification, TransactionDirection
@@ -97,8 +98,7 @@ def test_filter_clause_is_frozen() -> None:
 def test_ledger_spec_parses_status_and_period() -> None:
     spec = LedgerReviewFilterSpec.from_strings(["status=pending", "period=1T", "year=2026"])
     assert spec.status is LedgerReviewStatus.PENDING
-    assert spec.period == "1T"
-    assert spec.year == 2026
+    assert spec.period == Period.from_year_and_code(2026, "1T")
     assert spec.issue is None
     assert spec.import_id is None
     assert [c.key for c in spec.clauses] == ["status", "period", "year"]
@@ -116,9 +116,19 @@ def test_ledger_spec_requires_period_with_year() -> None:
         LedgerReviewFilterSpec.from_strings(["year=2026"])
 
 
+@pytest.mark.parametrize("period_code", ["2026Q1", "2026-1T", "1P", "not-a-period"])
+def test_ledger_spec_rejects_non_filterable_period_values(period_code: str) -> None:
+    with pytest.raises(FilterParseError, match=r"invalid-value-ledger-period") as exc:
+        LedgerReviewFilterSpec.from_strings([f"period={period_code}", "year=2026"])
+
+    assert exc.value.reason == "invalid-value-ledger-period"
+    assert exc.value.safe_token == f"period={_REDACTED}"
+
+
 def test_ledger_spec_parses_issue_filter() -> None:
     spec = LedgerReviewFilterSpec.from_strings(["issue=gap", "period=1T", "year=2026"])
     assert spec.issue is LedgerImportDiagnosticKind.GAP
+    assert spec.period == Period.from_year_and_code(2026, "1T")
 
 
 def test_ledger_spec_parses_duplicate_issue() -> None:
@@ -298,13 +308,23 @@ def test_ledger_spec_is_frozen() -> None:
 
     spec = LedgerReviewFilterSpec.from_strings([])
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        spec.period = "1T"
+        spec.period = Period.from_year_and_code(2026, "1T")
 
 
 def test_ledger_spec_rejects_inconsistent_construction() -> None:
     """Direct construction with mismatched clauses / typed fields fails."""
     with pytest.raises(ValueError, match=r"clauses|status|inconsistent"):
         LedgerReviewFilterSpec(clauses=(), status=LedgerReviewStatus.PENDING)
+
+
+def test_ledger_spec_rejects_inconsistent_period_construction() -> None:
+    clauses = parse_filter_clauses(["period=2T", "year=2026"])
+
+    with pytest.raises(ValueError, match=r"clauses\[period/year\] / period field disagree"):
+        LedgerReviewFilterSpec(
+            clauses=clauses,
+            period=Period.from_year_and_code(2026, "1T"),
+        )
 
 
 def test_invoice_spec_rejects_inconsistent_construction() -> None:

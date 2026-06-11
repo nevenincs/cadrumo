@@ -41,6 +41,8 @@ from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineVa
 from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
 
 if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
+    from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ..live._expedientes import PersistedExpedientesSnapshot
     from ..live._notifications import PersistedNotificationsSnapshot
@@ -613,9 +615,9 @@ def calendar_filing_evidence_from_sources(
     *,
     filing_records: tuple[ModeloRecord, ...] = (),
     observed_events: tuple[OverviewCalendarEvent, ...] = (),
-    filed_declaration_observations: tuple[object, ...] = (),
+    filed_declaration_observations: tuple[FiledDeclaracionObservation, ...] = (),
     calculation_observations: tuple[object, ...] = (),
-    justificantes: tuple[object, ...] = (),
+    justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarFilingEvidence, ...]:
     """Build :class:`OverviewCalendarFilingEvidence` tuples from local records and AEAT observations.
@@ -669,11 +671,11 @@ def calendar_filing_evidence_from_sources(
     return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))
 
 
-def _justificantes_by_csv(justificantes: tuple[object, ...]) -> dict[str, object]:
+def _justificantes_by_csv(justificantes: tuple[Justificante, ...]) -> dict[str, Justificante]:
     """Index loaded justificante metadata by CSV/reference identifier."""
-    by_csv: dict[str, object] = {}
+    by_csv: dict[str, Justificante] = {}
     for justificante in justificantes:
-        csv = str(getattr(justificante, "csv", "") or "").strip()
+        csv = justificante.csv.strip()
         if csv:
             by_csv[csv] = justificante
     return by_csv
@@ -682,7 +684,7 @@ def _justificantes_by_csv(justificantes: tuple[object, ...]) -> dict[str, object
 def _filing_evidence_from_modelo_record(
     record: ModeloRecord,
     *,
-    justificantes_by_csv: Mapping[str, object],
+    justificantes_by_csv: Mapping[str, Justificante],
     expected_tax_id: str | None,
 ) -> OverviewCalendarFilingEvidence | None:
     """Project one local Modelo filing record into calendar evidence."""
@@ -690,7 +692,7 @@ def _filing_evidence_from_modelo_record(
         return None
     modelo = str(record.modelo)
     filing_year = int(record.filing_year)
-    period = _period_from_observed_value(filing_year, record.period)
+    period = record.period
     external_evidence = record.external_evidence
     local_state = (
         OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
@@ -741,7 +743,7 @@ def _modelo_record_has_verified_justificante(
     filing_year: int,
     period: _Period,
     reference_id: str,
-    justificantes_by_csv: Mapping[str, object],
+    justificantes_by_csv: Mapping[str, Justificante],
     expected_tax_id: str | None,
 ) -> bool:
     """Return whether a Modelo record's external reference resolves to matching justificante metadata."""
@@ -751,17 +753,13 @@ def _modelo_record_has_verified_justificante(
     justificante = justificantes_by_csv.get(reference_id.strip())
     if justificante is None:
         return False
-    if str(getattr(justificante, "tax_id", "") or "").strip() != expected:
+    if justificante.tax_id.strip() != expected:
         return False
-    if str(getattr(justificante, "modelo", "") or "").strip() != modelo:
+    if justificante.modelo.strip() != modelo:
         return False
-    if str(getattr(justificante, "ejercicio", "") or "").strip() != str(filing_year):
+    if str(justificante.ejercicio or "").strip() != str(filing_year):
         return False
-    observed = getattr(justificante, "period", None)
-    if isinstance(observed, _Period):
-        return observed == period
-    observed_period = str(observed or "").strip().upper()
-    return observed_period == period.registry_token.upper()
+    return justificante.period == period
 
 
 def _filing_evidence_from_observed_event(
@@ -787,44 +785,34 @@ def _filing_evidence_from_observed_event(
 
 
 def _filing_evidence_from_filed_declaration_observation(
-    observation: object,
+    observation: FiledDeclaracionObservation,
     *,
     expected_tax_id: str | None,
 ) -> OverviewCalendarFilingEvidence | None:
     """Project a captured AEAT filed-declaration observation into calendar evidence."""
-    modelo = getattr(observation, "modelo", None)
-    filing_year = getattr(observation, "ejercicio", None)
-    period = getattr(observation, "period", None)
-    expediente_id = getattr(observation, "expediente_id", None)
-    if modelo is None or filing_year is None or period is None or expediente_id is None:
-        return None
     expected = (expected_tax_id or "").strip()
-    if expected and str(getattr(observation, "authenticated_identity", "") or "").strip() != expected:
+    if expected and observation.authenticated_identity.strip() != expected:
         return None
-    _year_int = int(filing_year)
-    _period_obj = _period_from_observed_value(_year_int, period)
     justificante = next(
         (
             artefact
-            for artefact in getattr(observation, "artefacts", ())
-            if getattr(artefact, "kind", None) == "justificante_pdf"
-            and getattr(artefact, "storage_ref", None)
-            and int(getattr(artefact, "byte_count", 0)) > 0
+            for artefact in observation.artefacts
+            if artefact.kind == "justificante_pdf" and artefact.storage_ref and artefact.byte_count > 0
         ),
         None,
     )
     verified = justificante is not None
     return OverviewCalendarFilingEvidence(
-        modelo=str(modelo),
-        filing_year=_year_int,
-        period=_period_obj,
+        modelo=observation.modelo,
+        filing_year=observation.ejercicio,
+        period=observation.period,
         aeat_submission_state=(
             OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
             if verified
             else OverviewAeatSubmissionState.SUBMITTED_OBSERVED
         ),
-        aeat_submitted_at=getattr(observation, "presented_at", None),
-        aeat_reference_id=str(expediente_id),
+        aeat_submitted_at=observation.presented_at,
+        aeat_reference_id=observation.expediente_id,
         aeat_evidence_kind="aeat_justificante_pdf" if verified else "filed_declaration_observation",
         justificante_verified=verified,
         evidence_source="filed_declaration_observation",
@@ -840,7 +828,10 @@ def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCa
     if observation is None:
         return None
     _obs_year = int(observation.filing_year)
-    _obs_period = _period_from_observed_value(_obs_year, observation.period)
+    registry_token = observation.period
+    if not isinstance(registry_token, str):
+        return None
+    _obs_period = _period_from_registry_token(_obs_year, registry_token)
     return OverviewCalendarFilingEvidence(
         modelo=str(observation.modelo),
         filing_year=_obs_year,
@@ -853,10 +844,8 @@ def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCa
     )
 
 
-def _period_from_observed_value(filing_year: int, value: object) -> _Period:
-    if isinstance(value, _Period):
-        return value
-    return _Period.from_year_and_code(filing_year, str(value))
+def _period_from_registry_token(filing_year: int, registry_token: str) -> _Period:
+    return _Period.from_year_and_code(filing_year, registry_token)
 
 
 def _merge_filing_evidence(

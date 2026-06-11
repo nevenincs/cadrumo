@@ -97,7 +97,7 @@ def _seed_work_unit():
         bucket_id=bucket_id,
         modelo="130",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
     )
 
@@ -119,6 +119,7 @@ def test_resume_surfaces_obligation_for_resumable_run(cli_runner: CliRunner) -> 
     assert result.exit_code == 0, result.output
     assert "modelo\t130" in result.output
     assert "period\t2026 1T" in result.output
+    assert "registry_period\t1T" in result.output
     assert "aborted_reason\tSITE_UNAVAILABLE" in result.output
 
 

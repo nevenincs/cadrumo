@@ -177,7 +177,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
         bucket_id=_BUCKET_ID,
         modelo="180",
         filing_year=_YEAR,
-        period="0A",
+        period=Period.from_year_and_code(_YEAR, "0A"),
         revision_id=snap_180.revision.id,
         repository=wu_repo,
         clock=_T0,

@@ -2,6 +2,6 @@
   "draft_count": 75,
   "empty_short_description_count": 75,
   "recorded_at": "2026-06-11",
-  "review_cadence": "Review after every Terminology Handbook curation pass and before docs-terminology-search closeout.",
+  "review_cadence": "Review after each Terminology Handbook curation pass and before closeout.",
   "source": "python -m aeat.terminology audit"
 }

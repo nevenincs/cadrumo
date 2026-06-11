@@ -47,6 +47,7 @@ from ...domain.calculations.registry import (
 )
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
+    CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
     storage_degradation_resolution,
@@ -252,6 +253,60 @@ def _observed_requirement_values(
     return tuple(values)
 
 
+def _formula_relation_ids(snapshot: RegistrySnapshot) -> frozenset[str]:
+    relation_ids: set[str] = set()
+    for formula in snapshot.revision.formulas:
+        _collect_expression_relation_ids(formula.expression, relation_ids)
+    return frozenset(relation_ids)
+
+
+def _collect_expression_relation_ids(expression: object, relation_ids: set[str]) -> None:
+    relation_id = getattr(expression, "relation", None)
+    if relation_id is not None:
+        relation_ids.add(str(relation_id))
+    for arg in getattr(expression, "args", ()):
+        _collect_expression_relation_ids(arg, relation_ids)
+
+
+def _unresolved_relation_diagnostics(
+    *,
+    unresolved_relation_ids: frozenset[str],
+    requirements_by_relation: dict[str, RegistryRelationSourceRequirement],
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for relation_id in sorted(unresolved_relation_ids):
+        requirement = requirements_by_relation.get(relation_id)
+        if requirement is None:
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="relation_prefill",
+                    resolver_id=resolver_id,
+                    relation_id=relation_id,
+                    message=f"relation {relation_id!r} has no resolved source filing",
+                ),
+            )
+            continue
+        period_text = ",".join(requirement.periods)
+        binding_id = requirement.target_bindings[0] if len(requirement.target_bindings) == 1 else None
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind="relation_prefill",
+                resolver_id=resolver_id,
+                binding_id=binding_id,
+                relation_id=relation_id,
+                message=(
+                    f"relation {relation_id!r} requires modelo {requirement.source_modelo} "
+                    f"{requirement.filing_year} periods {period_text} output {requirement.source_output}; "
+                    "the source filing is missing or incomplete"
+                ),
+            ),
+        )
+    return tuple(diagnostics)
+
+
 class RelationPrefillSourceResolver:
     """Source mesh adapter for local relation prefill values."""
 
@@ -292,7 +347,22 @@ class RelationPrefillSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
+        requirements_by_relation = {
+            relation_id: requirement
+            for requirement in relation_source_requirements(
+                snapshot.revision,
+                filing_year=snapshot.filing_year,
+                period=snapshot.period,
+            )
+            for relation_id in requirement.relation_ids
+        }
         resolved = tuple(item for item in relation_values.values if item.value is not None)
+        formula_relation_ids = _formula_relation_ids(snapshot)
+        unresolved_relation_ids = frozenset(
+            item.relation
+            for item in relation_values.values
+            if item.value is None and item.relation in formula_relation_ids
+        )
         resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
         # Materialise the resolved relation values into their declared
         # ``target_binding`` slots HERE, inside the resolver, so the merged
@@ -310,7 +380,13 @@ class RelationPrefillSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             relation_values=resolved_relation_values,
+            unresolved_relation_ids=tuple(sorted(unresolved_relation_ids)),
             binding_values=binding_values,
+            diagnostics=_unresolved_relation_diagnostics(
+                unresolved_relation_ids=unresolved_relation_ids,
+                requirements_by_relation=requirements_by_relation,
+                resolver_id=self.resolver_id,
+            ),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="relation_prefill",

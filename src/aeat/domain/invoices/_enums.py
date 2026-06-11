@@ -73,9 +73,11 @@ class PaymentStatus(StrEnum):
 
 
 _IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
+    IvaRate.RATE_0: IvaRateKind.ZERO,
     IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
     IvaRate.RATE_10: IvaRateKind.REDUCED,
     IvaRate.RATE_21: IvaRateKind.GENERAL,
+    IvaRate.EXEMPT: IvaRateKind.EXEMPT,
 }
 
 
@@ -110,6 +112,16 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
     return rate_record.pct / Decimal("100")
 
 
+def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
+    """Return the substrate rate tier for an invoice line rate slot.
+
+    ``NOT_SUBJECT`` has no OSS/IOSS rate tier because it is outside the
+    taxable-supply universe; callers that need a Modelo 369 candidate should
+    skip or reject it explicitly.
+    """
+    return _IVA_RATE_TO_IVA_KIND.get(rate)
+
+
 def numeric_iva_rate_percentages() -> frozenset[Decimal]:
     """Return the integer-percentage values for the numeric :class:`IvaRate` slots.
 
@@ -137,6 +149,7 @@ __all__ = [
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
+    "iva_rate_kind",
     "iva_rate_percentage",
     "numeric_iva_rate_percentages",
 ]

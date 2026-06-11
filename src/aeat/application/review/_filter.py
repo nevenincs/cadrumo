@@ -33,6 +33,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period, PeriodError
 from ...domain.iva import InvoiceKind
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ..transactions import LedgerImportDiagnosticKind
@@ -331,13 +332,9 @@ class LedgerReviewFilterSpec(BaseModel):
             command is invoked without ``--filter``.
         status: Resolved :class:`LedgerReviewStatus` if ``status=`` was
             provided.
-        period: Raw bare AEAT period token (e.g. ``1T``) if ``period=`` was
-            provided. The filing year is carried separately on :attr:`year`.
-            Period parsing is delegated to the consuming use-case so
-            this layer does not duplicate
-            :class:`aeat.application.aggregation.Period`.
-        year: Filing year (``YYYY``) if ``year=`` was provided; supplies the
-            year context the bare ``period=`` token needs.
+        period: Resolved filing period when ``period=`` and ``year=`` were
+            provided. The raw clauses remain available on :attr:`clauses`;
+            consumers receive the core value object directly.
         issue: Resolved :class:`LedgerImportDiagnosticKind` if ``issue=`` was
             provided.
         import_id: Raw import-batch id if ``import=`` was provided.
@@ -349,8 +346,7 @@ class LedgerReviewFilterSpec(BaseModel):
 
     clauses: tuple[FilterClause, ...] = ()
     status: LedgerReviewStatus | None = None
-    period: str | None = None
-    year: int | None = None
+    period: Period | None = None
     issue: LedgerImportDiagnosticKind | None = None
     import_id: str | None = None
     classification: BusinessClassification | None = None
@@ -364,8 +360,8 @@ class LedgerReviewFilterSpec(BaseModel):
         _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
         _ensure_unique_keys(clauses, scope="ledger")
         status: LedgerReviewStatus | None = None
-        period: str | None = None
-        year: int | None = None
+        period_code: str | None = None
+        filing_year: int | None = None
         issue: LedgerImportDiagnosticKind | None = None
         import_id: str | None = None
         classification: BusinessClassification | None = None
@@ -379,9 +375,9 @@ class LedgerReviewFilterSpec(BaseModel):
                     scope="ledger-status",
                 )
             elif clause.key == LedgerReviewFilterKey.PERIOD:
-                period = clause.value
+                period_code = clause.value
             elif clause.key == LedgerReviewFilterKey.YEAR:
-                year = _filter_year_or_raise(clause)
+                filing_year = _filter_year_or_raise(clause)
             elif clause.key == LedgerReviewFilterKey.ISSUE:
                 issue = _enum_value_or_raise(
                     clause,
@@ -411,11 +407,29 @@ class LedgerReviewFilterSpec(BaseModel):
                     scope="ledger-direction",
                     case_fold=True,
                 )
+        period: Period | None = None
+        if (period_code is not None) != (filing_year is not None):
+            raise FilterParseError(
+                "--filter period=/year=",
+                reason="ledger-period-year-pairing",
+            )
+        if period_code is not None and filing_year is not None:
+            try:
+                period = Period.from_year_and_code(filing_year, period_code)
+            except PeriodError as exc:
+                raise FilterParseError(
+                    f"--filter period={period_code}",
+                    reason="invalid-value-ledger-period",
+                ) from exc
+            if not period.has_date_span():
+                raise FilterParseError(
+                    f"--filter period={period_code}",
+                    reason="invalid-value-ledger-period",
+                )
         return cls(
             clauses=clauses,
             status=status,
             period=period,
-            year=year,
             issue=issue,
             import_id=import_id,
             classification=classification,
@@ -434,18 +448,28 @@ class LedgerReviewFilterSpec(BaseModel):
         present_keys = {clause.key for clause in self.clauses}
         if (LedgerReviewFilterKey.STATUS in present_keys) != (self.status is not None):
             raise ValueError("clauses[status] / status field disagree")
-        if (LedgerReviewFilterKey.PERIOD in present_keys) != (self.period is not None):
-            raise ValueError("clauses[period] / period field disagree")
-        if (LedgerReviewFilterKey.YEAR in present_keys) != (self.year is not None):
-            raise ValueError("clauses[year] / year field disagree")
-        # The bare ``period=`` token carries no year of its own; a ``year=``
-        # clause supplies it. The two travel together — one without the other
-        # cannot select a date span.
-        if (self.period is not None) != (self.year is not None):
+        has_period_clause = LedgerReviewFilterKey.PERIOD in present_keys
+        has_year_clause = LedgerReviewFilterKey.YEAR in present_keys
+        if has_period_clause != has_year_clause:
             raise FilterParseError(
                 "--filter period=/year=",
                 reason="ledger-period-year-pairing",
             )
+        if has_period_clause != (self.period is not None):
+            raise ValueError("clauses[period] / period field disagree")
+        if self.period is not None:
+            clauses_by_key = {clause.key: clause for clause in self.clauses}
+            period_clause = clauses_by_key[LedgerReviewFilterKey.PERIOD]
+            year_clause = clauses_by_key[LedgerReviewFilterKey.YEAR]
+            try:
+                expected_period = Period.from_year_and_code(
+                    _filter_year_or_raise(year_clause),
+                    period_clause.value,
+                )
+            except (FilterParseError, PeriodError) as exc:
+                raise ValueError("clauses[period/year] / period field disagree") from exc
+            if expected_period != self.period:
+                raise ValueError("clauses[period/year] / period field disagree")
         if (LedgerReviewFilterKey.ISSUE in present_keys) != (self.issue is not None):
             raise ValueError("clauses[issue] / issue field disagree")
         if (LedgerReviewFilterKey.IMPORT in present_keys) != (self.import_id is not None):
