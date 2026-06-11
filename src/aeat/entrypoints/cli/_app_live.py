@@ -25,6 +25,7 @@ from ...application.live import (
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
+    filed_data_capture_failure_row,
     list_filed_data,
 )
 from ...application.operator_surface import FilingStatus
@@ -834,21 +835,28 @@ def filed_list_cmd(
     resolved_to = year_to if year_to is not None else _date.today().year
     modelos = tuple(str(m.id) for m in resources().modelos.all()) if modelo is None else (modelo,)
     all_rows: list[FiledDataListingRow] = []
+    failures = []
     total_count = 0
     _emit_live_auth_preflight()
     for code in modelos:
-        report = asyncio.run(
-            list_filed_data(
-                modelo=code,
-                year_from=resolved_from,
-                year_to=resolved_to,
-            ),
-        )
+        try:
+            report = asyncio.run(
+                list_filed_data(
+                    modelo=code,
+                    year_from=resolved_from,
+                    year_to=resolved_to,
+                ),
+            )
+        except Exception as exc:
+            if modelo is not None:
+                raise
+            failures.append(filed_data_capture_failure_row(modelo=code, year=resolved_to, error=exc))
+            continue
         total_count += report.row_count
         all_rows.extend(report.rows)
-    from ._app_live_payloads import FiledListingRowPayload, FiledListResult
+    from ._app_live_payloads import FiledCaptureFailurePayload, FiledListingRowPayload, FiledListResult
 
-    lines = [_metric_line("row_count", total_count)]
+    lines = [_metric_line("row_count", total_count), _metric_line("failed_count", len(failures))]
     for row in all_rows:
         lines.append(
             _metric_line(
@@ -868,11 +876,28 @@ def filed_list_cmd(
                 ),
             ),
         )
+    lines.extend(
+        _metric_line(
+            "failure",
+            "\t".join(
+                (
+                    failure.modelo,
+                    str(failure.year),
+                    failure.period or "",
+                    failure.expediente_id or "",
+                    failure.error_type,
+                    failure.message,
+                ),
+            ),
+        )
+        for failure in failures
+    )
     result = FiledListResult(
         modelo_filter=modelo,
         year_from=resolved_from,
         year_to=resolved_to,
         row_count=total_count,
+        failed_count=len(failures),
         rows=[
             FiledListingRowPayload(
                 modelo=row.modelo,
@@ -886,6 +911,17 @@ def filed_list_cmd(
                 has_justificante=row.has_justificante,
             )
             for row in all_rows
+        ],
+        failures=[
+            FiledCaptureFailurePayload(
+                modelo=failure.modelo,
+                year=failure.year,
+                period=failure.period,
+                expediente_id=failure.expediente_id,
+                error_type=failure.error_type,
+                message=failure.message,
+            )
+            for failure in failures
         ],
     )
     _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
