@@ -359,6 +359,10 @@ def test_work_calculate_leads_with_a_result_summary() -> None:
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
+    assert any(line == "result summary  Modelo 111 2025 1T" for line in lines), result.output
+    assert "result summary  Modelo 111 2025 2025 1T" not in result.output
+    assert "--year 2025 --period 1T" in result.output
+    assert "--period 2025 1T" not in result.output
     summary_header_index = next(i for i, line in enumerate(lines) if line.startswith("role\tcasilla\tvalue\tlabel"))
     first_casilla_index = next(i for i, line in enumerate(lines) if line.startswith("casilla\t"))
     # The summary block precedes the full casilla table.
