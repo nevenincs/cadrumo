@@ -15,7 +15,6 @@ from ....domain.filing import (
     ModeloValue,
     ModeloValueKind,
 )
-from ....domain.period import parse_canonical_period as _parse_canonical_period
 from ....domain.submission import ModeloDraftStatus, ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from .. import (
     build_complementaria,
@@ -69,7 +68,7 @@ def _submitted_filing(
     )
 
 
-def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> ModeloDraft:
+def _draft(modelo: str, period: Period, casillas: dict[str, Decimal]) -> ModeloDraft:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
     values = tuple(
         ModeloValue(
@@ -80,11 +79,10 @@ def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> ModeloDraf
         )
         for casilla_id, value in sorted(casillas.items())
     )
-    typed_period = Period.from_year_and_code(*_parse_canonical_period(period))
     return ModeloDraft(
-        draft_id=f"unsupported-{modelo}-{period}",
+        draft_id=f"unsupported-{modelo}-{period.registry_token}",
         modelo=modelo,
-        period=typed_period,
+        period=period,
         profile_tax_id="00000000T",
         status=ModeloDraftStatus.PRESENTADA,
         values=values,
@@ -97,7 +95,7 @@ def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> ModeloDraf
 def _registry_draft(*, casillas: dict[str, Decimal]) -> ModeloDraft:
     return build_draft(
         modelo="130",
-        period="2024Q1",
+        period=Period.from_year_and_code(2024, "1T"),
         profile=ModeloTestProfile(
             tax_id="00000000T",
             display_name="Complementaria registry test",
@@ -191,7 +189,7 @@ class TestBuildComplementaria:
         assert _persisted_amendment_ids() == ()
 
     def test_unknown_modelo_requires_registry_definition(self) -> None:
-        original_draft = _draft("999", "2024Q2", {"69": Decimal("1900.00")})
+        original_draft = _draft("999", Period.from_year_and_code(2024, "2T"), {"69": Decimal("1900.00")})
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-999")
 
@@ -204,7 +202,7 @@ class TestBuildComplementaria:
         assert _persisted_amendment_ids() == ()
 
     def test_unknown_annual_modelo_requires_registry_definition(self) -> None:
-        original_draft = _draft("998", "2024A", {"109": Decimal("8400.00")})
+        original_draft = _draft("998", Period.from_year_and_code(2024, "0A"), {"109": Decimal("8400.00")})
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-998")
 

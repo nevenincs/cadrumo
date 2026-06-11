@@ -6,9 +6,9 @@ from datetime import date
 
 import pytest
 
+from ...core import Period
 from ..period import (
     PeriodValidationError,
-    parse_canonical_period,
     period_end_date,
     period_start_date,
 )
@@ -16,29 +16,27 @@ from ..period import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-class TestParseCanonicalPeriod:
+class TestPeriodConstructionContract:
     @pytest.mark.parametrize(
-        ("token", "expected"),
+        ("filing_year", "code", "expected"),
         [
-            ("2026Q1", (2026, "1T")),
-            ("2026Q4", (2026, "4T")),
-            ("2026-1T", (2026, "1T")),
-            ("2026-4T", (2026, "4T")),
-            ("2026-03", (2026, "03")),
-            ("2026-12", (2026, "12")),
-            ("2026A", (2026, "0A")),
-            ("2026", (2026, "0A")),
+            (2026, "1T", Period.from_year_and_code(2026, "1T")),
+            (2026, "4T", Period.from_year_and_code(2026, "4T")),
+            (2026, "03", Period.from_year_and_code(2026, "03")),
+            (2026, "12", Period.from_year_and_code(2026, "12")),
+            (2026, "0A", Period.from_year_and_code(2026, "0A")),
+            (2026, "1P", Period.from_year_and_code(2026, "1P")),
+            (2026, "2P", Period.from_year_and_code(2026, "2P")),
+            (2026, "3P", Period.from_year_and_code(2026, "3P")),
         ],
     )
-    def test_canonical_tokens_resolve(self, token: str, expected: tuple[int, str]) -> None:
-        assert parse_canonical_period(token) == expected
+    def test_bare_tokens_resolve_with_explicit_year(self, filing_year: int, code: str, expected: Period) -> None:
+        assert Period.from_year_and_code(filing_year, code) == expected
 
-    def test_raw_quarterly_token_uses_supplied_ejercicio(self) -> None:
-        assert parse_canonical_period("2T", ejercicio="2026") == (2026, "2T")
-
-    def test_unrecognised_token_raises(self) -> None:
-        with pytest.raises(PeriodValidationError, match=r"cannot map filing period"):
-            parse_canonical_period("not-a-period")
+    @pytest.mark.parametrize("combined", ("2026Q1", "2026-1T", "2026-03", "2026A", "2026", "2026P1"))
+    def test_combined_forms_refuse_at_core_period_boundary(self, combined: str) -> None:
+        with pytest.raises(ValueError, match=r"invalid period code"):
+            Period.from_year_and_code(2026, combined)
 
 
 class TestQuarterlyAndAnnualBoundaries:
@@ -101,32 +99,23 @@ class TestBoundaryRefusals:
             period_start_date(2026, "ZZ")
 
 
-class TestParseCanonicalPeriodPagoFraccionado:
-    """parse_canonical_period recognises the year-qualified pago-fraccionado tokens.
-
-    The canonical input form for the CLI / workflow layer is ``"YYYYPn"``
-    (e.g. ``"2026P1"``); the registry-native form is the short token
-    ``"nP"`` (e.g. ``"1P"``). This class verifies the contract arms.
-    """
+class TestPagoFraccionadoConstruction:
+    """The Modelo 202 IS pago-fraccionado instalment claves are bare tokens."""
 
     @pytest.mark.parametrize(
-        ("token", "expected"),
+        ("code", "expected"),
         [
-            ("2026P1", (2026, "1P")),
-            ("2026P2", (2026, "2P")),
-            ("2026P3", (2026, "3P")),
-            ("2024P1", (2024, "1P")),
+            ("1P", Period.from_year_and_code(2026, "1P")),
+            ("2P", Period.from_year_and_code(2026, "2P")),
+            ("3P", Period.from_year_and_code(2026, "3P")),
         ],
     )
-    def test_pago_fraccionado_tokens_resolve(self, token: str, expected: tuple[int, str]) -> None:
-        assert parse_canonical_period(token) == expected
+    def test_pago_fraccionado_tokens_resolve_with_explicit_year(self, code: str, expected: Period) -> None:
+        assert Period.from_year_and_code(2026, code) == expected
 
-    @pytest.mark.parametrize("token", ["2026P1", "2026P2", "2026P3"])
-    def test_registry_period_accepted_by_boundary_helpers(self, token: str) -> None:
-        """Every token parse_canonical_period accepts must also be accepted by the
-        period boundary helpers — the three surfaces are consistent."""
-        year, registry_period = parse_canonical_period(token)
-        # Neither boundary helper raises; the result is non-None.
-        start = period_start_date(year, registry_period)
-        end = period_end_date(year, registry_period)
+    @pytest.mark.parametrize("code", ["1P", "2P", "3P"])
+    def test_registry_period_accepted_by_boundary_helpers(self, code: str) -> None:
+        """Every valid bare instalment token is accepted by the boundary helpers."""
+        start = period_start_date(2026, code)
+        end = period_end_date(2026, code)
         assert start <= end

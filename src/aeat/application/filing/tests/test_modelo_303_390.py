@@ -16,7 +16,6 @@ from decimal import Decimal
 import pytest
 
 from ....core import Period
-from ....domain.period import parse_canonical_period as _parse_canonical_period
 from .. import ModeloInputs, build_draft, build_runtime_schema_provider
 from ..testing import ModeloTestProfile
 
@@ -35,7 +34,7 @@ def _profile() -> ModeloTestProfile:
     [
         (
             "303",
-            "2025Q1",
+            Period.from_year_and_code(2025, "1T"),
             {
                 "07": Decimal("10000.00"),
                 "29": Decimal("200.00"),
@@ -44,7 +43,7 @@ def _profile() -> ModeloTestProfile:
         ),
         (
             "390",
-            "2025A",
+            Period.from_year_and_code(2025, "0A"),
             {
                 "01": 2025,
                 "modelo-390-iva-repercutido-general-cuota": Decimal("0"),
@@ -63,7 +62,7 @@ def _profile() -> ModeloTestProfile:
 )
 def test_modelo_build_draft_projects_registry_backed_draft(
     modelo: str,
-    period: str,
+    period: Period,
     inputs: ModeloInputs,
 ) -> None:
     """``build_draft`` projects a registry-backed draft for 303 / 390."""
@@ -75,7 +74,6 @@ def test_modelo_build_draft_projects_registry_backed_draft(
         schema_provider=build_runtime_schema_provider(modelos=("303", "390")),
     )
 
-    expected_period = Period.from_year_and_code(*_parse_canonical_period(period))
     assert draft.modelo == modelo
-    assert draft.period == expected_period
+    assert draft.period == period
     assert draft.profile_tax_id == "12345678Z"
