@@ -390,28 +390,6 @@ def _compose_export_headers(
     return headers
 
 
-def _to_canonical_period(period: Period) -> str:
-    """Map a :class:`~aeat.core.Period` to the canonical period string.
-
-    ``build_draft`` accepts a canonical period string that
-    :func:`~aeat.domain.period.parse_canonical_period` can map (e.g.
-    ``"2026Q1"``, ``"2026A"``, ``"2026-03"``). This helper produces
-    that string from a typed :class:`~aeat.core.Period` so the export
-    path never constructs a combined-string intermediate from raw token
-    branches.
-    """
-    year = period.filing_year
-    code = period.registry_token
-    if code.endswith("T"):
-        return f"{year}Q{code[0]}"
-    if code == "0A":
-        return f"{year}A"
-    if code.endswith("P"):
-        return f"{year}P{code[0]}"
-    # Monthly tokens "01"–"12"
-    return f"{year}-{code}"
-
-
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
     """Return a typed :class:`~aeat.core.Period` built directly from the work unit's bare registry token.
 
@@ -454,7 +432,7 @@ def _approve_export_draft(
     try:
         draft = build_draft(
             modelo=work_unit.modelo,
-            period=_to_canonical_period(period),
+            period=period,
             profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
