@@ -37,6 +37,8 @@ def _evaluate(expression: FormulaExpression, values: dict[str, Decimal]) -> Deci
         relation_values={},
         operand_refs=operand_refs,
         operand_values=operand_values,
+        unresolved_relation_ids=frozenset(),
+        unresolved_casillas=set(),
     )
 
 
