@@ -1,0 +1,42 @@
+# Terminology Handbook concept fragment.
+
+[concept]
+concept_id = "terminology-handbook"
+domain = "concepto"
+lifecycle = "approved"
+created_at = 2026-06-12
+updated_at = 2026-06-12
+
+[language.es]
+short_description = "El arbol TOML curado que gobierna los conceptos y terminos de la documentacion."
+definition = "Superficie de autoria comprometida que contiene un fragmento TOML por concepto, compila esos fragmentos en registros estrictos y alimenta el glosario generado y la busqueda terminologica. En la arquitectura ADR D1-D3 y D7-D8, es la capa intermedia entre las fuentes de enrolment y los artefactos de documentacion generados."
+scope_note = "No es el indice Pagefind ni una pagina escrita a mano; es la fuente unica de los conceptos que luego se proyectan a la busqueda y al glosario."
+
+[language.es.source]
+citation = "2026-06-10-docs-terminology-search-adr, decisiones D1, D2, D3, D7 y D8."
+authority = "vaultspec"
+
+[[language.es.term]]
+label = "Terminology Handbook"
+term_status = "preferred"
+part_of_speech = "noun"
+hidden_search_forms = ["terminology handbook"]
+
+[[language.es.term]]
+label = "manual de terminologia"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The curated TOML tree that governs documentation concepts and terms."
+
+[[language.en.term]]
+label = "Terminology Handbook"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "L'arbre TOML curat que governa els conceptes i termes de la documentacio."
+
+[language.hu]
+short_description = "A kuralt TOML-fa, amely a dokumentacio fogalmait es terminusait iranyitja."

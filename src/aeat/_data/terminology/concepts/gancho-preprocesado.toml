@@ -1,0 +1,43 @@
+# Terminology Handbook concept fragment.
+
+[concept]
+concept_id = "gancho-preprocesado"
+domain = "concepto"
+lifecycle = "approved"
+broader = ["terminology-handbook"]
+related = ["barrido-rag"]
+created_at = 2026-06-12
+updated_at = 2026-06-12
+
+[language.es]
+short_description = "El contrato upstream para transformar fuentes PDF, XLS, HTML u otras antes de indexarlas."
+definition = "Interfaz generica solicitada a vaultspec-rag para registrar preprocessors por patron de fichero, emitir una salida versionada con texto extraido o unidades pre-chunked, incluir identidad del preprocessor en la clave de cache y declarar fallos de forma explicita. En ADR D6, este contrato permite que los corpus BOE y AEAT sean indexables sin codificar conocimiento AEAT dentro de vaultspec-rag."
+scope_note = "Mientras el gancho upstream no exista, este proyecto usa sidecars de extraccion como camino interino."
+
+[language.es.source]
+citation = "2026-06-10-docs-terminology-search-adr, decision D6."
+authority = "vaultspec"
+
+[[language.es.term]]
+label = "gancho de preprocesado"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "preprocess hook"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The upstream contract for transforming PDF, XLS, HTML, or other sources before indexing."
+
+[[language.en.term]]
+label = "preprocess hook"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "El contracte upstream per transformar fonts PDF, XLS, HTML o altres abans d'indexar-les."
+
+[language.hu]
+short_description = "Az upstream szerzodes PDF, XLS, HTML es mas forrasok indexeles elotti atalakitasa."
