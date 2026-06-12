@@ -88,6 +88,45 @@ output.
 Use the comparison as a sanity check before filing: an unexpected jump in a
 box is worth tracing back to its transactions before you export.
 
+## Look ahead to the year-end Renta
+
+If you file quarterly Modelo 130 instalments, project what the year-end
+Modelo 100 would look like from the quarters filed so far:
+
+```bash
+aeat app modelo project --year 2026 --ccaa cataluna
+```
+
+`--ccaa` names your autonomous community of tax residence, which selects the
+regional scale for the Modelo 100 calculation.
+
+The output shows the accumulated Modelo 130 figures (income, expenses, net
+result, instalments paid) and the projected Modelo 100 result: the taxable
+base, the state and regional gross tax (cuota íntegra), the net tax (cuota
+líquida), and the resulting balance after instalments (cuota resultante).
+
+**Read the extrapolation flag before trusting the numbers.** With fewer than
+four quarters filed, the projection extrapolates a full year from the
+quarters available and marks the output — for example
+`quarters_filed 2/4 (extrapolated from 2Q)`. An extrapolated projection is a
+planning estimate, not a draft Renta: it assumes the remaining quarters look
+like the filed ones.
+
+Refine the projection with values the quarters cannot know — withholdings,
+personal circumstances, or specific boxes:
+
+```bash
+aeat app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding KEY=VALUE
+```
+
+Withholdings bindings default to zero when not supplied, so a projection
+without them overstates the balance due if you had retenciones. Each
+projected box carries its formula and legal references in the JSON output,
+the same grounding as a real calculation.
+
+For when the year-end filing actually happens, see
+[Filing periods](filing-periods.md).
+
 ## Trace a value to its legal basis
 
 Every computed value carries its grounding, and you can surface it at each
