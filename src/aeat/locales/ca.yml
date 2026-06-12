@@ -1282,20 +1282,20 @@ cli:
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
-        capture_all_modelo_help: 'Limita aquesta descarrega a aquest model.'
         latest_help: Mostra el snapshot d'expedients més recent
         list_help: Llista els snapshots d'expedients desats
         pull_help: Descarrega el registre de declaracions d'AEAT i desa una instantania
           del bucket.
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
+        pull_modelo_help: 'Limita aquesta descarrega a aquest model.'
       filed:
-        capture_all_modelo_help: 'Limita aquesta descarrega a aquest model.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
         pull_help: Descarrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_sources_help: Descarrega les observacions presentades que requereixen
           les dependencies d'una declaracio objectiu.
+        pull_modelo_help: 'Limita aquesta descarrega a aquest model.'
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:

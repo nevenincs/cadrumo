@@ -26,12 +26,14 @@ from ....adapters.persistence.storage.master_key._bucket_session import BucketSe
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.auth import AuthProviderKind
 from ....application.live import (
+    FiledDataListingRow,
     IvaCompensationCarryForwardLotRow,
     IvaCompensationHistoryReport,
     IvaCompensationHistoryRow,
     IvaWalletAuthorityDecisionRow,
     IvaWalletCaptureReport,
     capture_source_filed_data,
+    filed_data_capture_failure_row,
     filed_data_listing_row,
     select_declarations_for_capture,
 )
@@ -48,7 +50,12 @@ from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.cli_runner import aeat_click_command
 from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
-from .._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
+from .._app_live import (
+    _filed_list_result_and_lines,
+    _iva_wallet_history_lines,
+    _iva_wallet_history_result,
+    _iva_wallet_pull_lines,
+)
 from ..registry import _resolve_parity_store_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -739,6 +746,19 @@ def test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all()
     assert _child(expedientes_group, "pull-all") is None
 
 
+def test_live_pull_help_locale_keys_do_not_use_capture_all_names() -> None:
+    checked_paths = (
+        Path("src/aeat/entrypoints/cli/_app_live.py"),
+        Path("src/aeat/entrypoints/cli/_app_live_expedientes_cli.py"),
+        Path("src/aeat/locales/en.yml"),
+        Path("src/aeat/locales/es.yml"),
+        Path("src/aeat/locales/ca.yml"),
+        Path("src/aeat/locales/hu.yml"),
+    )
+
+    assert all("capture_all_modelo_help" not in path.read_text(encoding="utf-8") for path in checked_paths)
+
+
 def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
     group = invoke_cached_cli(
         ["app", "live", "iva-wallet", "--help"],
@@ -867,6 +887,70 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         for line in lines
     )
     assert any(line.startswith("authority_source=2026\t2T\taeat_wallet") for line in lines)
+
+
+def test_live_iva_wallet_history_payload_preserves_typed_periods() -> None:
+    report = IvaCompensationHistoryReport(
+        row_count=1,
+        rows=(
+            IvaCompensationHistoryRow(
+                year=2024,
+                period=Period.from_year_and_code(2024, "1T"),
+                status="ALTA",
+                presented_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+                prior_pending_amount="100.00",
+                applied_amount="0.00",
+                pending_for_later_amount="100.00",
+                period_result_amount="0.00",
+                final_result_amount="0.00",
+                generated_amount="100.00",
+                available_end_amount="100.00",
+            ),
+        ),
+        as_of_year=2026,
+        carry_forward_lot_count=0,
+        unallocated_applied_amount="0",
+        authority_decision_count=0,
+    )
+
+    payload = _iva_wallet_history_result(report)
+
+    assert payload.rows[0].period == Period.from_year_and_code(2024, "1T")
+
+
+def test_live_filed_list_payload_and_text_use_registry_period_tokens() -> None:
+    row = FiledDataListingRow(
+        modelo="303",
+        year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        expediente_id="202610013522222A",
+        status="ALTA",
+        presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),
+        has_submitted_file=True,
+        has_declaration_copy=False,
+        has_justificante=True,
+    )
+    failure = filed_data_capture_failure_row(
+        modelo="303",
+        year=2026,
+        error=ValueError("period-token-smoke"),
+        declaration=_declaration(expediente_id="202620013522222B", period="2T", modelo="303"),
+    )
+
+    payload, lines = _filed_list_result_and_lines(
+        modelo_filter=None,
+        year_from=2026,
+        year_to=2026,
+        row_count=1,
+        rows=(row,),
+        failures=(failure,),
+    )
+
+    assert payload.rows[0].period == "1T"
+    assert payload.failures[0].period == "2T"
+    assert any(line.startswith("row=303\t2026\t1T\t") for line in lines)
+    assert any(line.startswith("failure=303\t2026\t2T\t") for line in lines)
+    assert all("2026 1T" not in line and "2026 2T" not in line for line in lines)
 
 
 def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Path) -> None:

@@ -1221,20 +1221,20 @@ cli:
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.
-        capture_all_modelo_help: 'Korlatozza ezt a letoltest erre a modellora.'
         latest_help: A legfrissebb expediente pillanatkép megjelenítése.
         list_help: Mentett expediente pillanatképek listázása.
         pull_help: Letolti az AEAT nyilatkozat-nyilvantartast es bucket-szintu pillanatkepet
           ment.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
+        pull_modelo_help: 'Korlatozza ezt a letoltest erre a modellora.'
       filed:
-        capture_all_modelo_help: 'Korlatozza ezt a letoltest erre a modellora.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_help: Letolti a benyujtott nyilatkozatok adatait a hitelesitett AEAT
           nyilvantartasbol.
         pull_sources_help: Letolti egy cel-nyilatkozat fuggosegeihez szukseges benyujtott
           megfigyeleseket.
+        pull_modelo_help: 'Korlatozza ezt a letoltest erre a modellora.'
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:

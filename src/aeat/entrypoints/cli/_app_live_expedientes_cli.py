@@ -110,7 +110,7 @@ def expedientes_pull(
         typer.Option(
             "--modelo",
             help=tr(
-                "cli.app.live.expedientes.capture_all_modelo_help",
+                "cli.app.live.expedientes.pull_modelo_help",
                 default="Modelo code to include. Repeat or omit with --from-year/--to-year for a bulk pull.",
             ),
         ),
