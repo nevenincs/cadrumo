@@ -12,9 +12,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_two_way_split_sums_to_parent() -> None:
-    amounts = derive_child_amounts(Decimal("121.00"), [Decimal("0.6"), Decimal("0.4")])
+    parent_amount = Decimal("121.00")
+    amounts = derive_child_amounts(parent_amount, [Decimal("0.6"), Decimal("0.4")])
     assert amounts == (Decimal("72.60"), Decimal("48.40"))
-    assert sum(amounts) == Decimal("121.00")
+    assert sum(amounts) == parent_amount
 
 
 def test_three_way_split_remainder_lands_on_last_child() -> None:
