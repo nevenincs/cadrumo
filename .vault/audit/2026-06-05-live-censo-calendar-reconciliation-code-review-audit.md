@@ -97,3 +97,37 @@ The S14 audit found the live filed and expedientes acquisition surfaces consolid
 Resolution 2026-06-12: accepted as residual repository drift for this step. Focused documented-command conformance passed, and `rg` found no `pull-all` / `pull_all` tokens in the live CLI implementation, live locale catalogues, pull/file naming rule, or notification how-to guide. Full locale scaffold cleanup remains separate work.
 
 Verification 2026-06-12: `uv run pytest src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/application/live/tests/test_filed_bulk_capture.py src/aeat/application/live/tests/test_justificante_capture.py src/aeat/application/live/tests/test_justificante_capture_resolution.py src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py src/aeat/entrypoints/cli/tests/test_live_justificante_verbs.py src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py -m "integration or not integration" -q` passed with 310 tests. Ruff passed for the touched live CLI and overview calendar surfaces. Live `config profile censo pull` still refused with no legible G313 censo, while live filed, expedientes, notifications, justificante, and calendar checks completed under the fresh profile.
+
+## CENSO-013 | HIGH | IVA wallet history payload stringified typed Period rows
+
+The S15 review found that `app live iva-wallet history` still passed `str(row.period)` into the payload row constructor. The payload schema expects the typed `core.Period`; stringifying there could reject valid history rows or weaken the typed Period boundary introduced by the period stringification work.
+
+Resolution 2026-06-12: fixed. IVA wallet history result construction now preserves typed `Period` values in payload rows and leaves registry-token stringification to text output only. Added `test_live_iva_wallet_history_payload_preserves_typed_periods`.
+
+## CENSO-014 | MEDIUM | Filed list output used display periods instead of registry period tokens
+
+The S15 review found that live filed list text and failure rows could emit display strings such as `2026 1T` where the row already carries `year=2026` and should use the registry period token `1T`. This could make machine parsing and operator comparison drift from registry-backed period semantics.
+
+Resolution 2026-06-12: fixed. Filed list result/line construction now emits registry period tokens for both successful rows and failure rows. Added `test_live_filed_list_payload_and_text_use_registry_period_tokens`.
+
+## CENSO-015 | LOW | Pull-only CLI still had capture-all help key names
+
+The S15 review found stale `capture_all_modelo_help` locale keys behind live `pull` options. The command surface had already consolidated on `pull`, but the locale key names still encoded the old verb and could reintroduce `pull-all` drift.
+
+Resolution 2026-06-12: fixed through the locale CLI. Live filed and expedientes help keys are now `pull_modelo_help` across `en`, `es`, `ca`, and `hu`, and the stale `capture_all_modelo_help` keys were removed. Added `test_live_pull_help_locale_keys_do_not_use_capture_all_names`.
+
+Verification 2026-06-12: `uv run ruff check src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_expedientes_cli.py src/aeat/entrypoints/cli/tests/test_registry_cli.py` passed. `uv run pytest src/aeat/entrypoints/cli/tests/test_registry_cli.py -m integration -q` passed with 54 tests. The focused calendar/live/modelo gate passed with 440 tests. `uv run python -m aeat.locales scaffold --check` still fails on the previously recorded catalogue drift unrelated to the pull-only rename.
+
+## CENSO-016 | INFO | Fresh-profile live calendar works, censo pull correctly refuses mismatched live identity
+
+The S15 live smoke created an isolated file-backed profile and proved profile creation, profile status, and `app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete`. The calendar returned Modelo 100/303/390/721 obligation rows with local filing readiness, AEAT submission observation, and justificante verification still represented as separate evidence states.
+
+The subsequent live `config profile censo pull` attempt failed closed before accepting AEAT data because the Cl@ve identity did not match the active profile tax identity. This is the required safety behavior, but it means final Modelo 036/G313 censo-derived obligation reconciliation remains open until a matching taxpayer profile authenticates successfully.
+
+## CENSO-017 | MEDIUM | Calendar evidence models allowed contradictory justificante state
+
+The calendar builders produced consistent rows, but the typed boundary models did not reject contradictory evidence such as `aeat_submission_state = justificante_verified` with `justificante_verified = false`, or `justificante_verified = true` on merely observed submissions. A malformed persisted live event could therefore reach rendering with a self-contradictory filing state.
+
+Resolution 2026-06-12: fixed. `OverviewCalendarFilingEvidence` and `OverviewCalendarEvent` now enforce the justificante state invariant at model validation time. Added application tests that construct contradictory evidence/events directly and assert they are refused.
+
+Verification 2026-06-12: `uv run ruff check src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py` passed. `uv run pytest src/aeat/application/overview/tests/test_calendar.py -q` passed with 54 tests. The focused calendar/live/modelo/cross-period gate passed with 442 tests.
