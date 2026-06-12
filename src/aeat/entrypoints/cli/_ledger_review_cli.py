@@ -1,4 +1,8 @@
-"""Review command registration for ``aeat app ledger``."""
+"""Review command registration for ``aeat app ledger``.
+
+The command queries a :class:`TransactionCatalogueRepository` through the
+application review backend.
+"""
 
 from __future__ import annotations
 

@@ -4,7 +4,8 @@ Surfaces the inverse of the forward ``source_transaction_ids`` link: which
 finalized modelo revisions, filings, and justificantes consumed a given ledger
 transaction. ``participation <transaction-id>`` emits a typed
 :class:`LedgerTransactionParticipationPayload`; ``participation rebuild``
-regenerates the derived index from the authoritative revision catalogue.
+regenerates the derived index from the authoritative revision catalogue. Lookup
+ids are resolved against a :class:`TransactionCatalogueRepository`.
 """
 
 from __future__ import annotations

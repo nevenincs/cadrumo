@@ -16,7 +16,7 @@ justificante reference. The index is co-written atomically inside the same
 the composition-service single-writer discipline); it is a read-side cache, never
 a second source of truth, and is fully rebuildable from the revision catalogue.
 
-The index is keyed by ``transaction_id`` and persisted one secure object per
+The index is keyed by ``transaction_id`` and persisted one secure :class:`Envelope` per
 transaction, so a revision over N contributing transactions co-emits N index
 upserts. Each upsert merges its new participation into that transaction's entry
 without disturbing the participations already recorded for it.

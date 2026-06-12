@@ -10,7 +10,7 @@ ADR codification candidate).
 The rebuild reads the :class:`CalculationRevisionCatalogue` (the finalized
 revisions and their ``source_transaction_ids``), the work-unit catalogue (for the
 ``modelo`` / ``filing_year`` / ``period`` axis per revision), and the
-:class:`ModeloRecordCatalogue` (to attach the ``filing_record_id`` and any
+:class:`ModeloRecordCatalogue` / :class:`ModeloRecord` rows (to attach the ``filing_record_id`` and any
 justificante reference to filed participations). Borrador and discarded revisions
 are excluded — the index records only the finalized audit surface.
 """
