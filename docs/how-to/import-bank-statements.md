@@ -98,8 +98,8 @@ aeat app ledger invoice list --kind issued
 ```
 
 Received invoices are supplier invoices you owe. Issued invoices are customer
-invoices owed to you. Run `aeat app ledger invoice --help` for the full
-command list.
+invoices owed to you. For the full invoice-record workflow, see
+[Attach invoices and receipts](ledger-evidence.md).
 
 ## Review rows
 
