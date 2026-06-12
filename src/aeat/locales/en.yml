@@ -1199,19 +1199,19 @@ cli:
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots
-        capture_all_modelo_help: 'Limit this pull to this modelo.'
         latest_help: Show the most recent expediente snapshot
         list_help: List saved expediente snapshots
         pull_help: Pull the AEAT declaration register and persist a bucket-scoped
           snapshot.
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
+        pull_modelo_help: 'Limit this pull to this modelo.'
       filed:
-        capture_all_modelo_help: 'Limit this pull to this modelo.'
         list_help: List filed declaration rows without downloading artefacts
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_sources_help: Pull the filed observations required by a target filing's
           dependencies.
+        pull_modelo_help: 'Limit this pull to this modelo.'
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
