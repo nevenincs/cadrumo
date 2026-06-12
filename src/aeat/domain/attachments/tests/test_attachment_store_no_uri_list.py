@@ -25,7 +25,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._enums import AttachmentKind, AttachmentSource
 from .._service import add_attachment_bytes
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_add_attachment_bytes_writes_byte_bearing_manifest_never_uri_list(tmp_path: Path) -> None:
