@@ -21,10 +21,8 @@ related:
 
 ## Outcome
 
-Fix applied in the working tree (concurrently by the typed-`Period` / co-editing agents) and VERIFIED PASSING: `test_modification_refused_when_row_feeds_finalized_modelo` passes in the three-test reconciliation run (3 passed).
-
-NOT yet committed by this campaign. The file simultaneously carries unrelated uncommitted WIP from the ledger-amount-direction campaign (doc-comment refinements at the `test_operator_can_filter_income_vs_expense` and `test_transfer_row_reclassified...` sites). Committing the file here would co-opt that peer campaign's edits into a ledger-filter-period commit, which the `aeat-git-worktree-safety` explicit-pathspec discipline forbids. The commit is therefore deferred to the agent that owns the file's WIP.
+Landed in commit `f10720943` (test(ledger-filter-period): pass typed core.Period to work-unit derivation in corpus journey (P05.S13)). Verified green at the then-current HEAD: `test_modification_refused_when_row_feeds_finalized_modelo` passes (1 passed; also green in the earlier three-test reconciliation run).
 
 ## Notes
 
-Step left UNCHECKED per `plan-closure-requires-exec-records` (intentional deferral, blocker named): the fix is applied and green, but the owning commit belongs to the concurrent campaign co-editing `test_ledger_corpus_journeys.py`. Once that campaign lands its commit (carrying both the typed-`Period` fix and its own comment edits), this step can be checked. The verification evidence above stands independent of which commit ultimately carries the line.
+The co-owning ledger-amount-direction campaign left `test_ledger_corpus_journeys.py` uncommitted for ~2 hours (its main C1 absolute-amount/direction-authority work landed separately in `3695a1b93`, but two doc-comment refinements stayed in the working tree). At operator direction this campaign committed the file directly. Because the typed-`Period` fix and the two C1 comment edits were co-mingled in one file and cannot be split without a forbidden `git add -p` / `git stash`, the single commit `f10720943` carries both; the commit message attributes the comment edits to C1. All changes are test/comment-only — no production code changed.
