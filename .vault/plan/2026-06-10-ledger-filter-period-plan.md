@@ -57,7 +57,7 @@ Add the anti-double-count continuity invariant test covering every adjacent quar
 Absorb the two CLI persona-test failures the parallel typed-core-Period refactor (W02.P08) introduced in files this plan's P03 migration touched. Worked concurrently with the typed-Period and ledger-amount-direction agents; fixes are applied as targeted, single-purpose test-contract updates that match the landed typed-Period production contracts, never reverting peer WIP.
 
 - [x] `P05.S12` - Update test_no_annual_money_rollup_surface_exists to assert the ledger status period payload as the typed-Period object {filing_year, code} the W02.P08 refactor now serialises, replacing the bare-year string; `src/aeat/entrypoints/cli/tests/test_ledger_persona_yearend_m100.py`.
-- [ ] `P05.S13` - Pass a typed core.Period to derive_work_unit_id and WorkUnit in test_modification_refused_when_row_feeds_finalized_modelo, which now require typed Period (coordinated with the ledger-amount-direction agent co-editing the file); `src/aeat/entrypoints/cli/tests/test_ledger_corpus_journeys.py`.
+- [x] `P05.S13` - Pass a typed core.Period to derive_work_unit_id and WorkUnit in test_modification_refused_when_row_feeds_finalized_modelo, which now require typed Period (coordinated with the ledger-amount-direction agent co-editing the file); `src/aeat/entrypoints/cli/tests/test_ledger_corpus_journeys.py`.
 
 ## Description
 
