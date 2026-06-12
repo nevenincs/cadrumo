@@ -876,12 +876,14 @@ def _filing_evidence_from_calculation_observation(
         return None
     source_metadata = getattr(payload, "source_metadata", None)
     source_metadata = source_metadata if isinstance(source_metadata, Mapping) else {}
+    if not source_metadata:
+        return None
     status = str(source_metadata.get("aeat_register_status", "")).strip()
-    if status and not _is_active_aeat_filing_status(status):
+    if not _is_active_aeat_filing_status(status):
         return None
     expected = (expected_tax_id or "").strip().upper()
     authenticated_identity = str(source_metadata.get("authenticated_identity", "")).strip().upper()
-    if expected and authenticated_identity and authenticated_identity != expected:
+    if expected and (not authenticated_identity or authenticated_identity != expected):
         return None
     observation = getattr(payload, "observation", None)
     if observation is None:
