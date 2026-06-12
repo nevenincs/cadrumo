@@ -86,18 +86,66 @@ setup:
 aeat config auth clear --all
 ```
 
-## Authorized representative (apoderado)
+## Act for someone else (apoderado)
 
-If you act as an authorized tax representative for someone else (a gestor,
-asesor, or authorized agent), inspect the representative access commands:
+If you act as an authorized tax representative for another taxpayer (a
+gestor, asesor, or authorized agent), record locally who you represent and
+under which AEAT apoderamiento scopes.
+
+The apoderamiento itself is granted at AEAT: the represented party authorizes
+you through AEAT's own apoderamiento procedures. The commands below only
+record that grant in your local profile so live-read commands know whose data
+they read. They never register, extend, revoke, or renounce an apoderamiento
+at AEAT — there is no command that writes representation state to AEAT.
+
+### See the accepted scopes
+
+List the scope codes the tool accepts:
 
 ```bash
-aeat config auth apoderado --help
+aeat config auth apoderado scopes list
 ```
 
-Those commands let you set up, check, and clear representative access scopes.
-Run the help command first to see the available options before changing
-anything.
+Each scope is an AEAT apoderamiento area, and some bind specific modelos —
+for example `RENT` (modelos 100, 714), `IVA` (303, 390), `PAGOSF` (130, 131),
+`RETEN` (withholding modelos), plus `GENERALNT`, `CENSO`, `INFORM`,
+`NOTIFIC`, and `EXPED`.
+
+### Record who you represent
+
+Set the represented party's tax identifier (NIF, CIF, DNI, NIE, or NII) and
+the scopes that match the grant at AEAT:
+
+```bash
+aeat config auth apoderado configure --represented-nif <nif> --scope IVA --scope PAGOSF
+```
+
+Repeat `--scope` for each code — a comma-separated list is rejected. Scope
+codes are uppercase. Use `--scope ALL` to record every catalogue scope at
+once. Unknown codes are refused with the accepted set named.
+
+The active profile holds at most one apoderado configuration; configuring
+again replaces it. The represented identifier is stored encrypted.
+
+### Review or retire the configuration
+
+Show what is recorded for the active profile:
+
+```bash
+aeat config auth apoderado status
+```
+
+`aeat config auth apoderado check` re-reads the same stored configuration; it
+does not contact AEAT.
+
+Remove the configuration when the representation ends:
+
+```bash
+aeat config auth apoderado clear
+```
+
+Clearing removes only the local record. The apoderamiento at AEAT is
+unaffected — revoke it through AEAT's own procedures.
 
 ## Next steps
 
