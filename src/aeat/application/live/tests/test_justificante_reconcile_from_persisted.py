@@ -258,7 +258,7 @@ def _seam_providers(*, pdf_bytes: bytes):
             Declaracion(
                 modelo="130",
                 ejercicio=2026,
-                period="1T",
+                period=Period.from_year_and_code(2026, "1T"),
                 expediente_id=_EXP_130_1T,
                 estado="ALTA",
                 presented_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
