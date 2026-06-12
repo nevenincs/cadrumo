@@ -36,6 +36,7 @@ from ....application.ledger import (
     update_manual_transaction,
     update_manual_transaction_fields,
 )
+from ....core import Period
 from ....core.aggregation import AggregationSourceKind
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ....domain.buckets import (
@@ -220,11 +221,12 @@ def _parsed_import_transaction(
 def _persist_verified_revision_citing_transaction(
     objects: SecureObjectRepository, *, transaction_id: str, bucket_id: str = "bucket-a",
 ) -> None:
+    period = Period.from_year_and_code(2026, "1T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=period,
         revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(
@@ -239,7 +241,7 @@ def _persist_verified_revision_citing_transaction(
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
         filing_year=2026,
-        period="1T",
+        period=period,
         revision_id="2009-y-siguientes",
         name="303-2026-1T",
         created_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
