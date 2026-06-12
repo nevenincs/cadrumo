@@ -206,8 +206,8 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "short-lived justificante PDF materialisation uses a private tempfile for parser handoff",
     (
         "src/aeat/locales/_modelo_manager.py",
-        "write_translation_file",
-        "expected_path.write_text",
+        "_write_translation_path",
+        "path.write_text",
     ): "modelo locale translation writer updates non-financial registry-localised text",
     (
         "src/aeat/locales/manager.py",

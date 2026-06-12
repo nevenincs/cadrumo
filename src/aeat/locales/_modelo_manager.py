@@ -351,14 +351,13 @@ class ModeloLocaleManager:
         """Set one schema-local translated leaf after registry-key validation."""
         field_kind = _coerce_field_kind(field)
         target = self._target_for_key(locale, modelo_id, revision_id, field_kind, key)
-        current = self.load_translation_file(target)
+        path = self._translation_leaf_path(target, field_kind, key)
+        current = self._load_translation_path(target, path)
         labels = dict(current.labels)
         help_text = dict(current.help)
         table = labels if field_kind is ModeloLocaleFieldKind.LABELS else help_text
         table[key] = value
-        return self.write_translation_file(
-            ModeloLocaleTranslationFile(target=target, path=current.path, labels=labels, help=help_text),
-        )
+        return self._write_translation_path(path, labels=labels, help_text=help_text)
 
     def remove_translation_value(
         self,
@@ -374,9 +373,10 @@ class ModeloLocaleManager:
         candidates = _drift_targets(language=language, modelo_id=modelo_id, revision_id=revision_id)
         matches: list[ModeloLocaleTranslationFile] = []
         for target in candidates:
-            current = self.load_translation_file(target)
-            if key in current.table(field_kind):
-                matches.append(current)
+            for path in self._translation_paths(target):
+                current = self._load_translation_path(target, path)
+                if key in current.table(field_kind):
+                    matches.append(current)
         if not matches:
             raise ModeloLocaleError(f"Modelo locale key not found: {field_kind.value}/{key!r}")
         if len(matches) > 1:
@@ -386,9 +386,7 @@ class ModeloLocaleManager:
         help_text = dict(current.help)
         table = labels if field_kind is ModeloLocaleFieldKind.LABELS else help_text
         del table[key]
-        return self.write_translation_file(
-            ModeloLocaleTranslationFile(target=current.target, path=current.path, labels=labels, help=help_text),
-        )
+        return self._write_translation_path(current.path, labels=labels, help_text=help_text)
 
     def _target_for_key(
         self,
@@ -435,14 +433,84 @@ class ModeloLocaleManager:
         require_exists: bool = False,
     ) -> ModeloLocaleTranslationFile:
         """Load one schema-local locale TOML file, or return an empty file model."""
-        path = self.resolve_target_path(target)
-        if not path.exists():
+        paths = self._translation_paths(target)
+        if len(paths) == 1 and not paths[0].exists():
             if require_exists:
-                raise ModeloLocaleError(f"Modelo locale file not found: {path}")
+                raise ModeloLocaleError(f"Modelo locale file not found: {paths[0]}")
+            return ModeloLocaleTranslationFile(target=target, path=paths[0], labels={}, help={})
+
+        labels: dict[str, str] = {}
+        help_text: dict[str, str] = {}
+        for path in paths:
+            current = self._load_translation_path(target, path)
+            _merge_translation_table(labels, current.labels, path=path, table_name="labels")
+            _merge_translation_table(help_text, current.help, path=path, table_name="help")
+        return ModeloLocaleTranslationFile(
+            target=target,
+            path=self.resolve_target_path(target),
+            labels=labels,
+            help=help_text,
+        )
+
+    def write_translation_file(self, translation: ModeloLocaleTranslationFile) -> Path:
+        """Write one schema-local locale TOML file with stable table ordering."""
+        expected_path = self.resolve_target_path(translation.target)
+        if translation.path.resolve() != expected_path:
+            raise ModeloLocaleError(f"Modelo locale file path mismatch: {translation.path}")
+        fragment_dir = expected_path.with_suffix("")
+        if fragment_dir.is_dir() and not expected_path.exists():
+            raise ModeloLocaleError(
+                f"Modelo locale target is fragmented; update existing fragments with set/remove: {fragment_dir}",
+            )
+        expected_path.parent.mkdir(parents=True, exist_ok=True)
+        return self._write_translation_path(expected_path, labels=translation.labels, help_text=translation.help)
+
+    def _translation_paths(self, target: ModeloLocaleFileTarget) -> tuple[Path, ...]:
+        """Return the flat file or fragment files that make up ``target``."""
+        flat_path = self.resolve_target_path(target)
+        fragment_dir = flat_path.with_suffix("")
+        if flat_path.exists() and fragment_dir.is_dir():
+            raise ModeloLocaleError(
+                f"Locale {target.locale.value!r} is declared both as a file and a fragment directory in "
+                f"{flat_path.parent}",
+            )
+        if flat_path.exists():
+            if not flat_path.is_file():
+                raise ModeloLocaleError(f"Modelo locale target is not a file: {flat_path}")
+            return (flat_path,)
+        if fragment_dir.is_dir():
+            paths = tuple(sorted(fragment_dir.glob("*.toml")))
+            if paths:
+                return paths
+        return (flat_path,)
+
+    def _translation_leaf_path(
+        self,
+        target: ModeloLocaleFileTarget,
+        field: ModeloLocaleFieldKind,
+        key: str,
+    ) -> Path:
+        """Return the concrete TOML file that owns ``field/key`` for ``target``."""
+        paths = self._translation_paths(target)
+        if len(paths) == 1:
+            return paths[0]
+        matches: list[Path] = []
+        for path in paths:
+            translation = self._load_translation_path(target, path)
+            if key in translation.table(field):
+                matches.append(path)
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            raise ModeloLocaleError(f"Modelo locale key is duplicated across fragments: {field.value}/{key!r}")
+        raise ModeloLocaleError(f"Modelo locale key has no owning fragment: {field.value}/{key!r}")
+
+    def _load_translation_path(self, target: ModeloLocaleFileTarget, path: Path) -> ModeloLocaleTranslationFile:
+        """Load one concrete schema-local locale TOML file."""
+        if not path.exists():
             return ModeloLocaleTranslationFile(target=target, path=path, labels={}, help={})
         if not path.is_file():
             raise ModeloLocaleError(f"Modelo locale target is not a file: {path}")
-
         raw = read_toml(path, error_factory=ModeloLocaleError)
         return ModeloLocaleTranslationFile(
             target=target,
@@ -451,17 +519,15 @@ class ModeloLocaleManager:
             help=_coerce_translation_table(raw.get("help", {}), path=path, table_name="help"),
         )
 
-    def write_translation_file(self, translation: ModeloLocaleTranslationFile) -> Path:
-        """Write one schema-local locale TOML file with stable table ordering."""
-        expected_path = self.resolve_target_path(translation.target)
-        if translation.path.resolve() != expected_path:
-            raise ModeloLocaleError(f"Modelo locale file path mismatch: {translation.path}")
-        expected_path.parent.mkdir(parents=True, exist_ok=True)
-        expected_path.write_text(
-            _render_translation_toml(labels=translation.labels, help_text=translation.help),
+    @staticmethod
+    def _write_translation_path(path: Path, *, labels: dict[str, str], help_text: dict[str, str]) -> Path:
+        """Write one concrete schema-local locale TOML file."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            _render_translation_toml(labels=labels, help_text=help_text),
             encoding=UTF_8_ENCODING,
         )
-        return expected_path
+        return path.resolve()
 
     def _contained_path(self, *segments: str) -> Path:
         """Return a resolved path guaranteed to stay below ``registry_root``."""
@@ -684,6 +750,14 @@ def _coerce_translation_table(raw: object, *, path: Path, table_name: str) -> di
             raise ModeloLocaleError(f"{path}: [{table_name}] {key!r} must be a string")
         table[key] = value
     return table
+
+
+def _merge_translation_table(target: dict[str, str], source: dict[str, str], *, path: Path, table_name: str) -> None:
+    """Merge one fragment table, rejecting duplicate keys."""
+    for key, value in source.items():
+        if key in target:
+            raise ModeloLocaleError(f"{path}: duplicate [{table_name}] key across locale fragments: {key!r}")
+        target[key] = value
 
 
 def _render_translation_toml(*, labels: dict[str, str], help_text: dict[str, str]) -> str:
