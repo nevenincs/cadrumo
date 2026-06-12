@@ -4,7 +4,7 @@
 concept_id = "clases-registro-busqueda"
 domain = "concepto"
 lifecycle = "approved"
-broader = ["terminology-handbook"]
+broader = ["manual-terminologia"]
 related = ["proyeccion-busqueda"]
 created_at = 2026-06-12
 updated_at = 2026-06-12

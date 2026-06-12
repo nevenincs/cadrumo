@@ -1,7 +1,7 @@
 # Terminology Handbook concept fragment.
 
 [concept]
-concept_id = "terminology-handbook"
+concept_id = "manual-terminologia"
 domain = "concepto"
 lifecycle = "approved"
 created_at = 2026-06-12
@@ -17,15 +17,15 @@ citation = "2026-06-10-docs-terminology-search-adr, decisiones D1, D2, D3, D7 y 
 authority = "vaultspec"
 
 [[language.es.term]]
-label = "Terminology Handbook"
+label = "manual de terminologia"
 term_status = "preferred"
 part_of_speech = "noun"
-hidden_search_forms = ["terminology handbook"]
 
 [[language.es.term]]
-label = "manual de terminologia"
+label = "Terminology Handbook"
 term_status = "admitted"
 part_of_speech = "noun"
+hidden_search_forms = ["terminology handbook"]
 
 [language.en]
 short_description = "The curated TOML tree that governs documentation concepts and terms."

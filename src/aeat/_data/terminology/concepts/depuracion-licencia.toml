@@ -4,7 +4,7 @@
 concept_id = "depuracion-licencia"
 domain = "concepto"
 lifecycle = "approved"
-broader = ["terminology-handbook"]
+broader = ["manual-terminologia"]
 related = ["mapa-relevancia"]
 created_at = 2026-06-12
 updated_at = 2026-06-12
