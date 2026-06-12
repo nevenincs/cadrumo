@@ -17,7 +17,7 @@ from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage import SecureObjectRepository
+    from ...adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 # namespace string preserved across rename to avoid orphaning persisted envelopes
@@ -155,7 +155,11 @@ class ModeloRecordCatalogueRepository:
         Args:
             catalogue: The ``ModeloRecordCatalogue`` to encrypt and store.
         """
-        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        self._objects.save_many((self.to_secure_object_write(catalogue),))
+
+    def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
+        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
+        from ...adapters.persistence.storage import Envelope, SecureObjectWrite, SensitivityClass
 
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
@@ -163,7 +167,7 @@ class ModeloRecordCatalogueRepository:
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )
-        self._objects.save(
+        return SecureObjectWrite(
             namespace=_FILING_NAMESPACE,
             object_key=_FILING_OBJECT_KEY,
             classification=SensitivityClass.FINANCIAL,
@@ -171,6 +175,14 @@ class ModeloRecordCatalogueRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+
+    def save_with_secure_object_writes(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist ``catalogue`` plus related secure objects in one unit of work."""
+        self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
 
 
 def upsert_filing_record(catalogue: ModeloRecordCatalogue, record: ModeloRecord) -> ModeloRecordCatalogue:

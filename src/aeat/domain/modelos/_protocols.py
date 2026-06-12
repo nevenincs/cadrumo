@@ -10,13 +10,16 @@ Use of :class:`ModeloRecord` for compliance.
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core import Period
 from ._calculation_revision import CalculationRevisionCatalogue
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._verification_report import VerificationReportCatalogue
 from ._work_unit import WorkUnitCatalogue
+
+if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
+    from ...adapters.persistence.storage import SecureObjectWrite
 
 
 @runtime_checkable
@@ -77,10 +80,14 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
 
+    def to_secure_object_write(self, catalogue: CalculationRevisionCatalogue) -> SecureObjectWrite:
+        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it."""
+        ...
+
     def save_with_secure_object_writes(
         self,
         catalogue: CalculationRevisionCatalogue,
-        extra_writes: tuple[object, ...],
+        extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
         """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
         ...
@@ -141,6 +148,18 @@ class ModeloRecordCatalogueRepositoryProtocol(Protocol):
 
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
         """Persist ``catalogue`` as the encrypted singleton object."""
+        ...
+
+    def to_secure_object_write(self, catalogue: ModeloRecordCatalogue) -> SecureObjectWrite:
+        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it."""
+        ...
+
+    def save_with_secure_object_writes(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
         ...
 
 
