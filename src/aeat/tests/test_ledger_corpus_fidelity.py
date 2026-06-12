@@ -27,6 +27,7 @@ import pytest
 from ..adapters.inbound.financial.providers._csv import CsvProvider
 from ..application.aggregation import aggregate_iva_ledger_observations
 from ..application.aggregation._renta_income_ledger import aggregate_renta_income_ledger
+from ..core import Period
 from ..domain.currency import (
     CurrencyNormalizationService,
     CurrencyNormalizationStatus,
@@ -155,6 +156,14 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
 # Build once at import; each row building through the strict pydantic model is
 # itself a fidelity assertion (invalid field combinations would raise here).
 _BUILT = _build_transactions()
+_IVA_TEST_PERIODS = (
+    Period.from_year_and_code(2025, "1T"),
+    Period.from_year_and_code(2025, "2T"),
+    Period.from_year_and_code(2025, "3T"),
+    Period.from_year_and_code(2025, "4T"),
+    Period.from_year_and_code(2026, "1T"),
+    Period.from_year_and_code(2026, "2T"),
+)
 
 
 def test_corpus_is_operating_scale() -> None:
@@ -184,7 +193,7 @@ def test_iva_pipeline_gates_transfers_personal_and_nondeclarable() -> None:
     gated_ids = {tx.transaction_id for tx, rule, _ in _BUILT if not rule.get("iva_declarable", False)}
     catalogue = _catalogue()
     emitted: set[str] = set()
-    for period in ("2025Q1", "2025Q2", "2025Q3", "2025Q4", "2026Q1", "2026Q2"):
+    for period in _IVA_TEST_PERIODS:
         result = aggregate_iva_ledger_observations(catalogue, period=period)
         emitted.update(o.ledger_id for o in result.observations)
     leaked = emitted & gated_ids
@@ -196,7 +205,7 @@ def test_iva_observations_match_oracle_category_and_flow() -> None:
     by_id = {tx.transaction_id: rule for tx, rule, _ in _BUILT}
     catalogue = _catalogue()
     seen = 0
-    for period in ("2025Q1", "2025Q2", "2025Q3", "2025Q4", "2026Q1", "2026Q2"):
+    for period in _IVA_TEST_PERIODS:
         result = aggregate_iva_ledger_observations(catalogue, period=period)
         # Issues are the pipeline's gating signal for transfers / personal /
         # no-IVA rows; they are expected for a mixed corpus, not an error.
