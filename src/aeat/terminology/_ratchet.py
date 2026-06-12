@@ -13,6 +13,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..core.external_constants import UTF_8_ENCODING
 from ..core.resources import bundled_path
 from ._curation import AuditReport, audit_handbook
 from ._errors import TerminologyLoadError
@@ -95,7 +96,7 @@ def load_curation_backlog_ratchet_baseline(
     """
     path = baseline_path if baseline_path is not None else terminology_ratchet_baseline_path()
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding=UTF_8_ENCODING))
     except OSError as exc:
         raise TerminologyLoadError(f"{path}: curation ratchet baseline cannot be read: {exc}") from exc
     except json.JSONDecodeError as exc:
