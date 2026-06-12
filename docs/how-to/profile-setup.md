@@ -406,6 +406,46 @@ Portable profile files contain taxpayer data including your tax identifier,
 activity, and local filing history. Store them as sensitive tax data and do
 not send them in support requests unless you have removed personal details.
 
+## See what happened to your profile
+
+Every change to a profile's data — creation, edits, imports, classifications,
+calculations, filings — is recorded as an event in that profile's append-only
+history. Browse it when you want to know what changed, when, and by which
+command.
+
+Find the profile's bucket id first — it is printed by:
+
+```bash
+aeat config profile list
+```
+
+Then browse the history:
+
+```bash
+aeat config profile history <bucket-id>
+```
+
+Each row shows the timestamp, the event type, the affected record, and the
+actor. Narrow long histories with filters, which combine:
+
+```bash
+aeat config profile history <bucket-id> --event-type profile.renamed
+aeat config profile history <bucket-id> --since 2026-01-01 --until 2026-03-31
+aeat config profile history <bucket-id> --object-id <record-id>
+aeat config profile history <bucket-id> --actor operator
+```
+
+Repeat `--event-type` to include several types; an unknown type is refused
+with the full accepted list, so an empty `--event-type` value is also a quick
+way to discover the vocabulary. `--since` and `--until` take ISO timestamps.
+
+A rename appears as two events on purpose: `profile.renamed` records that the
+profile's data changed, and `bucket.renamed` records that you invoked the
+rename action — one answers "what changed", the other "what was done".
+
+The history is read-only and append-only. Browsing it changes nothing, and
+no command edits or removes past events.
+
 ## Show profile contents and privacy notes
 
 Display the active profile:
