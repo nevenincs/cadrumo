@@ -13,7 +13,7 @@ re-validation.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from ...core import Period
 from ._schemas import OutputSchema, register_schema
@@ -38,7 +38,7 @@ class FiledListingRowPayload(OutputSchema):
 
 
 class FiledCaptureFailurePayload(OutputSchema):
-    """One failed declaration capture row in a filed pull-all result."""
+    """One failed declaration capture row in a filed pull result."""
 
     modelo: str
     year: int
@@ -70,33 +70,21 @@ class FiledListResult(OutputSchema):
 class FiledCaptureResult(OutputSchema):
     """Payload for ``aeat app live filed pull``."""
 
+    mode: Literal["single", "bulk"] = "single"
     output_root: str
-    modelo: str
-    year: int
+    modelo: str | None = None
+    year: int | None = None
+    modelos: list[str] = []
+    year_from: int | None = None
+    year_to: int | None = None
     captured_count: int
+    failed_count: int = 0
     observation_paths: list[str]
     artefact_refs: list[str]
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: list[str]
-
-
-@register_schema("app.live.filed.pull_all")
-class FiledCaptureAllResult(OutputSchema):
-    """Payload for ``aeat app live filed pull-all``."""
-
-    output_root: str
-    modelos: list[str]
-    year_from: int
-    year_to: int
-    captured_count: int
-    failed_count: int
-    observation_paths: list[str]
-    artefact_refs: list[str]
-    casilla_count: int
-    calculation_observation_count: int
-    calculation_observation_keys: list[str]
-    failures: list[FiledCaptureFailurePayload]
+    failures: list[FiledCaptureFailurePayload] = []
 
 
 @register_schema("app.live.filed.pull_sources")
@@ -402,20 +390,8 @@ class ExpedienteSnapshotSummaryPayload(OutputSchema):
     declaration_count: int
 
 
-@register_schema("app.live.expedientes.pull")
-class ExpedientesCaptureResult(OutputSchema):
-    """Payload for ``aeat app live expedientes pull``."""
-
-    bucket_id: str
-    snapshot_id: str
-    captured_at: str
-    persisted_at: str
-    declaration_count: int
-    source_url: str
-
-
 class ExpedientesCaptureFailurePayload(OutputSchema):
-    """One failed expedientes pull-all row."""
+    """One failed expedientes pull row."""
 
     modelo: str
     year: int
@@ -423,19 +399,24 @@ class ExpedientesCaptureFailurePayload(OutputSchema):
     message: str
 
 
-@register_schema("app.live.expedientes.pull_all")
-class ExpedientesCaptureAllResult(OutputSchema):
-    """Payload for ``aeat app live expedientes pull-all``."""
+@register_schema("app.live.expedientes.pull")
+class ExpedientesCaptureResult(OutputSchema):
+    """Payload for ``aeat app live expedientes pull``."""
 
+    mode: Literal["single", "bulk"] = "single"
     bucket_id: str
-    modelos: list[str]
-    year_from: int
-    year_to: int
-    captured_snapshot_count: int
+    snapshot_id: str | None = None
+    captured_at: str | None = None
+    persisted_at: str | None = None
     declaration_count: int
-    snapshot_ids: list[str]
-    failed_count: int
-    failures: list[ExpedientesCaptureFailurePayload]
+    source_url: str | None = None
+    modelos: list[str] = []
+    year_from: int | None = None
+    year_to: int | None = None
+    captured_snapshot_count: int = 0
+    snapshot_ids: list[str] = []
+    failed_count: int = 0
+    failures: list[ExpedientesCaptureFailurePayload] = []
 
 
 @register_schema("app.live.expedientes.list")

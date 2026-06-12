@@ -1282,21 +1282,16 @@ cli:
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
-        capture_all_modelo_help: Limita pull-all a aquest model.
+        capture_all_modelo_help: 'Limita aquesta descarrega a aquest model.'
         latest_help: Mostra el snapshot d'expedients més recent
         list_help: Llista els snapshots d'expedients desats
-        pull_all_help: Descarrega el registre de declaracions d'AEAT per a cada model
-          del registre sollicitat en un rang d'anys i desa instantanies del bucket.
         pull_help: Descarrega el registre de declaracions d'AEAT i desa una instantania
           del bucket.
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
       filed:
-        capture_all_modelo_help: Limita pull-all a aquest model.
+        capture_all_modelo_help: 'Limita aquesta descarrega a aquest model.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
-        pull_all_help: Descarrega declaracions i justificants presentats per a cada
-          model del registre sollicitat en un rang d'anys. Nomes lectura; informa
-          dels errors per model.
         pull_help: Descarrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_sources_help: Descarrega les observacions presentades que requereixen
