@@ -26,6 +26,7 @@ from ..application.aggregation._ledger_filing_snapshot import (
     stale_filed_revisions,
 )
 from ..application.ledger import ManualLedgerTransactionPatch, update_manual_transaction_fields
+from ..core import Period
 from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ..domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -53,6 +54,7 @@ from ..tests.secure_sql import isolated_runtime_profile
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
+_FILING_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 def _txn(*, taxable_base: Decimal) -> Transaction:
@@ -97,7 +99,11 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
 
 def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
-        bucket_id="bucket-a", modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes",
+        bucket_id="bucket-a",
+        modelo="303",
+        filing_year=2025,
+        period=_FILING_PERIOD,
+        revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -194,7 +200,7 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(_profile: SecureObjectR
         bucket_id="bucket-a",
         modelo=ModeloCode("303"),
         filing_year=2025,
-        period="1T",
+        period=_FILING_PERIOD,
         revision_id="2009-y-siguientes",
         name="303-2025-1T",
         created_at=_NOW,
