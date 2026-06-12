@@ -10,15 +10,19 @@ regenerates the derived index from the authoritative revision catalogue.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING
 
 import typer
 
 from ...application.ledger import get_transaction_participation
 from ...application.modelo import rebuild_participation_index
+from ...domain.transactions import TransactionCatalogueRepository
 from ._common import _active_bucket_id_or_bad, _emit_envelope, _state, _tx_repo
 
-ResolveTransactionId = Callable[[Any, str], str]
+if TYPE_CHECKING:
+    from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
+
+ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
 
 def register_participation_commands(
@@ -112,7 +116,7 @@ def _emit_participation_lookup(
 
 def _participation_lines(
     transaction_id: str,
-    entries: list[Any],
+    entries: list[LedgerTransactionParticipationEntryPayload],
 ) -> list[str]:
     lines = [f"transaction_id\t{transaction_id}"]
     for entry in entries:

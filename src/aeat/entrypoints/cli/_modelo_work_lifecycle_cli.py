@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import Annotated
 
 import typer
 
@@ -31,6 +31,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
+from ...domain.modelos import WorkUnit
 from ._common import _emit_envelope
 from ._modelo_payloads import (
     WorkCreateResult,
@@ -51,7 +52,7 @@ class _LifecycleDeps:
     require_active_profile: Callable[[], None]
     guard_foral_profile_ccaa: Callable[[], None]
     resolve_year_period: Callable[..., Period]
-    resolve_work_unit_for_cli: Callable[..., Any]
+    resolve_work_unit_for_cli: Callable[..., WorkUnit]
     resolve_default_actor: Callable[[], str]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
     selector_bad_parameter: Callable[[BaseException], typer.BadParameter]
@@ -64,7 +65,7 @@ def register_work_lifecycle_commands(
     require_active_profile: Callable[[], None],
     guard_foral_profile_ccaa: Callable[[], None],
     resolve_year_period: Callable[..., Period],
-    resolve_work_unit_for_cli: Callable[..., Any],
+    resolve_work_unit_for_cli: Callable[..., WorkUnit],
     resolve_default_actor: Callable[[], str],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
     selector_bad_parameter: Callable[[BaseException], typer.BadParameter],
