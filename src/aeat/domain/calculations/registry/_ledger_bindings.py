@@ -553,20 +553,28 @@ class _RentaLedgerIncomeSelector(BaseModel):
 
     ``fact`` controls which aggregation path is applied:
 
+    - ``"ingresos_integros_sum"`` sums the fiscally computable ingreso per
+      observation: ``taxable_base_amount`` (the IVA-exclusive base
+      imponible) when the transaction carries an explicit IVA tagging,
+      falling back to ``gross_amount`` when no base is declared — the
+      canonical ingresos-íntegros path feeding casilla ``"01"``. The AEAT
+      M130 instructions define casilla 01 as the "ingresos íntegros
+      fiscalmente computables"; IVA repercutido is collected on behalf of
+      Hacienda and is not computable income, so a tagged invoice
+      contributes its base, never its IVA-inclusive gross.
     - ``"gross_income_sum"`` sums ``RentaIncomeObservation.gross_amount``
-      (``raw.amount`` or its business fraction) across the window — the
-      ingresos íntegros path feeding casilla ``"01"``.
+      (``raw.amount`` or its business fraction) across the window,
+      ignoring any declared taxable base.
     - ``"taxable_base_sum"`` sums ``RentaIncomeObservation.taxable_base_amount``
-      (the IVA-exclusive base imponible) — the rendimiento-neto path feeding
-      casilla ``"03"``.  Observations whose ``taxable_base_amount`` is
-      ``None`` contribute zero to this sum.
+      (the IVA-exclusive base imponible).  Observations whose
+      ``taxable_base_amount`` is ``None`` contribute zero to this sum.
     """
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M130] = Modelo.M130
     target_casilla: str = Field(min_length=2, max_length=8)
-    fact: Literal["gross_income_sum", "taxable_base_sum"] = "gross_income_sum"
+    fact: Literal["ingresos_integros_sum", "gross_income_sum", "taxable_base_sum"] = "gross_income_sum"
 
 
 _RENTA_130_INCOME_CASILLAS: frozenset[str] = frozenset({"01", "03"})
@@ -581,7 +589,9 @@ def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedge
         ) from exc
 
 
-_RENTA_130_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset({"gross_income_sum", "taxable_base_sum"})
+_RENTA_130_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
+    {"ingresos_integros_sum", "gross_income_sum", "taxable_base_sum"},
+)
 
 
 def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
@@ -632,7 +642,9 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     """Resolve every ``ledger_renta_income_aggregation`` binding on ``revision``.
 
     The ``fact`` declared in the binding selector controls which field is
-    summed: ``"gross_income_sum"`` → ``observation.gross_amount``;
+    summed: ``"ingresos_integros_sum"`` → ``observation.taxable_base_amount``
+    when declared, else ``observation.gross_amount`` (per-observation
+    fallback); ``"gross_income_sum"`` → ``observation.gross_amount``;
     ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
     ``None``).
 
@@ -647,7 +659,17 @@ def resolve_ledger_renta_income_aggregation_binding_values(
             continue
         selector = _renta_ledger_income_selector(binding)
         matched = [observation for observation in available if observation.target_casilla == selector.target_casilla]
-        if selector.fact == "taxable_base_sum":
+        if selector.fact == "ingresos_integros_sum":
+            resolved[str(binding.id)] = sum(
+                (
+                    observation.taxable_base_amount
+                    if observation.taxable_base_amount is not None
+                    else observation.gross_amount
+                    for observation in matched
+                ),
+                Decimal("0"),
+            )
+        elif selector.fact == "taxable_base_sum":
             resolved[str(binding.id)] = sum(
                 (observation.taxable_base_amount or Decimal("0") for observation in matched),
                 Decimal("0"),
