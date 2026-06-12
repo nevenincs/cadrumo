@@ -27,6 +27,7 @@ from ...application.ledger import (
     suggest_evidence_split,
 )
 from ...core import resolve_active_bucket_id
+from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
 from ...core.time import now
 from ...domain.attachments import DocumentLinkSource
@@ -151,7 +152,7 @@ def _sniff_document_mime_type(reference: str, data: bytes) -> str:
     import mimetypes
 
     if data.startswith(b"%PDF-"):
-        return "application/pdf"
+        return PDF_MIME_TYPE
     if data.startswith(b"\x89PNG\r\n\x1a\n"):
         return "image/png"
     if data.startswith(b"\xff\xd8\xff"):
