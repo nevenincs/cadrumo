@@ -663,6 +663,41 @@ def test_non_alta_expedientes_event_does_not_create_submission_evidence() -> Non
     assert evidence == ()
 
 
+def test_non_alta_calendar_event_is_not_enriched_by_matching_verified_evidence() -> None:
+    event = OverviewCalendarEvent(
+        event_type=OverviewCalendarEventType.FILING,
+        event_date=date(2025, 4, 15),
+        source="aeat_sede_expedientes",
+        summary="Modelo 303 2025 1T filed at AEAT",
+        reference_id="12345678901234567890",
+        modelo="303",
+        filing_year=2025,
+        period=_PERIOD_2025_1T,
+        status="BAJA",
+    )
+    verified_evidence = OverviewCalendarFilingEvidence(
+        modelo="303",
+        filing_year=2025,
+        period=_PERIOD_2025_1T,
+        aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+        aeat_reference_id="12345678901234567890",
+        justificante_verified=True,
+    )
+
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        today=date(2025, 4, 10),
+        events=(event,),
+        filing_evidence=(verified_evidence,),
+    )
+
+    assert len(calendar.events) == 1
+    assert calendar.events[0].status == "BAJA"
+    assert calendar.events[0].aeat_submission_state is None
+    assert calendar.events[0].justificante_verified is None
+
+
 def test_sede_calculation_observation_is_not_justificante_verification() -> None:
     payload = _ObservationEnvelopePayload(
         observation=RegistryModeloObservation(
