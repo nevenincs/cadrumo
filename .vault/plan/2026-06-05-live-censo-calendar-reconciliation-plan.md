@@ -85,6 +85,8 @@ Use the fresh password-backed profile and persisted live Clave session to prove 
 - [x] `W05.P05.S16` - Enforce calendar justificante state consistency at typed evidence and event boundaries; `src/aeat/application/overview/_calendar.py, src/aeat/application/overview/tests/test_calendar.py`.
 - [x] `W05.P05.S17` - Prevent non-ALTA AEAT register rows from upgrading calendar submitted or justificante evidence; `src/aeat/application/overview/_calendar.py, src/aeat/application/overview/tests/test_calendar.py, src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
 - [x] `W05.P05.S18` - Require ALTA AEAT register status before persisting filed observations into official calculation and IVA history; `src/aeat/application/live/_filed_observation_persistence.py, src/aeat/application/live/tests/test_filed_capture_calculation_history.py`.
+- [x] `W05.P05.S19` - Stamp encrypted AEAT register provenance on official calculation observations and project it to calendar evidence; `src/aeat/application/calculations/_observations_repository.py, src/aeat/application/live/_filed_observation_persistence.py, src/aeat/application/overview/_calendar.py`.
+- [x] `W05.P05.S20` - Enforce stamped AEAT register provenance in cross-period clean-state source observations; `src/aeat/application/calculations/_cross_period_clean_state.py, src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
 
 ## Description
 
