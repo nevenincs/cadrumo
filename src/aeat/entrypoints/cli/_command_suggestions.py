@@ -170,6 +170,31 @@ class AeatTyperGroup(TyperGroup):
         return _LAZY_REGISTRY.get(self.name or "", {})
 
     @override
+    # KWARGS-ANY-RATIONALE-CLICK-MAIN: click's ``BaseCommand.main`` contract is
+    # ``*args: Any, **kwargs: Any`` passthrough; the override forwards verbatim.
+    def main(self, *args: object, standalone_mode: bool = True, **kwargs: object) -> object:
+        """Terminal exception funnel honouring the JSON error contract.
+
+        Typer's standalone ``main`` renders every :class:`ClickException`
+        (usage errors, bad parameters) as Rich text and lets unexpected
+        exceptions escape as raw tracebacks — so under ``--format json``
+        the shared-spine error document never appeared on any parse-time
+        or crash failure. Run the underlying dispatch non-standalone and
+        re-implement the terminal handling with a JSON-aware branch (see
+        :mod:`._terminal_errors`): usage errors keep their Click exit
+        codes but emit the shared-spine error document when JSON is
+        requested; unexpected exceptions become the structured crash
+        boundary instead of a raw traceback.
+        """
+        if not standalone_mode:
+            return super().main(*args, standalone_mode=False, **kwargs)
+        from ._terminal_errors import run_standalone_with_error_contract
+
+        return run_standalone_with_error_contract(
+            lambda: super(AeatTyperGroup, self).main(*args, standalone_mode=False, **kwargs),
+        )
+
+    @override
     def invoke(self, ctx: TyContext) -> object:
         """Stash the unparsed remainder in ``ctx.meta``, then dispatch.
 
