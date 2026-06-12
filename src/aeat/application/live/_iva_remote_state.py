@@ -464,14 +464,10 @@ def _evidence_ref(value: str) -> str:
 class _IvaWalletReconciliationObservation:
     taxpayer_nif: str
     target_year: int
-    target_period_token: str
+    target_period: Period
     total_pending: Decimal
     source_url: object
     captured_at: datetime
-
-    @property
-    def target_period(self) -> str:
-        return self.target_period_token
 
 
 def _wallet_reconciliation_observation(
@@ -480,7 +476,7 @@ def _wallet_reconciliation_observation(
     return _IvaWalletReconciliationObservation(
         taxpayer_nif=observation.taxpayer_nif,
         target_year=observation.target_year,
-        target_period_token=observation.target_period.registry_token,
+        target_period=observation.target_period,
         total_pending=observation.total_pending,
         source_url=observation.source_url,
         captured_at=observation.captured_at,
