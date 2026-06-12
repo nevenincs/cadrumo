@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import load_modelo_directory
-from aeat.locales.cli import app
+from ...core.resources import bundled_path
+from ...domain.calculations.registry import load_modelo_directory
+from ..cli import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
