@@ -9,6 +9,15 @@ related:
   - '[[2026-06-10-ledger-filter-period-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `ledger-filter-period` `Ledger shared period filter: ratify, delete residual notation, continuity gate` plan
 
@@ -42,6 +51,13 @@ Add the anti-double-count continuity invariant test covering every adjacent quar
 
 - [x] `P04.S10` - Write the period-continuity invariant test: for every adjacent quarter pair and adjacent month pair across 2+ years assert prior.end + 1 day == next.start and no date is contained by both; `src/aeat/application/aggregation/tests/test_period_continuity.py`.
 - [x] `P04.S11` - Assert the encrypted-storage invariant: the period filter selects rows from SecureObjectRepository without adding any plaintext persistence surface; `src/aeat/application/aggregation/tests/test_period_boundary_authority.py`.
+
+### Phase `P05` - Reconcile sibling typed-Period test churn
+
+Absorb the two CLI persona-test failures the parallel typed-core-Period refactor (W02.P08) introduced in files this plan's P03 migration touched. Worked concurrently with the typed-Period and ledger-amount-direction agents; fixes are applied as targeted, single-purpose test-contract updates that match the landed typed-Period production contracts, never reverting peer WIP.
+
+- [x] `P05.S12` - Update test_no_annual_money_rollup_surface_exists to assert the ledger status period payload as the typed-Period object {filing_year, code} the W02.P08 refactor now serialises, replacing the bare-year string; `src/aeat/entrypoints/cli/tests/test_ledger_persona_yearend_m100.py`.
+- [ ] `P05.S13` - Pass a typed core.Period to derive_work_unit_id and WorkUnit in test_modification_refused_when_row_feeds_finalized_modelo, which now require typed Period (coordinated with the ledger-amount-direction agent co-editing the file); `src/aeat/entrypoints/cli/tests/test_ledger_corpus_journeys.py`.
 
 ## Description
 

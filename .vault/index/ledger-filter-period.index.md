@@ -16,6 +16,8 @@ related:
   - '[[2026-06-10-ledger-filter-period-P03-S09]]'
   - '[[2026-06-10-ledger-filter-period-P04-S10]]'
   - '[[2026-06-10-ledger-filter-period-P04-S11]]'
+  - '[[2026-06-10-ledger-filter-period-P05-S12]]'
+  - '[[2026-06-10-ledger-filter-period-P05-S13]]'
   - '[[2026-06-10-ledger-filter-period-adr]]'
   - '[[2026-06-10-ledger-filter-period-plan]]'
   - '[[2026-06-10-ledger-filter-period-research]]'
@@ -44,6 +46,8 @@ Auto-generated index of all documents tagged with `#ledger-filter-period`.
 - `2026-06-10-ledger-filter-period-P03-S09` - Run the full ledger-filter test suite and confirm zero failures after the six migrations
 - `2026-06-10-ledger-filter-period-P04-S10` - Write the period-continuity invariant test for adjacent quarter and month pairs across 2+ years
 - `2026-06-10-ledger-filter-period-P04-S11` - Assert the encrypted-storage invariant: the period filter adds no plaintext persistence surface
+- `2026-06-10-ledger-filter-period-P05-S12` - Update test_no_annual_money_rollup_surface_exists to assert the ledger status period payload as the typed-Period object the W02.P08 refactor now serialises
+- `2026-06-10-ledger-filter-period-P05-S13` - Pass a typed core.Period to derive_work_unit_id and WorkUnit in test_modification_refused_when_row_feeds_finalized_modelo
 
 ### plan
 
