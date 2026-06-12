@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
-from ..core.external_constants import OutputLanguage
+from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ._enums import ConceptLifecycle, TermStatus
 from ._errors import TerminologyValidationError
 from ._loader import TerminologyHandbook, load_terminology_handbook, terminology_concepts_dir
@@ -320,7 +320,7 @@ def _commit_concept(handbook: TerminologyHandbook, new_concept: ConceptRecord, c
     candidate_handbook = TerminologyHandbook(concepts=tuple(by_id.values()))
     _validate_or_refuse(candidate_handbook)
     path = concepts_dir / f"{revalidated.concept_id}.toml"
-    path.write_text(serialise_concept(revalidated), encoding="utf-8")
+    path.write_text(serialise_concept(revalidated), encoding=UTF_8_ENCODING)
     return path
 
 

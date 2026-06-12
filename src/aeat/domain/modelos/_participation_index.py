@@ -35,6 +35,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from ...core import Period
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import TransactionId
 from ...core.logging import get_logger
 from ...core.time import now
@@ -235,7 +236,9 @@ class TransactionParticipationIndexRepository:
             ) from exc
         if record is None:
             return TransactionRevisionParticipationIndex(transaction_id=object_key)
-        envelope = Envelope[TransactionRevisionParticipationIndex].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[TransactionRevisionParticipationIndex].model_validate_json(
+            record.payload.decode(UTF_8_ENCODING),
+        )
         if envelope.classification is not SensitivityClass.FINANCIAL:
             _LOGGER.error("participation-index classification mismatch")
             raise TransactionParticipationIndexPersistenceError(
@@ -285,7 +288,7 @@ class TransactionParticipationIndexRepository:
             classification=SensitivityClass.FINANCIAL,
             schema_version=PARTICIPATION_INDEX_SCHEMA_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
 
