@@ -24,6 +24,7 @@ from ._errors import AttachmentValidationError
 from ._ids import AttachmentId
 
 _HEX_DIGITS = frozenset("0123456789abcdef")
+_LINK_ONLY_MIME_TYPE = "text/" "uri-" "list"
 
 
 def _normalize_hex_digest(value: str, *, field_name: str) -> str:
@@ -140,6 +141,14 @@ class Attachment(BaseModel):
         if not trimmed:
             raise AttachmentValidationError("value must not be blank")
         return trimmed
+
+    @field_validator("mime_type")
+    @classmethod
+    def _reject_link_only_mime_type(cls, value: str) -> str:
+        """Reject manifests that claim to store a link instead of document bytes."""
+        if value.lower() == _LINK_ONLY_MIME_TYPE:
+            raise AttachmentValidationError("attachment mime_type must carry document bytes, not a link-only URI list")
+        return value
 
     @field_validator("bucket_id", "captured_by", "source_command")
     @classmethod
