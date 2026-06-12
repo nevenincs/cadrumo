@@ -349,8 +349,8 @@ def test_m200_missing_m202_relation_becomes_unresolved_advisory_on_live_calculat
 ) -> None:
     """Missing formula-consumed M202 pagos do not raise or zero-contribute.
 
-    This pins the S31 robustness rule on the live path: a missing same-year M202
-    relation leaves the dependent M200 formula output unresolved and emits a
+    This pins the live-path robustness rule: a missing same-year M202 relation
+    leaves the dependent M200 formula output unresolved and emits a
     non-blocking relation-prefill advisory naming the missing source filings.
     The bound self-carry casillas still resolve their first-ejercicio zero stock
     without diagnostics because they are not formula relation operands.

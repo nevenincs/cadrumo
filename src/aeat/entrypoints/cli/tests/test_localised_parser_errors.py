@@ -6,11 +6,10 @@ target locales (``en``, ``es``, ``ca``, ``hu``) and asserts the rendered
 refusal payload carries the field label, the raw operator value, and — for the
 decimal refusal — the expected-format hint, in every locale.
 
-This is the locale-completeness half of the
-``2026-06-10-ledger-input-localization-adr`` decision: a refusal must name the
-field, echo what the operator typed, and state the accepted form in all four
-locales — never a bare "invalid" that varies by language. No mocks, no skips:
-the real catalogue and the real parse path are exercised end to end.
+A refusal must name the field, echo what the operator typed, and state the
+accepted form in all four locales — never a bare "invalid" that varies by
+language. No mocks, no skips: the real catalogue and the real parse path are
+exercised end to end.
 """
 
 from __future__ import annotations

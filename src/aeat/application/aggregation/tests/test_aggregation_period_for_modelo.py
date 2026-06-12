@@ -1,8 +1,7 @@
 """Deletion regression guard for :func:`aggregation_period_for_modelo`.
 
-After the legacy alias purge (ADR ``2026-06-10-ledger-filter-period``,
-decision 2), the translator accepts ONLY the canonical span-shaped
-:class:`StandardPeriodCode` tokens (``1T``-``4T``, ``0A``, ``01``-``12``) the
+The translator accepts ONLY the canonical span-shaped :class:`StandardPeriodCode`
+tokens (``1T``-``4T``, ``0A``, ``01``-``12``) the
 calc engine and the CLI ledger filter share. The deleted calendar-shape aliases
 (``Q1``-``Q4``, ``A``, ``ANUAL``, ``ANNUAL``, ``M01``-``M12``) must now raise.
 Each canonical token must map to the typed :class:`Period` consumed by ledger

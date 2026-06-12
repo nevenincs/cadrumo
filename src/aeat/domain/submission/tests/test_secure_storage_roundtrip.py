@@ -94,7 +94,7 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(tmp_path: Path) -
         assert loaded.status is SubmissionStatus.ACEPTADA
         assert loaded.period == _PERIOD
         assert loaded.period.filing_year == 2025
-        assert loaded.period.registry_token == "1T"  # noqa: S105 - period token, not credential
+        assert loaded.period.registry_token == _PERIOD.registry_token
         assert loaded.justificante_csv == "ABCD12345678EFGH"
         assert loaded.justificante_pdf_path == Path("justificantes/303-2025Q1-ABCD.pdf")
         assert len(loaded.attempts) == 2
