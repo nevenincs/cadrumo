@@ -99,6 +99,7 @@ def _save_source_observation(
     *,
     period: str,
     source_values: dict[str, Decimal],
+    source_metadata: dict[str, str] | None = None,
 ) -> None:
     repository.save_observation(
         RegistryModeloObservation(
@@ -111,6 +112,7 @@ def _save_source_observation(
         ),
         source_kind="aeat_sede_justificante",
         captured_at=_CLOCK,
+        source_metadata=source_metadata,
     )
 
 
@@ -140,6 +142,7 @@ def _save_member_322_observation(
     *,
     member_nif: str,
     source_casillas: tuple[str, ...],
+    source_metadata: dict[str, str] | None = None,
 ) -> None:
     repository.save_observation(
         RegistryModeloObservation(
@@ -154,6 +157,7 @@ def _save_member_322_observation(
         source_kind="aeat_sede_justificante",
         captured_at=_CLOCK,
         member_nif=member_nif,
+        source_metadata=source_metadata,
     )
 
 
@@ -163,6 +167,7 @@ def _seed_member_322_filing(
     member_nif: str,
     source_casillas: tuple[str, ...],
     justificante_tax_id: str | None = None,
+    source_metadata: dict[str, str] | None = None,
 ) -> None:
     values = _member_source_values(member_nif, source_casillas)
     work_unit_id = hashlib.sha256(f"322:{_M353_YEAR}:{_M353_PERIOD}:{member_nif}".encode()).hexdigest()
@@ -239,6 +244,7 @@ def _seed_member_322_filing(
         observation_repository,
         member_nif=member_nif,
         source_casillas=source_casillas,
+        source_metadata=source_metadata,
     )
 
 
@@ -377,9 +383,11 @@ def _seed_official_303_source_filings(
     observation_repository: CalculationObservationRepository,
     evidence_kind_by_period: dict[str, ExternalEvidenceKind] | None = None,
     skip_justificante_metadata_periods: set[str] | None = None,
+    source_metadata_by_period: dict[str, dict[str, str]] | None = None,
 ) -> None:
     evidence_kind_by_period = evidence_kind_by_period or {}
     skip_justificante_metadata_periods = skip_justificante_metadata_periods or set()
+    source_metadata_by_period = source_metadata_by_period or {}
     source_casillas_by_period: dict[str, set[str]] = {}
     for requirement in cross_period_dependency_requirements(_snapshot_390()):
         source_casillas_by_period.setdefault(
@@ -428,6 +436,7 @@ def _seed_official_303_source_filings(
             observation_repository,
             period=period,
             source_values=values,
+            source_metadata=source_metadata_by_period.get(period),
         )
 
 
@@ -903,6 +912,134 @@ def test_cross_period_clean_state_accepts_aeat_attested_reconciled_sources(tmp_p
     assert verdict.requires_clean_state is True
     assert verdict.clean is True
     assert verdict.blockers == ()
+
+
+def test_cross_period_clean_state_accepts_matching_aeat_register_observation_provenance(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            source_metadata_by_period={
+                "1T": {
+                    "aeat_register_status": "ALTA",
+                    "aeat_expediente_id": "EXP-303-2025-1T",
+                    "authenticated_identity": "X1234567L",
+                },
+            },
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="X1234567L",
+        )
+
+    first_quarter = _m390_first_quarter_evidence(verdict)
+    assert verdict.clean is True
+    assert first_quarter.blockers == ()
+
+
+def test_cross_period_clean_state_blocks_non_alta_aeat_register_observation_provenance(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            source_metadata_by_period={
+                "1T": {
+                    "aeat_register_status": "BAJA",
+                    "aeat_expediente_id": "EXP-303-2025-1T",
+                    "authenticated_identity": "X1234567L",
+                },
+            },
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="X1234567L",
+        )
+
+    first_quarter = _m390_first_quarter_evidence(verdict)
+    assert verdict.clean is False
+    assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
+
+def test_cross_period_clean_state_blocks_wrong_authenticated_identity_observation_provenance(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            source_metadata_by_period={
+                "1T": {
+                    "aeat_register_status": "ALTA",
+                    "aeat_expediente_id": "EXP-303-2025-1T",
+                    "authenticated_identity": "B12345678",
+                },
+            },
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="X1234567L",
+        )
+
+    first_quarter = _m390_first_quarter_evidence(verdict)
+    assert verdict.clean is False
+    assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
+
+def test_cross_period_clean_state_blocks_member_observation_authenticated_identity_mismatch(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        requirement = _member_fan_in_requirement()
+        _seed_member_322_filing(
+            observation_repository,
+            member_nif=_GROUP_MEMBER_A,
+            source_casillas=requirement.source_casillas,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "EXP-322-2026-12-A",
+                "authenticated_identity": _GROUP_MEMBER_B,
+            },
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_353(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            expected_member_sets=(
+                CrossPeriodExpectedMemberSet(
+                    source_modelo="322",
+                    filing_year=_M353_YEAR,
+                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
+                    member_nifs=(_GROUP_MEMBER_A,),
+                ),
+            ),
+        )
+
+    member_evidence = next(evidence for evidence in verdict.dependencies if evidence.requirement.requires_member_fan_in)
+    assert verdict.clean is False
+    assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in member_evidence.blockers
 
 
 def test_cross_period_clean_state_blocks_dangling_justificante_evidence_reference(tmp_path: Path) -> None:

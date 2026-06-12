@@ -23,7 +23,7 @@ substrate. They are stored encrypted at rest through an
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
 
@@ -98,6 +98,15 @@ class _ObservationEnvelopePayload(BaseModel):
             "(ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2). "
             "None for legacy records — carry-read must surface a non-blocking "
             "advisory rather than blocking or silently accepting unstamped records."
+        ),
+    )
+    source_metadata: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Encrypted source-specific provenance for the observation. Live AEAT "
+            "filed observations use this for register status, expediente id, and "
+            "authenticated identity so downstream readers can audit what official "
+            "register row produced the calculation history."
         ),
     )
 
@@ -233,6 +242,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         captured_at: datetime | None = None,
         member_nif: str | None = None,
         stamped_revision_id: str | None = None,
+        source_metadata: Mapping[str, str] | None = None,
     ) -> None:
         """Persist `observation` keyed by its (modelo, filing_year, period).
 
@@ -249,6 +259,10 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         pass ``snapshot.revision.id`` here. Legacy callers that do not yet have
         access to the revision id should leave this ``None``; the carry-read gate
         will surface a non-blocking advisory rather than blocking silently.
+
+        ``source_metadata`` is source-specific encrypted provenance. It is never
+        part of repository keys and must only contain data that belongs inside the
+        AUDIT-class secure payload.
         """
         when = captured_at if captured_at is not None else now()
         payload = _ObservationEnvelopePayload(
@@ -257,6 +271,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
             source_kind=source_kind,
             member_nif=member_nif,
             stamped_revision_id=stamped_revision_id,
+            source_metadata=dict(source_metadata or {}),
         )
         self.save(payload)
 

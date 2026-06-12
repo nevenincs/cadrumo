@@ -73,6 +73,13 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
 
         assert calculation_key == "303:2026:1T"
         assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is not None
+        loaded = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+        assert loaded is not None
+        assert loaded.source_metadata == {
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
+            "authenticated_identity": _SYNTHETIC_PROFILE_ID,
+        }
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
         assert prefill.prefilled[0].source_modelo == "303"
         assert prefill.prefilled[0].source_periods == ("1T",)

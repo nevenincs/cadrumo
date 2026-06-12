@@ -79,6 +79,7 @@ class _ObservationPayload(Protocol):
     source_kind: str
     member_nif: str | None
     stamped_revision_id: str | None
+    source_metadata: Mapping[str, str]
 
 
 class CrossPeriodDependencyOrigin(StrEnum):
@@ -515,10 +516,34 @@ def _revision_carry_check(
     return [], False
 
 
+def _aeat_register_provenance_blockers(
+    payload: _ObservationPayload,
+    *,
+    expected_tax_id: str | None,
+) -> list[CrossPeriodCleanStateBlocker]:
+    if payload.source_kind != "aeat_sede_justificante":
+        return []
+    metadata = payload.source_metadata
+    if not metadata:
+        return []
+
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    register_status = metadata.get("aeat_register_status", "").strip().upper()
+    if not register_status or register_status != "ALTA":
+        blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
+
+    authenticated_identity = metadata.get("authenticated_identity", "").strip().upper()
+    expected_identity = expected_tax_id.strip().upper() if expected_tax_id is not None else ""
+    if expected_identity and (not authenticated_identity or authenticated_identity != expected_identity):
+        blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
+    return blockers
+
+
 def _resolve_cross_period_source(
     requirement: CrossPeriodDependencyRequirement,
     observation_repository: CalculationObservationRepository,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
+    taxpayer_tax_id: str | None,
 ) -> _CrossPeriodSource:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     unstamped_advisory = False
@@ -556,6 +581,7 @@ def _resolve_cross_period_source(
             )
         # R2 carry gate: check revision stamp on each member payload.
         for item in value_member_payloads:
+            blockers.extend(_aeat_register_provenance_blockers(item, expected_tax_id=item.member_nif))
             extra_blockers, item_advisory = _revision_carry_check(
                 item.stamped_revision_id,
                 requirement.source_modelo,
@@ -571,6 +597,7 @@ def _resolve_cross_period_source(
         )
         # R2 carry gate: re-confirm stamped revision == law-determined revision.
         if payload is not None:
+            blockers.extend(_aeat_register_provenance_blockers(payload, expected_tax_id=taxpayer_tax_id))
             extra_blockers, unstamped_advisory = _revision_carry_check(
                 payload.stamped_revision_id,
                 requirement.source_modelo,
@@ -689,7 +716,12 @@ def _evaluate_requirement(
     taxpayer_tax_id: str | None,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
 ) -> CrossPeriodDependencyEvidence:
-    source = _resolve_cross_period_source(requirement, observation_repository, expected_member_set)
+    source = _resolve_cross_period_source(
+        requirement,
+        observation_repository,
+        expected_member_set,
+        taxpayer_tax_id,
+    )
     observation_source_kind, observation_values, value_blockers = _resolve_observation_values(
         requirement, source.value_member_payloads, source.payload,
     )

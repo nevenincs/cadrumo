@@ -691,7 +691,7 @@ def calendar_filing_evidence_from_sources(
             event_specific.append(evidence)
             _merge_filing_evidence(by_key, evidence)
     for payload in calculation_observations:
-        evidence = _filing_evidence_from_calculation_observation(payload)
+        evidence = _filing_evidence_from_calculation_observation(payload, expected_tax_id=expected_tax_id)
         if evidence is not None:
             _merge_filing_evidence(by_key, evidence)
     unique: dict[
@@ -865,10 +865,23 @@ def _is_active_aeat_filing_status(status: str | None) -> bool:
     return (status or "").strip().upper() == "ALTA"
 
 
-def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCalendarFilingEvidence | None:
+def _filing_evidence_from_calculation_observation(
+    payload: object,
+    *,
+    expected_tax_id: str | None,
+) -> OverviewCalendarFilingEvidence | None:
     """Project a persisted calculation observation into AEAT-submitted evidence."""
     source_kind = str(getattr(payload, "source_kind", ""))
     if source_kind != "aeat_sede_justificante":
+        return None
+    source_metadata = getattr(payload, "source_metadata", None)
+    source_metadata = source_metadata if isinstance(source_metadata, Mapping) else {}
+    status = str(source_metadata.get("aeat_register_status", "")).strip()
+    if status and not _is_active_aeat_filing_status(status):
+        return None
+    expected = (expected_tax_id or "").strip().upper()
+    authenticated_identity = str(source_metadata.get("authenticated_identity", "")).strip().upper()
+    if expected and authenticated_identity and authenticated_identity != expected:
         return None
     observation = getattr(payload, "observation", None)
     if observation is None:
@@ -884,6 +897,7 @@ def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCa
         period=_obs_period,
         aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
         aeat_submitted_at=getattr(payload, "captured_at", None),
+        aeat_reference_id=str(source_metadata.get("aeat_expediente_id") or "") or None,
         aeat_evidence_kind=source_kind,
         justificante_verified=False,
         evidence_source=source_kind,
