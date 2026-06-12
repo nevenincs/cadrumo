@@ -633,13 +633,14 @@ def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -
     assert "No such command" in old_capture.output
 
 
-def test_live_filed_capture_all_cli_help_resolves() -> None:
+def test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all() -> None:
     result = invoke_cached_cli(
-        ["app", "live", "filed", "pull-all", "--help"],
+        ["app", "live", "filed", "pull", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code == 0
+    assert "--year" in result.output
     assert "--from-year" in result.output
     assert "--to-year" in result.output
     assert "--modelo" in result.output
@@ -651,10 +652,9 @@ def test_live_filed_capture_all_cli_help_resolves() -> None:
     assert live_group is not None
     filed_group = _child(live_group, "filed")
     assert filed_group is not None
-    capture_all = _child(filed_group, "pull-all")
-    assert capture_all is not None
-    help_text = (capture_all.help or "").lower()
-    assert "read-only" in help_text or "solo lectura" in help_text
+    pull = _child(filed_group, "pull")
+    assert pull is not None
+    assert _child(filed_group, "pull-all") is None
 
 
 def test_live_notifications_latest_cli_help_resolves() -> None:
@@ -678,13 +678,14 @@ def test_live_notifications_latest_cli_help_resolves() -> None:
     assert hasattr(latest, "callback")
 
 
-def test_live_expedientes_capture_all_cli_help_resolves() -> None:
+def test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all() -> None:
     result = invoke_cached_cli(
-        ["app", "live", "expedientes", "pull-all", "--help"],
+        ["app", "live", "expedientes", "pull", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code == 0
+    assert "--year" in result.output
     assert "--from-year" in result.output
     assert "--to-year" in result.output
     assert "--modelo" in result.output
@@ -696,9 +697,10 @@ def test_live_expedientes_capture_all_cli_help_resolves() -> None:
     assert live_group is not None
     expedientes_group = _child(live_group, "expedientes")
     assert expedientes_group is not None
-    capture_all = _child(expedientes_group, "pull-all")
-    assert capture_all is not None
-    assert hasattr(capture_all, "callback")
+    pull = _child(expedientes_group, "pull")
+    assert pull is not None
+    assert hasattr(pull, "callback")
+    assert _child(expedientes_group, "pull-all") is None
 
 
 def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:

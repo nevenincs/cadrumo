@@ -1292,21 +1292,16 @@ cli:
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
-        capture_all_modelo_help: Limita pull-all a este modelo.
+        capture_all_modelo_help: 'Limita esta descarga a este modelo.'
         latest_help: Muestra el snapshot de expedientes más reciente
         list_help: Lista los snapshots de expedientes guardados
-        pull_all_help: Descarga el registro de declaraciones de AEAT para cada modelo
-          del registro solicitado en un rango de anos y guarda instantaneas del bucket.
         pull_help: Descarga el registro de declaraciones de AEAT y guarda una instantanea
           del bucket.
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de expedientes
       filed:
-        capture_all_modelo_help: Limita pull-all a este modelo.
+        capture_all_modelo_help: 'Limita esta descarga a este modelo.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
-        pull_all_help: Descarga declaraciones y justificantes presentados para cada
-          modelo del registro solicitado en un rango de anos. Solo lectura; informa
-          de los fallos por modelo.
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_sources_help: Descarga las observaciones presentadas que requieren las
