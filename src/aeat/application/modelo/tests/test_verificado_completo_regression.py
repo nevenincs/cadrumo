@@ -190,6 +190,11 @@ def _seed_clean_cross_period_sources_for_m130(
             ),
             source_kind="aeat_sede_justificante",
             captured_at=_T0,
+            stamped_revision_id=source_snapshot.revision.id,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "authenticated_identity": "X1234567L",
+            },
         )
     return observation_repository
 
