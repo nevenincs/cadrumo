@@ -637,3 +637,24 @@ files; the focused workflow resume suite passed with `22 passed`; the CLI work
 resume suite passed with `12 passed`; core/domain Period gates passed with
 `31 passed`; CLI import smoke printed `OK`; and the period plan check reported
 only the existing `PLAN022` ordering warning.
+
+## PERIOD-036 | INFO | Ledger filter Period CLI guidance reviewed
+
+Review of the ledger filter Period convergence found one operator-facing risk:
+after `LedgerReviewFilterSpec` started carrying a typed `Period`, invalid
+`period=` filter values could surface the generic filter parse message instead
+of the shared AEAT-token period guidance. The CLI list/review filter handlers
+now route `invalid-value-ledger-period` through the period refusal text, while
+all other filter parse errors remain redacted through the generic filter
+message. A real CLI regression now asserts `period=2026Q1` with `year=2026`
+refuses while naming `1T` and `--year`.
+
+The mandated code-review subagent was spawned but failed before review with the
+account usage-limit error. Coordinator-side `vaultspec-rag` also timed out with
+`http_search_timeout`; this pass was grounded with `rg`, direct source
+inspection, and the focused real-behaviour suites.
+
+Verification after the change: ruff passed for the touched review and ledger
+CLI files; review filter plus helper tests, ledger list filter tests, and ledger
+period grammar tests passed with `114 passed`; CLI import smoke printed `OK`;
+and the period plan check reported only the existing `PLAN022` ordering warning.
