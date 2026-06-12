@@ -10,7 +10,7 @@ import re
 import shutil
 import signal
 import subprocess
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any
@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 import typer
 
 from ...application.live import (
+    FiledDataCaptureFailureRow,
     FiledDataListingRow,
     IvaCompensationHistoryReport,
     IvaRemoteStateAcquisitionReport,
@@ -315,6 +316,11 @@ def iva_wallet_history_cmd(
     from ...application.live import list_iva_compensation_history
 
     report = list_iva_compensation_history(as_of_year=as_of_year)
+    result = _iva_wallet_history_result(report)
+    _emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
+
+
+def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
     from ._app_live_payloads import (
         IvaCompensationCarryForwardLotPayload,
         IvaCompensationHistoryRowPayload,
@@ -322,7 +328,7 @@ def iva_wallet_history_cmd(
         IvaWalletHistoryResult,
     )
 
-    result = IvaWalletHistoryResult(
+    return IvaWalletHistoryResult(
         row_count=report.row_count,
         as_of_year=report.as_of_year,
         carry_forward_lot_count=report.carry_forward_lot_count,
@@ -331,7 +337,7 @@ def iva_wallet_history_cmd(
         rows=[
             IvaCompensationHistoryRowPayload(
                 year=row.year,
-                period=str(row.period),
+                period=row.period,
                 status=row.status,
                 presented_at=row.presented_at.isoformat(),
                 prior_pending_amount=row.prior_pending_amount,
@@ -376,7 +382,6 @@ def iva_wallet_history_cmd(
             for decision in report.authority_decisions
         ],
     )
-    _emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
 
 
 def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str, ...]:
@@ -394,7 +399,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                 "\t".join(
                     (
                         str(row.year),
-                        str(row.period),
+                        row.period.registry_token,
                         row.status,
                         f"prior={row.prior_pending_amount}",
                         f"applied={row.applied_amount}",
@@ -874,7 +879,7 @@ def filed_list_cmd(
     resolved_to = year_to if year_to is not None else _date.today().year
     modelos = tuple(str(m.id) for m in resources().modelos.all()) if modelo is None else (modelo,)
     all_rows: list[FiledDataListingRow] = []
-    failures = []
+    failures: list[FiledDataCaptureFailureRow] = []
     total_count = 0
     _emit_live_auth_preflight()
     for code in modelos:
@@ -893,10 +898,30 @@ def filed_list_cmd(
             continue
         total_count += report.row_count
         all_rows.extend(report.rows)
+    result, lines = _filed_list_result_and_lines(
+        modelo_filter=modelo,
+        year_from=resolved_from,
+        year_to=resolved_to,
+        row_count=total_count,
+        rows=all_rows,
+        failures=failures,
+    )
+    _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
+
+
+def _filed_list_result_and_lines(
+    *,
+    modelo_filter: str | None,
+    year_from: int,
+    year_to: int,
+    row_count: int,
+    rows: Sequence[FiledDataListingRow],
+    failures: Sequence[FiledDataCaptureFailureRow],
+) -> tuple[Any, tuple[str, ...]]:
     from ._app_live_payloads import FiledCaptureFailurePayload, FiledListingRowPayload, FiledListResult
 
-    lines = [_metric_line("row_count", total_count), _metric_line("failed_count", len(failures))]
-    for row in all_rows:
+    lines = [_metric_line("row_count", row_count), _metric_line("failed_count", len(failures))]
+    for row in rows:
         lines.append(
             _metric_line(
                 "row",
@@ -904,7 +929,7 @@ def filed_list_cmd(
                     (
                         row.modelo,
                         str(row.year),
-                        str(row.period),
+                        row.period.registry_token,
                         row.expediente_id,
                         row.status,
                         row.presented_at.isoformat(),
@@ -922,7 +947,7 @@ def filed_list_cmd(
                 (
                     failure.modelo,
                     str(failure.year),
-                    str(failure.period) if failure.period is not None else "",
+                    failure.period.registry_token if failure.period is not None else "",
                     failure.expediente_id or "",
                     failure.error_type,
                     failure.message,
@@ -932,16 +957,16 @@ def filed_list_cmd(
         for failure in failures
     )
     result = FiledListResult(
-        modelo_filter=modelo,
-        year_from=resolved_from,
-        year_to=resolved_to,
-        row_count=total_count,
+        modelo_filter=modelo_filter,
+        year_from=year_from,
+        year_to=year_to,
+        row_count=row_count,
         failed_count=len(failures),
         rows=[
             FiledListingRowPayload(
                 modelo=row.modelo,
                 year=row.year,
-                period=str(row.period),
+                period=row.period.registry_token,
                 expediente_id=row.expediente_id,
                 status=row.status,
                 presented_at=row.presented_at.isoformat(),
@@ -949,13 +974,13 @@ def filed_list_cmd(
                 has_declaration_copy=row.has_declaration_copy,
                 has_justificante=row.has_justificante,
             )
-            for row in all_rows
+            for row in rows
         ],
         failures=[
             FiledCaptureFailurePayload(
                 modelo=failure.modelo,
                 year=failure.year,
-                period=str(failure.period) if failure.period is not None else None,
+                period=failure.period.registry_token if failure.period is not None else None,
                 expediente_id=failure.expediente_id,
                 error_type=failure.error_type,
                 message=failure.message,
@@ -963,7 +988,7 @@ def filed_list_cmd(
             for failure in failures
         ],
     )
-    _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
+    return result, tuple(lines)
 
 
 @filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
@@ -974,7 +999,7 @@ def filed_capture_cmd(
         typer.Option(
             "--modelo",
             help=tr(
-                "cli.app.live.filed.capture_all_modelo_help",
+                "cli.app.live.filed.pull_modelo_help",
                 default="Modelo code to include. Repeat or omit with --from-year/--to-year for a bulk pull.",
             ),
         ),
@@ -1076,7 +1101,7 @@ def filed_capture_cmd(
                     (
                         failure.modelo,
                         str(failure.year),
-                        str(failure.period) if failure.period is not None else "",
+                        failure.period.registry_token if failure.period is not None else "",
                         failure.expediente_id or "",
                         failure.error_type,
                         failure.message,
@@ -1103,7 +1128,7 @@ def filed_capture_cmd(
             FiledCaptureFailurePayload(
                 modelo=failure.modelo,
                 year=failure.year,
-                period=str(failure.period) if failure.period is not None else None,
+                period=failure.period.registry_token if failure.period is not None else None,
                 expediente_id=failure.expediente_id,
                 error_type=failure.error_type,
                 message=failure.message,
