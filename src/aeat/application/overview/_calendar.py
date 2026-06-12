@@ -972,6 +972,9 @@ def _calendar_events_with_filing_evidence(
         if event.event_type is not OverviewCalendarEventType.FILING:
             enriched.append(event)
             continue
+        if event.status is not None and not _is_active_aeat_filing_status(event.status):
+            enriched.append(event)
+            continue
         if event.modelo is None or event.filing_year is None or event.period is None:
             enriched.append(event)
             continue
@@ -1000,6 +1003,8 @@ def _calendar_event_filing_evidence(
     evidence: tuple[OverviewCalendarFilingEvidence, ...],
 ) -> OverviewCalendarFilingEvidence | None:
     if event.modelo is None or event.filing_year is None or event.period is None:
+        return None
+    if event.status is not None and not _is_active_aeat_filing_status(event.status):
         return None
     matching_refs = tuple(
         item
