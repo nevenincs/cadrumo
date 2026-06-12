@@ -203,6 +203,15 @@ aeat config repair quarantine --yes
 
 The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover — for example with the recovery key, see [Protect access to your data](protect-data-access.md) — the archived records still exist.
 
+When you need to know which finalized calculations and filings used a transaction, ask the participation index:
+
+```bash
+aeat app ledger participation <transaction-id>
+aeat app ledger participation rebuild
+```
+
+The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
+
 When nothing else recovers the problem, and only then, reset the saved progress of interrupted commands. This command is destructive:
 
 ```bash

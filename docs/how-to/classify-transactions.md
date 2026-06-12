@@ -111,6 +111,9 @@ aeat app ledger ratios set <category-id> 0.5
 aeat app ledger ratios validate
 ```
 
+Remove a category ratio you no longer want with
+`aeat app ledger ratios unset <category-id>`.
+
 For home-office expenses, you normally either classify the row as `MIXED` with
 an explicit `--business-pct`, or use a supported category ratio when your
 profile has one. If you have linked and applied Modelo 036 censo facts with
