@@ -38,6 +38,7 @@ from .. import (
     load_iva_remote_state,
     persist_filed_calculation_observation,
 )
+from .._errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -167,6 +168,23 @@ def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_p
         assert history.pending_for_later_amount == Decimal("2.00")
 
 
+def test_direct_filed_observation_persist_refuses_non_alta_status(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        with pytest.raises(LiveApplicationInputError, match="non-active AEAT filed observation"):
+            persist_filed_calculation_observation(
+                _prior_303_observation(
+                    pending_compensation=Decimal("900.00"),
+                    status="BAJA",
+                    presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                ),
+            )
+
+        assert (
+            CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
+        )
+        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
+
+
 def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> None:
     selected = _latest_declarations_by_period(
         (
@@ -197,6 +215,61 @@ def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> Non
     )
     assert selected[0].expediente_id == "200030300000007Z"
     assert selected[1].expediente_id == "200030300000008Z"
+
+
+def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        repository = CalculationObservationRepository()
+        keys = _persist_latest_filed_calculation_observations(
+            (
+                _prior_303_observation(
+                    expediente_id="200030300000012Z",
+                    pending_compensation=Decimal("1200.00"),
+                    presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                ),
+                _prior_303_observation(
+                    expediente_id="200030300000013Z",
+                    pending_compensation=Decimal("900.00"),
+                    status="BAJA",
+                    presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                ),
+            ),
+        )
+
+        stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
+
+        assert keys == ("303:2026:1T",)
+        assert stored is not None
+        assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("1200.00")
+        assert history is not None
+        assert history.expediente_id == "200030300000012Z"
+
+
+def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observation(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        keys = _persist_iva_compensation_history_observations_strict(
+            (
+                _prior_303_observation(
+                    expediente_id="200030300000014Z",
+                    pending_compensation=Decimal("1200.00"),
+                    presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                ),
+                _prior_303_observation(
+                    expediente_id="200030300000015Z",
+                    pending_compensation=Decimal("900.00"),
+                    status="BAJA",
+                    presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                ),
+            ),
+        )
+
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
+
+        assert keys == ("303:2026:1T",)
+        assert history is not None
+        assert history.expediente_id == "200030300000014Z"
+        assert history.pending_for_later_amount == Decimal("1200.00")
 
 
 def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(tmp_path: Path) -> None:
@@ -479,6 +552,7 @@ def _prior_303_observation(
     expediente_id: str = _SYNTHETIC_EXPEDIENTE_ID,
     presented_at: datetime = _CAPTURED_AT,
     semantic_compensation_ids: bool = False,
+    status: str = "ALTA",
 ) -> FiledDeclaracionObservation:
     observation_period = Period.from_year_and_code(year, period)
     body = f"303-{year}-{period}-submitted-file".encode("ascii")
@@ -489,7 +563,7 @@ def _prior_303_observation(
         ejercicio=year,
         period=observation_period,
         expediente_id=expediente_id,
-        status="ALTA",
+        status=status,
         presented_at=presented_at,
         authenticated_identity=_SYNTHETIC_PROFILE_ID,
         artefacts=(
