@@ -37,6 +37,12 @@ def persist_filed_calculation_observation(
     repository: CalculationObservationRepository | None = None,
 ) -> str:
     """Promote one AEAT filed-declaration observation into calculation history."""
+    if not _is_active_filed_observation(observation):
+        raise LiveApplicationInputError(
+            f"refusing to persist non-active AEAT filed observation "
+            f"{observation.modelo}/{observation.ejercicio}/{observation.period.registry_token} "
+            f"with status {observation.status!r}",
+        )
     registry_observation = registry_observation_from_filed_declaration(observation)
     registry_observation = _with_derived_303_compensation_available(registry_observation)
     repo = repository if repository is not None else CalculationObservationRepository()
@@ -68,10 +74,7 @@ def persist_latest_filed_calculation_observations(
     for observation in observations:
         key = (observation.modelo, observation.ejercicio, observation.period)
         current = latest.get(key)
-        if current is None or (observation.presented_at, observation.expediente_id) > (
-            current.presented_at,
-            current.expediente_id,
-        ):
+        if current is None or _filed_observation_rank(observation) > _filed_observation_rank(current):
             latest[key] = observation
     return tuple(
         key
@@ -96,10 +99,7 @@ def persist_iva_compensation_history_observations_strict(
             )
         key = (observation.ejercicio, observation.period)
         current = latest.get(key)
-        if current is None or (observation.presented_at, observation.expediente_id) > (
-            current.presented_at,
-            current.expediente_id,
-        ):
+        if current is None or _filed_observation_rank(observation) > _filed_observation_rank(current):
             latest[key] = observation
 
     keys: list[str] = []
@@ -153,8 +153,16 @@ def _persist_filed_calculation_observation_if_extractable(
 ) -> tuple[str, ...]:
     try:
         return (persist_filed_calculation_observation(observation),)
-    except SedeParseError:
+    except (LiveApplicationInputError, SedeParseError):
         return ()
+
+
+def _is_active_filed_observation(observation: FiledDeclaracionObservation) -> bool:
+    return observation.status.strip().upper() == "ALTA"
+
+
+def _filed_observation_rank(observation: FiledDeclaracionObservation) -> tuple[bool, datetime, str]:
+    return (_is_active_filed_observation(observation), observation.presented_at, observation.expediente_id)
 
 
 @dataclass(frozen=True)

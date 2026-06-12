@@ -1,8 +1,10 @@
 """Domain-profile test fixtures.
 
-Profile keys are compiled lazily from the wizard catalogue on first access
-via the :func:`~aeat.domain.contribuyente._keys._build_profile_keys` cycle-breaker.
-No application-layer import is needed here.
+Profile keys are compiled from the wizard catalogue and registered into the
+domain registry when the wizard package is imported. Import the real package
+here so domain-profile tests are not order-dependent on broader suite startup.
 """
 
 from __future__ import annotations
+
+from ...application import wizard as _wizard  # noqa: F401

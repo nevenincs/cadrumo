@@ -1,4 +1,4 @@
-"""Core revision record-section validation helpers."""
+"""Core :class:`ModeloRevision` record-section validation helpers."""
 
 from __future__ import annotations
 

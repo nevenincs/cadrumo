@@ -1,8 +1,8 @@
 """Real-behaviour tests for the Terminology Handbook validation gates.
 
-Each gate (ADR D2 / D8) is exercised with a PASSING case and a FAILING
-case that actually trips the gate's error (anti-tautology: the failing
-fixture is constructed so removing the gate would let it through). The
+Each gate is exercised with a passing case and a failing case that actually
+trips the gate's error (anti-tautology: the failing fixture is constructed so
+removing the gate would let it through). The
 bundled exemplar handbook (prorrata / prorrata-especial / casilla) must
 pass the full default inventory, including legal-ref resolution against
 the real registry legal catalogue.

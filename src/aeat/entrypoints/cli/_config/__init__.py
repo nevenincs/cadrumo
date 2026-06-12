@@ -20,7 +20,7 @@ from ....application.operator_surface import render_help_text as _render_help_te
 from ....application.wizard import build_wizard_command as _build_wizard_command
 from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
 from ....application.workflow import read_profile_bucket as _read_profile_bucket
-from ....core import Period
+from ....core import Period as _Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import AeatError as _AeatError
 from ....core.external_constants import OutputLanguage
@@ -453,7 +453,7 @@ def config_profile_show(
         raise typer.Exit(code=2)
 
 
-def _resolve_preflight_revision_id(*, modelo: str, period: Period, revision_id: str | None) -> str:
+def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id: str | None) -> str:
     """Resolve the registry revision a preflight check is assessed against.
 
     When ``revision_id`` is supplied it is an explicit override and is
@@ -554,7 +554,7 @@ def config_profile_preflight(
             context={"name": pointer.label or pointer.bucket_id},
         ) from exc
     try:
-        filing_period = Period.from_year_and_code(filing_year, period)
+        filing_period = _Period.from_year_and_code(filing_year, period)
     except ValueError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_unresolved",

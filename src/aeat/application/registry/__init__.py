@@ -379,16 +379,17 @@ def verify_filed_state(
         registry_root or _bundled_path("registry", "aeat"),
         source_root=source_root or _bundled_path(),
     )
+    filing_period_token = filed_observation.period.registry_token
     snapshot = authority.snapshot(
         filed_observation.modelo,
         filing_year=filed_observation.ejercicio,
-        period=filed_observation.period,
+        period=filing_period_token,
     )
     binding_values = _resolve_previous_filing_binding_values(
         snapshot.revision,
         registry_source_observations,
         filing_year=filed_observation.ejercicio,
-        period=filed_observation.period,
+        period=filing_period_token,
     )
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
     input_casillas = set()
@@ -413,7 +414,7 @@ def verify_filed_state(
         snapshot.revision,
         registry_source_observations,
         filing_year=filed_observation.ejercicio,
-        period=filed_observation.period,
+        period=filing_period_token,
     )
     calculation = _calculate_registry_snapshot(
         snapshot,
@@ -421,7 +422,7 @@ def verify_filed_state(
         date_context={
             "filing_period": _period_end_date(
                 filing_year=filed_observation.ejercicio,
-                registry_period=filed_observation.period,
+                registry_period=filing_period_token,
             ),
         },
         binding_values=binding_values,
@@ -551,7 +552,9 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
                     export_record_count=len(export_records),
                     export_field_count=len(export_fields),
                     deadline_window_count=len(revision.deadline_windows),
-                    deadline_periods=tuple(sorted(window.period for window in revision.deadline_windows)),
+                    deadline_periods=tuple(
+                        sorted(window.period.registry_token for window in revision.deadline_windows),
+                    ),
                     relation_ids=tuple(str(relation.id) for relation in revision.relations),
                     relation_count=len(revision.relations),
                     relation_dependency_roles=tuple(

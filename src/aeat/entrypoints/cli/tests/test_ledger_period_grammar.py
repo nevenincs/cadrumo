@@ -1,4 +1,4 @@
-"""One-strict-period-grammar tests for the ledger ``--period`` surface (D4 rework).
+"""One-strict-period-grammar tests for the ledger ``--period`` surface.
 
 The operator-surface decision makes the AEAT modelo tokens the *only* operator
 period grammar
@@ -9,7 +9,7 @@ supply the year the calendar shape used to embed, so ``--period 1T --year
 carried as a ``(year, bare-token)`` pair, materialised as a typed
 :class:`Period` date span — never a combined calendar string. The calendar
 shapes (``2024Q1`` / ``2024-03`` / ``2024``) and the ``2024-1T`` year-qualified
-hybrid the first D4 implementation accepted are **removed** — they now refuse.
+hybrid are **removed** — they now refuse.
 
 These are real-behaviour tests: the resolution and refusal cases exercise the
 production ``_canonical_period`` normaliser (which consumes the registry
@@ -97,9 +97,8 @@ def test_registry_union_validator_is_the_token_authority() -> None:
     """
 
     # Span-shaped tokens resolve.
-    assert _canonical_period("1T", year=2024).registry_token == "1T"  # noqa: S105 - period token
-    assert _canonical_period("0A", year=2024).registry_token == "0A"  # noqa: S105 - period token
-    assert _canonical_period("06", year=2024).registry_token == "06"  # noqa: S105 - period token
+    tokens = ("1T", "0A", "06")
+    assert tuple(_canonical_period(token, year=2024).registry_token for token in tokens) == tokens
 
     # Non-span registry-union members and instalment claves do not resolve to a
     # ledger date span; they raise rather than emit an unusable period.
@@ -108,7 +107,7 @@ def test_registry_union_validator_is_the_token_authority() -> None:
             _canonical_period(non_ledger, year=2024)
 
 
-# --- Calendar shapes now REFUSE (the D4 rework) -------------------------------
+# --- Calendar shapes now REFUSE -----------------------------------------------
 
 
 @pytest.mark.parametrize("calendar_shape", ["2024Q1", "2024-03", "2024", "2026Q4", "2025-12"])
@@ -126,7 +125,7 @@ def test_calendar_shape_refuses_naming_aeat_tokens_and_year(calendar_shape: str)
 
 @pytest.mark.parametrize("hybrid", ["2024-1T", "2024-0A", "2026-1T"])
 def test_year_qualified_hybrid_refuses(hybrid: str) -> None:
-    """The ``2024-1T`` year-qualified hybrid the first D4 impl accepted now refuses.
+    """The ``2024-1T`` year-qualified hybrid now refuses.
 
     Bare ``--period`` carries no year; the year comes from ``--year``. A
     year-qualified hybrid is a calendar-style notation that the strict grammar
@@ -167,9 +166,8 @@ def test_filter_clause_accepts_bare_token_with_year() -> None:
     there is no year-qualified combined token.
     """
 
-    assert _filter_canonical_period("1T", year=2024).registry_token == "1T"  # noqa: S105 - period token
-    assert _filter_canonical_period("0A", year=2024).registry_token == "0A"  # noqa: S105 - period token
-    assert _filter_canonical_period("03", year=2024).registry_token == "03"  # noqa: S105 - period token
+    tokens = ("1T", "0A", "03")
+    assert tuple(_filter_canonical_period(token, year=2024).registry_token for token in tokens) == tokens
 
 
 @pytest.mark.parametrize("rejected", ["2024Q1", "2024", "2024-1T", "not-a-period", "1P"])

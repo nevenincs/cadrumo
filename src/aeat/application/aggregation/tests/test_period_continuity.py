@@ -1,7 +1,6 @@
 """Anti-double-count continuity invariant for the shared period boundary.
 
-ADR ``2026-06-10-ledger-filter-period`` (decision 4) requires a continuity gate
-proving the fully-closed ``[start, end]`` boundary is gap-free and overlap-free:
+This proves the fully-closed ``[start, end]`` boundary is gap-free and overlap-free:
 for every adjacent quarter pair and every adjacent month pair across at least two
 years, ``prior.end_date + one day == next.start_date`` and no real calendar date is
 contained by both periods.

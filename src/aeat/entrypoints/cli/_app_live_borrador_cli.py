@@ -167,7 +167,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             filing_year=record.filing_year,
             snapshot_id=record.snapshot_id,
             captured_at=record.captured_at.isoformat(),
-            period=record.period,
+            period=str(record.period),
             source_url=record.source_url,
             binding_count=len(record.binding_values),
             state=record.state.value,
@@ -187,7 +187,7 @@ def _borrador_row(snapshot) -> _BorradorRow:
     return _BorradorRow(
         snapshot_id=snapshot.snapshot_id,
         filing_year=snapshot.filing_year,
-        period=snapshot.period,
+        period=str(snapshot.period),
         captured_at=snapshot.captured_at.isoformat(),
         source_url=snapshot.source_url,
         binding_count=len(snapshot.binding_values),

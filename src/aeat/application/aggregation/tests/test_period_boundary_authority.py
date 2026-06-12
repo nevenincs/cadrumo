@@ -1,7 +1,6 @@
 """Single boundary-authority pin for the shared ledger period filter.
 
-ADR ``2026-06-10-ledger-filter-period`` (decision 1) ratifies one shared filter
-authority: the CLI ledger surface (``--filter period=``+``--filter year=`` /
+The CLI ledger surface (``--filter period=``+``--filter year=`` /
 ``--period``+``--year``) and the modelo calculation snapshot
 (``aggregation_period_for_modelo``) are two spellings of the same
 ``(year, AEAT-token)`` input that MUST both resolve to the same :class:`Period`
@@ -10,7 +9,7 @@ boundary implementation is permitted.
 
 This module pins that convergence: for every canonical span token, the CLI
 transport and the calc-engine transport produce an *identical* ``Period``
-object. It also pins the secure-storage invariant (decision 6): the filter is a
+object. It also pins the secure-storage invariant: the filter is a
 pure in-memory selection predicate that adds no plaintext persistence surface;
 the rows it selects ride the encrypted :class:`SecureObjectRepository`.
 """
@@ -119,8 +118,8 @@ def test_no_parallel_contains_boundary_is_defined_on_period() -> None:
 def test_period_filter_adds_no_plaintext_persistence_surface() -> None:
     """The boundary authority is a pure in-memory predicate (secure-storage gate).
 
-    ADR decision 6: the period filter selects rows that already ride the
-    per-profile encrypted bucket-scoped :class:`SecureObjectRepository`; the
+    The period filter selects rows that already ride the per-profile encrypted
+    bucket-scoped :class:`SecureObjectRepository`; the
     filter itself must add no plaintext persistence. ``Period.contains`` is a
     pure ``date`` comparison — it performs no I/O and writes nothing. Pin that:
     the boundary computes from the model's own fields and the input date alone,

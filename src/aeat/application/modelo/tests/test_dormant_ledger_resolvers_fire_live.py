@@ -489,6 +489,8 @@ _M369_DE_GOODS_BINDING = "modelo-369-union-de-goods-distance-21pct"
 _M369_CUOTA_TOTAL_CASILLA = "iva.union.cuota-total"
 # Casilla bound to the DE-services OSS binding (used by the carve-out test).
 _M369_DE_SERVICES_BINDING_CASILLA = "iva.union.de.services-cuota"
+_M369_FR_SERVICES_BINDING_CASILLA = "iva.union.fr.services-cuota"
+_M369_DE_GOODS_BINDING_CASILLA = "iva.union.de.goods-distance-cuota"
 
 
 @pytest.fixture
@@ -641,8 +643,14 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
     )
 
     assert isinstance(result, BucketAggregationCalculationResult)
-    assert Decimal(result.revision.casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]) == Decimal("19.00")
-    assert Decimal(result.revision.casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == Decimal("116.00")
+    casilla_values = result.revision.casilla_values
+    component_cuotas = (
+        Decimal(casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]),
+        Decimal(casilla_values[_M369_FR_SERVICES_BINDING_CASILLA]),
+        Decimal(casilla_values[_M369_DE_GOODS_BINDING_CASILLA]),
+    )
+    assert component_cuotas == (Decimal("19.00"), Decimal("40.00"), Decimal("57.00"))
+    assert Decimal(casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == sum(component_cuotas, Decimal("0"))
     assert not any(
         diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
         for diag in result.source_diagnostics

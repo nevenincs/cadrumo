@@ -16,7 +16,7 @@ verification + re-consent), tracked separately.
 from __future__ import annotations
 
 import re
-from typing import Any, Final
+from typing import Final, Protocol, cast
 
 from ....domain.attachments import AttachmentSource
 from ...outbound.storage._errors import (
@@ -41,6 +41,18 @@ _GMAIL_SCOPE: Final[str] = "https://www.googleapis.com/auth/gmail.readonly"
 _DRIVE_READONLY_SCOPE: Final[str] = "https://www.googleapis.com/auth/drive.readonly"
 
 
+class _DriveMediaRequest(Protocol):
+    def execute(self) -> object: ...
+
+
+class _DriveFilesResource(Protocol):
+    def get_media(self, *, fileId: str) -> _DriveMediaRequest: ...  # noqa: N803
+
+
+class _DriveService(Protocol):
+    def files(self) -> _DriveFilesResource: ...
+
+
 def parse_drive_file_id(reference: str) -> str | None:
     """Extract a Drive file id from a Drive URL or a bare id; ``None`` if absent."""
     candidate = reference.strip()
@@ -51,7 +63,7 @@ def parse_drive_file_id(reference: str) -> str | None:
     return None
 
 
-def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY
+def _drive_service(credentials: object) -> _DriveService:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -60,7 +72,10 @@ def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-D
             context={"dependency": "google-api-python-client"},
             suggestion="uv sync",
         ) from exc
-    return build("drive", "v3", credentials=credentials, cache_discovery=False)
+    # CAST-RATIONALE-GOOGLE-DRIVE-SERVICE: googleapiclient.build returns a
+    # dynamic resource; the protocol pins the files().get_media().execute
+    # surface used below.
+    return cast(_DriveService, build("drive", "v3", credentials=credentials, cache_discovery=False))
 
 
 def resolve_document_link(
@@ -68,7 +83,7 @@ def resolve_document_link(
     source: AttachmentSource,
     reference: str,
     credentials: object,
-    service: Any | None = None,  # ANY-PARAM-RATIONALE-GOOGLE-DRIVE-SERVICE-SEAM
+    service: _DriveService | None = None,
 ) -> bytes:
     """Resolve a recorded document link to its bytes, within the granted scopes.
 
@@ -119,7 +134,7 @@ def resolve_document_link(
     )
 
 
-def _download_drive_file_from_service(file_id: str, service: Any) -> bytes:
+def _download_drive_file_from_service(file_id: str, service: _DriveService) -> bytes:
     request = service.files().get_media(fileId=file_id)
     try:
         payload = request.execute()

@@ -37,6 +37,7 @@ from .. import app as config_app
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "round5"
+_STORAGE_BACKEND = "file"
 
 
 @pytest.fixture
@@ -55,7 +56,7 @@ def _isolated_application_layer(tmp_path: Path) -> Iterator[None]:
     with override_settings(
         aeat_local_storage_root=storage_root,
         aeat_active_profile=_BUCKET_ID,
-        aeat_secret_store_backend="file",  # noqa: S106 - backend enum, not a secret
+        aeat_secret_store_backend=_STORAGE_BACKEND,
         aeat_secret_store_dir=secret_store_dir,
         aeat_secret_passphrase=passphrase,
     ) as settings:

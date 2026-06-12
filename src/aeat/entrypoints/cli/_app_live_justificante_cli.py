@@ -8,6 +8,7 @@ from typing import Annotated
 
 import typer
 
+from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ._common import _emit_envelope
 
@@ -50,6 +51,13 @@ def _run_auth_preflight() -> None:
     _auth_preflight()
 
 
+def _period_option(period: str, *, year: int) -> Period:
+    try:
+        return Period.from_year_and_code(year, period)
+    except PeriodError as exc:
+        raise typer.BadParameter(f"invalid AEAT period {period!r} for year {year}") from exc
+
+
 @justificante_app.command(
     "pull",
     help=tr(
@@ -73,13 +81,20 @@ def justificante_pull(
 
     bucket_id = _bucket_id()
     _run_auth_preflight()
-    persisted = asyncio.run(capture_justificante_snapshot(bucket_id=bucket_id, modelo=modelo, year=year, period=period))
+    persisted = asyncio.run(
+        capture_justificante_snapshot(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            year=year,
+            period=_period_option(period, year=year),
+        ),
+    )
     result = JustificanteCaptureResult(
         bucket_id=bucket_id,
         snapshot_id=persisted.snapshot_id,
         modelo=persisted.modelo,
         filing_year=persisted.filing_year,
-        period=persisted.period,
+        period=str(persisted.period),
         expediente_id=persisted.expediente_id,
         csv=persisted.csv,
         pdf_sha256=persisted.pdf_sha256,
@@ -123,7 +138,7 @@ def justificante_list(ctx: typer.Context) -> None:
                 snapshot_id=row.snapshot_id,
                 modelo=row.modelo,
                 filing_year=row.filing_year,
-                period=row.period,
+                period=str(row.period),
                 pdf_sha256=row.pdf_sha256,
                 state=row.state.value,
                 captured_at=row.captured_at.isoformat(),
@@ -167,7 +182,7 @@ def justificante_view(
         snapshot_id=record.snapshot_id,
         modelo=record.modelo,
         filing_year=record.filing_year,
-        period=record.period,
+        period=str(record.period),
         expediente_id=record.expediente_id,
         csv=record.csv,
         pdf_sha256=record.pdf_sha256,

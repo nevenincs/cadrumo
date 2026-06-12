@@ -2,7 +2,8 @@
 
 Split from :mod:`_ledger` to keep each module within the line budget. These are
 stateless input-coercion and error-shaping utilities consumed by the
-``aeat app ledger`` command bodies.
+``aeat app ledger`` command bodies, including :class:`TransactionCatalogueRepository`
+id resolution.
 """
 
 from __future__ import annotations

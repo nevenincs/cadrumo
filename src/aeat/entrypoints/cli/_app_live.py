@@ -10,7 +10,7 @@ import re
 import shutil
 import signal
 import subprocess
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any
@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 import typer
 
 from ...application.live import (
+    FiledDataCaptureFailureRow,
     FiledDataListingRow,
     IvaCompensationHistoryReport,
     IvaRemoteStateAcquisitionReport,
@@ -29,6 +30,7 @@ from ...application.live import (
     list_filed_data,
 )
 from ...application.operator_surface import FilingStatus
+from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
 from ._app_live_expedientes_cli import expedientes_app, register_expedientes_commands
@@ -86,6 +88,41 @@ app.add_typer(iva_wallet_app, name="iva-wallet")
 
 def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
+
+
+def _live_period_option(period: str | None, *, year: int) -> Period | None:
+    if period is None:
+        return None
+    try:
+        return Period.from_year_and_code(year, period)
+    except PeriodError as exc:
+        raise typer.BadParameter(f"invalid AEAT period {period!r} for year {year}") from exc
+
+
+def _required_live_period_option(period: str, *, year: int) -> Period:
+    parsed = _live_period_option(period, year=year)
+    if parsed is None:
+        raise typer.BadParameter("--period is required")
+    return parsed
+
+
+def _resolve_pull_year_range(
+    *,
+    year: int | None,
+    year_from: int | None,
+    year_to: int | None,
+) -> tuple[int, int]:
+    if year is not None and (year_from is not None or year_to is not None):
+        raise typer.BadParameter("use --year for a single-year pull or --from-year/--to-year for a range, not both")
+    if year is not None:
+        return year, year
+    if year_from is None and year_to is None:
+        raise typer.BadParameter("either --year or both --from-year and --to-year are required")
+    if year_from is None or year_to is None:
+        raise typer.BadParameter("--from-year and --to-year must be supplied together")
+    if year_from > year_to:
+        raise typer.BadParameter("--from-year must be less than or equal to --to-year")
+    return year_from, year_to
 
 
 def _live_iva_outcome_label(value: object) -> str:
@@ -214,7 +251,7 @@ def iva_wallet_pull_cmd(
     report = asyncio.run(
         capture_iva_compensation_wallet(
             target_year=year,
-            target_period=period,
+            target_period=_required_live_period_option(period, year=year),
             taxpayer_nif=taxpayer_nif,
         ),
     )
@@ -279,6 +316,11 @@ def iva_wallet_history_cmd(
     from ...application.live import list_iva_compensation_history
 
     report = list_iva_compensation_history(as_of_year=as_of_year)
+    result = _iva_wallet_history_result(report)
+    _emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
+
+
+def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
     from ._app_live_payloads import (
         IvaCompensationCarryForwardLotPayload,
         IvaCompensationHistoryRowPayload,
@@ -286,7 +328,7 @@ def iva_wallet_history_cmd(
         IvaWalletHistoryResult,
     )
 
-    result = IvaWalletHistoryResult(
+    return IvaWalletHistoryResult(
         row_count=report.row_count,
         as_of_year=report.as_of_year,
         carry_forward_lot_count=report.carry_forward_lot_count,
@@ -295,7 +337,7 @@ def iva_wallet_history_cmd(
         rows=[
             IvaCompensationHistoryRowPayload(
                 year=row.year,
-                period=str(row.period),
+                period=row.period,
                 status=row.status,
                 presented_at=row.presented_at.isoformat(),
                 prior_pending_amount=row.prior_pending_amount,
@@ -340,7 +382,6 @@ def iva_wallet_history_cmd(
             for decision in report.authority_decisions
         ],
     )
-    _emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
 
 
 def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str, ...]:
@@ -358,7 +399,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                 "\t".join(
                     (
                         str(row.year),
-                        str(row.period),
+                        row.period.registry_token,
                         row.status,
                         f"prior={row.prior_pending_amount}",
                         f"applied={row.applied_amount}",
@@ -378,7 +419,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                 "\t".join(
                     (
                         str(lot.source_filing_year),
-                        lot.source_period,
+                        lot.source_period.registry_token,
                         f"generated={lot.generated_amount}",
                         f"applied={lot.applied_amount}",
                         f"remaining={lot.remaining_amount}",
@@ -397,7 +438,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                 "\t".join(
                     (
                         str(decision.target_year),
-                        decision.target_period,
+                        decision.target_period.registry_token,
                         f"selected_authority={decision.selected_authority}",
                         f"selected_amount={decision.selected_amount}",
                         f"wallet_amount={decision.wallet_amount}",
@@ -413,7 +454,10 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
         )
         for source in decision.authority_sources:
             lines.append(
-                _metric_line("authority_source", f"{decision.target_year}\t{decision.target_period}\t{source}"),
+                _metric_line(
+                    "authority_source",
+                    f"{decision.target_year}\t{decision.target_period.registry_token}\t{source}",
+                ),
             )
     return tuple(lines)
 
@@ -835,7 +879,7 @@ def filed_list_cmd(
     resolved_to = year_to if year_to is not None else _date.today().year
     modelos = tuple(str(m.id) for m in resources().modelos.all()) if modelo is None else (modelo,)
     all_rows: list[FiledDataListingRow] = []
-    failures = []
+    failures: list[FiledDataCaptureFailureRow] = []
     total_count = 0
     _emit_live_auth_preflight()
     for code in modelos:
@@ -854,10 +898,30 @@ def filed_list_cmd(
             continue
         total_count += report.row_count
         all_rows.extend(report.rows)
+    result, lines = _filed_list_result_and_lines(
+        modelo_filter=modelo,
+        year_from=resolved_from,
+        year_to=resolved_to,
+        row_count=total_count,
+        rows=all_rows,
+        failures=failures,
+    )
+    _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
+
+
+def _filed_list_result_and_lines(
+    *,
+    modelo_filter: str | None,
+    year_from: int,
+    year_to: int,
+    row_count: int,
+    rows: Sequence[FiledDataListingRow],
+    failures: Sequence[FiledDataCaptureFailureRow],
+) -> tuple[Any, tuple[str, ...]]:
     from ._app_live_payloads import FiledCaptureFailurePayload, FiledListingRowPayload, FiledListResult
 
-    lines = [_metric_line("row_count", total_count), _metric_line("failed_count", len(failures))]
-    for row in all_rows:
+    lines = [_metric_line("row_count", row_count), _metric_line("failed_count", len(failures))]
+    for row in rows:
         lines.append(
             _metric_line(
                 "row",
@@ -865,7 +929,7 @@ def filed_list_cmd(
                     (
                         row.modelo,
                         str(row.year),
-                        str(row.period),
+                        row.period.registry_token,
                         row.expediente_id,
                         row.status,
                         row.presented_at.isoformat(),
@@ -883,7 +947,7 @@ def filed_list_cmd(
                 (
                     failure.modelo,
                     str(failure.year),
-                    str(failure.period) if failure.period is not None else "",
+                    failure.period.registry_token if failure.period is not None else "",
                     failure.expediente_id or "",
                     failure.error_type,
                     failure.message,
@@ -893,16 +957,16 @@ def filed_list_cmd(
         for failure in failures
     )
     result = FiledListResult(
-        modelo_filter=modelo,
-        year_from=resolved_from,
-        year_to=resolved_to,
-        row_count=total_count,
+        modelo_filter=modelo_filter,
+        year_from=year_from,
+        year_to=year_to,
+        row_count=row_count,
         failed_count=len(failures),
         rows=[
             FiledListingRowPayload(
                 modelo=row.modelo,
                 year=row.year,
-                period=str(row.period),
+                period=row.period.registry_token,
                 expediente_id=row.expediente_id,
                 status=row.status,
                 presented_at=row.presented_at.isoformat(),
@@ -910,13 +974,13 @@ def filed_list_cmd(
                 has_declaration_copy=row.has_declaration_copy,
                 has_justificante=row.has_justificante,
             )
-            for row in all_rows
+            for row in rows
         ],
         failures=[
             FiledCaptureFailurePayload(
                 modelo=failure.modelo,
                 year=failure.year,
-                period=str(failure.period) if failure.period is not None else None,
+                period=failure.period.registry_token if failure.period is not None else None,
                 expediente_id=failure.expediente_id,
                 error_type=failure.error_type,
                 message=failure.message,
@@ -924,14 +988,31 @@ def filed_list_cmd(
             for failure in failures
         ],
     )
-    _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
+    return result, tuple(lines)
 
 
 @filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
 def filed_capture_cmd(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
-    year: Annotated[int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))],
+    modelos: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--modelo",
+            help=tr(
+                "cli.app.live.filed.pull_modelo_help",
+                default="Modelo code to include. Repeat or omit with --from-year/--to-year for a bulk pull.",
+            ),
+        ),
+    ] = None,
+    year: Annotated[int | None, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))] = None,
+    year_from: Annotated[
+        int | None,
+        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
+    ] = None,
+    year_to: Annotated[
+        int | None,
+        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
+    ] = None,
     output_root: Annotated[
         Path,
         typer.Option(
@@ -947,92 +1028,59 @@ def filed_capture_cmd(
     limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
 ) -> None:
     """Capture filed-declaration data from the authenticated AEAT register."""
-    from ._app_live_payloads import FiledCaptureResult
+    from ._app_live_payloads import FiledCaptureFailurePayload, FiledCaptureResult
 
     _emit_live_auth_preflight()
-    report = asyncio.run(
-        capture_filed_data(
-            modelo=modelo,
-            year=year,
-            output_root=output_root,
-            period=period,
-            expediente_id=expediente_id,
-            limit=limit,
-        ),
+    selected_modelos = tuple(modelos or ())
+    single_mode = (
+        len(selected_modelos) == 1
+        and year is not None
+        and year_from is None
+        and year_to is None
     )
-    lines = (
-        _metric_line("captured_count", report.captured_count),
-        _metric_line("casilla_count", report.casilla_count),
-        _metric_line("calculation_observation_count", report.calculation_observation_count),
-        _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
-        _metric_line("observation_paths", ",".join(report.observation_paths)),
-        _metric_line("artefact_refs", ",".join(report.artefact_refs)),
-    )
-    result = FiledCaptureResult(
-        output_root=report.output_root,
-        modelo=report.modelo,
-        year=report.year,
-        captured_count=report.captured_count,
-        observation_paths=list(report.observation_paths),
-        artefact_refs=list(report.artefact_refs),
-        casilla_count=report.casilla_count,
-        calculation_observation_count=report.calculation_observation_count,
-        calculation_observation_keys=list(report.calculation_observation_keys),
-    )
-    _emit_envelope(ctx, command="app.live.filed.pull", result=result, lines=lines)
-
-
-@filed_app.command(
-    "pull-all",
-    help=tr(
-        "cli.app.live.filed.pull_all_help",
-        default=(
-            "Pull filed declarations and justificantes for every requested registry modelo "
-            "across a year range. Read-only; reports per-modelo failures explicitly."
-        ),
-    ),
-)
-def filed_capture_all_cmd(
-    ctx: typer.Context,
-    year_from: Annotated[
-        int,
-        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
-    ],
-    year_to: Annotated[
-        int,
-        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
-    ],
-    output_root: Annotated[
-        Path,
-        typer.Option(
-            "--output-root",
-            file_okay=False,
-            dir_okay=True,
-            writable=True,
-            help=tr("cli.app.live.output_root_help"),
-        ),
-    ] = Path("var/aeat/filed-declarations"),
-    modelos: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--modelo",
-            help=tr(
-                "cli.app.live.filed.capture_all_modelo_help",
-                default="Modelo code to include. Repeat to limit the run; omit to query all registry modelos.",
+    if single_mode:
+        resolved_period = _live_period_option(period, year=year)
+        report = asyncio.run(
+            capture_filed_data(
+                modelo=selected_modelos[0],
+                year=year,
+                output_root=output_root,
+                period=resolved_period,
+                expediente_id=expediente_id,
+                limit=limit,
             ),
-        ),
-    ] = None,
-) -> None:
-    """Capture filed-declaration artefacts for many modelos and years."""
-    from ._app_live_payloads import FiledCaptureAllResult, FiledCaptureFailurePayload
+        )
+        lines = (
+            _metric_line("captured_count", report.captured_count),
+            _metric_line("casilla_count", report.casilla_count),
+            _metric_line("calculation_observation_count", report.calculation_observation_count),
+            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
+            _metric_line("observation_paths", ",".join(report.observation_paths)),
+            _metric_line("artefact_refs", ",".join(report.artefact_refs)),
+        )
+        result = FiledCaptureResult(
+            output_root=report.output_root,
+            modelo=report.modelo,
+            year=report.year,
+            captured_count=report.captured_count,
+            observation_paths=list(report.observation_paths),
+            artefact_refs=list(report.artefact_refs),
+            casilla_count=report.casilla_count,
+            calculation_observation_count=report.calculation_observation_count,
+            calculation_observation_keys=list(report.calculation_observation_keys),
+        )
+        _emit_envelope(ctx, command="app.live.filed.pull", result=result, lines=lines)
+        return
 
-    _emit_live_auth_preflight()
+    if period is not None or expediente_id is not None or limit is not None:
+        raise typer.BadParameter("--period, --expediente, and --limit are only valid for one --modelo with --year")
+    resolved_from, resolved_to = _resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     report = asyncio.run(
         capture_filed_data_bulk(
-            year_from=year_from,
-            year_to=year_to,
+            year_from=resolved_from,
+            year_to=resolved_to,
             output_root=output_root,
-            modelos=tuple(modelos) if modelos else None,
+            modelos=selected_modelos or None,
         ),
     )
     lines = (
@@ -1053,7 +1101,7 @@ def filed_capture_all_cmd(
                     (
                         failure.modelo,
                         str(failure.year),
-                        failure.period or "",
+                        failure.period.registry_token if failure.period is not None else "",
                         failure.expediente_id or "",
                         failure.error_type,
                         failure.message,
@@ -1063,7 +1111,8 @@ def filed_capture_all_cmd(
             for failure in report.failures
         ),
     )
-    result = FiledCaptureAllResult(
+    result = FiledCaptureResult(
+        mode="bulk",
         output_root=report.output_root,
         modelos=list(report.modelos),
         year_from=report.year_from,
@@ -1079,7 +1128,7 @@ def filed_capture_all_cmd(
             FiledCaptureFailurePayload(
                 modelo=failure.modelo,
                 year=failure.year,
-                period=failure.period,
+                period=failure.period.registry_token if failure.period is not None else None,
                 expediente_id=failure.expediente_id,
                 error_type=failure.error_type,
                 message=failure.message,
@@ -1087,7 +1136,7 @@ def filed_capture_all_cmd(
             for failure in report.failures
         ],
     )
-    _emit_envelope(ctx, command="app.live.filed.pull_all", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.filed.pull", result=result, lines=lines)
 
 
 @filed_app.command("pull-sources", help=tr("cli.app.live.filed.pull_sources_help"))
@@ -1135,7 +1184,7 @@ def filed_capture_sources_cmd(
         capture_source_filed_data(
             modelo=modelo,
             year=year,
-            period=period,
+            period=_required_live_period_option(period, year=year),
             output_root=output_root,
             registry_root=registry_root,
             source_root=source_root,

@@ -34,6 +34,7 @@ from ....application.live._verify import VerifyService, VerifySurface
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
 from ....core.config import override_settings
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -171,7 +172,7 @@ class TestBorrador100Subgroup:
         bucket_id = "default"
         Borrador100SnapshotService(bucket_id=bucket_id).capture(
             filing_year=2024,
-            period="0A",
+            period=Period.from_year_and_code(2024, "0A"),
             captured_at=datetime(2025, 3, 15, tzinfo=UTC),
             source_url=aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax")),
             binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("1000.00")},
@@ -339,7 +340,7 @@ class TestIvaRemoteStateCliSurface:
             year_from=2022,
             year_to=2024,
             target_year=2026,
-            target_period="2T",
+            target_period=Period.from_year_and_code(2026, "2T"),
             auth=LiveIvaAuthOutcome(
                 status=LiveIvaReadStatus.FAILED,
                 outcome_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,

@@ -291,9 +291,8 @@ def test_cli_verbs_toggle_still_available() -> None:
 
 def test_bundled_handbook_audit_is_structurally_clean() -> None:
     # The real committed tree must carry no structural defect (dangling
-    # relations, retired-without-replaced_by). This gate is green today AND
-    # stays green after the S13 bootstrap, unlike a scaffold --check gate
-    # which is red until the 82 drafts are materialised.
+    # relations, retired-without-replaced_by). This gate is green today and
+    # remains independent of scaffold --check drift.
     report = audit_handbook()
     assert report.is_clean
     assert report.dangling_relations == {}

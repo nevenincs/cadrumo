@@ -90,7 +90,7 @@ def _tx(
     return Transaction.model_validate(payload)
 
 
-# --- S15: fires on positive significant rows with no evidence -----------------------
+# --- Fires on positive significant rows with no evidence ----------------------------
 def test_advisory_fires_on_outgoing_business_expense_without_evidence() -> None:
     tx = _tx("expense-no-evidence", direction=TransactionDirection.OUTGOING)
     diagnostics = missing_evidence_advisory_observations([tx])
@@ -122,7 +122,7 @@ def test_advisory_silent_when_purchase_invoice_present() -> None:
     assert missing_evidence_advisory_observations([tx]) == ()
 
 
-# --- S16: false-positive guards -----------------------------------------------------
+# --- False-positive guards ----------------------------------------------------------
 def test_advisory_silent_on_exempt_iva_category() -> None:
     """A cuota-less (exempt) OUTGOING row with no evidence does not fire."""
     tx = _tx("exempt-expense", iva_category=IvaCategory.DOMESTIC_EXEMPT)

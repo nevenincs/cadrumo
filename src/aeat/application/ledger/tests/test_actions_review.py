@@ -33,8 +33,8 @@ from ._action_test_support import (
     secure_objects,
 )
 
-__all__ = ["secure_objects"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+__all__ = ["secure_objects"]
 
 
 def test_list_and_get_manual_transactions_read_the_requested_bucket_only(

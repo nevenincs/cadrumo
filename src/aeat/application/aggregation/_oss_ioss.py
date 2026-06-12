@@ -8,6 +8,7 @@ substrate-classified ledger candidates, validates each line's persisted
 IVA amount against the destination Member State's published rate
 through :func:`aeat.domain.iva.lookup_rate`, and produces validated
 :class:`~aeat.domain.calculations.registry.OssIossLedgerObservation` records the registry can aggregate.
+Callers source persisted invoices through :class:`InvoiceCatalogueRepository`.
 
 Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
 match the destination Member State's published rate for the chosen
@@ -268,7 +269,14 @@ def oss_ioss_candidates_from_repositories(
     period: Period,
     invoice_repository: InvoiceCatalogueRepository | None = None,
 ) -> tuple[OssIossLedgerCandidate, ...]:
-    """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates."""
+    """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates.
+
+    Args:
+        bucket_id: Active bucket id for the default invoice repository.
+        period: Filing period whose date span filters issued invoices.
+        invoice_repository: Optional :class:`InvoiceCatalogueRepository`
+            used instead of the active bucket repository.
+    """
     if not period.has_date_span():
         return ()
     repo = invoice_repository if invoice_repository is not None else InvoiceCatalogueRepository(bucket_id=bucket_id)
@@ -292,7 +300,15 @@ def aggregate_oss_ioss_from_repositories(
     period: Period,
     invoice_repository: InvoiceCatalogueRepository | None = None,
 ) -> dict[str, Decimal]:
-    """Resolve Modelo 369 OSS/IOSS bindings from the live invoice catalogue."""
+    """Resolve Modelo 369 OSS/IOSS bindings from the live invoice catalogue.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose OSS/IOSS bindings are resolved.
+        bucket_id: Active bucket id for the default invoice repository.
+        period: Filing period whose date span filters issued invoices.
+        invoice_repository: Optional :class:`InvoiceCatalogueRepository`
+            used instead of the active bucket repository.
+    """
     return aggregate_oss_ioss_bindings(
         revision,
         oss_ioss_candidates_from_repositories(

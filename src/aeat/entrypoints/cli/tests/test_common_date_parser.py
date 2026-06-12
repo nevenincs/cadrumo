@@ -9,8 +9,7 @@ case drives ``date.fromisoformat`` and asserts a concrete ``date`` or a real
 ``typer.BadParameter`` refusal.
 
 The canonical gate refuses every non-ISO ordering by construction, so the
-DD/MM-vs-MM/DD ambiguity never arises — the ``2026-06-10-ledger-input-localization-adr``
-decision.
+DD/MM-vs-MM/DD ambiguity never arises.
 """
 
 from __future__ import annotations

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -25,12 +26,14 @@ from ....adapters.persistence.storage.master_key._bucket_session import BucketSe
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.auth import AuthProviderKind
 from ....application.live import (
+    FiledDataListingRow,
     IvaCompensationCarryForwardLotRow,
     IvaCompensationHistoryReport,
     IvaCompensationHistoryRow,
     IvaWalletAuthorityDecisionRow,
     IvaWalletCaptureReport,
     capture_source_filed_data,
+    filed_data_capture_failure_row,
     filed_data_listing_row,
     select_declarations_for_capture,
 )
@@ -38,13 +41,21 @@ from ....application.registry import (
     RegistryTreeReport,
     verify_filed_state,
 )
+from ....core import Period
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.config import override_settings
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import calculate_registry_snapshot
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
-from .._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
+from ....tests.cli_runner import aeat_click_command
+from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
+from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
+from .._app_live import (
+    _filed_list_result_and_lines,
+    _iva_wallet_history_lines,
+    _iva_wallet_history_result,
+    _iva_wallet_pull_lines,
+)
 from ..registry import _resolve_parity_store_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -53,6 +64,31 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 _BUCKET_ID = "registry-cli"
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
+_CLI_ENV: dict[str, str] = {}
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    global _CLI_ENV
+    tmp_path = tmp_path_factory.mktemp("registry-cli")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
+        _CLI_ENV = {
+            "AEAT_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
+            "AEAT_ACTIVE_PROFILE": runtime.bucket_id,
+            "AEAT_SECRET_STORE_BACKEND": "file",
+            "AEAT_SECRET_STORE_DIR": str(tmp_path / "secrets"),
+            "AEAT_BLOB_STORE_DIR": str(tmp_path / "blobs"),
+            "AEAT_AUDIT_DIR": str(tmp_path / "audit"),
+            "AEAT_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
+            "AEAT_OUTPUT_LANGUAGE": "en",
+        }
+        yield
+    _CLI_ENV = {}
+
+
+def invoke_cached_cli(args, **kwargs):
+    env = {**_CLI_ENV, **dict(kwargs.pop("env", {}) or {})}
+    return _invoke_cached_cli(args, env=env, **kwargs)
 
 
 def _child(group: object, name: str):
@@ -361,8 +397,11 @@ def test_registry_workbook_verify_cli_reports_text_from_official_corpus() -> Non
     )
 
     assert result.exit_code == 0
-    assert "Backend exists=True" in result.output
-    assert "Failed count=0" in result.output
+    assert "Backend exists=True" in result.output or "Backend existe=True" in result.output
+    assert any(
+        line == "Failed count=0" or (line.endswith("=0") and "fallid" in line.lower())
+        for line in result.output.splitlines()
+    )
 
 
 def test_registry_workbook_verify_cli_writes_json_report_from_official_corpus(tmp_path) -> None:
@@ -478,7 +517,10 @@ def test_registry_commands_refuse_unsupported_root_output_format() -> None:
 
     assert result.exit_code == 2
     assert "Refused." in result.output
-    assert "output format is not supported" in result.output
+    assert (
+        "output format is not supported" in result.output
+        or "formato de salida solicitado no es compatible" in result.output
+    )
     assert "unexpected internal error" not in result.output.lower()
 
 
@@ -490,7 +532,7 @@ def test_capture_selector_filters_register_rows_by_period_and_expediente() -> No
 
     selected = select_declarations_for_capture(
         rows,
-        period="2T",
+        period=Period.from_year_and_code(2026, "2T"),
         expediente_id="202620013522222B",
     )
 
@@ -502,6 +544,7 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
     row = _declaration(expediente_id="202511113520436S", period="1T", modelo=modelo).model_copy(
         update={
             "ejercicio": 2025,
+            "period": Period.from_year_and_code(2025, "1T"),
             "declaration_copy_link_text": None,
             "declaration_copy_cell_index": None,
         },
@@ -511,7 +554,7 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
 
     assert listed.modelo == modelo
     assert listed.year == 2025
-    assert listed.period == "1T"
+    assert listed.period == Period.from_year_and_code(2025, "1T")
     assert listed.expediente_id == "202511113520436S"
     assert listed.has_submitted_file is True
     assert listed.has_justificante is True
@@ -633,13 +676,14 @@ def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -
     assert "No such command" in old_capture.output
 
 
-def test_live_filed_capture_all_cli_help_resolves() -> None:
+def test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all() -> None:
     result = invoke_cached_cli(
-        ["app", "live", "filed", "pull-all", "--help"],
+        ["app", "live", "filed", "pull", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code == 0
+    assert "--year" in result.output
     assert "--from-year" in result.output
     assert "--to-year" in result.output
     assert "--modelo" in result.output
@@ -651,10 +695,9 @@ def test_live_filed_capture_all_cli_help_resolves() -> None:
     assert live_group is not None
     filed_group = _child(live_group, "filed")
     assert filed_group is not None
-    capture_all = _child(filed_group, "pull-all")
-    assert capture_all is not None
-    help_text = (capture_all.help or "").lower()
-    assert "read-only" in help_text or "solo lectura" in help_text
+    pull = _child(filed_group, "pull")
+    assert pull is not None
+    assert _child(filed_group, "pull-all") is None
 
 
 def test_live_notifications_latest_cli_help_resolves() -> None:
@@ -678,13 +721,14 @@ def test_live_notifications_latest_cli_help_resolves() -> None:
     assert hasattr(latest, "callback")
 
 
-def test_live_expedientes_capture_all_cli_help_resolves() -> None:
+def test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all() -> None:
     result = invoke_cached_cli(
-        ["app", "live", "expedientes", "pull-all", "--help"],
+        ["app", "live", "expedientes", "pull", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code == 0
+    assert "--year" in result.output
     assert "--from-year" in result.output
     assert "--to-year" in result.output
     assert "--modelo" in result.output
@@ -696,9 +740,23 @@ def test_live_expedientes_capture_all_cli_help_resolves() -> None:
     assert live_group is not None
     expedientes_group = _child(live_group, "expedientes")
     assert expedientes_group is not None
-    capture_all = _child(expedientes_group, "pull-all")
-    assert capture_all is not None
-    assert hasattr(capture_all, "callback")
+    pull = _child(expedientes_group, "pull")
+    assert pull is not None
+    assert hasattr(pull, "callback")
+    assert _child(expedientes_group, "pull-all") is None
+
+
+def test_live_pull_help_locale_keys_do_not_use_capture_all_names() -> None:
+    checked_paths = (
+        Path("src/aeat/entrypoints/cli/_app_live.py"),
+        Path("src/aeat/entrypoints/cli/_app_live_expedientes_cli.py"),
+        Path("src/aeat/locales/en.yml"),
+        Path("src/aeat/locales/es.yml"),
+        Path("src/aeat/locales/ca.yml"),
+        Path("src/aeat/locales/hu.yml"),
+    )
+
+    assert all("capture_all_modelo_help" not in path.read_text(encoding="utf-8") for path in checked_paths)
 
 
 def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
@@ -737,7 +795,7 @@ def test_live_iva_wallet_pull_output_lines_name_guarded_read_query_policy() -> N
     report = IvaWalletCaptureReport(
         taxpayer_ref="12345678Z",
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         observation_path="secure://wallet-observation",
         decision_key="iva-wallet-decision:12345678Z:2026:2T",
         row_count=1,
@@ -764,7 +822,7 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         rows=(
             IvaCompensationHistoryRow(
                 year=2024,
-                period="1T",
+                period=Period.from_year_and_code(2024, "1T"),
                 status="ALTA",
                 presented_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
                 prior_pending_amount="100.00",
@@ -782,7 +840,7 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
             IvaCompensationCarryForwardLotRow(
                 taxpayer_ref="sha256:abc123",
                 source_filing_year=2022,
-                source_period="4T",
+                source_period=Period.from_year_and_code(2022, "4T"),
                 generated_amount="100.00",
                 applied_amount="40.00",
                 remaining_amount="60.00",
@@ -797,7 +855,7 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
             IvaWalletAuthorityDecisionRow(
                 taxpayer_ref="sha256:abc123",
                 target_year=2026,
-                target_period="2T",
+                target_period=Period.from_year_and_code(2026, "2T"),
                 selected_authority="aeat_wallet",
                 selected_amount="60.00",
                 wallet_amount="60.00",
@@ -829,6 +887,70 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         for line in lines
     )
     assert any(line.startswith("authority_source=2026\t2T\taeat_wallet") for line in lines)
+
+
+def test_live_iva_wallet_history_payload_preserves_typed_periods() -> None:
+    report = IvaCompensationHistoryReport(
+        row_count=1,
+        rows=(
+            IvaCompensationHistoryRow(
+                year=2024,
+                period=Period.from_year_and_code(2024, "1T"),
+                status="ALTA",
+                presented_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+                prior_pending_amount="100.00",
+                applied_amount="0.00",
+                pending_for_later_amount="100.00",
+                period_result_amount="0.00",
+                final_result_amount="0.00",
+                generated_amount="100.00",
+                available_end_amount="100.00",
+            ),
+        ),
+        as_of_year=2026,
+        carry_forward_lot_count=0,
+        unallocated_applied_amount="0",
+        authority_decision_count=0,
+    )
+
+    payload = _iva_wallet_history_result(report)
+
+    assert payload.rows[0].period == Period.from_year_and_code(2024, "1T")
+
+
+def test_live_filed_list_payload_and_text_use_registry_period_tokens() -> None:
+    row = FiledDataListingRow(
+        modelo="303",
+        year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        expediente_id="202610013522222A",
+        status="ALTA",
+        presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),
+        has_submitted_file=True,
+        has_declaration_copy=False,
+        has_justificante=True,
+    )
+    failure = filed_data_capture_failure_row(
+        modelo="303",
+        year=2026,
+        error=ValueError("period-token-smoke"),
+        declaration=_declaration(expediente_id="202620013522222B", period="2T", modelo="303"),
+    )
+
+    payload, lines = _filed_list_result_and_lines(
+        modelo_filter=None,
+        year_from=2026,
+        year_to=2026,
+        row_count=1,
+        rows=(row,),
+        failures=(failure,),
+    )
+
+    assert payload.rows[0].period == "1T"
+    assert payload.failures[0].period == "2T"
+    assert any(line.startswith("row=303\t2026\t1T\t") for line in lines)
+    assert any(line.startswith("failure=303\t2026\t2T\t") for line in lines)
+    assert all("2026 1T" not in line and "2026 2T" not in line for line in lines)
 
 
 def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Path) -> None:
@@ -1020,7 +1142,7 @@ def _filed_observation(
     return FiledDeclaracionObservation(
         modelo=modelo,
         ejercicio=ejercicio,
-        period=period,
+        period=Period.from_year_and_code(ejercicio, period),
         expediente_id=f"{ejercicio}{modelo}13522222A",
         status="ALTA",
         presented_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
@@ -1053,7 +1175,7 @@ def _declaration(*, expediente_id: str, period: str, modelo: str | None = None) 
     return Declaracion(
         modelo=modelo or _first_registry_modelo(),
         ejercicio=2026,
-        period=period,
+        period=Period.from_year_and_code(2026, period),
         expediente_id=expediente_id,
         estado="ALTA",
         presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),

@@ -51,7 +51,7 @@ aeat app live expedientes pull --modelo 100 --year 2026
 Download history for a range of years:
 
 ```bash
-aeat app live expedientes pull-all --from-year 2020 --to-year 2026 --modelo 303
+aeat app live expedientes pull --from-year 2020 --to-year 2026 --modelo 303
 ```
 
 Leave out `--modelo` to download history for all your registered forms.
@@ -89,7 +89,7 @@ aeat app live filed pull --modelo 303 --year 2026 --period 1T
 
 Download all filed returns across a year range:
 ```bash
-aeat app live filed pull-all --from-year 2020 --to-year 2026
+aeat app live filed pull --from-year 2020 --to-year 2026
 ```
 
 Download the source declarations that a target filing depends on (for example,

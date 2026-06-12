@@ -484,6 +484,9 @@ class LedgerFilingCoverageError(ModeloError):
 def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) -> None:
     """Cross-check a loaded revision's snapshot and evidence contributor coverage.
 
+    Args:
+        revision: The :class:`CalculationRevision` loaded from persistence.
+
     Post-roundtrip validator (per the modelo-export-evidence-parity discipline):
     when both ``ledger_filing_snapshot`` and ``ledger_filing_evidence`` are
     present, their ``rows`` contributor (transaction_id) sets MUST be equal. A

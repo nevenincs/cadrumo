@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._calculation_repository import CalculationRevisionCatalogueRepository
 from .._calculation_revision import (
@@ -83,7 +84,7 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
         bucket_id="bucket-a",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=Period.from_year_and_code(2026, "1T"),
         revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(

@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
     from ...adapters.outbound.aeat.auth import AeatSession
     from ...adapters.outbound.aeat.sede import Declaracion, Expediente, SedeCapture
+    from ...core import Period
     from ...core.config import Settings
     from ._expedientes import ExpedientesCapture, ExpedientesService
     from ._notifications import NotificationsService
@@ -24,9 +25,8 @@ if TYPE_CHECKING:
 from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
 from ...adapters.outbound.aeat.sede import open_declarations_register as _open_declarations_register
 from ...adapters.outbound.aeat.sede import shared_playwright as _shared_playwright
-from ...core import Period
 from ...core.resources import resources as _resources
-from ...core.time import now
+from ...core.time import now as _now
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
@@ -153,7 +153,7 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
         declarations = await register.walk(modelo=modelo, ejercicio=year)
     capture = ExpedientesCapture(
         declarations=tuple(declarations),
-        captured_at=now(),
+        captured_at=_now(),
         source_url=f"declarations:modelo={modelo}:ejercicio={year}",
     )
     persisted = ExpedientesService(settings=settings).capture(bucket_id=bucket_id, capture=capture)
@@ -208,7 +208,7 @@ async def capture_expedientes_bulk(
     if successful_query_count:
         capture = ExpedientesCapture(
             declarations=tuple(declarations_for_snapshot),
-            captured_at=now(),
+            captured_at=_now(),
             source_url=(f"declarations:bulk:modelos={','.join(resolved_modelos)}:ejercicios={year_from}-{year_to}"),
         )
         persisted = service.capture(bucket_id=bucket_id, capture=capture)
@@ -346,7 +346,7 @@ async def capture_justificante_snapshot(
         csv=capture.ref.csv,
         pdf_bytes=capture.pdf_bytes,
         pdf_sha256=capture.pdf_sha256,
-        captured_at=now(),
+        captured_at=_now(),
     )
     # Per the ADR, the capture flow stamps the official evidence onto the work
     # unit's filing record in the same flow. Best-effort: a no-op when the period
