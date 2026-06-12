@@ -393,7 +393,7 @@ def test_dangling_deadline_window_legal_refs() -> None:
     window = DeadlineWindowDefinition(
         id="dw.test",
         filing_year=2024,
-        period="0A",
+        period="2024",
         period_kind="annual",
         opens_on=date(2024, 1, 1),
         closes_on=date(2024, 6, 30),
