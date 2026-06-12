@@ -81,6 +81,37 @@ class ObservationPayload(OutputSchema):
     source_refs: tuple[str, ...] = ()
 
 
+class WorkRecargoPayload(OutputSchema):
+    """Recargo band provenance for an overdue work-unit filing deadline.
+
+    Surfaces the Art. 27 LGT surcharge band the engine resolved for a
+    late filing so a JSON consumer reads the same band id, percentage,
+    interest applicability, and binding legal reference the text-mode
+    plazo lines render.
+    """
+
+    band_id: str
+    surcharge_pct: str  # serialised Decimal
+    interest_applies: bool
+    legal_ref: str
+
+
+class WorkPlazoDeadlinePayload(OutputSchema):
+    """Filing-deadline (plazo voluntario) state for the work unit.
+
+    Structured result data the calculate verb exists to surface: the
+    voluntary-filing close date, the in-time / overdue posture, and — when
+    overdue — the resolved Art. 27 LGT recargo band. Distinct from the
+    non-blocking advisory prose, which rides the envelope ``notices``
+    channel.
+    """
+
+    closes_on: str  # ISO date
+    days_remaining: int | None = None
+    days_overdue: int | None = None
+    recargo: WorkRecargoPayload | None = None
+
+
 class ResultSummaryRowPayload(OutputSchema):
     """One headline-result summary row (registry-declared lead figure)."""
 
@@ -409,6 +440,12 @@ class WorkCalculateResult(OutputSchema):
     # calculation still ran. The accompanying advisory prose is surfaced on
     # the envelope ``notices`` channel, not as a bespoke payload field.
     authorization_state: str | None = None
+    # Filing-deadline (plazo voluntario) state for the work unit. Structured
+    # result data — the voluntary-filing close date, in-time / overdue
+    # posture, and the resolved Art. 27 LGT recargo band when overdue.
+    # Populated when the deadline is resolvable; ``None`` otherwise. The
+    # overdue-warning prose rides the envelope ``notices`` channel.
+    deadline: WorkPlazoDeadlinePayload | None = None
 
 
 @register_schema("modelo.work.revisions")
