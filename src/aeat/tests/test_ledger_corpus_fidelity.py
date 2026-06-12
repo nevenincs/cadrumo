@@ -156,7 +156,7 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
 # Build once at import; each row building through the strict pydantic model is
 # itself a fidelity assertion (invalid field combinations would raise here).
 _BUILT = _build_transactions()
-_IVA_TEST_PERIODS = (
+_QUARTERLY_TEST_PERIODS = (
     Period.from_year_and_code(2025, "1T"),
     Period.from_year_and_code(2025, "2T"),
     Period.from_year_and_code(2025, "3T"),
@@ -193,7 +193,7 @@ def test_iva_pipeline_gates_transfers_personal_and_nondeclarable() -> None:
     gated_ids = {tx.transaction_id for tx, rule, _ in _BUILT if not rule.get("iva_declarable", False)}
     catalogue = _catalogue()
     emitted: set[str] = set()
-    for period in _IVA_TEST_PERIODS:
+    for period in _QUARTERLY_TEST_PERIODS:
         result = aggregate_iva_ledger_observations(catalogue, period=period)
         emitted.update(o.ledger_id for o in result.observations)
     leaked = emitted & gated_ids
@@ -205,7 +205,7 @@ def test_iva_observations_match_oracle_category_and_flow() -> None:
     by_id = {tx.transaction_id: rule for tx, rule, _ in _BUILT}
     catalogue = _catalogue()
     seen = 0
-    for period in _IVA_TEST_PERIODS:
+    for period in _QUARTERLY_TEST_PERIODS:
         result = aggregate_iva_ledger_observations(catalogue, period=period)
         # Issues are the pipeline's gating signal for transfers / personal /
         # no-IVA rows; they are expected for a mixed corpus, not an error.
@@ -228,7 +228,7 @@ def test_iva_pipeline_emits_intracommunity_and_export_and_import() -> None:
     """The source-driven categories actually reach M303 across the corpus."""
     catalogue = _catalogue()
     categories: set[IvaCategory] = set()
-    for period in ("2025Q1", "2025Q2", "2025Q3", "2025Q4", "2026Q1", "2026Q2"):
+    for period in _QUARTERLY_TEST_PERIODS:
         result = aggregate_iva_ledger_observations(catalogue, period=period)
         categories.update(o.category for o in result.observations)
     for required in (
@@ -247,7 +247,7 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130() -> None:
     assert excluded_ids, "corpus must contain salary/rent/interest income"
     catalogue = _catalogue()
     emitted: set[str] = set()
-    for period in ("2025Q1", "2025Q2", "2025Q3", "2025Q4", "2026Q1", "2026Q2"):
+    for period in _QUARTERLY_TEST_PERIODS:
         result = aggregate_renta_income_ledger(catalogue, bucket_id="corpus", period=period)
         emitted.update(o.transaction_id for o in result.observations)
     leaked = emitted & excluded_ids
@@ -263,7 +263,7 @@ def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
     }
     assert re_ids, "corpus must contain the recargo-equivalencia anomaly row"
     catalogue = _catalogue()
-    for period in ("2025Q1", "2025Q2", "2025Q3", "2025Q4", "2026Q1", "2026Q2"):
+    for period in _QUARTERLY_TEST_PERIODS:
         result = aggregate_iva_ledger_observations(catalogue, period=period)
         soportado = {o.ledger_id for o in result.observations if o.flow_direction is IvaFlowDirection.SOPORTADO}
         assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"
