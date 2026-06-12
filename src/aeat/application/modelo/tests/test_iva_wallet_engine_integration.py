@@ -62,6 +62,9 @@ def _period(filing_year: int, period: str) -> Period:
     return Period.from_year_and_code(filing_year, period)
 
 
+_TARGET_PERIOD_VALUE = _period(_TARGET_YEAR, _TARGET_PERIOD)
+
+
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
@@ -73,7 +76,7 @@ def _wallet_observation(
     pending: Decimal,
     taxpayer_nif: str = _TAXPAYER_NIF,
     target_year: int = _TARGET_YEAR,
-    target_period: str = _TARGET_PERIOD,
+    target_period: Period = _TARGET_PERIOD_VALUE,
     generation_year: int = 2026,
     generation_period: str = "1T",
     captured_at: datetime = _DECIDED_AT,
@@ -836,7 +839,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
             wallet=_wallet_observation(
                 pending=Decimal("450.00"),
                 target_year=target_year,
-                target_period=target_period,
+                target_period=_period(target_year, target_period),
                 generation_year=2025,
                 generation_period="4T",
             ),
