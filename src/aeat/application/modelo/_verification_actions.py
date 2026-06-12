@@ -14,7 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core import Modelo, Period
+from ...core import Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
@@ -110,6 +110,7 @@ from ._workflow_gate import build_revision_workflow_engine as _build_revision_wo
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
+    from ...adapters.persistence.storage import SecureObjectWrite
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
@@ -1001,7 +1002,7 @@ def _build_participation_writes(
     verified: CalculationRevision,
     work_unit: WorkUnit,
     participation_index_repository: TransactionParticipationIndexRepository,
-) -> tuple[object, ...]:
+) -> tuple[SecureObjectWrite, ...]:
     """Build the per-transaction participation-index co-emission writes.
 
     For each ``source_transaction_id`` of the verified revision, load that
@@ -1011,7 +1012,7 @@ def _build_participation_writes(
     caller co-emits them in the same atomic unit of work as the revision save.
     A revision with no contributing transactions yields no writes.
     """
-    writes: list[object] = []
+    writes: list[SecureObjectWrite] = []
     for transaction_id in verified.source_transaction_ids:
         index = participation_index_repository.load(transaction_id)
         participation = TransactionRevisionParticipation(
