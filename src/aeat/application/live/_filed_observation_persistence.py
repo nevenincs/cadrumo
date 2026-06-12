@@ -108,6 +108,8 @@ def persist_iva_compensation_history_observations_strict(
         latest.items(),
         key=lambda item: (item[0][0], item[0][1].registry_token),
     ):
+        if not _is_active_filed_observation(observation):
+            continue
         try:
             key = persist_filed_calculation_observation(observation)
         except SedeParseError as exc:

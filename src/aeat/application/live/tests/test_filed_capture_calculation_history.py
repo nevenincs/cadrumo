@@ -272,6 +272,26 @@ def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observatio
         assert history.pending_for_later_amount == Decimal("1200.00")
 
 
+def test_iva_history_strict_persist_skips_non_alta_only_period(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        keys = _persist_iva_compensation_history_observations_strict(
+            (
+                _prior_303_observation(
+                    expediente_id="200030300000016Z",
+                    pending_compensation=Decimal("900.00"),
+                    status="BAJA",
+                    presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                ),
+            ),
+        )
+
+        assert keys == ()
+        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
+        assert (
+            CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
+        )
+
+
 def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
