@@ -141,7 +141,7 @@ class MutatingNounGroupContract(BaseModel):
     noun: str = Field(min_length=1, description="canonical noun (e.g. 'payable_invoice')")
     cli_path: str = Field(
         min_length=1,
-        description="Typer mount path (e.g. 'aeat app ledger payable-invoice')",
+        description="Typer mount path (e.g. 'aeat app ledger invoice')",
     )
     exception: NounGroupExceptionKind = Field(
         default=NounGroupExceptionKind.STRICT_CRUD,
@@ -248,7 +248,7 @@ class CrudContractCatalogue(BaseModel):
 
         Args:
             cli_path: The Typer mount path to look up (e.g.
-                ``"aeat app ledger payable-invoice"``).
+                ``"aeat app ledger invoice"``).
         """
         for entry in self.entries:
             if entry.cli_path == cli_path:
