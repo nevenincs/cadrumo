@@ -299,7 +299,7 @@ def test_no_annual_money_rollup_surface_exists() -> None:
     result = json.loads(status.output)["result"]
     # Counts and readiness exist ...
     assert "total_count" in result and "ready" in result, result
-    assert result["period"] == "2025", result
+    assert result["period"] == {"filing_year": 2025, "code": "0A"}, result
     # ... but no monetary roll-up field is present on the status surface.
     money_fields = {"income", "expense", "net", "total_amount", "ingresos", "gastos"}
     assert not (money_fields & set(result)), f"unexpected money rollup field: {result}"
