@@ -362,6 +362,11 @@ def _seed_modelo_303_1t_clean_state(
         ),
         source_kind="aeat_sede_justificante",
         captured_at=datetime(2026, 5, 21, 11, 2, tzinfo=UTC),
+        stamped_revision_id=source_snapshot.revision.id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "authenticated_identity": taxpayer_tax_id,
+        },
     )
 
 

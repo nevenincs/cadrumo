@@ -286,6 +286,11 @@ def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
+                stamped_revision_id=source_snapshot.revision.id,
+                source_metadata={
+                    "aeat_register_status": "ALTA",
+                    "authenticated_identity": "X1234567L",
+                },
             )
 
         revision_id = _seed_verified_revision(
