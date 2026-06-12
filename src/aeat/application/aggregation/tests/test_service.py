@@ -365,8 +365,7 @@ def test_accepted_source_kinds_are_enum_members() -> None:
 def test_accepted_source_kinds_covers_all_four_members() -> None:
     """ACCEPTED_SOURCE_KINDS must contain exactly the four canonical aggregation kinds.
 
-    The enum carries a fifth member (``INVOICE``) used by the registry-constructs
-    surface; only the four aggregation-source kinds participate at this boundary.
+    The retired bare ``INVOICE`` alias must not participate at this boundary.
     """
     expected = frozenset(
         {
@@ -443,7 +442,7 @@ def test_operator_accepted_kind_map_uses_enum_keys_for_aggregation_source_kinds(
 
 
 def test_aggregation_source_kind_values_are_stable() -> None:
-    """AggregationSourceKind string values must remain backwards-compatible."""
+    """AggregationSourceKind string values must remain stable."""
     assert AggregationSourceKind.LEDGER_TRANSACTION == "ledger_transaction"
     assert AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE == "purchase_invoice_evidence"
     assert AggregationSourceKind.PAYABLE_INVOICE == "payable_invoice"
