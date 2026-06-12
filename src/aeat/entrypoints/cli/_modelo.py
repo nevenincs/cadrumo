@@ -550,6 +550,24 @@ _MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
 )
 
 
+def _bindings_discovery_command(unit: WorkUnit | None) -> str:
+    """Return the ``bindings list --missing`` discovery command for the refusal.
+
+    When the work unit resolves, the command is scoped to its modelo / year /
+    period. The period is rendered as its bare registry token (e.g. ``1T``):
+    ``WorkUnit.period`` is a :class:`Period` whose ``__str__`` is the combined
+    ``"2026 1T"`` display form, which would pass the year into the single-token
+    ``--period`` option and produce a non-runnable command. The year is a
+    distinct ``--year`` axis, so only the token belongs after ``--period``.
+    """
+    if unit is None:
+        return "aeat app modelo bindings list --missing"
+    return (
+        f"aeat app modelo bindings list --modelo {unit.modelo} "
+        f"--year {unit.filing_year} --period {unit.period.registry_token} --missing"
+    )
+
+
 def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str) -> str:
     """Return the missing-binding refusal enriched with operator guidance.
 
@@ -564,7 +582,6 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
     if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
         return base
 
-    discover_command = "aeat app modelo bindings list --missing"
     # Loading the work unit only refines the discovery command with the
     # concrete modelo / year / period. It is best-effort enrichment: any
     # failure (missing unit, no active session) degrades to the generic
@@ -574,11 +591,7 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
     except Exception:
         _log.debug("missing-binding guidance work-unit lookup failed", exc_info=True)
         unit = None
-    if unit is not None:
-        discover_command = (
-            f"aeat app modelo bindings list --modelo {unit.modelo} "
-            f"--year {unit.filing_year} --period {unit.period} --missing"
-        )
+    discover_command = _bindings_discovery_command(unit)
     return tr(
         "cli.app.modelo.work.missing_binding_guidance",
         default=(
