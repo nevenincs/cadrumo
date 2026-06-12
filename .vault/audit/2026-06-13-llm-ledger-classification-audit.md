@@ -99,6 +99,8 @@ usage.
 F1 confirms the feature is robust and grounded; F2 is the one substantive gap
 to closing the operator experience and is tracked for the next increment.
 
+## Codification candidates
+
 None new. F1 confirms the team is already following the
 `llm-selects-system-derives-tax-numbers` candidate authored in the stage-2 ADR
 (an LLM selects a registry-grounded category but never emits a tax number;

@@ -140,6 +140,11 @@ amount always add up to the transaction total. A category with no simple
 Spanish rate (for example an intra-community supply or a reverse-charge
 purchase) shows a short note instead of numbers, and you complete those by hand.
 
+The model may also decline to pick an IVA category and return `unknown`, even
+for an ordinary domestic purchase — it chooses not to guess. When that happens
+no numbers are derived. Re-run the suggestion (a different provider may decide),
+or complete the IVA fields by hand, as the override below shows.
+
 Apply a saturated suggestion after review:
 
 ```bash
@@ -147,7 +152,10 @@ aeat app ledger classify <transaction-id> --llm claude --saturate --apply
 ```
 
 Override any field by classifying manually afterwards. Manual classification
-always wins:
+always wins. The tool only derives the base, rate, and amount through
+`--saturate`; when you set the IVA category by hand you also supply the figures
+yourself — passing `--iva-category` alone records the category but does not
+compute the numbers:
 
 ```bash
 aeat app ledger classify <transaction-id> --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
