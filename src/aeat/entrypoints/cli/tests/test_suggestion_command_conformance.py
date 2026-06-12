@@ -20,10 +20,10 @@ no mocks, no fixture trees) and resolves every cited command path from:
 
 - every registered :class:`ErrorCode` ``default_suggestion``;
 - the curated operator help documents (root / config / app surfaces);
-- every string literal in production modules under ``aeat.application``,
-  ``aeat.core.errors``, and ``aeat.entrypoints`` (AST-extracted, so comments
-  cannot false-positive and ``next_action`` / write-policy / envelope builder
-  strings are all swept).
+- every string literal in production modules under ``aeat.adapters``,
+  ``aeat.application``, ``aeat.core.errors``, and ``aeat.entrypoints``
+  (AST-extracted, so comments cannot false-positive and ``next_action`` /
+  write-policy / envelope-builder / adapter-refusal strings are all swept).
 
 The four locale catalogues (``en``/``es``/``ca``/``hu``) carry the same class
 of citations inside translated suggestion text and are the natural fourth
@@ -63,6 +63,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PACKAGE_ROOT = Path(aeat.__file__).resolve().parent
 _AST_SCAN_ROOTS = (
+    _PACKAGE_ROOT / "adapters",
     _PACKAGE_ROOT / "application",
     _PACKAGE_ROOT / "core" / "errors",
     _PACKAGE_ROOT / "entrypoints",
@@ -185,9 +186,9 @@ def test_production_string_literals_cite_live_commands() -> None:
                 citation_count += _count_citations(node.value)
                 failures.extend(_dead_citations_in(node.value, origin=f"{relative}:{node.lineno}"))
     assert not failures, "\n".join(failures)
-    assert citation_count >= 500, (
+    assert citation_count >= 550, (
         f"only {citation_count} command citations found across production string literals; "
-        "the extractor appears blind — the scan roots carried 700+ when this gate landed"
+        "the extractor appears blind — the scan roots carried 760+ when adapters/ enrolled"
     )
 
 
