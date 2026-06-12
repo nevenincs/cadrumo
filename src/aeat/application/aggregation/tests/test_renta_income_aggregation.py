@@ -203,12 +203,54 @@ def test_non_eur_transaction_excluded_with_reason() -> None:
     assert result.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY
 
 
-def test_outgoing_transaction_excluded_with_reason() -> None:
+def test_outgoing_business_expense_surfaces_deducible_expense_advisory() -> None:
+    """A business OUTGOING row is a dropped deducible gasto, not an income oddity.
+
+    M130 casilla 02 (Gastos) has no ledger aggregation binding, so the
+    expense cannot fold into the filing. The exclusion must speak expense
+    vocabulary and name the drop loudly (no-silent-under-declaration) —
+    never the misleading "not an income flow" income-pipeline message.
+    """
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw_transaction("out", booked_date=date(2024, 3, 1), value_date=date(2024, 3, 1), amount=Decimal("121")),
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "business_pct": None,
+            "purchase_invoice_evidence_id": None,
+            "category_id": "material_oficina",
+            "taxable_base": Decimal("100"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("21"),
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+    catalogue = TransactionCatalogue.from_transactions((tx,))
+
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+    assert result.observations == ()
+    assert len(result.issues) == 1
+    issue = result.issues[0]
+    assert issue.reason == RentaIncomeLedgerAggregationIssueReason.DEDUCIBLE_EXPENSE_NOT_AGGREGATED
+    # Expense vocabulary: the operator must learn the deducible expense was
+    # dropped and which casilla it belongs to — not that it "is not income".
+    assert "gasto" in issue.detail
+    assert "casilla 02" in issue.detail
+    assert "material_oficina" in issue.detail
+    assert "100" in issue.detail
+    assert "not an income flow" not in issue.detail
+
+
+def test_outgoing_personal_transaction_keeps_unsupported_direction_reason() -> None:
+    """A personal OUTGOING row is not a deducible gasto candidate."""
     tx = Transaction.model_validate(
         {
             "raw": _raw_transaction("out", booked_date=date(2024, 3, 1), value_date=date(2024, 3, 1)),
             "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.BUSINESS,
+            "business_classification": BusinessClassification.PERSONAL,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,

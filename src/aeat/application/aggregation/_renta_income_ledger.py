@@ -68,6 +68,12 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     # belong to IRPF rendimientos del trabajo, not actividad económica,
     # and must not feed M130 casillas.
     TRABAJO_INCOME = "trabajo_income"
+    # An OUTGOING business-classified row is a deducible gasto candidate.
+    # M130 casilla 02 (Gastos) has no ledger aggregation binding yet, so
+    # the expense is NOT folded into the filing; per
+    # no-silent-under-declaration the drop must surface loudly in expense
+    # vocabulary, never as a generic "not an income flow" exclusion.
+    DEDUCIBLE_EXPENSE_NOT_AGGREGATED = "deducible_expense_not_aggregated"
 
 
 class RentaIncomeLedgerAggregationIssue(BaseModel):
@@ -260,6 +266,30 @@ def _classify_income_transaction(
     transaction_id = transaction.transaction_id
 
     if transaction.direction is not TransactionDirection.INCOMING:
+        if transaction.direction is TransactionDirection.OUTGOING and transaction.business_classification in (
+            BusinessClassification.BUSINESS,
+            BusinessClassification.MIXED,
+        ):
+            # A business-classified OUTGOING row is a deducible gasto
+            # candidate. There is no M130 casilla 02 (Gastos) ledger
+            # aggregation binding yet, so this expense will NOT reduce the
+            # rendimiento neto unless the operator declares gastos
+            # manually. Surface the drop in expense vocabulary so the
+            # operator is never left with a silent under-declared expense
+            # side (no-silent-under-declaration).
+            base = transaction.taxable_base if transaction.taxable_base is not None else abs(transaction.raw.amount)
+            category = transaction.category_id or "unclassified"
+            return RentaIncomeLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=RentaIncomeLedgerAggregationIssueReason.DEDUCIBLE_EXPENSE_NOT_AGGREGATED,
+                detail=(
+                    f"deducible expense (gasto) candidate dropped: OUTGOING business transaction "
+                    f"(category {category!r}, base {base}) is not aggregated into Modelo 130 "
+                    "casilla 02 (Gastos) — no expense aggregation binding exists yet; declare the "
+                    "quarter's gastos manually (e.g. --binding for casilla 02) or the filing "
+                    "overstates rendimiento neto"
+                ),
+            )
         return RentaIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
