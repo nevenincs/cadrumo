@@ -94,3 +94,37 @@ def test_ledger_remove_with_dry_run_does_not_require_yes(cli_runner: CliRunner) 
     # would only happen if the guard short-circuited the dry-run path.
     haystack = (result.output or "").lower()
     assert "confirm" not in haystack or "dry" in haystack, result.output
+
+
+def test_config_reset_refuses_without_explicit_scope(cli_runner: CliRunner) -> None:
+    """``aeat config reset --yes`` with no ``--scope`` is refused.
+
+    The most destructive scope (``all``, a full wipe) must never be an
+    implied default: one forgotten flag next to ``--yes`` would erase every
+    profile, session, and stored row. The refusal must name the accepted
+    scope set, never a bare "missing option".
+    """
+    result = cli_runner.invoke(app, ["config", "reset", "--yes"])
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    for scope_token in ("profile", "auth", "data", "all"):
+        assert scope_token in combined, combined
+
+
+def test_config_reset_scope_refusal_fires_before_yes_guard(cli_runner: CliRunner) -> None:
+    """Bare ``aeat config reset`` names the scope contract first."""
+    result = cli_runner.invoke(app, ["config", "reset"])
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--scope" in combined, combined
+
+
+def test_config_reset_with_explicit_scope_and_yes_executes(cli_runner: CliRunner) -> None:
+    """Anti-tautology: an explicit ``--scope auth --yes`` still executes.
+
+    If this fails, the scope-required guard has started refusing the
+    explicit form and the refusal tests above are meaningless.
+    """
+    result = cli_runner.invoke(app, ["config", "reset", "--scope", "auth", "--yes"])
+    assert result.exit_code == 0, result.output
+    assert "scope\tAUTH" in result.output, result.output
