@@ -190,6 +190,13 @@ Preview, apply, reject, or override local LLM suggestions.
 Install and authenticate a provider CLI so LLM suggestions work.
 :::
 
+:::{grid-item-card} Protect Data Access
+:link: protect-data-access
+:link-type: doc
+
+Set up a recovery key, change or recover your passphrase, lock, or reset.
+:::
+
 :::{grid-item-card} Troubleshooting
 :link: troubleshooting
 :link-type: doc
@@ -229,6 +236,7 @@ verification-reports
 file-at-aeat
 reconcile
 justificante-receipts
+protect-data-access
 troubleshooting
 authenticate-with-aeat
 ```
