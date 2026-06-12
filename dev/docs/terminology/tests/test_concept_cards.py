@@ -133,7 +133,7 @@ def test_self_hosted_architectural_vocabulary_projects_to_cards(
 ) -> None:
     """The epic's own architecture terms are enrolled into the shipped surface."""
     required = {
-        "terminology-handbook": "Terminology Handbook",
+        "manual-terminologia": "Terminology Handbook",
         "barrido-rag": "RAG sweep",
         "proyeccion-busqueda": "search projection",
         "mapa-relevancia": "relevance mapping",

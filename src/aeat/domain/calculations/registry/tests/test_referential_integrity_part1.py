@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import Period
 from ..._export_field_kind import CasillaFieldKind
 from ._referential_integrity_support import (
     _DUMMY_LEGAL_ID,
@@ -393,7 +394,7 @@ def test_dangling_deadline_window_legal_refs() -> None:
     window = DeadlineWindowDefinition(
         id="dw.test",
         filing_year=2024,
-        period="2024",
+        period=Period.from_year_and_code(2024, "0A"),
         period_kind="annual",
         opens_on=date(2024, 1, 1),
         closes_on=date(2024, 6, 30),
