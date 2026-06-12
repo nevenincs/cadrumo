@@ -152,6 +152,7 @@ def _seed_303_cross_period_sources(
             else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
         )
         evidence_reference_id = f"AEAT-{period}"
+        source_snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period=period)
         if evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF:
             _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=2025)
         work_unit = create_work_unit(
@@ -159,7 +160,7 @@ def _seed_303_cross_period_sources(
             modelo="303",
             filing_year=2025,
             period=Period.from_year_and_code(2025, period),
-            revision_id=_M303_REVISION,
+            revision_id=source_snapshot.revision.id,
             repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
             clock=_CLOCK,
@@ -188,6 +189,11 @@ def _seed_303_cross_period_sources(
             ),
             source_kind="aeat_sede_justificante",
             captured_at=_CLOCK,
+            stamped_revision_id=source_snapshot.revision.id,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "authenticated_identity": "X1234567L",
+            },
         )
 
 
