@@ -216,7 +216,7 @@ class InventoryService:
                 f"inventory ledger already exists for actividad={actividad_id!r} year={year}",
                 translated_message="application.inventory.service.errors.actividad_conflict",
                 context={"actividad_id": actividad_id, "year": str(year)},
-                suggestion="aeat app ledger inventory show",
+                suggestion="aeat app ledger inventory list",
             )
         ledger = InventoryLedger(
             actividad_id=actividad_id,
@@ -284,7 +284,7 @@ class InventoryService:
                 f"movement_id {movement.movement_id!r} already present in ledger",
                 translated_message="application.inventory.service.errors.duplicate_movement_id",
                 context={"movement_id": movement.movement_id},
-                suggestion="aeat app ledger inventory show",
+                suggestion="aeat app ledger inventory list",
             )
         record = MovementRecord(
             movement_id=movement.movement_id,

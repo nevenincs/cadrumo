@@ -9,7 +9,7 @@ every obligation whose ``adjusted_closes_on`` precedes today AND whose
 
 The verb is a read model only: it never mutates state and never
 contacts AEAT. Lifecycle continuation is owned by
-``aeat app modelo resume`` per the workflow-resumption-semantics ADR.
+``aeat app modelo work resume`` per the workflow-resumption-semantics ADR.
 """
 
 from __future__ import annotations

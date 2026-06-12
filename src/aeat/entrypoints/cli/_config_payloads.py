@@ -295,7 +295,7 @@ class ConfigProfileDuplicateResult(OutputSchema):
 
 @register_schema("config.profile.status")
 class ConfigStatusResult(OutputSchema):
-    """JSON envelope for ``aeat config status``.
+    """JSON envelope for ``aeat config profile status``.
 
     Covers all readiness branches: none, dangling_pointer,
     missing/unreadable profile record, incomplete config, and ready.
@@ -458,7 +458,7 @@ class AuthClearPayload(OutputSchema):
 
 @register_schema("config.auth.apoderado.check")
 class ApoderadoCheckResult(OutputSchema):
-    """JSON envelope for ``aeat config apoderado check``."""
+    """JSON envelope for ``aeat config auth apoderado check``."""
 
     bucket_id: str
     configured: bool

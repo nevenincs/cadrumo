@@ -405,7 +405,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_OUTBOUND_STORAGE_CONFLICT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_outbound_storage_conflict",
-            default_suggestion="aeat config google sync status",
+            default_suggestion="aeat config google sync probe",
             retryable=False,
             runbook_id=None,
         ),

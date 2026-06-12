@@ -2,7 +2,7 @@
 
 ``build_wizard_status`` projects the active workflow state into a
 strict :class:`WizardStatusReport` consumed by the config repair surface
-and the ``aeat config status`` command. ``load_active_taxpayer_profile``
+and the ``aeat config profile status`` command. ``load_active_taxpayer_profile``
 is the typed bridge the deadline engine and the filing runtime call
 to obtain an ``TaxpayerProfile`` from the active profile bucket.
 """
