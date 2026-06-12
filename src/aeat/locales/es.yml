@@ -320,13 +320,6 @@ aggregation:
   modelo_bindings:
     errors:
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
-  models:
-    errors:
-      annual_period_mixed: El periodo no puede mezclar valores anuales y subaños (trimestre/mes).
-      month_required: El tipo de periodo mensual requiere un valor de mes.
-      period_type_ambiguous: El tipo de periodo es ambiguo; especifique trimestre
-        o mes explícitamente.
-      quarter_required: El tipo de periodo trimestral requiere un valor de trimestre.
   per_modelo:
     errors:
       unsupported_modelo: Modelo no soportado para la agregación por modelo
@@ -336,8 +329,6 @@ aggregation:
           %{accrued_on}'
         unsupported_provider: 'Proveedor de agregación no soportado para el modelo
           %{modelo}: %{provider}'
-  period:
-    parse_error: Formato de período no reconocido
   prorrata:
     errors:
       current_year_not_after_prior: El año actual debe ser estrictamente mayor que
@@ -390,6 +381,8 @@ aggregation:
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado
         de fuentes deben ser únicos.
+      unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
+      unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
 application:
   auth:
     acquisition_lock:
@@ -583,10 +576,12 @@ application:
           %{reason}.'
         blank_modelo_selection: La seleccion de modelos solicitada no puede contener
           identificadores vacios.
+        filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
         filing_year_period_pair: filing_year y period deben indicarse juntos.
         modelo_not_in_registry: El modelo %{modelo} no esta presente en el registro
           de calculo.
         modelo_revision_missing: El modelo %{modelo} no tiene revisiones.
+        period_type: application.filing.runtime.errors.period_type
         provider_year_missing: El modelo %{modelo} revision %{revision} no tiene ejercicio
           de proveedor.
         registry_empty: La raiz del registro %{registry_root_name} no tiene definiciones
@@ -1296,16 +1291,16 @@ cli:
         list_help: Lista los snapshots de expedientes guardados
         pull_help: Descarga el registro de declaraciones de AEAT y guarda una instantanea
           del bucket.
+        pull_modelo_help: Limita esta descarga a este modelo.
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de expedientes
-        pull_modelo_help: 'Limita esta descarga a este modelo.'
       filed:
         list_help: Listar declaraciones presentadas sin descargar artefactos
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
+        pull_modelo_help: Limita esta descarga a este modelo.
         pull_sources_help: Descarga las observaciones presentadas que requieren las
           dependencias de una declaracion objetivo.
-        pull_modelo_help: 'Limita esta descarga a este modelo.'
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -3895,6 +3890,7 @@ errors:
       de revisiones de cálculo.
     fail_modelo_filing_record_persistence: No se pudo guardar o leer el catálogo de
       declaraciones registradas.
+    fail_modelo_locale_manager: errors.fail.fail_modelo_locale_manager
     fail_modelo_verification_report_persistence: No se pudo guardar o leer el catálogo
       de informes de verificación.
     fail_modelo_work_unit_persistence: No se pudo guardar o leer el catálogo de unidades
@@ -4016,6 +4012,7 @@ errors:
       de integridad (hash, tamaño o etiqueta).
     integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
       un campo con un tipo inesperado; el objeto de almacenamiento está corrupto.
+    integrity_period: errors.integrity.integrity_period
     integrity_portals_portal_integrity: El registro de portales de la AEAT infringe
       una invariante estructural.
     integrity_profile_answer_type: Un campo de respuesta de perfil recibió un tipo
@@ -4486,6 +4483,7 @@ live:
     expediente_not_found: No se encontro el expediente solicitado en la AEAT.
     iva_history_modelo_303_only: El historial de IVA solo esta disponible para el
       Modelo 303.
+    target_period_year_mismatch: live.errors.target_period_year_mismatch
     year_range_invalid: El rango de ejercicios indicado no es valido.
 locales:
   cli:
