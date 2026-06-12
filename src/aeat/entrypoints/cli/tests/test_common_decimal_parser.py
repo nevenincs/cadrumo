@@ -9,9 +9,7 @@ asserts a concrete accept or a real ``typer.BadParameter`` refusal.
 
 The canonical grammar is a dot decimal separator with an optional one- or
 two-digit (euro-cent) fractional part, no thousands grouping, no scientific
-notation, and no ``NaN``/``Infinity`` — the F1/F2 silent-misparse and
-non-finite-admission defects the ``2026-06-10-ledger-input-localization-adr``
-closes.
+notation, and no ``NaN``/``Infinity``.
 """
 
 from __future__ import annotations
