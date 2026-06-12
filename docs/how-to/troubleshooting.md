@@ -147,6 +147,23 @@ aeat config repair connectivity
 
 If authentication was never set up, follow [Authenticate with AEAT](authenticate-with-aeat.md).
 
+When a live login fails, the tool captures an encrypted diagnostic of the failure. List and inspect them:
+
+```bash
+aeat config auth diagnostics list
+aeat config auth diagnostics show <diagnostic-id>
+```
+
+`list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints one diagnostic with sensitive content redacted — configured credentials appear only as present/absent flags and fingerprints, never as values.
+
+For Cl@ve failures, the missing piece is often what happened on your phone — something the tool cannot see. Record what you observed so the diagnostic is complete:
+
+```bash
+aeat config auth diagnostics report <diagnostic-id> --phone-state app_prompted_not_accepted
+```
+
+Accepted states are `app_prompted_and_accepted`, `app_prompted_not_accepted`, `app_did_not_prompt`, and `operator_did_not_check`.
+
 ## The diagnostic toolbox
 
 Use these when no single symptom matches, or to gather context before asking for help.
@@ -176,6 +193,15 @@ aeat config repair integrity registry
 ```
 
 `integrity objects` checks the security seals on your encrypted records; `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
+
+When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
+
+```bash
+aeat config repair quarantine --dry-run
+aeat config repair quarantine --yes
+```
+
+The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover — for example with the recovery key, see [Protect access to your data](protect-data-access.md) — the archived records still exist.
 
 When nothing else recovers the problem, and only then, reset the saved progress of interrupted commands. This command is destructive:
 
