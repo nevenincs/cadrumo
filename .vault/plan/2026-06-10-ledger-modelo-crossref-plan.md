@@ -74,6 +74,12 @@ Add source_transaction_ids to ModeloRecord excluded from derive_filing_record_id
 - [x] `P05.S27` - Write validator test: build a CalculationRevision with ledger_filing_snapshot contributor set and ledger_filing_evidence contributor set; `introduce a deliberate mismatch (drop a row from one); assert the post-roundtrip validator raises with the missing contributor identified in the error message; `src/aeat/domain/modelos/tests/test_snapshot_evidence_coverage_validator.py [new file]`.
 - [x] `P05.S28` - Gate: uv run --no-sync pytest src/aeat/domain/modelos/tests/ src/aeat/application/modelo/tests/ -x -q; `uv run --no-sync pytest --collect-only -q 2>&1 | grep -v 'test session' | head -3 (confirm clean collection); run full affected-module suite; all tests green; `tests`.
 
+### Phase `P06` - Residual app/modelo verification
+
+Verify the previously held-back M130 verificado-completo regression and the full application/modelo suite now that the residual issue is in scope.
+
+- [x] `P06.S29` - Verify the held-back M130 verificado-completo regression and full application modelo suite are green before final closeout; `src/aeat/application/modelo/tests/test_verificado_completo_regression.py, src/aeat/application/modelo/tests/`.
+
 ## Description
 
 This plan implements the transaction-to-revision participation index described in the
