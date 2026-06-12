@@ -59,6 +59,7 @@ from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
 from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
+from ._prior_payment_advisory import collect_prior_payment_not_deducted_diagnostics
 from ._registry_helpers import normalize_casilla_input_aliases as _normalize_casilla_input_aliases
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
@@ -786,6 +787,24 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         revision.casilla_values,
     )
     source_diagnostics = source_diagnostics + official_box_diagnostics
+    # Stage 1 advisory (no-silent-under-declaration): Modelo 130 is cumulative
+    # from the start of the ejercicio, but casilla 05 ("Pagos fraccionados
+    # anteriores") is a manual cell with no binding — a cumulative 2T/3T/4T
+    # calculate never auto-deducts the prior trimestre's pago fraccionado, so the
+    # operator over-pays (RD 439/2007 art. 110; casilla 07 = 04 - 05 - 06). The
+    # advisory fires only when a prior-trimestre M130 filing for the same
+    # ejercicio actually exists in the catalogue, so a true first-obligation
+    # filer (whose casilla 05 is legitimately null) stays silent.
+    from ..calculations import CalculationObservationRepository
+
+    prior_payment_diagnostics = collect_prior_payment_not_deducted_diagnostics(
+        revision.casilla_values,
+        modelo=work_unit.modelo,
+        period_token=work_unit.period.registry_token,
+        filing_year=work_unit.filing_year,
+        observation_repository=CalculationObservationRepository(),
+    )
+    source_diagnostics = source_diagnostics + prior_payment_diagnostics
     return BucketAggregationCalculationResult(
         revision=revision,
         source_diagnostics=source_diagnostics,
