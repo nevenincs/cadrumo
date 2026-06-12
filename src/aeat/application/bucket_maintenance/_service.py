@@ -65,6 +65,24 @@ class BucketMaintenanceService:
     ) -> None:
         self._event_repository = event_repository
 
+    @staticmethod
+    def _event_repository_for_bucket(bucket_id: str) -> BucketEventHistoryRepository:
+        """Return a :class:`BucketEventHistoryRepository` bound to ``bucket_id``'s database.
+
+        The maintenance event for a surviving bucket belongs in that
+        bucket's own event history — the same binding principle the
+        lifecycle service applies — so a rename of a non-active bucket
+        never writes its audit event into a different bucket's
+        catalogue. ``delete`` deliberately does NOT use this binding:
+        its event must outlive the erased bucket, so it lands in the
+        operator's active bucket history instead.
+        """
+        from ...adapters.persistence.storage.runtime_repository import (
+            secure_object_repository_for_bucket,
+        )
+
+        return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
+
     def rename(self, command: RenameBucketCommand) -> RenameBucketResult:
         """Relabel the bucket identified by ``command.bucket_id``.
 
@@ -78,6 +96,13 @@ class BucketMaintenanceService:
         from the lifecycle service; the two events are co-emitted by
         design — the lifecycle event records the data change, the
         maintenance event records the operator-surface invocation.
+
+        Both events land in the renamed bucket's OWN event history:
+        the lifecycle service already binds its event repository to the
+        target bucket's database, and the maintenance emission mirrors
+        that binding so the audit trail can never split from the
+        records it describes when the renamed bucket is not the active
+        one.
 
         Returns:
             :class:`RenameBucketResult`: The result of the rename operation.
@@ -112,7 +137,7 @@ class BucketMaintenanceService:
             payload_version=_RENAME_PAYLOAD_VERSION,
             payload={"previous_label": previous_label, "new_label": record.display_name},
         )
-        repository = self._event_repository or BucketEventHistoryRepository()
+        repository = self._event_repository or self._event_repository_for_bucket(command.bucket_id)
         repository.save(append_bucket_event(repository.load(), event))
         return RenameBucketResult(
             bucket_id=command.bucket_id,

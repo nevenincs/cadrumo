@@ -890,17 +890,34 @@ def config_profile_rename(
     manifest label are updated, and nothing else moves. The bucket
     directory, keystore directory, secure-object key, and active-profile
     pointer are untouched.
+
+    The verb routes through :class:`BucketMaintenanceService` so the
+    operator invocation co-emits ``BUCKET_RENAMED`` (maintenance verb)
+    alongside the ``PROFILE_RENAMED`` lifecycle event the inner
+    single-writer primitive emits, per the composition ADR's two-event
+    audit contract.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import (
-        ProfileAlreadyRegisteredError,
-        rename_profile,
+    from ....application.bucket_maintenance import (
+        BucketMaintenanceService,
+        RenameBucketCommand,
     )
+    from ....application.user_profile import ProfileAlreadyRegisteredError
     from ....domain.user_profile import ProfileNotFoundError
 
+    if not target.strip():
+        # The typed RenameBucketCommand refuses a blank label at model
+        # validation; surface the same localised refusal the inner
+        # primitive raises so the operator never sees a raw schema error.
+        raise _CliRefusedBoundaryError(
+            translated_message="application.user_profile.errors.profile_label_blank",
+            context={"name": source},
+        )
     pointer = _resolve_profile_by_label(source)
     try:
-        record = rename_profile(profile_id=pointer.bucket_id, new_label=target)
+        outcome = BucketMaintenanceService().rename(
+            RenameBucketCommand(bucket_id=pointer.bucket_id, new_label=target),
+        )
     except ProfileAlreadyRegisteredError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.already_exists",
@@ -915,18 +932,18 @@ def config_profile_rename(
     from .._config_payloads import ConfigProfileRenameResult
 
     rename_result = ConfigProfileRenameResult(
-        profile_id=record.profile_id,
+        profile_id=outcome.bucket_id,
         previous_display_name=source,
-        display_name=record.display_name,
+        display_name=outcome.new_label,
     )
     _emit_envelope(
         ctx,
         command="config.profile.rename",
         result=rename_result,
         lines=(
-            f"profile_id\t{record.profile_id}",
+            f"profile_id\t{outcome.bucket_id}",
             f"previous_display_name\t{source}",
-            f"display_name\t{record.display_name}",
+            f"display_name\t{outcome.new_label}",
         ),
     )
 
