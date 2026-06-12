@@ -339,6 +339,31 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 artefacts=(wrong_identity_artefact,),
             ),
         )
+        non_active_body = b"modelo-303-2025-4T-non-active-justificante"
+        non_active_artefact = store.persist_artefact(
+            ("303", 2025, "4T", "12345678901234567893"),
+            FiledDeclaracionArtefact(
+                kind="justificante_pdf",
+                source_url=_SOURCE_URL,
+                content_type="application/pdf",
+                byte_count=len(non_active_body),
+                sha256=hashlib.sha256(non_active_body).hexdigest(),
+                captured_at=datetime(2026, 1, 16, 12, 1, tzinfo=UTC),
+            ),
+            non_active_body,
+        )
+        store.persist_observation(
+            FiledDeclaracionObservation(
+                modelo="303",
+                ejercicio=2025,
+                period=Period.from_year_and_code(2025, "4T"),
+                expediente_id="12345678901234567893",
+                status="BAJA",
+                presented_at=datetime(2026, 1, 15, 9, 30, tzinfo=UTC),
+                authenticated_identity="X1234567L",
+                artefacts=(non_active_artefact,),
+            ),
+        )
 
     with profile_create_storage_span("second"):
         workflow_state_repository().update(
@@ -366,11 +391,13 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     period_1t = Period.from_year_and_code(2025, "1T")
     period_2t = Period.from_year_and_code(2025, "2T")
     period_3t = Period.from_year_and_code(2025, "3T")
+    period_4t = Period.from_year_and_code(2025, "4T")
     assert by_period[period_1t].aeat_submission_state.value == "justificante_verified"
     assert by_period[period_1t].justificante_verified is True
     assert by_period[period_2t].aeat_submission_state.value == "submitted_observed"
     assert by_period[period_2t].justificante_verified is False
     assert period_3t not in by_period
+    assert period_4t not in by_period
 
 
 def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata() -> None:
