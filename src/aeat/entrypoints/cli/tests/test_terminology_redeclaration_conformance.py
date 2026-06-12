@@ -67,8 +67,8 @@ def _approved_anchor_terms() -> tuple[str, ...]:
     generator renders them. Longest-first so a multi-word term is matched before
     a substring (``modelo 100`` before a bare ``modelo`` that is not an anchor).
     """
-    from aeat.terminology import load_terminology_handbook
-    from aeat.terminology._enums import ConceptLifecycle, TermStatus
+    from ....terminology import load_terminology_handbook
+    from ....terminology._enums import ConceptLifecycle, TermStatus
 
     handbook = load_terminology_handbook()
     labels: set[str] = set()

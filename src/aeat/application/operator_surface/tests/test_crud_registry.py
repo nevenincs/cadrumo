@@ -33,7 +33,7 @@ class TestCatalogueShape:
 
     def test_old_split_invoice_contracts_are_gone(self) -> None:
         # The payable / collectible split collapsed into one INVOICE contract.
-        import aeat.application.operator_surface._crud_registry as registry
+        from .. import _crud_registry as registry
 
         assert not hasattr(registry, "PAYABLE_INVOICE")
         assert not hasattr(registry, "COLLECTIBLE_INVOICE")
