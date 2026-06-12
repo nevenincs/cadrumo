@@ -21,7 +21,7 @@ import re
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -32,6 +32,8 @@ from aeat.terminology._enums import TermStatus
 from aeat.terminology._errors import TerminologyLoadError
 
 from ._sweep import enumerate_query_vocabulary
+
+_UTF_8: Final[str] = "utf-8"
 
 __all__ = [
     "DEFAULT_RELATIVE_COSINE_THRESHOLDS",
@@ -223,7 +225,7 @@ def load_synonym_ratification_queue(path: Path | None = None) -> SynonymRatifica
     """Load and strictly validate the committed synonym-ratification queue."""
     target = path if path is not None else synonym_ratification_queue_path()
     try:
-        payload = json.loads(target.read_text(encoding="utf-8"))
+        payload = json.loads(target.read_text(encoding=_UTF_8))
     except OSError as exc:
         raise TerminologyLoadError(f"{target}: synonym ratification queue cannot be read: {exc}") from exc
     except json.JSONDecodeError as exc:

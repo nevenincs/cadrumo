@@ -37,7 +37,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from aeat.core.external_constants import OutputLanguage
 
@@ -47,6 +47,8 @@ if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
 logger = logging.getLogger(__name__)
+
+_UTF_8: Final[str] = "utf-8"
 
 InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
 
@@ -104,7 +106,7 @@ def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     if not path.is_file():
         return {}
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding=_UTF_8))
     except (OSError, json.JSONDecodeError):
         logger.warning("relevance file present but unreadable: %s", path)
         return {}

@@ -39,6 +39,7 @@ import html as html_entities
 import json
 import re
 from pathlib import Path
+from typing import Final
 
 from ._parts import split_units_by_budget, write_part_sidecars
 from ._schema import (
@@ -55,6 +56,7 @@ HTML_EXTRACTOR_ID = "normatives-html"
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
 HTML_EXTRACTOR_VERSION = "1.0"
+_UTF_8: Final[str] = "utf-8"
 
 #: Standing BOE/AEAT attribution used when no manifest pins a permalink.
 _BASE_ATTRIBUTION = (
@@ -173,7 +175,7 @@ def _document_boe_url(source: Path) -> str:
     if not manifest_path.is_file():
         return ""
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest = json.loads(manifest_path.read_text(encoding=_UTF_8))
     except (OSError, json.JSONDecodeError):
         return ""
     if not isinstance(manifest, dict):
@@ -206,7 +208,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     Returns:
         A list of validated records (one per sidecar pair to write).
     """
-    markup = source.read_text(encoding="utf-8")
+    markup = source.read_text(encoding=_UTF_8)
     markup = _clip_to_content(markup)
     markup = _SCRIPT.sub(" ", markup)
     markup = _STYLE.sub(" ", markup)

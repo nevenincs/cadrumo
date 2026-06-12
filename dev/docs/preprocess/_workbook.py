@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 from ._schema import (
     ExtractionStatus,
@@ -51,6 +51,7 @@ WORKBOOK_EXTRACTOR_ID = "diseno-registro-workbook"
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
 WORKBOOK_EXTRACTOR_VERSION = "1.0"
+_UTF_8: Final[str] = "utf-8"
 
 #: Column separator in the rendered field table. A pipe keeps each row on
 #: one line and survives the text chunker without being mistaken for prose.
@@ -165,7 +166,7 @@ def _attribution_for(source: Path) -> str:
     if not manifest_path.is_file():
         return base
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest = json.loads(manifest_path.read_text(encoding=_UTF_8))
     except (OSError, json.JSONDecodeError):
         return base
     artefacts = manifest.get("artefacts", [])
@@ -196,7 +197,7 @@ def _split_units_by_budget(
     current: list[PreprocessUnit] = []
     current_bytes = 0
     for unit in units:
-        unit_bytes = len(unit.text.encode("utf-8"))
+        unit_bytes = len(unit.text.encode(_UTF_8))
         if current and current_bytes + unit_bytes > _TEXT_BUDGET_BYTES:
             groups.append(current)
             current = []
