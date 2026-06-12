@@ -202,7 +202,7 @@ def _seed_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=period,
+        period=Period.from_year_and_code(filing_year, period),
         revision_id=revision_id,
         repository=wu_repo,
         clock=_T0,
@@ -240,13 +240,13 @@ def _cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str
     snapshot = resources().modelos.authority.snapshot(
         work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     )
     groups: dict[tuple[str, int, str], set[str]] = {}
     for requirement in previous_filing_observation_requirements(
         snapshot.revision,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     ):
         groups.setdefault(
             (requirement.modelo, requirement.filing_year, requirement.period),
@@ -255,7 +255,7 @@ def _cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str
     for requirement in relation_source_requirements(
         snapshot.revision,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     ):
         for period in requirement.periods:
             groups.setdefault(
@@ -283,12 +283,13 @@ def _seed_clean_cross_period_sources(
     observation_repository = CalculationObservationRepository()
     filing_catalogue = filing_repository.load()
     for (source_modelo, filing_year, period), source_casillas in sorted(groups.items()):
+        source_period = Period.from_year_and_code(filing_year, period)
         values = _source_casilla_values(source_casillas)
         current = filing_catalogue.current_for(
             bucket_id=work_unit.bucket_id,
             modelo=source_modelo,
             filing_year=filing_year,
-            period=period,
+            period=source_period,
         )
         if current is None:
             source_snapshot = resources().modelos.authority.snapshot(
@@ -308,7 +309,7 @@ def _seed_clean_cross_period_sources(
                 bucket_id=work_unit.bucket_id,
                 modelo=source_modelo,
                 filing_year=filing_year,
-                period=period,
+                period=source_period,
                 revision_id=source_snapshot.revision.id,
                 repository=work_unit_repository,
                 clock=_T0,
@@ -578,7 +579,7 @@ def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
         bucket_id="default",
         modelo=_VERIFY_MODELO,
         filing_year=_VERIFY_YEAR,
-        period=_VERIFY_PERIOD,
+        period=Period.from_year_and_code(_VERIFY_YEAR, _VERIFY_PERIOD),
         revision_id=_VERIFY_REVISION,
         repository=wu_repo,
         clock=_T0,

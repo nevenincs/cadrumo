@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import Period
 from ._file_flow_support import (
     _DEFAULT_130_BASELINE_INPUTS,
     _DEFAULT_130_BINDING_VALUES,
@@ -256,7 +257,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     required = _registry_required_manual_casillas_for(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        period=work_unit.period.registry_token,
     )
 
     revision = calculate_modelo_revision(
@@ -391,7 +392,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         bucket_id="default",
         modelo=_VERIFY_MODELO,
         filing_year=2010,
-        period=_VERIFY_PERIOD,
+        period=Period.from_year_and_code(2010, _VERIFY_PERIOD),
         revision_id=_VERIFY_REVISION,
         repository=wu_repo,
         clock=_T0,
