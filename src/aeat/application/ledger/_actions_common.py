@@ -327,20 +327,65 @@ def _verify_evidence_references(
         _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
 
 
+def _purchase_invoice_evidence_record_exists(bucket_id: str, evidence_id: str) -> bool:
+    """Return True when a ``PurchaseInvoiceEvidence`` record with ``evidence_id`` exists in the bucket.
+
+    Resolves the bucket-scoped encrypted purchase-invoice evidence store written by
+    ``aeat app ledger evidence add`` (the :class:`PurchaseInvoiceEvidence` namespace),
+    distinct from the rich :class:`InvoiceCatalogue` written by invoice-import flows.
+    Local imports mirror this module's existing deferred-import style.
+    """
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...core.config import load_settings
+    from ._evidence import PurchaseInvoiceEvidenceRepository
+
+    repository = PurchaseInvoiceEvidenceRepository(
+        objects=secure_object_repository_for_bucket(bucket_id, load_settings()),
+    )
+    document = repository.load(bucket_id)
+    if document is None:
+        return False
+    return any(record.evidence_id == evidence_id for record in document.records)
+
+
 def _verify_purchase_invoice_evidence(
     command: ManualLedgerTransactionCommand,
     *,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> None:
-    """Verify the purchase-invoice evidence reference exists, matches the bucket, and is RECEIVED."""
+    """Verify a purchase-invoice evidence reference resolves to one of two distinct id spaces.
+
+    The ``purchase_invoice_evidence_id`` may name either of two bucket-scoped id
+    spaces, checked in order:
+
+    1. A :class:`PurchaseInvoiceEvidence` record minted by ``aeat app ledger
+       evidence add`` (PDF/image evidence registered into the dedicated evidence
+       store). This is the path the receipt-OCR/PDF-evidence ADR's acceptance
+       criterion requires — an id produced by ``evidence add`` must be accepted by
+       ``aeat app ledger attach`` in the same shell session (ADR
+       ``2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence``, 2026-05-14
+       amendment).
+    2. An imported received-invoice id in the rich :class:`InvoiceCatalogue`
+       (bucket match plus :attr:`InvoiceKind.RECEIVED`), written only by the
+       invoice-import flows.
+
+    Ids minted by ``aeat app ledger invoice add`` (slim operator invoice records)
+    are deliberately NOT a valid evidence reference per the ledger-invoice
+    unification ADR's store split; they are refused with an instructive message.
+    """
     evidence_id = command.purchase_invoice_evidence_id
     if evidence_id is None:
+        return
+    if _purchase_invoice_evidence_record_exists(command.bucket_id, evidence_id):
         return
     invoices = _invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load()
     invoice = invoices.get(evidence_id)
     if invoice is None:
         raise TransactionValidationError(
-            "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record",
+            "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record "
+            "(register one from a PDF/image with `aeat app ledger evidence add`) or an imported "
+            "received-invoice id from the invoice catalogue; ids minted by `aeat app ledger invoice add` "
+            "are operator invoice records, not evidence references",
             context={"purchase_invoice_evidence_id": command.purchase_invoice_evidence_id},
         )
     if invoice.bucket_id != command.bucket_id:
