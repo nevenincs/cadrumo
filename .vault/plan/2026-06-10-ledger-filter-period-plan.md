@@ -9,12 +9,15 @@ related:
   - '[[2026-06-10-ledger-filter-period-research]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `ledger-filter-period` `Ledger shared period filter: ratify, delete residual notation, continuity gate` plan
 
@@ -22,34 +25,32 @@ related:
 
 Pin Period.contains() as the one shared filter authority for both the CLI ledger filter and the modelo calculation snapshot; add a regression guard that forbids parallel boundary implementations.
 
-
-
-- [ ] `P01.S01` - Write a boundary-authority pin test asserting Period.contains() is the sole filter path for both the CLI and the calc engine; `src/aeat/application/aggregation/tests/test_period_boundary_authority.py`.
-- [ ] `P01.S02` - Assert that the CLI filter path and the calc-engine path both produce an identical Period object for the same (year, AEAT-token) input; `src/aeat/application/aggregation/tests/test_period_boundary_authority.py`.
+- [x] `P01.S01` - Write a boundary-authority pin test asserting Period.contains() is the sole filter path for both the CLI and the calc engine; `src/aeat/application/aggregation/tests/test_period_boundary_authority.py`.
+- [x] `P01.S02` - Assert that the CLI filter path and the calc-engine path both produce an identical Period object for the same (year, AEAT-token) input; `src/aeat/application/aggregation/tests/test_period_boundary_authority.py`.
 
 ### Phase `P02` - Delete internal legacy aliases
 
 Remove the Q1-Q4, A, ANUAL, ANNUAL dead branches from aggregation_period_for_modelo and confirm the four call sites already pass canonical StandardPeriodCode tokens.
 
-- [ ] `P02.S03` - Confirm the four aggregation_period_for_modelo call sites pass canonical StandardPeriodCode tokens via CalculationSourceContext.period; `src/aeat/application/aggregation/_modelo_bindings.py`.
-- [ ] `P02.S04` - Delete the Q1-Q4, A, ANUAL, ANNUAL legacy alias branches from aggregation_period_for_modelo; `src/aeat/application/aggregation/_modelo_bindings.py:448-453`.
-- [ ] `P02.S05` - Add a test asserting aggregation_period_for_modelo raises on the deleted tokens and succeeds on every canonical StandardPeriodCode span member; `src/aeat/application/aggregation/tests/test_aggregation_period_for_modelo.py`.
+- [x] `P02.S03` - Confirm the four aggregation_period_for_modelo call sites pass canonical StandardPeriodCode tokens via CalculationSourceContext.period; `src/aeat/application/aggregation/_modelo_bindings.py`.
+- [x] `P02.S04` - Delete the Q1-Q4, A, ANUAL, ANNUAL legacy alias branches from aggregation_period_for_modelo; `src/aeat/application/aggregation/_modelo_bindings.py:448-453`.
+- [x] `P02.S05` - Add a test asserting aggregation_period_for_modelo raises on the deleted tokens and succeeds on every canonical StandardPeriodCode span member; `src/aeat/application/aggregation/tests/test_aggregation_period_for_modelo.py`.
 
 ### Phase `P03` - Migrate stale test call sites
 
 Rewrite the six broken test call sites to the canonical year-qualified AEAT-token form so the ledger-filter suite is green.
 
-- [ ] `P03.S06` - Migrate test_ledger_corpus_journeys.py:378 and test_ledger_persona_autonoma_close.py:113 from 2025Q1 to 2025-1T; `src/aeat/application/aggregation/tests/test_ledger_corpus_journeys.py, src/aeat/application/aggregation/tests/test_ledger_persona_autonoma_close.py`.
-- [ ] `P03.S07` - Migrate test_ledger_persona_yearend_m100.py:126/277/279 from bare 2025/2026 to 2025-0A/2026-0A; `src/aeat/application/aggregation/tests/test_ledger_persona_yearend_m100.py`.
-- [ ] `P03.S08` - Migrate test_ledger_list_filter.py:93-96,135 from bare YYYY to f'{year}-0A' canonical year-qualified form; `src/aeat/entrypoints/cli/tests/test_ledger_list_filter.py`.
-- [ ] `P03.S09` - Run the full ledger-filter test suite and confirm zero failures after the six migrations; `src/aeat/application/aggregation/tests/, src/aeat/entrypoints/cli/tests/`.
+- [x] `P03.S06` - Migrate test_ledger_corpus_journeys.py:378 and test_ledger_persona_autonoma_close.py:113 from 2025Q1 to 2025-1T; `src/aeat/application/aggregation/tests/test_ledger_corpus_journeys.py, src/aeat/application/aggregation/tests/test_ledger_persona_autonoma_close.py`.
+- [x] `P03.S07` - Migrate test_ledger_persona_yearend_m100.py:126/277/279 from bare 2025/2026 to 2025-0A/2026-0A; `src/aeat/application/aggregation/tests/test_ledger_persona_yearend_m100.py`.
+- [x] `P03.S08` - Migrate test_ledger_list_filter.py:93-96,135 from bare YYYY to f'{year}-0A' canonical year-qualified form; `src/aeat/entrypoints/cli/tests/test_ledger_list_filter.py`.
+- [x] `P03.S09` - Run the full ledger-filter test suite and confirm zero failures after the six migrations; `src/aeat/application/aggregation/tests/, src/aeat/entrypoints/cli/tests/`.
 
 ### Phase `P04` - Period continuity invariant and secure-storage gate
 
 Add the anti-double-count continuity invariant test covering every adjacent quarter and month pair across two or more years, and assert the encrypted-storage boundary invariant.
 
-- [ ] `P04.S10` - Write the period-continuity invariant test: for every adjacent quarter pair and adjacent month pair across 2+ years assert prior.end + 1 day == next.start and no date is contained by both; `src/aeat/application/aggregation/tests/test_period_continuity.py`.
-- [ ] `P04.S11` - Assert the encrypted-storage invariant: the period filter selects rows from SecureObjectRepository without adding any plaintext persistence surface; `src/aeat/application/aggregation/tests/test_period_boundary_authority.py`.
+- [x] `P04.S10` - Write the period-continuity invariant test: for every adjacent quarter pair and adjacent month pair across 2+ years assert prior.end + 1 day == next.start and no date is contained by both; `src/aeat/application/aggregation/tests/test_period_continuity.py`.
+- [x] `P04.S11` - Assert the encrypted-storage invariant: the period filter selects rows from SecureObjectRepository without adding any plaintext persistence surface; `src/aeat/application/aggregation/tests/test_period_boundary_authority.py`.
 
 ## Description
 
