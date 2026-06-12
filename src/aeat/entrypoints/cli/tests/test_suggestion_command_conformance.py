@@ -125,19 +125,114 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
     return None, _is_group(command)
 
 
-def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...], bool]]:
-    """Yield ``(cited_text, verb_tokens, has_trailing_help)`` per command citation.
+@cache
+def _root_option_names() -> frozenset[str]:
+    """Long/short option strings declared on the root callback.
+
+    Root-global options (``--language`` / ``--format`` / ``--profile`` /
+    ``--help`` / etc.) are accepted on any leaf, so the option-validity check
+    unions them with the resolved command's own params. Mirrors
+    :func:`test_documented_command_conformance._root_option_names`.
+    """
+    names: set[str] = set()
+    for param in _root_command().params:
+        if getattr(param, "param_type_name", None) == "option":
+            names.update(param.opts)
+            names.update(param.secondary_opts)
+    return frozenset(names)
+
+
+def _command_option_names(command: click.Command) -> frozenset[str]:
+    """Long/short option strings declared on ``command``.
+
+    Mirrors :func:`test_documented_command_conformance._command_option_names`
+    so the suggestion surface validates cited ``--option`` tokens against the
+    same authoritative live-parameter set the how-to docs are checked against.
+    """
+    names: set[str] = set()
+    for param in command.params:
+        if getattr(param, "param_type_name", None) == "option":
+            names.update(param.opts)
+            names.update(param.secondary_opts)
+    return frozenset(names)
+
+
+# An ``--option`` / ``-o`` token in suggestion text. ``--help`` is always valid
+# (it is a root global), so it never reaches the option-validity check; the
+# pattern still captures it so the citation's trailing-help recovery works.
+# A trailing ``=`` form (``--format=json``) is split to the bare option name.
+_OPTION_TOKEN_PATTERN = re.compile(r"(?<![\w-])(--[a-z][a-z0-9-]*|-[a-zA-Z])(?=[\s=.,;)\]'\"]|$)")
+
+
+def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
+    """Return the deepest live command the verb tokens resolve to, or ``None``.
+
+    Walks group-by-group exactly like :func:`_resolve_citation` but returns the
+    resolved command object (the leaf, or the deepest group) so its parameter
+    set can be introspected. Returns ``None`` when any token fails to resolve —
+    the dead-token check already reports that as a failure, so option validity
+    is only evaluated on a citation whose verb path is sound.
+    """
+    command: click.Command = _root_command()
+    context = click.Context(command, info_name="aeat")
+    for token in tokens:
+        if not _is_group(command):
+            return command
+        group = cast("click.Group", command)
+        subcommand = group.get_command(context, token)
+        if subcommand is None:
+            return None
+        context = click.Context(subcommand, info_name=token, parent=context)
+        command = subcommand
+    return command
+
+
+def _cited_options_after(text: str, start: int) -> list[str]:
+    """Extract ``--option`` tokens that belong to the citation ending at ``start``.
+
+    Scans forward from the end of the matched verb path until the next ``aeat``
+    citation begins or the text ends, so options trailing one suggested command
+    are not mis-attributed to a later one. ``--help`` is dropped (a universal
+    root global that is always runnable). ``--opt=value`` is reduced to the bare
+    option name.
+    """
+    next_match = _CITATION_PATTERN.search(text, start)
+    end = next_match.start() if next_match is not None else len(text)
+    window = text[start:end]
+    options: list[str] = []
+    for match in _OPTION_TOKEN_PATTERN.finditer(window):
+        name = match.group(1)
+        if name == "--help":
+            continue
+        options.append(name)
+    return options
+
+
+def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...], bool, tuple[str, ...]]]:
+    """Yield ``(cited_text, verb_tokens, has_trailing_help, cited_options)`` per citation.
 
     ``has_trailing_help`` records whether ``--help`` immediately follows the
     cited verb path in the source text. The citation regex stops at the first
     ``--option`` form, so a runnable ``aeat config repair integrity --help``
     citation parses as the bare-group token run; this flag recovers the
     operator-runnable distinction the regex drops.
+
+    ``cited_options`` are the ``--option`` / ``-o`` tokens the regex drops,
+    recovered from the text following the verb path (up to the next citation),
+    so a suggestion can be validated against the resolved command's parameter
+    set — catching a dead option (e.g. ``... split <id> --dry-run`` where
+    ``split`` has no ``--dry-run``) the verb-only check could never see.
     """
     for match in _CITATION_PATTERN.finditer(text):
         remainder = text[match.end() :]
         has_trailing_help = bool(re.match(r"\s+--help\b", remainder))
-        yield match.group(0), (match.group(1), *match.group(2).split()), has_trailing_help
+        cited_options = tuple(_cited_options_after(text, match.end()))
+        yield (
+            match.group(0),
+            (match.group(1), *match.group(2).split()),
+            has_trailing_help,
+            cited_options,
+        )
 
 
 def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = False) -> list[str]:
@@ -156,22 +251,54 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
     broad production-string-literal scan, where a bare ``aeat config google``
     is overwhelmingly a prose/docstring reference to a command *family*, not a
     runnable suggestion, and group-termination is legitimate there.
+
+    The flag ALSO gates option validity: under ``require_runnable_leaf`` every
+    cited ``--option`` must be a real parameter of the resolved command (or a
+    root-global option), so a suggestion citing an option the target verb does
+    not declare (e.g. ``... split <id> --dry-run`` where ``split`` carries only
+    ``--yes``) is flagged. Option validity is scoped to the runnable-suggestion
+    surfaces because reference prose can legitimately mention an option in the
+    abstract; a runnable suggestion is the line the operator pastes verbatim.
     """
     failures: list[str] = []
-    for cited, tokens, has_trailing_help in _iter_citations(text):
+    for cited, tokens, has_trailing_help, cited_options in _iter_citations(text):
         dead_token, terminates_on_group = _resolve_citation(tokens)
         if dead_token is not None:
             failures.append(f"{origin}: cites {cited!r} but {dead_token!r} does not resolve in the live CLI tree")
-        elif require_runnable_leaf and terminates_on_group and not has_trailing_help:
+            continue
+        if require_runnable_leaf and terminates_on_group and not has_trailing_help:
             failures.append(
                 f"{origin}: cites {cited!r} which resolves to a command GROUP, not a runnable leaf; "
                 "append a child command or cite '... --help' so the suggestion runs verbatim"
             )
+        if require_runnable_leaf and cited_options:
+            command = _resolve_leaf_command(tokens)
+            if command is not None and not _is_group(command):
+                valid_options = _command_option_names(command) | _root_option_names()
+                for option in cited_options:
+                    if option not in valid_options:
+                        failures.append(
+                            f"{origin}: cites {cited!r} with option {option!r}, which is not a parameter of "
+                            f"'aeat {' '.join(tokens)}' (nor a root-global option)"
+                        )
     return failures
 
 
 def _count_citations(text: str) -> int:
     return sum(1 for _ in _iter_citations(text))
+
+
+def _option_validity_failures(text: str, *, origin: str) -> list[str]:
+    """Return only the option-validity failures for ``text`` under strict mode.
+
+    A thin focused wrapper used by the anti-tautology proof so it asserts the
+    option check in isolation from the verb-path and group-termination checks.
+    """
+    return [
+        failure
+        for failure in _dead_citations_in(text, origin=origin, require_runnable_leaf=True)
+        if "with option" in failure
+    ]
 
 
 def _iter_production_modules() -> Iterator[Path]:
@@ -322,9 +449,7 @@ def test_scanner_flags_a_group_citation() -> None:
     ``objects``, ``registry``). A trailing ``.`` terminates the token run so
     the citation resolves exactly to the group.
     """
-    group_cited = _dead_citations_in(
-        "aeat config repair integrity.", origin="synthetic", require_runnable_leaf=True
-    )
+    group_cited = _dead_citations_in("aeat config repair integrity.", origin="synthetic", require_runnable_leaf=True)
     assert len(group_cited) == 1
     assert "GROUP" in group_cited[0]
 
@@ -341,3 +466,37 @@ def test_scanner_flags_a_group_citation() -> None:
     # Without the strict flag, a bare group citation is tolerated (prose-family
     # references in docstrings legitimately terminate on a group).
     assert not _dead_citations_in("aeat config repair integrity.", origin="synthetic")
+
+
+def test_scanner_flags_a_dead_option_citation() -> None:
+    """Anti-tautology proof for the option-validity rule.
+
+    A runnable suggestion that cites an ``--option`` the resolved leaf does NOT
+    declare is flagged; the same leaf's REAL option passes. ``aeat app ledger
+    split`` is a real leaf carrying ``--yes`` (the destructive-confirm flag) but
+    NOT ``--dry-run`` (only ``remove`` / ``reset`` have a dry-run preview), so a
+    suggestion steering the operator to ``... split <id> --dry-run`` sends them
+    to a flag the command does not accept. This is the dead-option class the
+    verb-only check could never see.
+    """
+    dead_option = _option_validity_failures(
+        "Re-run aeat app ledger split TX123 --dry-run to preview.", origin="synthetic"
+    )
+    assert len(dead_option) == 1, dead_option
+    assert "--dry-run" in dead_option[0]
+    assert "split" in dead_option[0]
+
+    # The real ``--yes`` flag on the same leaf passes.
+    assert not _option_validity_failures("Re-run aeat app ledger split TX123 --yes to confirm.", origin="synthetic")
+
+    # A leaf that genuinely has ``--dry-run`` (``remove``) accepts it.
+    assert not _option_validity_failures(
+        "Re-run aeat app ledger remove TX123 --dry-run to preview.", origin="synthetic"
+    )
+
+    # Root-global options (``--format`` / ``--language``) are valid on any leaf.
+    assert not _option_validity_failures("Run aeat app ledger split TX123 --format json --yes.", origin="synthetic")
+
+    # Option validity is OFF for reference prose (no strict flag), so an abstract
+    # mention of an option does not false-positive.
+    assert not _dead_citations_in("The aeat app ledger split verb has no --dry-run preview.", origin="synthetic")
