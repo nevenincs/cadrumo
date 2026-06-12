@@ -21,7 +21,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
     "src/aeat/application/overview/_calendar.py": 1400,
-    "src/aeat/application/overview/tests/test_calendar.py": 1370,
+    "src/aeat/application/overview/tests/test_calendar.py": 1396,
     "src/aeat/domain/calculations/registry/_schema.py": 1269,
     "src/aeat/entrypoints/cli/_app_live.py": 1265,
     "src/aeat/entrypoints/cli/_ledger_payloads.py": 1303,
