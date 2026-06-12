@@ -29,6 +29,7 @@ from ....adapters.outbound.aeat.sede import (
     SedeCapture,
 )
 from ....core import Modelo, Period
+from ....core.config import Settings
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import LiveApplicationInputError
 from .._justificante import resolve_period_expediente
@@ -46,6 +47,7 @@ _EXP_2T = "202613000020002B"
 _PERIOD_1T = Period.from_year_and_code(_YEAR, "1T")
 _PERIOD_2T = Period.from_year_and_code(_YEAR, "2T")
 _PERIOD_3T = Period.from_year_and_code(_YEAR, "3T")
+_AEAT = Settings.external_constants().aeat
 
 
 def _declaration(
@@ -71,7 +73,9 @@ def _expediente(*, expediente_id: str) -> Expediente:
         modelo=_MODELO,
         ejercicio=_YEAR,
         category_path=("AEAT", "Modelo 130. IRPF. Pago fraccionado."),
-        detail_url=AnyHttpUrl(f"https://sede.agenciatributaria.gob.es/wlpl/DASR-CORE/Acceso?exp={expediente_id}"),
+        detail_url=AnyHttpUrl(
+            f"{_AEAT.domains.sede}{_AEAT.sede_paths.expediente_detail_template.format(expediente_id=expediente_id)}",
+        ),
     )
 
 
@@ -202,10 +206,10 @@ def test_orchestrator_persists_period_correct_capture_offline(tmp_path: Path) ->
             csv="CSV2T0001ABCD2345",
             expediente_id=expediente.expediente_id,
             cotejo_url=AnyHttpUrl(
-                "https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=CSV2T0001ABCD2345",
+                f"{_AEAT.domains.sede}{_AEAT.sede_paths.cotejo_query}?CSV=CSV2T0001ABCD2345",
             ),
             pdf_url=AnyHttpUrl(
-                "https://sede.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=CSV2T0001ABCD2345",
+                f"{_AEAT.domains.sede}{_AEAT.sede_paths.cotejo_document}?CSV=CSV2T0001ABCD2345",
             ),
         )
         return SedeCapture(

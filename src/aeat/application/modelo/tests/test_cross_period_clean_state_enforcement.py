@@ -387,7 +387,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
                     CrossPeriodGroupMemberRoster(
                         source_modelo="322",
                         filing_year=2026,
-                        period="12",
+                        period=Period.from_year_and_code(2026, "12"),
                         member_nifs=("A00000000", "B00000001"),
                     ),
                 ),

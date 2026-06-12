@@ -10,6 +10,7 @@ import pytest
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._errors import LiveApplicationInputError
@@ -46,7 +47,7 @@ def _declaration(
     return Declaracion(
         modelo=modelo,
         ejercicio=ejercicio,
-        period=period,
+        period=Period.from_year_and_code(ejercicio, period),
         expediente_id=expediente_id,
         estado=estado,
         presented_at=presented_at or datetime(2025, 4, 15, 9, 30, tzinfo=UTC),

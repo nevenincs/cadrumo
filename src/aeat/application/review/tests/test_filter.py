@@ -116,7 +116,7 @@ def test_ledger_spec_requires_period_with_year() -> None:
         LedgerReviewFilterSpec.from_strings(["year=2026"])
 
 
-@pytest.mark.parametrize("period_code", ["2026Q1", "2026-1T", "1P", "not-a-period"])
+@pytest.mark.parametrize("period_code", ["Q1", "quarter-1", "1P", "not-a-period"])
 def test_ledger_spec_rejects_non_filterable_period_values(period_code: str) -> None:
     with pytest.raises(FilterParseError, match=r"invalid-value-ledger-period") as exc:
         LedgerReviewFilterSpec.from_strings([f"period={period_code}", "year=2026"])

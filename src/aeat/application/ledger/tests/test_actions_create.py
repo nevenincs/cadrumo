@@ -34,9 +34,12 @@ from ._action_test_support import (
     date,
     datetime,
     hashlib,
+    secure_objects,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+__all__ = ["secure_objects"]
 
 
 def test_create_manual_transaction_returns_bucket_ref(secure_objects: SecureObjectRepository) -> None:

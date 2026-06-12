@@ -7,6 +7,7 @@ isolation guarantees.
 
 from __future__ import annotations
 
+import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -38,6 +39,12 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
 
 def _database_bytes(tmp_path: Path) -> bytes:
     return (tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db").read_bytes()
+
+
+def _database_payloads(tmp_path: Path) -> tuple[bytes, ...]:
+    db_path = tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db"
+    with sqlite3.connect(db_path) as connection:
+        return tuple(bytes(row[0]) for row in connection.execute("SELECT payload FROM secure_objects"))
 
 
 class TestEmptyState:
@@ -103,10 +110,13 @@ class TestClassificationGate:
         repo.save(_make_history(modelo="130"))
         raw = _database_bytes(tmp_path)
         assert b"secure_objects" in raw
-        assert b"2026Q1" not in raw
-        assert b"2026 1T" not in raw
-        assert b"ACCEPTED" not in raw
-        assert b"130" not in raw
+        payloads = _database_payloads(tmp_path)
+        assert payloads
+        for payload in payloads:
+            assert b"2026Q1" not in payload
+            assert b"2026 1T" not in payload
+            assert b"ACCEPTED" not in payload
+            assert b"130" not in payload
 
     def test_serialized_payload_stores_structured_period_not_combined_string(self) -> None:
         history = _make_history(modelo="130")

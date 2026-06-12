@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import Period
 from ._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
     _T0,
@@ -316,7 +317,7 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos: _Repos) ->
         bucket_id="default",
         modelo="130",
         filing_year=2010,
-        period="1T",
+        period=Period.from_year_and_code(2010, "1T"),
         revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,

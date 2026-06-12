@@ -42,10 +42,9 @@ def test_aggregation_source_kind_importable_from_core() -> None:
 
 
 def test_aggregation_source_kind_members_are_complete() -> None:
-    """The enum carries the canonical source-kind members including the INVOICE alias."""
+    """The enum carries the canonical source-kind members after retiring the bare INVOICE alias."""
 
     expected = {
-        "INVOICE",
         "LEDGER_TRANSACTION",
         "PURCHASE_INVOICE_EVIDENCE",
         "PAYABLE_INVOICE",
