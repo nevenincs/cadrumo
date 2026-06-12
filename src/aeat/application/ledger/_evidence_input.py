@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_valid
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core.config import Settings
+from ...core.external_constants import PDF_MIME_TYPE
 from ._evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
 
 __all__ = [
@@ -138,7 +139,7 @@ class EvidenceInput(BaseModel):
 
 def _media_kind_from_mime(mime_type: str) -> MediaKind:
     """Map a stored attachment MIME type to the reader's ``MediaKind``."""
-    if mime_type == "application/pdf":
+    if mime_type == PDF_MIME_TYPE:
         return MediaKind.PDF
     if mime_type.startswith("image/"):
         return MediaKind.IMAGE

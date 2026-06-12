@@ -35,7 +35,7 @@ from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
 from ...core.errors import AeatError
-from ...core.external_constants import PDF_EXTENSION
+from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
@@ -55,7 +55,7 @@ _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp"
 # Concrete MIME types by source extension. The on-host vision reader needs a
 # concrete MIME (image/png vs image/jpeg), which `MediaKind` alone cannot supply.
 _SUFFIX_MIME = {
-    PDF_EXTENSION: "application/pdf",
+    PDF_EXTENSION: PDF_MIME_TYPE,
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
