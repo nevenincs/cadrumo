@@ -40,6 +40,7 @@ from ._actions_common import (
     _bucket_event_repository,
     _build_bucket_event,
     _catalogue_modelo_source_ids,
+    _draft_revision_advisories,
     _invoice_repository,
     _normalise_timestamp,
     _raise_finalized_modelo_blocked,
@@ -229,9 +230,16 @@ def remove_manual_transaction(
     event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     current = _require_transaction(catalogue, transaction_id)
+    guard_ids = _transaction_modelo_source_ids(current)
     blockers = _blocking_modelo_references(
         bucket_id=bucket_id,
-        transaction_ids=_transaction_modelo_source_ids(current),
+        transaction_ids=guard_ids,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    draft_advisories = _draft_revision_advisories(
+        bucket_id=bucket_id,
+        transaction_ids=guard_ids,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
@@ -262,6 +270,7 @@ def remove_manual_transaction(
             cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
             cascaded_attachment_ids=attachment_ids,
             blocking_modelo_references=blockers,
+            stale_draft_revision_references=draft_advisories,
         )
     if dry_run:
         return LedgerTransactionRemovalReport(
@@ -272,6 +281,7 @@ def remove_manual_transaction(
             reason=reason.strip(),
             cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
             cascaded_attachment_ids=attachment_ids,
+            stale_draft_revision_references=draft_advisories,
         )
 
     events = _removal_events(
@@ -309,6 +319,7 @@ def remove_manual_transaction(
         reason=reason.strip(),
         cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
         cascaded_attachment_ids=attachment_ids,
+        stale_draft_revision_references=draft_advisories,
         bucket_event_ids=tuple(event.event_id for event in events),
     )
 

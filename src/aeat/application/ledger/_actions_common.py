@@ -74,6 +74,17 @@ _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
         CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
     },
 )
+# Draft revisions do not block removal (the operator may legitimately prune a row
+# before finalising), but a draft that still cites the removed row will assert an
+# income/expense no longer in the books on the next verify/file. Surfacing a
+# non-blocking advisory keeps that under-declaration non-silent
+# (no-silent-under-declaration). DESCARTADO (discarded) drafts are excluded: they
+# are not live filings.
+_REMOVAL_ADVISORY_REVISION_STATES = frozenset(
+    {
+        CalculationRevisionState.BORRADOR,
+    },
+)
 
 
 def _transaction_repository(
@@ -232,6 +243,59 @@ def _blocking_modelo_references(
                 blocker.filing_year,
                 blocker.period,
                 blocker.calculation_revision_id,
+            ),
+        ),
+    )
+
+
+def _draft_revision_advisories(
+    *,
+    bucket_id: str,
+    transaction_ids: tuple[str, ...],
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> tuple[LedgerRemovalBlocker, ...]:
+    """Collect DRAFT (BORRADOR) revisions still citing the wanted transaction ids.
+
+    Removal proceeds for draft-cited rows, but the draft's
+    ``source_transaction_ids`` will still assert the removed row's income/expense
+    on the next verify/file. These advisory rows name each affected draft so the
+    operator can recalculate it (no-silent-under-declaration). Correctness rides
+    on the live revision-catalogue scan, never the derived participation index
+    (ledger-participation-index-is-derived-rebuildable).
+    """
+    if not transaction_ids:
+        return ()
+    wanted = set(transaction_ids)
+    work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
+    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    advisories: list[LedgerRemovalBlocker] = []
+    for revision in revisions.values():
+        if revision.state not in _REMOVAL_ADVISORY_REVISION_STATES:
+            continue
+        if not wanted.intersection(revision.source_transaction_ids):
+            continue
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != bucket_id:
+            continue
+        advisories.append(
+            LedgerRemovalBlocker(
+                work_unit_id=work_unit.work_unit_id,
+                calculation_revision_id=revision.calculation_revision_id,
+                revision_state=revision.state.value,
+                modelo=work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            ),
+        )
+    return tuple(
+        sorted(
+            advisories,
+            key=lambda advisory: (
+                advisory.modelo,
+                advisory.filing_year,
+                advisory.period,
+                advisory.calculation_revision_id,
             ),
         ),
     )
