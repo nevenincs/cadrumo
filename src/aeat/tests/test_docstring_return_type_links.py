@@ -13,11 +13,9 @@ resolves), that class must be cross-referenced somewhere in the function's
 docstring. Functions without a docstring are out of scope here; docstring
 presence is enforced by the ruff/interrogate gates.
 
-The gate is hard-cut with no stored baseline: it recomputes the violation
-worklist from the AST on every run and fails with a precise
-``module::function -> :class:`ReturnType``` enumeration, so coverage can only
-ratchet to green. It carries the ``docs`` marker and runs in the documentation
-CI lane.
+The gate uses an explicit backlog baseline: it recomputes the violation
+worklist from the AST on every run and fails when new items appear or when fixed
+items remain in the baseline. Coverage can only ratchet toward an empty set.
 """
 
 from __future__ import annotations
@@ -35,6 +33,44 @@ _SRC_ROOT = Path(__file__).resolve().parents[2]
 _PKG_ROOT = _SRC_ROOT / "aeat"
 
 _ROLE = re.compile(r":(?:class|obj|meth|func|data|attr|exc):`[^`]*?([A-Za-z_][A-Za-z0-9_]*)`")
+
+_RETURN_TYPE_LINK_BASELINE: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("aeat.application.aggregation._oss_ioss::oss_ioss_candidates_from_repositories", "OssIossLedgerCandidate"),
+        ("aeat.application.calculations._ports::period", "Period"),
+        ("aeat.application.live._justificante::capture", "JustificanteCaptureSnapshot"),
+        ("aeat.application.live._justificante::reconcile_capture", "ModeloReconciliationReport"),
+        ("aeat.application.live._justificante::stamp_capture_evidence_if_filed", "ModeloRecord"),
+        ("aeat.application.live::capture_justificante_snapshot", "JustificanteCaptureSnapshot"),
+        ("aeat.core._period::from_registry_authoring_string", "Period"),
+        ("aeat.core._period::from_string", "Period"),
+        ("aeat.core.json_contract::derive_status", "EnvelopeStatus"),
+        ("aeat.domain.calculations.registry._queries::casillas_for_scope", "ModeloCasillasReport"),
+        ("aeat.domain.calculations.registry._queries::describe_modelo_for_scope", "ModeloDescribeReport"),
+        ("aeat.domain.calculations.registry._queries::formulas_for_scope", "ModeloFormulasReport"),
+        ("aeat.domain.calculations.registry._schema::filing_period_from_scope", "Period"),
+        ("aeat.domain.invoices._enums::iva_rate_kind", "IvaRateKind"),
+        ("aeat.domain.modelos._participation_index::secure_object_repository", "SecureObjectRepository"),
+        (
+            "aeat.domain.modelos._participation_index::upsert_transaction_participation",
+            "TransactionRevisionParticipationIndex",
+        ),
+        ("aeat.entrypoints.cli._overview_rendering::overview_next_step_notices", "Notice"),
+        ("aeat.locales._modelo_manager::coverage_record", "ModeloLocaleCoverageRecord"),
+        ("aeat.locales._modelo_manager::drift_records", "ModeloLocaleDriftRecord"),
+        ("aeat.locales._modelo_manager::inventory_keys", "ModeloLocaleInventoryKey"),
+        ("aeat.locales._modelo_manager::load_modelo", "ModeloDefinition"),
+        ("aeat.locales._modelo_manager::load_translation_file", "ModeloLocaleTranslationFile"),
+        ("aeat.terminology._enrolment::collect_enrolment_candidates", "EnrolmentCandidate"),
+        ("aeat.terminology._loader::by_id", "ConceptRecord"),
+        ("aeat.terminology._loader::load_bundled_terminology_handbook", "TerminologyHandbook"),
+        ("aeat.terminology._ratchet::check_curation_backlog_ratchet", "CurationBacklogRatchetResult"),
+        ("aeat.terminology._ratchet::load_curation_backlog_ratchet_baseline", "CurationBacklogRatchetBaseline"),
+        ("aeat.terminology._scaffold::by_action", "ScaffoldEntry"),
+        ("aeat.terminology._scaffold::counts", "ScaffoldAction"),
+        ("aeat.terminology._schema::language_codes", "OutputLanguage"),
+    },
+)
 
 
 def _is_in_scope(path: Path) -> bool:
@@ -80,7 +116,7 @@ def _linkable_classes() -> set[str]:
 def test_public_functions_link_their_aeat_return_type() -> None:
     """A documented public function must cross-link an aeat-typed return annotation."""
     linkable = _linkable_classes()
-    violations: dict[str, list[str]] = defaultdict(list)
+    violations: set[tuple[str, str]] = set()
     for path in _PKG_ROOT.rglob("*.py"):
         if not _is_in_scope(path):
             continue
@@ -100,16 +136,20 @@ def test_public_functions_link_their_aeat_return_type() -> None:
             linked = {m for m in _ROLE.findall(doc)}
             returned = {n for n in _annotation_names(node.returns) if n in linkable}
             for name in sorted(returned - linked):
-                violations[f"{module}::{node.name}"].append(name)
+                violations.add((f"{module}::{node.name}", name))
 
-    if violations:
-        total = sum(len(v) for v in violations.values())
+    new_violations = sorted(violations - _RETURN_TYPE_LINK_BASELINE)
+    resolved_baseline = sorted(_RETURN_TYPE_LINK_BASELINE - violations)
+    if new_violations or resolved_baseline:
         lines = [
-            f"{total} public functions return an aeat type their docstring does not link.",
+            f"{len(new_violations)} new public return-type docstring link violation(s).",
             "Cross-link the return type (e.g. in the Returns: section) with :class:`Name`:",
             "",
         ]
-        for symbol in sorted(violations):
-            for name in sorted(violations[symbol]):
-                lines.append(f"  {symbol}  ->  :class:`{name}`")
+        for symbol, name in new_violations:
+            lines.append(f"  + {symbol}  ->  :class:`{name}`")
+        if resolved_baseline:
+            lines.extend(("", "Resolved baseline entries; remove them from _RETURN_TYPE_LINK_BASELINE:"))
+            for symbol, name in resolved_baseline:
+                lines.append(f"  - {symbol}  ->  :class:`{name}`")
         pytest.fail("\n".join(lines))
