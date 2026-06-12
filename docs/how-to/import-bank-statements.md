@@ -69,11 +69,12 @@ date automatically.
 Use `ledger add` when a transaction is missing from imported statements:
 
 ```bash
-aeat app ledger add --date 2026-03-15 --amount=-49.99 --direction OUTGOING --description "Software subscription"
+aeat app ledger add --date 2026-03-15 --amount 49.99 --direction OUTGOING --description "Software subscription"
 ```
 
-Required fields are date, amount (`-` prefix for expenses, no prefix for
-income), direction, and description. `OUTGOING` is for expenses — money
+Required fields are date, amount, direction, and description. Write the amount
+as a positive figure — the direction carries whether money came in or went
+out, and the command refuses a negative amount. `OUTGOING` is for expenses — money
 you paid out. `INCOMING` is for income — money you received.
 
 For a received payment or issued invoice, use `INCOMING`:
@@ -85,19 +86,20 @@ aeat app ledger add --date 2026-03-20 --amount 121.00 --direction INCOMING --des
 For an expense or supplier invoice, use `OUTGOING`:
 
 ```bash
-aeat app ledger add --date 2026-03-21 --amount=-60.50 --direction OUTGOING --description "Office supplies"
+aeat app ledger add --date 2026-03-21 --amount 60.50 --direction OUTGOING --description "Office supplies"
 ```
 
 Use the invoice commands when you also need to track whether an invoice exists
 separately from the bank movement:
 
 ```bash
-aeat app ledger payable-invoice --help
-aeat app ledger collectible-invoice --help
+aeat app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-21
+aeat app ledger invoice list --kind issued
 ```
 
-Payable invoices are supplier invoices you owe. Collectible invoices are
-customer invoices owed to you.
+Received invoices are supplier invoices you owe. Issued invoices are customer
+invoices owed to you. Run `aeat app ledger invoice --help` for the full
+command list.
 
 ## Review rows
 
@@ -190,23 +192,27 @@ aeat app ledger attach <transaction-id> --attachment-id <attachment-id>
 aeat app ledger link <transaction-id> --invoice-id <invoice-id> --evidence-id <evidence-id>
 ```
 
-Record a link to a Gmail, Google Drive, or URL without copying the file:
+Pull a document straight from Google Drive into encrypted evidence storage:
 
 ```bash
 aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
-The link is saved with the transaction. aeat does not access or download the
-file.
+The command downloads the Drive file, stores its bytes encrypted with the
+transaction, and keeps the original link as provenance. Gmail links, arbitrary
+URLs, and Drive files outside the granted scope are refused — evidence always
+carries the document itself, never a bare link. For a refused source, download
+the document yourself and attach it with `aeat app ledger attach
+--attachment-id`.
 
 ## Split and re-join a transaction
 
 Use `split` when one bank movement contains parts that need different
-categories or business percentages. For example, split a `-121.00` movement
-into software and personal parts:
+categories or business percentages. For example, split a `121.00` outgoing
+movement into software and personal parts:
 
 ```bash
-aeat app ledger split <transaction-id> --child-amount=-100.00 --child-description "Software business part" --child-amount=-21.00 --child-description "Personal part" --reason "mixed receipt" --yes
+aeat app ledger split <transaction-id> --child-amount 100.00 --child-description "Software business part" --child-amount 21.00 --child-description "Personal part" --reason "mixed receipt" --yes
 ```
 
 aeat replaces the original transaction with two separate entries — one for

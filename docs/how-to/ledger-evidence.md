@@ -7,7 +7,7 @@ Store an evidence record for each invoice or receipt and link it to the transact
 You need:
 
 - Transactions in your ledger. If your ledger is empty, see [Work with transactions](import-bank-statements.md) first.
-- The invoice or receipt as a PDF or image file. aeat records the file's location and a content fingerprint together with the facts you type. The file itself stays where it is, so keep it in place.
+- The invoice or receipt as a PDF or image file. aeat copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as provenance. Your original file is never needed again after `add`.
 
 ## Add an evidence record
 
@@ -37,17 +37,15 @@ Generic file attachments are separate. Use `--attachment-id` (repeatable) to att
 aeat app ledger attach <transaction-id> --attachment-id <file-id>
 ```
 
-## Link an external document instead
+## Pull a document from Google Drive instead
 
-When the document lives elsewhere - in Google Drive, in Gmail, or at a URL - record a document link instead:
+When the document lives in Google Drive, pull it straight into encrypted evidence storage:
 
 ```bash
 aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"
 ```
 
-Accepted sources are `GMAIL`, `GOOGLE_DRIVE`, and `URL`.
-
-The link is saved with the transaction as a reference only. aeat never accesses or downloads the file.
+The command downloads the Drive file, stores its bytes encrypted with the transaction, and keeps the original link as provenance. Evidence always carries the document itself, never a bare link: Gmail links, arbitrary URLs, and Drive files outside the granted scope are refused. For a refused source, download the document yourself and attach it with `aeat app ledger evidence add` or `aeat app ledger attach --attachment-id`.
 
 ## List, view, update, and remove evidence records
 
