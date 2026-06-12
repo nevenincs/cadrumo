@@ -141,6 +141,13 @@ Export the file, upload it at the AEAT portal yourself, record, and reconcile.
 Compare local filing data with the AEAT justificante.
 :::
 
+:::{grid-item-card} Filing Receipts
+:link: justificante-receipts
+:link-type: doc
+
+Pull, store, and inspect the AEAT justificante for each filed period.
+:::
+
 ::::
 
 ## How does this work?
@@ -221,6 +228,7 @@ modelo-390
 verification-reports
 file-at-aeat
 reconcile
+justificante-receipts
 troubleshooting
 authenticate-with-aeat
 ```
