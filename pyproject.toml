@@ -511,6 +511,7 @@ convention = "google"
 "dev/docs/tests/test_cli_reference_conformance.py" = ["F401"]
 "src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_help_without_secrets.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_json_error_contract.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]
