@@ -708,6 +708,10 @@ def test_sede_calculation_observation_is_not_justificante_verification() -> None
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": "12345678901234567890",
+        },
     )
 
     evidence = calendar_filing_evidence_from_sources(calculation_observations=(payload,))
@@ -715,8 +719,55 @@ def test_sede_calculation_observation_is_not_justificante_verification() -> None
     assert len(evidence) == 1
     row = evidence[0]
     assert row.aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    assert row.aeat_reference_id == "12345678901234567890"
     assert row.aeat_evidence_kind == "aeat_sede_justificante"
     assert row.justificante_verified is False
+
+
+def test_sede_calculation_observation_with_non_alta_metadata_is_not_submission_evidence() -> None:
+    payload = _ObservationEnvelopePayload(
+        observation=RegistryModeloObservation(
+            modelo="303",
+            filing_year=2025,
+            period="1T",
+            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+        ),
+        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        source_kind="aeat_sede_justificante",
+        source_metadata={
+            "aeat_register_status": "BAJA",
+            "aeat_expediente_id": "12345678901234567890",
+        },
+    )
+
+    evidence = calendar_filing_evidence_from_sources(calculation_observations=(payload,))
+
+    assert evidence == ()
+
+
+def test_sede_calculation_observation_for_wrong_authenticated_identity_is_ignored() -> None:
+    payload = _ObservationEnvelopePayload(
+        observation=RegistryModeloObservation(
+            modelo="303",
+            filing_year=2025,
+            period="1T",
+            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+        ),
+        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        source_kind="aeat_sede_justificante",
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": "12345678901234567890",
+            "authenticated_identity": "Y7654321Z",
+        },
+    )
+
+    evidence = calendar_filing_evidence_from_sources(
+        calculation_observations=(payload,),
+        expected_tax_id="X1234567L",
+    )
+
+    assert evidence == ()
 
 
 def test_filed_declaration_observation_with_stored_justificante_marks_verified() -> None:
