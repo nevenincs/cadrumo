@@ -216,7 +216,7 @@ def test_review_renders_corpus() -> None:
 def test_operator_can_filter_income_vs_expense() -> None:
     _import_corpus()
     rows = _list_rows()
-    # On import, direction is resolved from the amount sign; every row lands
+    # On import, direction is resolved once from the source-signed amount; every row lands
     # INCOMING or OUTGOING and NOT_YET_PROCESSED. INTERNAL_TRANSFER is an
     # operator classification applied later (transfers are not auto-detected),
     # so the raw import carries only the two settlement directions plus the
@@ -701,7 +701,7 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() 
     rows = _list_rows()
     transfer = _find(rows, "Transferencia a cuenta personal CaixaBank")
     tx = transfer["transaction_id"]
-    # Import resolves direction from the amount sign — never INTERNAL_TRANSFER.
+    # Import resolves direction once from the source-signed amount — never INTERNAL_TRANSFER.
     assert transfer["direction"] == "OUTGOING"
     assert transfer["business_classification"] == "NOT_YET_PROCESSED"
 
@@ -792,7 +792,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    from ....core import resolve_active_bucket_id
+    from ....core import Period, resolve_active_bucket_id
     from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ....domain.modelos._calculation_revision import (
         CalculationRevision,
@@ -810,8 +810,9 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
 
+    period = Period.from_year_and_code(2025, "1T")
     work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id, modelo="303", filing_year=2025, period="1T", revision_id="2009-y-siguientes",
+        bucket_id=bucket_id, modelo="303", filing_year=2025, period=period, revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -829,7 +830,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
                     bucket_id=bucket_id,
                     modelo=ModeloCode("303"),
                     filing_year=2025,
-                    period="1T",
+                    period=period,
                     revision_id="2009-y-siguientes",
                     name="303-2025-1T",
                     created_at=now,
