@@ -126,6 +126,9 @@ from ._verification_actions import (
     _PREDICATE_CAP_LE_WHEN_POSITIVE as _PREDICATE_CAP_LE_WHEN_POSITIVE,
 )
 from ._verification_actions import (
+    _PREDICATE_IMPLIES_ANY_NONZERO as _PREDICATE_IMPLIES_ANY_NONZERO,
+)
+from ._verification_actions import (
     _PREDICATE_IMPLIES_NONZERO as _PREDICATE_IMPLIES_NONZERO,
 )
 from ._verification_actions import (

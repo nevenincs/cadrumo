@@ -58,6 +58,7 @@ from ._calculation_helpers import (
 from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
+from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
 from ._registry_helpers import normalize_casilla_input_aliases as _normalize_casilla_input_aliases
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
@@ -774,6 +775,17 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         detail_rows=detail_rows,
         clock=clock,
     )
+    # Stage 1 advisory (no-silent-under-declaration): a ledger-driven calculate
+    # folds cuota into the semantic aggregate layer while the official
+    # Diseño-de-Registros numbered boxes (manual, the cells the human transcribes
+    # to the AEAT sede) stay zero. Surface that contradiction as a non-blocking
+    # advisory, reusing the revision's ADVISORY implies_any_nonzero predicates as
+    # the single total→constituent mapping so it cannot drift from the verify gate.
+    official_box_diagnostics = collect_official_box_unpopulated_diagnostics(
+        snapshot.revision,
+        revision.casilla_values,
+    )
+    source_diagnostics = source_diagnostics + official_box_diagnostics
     return BucketAggregationCalculationResult(
         revision=revision,
         source_diagnostics=source_diagnostics,

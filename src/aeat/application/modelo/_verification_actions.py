@@ -95,9 +95,11 @@ from ._action_errors import (
     ModeloCrossPeriodCleanStateError,
     WorkUnitNotFoundError,
 )
-from ._calculation_actions import _iva_wallet_blocked_message
 from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
+)
+from ._iva_wallet_gate import (
+    iva_wallet_blocked_message as _iva_wallet_blocked_message,
 )
 from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
@@ -122,6 +124,13 @@ _PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(r"^cap_le_when_positive\(\[(?P<ids
 # invariants of the shape "cuando C01 sea positivo, C07 debe ser distinta
 # de cero" (M131 EO cuota mínima, M130/M303 régimen simplificado analogues).
 _PREDICATE_IMPLIES_NONZERO = _re.compile(r"^implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
+# implies_any_nonzero(["antecedent_id", "c1_id", "c2_id", ...]) — the
+# N-consequent generalisation of implies_nonzero: predicate holds iff the
+# antecedent is <= 0 OR at least one of the listed consequents is non-zero.
+# Authored for the M303 official-Diseño under-declaration contradiction (a
+# positive computed total with every constituent official numbered box still
+# zero). See the implies_any_nonzero branch in _evaluate_advisory_predicate_fires.
+_PREDICATE_IMPLIES_ANY_NONZERO = _re.compile(r"^implies_any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 # profile_field_required("field_name", "applicability_filter") —
 # profile-state-aware conditional non-zero requirement; sibling of
 # implies_nonzero per the dsl-conditional-predicate ADR. The
@@ -197,6 +206,9 @@ def _evaluate_predicate_expression(
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with strictly-positive antecedent: predicate holds iff
       antecedent <= 0 OR consequent != 0.
+    - ``implies_any_nonzero(["antecedent_id", "c1_id", ...])`` — N-consequent
+      generalisation: predicate holds iff antecedent <= 0 OR at least one
+      listed consequent != 0 (M303 official-Diseño under-declaration shape).
     - ``profile_field_required("field_name", "applicability_filter")`` —
       profile-state-aware conditional non-zero requirement; sibling of
       ``implies_nonzero`` per the dsl-conditional-predicate ADR.
@@ -261,6 +273,24 @@ def _evaluate_predicate_expression(
             return True
         consequent = casilla_values.get(consequent_id, Decimal(0))
         return consequent != Decimal(0)
+
+    m = _PREDICATE_IMPLIES_ANY_NONZERO.match(expr)
+    if m:
+        # implies_any_nonzero(["antecedent_id", "c1_id", ...]) — material
+        # implication "antecedent strictly positive → at least one consequent
+        # non-zero". Predicate holds (returns True) when the expression names
+        # no consequents (defensive), the antecedent is <= 0 (implication
+        # trivially holds), or ANY consequent is non-zero. The violation case
+        # (returns False) is "antecedent strictly positive AND every consequent
+        # == 0" — the M303 silent-under-declaration shape. Missing consequents
+        # read as Decimal(0) via .get, same convention as the other operators.
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) < 2:
+            return True
+        antecedent = casilla_values.get(ids[0], Decimal(0))
+        if antecedent <= Decimal(0):
+            return True
+        return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids[1:])
 
     m = _PREDICATE_PROFILE_FIELD_REQUIRED.match(expr)
     if m:
@@ -341,6 +371,11 @@ def _evaluate_advisory_predicate_fires(
       a likely silent under-declaration that a positive-result entity should
       confirm (legitimate zero-base via BIN compensation remains permissible,
       hence advisory rather than blocking).
+    - ``implies_any_nonzero(["antecedent_id", "c1_id", ...])`` — the
+      N-consequent generalisation: fires when the antecedent is strictly
+      positive but EVERY listed consequent is zero. The M303 official-Diseño
+      contradiction (a positive computed total whose constituent official
+      numbered boxes are all unpopulated by the calculate path).
     """
     expr = expression.strip()
     m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
@@ -365,6 +400,20 @@ def _evaluate_advisory_predicate_fires(
         antecedent = casilla_values.get(ids[0], Decimal(0))
         consequent = casilla_values.get(ids[1], Decimal(0))
         return antecedent > Decimal(0) and consequent == Decimal(0)
+    m = _PREDICATE_IMPLIES_ANY_NONZERO.match(expr)
+    if m:
+        # Fires (advisory shown) when the antecedent is strictly positive but
+        # EVERY listed consequent is zero — the M303 official-Diseño
+        # contradiction (a positive computed total whose constituent official
+        # numbered boxes are all unpopulated). See the docstring branch in
+        # _evaluate_predicate_expression for the BLOCKING_RULE complement.
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) < 2:
+            return False
+        antecedent = casilla_values.get(ids[0], Decimal(0))
+        if antecedent <= Decimal(0):
+            return False
+        return all(casilla_values.get(cid, Decimal(0)) == Decimal(0) for cid in ids[1:])
     return False
 
 

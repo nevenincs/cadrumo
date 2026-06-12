@@ -51,6 +51,7 @@ CalculationSourceDiagnosticReason = Literal[
     "unhandled_binding_source",
     "oss_no_live_source",
     "missing_transaction_evidence",
+    "official_box_unpopulated",
 ]
 
 # Source kinds that are explicitly deferred — no mesh resolver is built yet, but
