@@ -723,6 +723,127 @@ def apply_saturated_llm_classification(
     return result
 
 
+# ── operator-initiated derivation (no LLM) ────────────────────────
+
+
+class OperatorIvaDerivationResult(BaseModel):
+    """Result of an operator-initiated IVA derivation for one transaction.
+
+    The operator selects the :class:`aeat.domain.iva.IvaCategory`; the system
+    resolves the registry rate and derives the taxable base and IVA amount with
+    a deterministic inverse split — never a guessed number, exactly as the
+    saturating LLM path does, but without the model. ``derivable`` is False for
+    a category with no simple Spanish domestic rate, in which case nothing is
+    persisted and ``note`` explains why the operator must complete the figures.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str
+    iva_category: IvaCategory
+    derivable: bool
+    iva_rate: Decimal | None = None
+    taxable_base: Decimal | None = None
+    iva_amount: Decimal | None = None
+    note: str = ""
+    result: ManualLedgerTransactionResult | None = None
+
+
+def derive_operator_iva_substrate(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    iva_category: IvaCategory,
+    on_date: date | None = None,
+    actor: str = "operator",
+    source_command: str = "aeat app ledger classify --iva-category --saturate",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> OperatorIvaDerivationResult:
+    """Derive and persist the IVA substrate for an OPERATOR-chosen category.
+
+    The same grounded derivation the saturating LLM path uses
+    (:func:`aeat.domain.iva.resolve_category_rate` +
+    :func:`aeat.domain.iva.split_gross_at_rate`), but initiated by the operator
+    rather than the model — the fallback for when the model declines (returns
+    ``unknown``) or the operator simply knows the category. Given a transaction
+    already classified BUSINESS or MIXED and the selected
+    :class:`aeat.domain.iva.IvaCategory`, it resolves the registry rate, splits
+    the gross into taxable base and IVA amount, and persists them through the
+    manual write with ``derived:`` provenance. Only the IVA substrate is
+    touched; the business classification stays as-is. A non-derivable category
+    persists nothing and returns an explanatory note.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        TransactionValidationError: When the transaction is not classified
+            BUSINESS or MIXED (IVA applies only to business activity).
+    """
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    transaction = repository.load().get(transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+    if transaction.business_classification not in {
+        BusinessClassification.BUSINESS,
+        BusinessClassification.MIXED,
+    }:
+        raise TransactionValidationError(
+            "IVA derivation applies only to a business transaction; classify it as "
+            "BUSINESS or MIXED first, then derive the IVA substrate",
+            context={"transaction_id": transaction_id},
+        )
+    effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
+    iva_rate, taxable_base, iva_amount, derivable, note = _derive_iva_substrate(
+        iva_category,
+        gross=transaction.raw.amount,
+        on_date=effective_date,
+    )
+    if not derivable:
+        return OperatorIvaDerivationResult(
+            transaction_id=transaction_id,
+            iva_category=iva_category,
+            derivable=False,
+            note=note,
+        )
+    patch = ManualLedgerTransactionPatch.model_validate(
+        {
+            "iva_category": iva_category,
+            "iva_rate": iva_rate,
+            "taxable_base": taxable_base,
+            "iva_amount": iva_amount,
+        }
+    )
+    result = update_manual_transaction_fields(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        patch=patch,
+        actor=actor,
+        source_command=source_command,
+        classified_by_override="derived:iva-category",
+        transaction_repository=transaction_repository,
+        bucket_event_repository=bucket_event_repository,
+        occurred_at=occurred_at,
+    )
+    _logger.info(
+        "operator iva derive: transaction=%s iva_category=%s rate=%s base=%s amount=%s",
+        transaction_id,
+        iva_category.value,
+        iva_rate,
+        taxable_base,
+        iva_amount,
+    )
+    return OperatorIvaDerivationResult(
+        transaction_id=transaction_id,
+        iva_category=iva_category,
+        derivable=True,
+        iva_rate=iva_rate,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
+        result=result,
+    )
+
+
 # ── stage-3b: evidence-driven N-way split ─────────────────────────
 
 
@@ -1038,10 +1159,12 @@ __all__ = [
     "LLMSplitApplyResult",
     "LLMSplitChildSuggestion",
     "LLMSplitSuggestion",
+    "OperatorIvaDerivationResult",
     "apply_evidence_split",
     "apply_llm_classification",
     "apply_saturated_llm_classification",
     "available_llm_providers",
+    "derive_operator_iva_substrate",
     "is_llm_provider_available",
     "saturate_llm_classification",
     "suggest_evidence_split",

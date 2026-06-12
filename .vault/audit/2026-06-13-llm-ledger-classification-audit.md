@@ -99,6 +99,39 @@ usage.
 F1 confirms the feature is robust and grounded; F2 is the one substantive gap
 to closing the operator experience and is tracked for the next increment.
 
+## Resolution
+
+### F2 (CLOSED) Operator-initiated derivation wired
+
+`derive_operator_iva_substrate` (`application/ledger/_llm_classification.py`)
+now lets an operator pick the IVA category and have the system derive the
+base / rate / amount from the registry — the same grounded
+`_derive_iva_substrate` path the LLM saturate uses, reached without `--llm`.
+`aeat app ledger classify <id> --iva-category <derivable> --saturate` (no
+`--llm`) derives and persists through the existing manual write, stamped with a
+new `derived:iva-category` provenance. The derivation only touches the IVA
+substrate (the business classification and its provenance are untouched), is
+guarded to BUSINESS/MIXED rows (refuses a non-business row instructively), and
+refuses a non-derivable category with the grounded reason rather than guessing.
+The `classified_by` contract (`domain/transactions/_models.py`
+`_validate_classified_by_shape`) gained a `derived:<basis>` shape so a
+registry-derived value is auditable as distinct from a hand-typed `manual`
+value and an `llm:<model>` value. Real-behavior coverage: operator-derive
+persistence + provenance + non-derivable + non-business-refusal + zero-rate at
+the application layer (`test_llm_saturation.py`), the reachable CLI route end to
+end (`test_ledger_llm_saturate.py`), and the extended provenance whitelist
+(`test_models.py`). The `--saturate`-without-`--llm` refusal was reworded across
+all four locale catalogues to point at `--iva-category` or `--llm`, and
+`docs/how-to/classify-with-llm.md` documents the derive-yourself path and the
+`unknown` outcome (part of F4).
+
+### F3 / F4 / F5 (open)
+
+F3 (self-assessed-branch unit pair), the remaining F4 doc items (the two
+undocumented provider/passphrase error messages in setup/troubleshooting), and
+F5 (the `split_gross_at_rate` docstring) remain tracked follow-ups for a
+subsequent increment.
+
 ## Codification candidates
 
 None new. F1 confirms the team is already following the

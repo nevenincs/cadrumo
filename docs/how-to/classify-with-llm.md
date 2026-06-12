@@ -143,7 +143,8 @@ purchase) shows a short note instead of numbers, and you complete those by hand.
 The model may also decline to pick an IVA category and return `unknown`, even
 for an ordinary domestic purchase — it chooses not to guess. When that happens
 no numbers are derived. Re-run the suggestion (a different provider may decide),
-or complete the IVA fields by hand, as the override below shows.
+or pick the category yourself and let the system derive the numbers, as
+[Derive the IVA fields yourself](#derive-the-iva-fields-yourself) shows.
 
 Apply a saturated suggestion after review:
 
@@ -151,11 +152,34 @@ Apply a saturated suggestion after review:
 aeat app ledger classify <transaction-id> --llm claude --saturate --apply
 ```
 
-Override any field by classifying manually afterwards. Manual classification
-always wins. The tool only derives the base, rate, and amount through
-`--saturate`; when you set the IVA category by hand you also supply the figures
-yourself — passing `--iva-category` alone records the category but does not
-compute the numbers:
+## Derive the IVA fields yourself
+
+When you already know the IVA category — or the model returned `unknown` — pick
+the category yourself and let the system derive the numbers. Classify the row
+as a business expense first, then run `--saturate` with `--iva-category` and no
+`--llm`:
+
+```bash
+aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
+aeat app ledger classify <transaction-id> --iva-category domestic_general_21 --saturate
+```
+
+The second command derives the taxable base, IVA rate, and IVA amount from the
+official rate for that category and the transaction total, exactly as the model
+path does. It records that the numbers were system-derived, not hand-entered. It
+only touches the IVA fields; the business classification you chose first stays as
+it is. The row must already be classified business or mixed — IVA applies only to
+business activity.
+
+A category with no simple Spanish rate (an intra-community supply, a
+reverse-charge purchase) cannot be derived this way; the command says so and you
+complete those figures by hand, as the manual override below shows.
+
+## Override the fields by hand
+
+Override any field by classifying manually. Manual classification always wins
+and supersedes a derived or model-applied value. Set the IVA category together
+with the figures yourself:
 
 ```bash
 aeat app ledger classify <transaction-id> --classification BUSINESS --iva-category domestic_reduced_10 --taxable-base 110.00 --iva-rate 0.10 --iva-amount 11.00
