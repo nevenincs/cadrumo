@@ -21,6 +21,7 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede import Declaracion, Expediente, JustificanteRef, SedeCapture
 from ....core import Modelo, Period
+from ....core.config import Settings
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.justificante import JustificanteRepository
 from ....domain.modelos import (
@@ -245,6 +246,7 @@ def test_stamp_refuses_when_no_current_filing_exists() -> None:
 
 
 _EXP_130_1T = "202613000010001A"
+_AEAT = Settings.external_constants().aeat
 
 
 def _seam_providers(*, pdf_bytes: bytes):
@@ -272,7 +274,10 @@ def _seam_providers(*, pdf_bytes: bytes):
                 modelo="130",
                 ejercicio=2026,
                 category_path=("AEAT", "Modelo 130"),
-                detail_url=AnyHttpUrl(f"https://sede.agenciatributaria.gob.es/acc?exp={_EXP_130_1T}"),
+                detail_url=AnyHttpUrl(
+                    f"{_AEAT.domains.sede}"
+                    f"{_AEAT.sede_paths.expediente_detail_template.format(expediente_id=_EXP_130_1T)}",
+                ),
             ),
         )
 
@@ -280,8 +285,8 @@ def _seam_providers(*, pdf_bytes: bytes):
         ref = JustificanteRef(
             csv="ABCD1234EFGH5678",
             expediente_id=expediente.expediente_id,
-            cotejo_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/cotejo/CotejoIdSv?CSV=ABCD1234EFGH5678"),
-            pdf_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/cotejo/CotejoDocIdSv?CSV=ABCD1234EFGH5678"),
+            cotejo_url=AnyHttpUrl(f"{_AEAT.domains.sede}{_AEAT.sede_paths.cotejo_query}?CSV=ABCD1234EFGH5678"),
+            pdf_url=AnyHttpUrl(f"{_AEAT.domains.sede}{_AEAT.sede_paths.cotejo_document}?CSV=ABCD1234EFGH5678"),
         )
         return SedeCapture(
             expediente=expediente,
