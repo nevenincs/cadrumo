@@ -114,3 +114,54 @@ def test_attachment_store_refuses_link_only_uri_list_manifest(tmp_path: Path) ->
 
         loaded = store.load_manifest(attachment.attachment_id)
         assert loaded.mime_type == "application/pdf"
+
+
+@pytest.mark.parametrize(
+    "disguised_mime",
+    [
+        "text/uri-list; charset=utf-8",
+        "text/uri-list;charset=us-ascii",
+        "TEXT/URI-LIST; q=0.9",
+        "text/uri-list ; boundary=x",
+    ],
+)
+def test_parameterized_uri_list_mime_is_refused_at_both_boundaries(
+    tmp_path: Path,
+    disguised_mime: str,
+) -> None:
+    """A parameter section must not smuggle a link-only media type past the guards.
+
+    MIME syntax allows ``type/subtype; param=value``; a full-string equality
+    check accepted ``text/uri-list; charset=utf-8``. Both the model validator
+    and the store write guard must compare the parsed media type.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        store = AttachmentStore()
+        attachment = add_attachment_bytes(
+            store,
+            data=b"%PDF-1.4\nbyte-bearing-document-for-param-variants\n",
+            kind=AttachmentKind.DRIVE_DOCUMENT,
+            source=AttachmentSource.GOOGLE_DRIVE,
+            source_reference="https://drive.google.com/file/d/parammime/view",
+            mime_type="application/pdf",
+            captured_at=datetime.now(UTC).replace(microsecond=0),
+        )
+
+        manifest_payload = attachment.model_dump(mode="python")
+        manifest_payload["mime_type"] = disguised_mime
+        with pytest.raises(ValidationError, match="link-only URI list"):
+            Attachment.model_validate(manifest_payload)
+
+        tampered = attachment.model_copy(update={"mime_type": disguised_mime})
+        with pytest.raises(AttachmentValidationError, match="link-only URI list"):
+            store.write_manifest(tampered)
+
+        # A parameterized NON-link media type stays accepted: the guard parses
+        # the media type, it does not blanket-refuse parameter sections.
+        parameterized_ok = attachment.model_dump(mode="python")
+        parameterized_ok["mime_type"] = "text/plain; charset=utf-8"
+        revalidated = Attachment.model_validate(parameterized_ok)
+        assert revalidated.mime_type == "text/plain; charset=utf-8"
+
+        loaded = store.load_manifest(attachment.attachment_id)
+        assert loaded.mime_type == "application/pdf"

@@ -27,6 +27,19 @@ _HEX_DIGITS = frozenset("0123456789abcdef")
 _LINK_ONLY_MIME_TYPE = "text/" "uri-" "list"
 
 
+def is_link_only_mime_type(value: str) -> bool:
+    """Return whether ``value`` names the link-only URI-list media type.
+
+    MIME syntax permits a parameter section (``type/subtype; param=value``),
+    so the comparison is against the parsed media type — the token before any
+    ``;`` — not the full string. ``text/uri-list; charset=utf-8`` is as
+    link-only as the bare form and must be refused by every boundary that
+    guards evidence-byte manifests.
+    """
+    media_type = value.split(";", 1)[0].strip().lower()
+    return media_type == _LINK_ONLY_MIME_TYPE
+
+
 def _normalize_hex_digest(value: str, *, field_name: str) -> str:
     """Normalise and validate a 64-character lowercase hex digest.
 
@@ -146,7 +159,7 @@ class Attachment(BaseModel):
     @classmethod
     def _reject_link_only_mime_type(cls, value: str) -> str:
         """Reject manifests that claim to store a link instead of document bytes."""
-        if value.lower() == _LINK_ONLY_MIME_TYPE:
+        if is_link_only_mime_type(value):
             raise AttachmentValidationError("attachment mime_type must carry document bytes, not a link-only URI list")
         return value
 
