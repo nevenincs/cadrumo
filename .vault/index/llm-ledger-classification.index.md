@@ -3,13 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#llm-ledger-classification'
-date: '2026-06-05'
+date: '2026-06-12'
 related:
   - '[[2026-06-03-llm-ledger-classification-adr]]'
   - '[[2026-06-03-llm-ledger-classification-plan]]'
   - '[[2026-06-03-llm-ledger-classification-research]]'
   - '[[2026-06-04-llm-ledger-classification-adr]]'
   - '[[2026-06-04-llm-ledger-classification-plan]]'
+  - '[[2026-06-13-llm-ledger-classification-audit]]'
 ---
 
 # `llm-ledger-classification` feature index
@@ -22,6 +23,10 @@ Auto-generated index of all documents tagged with `#llm-ledger-classification`.
 
 - `2026-06-03-llm-ledger-classification-adr` - `llm-ledger-classification` adr: `Wire LLM-assisted ledger classification into an operator suggest/confirm/reject loop (MVP)` | (**status:** `accepted`)
 - `2026-06-04-llm-ledger-classification-adr` - `llm-ledger-classification` adr: `Saturate transactions with grounded rich tax metadata via LLM (stage 2)` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-13-llm-ledger-classification-audit` - `llm-ledger-classification` audit: `Saturation pipeline: peer review (PASS) + persona test findings`
 
 ### plan
 
