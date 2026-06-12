@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
 
 import typer
 
@@ -16,10 +15,11 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
+from ...domain.transactions import TransactionCatalogueRepository
 from ._common import _bad, _emit_envelope, _state, _tx_repo
 from ._ledger_list import ledger_filter_parse_error_message
 
-ResolveTransactionId = Callable[[Any, str], str]
+ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
 
 def register_ledger_review_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
@@ -53,7 +53,7 @@ def _ledger_review_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
 
 
 def _ledger_review_query(
-    transaction_repository: Any,
+    transaction_repository: TransactionCatalogueRepository,
     *,
     spec: LedgerReviewFilterSpec,
     record_id: str | None,
