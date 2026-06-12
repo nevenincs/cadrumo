@@ -8,7 +8,7 @@ file or a set of append fragments merged in deterministic order.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -254,13 +254,63 @@ def _load_locale_translation(path: Path) -> RegistryLocaleTranslation:
         raise RegistryValidationError(f"Invalid locales file {path}: {exc}") from exc
 
 
-def _load_modelo_translations(modelo_dir: Path) -> dict[str, RegistryLocaleTranslation]:
+def _merge_locale_translation(
+    *,
+    language: str,
+    target: RegistryLocaleTranslation,
+    source: RegistryLocaleTranslation,
+    path: Path,
+) -> RegistryLocaleTranslation:
+    labels = dict(target.labels)
+    help_text = dict(target.help)
+    duplicate_labels = sorted(set(labels).intersection(source.labels))
+    duplicate_help = sorted(set(help_text).intersection(source.help))
+    if duplicate_labels or duplicate_help:
+        details: list[str] = []
+        if duplicate_labels:
+            details.append(f"labels={duplicate_labels!r}")
+        if duplicate_help:
+            details.append(f"help={duplicate_help!r}")
+        raise RegistryValidationError(
+            f"Duplicate {language!r} locale translation keys in {path}: {', '.join(details)}",
+        )
+    labels.update(source.labels)
+    help_text.update(source.help)
+    return RegistryLocaleTranslation(labels=labels, help=help_text)
+
+
+def _load_locale_translation_group(language: str, paths: Iterable[Path]) -> RegistryLocaleTranslation:
+    merged = RegistryLocaleTranslation()
+    for path in sorted(paths):
+        merged = _merge_locale_translation(
+            language=language,
+            target=merged,
+            source=_load_locale_translation(path),
+            path=path,
+        )
+    return merged
+
+
+def _load_locale_translations(locales_dir: Path) -> dict[str, RegistryLocaleTranslation]:
     translations: dict[str, RegistryLocaleTranslation] = {}
-    locales_dir = modelo_dir / "locales"
-    if locales_dir.is_dir():
-        for path in sorted(locales_dir.glob("*.toml")):
-            translations[path.stem] = _load_locale_translation(path)
+    if not locales_dir.is_dir():
+        return translations
+    for path in sorted(locales_dir.glob("*.toml")):
+        translations[path.stem] = _load_locale_translation_group(path.stem, (path,))
+    for language_dir in sorted(path for path in locales_dir.iterdir() if path.is_dir()):
+        paths = tuple(sorted(language_dir.glob("*.toml")))
+        if not paths:
+            continue
+        if language_dir.name in translations:
+            raise RegistryValidationError(
+                f"Locale {language_dir.name!r} is declared both as a file and a fragment directory in {locales_dir}",
+            )
+        translations[language_dir.name] = _load_locale_translation_group(language_dir.name, paths)
     return translations
+
+
+def _load_modelo_translations(modelo_dir: Path) -> dict[str, RegistryLocaleTranslation]:
+    return _load_locale_translations(modelo_dir / "locales")
 
 
 def _load_revision_translations(
@@ -274,10 +324,9 @@ def _load_revision_translations(
         if not path.is_dir():
             continue
         rev_locales_dir = path / "locales"
-        if not rev_locales_dir.is_dir():
-            continue
-        for locale_path in sorted(rev_locales_dir.glob("*.toml")):
-            translations.setdefault(path.name, {})[locale_path.stem] = _load_locale_translation(locale_path)
+        locale_map = _load_locale_translations(rev_locales_dir)
+        if locale_map:
+            translations[path.name] = locale_map
     return translations
 
 
@@ -1063,7 +1112,7 @@ def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], .
     fingerprints: list[tuple[str, int, int]] = [_toml_fingerprint(entry / "manifest.toml")]
     locales_dir = entry / "locales"
     if locales_dir.is_dir():
-        for path in sorted(locales_dir.glob("*.toml")):
+        for path in sorted(locales_dir.rglob("*.toml")):
             fingerprints.append(_toml_fingerprint(path))
     revisions_dir = entry / "revisions"
     if revisions_dir.is_dir():

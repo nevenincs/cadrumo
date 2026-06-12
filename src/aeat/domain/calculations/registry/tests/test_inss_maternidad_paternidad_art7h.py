@@ -29,9 +29,13 @@ current working tree. The CLI help-surface test verifies end-to-end wiring.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+from .....core.config import SecretStoreBackend
 from .....core.resources import bundled_path
+from .....tests.secure_sql import dev_test_database_password
 from .._loader import load_registry_tree
 from .._temporal import select_revision
 
@@ -160,10 +164,21 @@ class TestLegalRefs:
 class TestCliFlag:
     """The --prestacion-inss-exenta flag is visible in help output."""
 
-    def test_help_exposes_prestacion_inss_exenta_flag(self) -> None:
+    def test_help_exposes_prestacion_inss_exenta_flag(self, tmp_path: Path) -> None:
         """The --prestacion-inss-exenta flag is advertised in work calculate --help."""
         from .....tests.cli_runner import invoke_cached_cli
 
-        result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
+        result = invoke_cached_cli(
+            ["app", "modelo", "work", "calculate", "--help"],
+            env={
+                "AEAT_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
+                "AEAT_SECRET_PASSPHRASE": dev_test_database_password(),
+                "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+                "AEAT_RUNS_DIR": str(tmp_path / "runs"),
+                "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
+                "AEAT_INVOICES_DIR": str(tmp_path / "invoices"),
+                "AEAT_DRAFTS_DIR": str(tmp_path / "drafts"),
+            },
+        )
         assert result.exit_code == 0
         assert "--prestacion-inss-exenta" in result.output

@@ -22,7 +22,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import _loader
-from .._errors import RegistryLoadError
+from .._errors import RegistryLoadError, RegistryValidationError
 from .._loader import (
     discover_modelo_sources,
     load_modelo_directory,
@@ -1157,6 +1157,46 @@ def test_revision_fragment_merge_contract_covers_repeatable_revision_fields() ->
     assert repeatable_revision_fields == fragment_merge_fields
     assert _loader._REVISION_COMPLETENESS_MANIFEST in ModeloRevision.model_fields
     assert _loader._REVISION_COMPLETENESS_MANIFEST not in repeatable_revision_fields
+
+
+def test_locale_translation_fragments_merge_by_language_directory(tmp_path: Path) -> None:
+    """Locale directories allow large reviewable language fragments."""
+
+    locales_dir = tmp_path / "locales"
+    en_dir = locales_dir / "en"
+    en_dir.mkdir(parents=True)
+    (en_dir / "001-labels.toml").write_text(
+        '[labels]\n"0001" = "One"\n',
+        encoding="utf-8",
+    )
+    (en_dir / "002-help.toml").write_text(
+        '[help]\n"0002" = "Two help"\n',
+        encoding="utf-8",
+    )
+
+    translations = _loader._load_locale_translations(locales_dir)
+
+    assert translations["en"].labels == {"0001": "One"}
+    assert translations["en"].help == {"0002": "Two help"}
+
+
+def test_locale_translation_fragments_reject_duplicate_keys(tmp_path: Path) -> None:
+    """Fragmented locale tables must remain unambiguous."""
+
+    locales_dir = tmp_path / "locales"
+    en_dir = locales_dir / "en"
+    en_dir.mkdir(parents=True)
+    (en_dir / "001-labels.toml").write_text(
+        '[labels]\n"0001" = "One"\n',
+        encoding="utf-8",
+    )
+    (en_dir / "002-labels.toml").write_text(
+        '[labels]\n"0001" = "Uno"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryValidationError, match="Duplicate 'en' locale translation keys"):
+        _loader._load_locale_translations(locales_dir)
 
 
 def test_committed_registry_toml_files_stay_reviewable() -> None:
