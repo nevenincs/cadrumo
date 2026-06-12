@@ -84,6 +84,37 @@ def test_add_stores_bytes_in_secure_storage_under_attachment_id(
     assert store.read_bytes(record.attachment_id) == _PDF_BYTES
 
 
+def test_add_with_nonexistent_path_refuses_with_path_oriented_guidance(
+    isolated_settings: Settings, secure_objects: SecureObjectRepository, tmp_path: Path,
+) -> None:
+    """A typo'd / missing --file path must surface a PATH problem, not a
+    'evidence list' suggestion irrelevant to the file the operator named.
+
+    The refusal names the offending path in its context and tells the operator
+    to fix the path, then re-run ``evidence add`` — never to list existing
+    records, which does not address a wrong path at all.
+    """
+    svc = PurchaseInvoiceEvidenceService(
+        settings=isolated_settings,
+        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+    )
+    bogus = tmp_path / "does-not-exist.pdf"
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as exc_info:
+        svc.add(bucket_id="bucket-001", source_path=bogus)
+
+    error = exc_info.value
+    # The suggestion addresses the path, not the (irrelevant) list verb.
+    assert error.suggestion is not None
+    assert "evidence list" not in error.suggestion
+    assert "path" in error.suggestion.lower()
+    assert "aeat app ledger evidence add" in error.suggestion
+    # The offending path is named in structured context for the operator.
+    assert error.context is not None
+    assert str(bogus) == error.context["source_path"]
+    assert "resolved_path" in error.context
+
+
 def test_resolve_purchase_invoice_evidence_reads_secure_storage_into_memory(
     isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
 ) -> None:

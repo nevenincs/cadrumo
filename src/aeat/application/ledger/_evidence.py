@@ -329,8 +329,12 @@ class PurchaseInvoiceEvidenceService:
         resolved = Path(source_path).expanduser().resolve()
         if not resolved.is_file():
             raise PurchaseInvoiceEvidenceInputError(
-                f"source path {source_path!s} is not a readable file",
-                suggestion="aeat app ledger evidence list",
+                f"source path {source_path!s} does not resolve to a readable file (resolved to {resolved!s})",
+                context={"source_path": str(source_path), "resolved_path": str(resolved)},
+                suggestion=(
+                    "check the --file path: confirm the file exists, the path is spelled correctly, "
+                    "and the file is readable, then re-run `aeat app ledger evidence add`"
+                ),
             )
         media_kind = _resolve_media_kind(resolved)
         now = _utc_now()
