@@ -108,8 +108,8 @@ class StoredProfileDriftError(UserProfileError):
         """
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
-            context={"profile_id": profile_id, "recovery": "aeat config repair"},
-            suggestion="aeat config repair",
+            context={"profile_id": profile_id, "recovery": "aeat config repair --help"},
+            suggestion="aeat config repair --help",
         )
         self.profile_id: str = profile_id
         self.original_exception: ValidationError = error

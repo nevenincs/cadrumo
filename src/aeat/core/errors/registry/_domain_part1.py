@@ -471,7 +471,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_FINANCIAL_LEDGER_STORAGE",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_financial_ledger_storage",
-            default_suggestion="aeat config repair",
+            default_suggestion="aeat config repair --help",
             retryable=False,
             runbook_id=None,
         ),

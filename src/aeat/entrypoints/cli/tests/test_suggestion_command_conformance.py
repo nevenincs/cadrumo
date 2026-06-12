@@ -69,11 +69,15 @@ _AST_SCAN_ROOTS = (
     _PACKAGE_ROOT / "entrypoints",
 )
 
-# ``aeat`` + a root family + a run of lowercase kebab-case tokens. Uppercase
-# placeholders, ``--option`` forms, and ``<value>`` forms end the run, so only
-# verb-path candidates (plus possibly lowercase argument VALUES, which the
-# resolver tolerates past a leaf) are captured.
-_CITATION_PATTERN = re.compile(r"\baeat (app|config)((?: [a-z][a-z0-9-]*)*)")
+# ``aeat`` + a root family + a run of kebab-case tokens. A token is lowercase
+# kebab-case OR a bare modelo code (three digits, e.g. ``100``/``303``), the
+# only digit-leading command segments in the live tree (``aeat app live
+# borrador 100 list``). Uppercase placeholders, ``--option`` forms, and
+# ``<value>`` forms end the run, so only verb-path candidates (plus possibly
+# lowercase argument VALUES, which the resolver tolerates past a leaf) are
+# captured. Admitting the modelo code keeps a runnable ``... borrador 100 list``
+# citation from terminating prematurely on the ``borrador`` group.
+_CITATION_PATTERN = re.compile(r"\baeat (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3}))*)")
 
 
 @cache
@@ -82,44 +86,87 @@ def _root_command() -> click.Command:
     return cast("click.Command", get_command(app))
 
 
-def _first_dead_token(tokens: tuple[str, ...]) -> str | None:
-    """Walk ``tokens`` through the live tree; return the first unresolvable one.
+def _is_group(command: click.Command) -> bool:
+    """Return whether ``command`` is a structural group (not a runnable leaf).
 
-    Tokens beyond a leaf command are positional argument values and are
-    accepted. A ``None`` return means the citation names a live command path.
+    ``list_commands`` is the structural group marker; the vendored TyperGroup
+    is not a guaranteed upstream ``click.Group`` subclass, so narrow by
+    interface rather than isinstance — an isinstance check silently treats
+    every group as a leaf (caught by ``test_scanner_flags_a_group_citation``).
+    """
+    return hasattr(command, "list_commands")
+
+
+def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
+    """Walk ``tokens`` through the live tree.
+
+    Returns ``(dead_token, terminates_on_group)``:
+
+    - ``dead_token`` is the first token that does not resolve, or ``None`` when
+      every token resolves. Tokens beyond a leaf command are positional
+      argument values and are accepted.
+    - ``terminates_on_group`` is ``True`` when the citation resolves cleanly but
+      the final resolved command is a group (e.g. ``config repair integrity``),
+      which is NOT runnable verbatim — the operator must pick a child or be
+      pointed at ``... --help``.
     """
     command: click.Command = _root_command()
     context = click.Context(command, info_name="aeat")
     for token in tokens:
-        if not hasattr(command, "list_commands"):
-            return None
-        # ``list_commands`` is the structural group marker; the vendored
-        # TyperGroup is not a guaranteed upstream ``click.Group`` subclass, so
-        # narrow by interface (cast) rather than isinstance — an isinstance
-        # check silently treats every group as a leaf and accepts everything
-        # (caught by test_scanner_flags_a_dead_citation at authoring time).
+        if not _is_group(command):
+            # Already at a leaf; remaining tokens are argument values.
+            return None, False
         group = cast("click.Group", command)
         subcommand = group.get_command(context, token)
         if subcommand is None:
-            return token
+            return token, False
         context = click.Context(subcommand, info_name=token, parent=context)
         command = subcommand
-    return None
+    return None, _is_group(command)
 
 
-def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...]]]:
-    """Yield ``(cited_text, verb_tokens)`` for every command citation in ``text``."""
+def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...], bool]]:
+    """Yield ``(cited_text, verb_tokens, has_trailing_help)`` per command citation.
+
+    ``has_trailing_help`` records whether ``--help`` immediately follows the
+    cited verb path in the source text. The citation regex stops at the first
+    ``--option`` form, so a runnable ``aeat config repair integrity --help``
+    citation parses as the bare-group token run; this flag recovers the
+    operator-runnable distinction the regex drops.
+    """
     for match in _CITATION_PATTERN.finditer(text):
-        yield match.group(0), (match.group(1), *match.group(2).split())
+        remainder = text[match.end() :]
+        has_trailing_help = bool(re.match(r"\s+--help\b", remainder))
+        yield match.group(0), (match.group(1), *match.group(2).split()), has_trailing_help
 
 
-def _dead_citations_in(text: str, *, origin: str) -> list[str]:
-    """Return instructive failure rows for every dead citation in ``text``."""
+def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = False) -> list[str]:
+    """Return instructive failure rows for every non-runnable citation in ``text``.
+
+    A citation is dead when one of its tokens does not resolve in the live tree
+    — always a failure.
+
+    When ``require_runnable_leaf`` is set (the operator-suggestion surfaces:
+    error-registry ``default_suggestion`` and curated help ``command`` fields,
+    where the cited string IS the command the operator is told to run), a
+    citation that resolves cleanly to a command GROUP with no trailing
+    ``--help`` is ALSO a failure: a group is not executable verbatim
+    (``Missing command``), so the operator is sent to a non-runnable line.
+    ``<group> --help`` IS runnable and is accepted. The flag is OFF for the
+    broad production-string-literal scan, where a bare ``aeat config google``
+    is overwhelmingly a prose/docstring reference to a command *family*, not a
+    runnable suggestion, and group-termination is legitimate there.
+    """
     failures: list[str] = []
-    for cited, tokens in _iter_citations(text):
-        dead_token = _first_dead_token(tokens)
+    for cited, tokens, has_trailing_help in _iter_citations(text):
+        dead_token, terminates_on_group = _resolve_citation(tokens)
         if dead_token is not None:
             failures.append(f"{origin}: cites {cited!r} but {dead_token!r} does not resolve in the live CLI tree")
+        elif require_runnable_leaf and terminates_on_group and not has_trailing_help:
+            failures.append(
+                f"{origin}: cites {cited!r} which resolves to a command GROUP, not a runnable leaf; "
+                "append a child command or cite '... --help' so the suggestion runs verbatim"
+            )
     return failures
 
 
@@ -145,7 +192,7 @@ def test_error_registry_suggestions_cite_live_commands() -> None:
         if not suggestion:
             continue
         citation_count += _count_citations(suggestion)
-        failures.extend(_dead_citations_in(suggestion, origin=f"error code {code}"))
+        failures.extend(_dead_citations_in(suggestion, origin=f"error code {code}", require_runnable_leaf=True))
     assert not failures, "\n".join(failures)
     assert citation_count >= 150, (
         f"only {citation_count} command citations found across error-registry suggestions; "
@@ -168,6 +215,40 @@ def test_operator_help_documents_cite_live_commands() -> None:
     )
 
 
+# The runnable-suggestion fields: a string assigned to one of these — as a
+# keyword argument (``suggestion=...``) or a dict value (``{"recovery": ...}``)
+# — is a command the operator is told to run, so it MUST resolve to a runnable
+# leaf, never a bare command group. Other literals (docstrings, ``cli_path=``
+# path-root declarations, help-document heading/paragraph prose) name a command
+# *family* in reference and legitimately terminate on a group; they stay under
+# the dead-token check only.
+_RUNNABLE_SUGGESTION_KEYS = frozenset({"suggestion", "recovery", "default_suggestion", "next_action"})
+
+
+def _runnable_suggestion_node_ids(tree: ast.AST) -> set[int]:
+    """Collect ``id()`` of every string ``Constant`` used as a runnable-suggestion value.
+
+    Matches both ``suggestion="aeat ..."`` keyword arguments and
+    ``{"recovery": "aeat ..."}`` / ``{"next_action": "aeat ..."}`` dict
+    entries, where the operator is directed to run the cited command verbatim.
+    """
+    suggestion_ids: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.keyword) and node.arg in _RUNNABLE_SUGGESTION_KEYS:
+            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                suggestion_ids.add(id(node.value))
+        elif isinstance(node, ast.Dict):
+            for key, value in zip(node.keys, node.values, strict=True):
+                if (
+                    isinstance(key, ast.Constant)
+                    and key.value in _RUNNABLE_SUGGESTION_KEYS
+                    and isinstance(value, ast.Constant)
+                    and isinstance(value.value, str)
+                ):
+                    suggestion_ids.add(id(value))
+    return suggestion_ids
+
+
 def test_production_string_literals_cite_live_commands() -> None:
     """Every ``aeat app/config`` literal in production modules stays live.
 
@@ -175,16 +256,32 @@ def test_production_string_literals_cite_live_commands() -> None:
     ungated: write-policy allowlists, ``next_action`` builders, envelope
     builders, and any future suggestion string a feature module grows.
     Comments cannot false-positive (they are not AST constants).
+
+    Two checks per literal: every citation's tokens must resolve (dead-token
+    check, all literals), and a literal assigned to a runnable-suggestion field
+    (``suggestion=`` / ``recovery`` / ``default_suggestion`` / ``next_action``)
+    must additionally resolve to a runnable LEAF — a bare command group with no
+    trailing ``--help`` is not executable verbatim and fails. Reference prose
+    (docstrings, ``cli_path=`` path roots, help headings) names a command
+    family and legitimately terminates on a group, so the runnable-leaf check
+    is scoped to the suggestion fields only.
     """
     failures: list[str] = []
     citation_count = 0
     for module_path in _iter_production_modules():
         tree = ast.parse(module_path.read_text(encoding="utf-8"))
         relative = module_path.relative_to(_PACKAGE_ROOT.parent).as_posix()
+        suggestion_ids = _runnable_suggestion_node_ids(tree)
         for node in ast.walk(tree):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 citation_count += _count_citations(node.value)
-                failures.extend(_dead_citations_in(node.value, origin=f"{relative}:{node.lineno}"))
+                failures.extend(
+                    _dead_citations_in(
+                        node.value,
+                        origin=f"{relative}:{node.lineno}",
+                        require_runnable_leaf=id(node) in suggestion_ids,
+                    )
+                )
     assert not failures, "\n".join(failures)
     assert citation_count >= 550, (
         f"only {citation_count} command citations found across production string literals; "
@@ -213,3 +310,34 @@ def test_scanner_flags_a_dead_citation() -> None:
     # The live canonical forms pass, and argument values past a leaf are tolerated.
     assert not _dead_citations_in("Run aeat app ledger import --file STATEMENT.csv.", origin="synthetic")
     assert not _dead_citations_in("Run aeat app modelo work calculate yourworkunit.", origin="synthetic")
+
+
+def test_scanner_flags_a_group_citation() -> None:
+    """Anti-tautology proof for the group-termination rule.
+
+    A citation that resolves to a command GROUP with no trailing ``--help`` is
+    NOT runnable verbatim ('Missing command'); the scanner must flag it under
+    ``require_runnable_leaf``. The same path with ``--help`` IS runnable and
+    must pass. ``config repair integrity`` is a real group (children:
+    ``objects``, ``registry``). A trailing ``.`` terminates the token run so
+    the citation resolves exactly to the group.
+    """
+    group_cited = _dead_citations_in(
+        "aeat config repair integrity.", origin="synthetic", require_runnable_leaf=True
+    )
+    assert len(group_cited) == 1
+    assert "GROUP" in group_cited[0]
+
+    # The runnable help form on the same group is accepted even when strict.
+    assert not _dead_citations_in(
+        "aeat config repair integrity --help.", origin="synthetic", require_runnable_leaf=True
+    )
+
+    # A real runnable leaf under that group is accepted.
+    assert not _dead_citations_in(
+        "aeat config repair integrity objects.", origin="synthetic", require_runnable_leaf=True
+    )
+
+    # Without the strict flag, a bare group citation is tolerated (prose-family
+    # references in docstrings legitimately terminate on a group).
+    assert not _dead_citations_in("aeat config repair integrity.", origin="synthetic")
