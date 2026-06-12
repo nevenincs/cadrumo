@@ -13,6 +13,19 @@ related:
 
 A business that starts economic activity in 2025 4T cannot locally file its first period. It truthfully binds `irpf.previous_year_economic_activity_net_income = 0` and `modelo-130-resultados-negativos-anteriores = 0` (no prior activity existed), yet `work verify` blocks with `cross_period_dependency_unclean`, demanding official AEAT evidence for a Modelo 100 year 2024 filing and a Modelo 130 2025 3T filing that never existed. Because local `file` requires `verified_complete`, the very first period is structurally unfileable.
 
+### Worked failure case: round-5 operator evidence proves the loop is fully closed
+
+Round-5 operator testing exhaustively mapped every exit from the dead end at HEAD and confirmed there is no legitimate offline path out:
+
+- `work verify` blocks on `cross_period_dependency_unclean` (M100 2025 0A) even when the prior-year binding is explicitly supplied as 0 — confirming the gate evaluates filing-record existence, not binding values.
+- `export` refuses drafts: `current revision is still draft; verify it before exporting`. Workbook export is therefore unreachable.
+- `file` refuses non-verified revisions: `filing requires a verified-complete revision`. A local filing record is therefore unreachable.
+- The only gate-satisfying routes are `live filed pull-sources` (live AEAT read), `reconcile file --file` (requires a real justificante PDF), or `filing-record import --evidence-kind aeat_justificante_pdf|aeat_csv_register|aeat_live_capture --evidence-id <id>` — and the import honesty gate correctly refuses any evidence id that is not a persisted real artefact.
+
+All three routes demand official AEAT evidence of a filing that never existed, so a first-time filer can never reach workbook export OR a local filing record by any legitimate offline path. The loop is closed: verify blocks file, file requires verify, and the only key that opens verify is evidence the legal world never minted.
+
+Notably, `filing-record import` accepts exactly the evidence-kind set `_OFFICIAL_SOURCE_KINDS` enumerates (`aeat_justificante_pdf`-class artefacts mapping to `aeat_sede_justificante` / `aeat_csv_register` / `aeat_live_capture`). The gate architecture is *coherent* — every door checks the same official-evidence invariant, and the import honesty gate is right to refuse fabricated ids. The defect is not an inconsistent gate; it is the absence of any vocabulary, anywhere in the architecture, to express that no prior obligation existed.
+
 ## Findings
 
 ### 1. Current mechanics at HEAD: why a truthful zero still blocks
@@ -70,6 +83,13 @@ The `local-filed-observations-are-non-official-evidence` and `no-silent-under-de
 ## Recommended option and open questions
 
 Recommended: Option A (censo-grounded activity-start scoping), with the existing absent-by-design value path of Option C materialising the zero. Option A is the only sketch whose no-prior-obligation determination is grounded in AEAT-sourced authority (the G313 censo activity_start_date) rather than a forgeable operator claim, so it satisfies `aeat-safety-legal-gates` and resists the dishonesty that sinks Option B; it reuses the registry existing absent-by-design vocabulary; and it preserves `local-filed-observations-are-non-official-evidence` untouched because it never touches the evidence gate for in-scope periods. It removes pre-activity periods from the requirement graph before evidence is demanded, and records the removal as declared, audited provenance rather than a silent blank.
+
+Which refusal points the fix unblocks — and which it deliberately leaves blocking:
+
+- `verify` (UNBLOCKED, the root fix): the pre-activity dependency is removed from the requirement graph with declared provenance, so the clean-state verdict for a genuinely first period comes back clean and verification can proceed to `verified_complete` on the merits of the current-period data alone.
+- `export` (unblocked transitively, gate unchanged): export keeps refusing draft revisions; it opens only because verify can now legitimately complete. No export-side change is made or wanted.
+- `file` (unblocked transitively, gate unchanged): local `file` keeps requiring a verified-complete revision; it opens for the same transitive reason. The resulting local filing record still persists its observation under the non-official `app_filing` source kind, so a *later* dependent period still demands real AEAT evidence of THIS filing per `local-filed-observations-are-non-official-evidence` — the first-filer fix does not weaken the chain for period two onward.
+- `filing-record import`, `reconcile file`, `live filed pull-sources` (DELIBERATELY UNTOUCHED): the official-evidence honesty gates and the `_OFFICIAL_SOURCE_KINDS` set stay exactly as they are. The fix never mints evidence; it removes a demand for evidence of a filing the law never required.
 
 Open questions an ADR must settle:
 
