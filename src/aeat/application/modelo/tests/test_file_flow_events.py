@@ -67,7 +67,7 @@ def test_calculate_emits_modelo_calculation_created_event(repos: _Repos) -> None
     assert event.payload["work_unit_id"] == work_unit.work_unit_id
     assert event.payload["modelo"] == work_unit.modelo
     assert event.payload["filing_year"] == str(work_unit.filing_year)
-    assert event.payload["period"] == work_unit.period
+    assert event.payload["period"] == work_unit.period.registry_token
     assert event.payload["borrador_snapshot_id"] == ""
     assert event.payload["borrador_binding_count"] == "0"
 
