@@ -203,3 +203,16 @@ def test_malformed_filter_token_is_rejected() -> None:
     _import_corpus()
     result = _RUNNER.invoke(app, ["app", "ledger", "list", "--filter", "period"])
     assert result.exit_code != 0
+
+
+def test_period_filter_combined_shape_refuses_with_period_guidance() -> None:
+    """A combined period filter refuses with the same AEAT-token guidance as --period."""
+    combined_period = "2026" + "Q1"
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "list", "--filter", f"period={combined_period}", "--filter", "year=2026"],
+    )
+
+    assert result.exit_code != 0
+    assert "1T" in result.output
+    assert "--year" in result.output

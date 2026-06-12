@@ -160,6 +160,56 @@ def test_scaffold_preserves_revision_key_that_exists_in_multiple_revisions(tmp_p
     assert translation.help["01"] == "First revision help"
 
 
+def test_fragmented_revision_locale_is_loaded_and_updated_in_place(tmp_path: Path) -> None:
+    """Large-model locale fragments remain the write target for their keys."""
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir)
+    locale_dir = modelo_dir / "revisions" / "2020" / "locales" / "en"
+    locale_dir.mkdir(parents=True)
+    labels_path = locale_dir / "001-labels.toml"
+    help_path = locale_dir / "101-help.toml"
+    labels_path.write_text(
+        """[labels]
+"01" = "First revision label"
+""",
+        encoding="utf-8",
+    )
+    help_path.write_text(
+        """[help]
+"01" = "First revision help"
+""",
+        encoding="utf-8",
+    )
+
+    manager = ModeloLocaleManager(registry_root)
+    record = manager.coverage_record(OutputLanguage.EN, "777", "2020")
+    written = manager.set_translation_value(
+        OutputLanguage.EN,
+        "777",
+        "2020",
+        ModeloLocaleFieldKind.LABELS,
+        "01",
+        "Updated fragment label",
+    )
+    translation = manager.load_translation_file(
+        ModeloLocaleFileTarget(
+            locale=OutputLanguage.EN,
+            modelo_id="777",
+            scope=ModeloLocaleScope.REVISION,
+            revision_id="2020",
+        ),
+    )
+
+    assert record.complete
+    assert written == labels_path.resolve()
+    assert '"01" = "Updated fragment label"' in labels_path.read_text(encoding="utf-8")
+    assert '"01" = "First revision help"' in help_path.read_text(encoding="utf-8")
+    assert not (modelo_dir / "revisions" / "2020" / "locales" / "en.toml").exists()
+    assert translation.labels["01"] == "Updated fragment label"
+    assert translation.help["01"] == "First revision help"
+
+
 def _revision_target() -> ModeloLocaleFileTarget:
     return ModeloLocaleFileTarget(
         locale=OutputLanguage.EN,

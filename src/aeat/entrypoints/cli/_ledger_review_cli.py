@@ -17,6 +17,7 @@ from ...application.ledger import (
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
 from ._common import _bad, _emit_envelope, _state, _tx_repo
+from ._ledger_list import ledger_filter_parse_error_message
 
 ResolveTransactionId = Callable[[Any, str], str]
 
@@ -48,7 +49,7 @@ def _ledger_review_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
     try:
         return LedgerReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
-        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)) from exc
+        raise _bad(ledger_filter_parse_error_message(exc)) from exc
 
 
 def _ledger_review_query(

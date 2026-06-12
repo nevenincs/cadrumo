@@ -14,7 +14,7 @@ from ...application.ledger import (
     list_manual_transactions,
     query_ledger_review_rows,
 )
-from ...application.review import LedgerReviewFilterSpec
+from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core import LedgerSortField, LedgerSortOrder
 from ...core.i18n import tr
 from ...domain.transactions import Transaction, TransactionCatalogueRepositoryProtocol
@@ -38,6 +38,20 @@ class LedgerListProjection:
 def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
     """Parse ``ledger list --filter`` clauses and return a :class:`LedgerReviewFilterSpec`."""
     return LedgerReviewFilterSpec.from_strings(filters)
+
+
+def ledger_filter_parse_error_message(exc: FilterParseError) -> str:
+    """Render a CLI message for a parsed ledger filter error."""
+    if exc.reason == "invalid-value-ledger-period":
+        return tr("cli.common.errors.period_unrecognised", raw=_filter_period_value(exc))
+    return tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)
+
+
+def _filter_period_value(exc: FilterParseError) -> str:
+    prefix = "--filter period="
+    if exc.raw_token.startswith(prefix):
+        return exc.raw_token.removeprefix(prefix)
+    return exc.safe_token
 
 
 def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
@@ -278,6 +292,7 @@ def _ledger_list_rows_and_lines(
 
 __all__ = [
     "LedgerListProjection",
+    "ledger_filter_parse_error_message",
     "parse_ledger_list_filter_spec",
     "project_ledger_list",
 ]

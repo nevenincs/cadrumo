@@ -57,6 +57,9 @@ You MUST respect these rules at all times:
 @.codex/rules/revision-resolution-is-law-determined.md
 @.codex/rules/sensitive-financial-data-secure-storage-only.md
 @.codex/rules/service-imports-via-top-level-reexports.md
+@.codex/rules/shipped-search-licence-clean.md
+@.codex/rules/terminology-scaffold-preserve-contract.md
+@.codex/rules/terminology-single-declaration.md
 @.codex/rules/tests-live-under-domain-tests-folders.md
 @.codex/rules/vaultspec-archive-discipline.builtin.md
 @.codex/rules/vaultspec-cli.builtin.md
