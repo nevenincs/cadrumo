@@ -5,6 +5,8 @@ tags:
 date: '2026-06-11'
 related:
   - "[[2026-06-11-period-grammar-standardisation-plan]]"
+  - "[[2026-06-04-registry-period-code-union-research]]"
+  - "[[2026-06-10-ledger-filter-period-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
 ---

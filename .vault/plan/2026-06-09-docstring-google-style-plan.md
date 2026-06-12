@@ -4,6 +4,9 @@ tags:
   - '#docstring-google-style'
 date: '2026-06-09'
 tier: L1
+related:
+  - '[[2026-05-30-docs-architecture-adr]]'
+  - '[[2026-05-30-docs-architecture-research]]'
 ---
 
 
@@ -1025,4 +1028,3 @@ tier: L1
 
 
 ## Verification
-
