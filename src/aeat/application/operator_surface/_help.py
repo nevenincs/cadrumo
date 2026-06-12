@@ -173,7 +173,7 @@ def _root_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.root.section_diagnostics"),
                 entries=(
                     HelpEntry(
-                        command="aeat config repair",
+                        command="aeat config repair --help",
                         description=tr("cli.operator_surface.help.root.diagnostics_repair"),
                     ),
                     HelpEntry(
@@ -304,7 +304,7 @@ def _config_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.config.section_diagnostics"),
                 entries=(
                     HelpEntry(
-                        command="aeat config repair",
+                        command="aeat config repair --help",
                         description=tr("cli.operator_surface.help.config.diagnostics_repair"),
                     ),
                     HelpEntry(

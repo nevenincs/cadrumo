@@ -46,8 +46,8 @@ class StoredTransactionDriftError(TransactionPersistenceError):
         """
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
-            context={"bucket_id": bucket_id, "recovery": "aeat config repair"},
-            suggestion="aeat config repair",
+            context={"bucket_id": bucket_id, "recovery": "aeat config repair --help"},
+            suggestion="aeat config repair --help",
         )
         self.bucket_id = bucket_id
         self.original_exception = error

@@ -304,7 +304,7 @@ class AeatSection(_Frozen):
                     "section": "aeat.pre303",
                     "validation_error": str(exc),
                 },
-                suggestion="aeat config repair",
+                suggestion="aeat config repair --help",
             ) from exc
 
 
