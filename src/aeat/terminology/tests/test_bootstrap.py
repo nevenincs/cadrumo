@@ -1,12 +1,10 @@
 """Gates over the bootstrapped Terminology Handbook tree.
 
-After the W02.P06.S13 bootstrap + glossary migration, the committed tree
-must: load and pass every S10 validation gate; carry the key migrated
+The committed tree must load, pass every validation gate, carry the key migrated
 concepts as approved with resolving legal_refs and four-language
-short_descriptions; survive a re-scaffold without clobbering migrated
-prose (the PRESERVE contract on real content); and be drift-free against
-the enrolment sources so ``scaffold --check`` is green (the S12-deferred
-gate, now active).
+short_descriptions, survive a re-scaffold without clobbering migrated prose,
+and be drift-free against the enrolment sources so ``scaffold --check`` is
+green.
 """
 
 from __future__ import annotations
@@ -89,8 +87,8 @@ def test_rescaffold_does_not_clobber_migrated_prose() -> None:
 
 
 def test_scaffold_check_is_green_against_the_bootstrapped_tree() -> None:
-    # The S12-deferred drift gate, now active: the committed tree is in sync
-    # with the enrolment sources, so a --check dry-run reports no drift.
+    # The committed tree is in sync with the enrolment sources, so a --check
+    # dry-run reports no drift.
     candidates = collect_enrolment_candidates()
     handbook = load_bundled_terminology_handbook()
     plan = build_scaffold_plan(candidates, dict(handbook.by_id), today=handbook.concepts[0].updated_at)
@@ -101,6 +99,6 @@ def test_audit_reports_structurally_clean_with_a_tracked_backlog() -> None:
     report = audit_handbook(terminology_concepts_dir())
     # Structurally clean (no dangling relations, no retired-without-replacement).
     assert report.is_clean
-    # The curation backlog is the honest draft count the W05.P13 ratchet baselines.
+    # The curation backlog is the honest draft count the ratchet baselines.
     assert report.draft_count >= 1
     assert report.approved_count >= 20

@@ -1,12 +1,10 @@
-"""Pydantic construction / validation / serialisation suite for the
-ledger-interface-contract payload schemas (D1, D2, D6).
+"""Pydantic construction / validation / serialisation suite for ledger payloads.
 
-Exercises the typed CLI envelopes the ledger-interface-contract ADR settled —
-the uniform mutation quintet (D1), the typed list-row payload that replaces the
-former bare ``dict[str, object]`` boundary (D2), and the persistence-record
-lifecycle timestamps (D6) — directly as pydantic models (no CLI runner, no
-mocks). These lock the schema shape, the strict extra-forbid contract, and the
-JSON round-trip.
+Exercises the typed CLI envelopes directly as pydantic models: the uniform
+mutation quintet, typed list-row payloads that replace bare
+``dict[str, object]`` boundaries, and persistence-record lifecycle timestamps.
+These lock the schema shape, the strict extra-forbid contract, and the JSON
+round-trip.
 """
 
 from __future__ import annotations
@@ -98,7 +96,7 @@ def _business_invoice_payload(**overrides: object) -> dict[str, object]:
 
 
 def test_add_result_subclasses_mutation_quintet_and_carries_review_status() -> None:
-    """D1: LedgerAddResult is a _LedgerMutationResult and carries review_status."""
+    """LedgerAddResult is a _LedgerMutationResult and carries review_status."""
     assert issubclass(LedgerAddResult, _LedgerMutationResult)
     result = LedgerAddResult.model_validate(
         {
@@ -117,7 +115,7 @@ def test_add_result_subclasses_mutation_quintet_and_carries_review_status() -> N
 
 
 def test_classify_single_result_is_the_mutation_quintet() -> None:
-    """D1: the single-transaction classify path returns the mutation quintet."""
+    """The single-transaction classify path returns the mutation quintet."""
     assert issubclass(LedgerClassifySingleResult, _LedgerMutationResult)
     result = LedgerClassifySingleResult.model_validate(
         {
@@ -132,7 +130,7 @@ def test_classify_single_result_is_the_mutation_quintet() -> None:
 
 
 def test_classify_branches_are_distinct_discriminated_shapes() -> None:
-    """D1: bulk / llm-suggest / llm-saturate are distinct, non-optional branches."""
+    """Bulk / llm-suggest / llm-saturate are distinct, non-optional branches."""
     bulk = LedgerClassifyBulkResult.model_validate(
         {"total": 10, "applied": 7, "skipped": 2, "failures": []},
     )
@@ -158,7 +156,7 @@ def test_bulk_result_rejects_extra_field() -> None:
 
 
 def test_link_result_carries_transaction_and_typed_evidence_update() -> None:
-    """D1/D2: link gains a transaction slot and a typed evidence_update payload."""
+    """Link carries a transaction slot and a typed evidence_update payload."""
     evidence = LedgerLinkEvidenceUpdatePayload.model_validate(
         {
             "bucket_id": "default",
@@ -196,7 +194,7 @@ def test_link_result_carries_transaction_and_typed_evidence_update() -> None:
 
 
 def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
-    """D2/D6: the typed list row carries the full field set incl. timestamps."""
+    """The typed list row carries the full field set incl. timestamps."""
     row = LedgerListRowPayload.model_validate(
         {
             "full_id": "a" * 64,
@@ -226,7 +224,7 @@ def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
 
 
 def test_history_events_are_typed_not_bare_dicts() -> None:
-    """D2: ledger history events are a typed list, not list[dict[str, object]]."""
+    """Ledger history events are a typed list, not list[dict[str, object]]."""
     event = {
         "event_id": "e" * 64,
         "bucket_id": "default",
@@ -247,7 +245,7 @@ def test_history_events_are_typed_not_bare_dicts() -> None:
 
 
 def test_import_transaction_refs_are_typed() -> None:
-    """D2: import transaction-ref lists are typed, not list[dict[str, object]]."""
+    """Import transaction-ref lists are typed, not list[dict[str, object]]."""
     ref = LedgerImportTransactionRefPayload.model_validate(
         {"bucket_id": "default", "transaction_id": "a" * 64},
     )
@@ -257,7 +255,7 @@ def test_import_transaction_refs_are_typed() -> None:
 
 
 def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
-    """D2: export rows and preflight period/issues are typed nested models."""
+    """Export rows and preflight period/issues are typed nested models."""
     export_row = {
         "bucket_id": "default",
         "transaction_id": "a" * 64,
@@ -302,7 +300,7 @@ def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
 
 
 def test_ratios_payloads_use_typed_rows_and_findings() -> None:
-    """D2: ratios eligible/validate rows are typed payloads."""
+    """Ratios eligible/validate rows are typed payloads."""
     eligible = RatiosEligibleResult.model_validate(
         {
             "bucket_id": "default",
@@ -334,7 +332,7 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
 
 
 def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> None:
-    """D2: list payloads after C4 and companion ledger sub-apps are typed."""
+    """List payloads for companion ledger sub-apps are typed."""
     invoice_list = BusinessInvoiceRecordPayload.model_validate(_business_invoice_payload())
     assert invoice_list.source_kind == "payable_invoice"
 
@@ -420,7 +418,7 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
 
 
 def test_transaction_payload_carries_d6_timestamps() -> None:
-    """D6: the nested TransactionPayload exposes created_at / modified_at."""
+    """The nested TransactionPayload exposes created_at / modified_at."""
     payload = TransactionPayload.model_validate(_transaction_payload())
     assert payload.created_at == "2024-04-10T09:30:00+00:00"
     assert payload.modified_at == "2024-06-01T16:45:00+00:00"

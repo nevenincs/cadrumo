@@ -1,4 +1,4 @@
-"""Real-behaviour tests for the Tier-A external seed importers (ADR D9).
+"""Real-behaviour tests for the Tier-A external seed importers.
 
 The importers parse a Tier-A export (an IATE TBX file, a UBTERM CSV) into the
 strict typed intermediate, map each entry onto an EXISTING concept by its
@@ -104,11 +104,11 @@ def test_excluded_source_is_refused(source: SeedSource) -> None:
 
 
 def test_eurovoc_refused_until_licence_verified() -> None:
-    """EuroVoc is refused until its download-page licence is confirmed (ADR D9).
+    """EuroVoc is refused until its download-page licence is confirmed.
 
-    Per D9 EuroVoc is ingestible ONLY after licence verification on the
-    Publications Office download page. That verification has not been done in
-    this environment, so the gate refuses it and says why.
+    EuroVoc is ingestible only after licence verification on the Publications
+    Office download page. That verification has not been done in this
+    environment, so the gate refuses it and says why.
     """
     with pytest.raises(SeedLicenceError) as excinfo:
         assert_source_ingestible(SeedSource.EUROVOC)
