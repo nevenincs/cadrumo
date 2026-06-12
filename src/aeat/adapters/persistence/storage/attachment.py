@@ -35,7 +35,7 @@ from ....domain.attachments._errors import (
     AttachmentPersistenceError,
     AttachmentValidationError,
 )
-from ....domain.attachments._models import Attachment
+from ....domain.attachments._models import Attachment, is_link_only_mime_type
 from ._namespace_registry import (
     ATTACHMENT_BLOB_NAMESPACE as ATTACHMENT_BLOB_STORAGE_NAMESPACE,
 )
@@ -58,7 +58,6 @@ _ATTACHMENT_MANIFEST_SENSITIVITY = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.sensiti
 _ATTACHMENT_BLOB_NAMESPACE = ATTACHMENT_BLOB_STORAGE_NAMESPACE.namespace
 _ATTACHMENT_MANIFEST_NAMESPACE = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.namespace
 _ATTACHMENT_ERROR_CONTEXT = {"surface": "attachment_store"}
-_LINK_ONLY_MIME_TYPE = "text/" "uri-" "list"
 
 
 def _attachment_validation_error(message: str, *, violation: str) -> AttachmentValidationError:
@@ -283,7 +282,7 @@ class AttachmentStore(BaseModel):
 
     def write_manifest(self, attachment: Attachment) -> None:
         """Persist ``attachment`` as an encrypted database object."""
-        if attachment.mime_type.strip().lower() == _LINK_ONLY_MIME_TYPE:
+        if is_link_only_mime_type(attachment.mime_type):
             raise _attachment_validation_error(
                 "attachment manifest must carry document bytes, not a link-only URI list",
                 violation="manifest_link_only_mime_type",
