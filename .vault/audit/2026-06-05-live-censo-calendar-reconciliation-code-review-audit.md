@@ -131,3 +131,11 @@ The calendar builders produced consistent rows, but the typed boundary models di
 Resolution 2026-06-12: fixed. `OverviewCalendarFilingEvidence` and `OverviewCalendarEvent` now enforce the justificante state invariant at model validation time. Added application tests that construct contradictory evidence/events directly and assert they are refused.
 
 Verification 2026-06-12: `uv run ruff check src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py` passed. `uv run pytest src/aeat/application/overview/tests/test_calendar.py -q` passed with 54 tests. The focused calendar/live/modelo/cross-period gate passed with 442 tests.
+
+## CENSO-018 | MEDIUM | Non-ALTA AEAT register rows could upgrade calendar filing evidence
+
+The S17 audit focused on AEAT declaration-register status semantics. Live acquisition already prefers `ALTA` rows, but the overview projection had to enforce the same boundary when reading persisted local observations. Without that guard, a cancelled, superseded, or otherwise non-current AEAT row carrying a justificante artefact could be treated as submitted or justificante-verified calendar evidence for the obligation.
+
+Resolution 2026-06-12: fixed. Calendar projection now requires `ALTA` before expedientes events, observed filing events, or persisted filed-declaration observations can produce or enrich per-obligation AEAT submitted/justificante evidence. Non-`ALTA` rows remain visible as historical calendar events with their raw status but do not upgrade the obligation state. Added application and CLI-storage regressions, including the late enrichment path where a non-`ALTA` event shares a reference id with separate verified evidence.
+
+Verification 2026-06-12: `uv run ruff check src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py` passed. `uv run pytest src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -m "integration or not integration" -q` passed with 66 tests. The focused calendar/live/modelo/cross-period gate passed with 445 tests. `vaultspec-code-reviewer` returned no findings; residual risk is limited to callers manually constructing `OverviewCalendarFilingEvidence` outside the guarded production merger.
