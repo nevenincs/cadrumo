@@ -17,7 +17,7 @@ related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-code-review-audit]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-reference]]'
-  - '[[2026-06-11-live-censo-calendar-reconciliation-W03-P03-S06-S07-hardening]]'
+  - '[[2026-06-05-live-censo-calendar-reconciliation-W03-P03-S06]]'
 ---
 
 # `live-censo-calendar-reconciliation` feature index
@@ -41,7 +41,7 @@ Auto-generated index of all documents tagged with `#live-censo-calendar-reconcil
 - `2026-06-05-live-censo-calendar-reconciliation-W04-P04-S09` - `live-censo-calendar-reconciliation` `W04.P04.S09` exec - fresh profile password unlock
 - `2026-06-05-live-censo-calendar-reconciliation-W04-P04-S12` - `live-censo-calendar-reconciliation` `W04.P04.S12` exec - noninteractive unlock fail-fast
 - `2026-06-05-live-censo-calendar-reconciliation-W05-P05-S13` - `live-censo-calendar-reconciliation` `W05.P05.S13` exec - authenticated live surface proof
-- `2026-06-11-live-censo-calendar-reconciliation-W03-P03-S06-S07-hardening` - W03.P03.S06-S07 - censo calendar hardening and live verification attempt
+- `2026-06-05-live-censo-calendar-reconciliation-W03-P03-S06` - W03.P03.S06-S07 - censo calendar hardening and live verification attempt
 
 ### plan
 
