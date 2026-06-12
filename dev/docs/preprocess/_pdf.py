@@ -30,13 +30,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import cast
+from typing import Final, cast
 
 from ._parts import (
     split_units_by_budget,
     stamp_part_anchors,
     write_part_sidecars,
 )
+
+_UTF_8: Final[str] = "utf-8"
 from ._schema import (
     ExtractionStatus,
     PreprocessOutput,
@@ -88,7 +90,7 @@ def _load_manifest(path: Path) -> dict[str, object] | None:
     if not path.is_file():
         return None
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding=_UTF_8))
     except (OSError, json.JSONDecodeError):
         return None
     return data if isinstance(data, dict) else None

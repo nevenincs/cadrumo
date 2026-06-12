@@ -36,7 +36,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import cast
+from typing import Final, cast
 
 from ._parts import split_units_by_budget, write_part_sidecars
 from ._schema import (
@@ -46,6 +46,8 @@ from ._schema import (
     SourceDocumentKind,
 )
 from ._sidecar import sha256_of
+
+_UTF_8: Final[str] = "utf-8"
 
 #: Stable id of this extractor, recorded in every sidecar's provenance.
 TEXT_EXTRACTOR_ID = "unsupported-text"
@@ -104,7 +106,7 @@ def _load_manifest(path: Path) -> dict[str, object] | None:
     if not path.is_file():
         return None
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding=_UTF_8))
     except (OSError, json.JSONDecodeError):
         return None
     return data if isinstance(data, dict) else None

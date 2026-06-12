@@ -16,7 +16,7 @@ step consumes, so the seam is clean.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Final
 
 import typer
 
@@ -27,6 +27,8 @@ from ._sweep import (
     run_sweep,
 )
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR
+
+_UTF_8: Final[str] = "utf-8"
 
 app = typer.Typer(
     name="sweep",
@@ -72,7 +74,7 @@ def run(
     )
     _report(result)
     if out is not None:
-        out.write_text(result.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="")
+        out.write_text(result.model_dump_json(indent=2) + "\n", encoding=_UTF_8, newline="")
         typer.echo(f"wrote relevance mapping -> {out}")
 
 

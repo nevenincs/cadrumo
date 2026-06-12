@@ -24,8 +24,11 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Final
 
 from ._schema import PreprocessOutput
+
+_UTF_8: Final[str] = "utf-8"
 
 #: Suffix of the indexable rendered-text sidecar (walker indexes ``.md``).
 EXTRACTED_TEXT_SUFFIX = ".extracted.md"
@@ -100,10 +103,10 @@ def write_sidecar(source: Path, output: PreprocessOutput) -> tuple[Path, Path]:
     # translate "\n" to the OS line ending, churning the committed sidecars
     # against the repo's eol=lf normalisation on Windows.
     try:
-        text_path.write_text(output.render_text(), encoding="utf-8", newline="")
+        text_path.write_text(output.render_text(), encoding=_UTF_8, newline="")
         json_path.write_text(
             json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
+            encoding=_UTF_8,
             newline="",
         )
     except OSError as exc:
@@ -127,7 +130,7 @@ def load_sidecar(source: Path) -> PreprocessOutput:
     """
     _, json_path = sidecar_paths_for(source)
     try:
-        raw = json_path.read_text(encoding="utf-8")
+        raw = json_path.read_text(encoding=_UTF_8)
     except OSError as exc:
         raise PreprocessSidecarError(f"sidecar missing or unreadable for {source}: {exc}") from exc
     # Parse through pydantic's JSON path so strict-mode coercion treats the

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
+from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -36,6 +37,7 @@ __all__ = [
 ]
 
 DEFAULT_RUNG2_MISS_RATE_THRESHOLD = 0.20
+_UTF_8: Final[str] = "utf-8"
 
 
 class MissReason(StrEnum):
@@ -131,14 +133,14 @@ def load_committed_relevance(path: Path | None = None) -> SweepResult:
     """Load and strictly validate the committed relevance mapping."""
 
     resolved = path if path is not None else relevance_mapping_path()
-    return SweepResult.model_validate_json(resolved.read_text(encoding="utf-8"))
+    return SweepResult.model_validate_json(resolved.read_text(encoding=_UTF_8))
 
 
 def load_held_out_query_set(path: Path | None = None) -> HeldOutQuerySet:
     """Load and strictly validate the held-out query corpus."""
 
     resolved = path if path is not None else held_out_query_set_path()
-    return HeldOutQuerySet.model_validate_json(resolved.read_text(encoding="utf-8"))
+    return HeldOutQuerySet.model_validate_json(resolved.read_text(encoding=_UTF_8))
 
 
 def evaluate_held_out_miss_rate(
