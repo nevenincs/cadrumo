@@ -275,14 +275,23 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
     rule = Transaction.model_validate(
         {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "rule:vendor-map"},
     )
+    derived = Transaction.model_validate(
+        {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "derived:iva-category"},
+    )
 
     assert auto.classified_by == "auto"
     assert manual.classified_by == "manual"
     assert rule.classified_by == "rule:vendor-map"
+    assert derived.classified_by == "derived:iva-category"
 
     with pytest.raises(ValidationError):
         Transaction.model_validate(
             {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "rule:"},
+        )
+
+    with pytest.raises(ValidationError):
+        Transaction.model_validate(
+            {"raw": _sample_raw(), "direction": TransactionDirection.INCOMING, "classified_by": "derived:"},
         )
 
     with pytest.raises(ValidationError):
