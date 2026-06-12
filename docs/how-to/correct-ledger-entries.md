@@ -29,10 +29,10 @@ The [transactions guide](import-bank-statements.md) covers listing and filtering
 Change one or more fields directly:
 
 ```bash
-aeat app ledger update <transaction-id> --amount=-121.00 --description "Office chair, corrected price"
+aeat app ledger update <transaction-id> --amount 121.00 --description "Office chair, corrected price"
 ```
 
-Each flag fully replaces that field - write the complete new value, not an addition to the old one. The updatable fields are: date, value-date, amount, direction, currency, counterparty, description, taxable-base, iva-rate, iva-amount, irpf-category, notes, and group.
+Each flag fully replaces that field - write the complete new value, not an addition to the old one. Write the amount as a positive figure - the direction field carries whether money came in or went out, and a negative amount is refused. The updatable fields are: date, value-date, amount, direction, currency, counterparty, description, taxable-base, iva-rate, iva-amount, irpf-category, notes, and group.
 
 An update gives the transaction a new ID - the update output prints it. You don't have to track the change for read commands: an ID you wrote down before the update still answers in `history`, `view`, and `track`, resolving to the corrected transaction. For a further mutation - another `update`, `classify`, or `archive` - use the current ID from the update output or from `list`, because those commands act on the live transaction.
 
@@ -52,7 +52,7 @@ aeat app ledger remove <transaction-id> --reason "wrong file imported" --yes
 When one payment covers two different things - for example, a card payment that mixes business and personal items - split it into parts:
 
 ```bash
-aeat app ledger split <transaction-id> --child-amount=-100.00 --child-description "office supplies" --child-amount=-21.00 --child-description "personal items" --reason "mixed receipt" --yes
+aeat app ledger split <transaction-id> --child-amount 100.00 --child-description "office supplies" --child-amount 21.00 --child-description "personal items" --reason "mixed receipt" --yes
 ```
 
 Amounts and descriptions pair up one per part: the first amount goes with the first description, and so on. The original transaction becomes the split parent, and the parts carry the balance from then on.
