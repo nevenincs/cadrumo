@@ -19,10 +19,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....tests.secure_sql import isolated_runtime_profile
 from .._enums import AttachmentKind, AttachmentSource
+from .._errors import AttachmentValidationError
+from .._models import Attachment
 from .._service import add_attachment_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -84,3 +87,30 @@ def test_no_manifest_in_the_store_carries_a_uri_list_mime(tmp_path: Path) -> Non
         manifests = tuple(store.iter_manifests())
         assert manifests, "expected the byte path to have written manifests"
         assert all(manifest.mime_type != "text/uri-list" for manifest in manifests)
+
+
+def test_attachment_store_refuses_link_only_uri_list_manifest(tmp_path: Path) -> None:
+    """Even a tampered manifest object cannot write a link-only URI-list record."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        store = AttachmentStore()
+        attachment = add_attachment_bytes(
+            store,
+            data=b"%PDF-1.4\nvalid-byte-bearing-document\n",
+            kind=AttachmentKind.DRIVE_DOCUMENT,
+            source=AttachmentSource.GOOGLE_DRIVE,
+            source_reference="https://drive.google.com/file/d/bytebearing/view",
+            mime_type="application/pdf",
+            captured_at=datetime.now(UTC).replace(microsecond=0),
+        )
+
+        manifest_payload = attachment.model_dump(mode="python")
+        manifest_payload["mime_type"] = "text/uri-list"
+        with pytest.raises(ValidationError, match="link-only URI list"):
+            Attachment.model_validate(manifest_payload)
+
+        tampered = attachment.model_copy(update={"mime_type": "text/uri-list"})
+        with pytest.raises(AttachmentValidationError, match="link-only URI list"):
+            store.write_manifest(tampered)
+
+        loaded = store.load_manifest(attachment.attachment_id)
+        assert loaded.mime_type == "application/pdf"
