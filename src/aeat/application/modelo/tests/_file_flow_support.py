@@ -168,8 +168,7 @@ _Repos = tuple[
 ]
 
 
-@pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
+def _repos(tmp_path: Path) -> Iterator[_Repos]:
     """Yield the five catalogue repositories over an encrypted SQLite
     database through the shared active-profile runtime. Tuple shape:
     ``(work_unit, calculation_revision, filing_record,
@@ -183,6 +182,11 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         vr = VerificationReportCatalogueRepository(objects=objects)
         bv = BucketEventHistoryRepository(objects=objects)
         yield wu, cr, fr, vr, bv
+
+
+@pytest.fixture
+def repos(tmp_path: Path) -> Iterator[_Repos]:
+    yield from _repos(tmp_path)
 
 
 def _seed_work_unit(
