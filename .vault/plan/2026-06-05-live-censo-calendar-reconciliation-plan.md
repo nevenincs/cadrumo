@@ -82,6 +82,8 @@ Use the fresh password-backed profile and persisted live Clave session to prove 
 - [x] `W05.P05.S13` - Record authenticated live all-model filing, expedientes, notifications, and calendar proof; `src/aeat/entrypoints/cli/_app_live.py, src/aeat/entrypoints/cli/_app_live_payloads.py, src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W05.P05.S14` - Standardize live filed and expedientes bulk reads on pull only and verify Period-safe CLI output; `src/aeat/entrypoints/cli/_app_live.py, src/aeat/entrypoints/cli/_app_live_expedientes_cli.py, src/aeat/entrypoints/cli/_app_live_payloads.py`.
 - [x] `W05.P05.S15` - Verify typed Period registry, filed-state, IVA wallet, and calendar evidence boundaries after period stringification landed; `src/aeat/application/registry/__init__.py, src/aeat/entrypoints/cli/_app_live.py, src/aeat/entrypoints/cli/tests/test_registry_cli.py, src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
+- [x] `W05.P05.S16` - Enforce calendar justificante state consistency at typed evidence and event boundaries; `src/aeat/application/overview/_calendar.py, src/aeat/application/overview/tests/test_calendar.py`.
+- [x] `W05.P05.S17` - Prevent non-ALTA AEAT register rows from upgrading calendar submitted or justificante evidence; `src/aeat/application/overview/_calendar.py, src/aeat/application/overview/tests/test_calendar.py, src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
 
 ## Description
 
