@@ -19,6 +19,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/modelo/_verification_actions.py": 1319,
     "src/aeat/application/overview/_calendar.py": 1297,
     "src/aeat/domain/calculations/registry/_schema.py": 1269,
+    "src/aeat/entrypoints/cli/_app_live.py": 1265,
     "src/aeat/entrypoints/cli/_ledger_payloads.py": 1303,
     "src/aeat/entrypoints/cli/_modelo_payloads.py": 1295,
 }
