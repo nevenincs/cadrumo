@@ -1,0 +1,43 @@
+# Terminology Handbook concept fragment.
+
+[concept]
+concept_id = "depuracion-licencia"
+domain = "concepto"
+lifecycle = "approved"
+broader = ["terminology-handbook"]
+related = ["mapa-relevancia"]
+created_at = 2026-06-12
+updated_at = 2026-06-12
+
+[language.es]
+short_description = "La frontera que permite shippear solo identificadores y rankings limpios de datos de embedding."
+definition = "Regla de transformacion que elimina de los artefactos de busqueda cualquier dato model-derived no permitido, como vectores, pesos sparse, scores crudos, rutas o snippets, y conserva solo identificadores, destinos, superficies y pesos normalizados. En ADR D6, y bajo la restriccion de licencias de D9, esta depuracion mantiene limpio el backend shipped aunque el oraculo dev use recuperacion hibrida."
+scope_note = "No cambia la fuente legal de un resultado; solo define que informacion derivada puede cruzar al artefacto shipped."
+
+[language.es.source]
+citation = "2026-06-10-docs-terminology-search-adr, decisiones D6 y D9."
+authority = "vaultspec"
+
+[[language.es.term]]
+label = "depuracion de licencia"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "laundering"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The boundary that ships only clean identifiers and rankings, never embedding internals."
+
+[[language.en.term]]
+label = "licence laundering"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "La frontera que envia nomes identificadors i rankings nets, mai dades internes d'embedding."
+
+[language.hu]
+short_description = "A hatar, amely csak tiszta azonositokat es rangsorokat szallit, embedding-belso adatokat nem."

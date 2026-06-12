@@ -26,6 +26,7 @@ from aeat.terminology import (
     load_terminology_handbook,
     terminology_concepts_dir,
 )
+from dev.docs.terminology._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -33,7 +34,7 @@ _FOUR_LANGUAGES = frozenset(OutputLanguage)
 
 
 @pytest.fixture(scope="module")
-def projection() -> tuple[tuple[object, ...], object]:
+def projection() -> tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats]:
     """Project the real bundled Handbook into cards once for the module."""
     from dev.docs.terminology._concept_cards import project_concept_cards
 
@@ -47,7 +48,7 @@ def _bundled_concept_ids() -> set[str]:
 
 
 def test_one_card_per_bundled_concept(
-    projection: tuple[tuple[object, ...], object],
+    projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
 ) -> None:
     """Exact parity: one card per concept in the bundled Handbook.
 
@@ -55,7 +56,7 @@ def test_one_card_per_bundled_concept(
     every concept projects (drafts included), none is dropped or duplicated.
     """
     cards, _stats = projection
-    card_ids = {card.concept_id for card in cards}  # type: ignore[attr-defined]
+    card_ids = {card.concept_id for card in cards}
     bundled = _bundled_concept_ids()
 
     assert card_ids == bundled, (
@@ -67,7 +68,7 @@ def test_one_card_per_bundled_concept(
 
 
 def test_card_count_matches_curation_split(
-    projection: tuple[tuple[object, ...], object],
+    projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
 ) -> None:
     """The approved/draft split equals the Handbook's own lifecycle counts.
 
@@ -79,18 +80,18 @@ def test_card_count_matches_curation_split(
     approved = sum(1 for c in handbook.concepts if c.lifecycle is ConceptLifecycle.APPROVED)
     draft = sum(1 for c in handbook.concepts if c.lifecycle is ConceptLifecycle.DRAFT)
 
-    assert stats.total_cards == len(handbook.concepts)  # type: ignore[attr-defined]
-    assert stats.approved_cards == approved  # type: ignore[attr-defined]
-    assert stats.draft_cards == draft  # type: ignore[attr-defined]
+    assert stats.total_cards == len(handbook.concepts)
+    assert stats.approved_cards == approved
+    assert stats.draft_cards == draft
     # Sanity: drafts are flagged, not silently approved.
-    flagged_drafts = [c for c in cards if c.lifecycle is ConceptLifecycle.DRAFT]  # type: ignore[attr-defined]
+    flagged_drafts = [c for c in cards if c.lifecycle is ConceptLifecycle.DRAFT]
     assert len(flagged_drafts) == draft
     for card in flagged_drafts:
-        assert card.is_approved is False  # type: ignore[attr-defined]
+        assert card.is_approved is False
 
 
 def test_approved_prorrata_card_is_fully_populated(
-    projection: tuple[tuple[object, ...], object],
+    projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
 ) -> None:
     """The approved ``prorrata`` card carries its full four-language surface.
 
@@ -99,39 +100,66 @@ def test_approved_prorrata_card_is_fully_populated(
     synonyms the palette expands), and resolvable legal-grounding links.
     """
     cards, _stats = projection
-    prorrata = next((c for c in cards if c.concept_id == "prorrata"), None)  # type: ignore[attr-defined]
+    prorrata = next((c for c in cards if c.concept_id == "prorrata"), None)
     assert prorrata is not None, "expected the approved 'prorrata' concept card"
 
     # Four-language short_descriptions (the card text).
-    assert set(prorrata.descriptions) == _FOUR_LANGUAGES, (  # type: ignore[attr-defined]
-        f"prorrata missing short_descriptions in: {_FOUR_LANGUAGES - set(prorrata.descriptions)}"  # type: ignore[attr-defined]
+    assert set(prorrata.descriptions) == _FOUR_LANGUAGES, (
+        f"prorrata missing short_descriptions in: {_FOUR_LANGUAGES - set(prorrata.descriptions)}"
     )
     for language in _FOUR_LANGUAGES:
-        assert prorrata.descriptions[language].strip()  # type: ignore[attr-defined]
+        assert prorrata.descriptions[language].strip()
 
     # Alias set: the admitted English "pro rata" and Spanish "prorrateo" the
     # palette must match cross-vocabulary.
-    labels_by_language = {
-        (alias.language, alias.label): alias.term_status  # type: ignore[attr-defined]
-        for alias in prorrata.aliases  # type: ignore[attr-defined]
-    }
+    labels_by_language = {(alias.language, alias.label): alias.term_status for alias in prorrata.aliases}
     assert (OutputLanguage.EN, "pro rata") in labels_by_language
     assert labels_by_language[(OutputLanguage.EN, "pro rata")] is TermStatus.PREFERRED
     assert (OutputLanguage.ES, "prorrateo") in labels_by_language
     assert labels_by_language[(OutputLanguage.ES, "prorrateo")] is TermStatus.ADMITTED
 
     # Legal-grounding links resolve to BOE permalinks.
-    refs = {link.legal_ref for link in prorrata.legal_links}  # type: ignore[attr-defined]
+    refs = {link.legal_ref for link in prorrata.legal_links}
     assert {"ley-37-1992:art-102", "ley-37-1992:art-104"}.issubset(refs)
-    for link in prorrata.legal_links:  # type: ignore[attr-defined]
+    for link in prorrata.legal_links:
         assert link.permalink.startswith("https://www.boe.es/")
         if link.corpus_ref is not None:
             assert link.corpus_ref.endswith(".html#a102") or link.corpus_ref.endswith(".html#a104")
-    assert prorrata.is_approved is True  # type: ignore[attr-defined]
+    assert prorrata.is_approved is True
+
+
+def test_self_hosted_architectural_vocabulary_projects_to_cards(
+    projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
+) -> None:
+    """The epic's own architecture terms are enrolled into the shipped surface."""
+    required = {
+        "terminology-handbook": "Terminology Handbook",
+        "barrido-rag": "RAG sweep",
+        "proyeccion-busqueda": "search projection",
+        "mapa-relevancia": "relevance mapping",
+        "gancho-preprocesado": "preprocess hook",
+        "depuracion-licencia": "licence laundering",
+        "clases-registro-busqueda": "search record kinds",
+    }
+    cards, _stats = projection
+    by_id = {card.concept_id: card for card in cards}
+
+    assert required.keys() <= by_id.keys()
+    for concept_id, english_label in required.items():
+        card = by_id[concept_id]
+        assert card.is_approved is True
+        assert OutputLanguage.ES in card.descriptions
+        assert OutputLanguage.EN in card.descriptions
+        aliases = {(alias.language, alias.label) for alias in card.aliases}
+        assert (OutputLanguage.EN, english_label) in aliases
+        es_definition = next(
+            definition.definition for definition in card.definitions if definition.language is OutputLanguage.ES
+        )
+        assert es_definition is not None and "ADR D" in es_definition
 
 
 def test_every_card_has_a_spanish_short_description(
-    projection: tuple[tuple[object, ...], object],
+    projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
 ) -> None:
     """Spanish is the invariant: every card (draft or approved) has an es card text.
 
@@ -141,13 +169,13 @@ def test_every_card_has_a_spanish_short_description(
     """
     cards, _stats = projection
     for card in cards:
-        assert OutputLanguage.ES in card.descriptions, f"{card.concept_id}: no es short_description"  # type: ignore[attr-defined]
-        assert card.descriptions[OutputLanguage.ES].strip()  # type: ignore[attr-defined]
-        assert set(card.descriptions).issubset(_FOUR_LANGUAGES)  # type: ignore[attr-defined]
+        assert OutputLanguage.ES in card.descriptions, f"{card.concept_id}: no es short_description"
+        assert card.descriptions[OutputLanguage.ES].strip()
+        assert set(card.descriptions).issubset(_FOUR_LANGUAGES)
 
 
 def test_all_legal_refs_resolve_against_the_real_catalogue(
-    projection: tuple[tuple[object, ...], object],
+    projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
 ) -> None:
     """No card ships a dead legal link: the real-catalogue run reports zero unresolved.
 
@@ -155,8 +183,8 @@ def test_all_legal_refs_resolve_against_the_real_catalogue(
     load, so an unresolved ref against the same catalogue is a contradiction.
     """
     _cards, stats = projection
-    assert stats.unresolved_legal_refs == (), (  # type: ignore[attr-defined]
-        f"legal_refs failed to resolve against the bundled catalogue: {stats.unresolved_legal_refs}"  # type: ignore[attr-defined]
+    assert stats.unresolved_legal_refs == (), (
+        f"legal_refs failed to resolve against the bundled catalogue: {stats.unresolved_legal_refs}"
     )
 
 
@@ -196,11 +224,11 @@ def test_legal_link_resolution_reports_a_missing_ref() -> None:
 
 
 def test_card_records_are_frozen(
-    projection: tuple[tuple[object, ...], object],
+    projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
 ) -> None:
     """The strict-frozen contract: a projected card rejects mutation."""
     from pydantic import ValidationError
 
     cards, _stats = projection
     with pytest.raises(ValidationError):
-        cards[0].lifecycle = ConceptLifecycle.RETIRED  # type: ignore[attr-defined,misc]
+        cards[0].lifecycle = ConceptLifecycle.RETIRED  # type: ignore[misc]
