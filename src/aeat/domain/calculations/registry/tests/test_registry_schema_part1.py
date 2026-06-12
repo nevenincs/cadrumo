@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pytest
 
+from .. import RegistrySnapshot
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
@@ -38,6 +41,11 @@ from ._registry_schema_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture
+def _modelo_130_snapshot(registry_snapshot: Callable[[str, int, str], RegistrySnapshot]) -> RegistrySnapshot:
+    return registry_snapshot("130", 2024, "3T")
 
 
 def test_formula_expression_accepts_dispatch_table_entries() -> None:
