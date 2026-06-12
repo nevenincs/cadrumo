@@ -1145,8 +1145,8 @@ def config_status(
 @app.command("reset", help=tr("cli.config.reset.help"))
 def config_reset(
     ctx: typer.Context,
-    scope: str = typer.Option(
-        "all",
+    scope: str | None = typer.Option(
+        None,
         "--scope",
         click_type=_CONFIG_RESET_SCOPE_CHOICE,
         help=tr("cli.config.reset.scope_help"),
@@ -1156,6 +1156,17 @@ def config_reset(
     """Reset operator-entered configuration scopes."""
     from ....application.config_reset import reset_config
 
+    if scope is None:
+        # The most destructive scope (`all`, a full wipe) must never be an
+        # implied default: one forgotten flag next to `--yes` would erase
+        # every profile, session, and stored row. The refusal names the
+        # accepted set per the CLI-boundary rule (never a bare "missing").
+        accepted = ", ".join(_CONFIG_RESET_SCOPE_CLI_VALUES)
+        raise _CliRefusedBoundaryError(
+            f"config reset requires an explicit --scope; accepted scopes: {accepted}. "
+            "The full wipe is `--scope all` and is never implied.",
+            context={"accepted_scopes": accepted},
+        )
     if not yes:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.reset.requires_yes",

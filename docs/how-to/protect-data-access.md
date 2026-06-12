@@ -108,8 +108,8 @@ Pick the scope deliberately:
   Stored profiles and records are untouched.
 - `--scope data` — quarantines unreadable encrypted rows only. Readable
   records are not deleted.
-- `--scope all` — all three of the above. This is the default scope, so
-  always pass `--scope` explicitly unless you mean a full wipe.
+- `--scope all` — all three of the above: a full wipe. There is no default
+  scope; the command refuses to run without an explicit `--scope`.
 
 Before any reset, export profiles you want to keep with
 `aeat config profile export` — see
