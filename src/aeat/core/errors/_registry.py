@@ -381,7 +381,25 @@ def render_error_json(
 
 
 def get_error_exit_code(category: ErrorCategory) -> int:
-    """Return the canonical process exit code for ``category``."""
+    """Return the canonical process exit code for ``category``.
+
+    The exit-code family is the operator's coarse outcome signal:
+
+    * ``ERROR`` -> 1: an expected, operator-actionable failure or refusal of
+      a *domain outcome*. A modelo verification that resolves not-granted —
+      whether ``BLOCKED`` (a blocking-rule finding) or ``INCOMPLETE``
+      (missing required casillas) — exits 1: both are expected verification
+      verdicts, surfaced through ``typer.Exit(code=1)`` in the verify
+      handler, never as an ``INTERNAL`` crash.
+    * ``REFUSED`` -> 2, ``AUTH`` -> 3, ``INTEGRITY`` -> 4, ``FAIL`` -> 5,
+      ``LOCKED`` -> 7: the remaining expected, registered refusal classes.
+    * ``INTERNAL`` -> 6 is reserved exclusively for an *unexpected internal
+      crash* (the ``INTERNAL_*`` registry codes:
+      ``INTERNAL_CLI_UNEXPECTED_BOUNDARY``, ``INTERNAL_WORKFLOW_UNHANDLED``,
+      etc.). An expected domain outcome MUST NOT map to ``INTERNAL`` — a
+      not-granted verification verdict is a result the operator must act on,
+      not a program defect, so it never exits 6.
+    """
     return {
         ErrorCategory.ERROR: 1,
         ErrorCategory.REFUSED: 2,
