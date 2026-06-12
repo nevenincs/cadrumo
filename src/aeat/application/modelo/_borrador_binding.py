@@ -262,19 +262,18 @@ def _assert_same_axis(
     snapshot: Borrador100Snapshot,
 ) -> None:
     expected_bucket = bucket_id.strip()
-    expected_period = period.registry_token
     if snapshot.bucket_id != expected_bucket:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_bucket_mismatch",
         )
-    if snapshot.filing_year != filing_year or snapshot.period != expected_period:
+    if snapshot.filing_year != filing_year or snapshot.period != period:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_axis_mismatch",
             context={
                 "snapshot_year": snapshot.filing_year,
-                "snapshot_period": snapshot.period,
+                "snapshot_period": snapshot.period.registry_token,
                 "filing_year": filing_year,
-                "period": expected_period,
+                "period": period.registry_token,
             },
         )
 

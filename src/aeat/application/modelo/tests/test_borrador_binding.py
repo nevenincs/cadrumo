@@ -95,7 +95,7 @@ def _save_snapshot(
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=_YEAR,
-        period=_PERIOD,
+        period=Period.from_year_and_code(_YEAR, _PERIOD),
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_R210_SIMULATOR_URL,
         state=state,
