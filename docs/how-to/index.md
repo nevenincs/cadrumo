@@ -134,6 +134,13 @@ Export, edit, and pull back model calculations using a Google Sheets spreadsheet
 Run verification, read the report findings, and fix what blocks export.
 :::
 
+:::{grid-item-card} Filing Readiness
+:link: filing-readiness
+:link-type: doc
+
+Check readiness, dependencies, lifecycle history, and year-over-year deltas.
+:::
+
 :::{grid-item-card} File at AEAT
 :link: file-at-aeat
 :link-type: doc
@@ -241,6 +248,7 @@ filing-spine
 modelo-303
 modelo-390
 verification-reports
+filing-readiness
 file-at-aeat
 reconcile
 justificante-receipts
