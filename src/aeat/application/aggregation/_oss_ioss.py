@@ -8,6 +8,7 @@ substrate-classified ledger candidates, validates each line's persisted
 IVA amount against the destination Member State's published rate
 through :func:`aeat.domain.iva.lookup_rate`, and produces validated
 :class:`~aeat.domain.calculations.registry.OssIossLedgerObservation` records the registry can aggregate.
+Callers source persisted invoices through :class:`InvoiceCatalogueRepository`.
 
 Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
 match the destination Member State's published rate for the chosen

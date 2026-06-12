@@ -3,8 +3,9 @@
 The runtime registry loader owns how schema-local translations are applied:
 modelo-level locale TOML is keyed by ``continuidad_id`` and revision-level
 locale TOML is keyed by ``casilla_id``. This module gives the locales CLI a
-typed authoring contract for that storage without moving those translations
-into the eager application YAML catalogues.
+typed authoring contract for :class:`ModeloDefinition` / :class:`ModeloRevision`
+storage without moving those translations into the eager application YAML
+catalogues.
 """
 
 from __future__ import annotations
