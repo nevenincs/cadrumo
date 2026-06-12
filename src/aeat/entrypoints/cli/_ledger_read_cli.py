@@ -39,7 +39,7 @@ from ...domain.categories import (
 )
 from ...domain.transactions import Transaction, TransactionCatalogueRepository
 from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
-from ._ledger_list import parse_ledger_list_filter_spec, project_ledger_list
+from ._ledger_list import ledger_filter_parse_error_message, parse_ledger_list_filter_spec, project_ledger_list
 from ._ledger_review_cli import register_ledger_review_command
 from ._participation_cli import register_participation_commands
 
@@ -436,7 +436,7 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
         try:
             spec = parse_ledger_list_filter_spec(filters)
         except FilterParseError as exc:
-            raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)) from exc
+            raise _bad(ledger_filter_parse_error_message(exc)) from exc
         projection = project_ledger_list(
             transaction_repository=transaction_repository,
             spec=spec,
