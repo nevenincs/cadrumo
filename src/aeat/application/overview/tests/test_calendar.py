@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-from pydantic import AnyHttpUrl, TypeAdapter
+from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
@@ -42,7 +42,9 @@ from .. import (
     OverviewAeatSubmissionState,
     OverviewCalendar,
     OverviewCalendarEntry,
+    OverviewCalendarEvent,
     OverviewCalendarEventType,
+    OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
     OverviewLocalFilingState,
     OverviewPeriodState,
@@ -500,6 +502,53 @@ def test_local_modelo_record_does_not_mark_aeat_submission() -> None:
     assert row.justificante_verified is False
 
 
+def test_calendar_filing_evidence_refuses_contradictory_justificante_state() -> None:
+    with pytest.raises(ValidationError):
+        OverviewCalendarFilingEvidence(
+            modelo="303",
+            filing_year=2025,
+            period=_PERIOD_2025_1T,
+            aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+            justificante_verified=False,
+        )
+
+    with pytest.raises(ValidationError):
+        OverviewCalendarFilingEvidence(
+            modelo="303",
+            filing_year=2025,
+            period=_PERIOD_2025_1T,
+            aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+            justificante_verified=True,
+        )
+
+
+def test_calendar_event_refuses_contradictory_justificante_state() -> None:
+    base = {
+        "event_type": OverviewCalendarEventType.FILING,
+        "event_date": date(2025, 4, 15),
+        "source": "filed_declaration_observation",
+        "summary": "Modelo 303 filed declaration",
+        "reference_id": "12345678901234567890",
+        "modelo": "303",
+        "filing_year": 2025,
+        "period": _PERIOD_2025_1T,
+    }
+
+    with pytest.raises(ValidationError):
+        OverviewCalendarEvent(
+            **base,
+            aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+            justificante_verified=False,
+        )
+
+    with pytest.raises(ValidationError):
+        OverviewCalendarEvent(
+            **base,
+            aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+            justificante_verified=True,
+        )
+
+
 def test_live_capture_external_evidence_requires_persisted_justificante_to_verify() -> None:
     csv = "CSVLIVE3031T2025"
     evidence = calendar_filing_evidence_from_sources(
@@ -581,6 +630,39 @@ def test_expedientes_event_marks_observed_submission_but_not_justificante_verifi
     assert row.justificante_verified is False
 
 
+def test_non_alta_expedientes_event_does_not_create_submission_evidence() -> None:
+    event = calendar_events_from_expedientes_snapshots(
+        (
+            PersistedExpedientesSnapshot(
+                snapshot_id="f" * 64,
+                bucket_id="bucket-1",
+                captured_at=datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+                source_url=_SOURCE_URL,
+                declarations=(
+                    Declaracion(
+                        modelo="303",
+                        ejercicio=2025,
+                        period=_PERIOD_2025_1T,
+                        expediente_id="12345678901234567890",
+                        estado="BAJA",
+                        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    ),
+                ),
+                persisted_at=datetime(2025, 4, 16, 10, 5, tzinfo=UTC),
+            ),
+        ),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+    )
+
+    assert len(event) == 1
+    assert event[0].status == "BAJA"
+    assert event[0].aeat_submission_state is None
+
+    evidence = calendar_filing_evidence_from_sources(observed_events=event)
+
+    assert evidence == ()
+
+
 def test_sede_calculation_observation_is_not_justificante_verification() -> None:
     payload = _ObservationEnvelopePayload(
         observation=RegistryModeloObservation(
@@ -614,6 +696,19 @@ def test_filed_declaration_observation_with_stored_justificante_marks_verified()
     assert row.aeat_evidence_kind == "aeat_justificante_pdf"
     assert row.aeat_reference_id == "12345678901234567890"
     assert row.justificante_verified is True
+
+
+def test_non_alta_filed_declaration_observation_does_not_mark_verified() -> None:
+    evidence = calendar_filing_evidence_from_sources(
+        filed_declaration_observations=(
+            _filed_declaration_observation(
+                artefacts=(_filed_declaration_artefact(),),
+            ).model_copy(update={"status": "BAJA"}),
+        ),
+        expected_tax_id="X1234567L",
+    )
+
+    assert evidence == ()
 
 
 def test_filed_declaration_observation_for_wrong_taxpayer_is_ignored() -> None:

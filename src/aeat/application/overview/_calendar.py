@@ -200,6 +200,17 @@ class OverviewCalendarFilingEvidence(BaseModel):
     def _serialize_period(self, value: _Period | None) -> str | None:
         return str(value) if value is not None else None
 
+    @model_validator(mode="after")
+    def _enforce_justificante_state_consistency(self) -> OverviewCalendarFilingEvidence:
+        """Keep the AEAT submission state and justificante boolean in lockstep."""
+        state_is_verified = self.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+        if self.justificante_verified != state_is_verified:
+            raise ValueError(
+                "OverviewCalendarFilingEvidence.justificante_verified must be true exactly when "
+                "aeat_submission_state is justificante_verified",
+            )
+        return self
+
 
 class OverviewCalendarEntry(BaseModel):
     """One ``(modelo, period)`` row in the calendar view.
@@ -312,6 +323,25 @@ class OverviewCalendarEvent(BaseModel):
     @field_serializer("period", mode="plain")
     def _serialize_period(self, value: _Period | None) -> str | None:
         return str(value) if value is not None else None
+
+    @model_validator(mode="after")
+    def _enforce_justificante_state_consistency(self) -> OverviewCalendarEvent:
+        """Reject calendar events that report contradictory AEAT filing evidence."""
+        if self.aeat_submission_state is None and self.justificante_verified is None:
+            return self
+        if self.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED:
+            if self.justificante_verified is not True:
+                raise ValueError(
+                    "OverviewCalendarEvent.justificante_verified must be true when "
+                    "aeat_submission_state is justificante_verified",
+                )
+            return self
+        if self.justificante_verified is True:
+            raise ValueError(
+                "OverviewCalendarEvent.justificante_verified cannot be true unless "
+                "aeat_submission_state is justificante_verified",
+            )
+        return self
 
 
 class CalendarWarning(BaseModel):
@@ -548,6 +578,11 @@ def calendar_events_from_expedientes_snapshots(
                 continue
             _period = declaration.period
             summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {_period.registry_token} filed at AEAT"
+            aeat_submission_state = (
+                OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+                if _is_active_aeat_filing_status(declaration.estado)
+                else None
+            )
             events.append(
                 OverviewCalendarEvent(
                     event_type=OverviewCalendarEventType.FILING,
@@ -561,8 +596,8 @@ def calendar_events_from_expedientes_snapshots(
                     period=_period,
                     status=declaration.estado,
                     source_url=snapshot.source_url,
-                    aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
-                    justificante_verified=False,
+                    aeat_submission_state=aeat_submission_state,
+                    justificante_verified=False if aeat_submission_state is not None else None,
                 ),
             )
     return _dedupe_calendar_events(events)
@@ -770,7 +805,11 @@ def _filing_evidence_from_observed_event(
         return None
     if event.modelo is None or event.filing_year is None or event.period is None:
         return None
-    state = event.aeat_submission_state or OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    if event.status is not None and not _is_active_aeat_filing_status(event.status):
+        return None
+    state = event.aeat_submission_state
+    if state is None:
+        return None
     return OverviewCalendarFilingEvidence(
         modelo=event.modelo,
         filing_year=event.filing_year,
@@ -792,6 +831,8 @@ def _filing_evidence_from_filed_declaration_observation(
     """Project a captured AEAT filed-declaration observation into calendar evidence."""
     expected = (expected_tax_id or "").strip()
     if expected and observation.authenticated_identity.strip() != expected:
+        return None
+    if not _is_active_aeat_filing_status(observation.status):
         return None
     justificante = next(
         (
@@ -817,6 +858,11 @@ def _filing_evidence_from_filed_declaration_observation(
         justificante_verified=verified,
         evidence_source="filed_declaration_observation",
     )
+
+
+def _is_active_aeat_filing_status(status: str | None) -> bool:
+    """Return whether an AEAT register row represents the current accepted filing."""
+    return (status or "").strip().upper() == "ALTA"
 
 
 def _filing_evidence_from_calculation_observation(payload: object) -> OverviewCalendarFilingEvidence | None:
