@@ -375,6 +375,21 @@ def _income_business_amount(transaction: Transaction) -> Decimal | None:
     return amount * proportion
 
 
+def _computable_income_amount(observation: RentaIncomeObservation) -> Decimal:
+    """Return the fiscally computable ingreso for one observation.
+
+    Mirrors the registry's ``ingresos_integros_sum`` fact: the
+    IVA-exclusive ``taxable_base_amount`` when the transaction carries an
+    explicit IVA tagging, falling back to ``gross_amount`` when no base is
+    declared. IVA repercutido is collected on behalf of Hacienda and is
+    not computable income, so the two surfaces (this projection and the
+    binding resolver) must agree per the one-aggregation-path discipline.
+    """
+    if observation.taxable_base_amount is not None:
+        return observation.taxable_base_amount
+    return observation.gross_amount
+
+
 def _income_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaIncomeObservation],
@@ -384,7 +399,7 @@ def _income_casilla_aggregation(
     grouped: dict[str, list[RentaIncomeObservation]] = {}
     for observation in observations:
         totals[observation.target_casilla] = (
-            totals.get(observation.target_casilla, Decimal("0")) + observation.gross_amount
+            totals.get(observation.target_casilla, Decimal("0")) + _computable_income_amount(observation)
         )
         grouped.setdefault(observation.target_casilla, []).append(observation)
     for casilla, rows in sorted(grouped.items()):
@@ -393,7 +408,7 @@ def _income_casilla_aggregation(
                 casilla=casilla,
                 category_id=None,
                 transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
-                subtotal=sum((row.gross_amount for row in rows), start=Decimal("0")),
+                subtotal=sum((_computable_income_amount(row) for row in rows), start=Decimal("0")),
             ),
         )
     return CasillaAggregation(
