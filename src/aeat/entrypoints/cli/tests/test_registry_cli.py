@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -38,12 +39,15 @@ from ....application.registry import (
     RegistryTreeReport,
     verify_filed_state,
 )
+from ....core import Period
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.config import override_settings
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import calculate_registry_snapshot
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
+from ....tests.cli_runner import aeat_click_command
+from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
+from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from .._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
 from ..registry import _resolve_parity_store_root
 
@@ -53,6 +57,31 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 _BUCKET_ID = "registry-cli"
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
+_CLI_ENV: dict[str, str] = {}
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    global _CLI_ENV
+    tmp_path = tmp_path_factory.mktemp("registry-cli")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
+        _CLI_ENV = {
+            "AEAT_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
+            "AEAT_ACTIVE_PROFILE": runtime.bucket_id,
+            "AEAT_SECRET_STORE_BACKEND": "file",
+            "AEAT_SECRET_STORE_DIR": str(tmp_path / "secrets"),
+            "AEAT_BLOB_STORE_DIR": str(tmp_path / "blobs"),
+            "AEAT_AUDIT_DIR": str(tmp_path / "audit"),
+            "AEAT_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
+            "AEAT_OUTPUT_LANGUAGE": "en",
+        }
+        yield
+    _CLI_ENV = {}
+
+
+def invoke_cached_cli(args, **kwargs):
+    env = {**_CLI_ENV, **dict(kwargs.pop("env", {}) or {})}
+    return _invoke_cached_cli(args, env=env, **kwargs)
 
 
 def _child(group: object, name: str):
@@ -490,7 +519,7 @@ def test_capture_selector_filters_register_rows_by_period_and_expediente() -> No
 
     selected = select_declarations_for_capture(
         rows,
-        period="2T",
+        period=Period.from_year_and_code(2026, "2T"),
         expediente_id="202620013522222B",
     )
 
@@ -502,6 +531,7 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
     row = _declaration(expediente_id="202511113520436S", period="1T", modelo=modelo).model_copy(
         update={
             "ejercicio": 2025,
+            "period": Period.from_year_and_code(2025, "1T"),
             "declaration_copy_link_text": None,
             "declaration_copy_cell_index": None,
         },
@@ -511,7 +541,7 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
 
     assert listed.modelo == modelo
     assert listed.year == 2025
-    assert listed.period == "1T"
+    assert listed.period == Period.from_year_and_code(2025, "1T")
     assert listed.expediente_id == "202511113520436S"
     assert listed.has_submitted_file is True
     assert listed.has_justificante is True
@@ -739,7 +769,7 @@ def test_live_iva_wallet_pull_output_lines_name_guarded_read_query_policy() -> N
     report = IvaWalletCaptureReport(
         taxpayer_ref="12345678Z",
         target_year=2026,
-        target_period="2T",
+        target_period=Period.from_year_and_code(2026, "2T"),
         observation_path="secure://wallet-observation",
         decision_key="iva-wallet-decision:12345678Z:2026:2T",
         row_count=1,
@@ -766,7 +796,7 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         rows=(
             IvaCompensationHistoryRow(
                 year=2024,
-                period="1T",
+                period=Period.from_year_and_code(2024, "1T"),
                 status="ALTA",
                 presented_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
                 prior_pending_amount="100.00",
@@ -784,7 +814,7 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
             IvaCompensationCarryForwardLotRow(
                 taxpayer_ref="sha256:abc123",
                 source_filing_year=2022,
-                source_period="4T",
+                source_period=Period.from_year_and_code(2022, "4T"),
                 generated_amount="100.00",
                 applied_amount="40.00",
                 remaining_amount="60.00",
@@ -799,7 +829,7 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
             IvaWalletAuthorityDecisionRow(
                 taxpayer_ref="sha256:abc123",
                 target_year=2026,
-                target_period="2T",
+                target_period=Period.from_year_and_code(2026, "2T"),
                 selected_authority="aeat_wallet",
                 selected_amount="60.00",
                 wallet_amount="60.00",
@@ -1022,7 +1052,7 @@ def _filed_observation(
     return FiledDeclaracionObservation(
         modelo=modelo,
         ejercicio=ejercicio,
-        period=period,
+        period=Period.from_year_and_code(ejercicio, period),
         expediente_id=f"{ejercicio}{modelo}13522222A",
         status="ALTA",
         presented_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
@@ -1055,7 +1085,7 @@ def _declaration(*, expediente_id: str, period: str, modelo: str | None = None) 
     return Declaracion(
         modelo=modelo or _first_registry_modelo(),
         ejercicio=2026,
-        period=period,
+        period=Period.from_year_and_code(2026, period),
         expediente_id=expediente_id,
         estado="ALTA",
         presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),

@@ -73,7 +73,7 @@ def _modelo_record_with_external_justificante(*, csv: str, bucket_id: str = "ope
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
         filing_year=2025,
-        period="1T",
+        period=Period.from_year_and_code(2025, "1T"),
         filed_at=filed_at,
         filed_by="operator",
         aeat_accepted=True,
@@ -91,7 +91,7 @@ def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justifican
     return Justificante(
         csv=csv,
         modelo="303",
-        period="1T",
+        period=Period.from_year_and_code(2025, "1T"),
         ejercicio="2025",
         presentation_id=None,
         presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -191,7 +191,7 @@ def test_calendar_json_includes_local_live_snapshot_events(cli_runner: CliRunner
                 Declaracion(
                     modelo="303",
                     ejercicio=2025,
-                    period="1T",
+                    period=Period.from_year_and_code(2025, "1T"),
                     expediente_id="12345678901234567890",
                     estado="ALTA",
                     presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -257,6 +257,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         modelo="303",
         filing_year=2025,
         period="1T",
+        filing_period=Period.from_year_and_code(2025, "1T"),
         observations=(CasillaObservation(casilla_id="01", value=Decimal("10.00")),),
     )
     with profile_storage_session("operator"):
@@ -283,7 +284,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             FiledDeclaracionObservation(
                 modelo="303",
                 ejercicio=2025,
-                period="1T",
+                period=Period.from_year_and_code(2025, "1T"),
                 expediente_id="12345678901234567890",
                 status="ALTA",
                 presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
@@ -295,7 +296,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             FiledDeclaracionObservation(
                 modelo="303",
                 ejercicio=2025,
-                period="2T",
+                period=Period.from_year_and_code(2025, "2T"),
                 expediente_id="12345678901234567891",
                 status="ALTA",
                 presented_at=datetime(2025, 7, 15, 9, 30, tzinfo=UTC),
@@ -330,7 +331,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             FiledDeclaracionObservation(
                 modelo="303",
                 ejercicio=2025,
-                period="3T",
+                period=Period.from_year_and_code(2025, "3T"),
                 expediente_id="12345678901234567892",
                 status="ALTA",
                 presented_at=datetime(2025, 10, 15, 9, 30, tzinfo=UTC),

@@ -414,7 +414,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                 "\t".join(
                     (
                         str(lot.source_filing_year),
-                        lot.source_period,
+                        lot.source_period.registry_token,
                         f"generated={lot.generated_amount}",
                         f"applied={lot.applied_amount}",
                         f"remaining={lot.remaining_amount}",
@@ -433,7 +433,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                 "\t".join(
                     (
                         str(decision.target_year),
-                        decision.target_period,
+                        decision.target_period.registry_token,
                         f"selected_authority={decision.selected_authority}",
                         f"selected_amount={decision.selected_amount}",
                         f"wallet_amount={decision.wallet_amount}",
@@ -449,7 +449,10 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
         )
         for source in decision.authority_sources:
             lines.append(
-                _metric_line("authority_source", f"{decision.target_year}\t{decision.target_period}\t{source}"),
+                _metric_line(
+                    "authority_source",
+                    f"{decision.target_year}\t{decision.target_period.registry_token}\t{source}",
+                ),
             )
     return tuple(lines)
 
