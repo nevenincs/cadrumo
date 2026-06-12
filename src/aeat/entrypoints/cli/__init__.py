@@ -17,8 +17,12 @@ application functions and pydantic records.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING, cast
 
 import typer
+
+if TYPE_CHECKING:
+    import click
 from typer._types import TyperChoice as _TyperChoice
 
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
@@ -220,7 +224,13 @@ def _root(
     # so verbs that need it have access to the active profile's
     # encrypted records. This is deferred after the bare-invocation
     # path to keep it out of the state-free surfaces (--version,
-    # --help, bare invocation).
+    # --help, bare invocation). Help and usage-error renderings are
+    # introspection surfaces too: they must never require the master
+    # key, or a newcomer without AEAT_SECRET_PASSPHRASE cannot browse
+    # the command tree and an unknown-command typo is masked by a
+    # master-key refusal instead of the usage error.
+    if _is_introspection_only_invocation(ctx):
+        return
     _activate_active_bucket_session(ctx)
 
 
@@ -399,6 +409,61 @@ def _register_wizard_catalogue_for_profile_keys() -> None:
     from ...application.wizard import _persistence as _wizard_persistence
 
     _ = (_wizard_catalogue, _wizard_persistence)
+
+
+def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
+    """Return whether the invocation can only render help or a usage error.
+
+    Two introspection shapes never execute a verb body and therefore must
+    not open the encrypted bucket session (which demands the master key and,
+    without ``AEAT_SECRET_PASSPHRASE`` on a non-interactive stdin, refuses):
+
+    - A help request: a ``--help`` / ``-h`` token anywhere in the unparsed
+      remainder. Click's eager help callback (or the curated subgroup help
+      in the group callbacks) aborts before any verb body runs.
+    - An unresolvable command chain: the leading non-option tokens do not
+      name a registered command, so click can only emit the usage error.
+      Opening the session first would mask that exit-2 usage error with a
+      master-key refusal, hiding the typo from the operator.
+
+    A literal ``--help`` passed as an option VALUE (``--note --help``) is
+    indistinguishable from a help request at this stage; the skip is
+    fail-closed — the verb body then refuses on the missing session rather
+    than executing, and the canonical spelling ``--note=--help`` is
+    unaffected.
+
+    Click empties ``ctx.args`` / the protected list before the group
+    callback runs, so the token stream is read from the ``ctx.meta``
+    capture staged by :class:`AeatTyperGroup.invoke` (which works for both
+    real-process and in-process invocations).
+    """
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+
+    remainder = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    if any(token in ("--help", "-h") for token in remainder):
+        return True
+    # Walk the LEADING non-option tokens through the real command tree;
+    # the chain stops at the first option token (everything after it can
+    # be an option value, not a subcommand name). ``list_commands`` is
+    # the structural group marker (the vendored TyperGroup is not a
+    # guaranteed upstream ``click.Group`` subclass).
+    tokens: list[str] = []
+    for token in remainder:
+        if token.startswith("-"):
+            break
+        tokens.append(token)
+    if not tokens:
+        return False
+    command: object = ctx.command
+    for token in tokens:
+        if not hasattr(command, "list_commands"):
+            return False
+        group = cast("click.Group", command)
+        subcommand = group.get_command(ctx, token)
+        if subcommand is None:
+            return True
+        command = subcommand
+    return False
 
 
 def _verb_path_from_context(ctx: typer.Context) -> str | None:
