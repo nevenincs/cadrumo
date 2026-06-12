@@ -169,6 +169,12 @@ def _seed_member_322_filing(
     justificante_tax_id: str | None = None,
     source_metadata: dict[str, str] | None = None,
 ) -> None:
+    if source_metadata is None:
+        source_metadata = {
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": f"EXP-322-{_M353_YEAR}-{_M353_PERIOD}-{member_nif}",
+            "authenticated_identity": member_nif,
+        }
     values = _member_source_values(member_nif, source_casillas)
     work_unit_id = hashlib.sha256(f"322:{_M353_YEAR}:{_M353_PERIOD}:{member_nif}".encode()).hexdigest()
     revision_id = derive_calculation_revision_id(
@@ -383,7 +389,7 @@ def _seed_official_303_source_filings(
     observation_repository: CalculationObservationRepository,
     evidence_kind_by_period: dict[str, ExternalEvidenceKind] | None = None,
     skip_justificante_metadata_periods: set[str] | None = None,
-    source_metadata_by_period: dict[str, dict[str, str]] | None = None,
+    source_metadata_by_period: dict[str, dict[str, str] | None] | None = None,
 ) -> None:
     evidence_kind_by_period = evidence_kind_by_period or {}
     skip_justificante_metadata_periods = skip_justificante_metadata_periods or set()
@@ -436,7 +442,14 @@ def _seed_official_303_source_filings(
             observation_repository,
             period=period,
             source_values=values,
-            source_metadata=source_metadata_by_period.get(period),
+            source_metadata=source_metadata_by_period.get(
+                period,
+                {
+                    "aeat_register_status": "ALTA",
+                    "aeat_expediente_id": f"EXP-303-{_M390_YEAR}-{period}",
+                    "authenticated_identity": "X1234567L",
+                },
+            ),
         )
 
 
@@ -941,6 +954,29 @@ def test_cross_period_clean_state_accepts_matching_aeat_register_observation_pro
     first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is True
     assert first_quarter.blockers == ()
+
+
+def test_cross_period_clean_state_blocks_missing_aeat_register_observation_provenance(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        observation_repository = CalculationObservationRepository()
+        _seed_official_303_source_filings(
+            observation_repository=observation_repository,
+            source_metadata_by_period={"1T": None},
+        )
+
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_390(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=observation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="X1234567L",
+        )
+
+    first_quarter = _m390_first_quarter_evidence(verdict)
+    assert verdict.clean is False
+    assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
 
 def test_cross_period_clean_state_blocks_non_alta_aeat_register_observation_provenance(tmp_path: Path) -> None:

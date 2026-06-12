@@ -525,7 +525,7 @@ def _aeat_register_provenance_blockers(
         return []
     metadata = payload.source_metadata
     if not metadata:
-        return []
+        return [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
 
     blockers: list[CrossPeriodCleanStateBlocker] = []
     register_status = metadata.get("aeat_register_status", "").strip().upper()
