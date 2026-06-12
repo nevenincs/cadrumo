@@ -124,6 +124,8 @@ def _evaluate(
         operand_refs=[],
         operand_values=[],
         enum_binding_values=enum_bindings,
+        unresolved_relation_ids=frozenset(),
+        unresolved_casillas=set(),
     )
 
 
