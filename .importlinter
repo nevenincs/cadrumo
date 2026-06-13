@@ -86,6 +86,9 @@ ignore_imports =
     # ── W09: sanctioned cross-layer test/fixture/oracle edges (roundtrip discipline) ──
     aeat.domain.deadlines.conftest -> aeat.application.wizard._catalogue
     aeat.domain.deadlines.conftest -> aeat.application.wizard._persistence
+    # ── conftest profile-key eager registration (wizard import side-effect; test scaffolding) ──
+    aeat.domain.calculations.registry.tests.conftest -> aeat.application.wizard
+    aeat.domain.contribuyente.conftest -> aeat.application.wizard
     # ── DB-16: per-domain repositories wrap the secure-storage substrate ──
     # Sanctioned by the secure-persistence-foundation ADR series
     # (2026-04-30-secure-persistence-foundation-adr, Wave-3/4 per-domain
@@ -727,3 +730,27 @@ ignore_imports =
     aeat.application.modelo.tests.test_modelo_100_2025_retenciones_credit_fold_in_live -> aeat.tests.secure_sql
     aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.adapters.persistence.storage.sql
     aeat.application.modelo.tests.test_modelo_200_fold_in_live -> aeat.tests.secure_sql
+    # ── participation-index derived encrypted cache: domain module wraps secure storage
+    #    like the sibling per-domain repositories (ledger-participation-index-is-derived-rebuildable) ──
+    aeat.domain.modelos._participation_index -> aeat.adapters.persistence.storage
+    aeat.domain.modelos._participation_index -> aeat.adapters.persistence.storage.errors
+    # ── sanctioned cross-layer test/fixture edges (roundtrip discipline; secure_sql harness) ──
+    aeat.domain.modelos.tests.test_participation_index_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.modelos.tests.test_participation_index_roundtrip -> aeat.tests.secure_sql
+    aeat.domain.attachments.tests.test_attachment_store_no_uri_list -> aeat.adapters.persistence.storage.attachment
+    aeat.domain.attachments.tests.test_attachment_store_no_uri_list -> aeat.tests.secure_sql
+    aeat.domain.calculations.registry.tests.test_inss_maternidad_paternidad_art7h -> aeat.tests.secure_sql
+    aeat.domain.calculations.registry.tests.test_registry_locales_loader -> aeat.locales
+    aeat.domain.calculations.registry.tests.conftest -> aeat.application.wizard
+    aeat.domain.contribuyente.conftest -> aeat.application.wizard
+    aeat.application.bucket_maintenance.tests.test_service_import_export -> aeat.tests.secure_sql
+    aeat.application.calculations.tests.test_cross_period_clean_state_provenance -> aeat.tests.secure_sql
+    aeat.application.calculations.tests.test_modelo_130_casilla_05_carry -> aeat.tests.secure_sql
+    aeat.application.ledger.tests.test_attach_purchase_evidence_store -> aeat.tests.secure_sql
+    aeat.application.ledger.tests.test_llm_vision_evidence -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_e2e_ledger_m130_quarters_to_m100_annual -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_e2e_ledger_m303_quarters_to_m390_annual -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_modelo_130_prior_payment_advisory -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_modelo_303_official_box_under_declaration -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_participation_co_emission -> aeat.tests.secure_sql
+    aeat.application.modelo.tests.test_participation_rebuild -> aeat.tests.secure_sql

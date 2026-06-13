@@ -32,8 +32,10 @@ You MUST respect these rules at all times:
 @.agents/rules/cli-single-subject-id-is-positional.md
 @.agents/rules/composition-service-no-parallel-write-path.md
 @.agents/rules/core-struct-docstring-links.md
+@.agents/rules/firmware-reference-parity.builtin.md
 @.agents/rules/fixture-provenance-declared-in-sidecar.md
 @.agents/rules/full-tree-gate-must-distinguish-owner.md
+@.agents/rules/generated-reference-is-cli-owned.builtin.md
 @.agents/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.agents/rules/ledger-derived-revisions-bundle-evidence.md
 @.agents/rules/ledger-evidence-bytes-not-links.md

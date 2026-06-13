@@ -227,17 +227,18 @@ aeat app ledger classify <transaction-id> --llm claude --saturate --read-evidenc
 ```
 
 A scanned PDF or an image invoice is read entirely on your machine by a local
-vision model. Nothing leaves the host, so no acknowledgement is needed and it
-works in gestor and professional deployments. Run it without
-`--evidence-acknowledged`:
+vision model. Nothing leaves the host, so no acknowledgement is needed, no
+`--llm` provider is needed, and it works in gestor and professional deployments:
 
 ```bash
-aeat app ledger classify <transaction-id> --llm claude --saturate --read-evidence
+aeat app ledger classify <transaction-id> --saturate --read-evidence
 ```
 
-The local vision model reads scanned and image evidence regardless of the
-`--llm` provider you pass. Install a local Ollama vision model first; see
-[Set up LLM classification providers](setup-llm-classification.md).
+Install a local Ollama vision model first. The default is `qwen2.5vl:3b`
+(`ollama pull qwen2.5vl:3b`), which reads invoices well and runs on normal
+consumer hardware (a modest GPU or CPU). On an 8 GB+ GPU, override to
+`qwen2.5vl:7b` for stronger reading; for CPU-only or low-memory machines, use
+`moondream`. See [Set up LLM classification providers](setup-llm-classification.md).
 
 The model reads the document only to choose the spending category and the IVA
 situation. It never copies a euro amount from the invoice. The tax numbers are

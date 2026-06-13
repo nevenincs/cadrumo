@@ -45,9 +45,9 @@ locale CLI).
 
 ## How
 
-- **Good:** `aeat app live justificante pull`, `aeat app live expedientes pull`,
-  `aeat app live notifications pull`, `aeat app live filed pull` /
-  `pull-sources`, `aeat app live iva-wallet pull-history` /
+- **Good:** `aeat app live justificante pull`, `aeat app live expedientes pull`
+  / `pull-all`, `aeat app live notifications pull`, `aeat app live filed pull` /
+  `pull-all` / `pull-sources`, `aeat app live iva-wallet pull-history` /
   `pull-remote-state`, `aeat config profile censo pull` — every live AEAT read is
   a `pull`.
 - **Good:** `aeat app ledger import --file STATEMENT.csv` and
