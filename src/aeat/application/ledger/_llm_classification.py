@@ -345,12 +345,16 @@ def suggest_llm_classification(
         provider: Subprocess provider to resolve when ``classifier`` is None.
         classifier: Injected classifier (dependency injection for tests). When
             None, resolved via :func:`resolve_classifier` for ``provider``.
+        vision_classifier: Injected on-host vision classifier used when the
+            evidence is a scan-only PDF or image; default-resolved otherwise.
         transaction_repository: Injected catalogue repository.
-        read_evidence: When True, resolve the transaction's linked evidence, extract
-            its text on-host, and inject it into the prompt. Off by default.
-        evidence_acknowledged: Per-invocation acknowledgement that sending the evidence
-            to a cloud model is accepted; required by the cloud-upload consent gate when
-            ``read_evidence`` is set.
+        read_evidence: When True, resolve the transaction's linked evidence and read
+            it on-host — a text-layer PDF is inlined and sent to the cloud
+            classifier (consent-gated), a scan-only PDF or image is read by the
+            local vision model (no consent needed). Off by default.
+        evidence_acknowledged: Per-invocation acknowledgement that sending text-layer
+            evidence to a cloud model is accepted; required by the cloud-upload consent
+            gate for the text path (the on-host vision path needs no acknowledgement).
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
@@ -638,6 +642,8 @@ def saturate_llm_classification(
         classifier: Injected classifier (dependency injection for tests). When
             None, resolved via :func:`resolve_classifier` for ``provider`` with
             the saturation prompt spec.
+        vision_classifier: Injected on-host vision classifier used when the
+            evidence is a scan-only PDF or image; default-resolved otherwise.
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve the registry rate; defaults to
             the transaction's value date (or booked date).
@@ -1057,6 +1063,8 @@ def suggest_evidence_split(
         provider: Subprocess provider to resolve when ``proposer`` is None.
         proposer: Injected split proposer (dependency injection for tests). When
             None, resolved via :func:`resolve_split_proposer` for ``provider``.
+        vision_classifier: Injected on-host vision classifier used when the
+            evidence is a scan-only PDF or image; default-resolved otherwise.
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve each child's registry rate;
             defaults to the transaction's value date (or booked date).
