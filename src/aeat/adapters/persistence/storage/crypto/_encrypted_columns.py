@@ -42,11 +42,14 @@ from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
-from ..errors import DecryptionError, StorageValidationError
+from ..errors import (
+    DecryptionError,
+)
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
 from ..master_key._active_session import get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
-
-_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
 
 
 class EncryptedPayload(BaseModel):
@@ -68,10 +71,6 @@ _AAD_STRING = b"aeat.column.encrypted_string.v1"
 _AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
 _AAD_JSON = b"aeat.column.encrypted_json.v1"
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"aeat.column.hashed_lookup.v1"
-
-
-def _storage_validation_error(message: str) -> StorageValidationError:
-    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
