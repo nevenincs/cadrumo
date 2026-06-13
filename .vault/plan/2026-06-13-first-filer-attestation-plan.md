@@ -104,38 +104,38 @@ Introduce the typed no-prior-obligation evidence facet on CrossPeriodDependencyE
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Add the NO_PRIOR_OBLIGATION_PRE_ACTIVITY provenance facet kind enum to the cross-period clean-state vocabulary while gate-proving it never enters _OFFICIAL_SOURCE_KINDS; `src/aeat/application/calculations/_cross_period_clean_state.py`.
-- [ ] `P01.S02` - Add the typed NoPriorObligationProvenance model carrying activity_start_date, provenance kind (operator-declared vs censo-corroborated), and optional censo snapshot id; `src/aeat/application/calculations/_cross_period_clean_state.py`.
-- [ ] `P01.S03` - Add the suppressed no_prior_obligation facet field plus its clean-property treatment to CrossPeriodDependencyEvidence so a scoped-out requirement is explicit and non-silent; `src/aeat/application/calculations/_cross_period_clean_state.py`.
-- [ ] `P01.S04` - Add the pure period-strictly-before-activity-start predicate over a declared date routed through Period boundary authority, unit-testing that the alta-containing period is NOT before-start; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `P01.S01` - Add the NO_PRIOR_OBLIGATION_PRE_ACTIVITY provenance facet kind enum to the cross-period clean-state vocabulary while gate-proving it never enters _OFFICIAL_SOURCE_KINDS; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `P01.S02` - Add the typed NoPriorObligationProvenance model carrying activity_start_date, provenance kind (operator-declared vs censo-corroborated), and optional censo snapshot id; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `P01.S03` - Add the suppressed no_prior_obligation facet field plus its clean-property treatment to CrossPeriodDependencyEvidence so a scoped-out requirement is explicit and non-silent; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `P01.S04` - Add the pure period-strictly-before-activity-start predicate over a declared date routed through Period boundary authority, unit-testing that the alta-containing period is NOT before-start; `src/aeat/application/calculations/_cross_period_clean_state.py`.
 
 ### Phase `P02` - Application-layer activity-start scoping in requirement derivation
 
 Scope cross-period dependency requirements whose period falls strictly before the operator-declared activity_start_date out of the derived graph inside _cross_period_clean_state.py, generalising the existing M130 absent-by-design vocabulary from calendar-position to activity-start boundary. Apply the scoping uniformly to both previous_filing bindings and relation_source_requirements, stamp suppressed anchors with the provenance facet, and resolve the binding value to a provenance-marked zero. Never weaken _OFFICIAL_SOURCE_KINDS.
 
-- [ ] `P02.S05` - Apply the activity-start scoping filter to previous_filing-origin requirements in cross_period_dependency_requirements so a period strictly before the declared alta is dropped from the derived graph; `src/aeat/application/calculations/_cross_period_clean_state.py`.
-- [ ] `P02.S06` - Apply the same activity-start scoping filter to registry-relation-origin requirements so the suppression is uniform across both previous_filing and relation_source_requirements origins; `src/aeat/application/calculations/_cross_period_clean_state.py`.
-- [ ] `P02.S07` - Stamp each suppressed requirement with the no-prior-obligation provenance facet and resolve its binding value through the existing absent-by-design path to a provenance-marked Decimal zero rather than an unstamped carry; `src/aeat/application/calculations/_cross_period_clean_state.py`.
-- [ ] `P02.S08` - Thread the declared activity_start_date parameter into evaluate_cross_period_clean_state and cross_period_dependency_requirements without letting callers pass an ad hoc dependency set, preserving registry-derived guard semantics; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `P02.S05` - Apply the activity-start scoping filter to previous_filing-origin requirements in cross_period_dependency_requirements so a period strictly before the declared alta is dropped from the derived graph; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `P02.S06` - Apply the same activity-start scoping filter to registry-relation-origin requirements so the suppression is uniform across both previous_filing and relation_source_requirements origins; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `P02.S07` - Stamp each suppressed requirement with the no-prior-obligation provenance facet and resolve its binding value through the existing absent-by-design path to a provenance-marked Decimal zero rather than an unstamped carry; `src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `P02.S08` - Thread the declared activity_start_date parameter into evaluate_cross_period_clean_state and cross_period_dependency_requirements without letting callers pass an ad hoc dependency set, preserving registry-derived guard semantics; `src/aeat/application/calculations/_cross_period_clean_state.py`.
 
 ### Phase `P03` - Caller plumbing and non-blocking advisory
 
 Thread the operator-declared activity_start_date from the workflow profile through the verification-action caller into evaluate_cross_period_clean_state, reusing the exact field the deadline engine consumes. Emit the non-blocking advisory finding when suppression rests on a declared-but-uncorroborated date, fail closed (block, prompt to record the date) when no activity_start_date exists at all, and keep the first local filing persisting under the non-official app_filing source kind.
 
-- [ ] `P03.S09` - Thread workflow_profile.activity_start_date from the verification-action caller into _cross_period_clean_state_verdict_for_work_unit and onward to evaluate_cross_period_clean_state, reusing the exact field the deadline engine consumes; `src/aeat/application/modelo/_verification_actions.py`.
-- [ ] `P03.S10` - Emit a non-blocking advisory verification finding when a suppression rests on an operator-declared-but-uncorroborated activity-start date, mirroring the existing unstamped-revision advisory severity that keeps the grant path open; `src/aeat/application/modelo/_verification_actions.py`.
-- [ ] `P03.S11` - Fail closed with a blocking finding that prompts the operator to record the activity-start date when the profile carries no activity_start_date at all, so the gate never silently opens; `src/aeat/application/modelo/_verification_actions.py`.
+- [x] `P03.S09` - Thread workflow_profile.activity_start_date from the verification-action caller into _cross_period_clean_state_verdict_for_work_unit and onward to evaluate_cross_period_clean_state, reusing the exact field the deadline engine consumes; `src/aeat/application/modelo/_verification_actions.py`.
+- [x] `P03.S10` - Emit a non-blocking advisory verification finding when a suppression rests on an operator-declared-but-uncorroborated activity-start date, mirroring the existing unstamped-revision advisory severity that keeps the grant path open; `src/aeat/application/modelo/_verification_actions.py`.
+- [x] `P03.S11` - Fail closed with a blocking finding that prompts the operator to record the activity-start date when the profile carries no activity_start_date at all, so the gate never silently opens; `src/aeat/application/modelo/_verification_actions.py`.
 
 ### Phase `P04` - Real-behavior verification gates
 
 Prove the design with real-storage tests: the empty-pre-activity-span (absent-by-design = no blocker) case, the alta-containing-period stays in scope, uniform application across both requirement origins, the no-activity-start fail-closed case, the advisory surfaces, and an anti-tautology proof that a REAL prior filing post-dating the declared alta still blocks.
 
-- [ ] `P04.S12` - Add a real-storage test proving an empty pre-activity span produces no cross-period blocker (absent-by-design) and verify completes on current-period merits for a genuine first filer; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
-- [ ] `P04.S13` - Add a real-storage test proving the alta-containing period stays in scope as the first obligation and is NOT suppressed; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
-- [ ] `P04.S14` - Add a real-storage test proving the activity-start scoping applies uniformly to both previous_filing and relation_source_requirements origins; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
-- [ ] `P04.S15` - Add an anti-tautology proof that a REAL prior filing post-dating the declared alta still produces a cross-period blocker and still demands official AEAT evidence; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
-- [ ] `P04.S16` - Add a real-storage test proving the gate fails closed when the profile carries no activity_start_date and that the non-blocking advisory surfaces when a declared date scopes a requirement out; `src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py`.
-- [ ] `P04.S17` - Add a regression asserting no_prior_obligation provenance never enters _OFFICIAL_SOURCE_KINDS and the first local filing still persists under the non-official app_filing source kind; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
+- [x] `P04.S12` - Add a real-storage test proving an empty pre-activity span produces no cross-period blocker (absent-by-design) and verify completes on current-period merits for a genuine first filer; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+- [x] `P04.S13` - Add a real-storage test proving the alta-containing period stays in scope as the first obligation and is NOT suppressed; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+- [x] `P04.S14` - Add a real-storage test proving the activity-start scoping applies uniformly to both previous_filing and relation_source_requirements origins; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+- [x] `P04.S15` - Add an anti-tautology proof that a REAL prior filing post-dating the declared alta still produces a cross-period blocker and still demands official AEAT evidence; `src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
+- [x] `P04.S16` - Add a real-storage test proving the gate fails closed when the profile carries no activity_start_date and that the non-blocking advisory surfaces when a declared date scopes a requirement out; `src/aeat/application/modelo/tests/test_cross_period_clean_state_gates.py`.
+- [x] `P04.S17` - Add a regression asserting no_prior_obligation provenance never enters _OFFICIAL_SOURCE_KINDS and the first local filing still persists under the non-official app_filing source kind; `src/aeat/application/modelo/tests/test_cross_period_clean_state_enforcement.py`.
 
 ## Description
 
@@ -169,11 +169,11 @@ the first obligation and only STRICTLY-prior periods are suppressed (routed
 through `Period` boundary authority per `period-filter-single-boundary-authority`);
 the narrowing is an application-layer filter over the derived requirements (the
 registry stays pure, the declared date is a grounded input, not an ad hoc per-call
-shrink — preserving the `2026-06-05-cross-period-calculation-guards-adr` registry-
+shrink - preserving the `2026-06-05-cross-period-calculation-guards-adr` registry-
 derived-graph constraint); the suppression is recorded as an explicit typed
 no-prior-obligation evidence facet (NOT a silent omission); the scoping applies
 uniformly to both `previous_filing` bindings and `relation_source_requirements`;
-and censo-corroboration is deferred — the declared date is the authority now with
+and censo-corroboration is deferred - the declared date is the authority now with
 a non-blocking advisory. `_OFFICIAL_SOURCE_KINDS` is never weakened, and the first
 local filing still persists under the non-official `app_filing` source kind, so a
 later dependent period still demands real AEAT evidence of that filing.
@@ -240,7 +240,7 @@ is a precondition for P03 (the caller plumbing and advisory that surface it),
 which P04 (the verification gates) proves. Within a Phase the Steps share the
 same file and must land in id order.
 
-CONTENTION RISK — peer WIP in the worktree. At plan-authoring time
+CONTENTION RISK - peer WIP in the worktree. At plan-authoring time
 `src/aeat/application/calculations/_cross_period_clean_state.py`,
 `src/aeat/application/modelo/_verification_actions.py`, and the test files this
 plan touches (`test_cross_period_clean_state.py`,
@@ -269,7 +269,7 @@ verifiable gates pass:
   `previous_filing` and `relation_source_requirements` origins.
 - The anti-tautology proof (P04.S15) proves a REAL prior filing post-dating the
   declared alta still produces a cross-period blocker and still demands official
-  AEAT evidence — the gate is not vacuously open.
+  AEAT evidence - the gate is not vacuously open.
 - The fail-closed-plus-advisory test (P04.S16) proves the gate blocks when no
   `activity_start_date` exists and surfaces the non-blocking advisory when a
   declared date scopes a requirement out.
