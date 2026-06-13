@@ -8,8 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import BucketPointer
-from .....core import write_pointer
+from .....core import BucketPointer, write_pointer
 from .....core.config import Settings, StorageRouteKind, override_settings
 from .....core.errors import resolve_error_message
 from .....core.external_constants import OutputLanguage

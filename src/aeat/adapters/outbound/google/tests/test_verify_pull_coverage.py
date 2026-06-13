@@ -14,7 +14,6 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from .....core import Period
 from .....application.storage.calc_sheets._records import (
     SheetCellAddress,
     SheetExportMetadata,
@@ -24,6 +23,7 @@ from .....application.storage.calc_sheets._records import (
     SheetRowSetColumn,
     TabName,
 )
+from .....core import Period
 from .._calc_sheets_pull import (
     MetadataMatchState,
     PullCoverageDiscrepancy,

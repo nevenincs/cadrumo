@@ -8,6 +8,7 @@ from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M111,
     _COMPUTED_CASILLAS_M130,
     _COMPUTED_CASILLAS_M303,
+    _DR303_PROJECTION_CASILLAS,
     _M303_2023_ONWARDS_PARAMS,
     FIXTURES_DIR,
     Decimal,
@@ -67,6 +68,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
       1. parse_declaracion → DeclaracionObservation (extracts c03 and c19 only)
       2. Reconstruct leaf inputs: c01 = extracted_c03, c02 = 0
       3. Supply previous-filing binding values:
+         - modelo-130-pagos-fraccionados-anteriores = 0 (no prior payments)
          - modelo-130-resultados-negativos-anteriores = 0 (no prior negative)
          - irpf.previous_year_economic_activity_net_income = 0
            (unknown from corpus → conservative 0 → casilla 13 = 0)
@@ -132,8 +134,10 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
 
     # Only previous_filing bindings must be supplied via binding_values:
     binding_values: dict[str, Decimal] = {
-        # Prior-quarter carry-forward; 0 = no prior negative result (safe default
-        # for corpus specimens where we don't know prior-quarter saldo).
+        # Prior-quarter payments and negative-result carry-forward; 0 = no prior
+        # values (safe default for corpus specimens where we don't know prior
+        # quarter saldo or payments).
+        "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         # Prior-year net income; 0 → casilla 13 = 0 (minoración rendimientos netos).
         # Conservative but honest: corpus PDFs don't print casilla 13 (computed).
@@ -210,7 +214,9 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     ],
 )
 def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
-    pdf_stem: str, year: int, period: str,
+    pdf_stem: str,
+    year: int,
+    period: str,
 ) -> None:
     """Engine recomputes casilla 28 (total retenciones) and 30 (resultado) from leaf inputs.
 
@@ -413,7 +419,9 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
     ],
 )
 def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
-    pdf_stem: str, year: int, period: str,
+    pdf_stem: str,
+    year: int,
+    period: str,
 ) -> None:
     """Engine resultado-regimen-general matches the extracted printed box 46.
 
@@ -518,20 +526,28 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
         f"  (engine formula or fixture inconsistency — box 46 = box 27 − box 45,\n"
         f"   Orden EHA/3786/2008 art. 1)"
     )
-    # Internal consistency cross-check: engine resultado == c27 - c45.
-    input_27 = inputs.get("27", Decimal("0"))
-    input_45 = inputs.get("45", Decimal("0"))
-    expected_resultado = input_27 - input_45
+    # Internal consistency cross-check: engine resultado == computed c27 - c45.
+    engine_27 = engine_values.get("27")
+    engine_45 = engine_values.get("45")
+    assert isinstance(engine_27, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 27 missing or non-Decimal: {engine_27!r}"
+    )
+    assert isinstance(engine_45, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 45 missing or non-Decimal: {engine_45!r}"
+    )
+    expected_resultado = engine_27 - engine_45
     assert engine_resultado == expected_resultado, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
-        f"{engine_resultado!r} != box27({input_27!r}) - box45({input_45!r}) = {expected_resultado!r}\n"
+        f"{engine_resultado!r} != box27({engine_27!r}) - box45({engine_45!r}) = {expected_resultado!r}\n"
         f"  (internal formula consistency broken — registry formula defect)"
     )
 
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
-    pdf_stem: str, year: int, period: str,
+    pdf_stem: str,
+    year: int,
+    period: str,
 ) -> None:
     """Engine box 64 (suma de resultados) matches the extracted printed value.
 
@@ -563,7 +579,9 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
-    pdf_stem: str, year: int, period: str,
+    pdf_stem: str,
+    year: int,
+    period: str,
 ) -> None:
     """Engine box 66 (atribuible Administración del Estado) matches the extracted printed value.
 
@@ -596,7 +614,9 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidacion(
-    pdf_stem: str, year: int, period: str,
+    pdf_stem: str,
+    year: int,
+    period: str,
 ) -> None:
     """Engine box 69 (resultado autoliquidación) matches the extracted printed value.
 
@@ -629,7 +649,9 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
-    pdf_stem: str, year: int, period: str,
+    pdf_stem: str,
+    year: int,
+    period: str,
 ) -> None:
     """Engine box 71 (resultado final) matches the extracted printed value.
 
@@ -673,7 +695,9 @@ def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
     ],
 )
 def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_general(
-    pdf_stem: str, year: int, period: str,
+    pdf_stem: str,
+    year: int,
+    period: str,
 ) -> None:
     """Engine resultado-regimen-general matches the extracted printed box 46 (legacy revision).
 
@@ -714,7 +738,7 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
     # Build inputs — supply only non-computed Decimal casillas.
     inputs: dict[str, Decimal] = {}
     for casilla_id, value in extracted.items():
-        if casilla_id in _COMPUTED_CASILLAS_M303:
+        if casilla_id in _COMPUTED_CASILLAS_M303 and casilla_id not in _DR303_PROJECTION_CASILLAS:
             continue
         if not isinstance(value, Decimal):
             continue
@@ -762,11 +786,17 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
         f"  (engine formula or fixture inconsistency — box 46 = box 27 − box 45,\n"
         f"   Orden EHA/3786/2008 art. 1)"
     )
-    input_27 = inputs.get("27", Decimal("0"))
-    input_45 = inputs.get("45", Decimal("0"))
-    expected_resultado = input_27 - input_45
+    engine_27 = engine_values.get("27")
+    engine_45 = engine_values.get("45")
+    assert isinstance(engine_27, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 27 missing or non-Decimal: {engine_27!r}"
+    )
+    assert isinstance(engine_45, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 45 missing or non-Decimal: {engine_45!r}"
+    )
+    expected_resultado = engine_27 - engine_45
     assert engine_resultado == expected_resultado, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
-        f"{engine_resultado!r} != box27({input_27!r}) - box45({input_45!r}) = {expected_resultado!r}\n"
+        f"{engine_resultado!r} != box27({engine_27!r}) - box45({engine_45!r}) = {expected_resultado!r}\n"
         f"  (internal formula consistency broken — registry formula defect)"
     )

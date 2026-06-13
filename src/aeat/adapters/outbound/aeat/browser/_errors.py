@@ -47,7 +47,6 @@ class BrowserValidationError(BrowserError, ValueError):
     """
 
 
-
 class BrowserEvasionError(BrowserError):
     """Raised when browser evasion setup cannot be applied."""
 

@@ -466,11 +466,17 @@ def pull_operator_edits(
     casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     cursor = 0
     operator_edits, cursor, casilla_cells_read = _decode_operator_edits(
-        value_ranges, cursor, operator_input_ids, casilla_by_id,
+        value_ranges,
+        cursor,
+        operator_input_ids,
+        casilla_by_id,
     )
     binding_edits, cursor, binding_cells_read = _decode_binding_edits(value_ranges, cursor, binding_ids)
     relation_edits, cursor, relation_cells_read = _decode_relation_edits(
-        value_ranges, cursor, relation_ids, metadata_pairs,
+        value_ranges,
+        cursor,
+        relation_ids,
+        metadata_pairs,
     )
 
     # Read row-set detail rows from the Detalle tab. Each row-set

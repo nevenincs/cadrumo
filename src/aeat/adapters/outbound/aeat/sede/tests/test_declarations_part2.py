@@ -139,10 +139,12 @@ class TestSubmittedFileObservation:
             artefact=artefact,
         )
         observed_values = {item.casilla_id: Decimal(item.value) for item in observed}
-        # Casilla 15 (resultados-negativos-anteriores) is a previous-filing
-        # bound registry casilla; it must route through binding_values keyed
-        # by the binding id, not through inputs. The _formula_runtime smuggle
-        # guard refuses inputs["15"] without a matching binding entry.
+        # Casillas 05 (pagos fraccionados anteriores) and 15
+        # (resultados-negativos-anteriores) are previous-filing bound registry
+        # casillas; they must route through binding_values keyed by the binding
+        # id, not through inputs alone. The _formula_runtime smuggle guard
+        # refuses inputs["05"]/inputs["15"] without matching binding entries.
+        prior_payments_value = observed_values.get("05", Decimal("0"))
         carry_forward_value = observed_values.get("15", Decimal("0"))
         input_values = {
             casilla.id: observed_values[casilla.id]
@@ -176,6 +178,7 @@ class TestSubmittedFileObservation:
             filing_year=2026,
             period="1T",
         )
+        binding_values["modelo-130-pagos-fraccionados-anteriores"] = prior_payments_value
         binding_values["modelo-130-resultados-negativos-anteriores"] = carry_forward_value
         computed_casillas = {
             casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED

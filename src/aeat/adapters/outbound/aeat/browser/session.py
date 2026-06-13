@@ -111,7 +111,9 @@ class BrowserSession:
             self._browser = browser
             try:
                 context_kwargs = self._build_context_kwargs(
-                    storage_state_path=storage_state_path, storage_state=storage_state, provisioner=provisioner,
+                    storage_state_path=storage_state_path,
+                    storage_state=storage_state,
+                    provisioner=provisioner,
                 )
                 context = await self._create_playwright_context(browser, context_kwargs)
                 await self._apply_evasion(context)
@@ -274,7 +276,9 @@ class BrowserSession:
             ) from exc
 
     def _annotate_context_via_provisioner(
-        self, context: BrowserContext, provisioner: BrowserContextProvisioner,
+        self,
+        context: BrowserContext,
+        provisioner: BrowserContextProvisioner,
     ) -> None:
         """Run the provisioner's post-construct annotation hook with typed error envelope."""
         try:

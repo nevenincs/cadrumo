@@ -60,10 +60,25 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
     return text
 
 
+def extract_text_from_bytes(pdf_bytes: bytes, backend: JustificanteParserBackend) -> str:
+    """Extract concatenated text from in-memory PDF bytes using ``backend``."""
+    backend_value = backend.value if hasattr(backend, "value") else str(backend)
+    return _extract_text_from_bytes_uncached(pdf_bytes, backend_value)
+
+
 def _extract_text_uncached(pdf_path: Path, backend_value: str) -> str:
     normalized_backend = backend_value.lower()
     if normalized_backend == JustificanteParserBackend.PDFPLUMBER.value.lower():
         from ._pdfplumber_backend import extract_text_pdfplumber
 
         return extract_text_pdfplumber(pdf_path)
+    raise JustificanteParseError(f"unknown parser backend: {backend_value!r}")
+
+
+def _extract_text_from_bytes_uncached(pdf_bytes: bytes, backend_value: str) -> str:
+    normalized_backend = backend_value.lower()
+    if normalized_backend == JustificanteParserBackend.PDFPLUMBER.value.lower():
+        from ._pdfplumber_backend import extract_text_pdfplumber_bytes
+
+        return extract_text_pdfplumber_bytes(pdf_bytes)
     raise JustificanteParseError(f"unknown parser backend: {backend_value!r}")

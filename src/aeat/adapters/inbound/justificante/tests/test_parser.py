@@ -34,7 +34,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from ...pdf._utils import source_pdf_reference_path
-from .. import parse_justificante
+from .. import parse_justificante, parse_justificante_bytes
 from .._parsers import _TEXT_CACHE, extract_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -122,6 +122,12 @@ class TestParseJustificante:
         a_dict = a.model_dump(exclude={"parsed_at"})
         b_dict = b.model_dump(exclude={"parsed_at"})
         assert a_dict == b_dict
+
+    def test_parse_bytes_matches_path_parser_without_plaintext_materialisation(self, modelo_130_pdf: Path) -> None:
+        path_record = parse_justificante(modelo_130_pdf)
+        bytes_record = parse_justificante_bytes(modelo_130_pdf.read_bytes())
+
+        assert bytes_record.model_dump(exclude={"parsed_at"}) == path_record.model_dump(exclude={"parsed_at"})
 
     def test_explicit_backend_pdfplumber(self, modelo_130_pdf: Path) -> None:
         record = parse_justificante(

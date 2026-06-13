@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .....domain.justificante._errors import JustificanteParseError
-from ...pdf._pdfplumber import extract_pages_text_concatenated
+from ...pdf._pdfplumber import extract_pages_text_concatenated, extract_pages_text_from_bytes
 
 
 def extract_text_pdfplumber(pdf_path: Path) -> str:
@@ -26,3 +26,15 @@ def extract_text_pdfplumber(pdf_path: Path) -> str:
         newlines. Empty pages are skipped.
     """
     return extract_pages_text_concatenated(pdf_path, error_class=JustificanteParseError)
+
+
+def extract_text_pdfplumber_bytes(pdf_bytes: bytes) -> str:
+    """Return concatenated text from in-memory PDF bytes using pdfplumber."""
+    return "\n".join(
+        extract_pages_text_from_bytes(
+            pdf_bytes,
+            error_class=JustificanteParseError,
+            pdf_label="PDF",
+            source_label="in-memory justificante PDF",
+        )
+    )

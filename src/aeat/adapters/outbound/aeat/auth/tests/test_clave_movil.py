@@ -876,8 +876,12 @@ class TestPostAuthLanding:
             await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=1_000)
 
         asyncio.run(run())
+        continue_selector = (
+            f"{_PRE303_SURFACE.alert_modal_selector}.show "
+            f'button:has-text("{_PRE303_SURFACE.alert_continue_button_text.title()}")'
+        )
         assert page.clicks == [
-            f'{_PRE303_SURFACE.alert_modal_selector} button:has-text("{_PRE303_SURFACE.alert_continue_button_text}")',
+            continue_selector,
             _PRE303_SURFACE.representation_own_name_label_selector,
             _PRE303_SURFACE.representation_submit_selector,
         ]

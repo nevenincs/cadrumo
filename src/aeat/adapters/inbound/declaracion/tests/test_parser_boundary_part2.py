@@ -191,7 +191,9 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     ],
 )
 def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
-    pdf_stem: str, year: int, period: str,
+    pdf_stem: str,
+    year: int,
+    period: str,
 ) -> None:
     """Round-trip: parse all 7 corpus M303 PDFs from the 2021-2022 printed-form template.
 

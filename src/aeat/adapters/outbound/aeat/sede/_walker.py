@@ -325,7 +325,8 @@ async def _snapshot_html(page: object) -> str:
                 await wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_TIMEOUT_SHORT_MS)
             except PlaywrightError as wait_exc:
                 log.debug(
-                    "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)", wait_exc,
+                    "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)",
+                    wait_exc,
                 )
         try:
             return await content()

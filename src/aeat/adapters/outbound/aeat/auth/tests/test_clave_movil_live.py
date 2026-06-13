@@ -118,3 +118,28 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
             )
         finally:
             await provider.close()
+
+        from ......core import require_active_bucket_id
+        from ......core.auth_session_keys import aeat_auth_session_storage_state_path
+
+        storage_state_path = aeat_auth_session_storage_state_path(
+            require_active_bucket_id(),
+            "clave-movil-storage",
+        )
+        assert _session_store.exists(storage_state_path)
+        assert not storage_state_path.exists()
+        assert not storage_state_path.with_suffix(".meta.json").exists()
+
+        probe_provider = ClaveMovilAuthProvider(settings, browser_session_factory=_central_browser_session)
+        try:
+            resumed_session, resumed_assertion = await probe_provider.probe_persisted_session()
+            assert isinstance(resumed_session, AeatSession)
+            assert resumed_session.identity_nif == settings.aeat_clave_movil_dni_nie.get_secret_value().strip().upper()
+            assert isinstance(resumed_session.provider_detail, ClaveMovilSessionDetail)
+            assert isinstance(resumed_assertion, AeatLoginAssertion)
+            assert resumed_assertion.is_valid is True, (
+                "persisted Cl@ve login assertion failed: "
+                f"status={resumed_assertion.status_code} error={resumed_assertion.error_message}"
+            )
+        finally:
+            await probe_provider.close()
