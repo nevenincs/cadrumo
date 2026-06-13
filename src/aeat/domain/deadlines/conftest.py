@@ -29,4 +29,4 @@ def _register_wizard_catalogue() -> None:
     projection resolves for every test in this package regardless of run
     selection.
     """
-    import aeat.application.wizard._catalogue  # noqa: F401  (import for registration side effect)
+    from ...application.wizard import _catalogue  # noqa: F401  (import for registration side effect)
