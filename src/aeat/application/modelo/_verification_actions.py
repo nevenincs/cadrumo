@@ -743,7 +743,7 @@ def _cross_period_missing_activity_start_finding(
         ),
         next_action=(
             "Record the operator-declared activity-start date on the taxpayer profile "
-            "(`aeat config profile setup`), then rerun verification. If a prior obligation genuinely "
+            "(`aeat config profile edit`), then rerun verification. If a prior obligation genuinely "
             "existed, capture or import its AEAT justificante/CSV/live evidence instead."
         ),
     )
