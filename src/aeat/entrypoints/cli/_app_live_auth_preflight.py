@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import typer
 
 from ...application.auth import LiveAuthPreflightReport, build_live_auth_preflight_report
@@ -10,6 +12,18 @@ from ...core.redaction import redact_for_cli_output
 
 def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
+
+
+def run_auth_preflight(preflight: Callable[[], None] | None, *, family: str) -> None:
+    """Run a live command family's registered auth preflight, or refuse if unregistered.
+
+    Single canonical guard shared by the live command-family modules
+    (expedientes, justificante, notifications), which previously each
+    declared an identical guard differing only in the family name.
+    """
+    if preflight is None:
+        raise RuntimeError(f"live {family} commands were not registered")
+    preflight()
 
 
 def _emit_live_auth_preflight(provider: str | None = None) -> None:

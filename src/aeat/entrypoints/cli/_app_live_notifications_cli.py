@@ -10,6 +10,7 @@ import typer
 
 from ...application.live import NotificationsService, capture_notifications
 from ...core.i18n import tr
+from ._app_live_auth_preflight import run_auth_preflight
 from ._app_live_payloads import (
     NotificationRowPayload,
     NotificationsCaptureResult,
@@ -43,12 +44,6 @@ def _bucket_id() -> str:
     return _active_bucket_id()
 
 
-def _run_auth_preflight() -> None:
-    if _auth_preflight is None:
-        raise RuntimeError("live notifications commands were not registered")
-    _auth_preflight()
-
-
 notifications_app = typer.Typer(
     name="notifications",
     help=tr("cli.app.live.notifications.app_help", default="DEHu notification snapshots (read-only)."),
@@ -67,7 +62,7 @@ notifications_app = typer.Typer(
 def notifications_pull(ctx: typer.Context) -> None:
     """Drive the live DEHu fetch and persist flow."""
     bucket_id = _bucket_id()
-    _run_auth_preflight()
+    run_auth_preflight(_auth_preflight, family="notifications")
     persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
     result = NotificationsCaptureResult(
         bucket_id=bucket_id,

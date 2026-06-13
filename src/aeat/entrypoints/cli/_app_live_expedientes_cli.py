@@ -11,6 +11,7 @@ import typer
 
 from ...application.live import capture_expedientes_bulk
 from ...core.i18n import tr
+from ._app_live_auth_preflight import _metric_line, run_auth_preflight
 from ._common import _emit_envelope
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -41,16 +42,6 @@ def _bucket_id() -> str:
     if _active_bucket_id is None:
         raise RuntimeError("live expedientes commands were not registered")
     return _active_bucket_id()
-
-
-def _run_auth_preflight() -> None:
-    if _auth_preflight is None:
-        raise RuntimeError("live expedientes commands were not registered")
-    _auth_preflight()
-
-
-def _metric_line(key: str, value: object) -> str:
-    return f"{key}={value}"
 
 
 def _resolve_pull_year_range(
@@ -133,7 +124,7 @@ def expedientes_pull(
     from ._app_live_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
     bucket_id = _bucket_id()
-    _run_auth_preflight()
+    run_auth_preflight(_auth_preflight, family="expedientes")
     selected_modelos = tuple(modelos or ())
     single_mode = len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None
     if single_mode:
@@ -265,7 +256,7 @@ def expedientes_show(
             ExpedienteDeclarationPayload(
                 modelo=declaration.modelo,
                 ejercicio=declaration.ejercicio,
-                period=declaration.period,
+                period=declaration.period.registry_token,
                 expediente_id=declaration.expediente_id,
                 estado=declaration.estado,
                 tipo_solicitud=declaration.tipo_solicitud,
