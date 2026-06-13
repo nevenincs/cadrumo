@@ -95,6 +95,7 @@ from ._action_errors import (
     ModeloCrossPeriodCleanStateError,
     WorkUnitNotFoundError,
 )
+from ._dt12_advisory import _dt12_reduccion_advisory_finding
 from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
 )
@@ -131,6 +132,16 @@ _PREDICATE_IMPLIES_NONZERO = _re.compile(r"^implies_nonzero\(\[(?P<ids>[^\]]*)\]
 # positive computed total with every constituent official numbered box still
 # zero). See the implies_any_nonzero branch in _evaluate_advisory_predicate_fires.
 _PREDICATE_IMPLIES_ANY_NONZERO = _re.compile(r"^implies_any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
+# equals(["lhs_id", "rhs_id"]) — binary consistency invariant: predicate holds
+# iff the two named casillas hold the same value. Authored for the M303 official
+# Diseño box projections (Stage 2): each numbered box copies an already-computed
+# semantic source, so box == source must hold for VERIFICADO_COMPLETO. A copy
+# cannot drift from its source within one evaluation, so the live filing always
+# satisfies it; the predicate's value is catching a FUTURE mis-edit (a box
+# re-flipped to manual, or a projection pointed at the wrong source). As a
+# BLOCKING_RULE it refuses a filing whose projected box has drifted from its
+# semantic source. See the equals branch in _evaluate_predicate_expression.
+_PREDICATE_EQUALS = _re.compile(r"^equals\(\[(?P<ids>[^\]]*)\]\)$")
 # profile_field_required("field_name", "applicability_filter") —
 # profile-state-aware conditional non-zero requirement; sibling of
 # implies_nonzero per the dsl-conditional-predicate ADR. The
@@ -203,6 +214,9 @@ def _evaluate_predicate_expression(
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
     - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the ceiling
       casilla is strictly positive, the limited casilla MUST NOT exceed it.
+    - ``equals(["lhs_id", "rhs_id"])`` — binary consistency invariant: predicate
+      holds iff the two named casillas hold the same value (M303 official-box
+      projection consistency: box == its semantic source).
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with strictly-positive antecedent: predicate holds iff
       antecedent <= 0 OR consequent != 0.
@@ -248,6 +262,24 @@ def _evaluate_predicate_expression(
             return True
         limited = casilla_values.get(limited_id, Decimal(0))
         return limited <= ceiling
+
+    m = _PREDICATE_EQUALS.match(expr)
+    if m:
+        # equals(["lhs_id", "rhs_id"]) — binary consistency check. Predicate holds
+        # (returns True, no violation) iff the two named casillas hold the same
+        # value. A malformed arity reads as holding (defensive, same convention as
+        # the other operators); the authoring-time validator in
+        # _validate_surfaces rejects a malformed equals at registry load, so a
+        # bad arity cannot reach here from a validated registry. A missing casilla
+        # reads as Decimal(0) via .get. The violation case (returns False) is
+        # "the two casillas differ" — a projected box that has drifted from its
+        # semantic source (a future mis-edit).
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 2:
+            return True
+        lhs = casilla_values.get(ids[0], Decimal(0))
+        rhs = casilla_values.get(ids[1], Decimal(0))
+        return lhs == rhs
 
     m = _PREDICATE_IMPLIES_NONZERO.match(expr)
     if m:
@@ -1250,56 +1282,6 @@ def _collect_revision_verification_findings(
         findings.append(dt12_finding)
 
     return findings, resolved_casillas, missing_required
-
-
-_DT12_TRABAJO_INGRESO_ROLE = "irpf_rendimiento_trabajo_importe_integro_dinerario"
-_DT12_TRABAJO_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion"
-#: Heuristic threshold above which DT 12ª advisory fires (large lump-sum pension).
-_DT12_LARGE_TRABAJO_THRESHOLD = Decimal("20000")
-
-
-def _dt12_reduccion_advisory_finding(
-    revision: object,
-    casilla_values: Mapping[str, Decimal],
-) -> ModeloVerificationFinding | None:
-    """Return a DT_12A_REDUCCION_POSSIBLE WARNING when large trabajo income is present but no reducción is declared.
-
-    The check is advisory only (WARNING severity); it does not block VERIFICADO_COMPLETO.
-    Heuristic: casilla with semantic_role ``irpf_rendimiento_trabajo_importe_integro_dinerario``
-    value > 20 000 AND casilla with role ``irpf_rendimiento_trabajo_reduccion`` is zero/absent.
-    Returns ``None`` when the advisory does not apply or when the snapshot revision
-    does not carry the required semantic roles (non-M100 modelos).
-    """
-    ingreso_id: str | None = None
-    reduccion_id: str | None = None
-    for casilla in getattr(revision, "casillas", ()):
-        role = getattr(casilla, "semantic_role", None)
-        if role == _DT12_TRABAJO_INGRESO_ROLE:
-            ingreso_id = str(casilla.id)
-        elif role == _DT12_TRABAJO_REDUCCION_ROLE:
-            reduccion_id = str(casilla.id)
-
-    if ingreso_id is None or reduccion_id is None:
-        return None
-
-    ingreso_value = casilla_values.get(ingreso_id, Decimal(0))
-    reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
-
-    if ingreso_value > _DT12_LARGE_TRABAJO_THRESHOLD and reduccion_value == Decimal(0):
-        return ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.WARNING,
-            casilla_id=reduccion_id,
-            message=tr(
-                "application.modelo.findings.dt12a_reduccion_possible",
-                ingreso_id=ingreso_id,
-                ingreso_value=str(ingreso_value),
-                reduccion_id=reduccion_id,
-            ),
-            next_action=tr("application.modelo.findings.dt12a_reduccion_next_action"),
-            legal_refs=("ley-35-2006:dt-12",),
-        )
-    return None
 
 
 def _missing_required_casilla_finding(
