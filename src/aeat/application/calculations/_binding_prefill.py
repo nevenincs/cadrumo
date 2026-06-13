@@ -98,15 +98,6 @@ def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool,
     return payload.stamped_revision_id != snapshot.revision.id, False
 
 
-def _revision_prefill_advisory(payload: _ObservationEnvelopePayload) -> bool:
-    """Return True when the carry should surface a non-blocking revision advisory.
-
-    See :func:`_revision_carry_outcome` — True for a legacy (unstamped) record or
-    an indeterminate (unresolvable source context) stamp.
-    """
-    return _revision_carry_outcome(payload)[1]
-
-
 def _revision_prefill_divergence(payload: _ObservationEnvelopePayload) -> bool:
     """Return True when the payload's stamped revision diverges from the law-determined revision.
 

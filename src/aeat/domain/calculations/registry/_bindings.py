@@ -520,13 +520,6 @@ class _ManualInputSelector(BaseModel):
         return self
 
 
-def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelector:
-    try:
-        return _ManualInputSelector.model_validate(_selector_as_dict(binding))
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed manual_input selector") from exc
-
-
 # ---------------------------------------------------------------------------
 # Discriminated-selector registry
 #
