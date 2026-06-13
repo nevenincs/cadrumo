@@ -26,12 +26,8 @@ from __future__ import annotations
 
 import base64
 import binascii
-import contextlib
-import os
-import tempfile
-from collections.abc import Generator, Sequence
+from collections.abc import Sequence
 from datetime import datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -211,9 +207,7 @@ def resolve_period_expediente(
     """
     target_period = period.registry_token
     candidates = [
-        declaration
-        for declaration in declarations
-        if declaration.modelo == modelo and declaration.period == period
+        declaration for declaration in declarations if declaration.modelo == modelo and declaration.period == period
     ]
     if not candidates:
         raise LiveApplicationInputError(
@@ -502,38 +496,16 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
         )
 
 
-@contextlib.contextmanager
-def _materialized_capture_pdf(snapshot: JustificanteCaptureSnapshot) -> Generator[Path]:
-    """Yield a transient on-disk path to the captured PDF, deleted on exit.
-
-    The justificante parser and the local reconciler are path-only, so the
-    persisted bytes are written to a private temporary file for the duration
-    of the read and unlinked afterwards. The file never outlives the call;
-    the parser's path-redaction behaviour keeps the transient path out of any
-    surfaced error.
-    """
-    file_descriptor, raw_name = tempfile.mkstemp(suffix=".pdf")
-    pdf_path = Path(raw_name)
-    try:
-        with os.fdopen(file_descriptor, "wb") as handle:
-            handle.write(snapshot.decoded_pdf_bytes())
-        yield pdf_path
-    finally:
-        with contextlib.suppress(FileNotFoundError):
-            pdf_path.unlink()
-
-
 def parse_capture_to_justificante(snapshot: JustificanteCaptureSnapshot) -> Justificante:
     """Parse a persisted capture's PDF into a strict domain :class:`Justificante`.
 
-    Materialises the encrypted snapshot's bytes to a transient path and runs the
-    existing inbound parser. Used to register the captured receipt as official
-    filing evidence and to reconcile against it.
+    Reads the encrypted snapshot's bytes in memory and runs the inbound parser.
+    Used to register the captured receipt as official filing evidence and to
+    reconcile against it.
     """
-    from ...adapters.inbound.justificante import parse_justificante
+    from ...adapters.inbound.justificante import parse_justificante_bytes
 
-    with _materialized_capture_pdf(snapshot) as pdf_path:
-        return parse_justificante(pdf_path)
+    return parse_justificante_bytes(snapshot.decoded_pdf_bytes())
 
 
 def reconcile_capture(
@@ -544,26 +516,31 @@ def reconcile_capture(
 ) -> ModeloReconciliationReport:
     """Reconcile a work unit against a persisted live capture.
 
-    Materialises the captured PDF to a transient path and delegates to the
-    existing local-only ``modelo_reconcile``; the reconciler never contacts
-    AEAT. This is the live-sourced equivalent of the operator hand-passing a
-    downloaded justificante via the local ``reconcile file --file PATH`` surface.
+    Reads the captured PDF from secure storage into memory and delegates to the
+    existing local-only reconciler; the reconciler never contacts AEAT and never
+    writes the plaintext receipt to disk. This is the live-sourced equivalent of
+    the operator hand-passing a downloaded justificante via the local
+    ``reconcile file --file PATH`` surface.
     """
     from ..modelo import (
-        ModeloReconciliationCommand,
+        ModeloReconciliationBytesCommand,
         ModeloReconciliationSourceKind,
-        modelo_reconcile,
+        modelo_reconcile_bytes,
     )
 
-    with _materialized_capture_pdf(snapshot) as pdf_path:
-        return modelo_reconcile(
-            ModeloReconciliationCommand(
-                work_unit_id=work_unit_id,
-                source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
-                source_path=pdf_path,
-                actor=actor,
-            ),
-        )
+    return modelo_reconcile_bytes(
+        ModeloReconciliationBytesCommand(
+            work_unit_id=work_unit_id,
+            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_bytes=snapshot.decoded_pdf_bytes(),
+            source_ref=_capture_secure_reference(snapshot),
+            actor=actor,
+        ),
+    )
+
+
+def _capture_secure_reference(snapshot: JustificanteCaptureSnapshot) -> str:
+    return f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot.snapshot_id}"
 
 
 def register_capture_as_filing_evidence(
@@ -606,13 +583,18 @@ def register_capture_as_filing_evidence(
         upsert_filing_record,
     )
 
+    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
+        raise LiveApplicationInputError(
+            f"cannot stamp {snapshot.state.value} live-capture snapshot {snapshot.snapshot_id!r} as filing evidence",
+        )
+
     filing_repository = ModeloRecordCatalogueRepository()
     catalogue = filing_repository.load()
     current = catalogue.current_for(
         bucket_id=snapshot.bucket_id,
         modelo=snapshot.modelo,
         filing_year=snapshot.filing_year,
-            period=snapshot.period,
+        period=snapshot.period,
     )
     if current is None:
         raise LiveApplicationInputError(
@@ -621,7 +603,25 @@ def register_capture_as_filing_evidence(
             "file the period before stamping live-capture evidence",
         )
 
-    justificante = parse_capture_to_justificante(snapshot).model_copy(update={"csv": snapshot.csv})
+    justificante = parse_capture_to_justificante(snapshot)
+    if justificante.csv.strip().upper() != snapshot.csv.strip().upper():
+        raise LiveApplicationInputError(
+            f"captured justificante csv {justificante.csv!r} does not match live snapshot csv {snapshot.csv!r}",
+        )
+    expected_tax_id = _expected_tax_id_for_filing_record(current)
+    if not _justificante_matches_filing_record(justificante, current, expected_tax_id=expected_tax_id):
+        raise LiveApplicationInputError(
+            f"captured justificante {snapshot.csv!r} does not match current filing record "
+            f"for modelo={current.modelo!s} period={current.period!s}",
+        )
+    if current.aeat_accepted and current.external_evidence is not None:
+        if _existing_capture_evidence_matches_current_csv(current, snapshot.csv):
+            JustificanteRepository().save(justificante)
+            return current
+        raise LiveApplicationInputError(
+            f"cannot overwrite existing AEAT evidence {current.external_evidence.reference_id!r} "
+            f"on filing record {current.filing_record_id!r} with live-capture csv {snapshot.csv!r}",
+        )
     JustificanteRepository().save(justificante)
 
     stamped_at = now()
@@ -674,6 +674,52 @@ def register_capture_as_filing_evidence(
     return stamped
 
 
+def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
+    if filing.member_nif is not None and filing.member_nif.strip():
+        return filing.member_nif.strip().upper()
+    from ...core.errors import AeatError
+    from ..user_profile import UserProfileLifecycleRepository, record_to_values
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=filing.bucket_id).load(filing.bucket_id)
+    except (AeatError, OSError) as exc:
+        raise LiveApplicationInputError(
+            "cannot stamp live-capture evidence without the filing profile tax identity",
+        ) from exc
+    values = record_to_values(record)
+    tax_id = str(values.get("identity.tax_id") or values.get("tax.id") or "").strip().upper()
+    if not tax_id:
+        raise LiveApplicationInputError(
+            "cannot stamp live-capture evidence without the filing profile tax identity",
+        )
+    return tax_id
+
+
+def _justificante_matches_filing_record(
+    justificante: Justificante,
+    filing: ModeloRecord,
+    *,
+    expected_tax_id: str,
+) -> bool:
+    return (
+        justificante.modelo.strip() == str(filing.modelo)
+        and str(justificante.ejercicio or "").strip() == str(filing.filing_year)
+        and justificante.period == filing.period
+        and justificante.tax_id.strip().upper() == expected_tax_id.strip().upper()
+    )
+
+
+def _existing_capture_evidence_matches_current_csv(filing: ModeloRecord, csv: str) -> bool:
+    evidence = filing.external_evidence
+    if evidence is None:
+        return False
+    kind = getattr(evidence.kind, "value", evidence.kind)
+    return (
+        str(kind) in {"aeat_csv_register", "aeat_justificante_pdf", "aeat_live_capture"}
+        and evidence.reference_id.strip().upper() == csv.strip().upper()
+    )
+
+
 def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> ModeloRecord | None:
     """Best-effort variant of :func:`register_capture_as_filing_evidence`.
 
@@ -682,12 +728,25 @@ def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> Mo
     the operator can stamp later by filing the period, then re-capturing) or the
     captured PDF is not parseable into a justificante. Used by the capture
     orchestrator so a capture of a period not yet filed in-app does not fail.
+    A present-but-conflicting local filing record is not best-effort: identity,
+    period, modelo, and existing-evidence conflicts propagate to the caller.
     """
     from ...domain.justificante import JustificanteParseError
+    from ...domain.modelos import ModeloRecordCatalogueRepository
+
+    catalogue = ModeloRecordCatalogueRepository().load()
+    current = catalogue.current_for(
+        bucket_id=snapshot.bucket_id,
+        modelo=snapshot.modelo,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+    if current is None:
+        return None
 
     try:
         return register_capture_as_filing_evidence(snapshot=snapshot)
-    except (LiveApplicationInputError, JustificanteParseError):
+    except JustificanteParseError:
         return None
 
 
