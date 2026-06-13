@@ -7,7 +7,9 @@ related:
   - "[[2026-06-12-first-filer-attestation-research]]"
 ---
 
-# `first-filer-attestation` adr: `censo-grounded activity-start scoping` | (**status:** `proposed`)
+# `first-filer-attestation` adr: `censo-grounded activity-start scoping` | (**status:** `superseded`)
+
+> **Superseded by `2026-06-13-first-filer-attestation-adr`.** This ADR's core concept (the activity-start date is genuine AEAT authority and the right axis to scope a first filer's cross-period dependency graph) is retained, but two defects below are corrected by the superseding ADR. (1) Factual grounding: this ADR names AEAT sede procedure G313 as the "Mis Datos Censales" data page. That is wrong - G313 is the certificate-issuance procedure (Expedicion de certificados tributarios, Situacion Censal); the censal form is Modelo 036 (sede code G322); and Mis Datos Censales is a separate data surface. (2) Honesty: the live censo read is non-functional today (never returned a readable censo) and mis-wired to the G313 certificate URL, so this ADR's censo-only, fail-closed posture would permanently trap the first filer it aims to free. The superseding ADR keeps the activity-start axis but sources it from the operator-declared `activity_start_date` now (already trusted by the deadline engine for the same pre-alta suppression), stamped operator-declared with an advisory and censo-corroborated once the live surface is fixed. Read `2026-06-13-first-filer-attestation-adr` for the active decision; everything below is retained for provenance.
 
 ## Problem Statement
 
