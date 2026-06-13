@@ -1,0 +1,10 @@
+{
+  "provenance": "real_corpus",
+  "kind": "pdf_invoice_text_layer",
+  "source": "github:ZUGFeRD/mustangproject",
+  "source_url": "https://raw.githubusercontent.com/ZUGFeRD/mustangproject/master/library/src/test/resources/EN16931_Einfach.pdf",
+  "licence": "Apache-2.0",
+  "notes": "EN16931 reference invoice, fictional data",
+  "sha256": "05b5a382db8fdc60d1e9ec31fef7fb09c91d68413b9187f7ca116aed116ed1d0",
+  "bytes": 37897
+}
