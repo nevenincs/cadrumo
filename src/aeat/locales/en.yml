@@ -825,6 +825,8 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
+      modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: 'Total IVA devengado (cuota-devengada-total) is positive, but every official numbered box on the Diseño de Registros (03 4%, 06 10%, 09 21%, 11 intracomunitaria, 13 inversion del sujeto pasivo) is still zero. The calculate path does not auto-populate the official numbered boxes; transcribe the cuota into the applicable boxes before filing.'
+      modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: 'Total IVA deducible (cuota-deducible-total) is positive, but every official numbered box on the Diseño de Registros (29 interiores corrientes, 33 importaciones, 37 adquisiciones intracomunitarias) is still zero. The calculate path does not auto-populate the official numbered boxes; transcribe the cuota into the applicable boxes before filing.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -1233,7 +1235,7 @@ cli:
           gates only continue in own-name mode.
         pull_history_help: Pull filed Modelo 303 history and persist secure IVA compensation
           state. No AEAT filing or wallet form choices are submitted.
-        pull_remote_state_help: Pull filed Modelo 303 history and attempt the AEAT
+        pull_evidence_help: Pull filed Modelo 303 history and attempt the AEAT
           IVA wallet/cartera read as one typed read-only acquisition.
         taxpayer_nif_help: Taxpayer NIF; defaults to the authenticated identity.
       justificante:
@@ -2083,7 +2085,7 @@ cli:
         since_after_until: --since must be before or equal to --until.
       history_actor_help: Filter the history to events recorded by a specific actor
         (exact match)
-      history_bucket_id_help: Bucket identifier whose event history should be inspected
+      history_bucket_id_help: Profile name whose event history should be inspected
       history_event_type_help: Filter the history to one or more event types (repeatable)
       history_help: Show the append-only event history for one profile
       history_object_id_help: Filter the history to events targeting a specific object_id
@@ -2197,12 +2199,11 @@ cli:
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
-      reset_progress_dry_run_help: Show what would be cleared without deleting it
-      reset_progress_help: Clear the stuck progress saved for an interrupted command
-        (destructive; requires --yes)
+      reset_progress_dry_run_help: 'Show the saved progress that would be cleared'
+      reset_progress_help: 'Clear saved interrupted-command progress (destructive; requires --yes)'
       reset_progress_requires_yes: This operation is destructive. Re-run with --yes
         to confirm or pass --dry-run to see what would be cleared.
-      reset_progress_yes_help: Confirm clearing the saved progress
+      reset_progress_yes_help: 'Confirm clearing saved interrupted-command progress'
       yes_help: Confirm repair.
     reset:
       help: Reset operator-entered configuration scopes
@@ -2288,8 +2289,7 @@ cli:
       auth_no_session: Authentication provider %{provider} has no ready session
       auth_none: Authentication is not configured
       auth_session_ready: Authentication session ready for %{provider}
-      auth_state_unreadable: Authentication readiness cannot be checked until secure
-        workflow state is readable.
+      auth_state_unreadable: 'Authentication readiness cannot be checked until saved local session data is readable.'
       profile_keys_set: '%{present}/%{total} profile keys set.'
       profile_missing_keys: '%{count} profile key(s) missing.'
       profile_none: No profile configured
@@ -2587,14 +2587,14 @@ cli:
       errors:
         cross_bucket_invoice: Invoice belongs to a different bucket than the active
           profile.
-        invoice_not_found: The invoice is not in the active profile invoice catalogue.
+        invoice_not_found: 'This id was not found in the reconciliation invoice catalogue, which is populated by the invoice import and reconciliation flows. Ids minted by ''aeat app ledger invoice add'' are operator invoice records and cannot be linked here. To attach purchase-invoice evidence, run ''aeat app ledger link <tx> --evidence-id <id>'' (or ''aeat app ledger attach'') with an id from ''aeat app ledger evidence add''.'
         missing_target: Supply at least one of --invoice-id or --evidence-id.
-      evidence_id_help: Purchase-invoice evidence record id to attach to the transaction.
+      evidence_id_help: 'Purchase-invoice evidence id minted by ''aeat app ledger evidence add'', attached to the transaction.'
       help: Bind a ledger transaction to an invoice and/or a purchase-invoice evidence
         record in a single canonical call. Refuses cross-bucket links. Local-only;
         never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
-      invoice_id_help: Invoice id to bind bidirectionally to the transaction.
+      invoice_id_help: 'Rich invoice-catalogue id from an imported or reconciled invoice, bound bidirectionally to the transaction. This is NOT an ''aeat app ledger invoice add'' id.'
     list:
       by_group_help: Section the listing by group label.
       filter_help: Filter rows by status, period (a bare AEAT token, e.g. period=1T)
@@ -2662,8 +2662,7 @@ cli:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_SPLIT event
       apply_help: Persist the proposed --llm split (requires --yes); without it the
         proposal is previewed only.
-      child_amount_help: One child amount (signed Decimal in the parent's currency).
-        Repeat once per child; the count must match --child-description.
+      child_amount_help: 'One child amount as a non-negative magnitude in the parent''s currency. Repeat once per child; the count must match --child-description.'
       child_description_help: One child narrative. Repeat once per child; the count
         must match --child-amount.
       errors:
@@ -2700,7 +2699,7 @@ cli:
       transaction_id_help: Ledger transaction id to inspect
     update:
       actor_help: Operator name recorded on the bucket event
-      amount_help: New signed amount (full replace)
+      amount_help: 'New non-negative amount magnitude (full replace)'
       counterparty_help: New counterparty descriptor
       currency_help: New three-letter ISO 4217 currency code
       date_help: New booked date (YYYY-MM-DD)
@@ -2798,7 +2797,7 @@ cli:
         diagnostics_logs: Show the configured log path and recent lines.
         diagnostics_quarantine: Quarantine unreadable secure objects.
         diagnostics_repair: Diagnose local configuration and storage health.
-        diagnostics_reset_progress: Reset unreadable workflow state.
+        diagnostics_reset_progress: 'Clear stuck interrupted-command progress.'
         first_run_bootstrap: Create a local tax profile.
         first_run_edit: Re-run the profile wizard for an existing profile.
         footer: Run aeat --help for the full overview.
@@ -2887,9 +2886,21 @@ cli:
       show_suppressed_help: Include filtered (non-applicable) obligations in the output
         with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
-    calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
-      config profile edit NAME'' or pass --allow-incomplete to see the calendar computed
-      under defaults.'
+    calendar_refused_incomplete: 'Calendar has unresolved profile checks: %{keys}.
+      Run the warning fix command or pass --allow-incomplete to inspect the provisional
+      calendar.'
+    calendar_local_filing_evidence_unavailable: 'Overview calendar local filing evidence is unavailable; refusing to render without persisted AEAT filing state.'
+    calendar_local_live_events_unavailable: Local live-event evidence is unavailable
+      for this calendar row.
+    calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
+      for this calendar row.
+    warning:
+      censo_enrolment_unverified: Calendar obligations are derived from profile data
+        that has not been reconciled against a live AEAT Modelo 036 censo pull.
+      justificante_unverified: AEAT filing evidence is present, but no matching
+        justificante has been verified for one or more calendar obligations.
+      aeat_evidence_conflict: Calendar filing evidence contains disagreeing AEAT
+        filing references for one or more obligations.
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
