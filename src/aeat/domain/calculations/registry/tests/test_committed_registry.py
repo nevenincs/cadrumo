@@ -29,7 +29,6 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
         inputs={
             "01": Decimal("10000"),
             "02": Decimal("4000"),
-            "05": Decimal("250"),
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),

@@ -117,7 +117,6 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
         inputs={
             "01": Decimal("10000"),
             "02": Decimal("4000"),
-            "05": Decimal("250"),
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
@@ -133,6 +132,13 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
     assert casilla_15.value == Decimal("0")
     assert casilla_15.absent_by_design is True
+
+    # Casilla 05 (pagos fraccionados anteriores) is now a bound carry; at 1T the
+    # expanding span has no prior same-ejercicio quarter, so it resolves to a
+    # clean zero through the same absent-by-design path as casilla 15.
+    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == "05")
+    assert casilla_05.value == Decimal("0")
+    assert casilla_05.absent_by_design is True
 
 
 def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected(
@@ -164,7 +170,6 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
             inputs={
                 "01": Decimal("10000"),
                 "02": Decimal("4000"),
-                "05": Decimal("250"),
                 "06": Decimal("100"),
                 "08": Decimal("2000"),
                 "10": Decimal("10"),
@@ -203,12 +208,30 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
     saldo_seed = Decimal("750.00")
     filing_year = 2026
 
-    prior_observation = RegistryModeloObservation(
-        modelo="130",
-        filing_year=filing_year,
-        period=prior_period,
-        observations=(CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),),
-    )
+    # The casilla-05 expanding-span carry now requires casilla 07 and casilla 16
+    # observations on EVERY same-ejercicio quarter strictly preceding the target.
+    # Seed each prior quarter with a chosen 07/16 pair (the prior quarter that
+    # carries the saldo seed also carries its casilla 07 and 16). All prior 07
+    # are positive here, so casilla 05 = Σ 07_q − Σ 16_q over the prior quarters.
+    _PRIOR_07 = {"1T": Decimal("300.00"), "2T": Decimal("400.00"), "3T": Decimal("500.00")}
+    _PRIOR_16 = {"1T": Decimal("20.00"), "2T": Decimal("30.00"), "3T": Decimal("40.00")}
+    prior_quarters = {"3T": ("1T", "2T"), "4T": ("1T", "2T", "3T")}[target_period]
+
+    def _prior_obs(period: str) -> RegistryModeloObservation:
+        casillas = [
+            CasillaObservation(casilla_id="07", value=_PRIOR_07[period]),
+            CasillaObservation(casilla_id="16", value=_PRIOR_16[period]),
+        ]
+        if period == prior_period:
+            casillas.append(CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed))
+        return RegistryModeloObservation(
+            modelo="130",
+            filing_year=filing_year,
+            period=period,
+            observations=tuple(casillas),
+        )
+
+    prior_observations = tuple(_prior_obs(period) for period in prior_quarters)
     prior_year_income_observation = RegistryModeloObservation(
         modelo="100",
         filing_year=filing_year - 1,
@@ -220,19 +243,24 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
 
     resolved_bindings = resolve_previous_filing_binding_values(
         snapshot.revision,
-        (prior_observation, prior_year_income_observation),
+        (*prior_observations, prior_year_income_observation),
         filing_year=filing_year,
         period=target_period,
     )
 
     assert resolved_bindings["modelo-130-resultados-negativos-anteriores"] == saldo_seed
+    # casilla 05 = Σ max(0, 07_q) − Σ 16_q computed independently from the seeded
+    # prior-quarter inputs (a different code path than the span binding).
+    expected_casilla_05 = sum(
+        (max(Decimal("0"), _PRIOR_07[q]) for q in prior_quarters), Decimal("0"),
+    ) - sum((_PRIOR_16[q] for q in prior_quarters), Decimal("0"))
+    assert resolved_bindings["modelo-130-pagos-fraccionados-anteriores"] == expected_casilla_05
 
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
             "01": Decimal("20000"),
             "02": Decimal("8000"),
-            "05": Decimal("500"),
             "06": Decimal("200"),
             "08": Decimal("4000"),
             "10": Decimal("20"),
@@ -255,6 +283,9 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
     assert casilla_15.value == saldo_seed
     assert casilla_15.absent_by_design is False
+    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == "05")
+    assert casilla_05.value == expected_casilla_05
+    assert casilla_05.absent_by_design is False
 
 
 def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(modelo_130_registry: _ModeloFixture) -> None:
@@ -277,7 +308,6 @@ def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(model
             inputs={
                 "01": Decimal("10000"),
                 "02": Decimal("4000"),
-                "05": Decimal("250"),
                 "06": Decimal("100"),
                 "08": Decimal("2000"),
                 "10": Decimal("10"),
@@ -316,11 +346,19 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     snapshot_2t = _snapshot_130(modelo_130_registry, period="2T")
     saldo_seed = Decimal("500.00")
 
+    # The 1T filing carries casilla 07 and 16 (now read by the casilla-05
+    # expanding-span carry) alongside the saldo seed.
+    prior_07 = Decimal("450.00")
+    prior_16 = Decimal("25.00")
     first_period_observation = RegistryModeloObservation(
         modelo="130",
         filing_year=2026,
         period="1T",
-        observations=(CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),),
+        observations=(
+            CasillaObservation(casilla_id="07", value=prior_07),
+            CasillaObservation(casilla_id="16", value=prior_16),
+            CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),
+        ),
     )
     # The M100 income-reduction binding also resolves through the
     # previous-filing pipeline. Supply a zeroed 2025 0A observation
@@ -343,13 +381,15 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     )
 
     assert resolved_bindings["modelo-130-resultados-negativos-anteriores"] == saldo_seed
+    # 2T casilla 05 = max(0, 07_1T) − 16_1T over the single prior quarter.
+    expected_casilla_05 = max(Decimal("0"), prior_07) - prior_16
+    assert resolved_bindings["modelo-130-pagos-fraccionados-anteriores"] == expected_casilla_05
 
     result = calculate_registry_snapshot(
         snapshot_2t,
         inputs={
             "01": Decimal("16000"),
             "02": Decimal("6000"),
-            "05": Decimal("500"),
             "06": Decimal("250"),
             "08": Decimal("3000"),
             "10": Decimal("20"),
@@ -366,6 +406,9 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
     assert casilla_15.value == saldo_seed
     assert casilla_15.absent_by_design is False
+    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == "05")
+    assert casilla_05.value == expected_casilla_05
+    assert casilla_05.absent_by_design is False
 
     # Casilla 17 (diferencia) is `(C14 - C15) - C16`; the carry-forward
     # subtracts the seed from the gross diferencia. Structural assert:
@@ -408,7 +451,6 @@ def test_modelo_130_art110_3b_casilla_17_is_zero_when_retention_ratio_meets_thre
         inputs={
             "01": Decimal("15000"),
             "02": Decimal("5000"),
-            "05": Decimal("250"),
             "06": Decimal("10500"),  # 10500/15000 = exactly 70%
             "08": Decimal("0"),
             "10": Decimal("0"),
@@ -455,7 +497,8 @@ def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_
             # c03 (rendimiento neto) is computed via the
             # ``modelo-130-rendimiento-neto`` formula (c01 − c02);
             # supplying it as input would trip the computed-casilla gate.
-            "05": Decimal("0"),
+            # c05 (pagos fraccionados anteriores) is a bound carry; at 1T the
+            # expanding span is empty so it resolves to 0 absent-by-design.
             "06": Decimal("1000"),  # 1000/50000 = 2% — well below threshold; c04=8000 > c06
             "08": Decimal("0"),
             "10": Decimal("0"),
