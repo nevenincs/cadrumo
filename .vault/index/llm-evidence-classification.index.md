@@ -39,8 +39,10 @@ related:
   - '[[2026-06-13-llm-evidence-classification-W02-P02-S06]]'
   - '[[2026-06-13-llm-evidence-classification-W03-P03-S07]]'
   - '[[2026-06-13-llm-evidence-classification-W03-P03-S08]]'
+  - '[[2026-06-13-llm-evidence-classification-adr]]'
   - '[[2026-06-13-llm-evidence-classification-audit]]'
   - '[[2026-06-13-llm-evidence-classification-plan]]'
+  - '[[2026-06-13-llm-evidence-classification-research]]'
 ---
 
 # `llm-evidence-classification` feature index
@@ -52,6 +54,7 @@ Auto-generated index of all documents tagged with `#llm-evidence-classification`
 ### adr
 
 - `2026-06-10-llm-evidence-classification-adr` - `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)
+- `2026-06-13-llm-evidence-classification-adr` - `llm-evidence-classification` adr: `Default local vision model bound to consumer-grade hardware` | (**status:** `accepted`)
 
 ### audit
 
@@ -99,3 +102,4 @@ Auto-generated index of all documents tagged with `#llm-evidence-classification`
 ### research
 
 - `2026-06-10-llm-evidence-classification-research` - `llm-evidence-classification` research: `Evidence-aware LLM ledger classification (Stage-3): feeding attached evidence into the classifier`
+- `2026-06-13-llm-evidence-classification-research` - `llm-evidence-classification` research: `Local vision model for consumer-grade on-host evidence reading`
