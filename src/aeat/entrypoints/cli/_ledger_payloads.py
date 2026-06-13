@@ -365,6 +365,7 @@ class LedgerRemoveResult(OutputSchema):
     cascaded_purchase_invoice_evidence_ids: list[str] = []
     cascaded_attachment_ids: list[str] = []
     blocking_modelo_references: list[LedgerRemovalBlockerPayload] = []
+    stale_draft_revision_references: list[LedgerRemovalBlockerPayload] = []
     bucket_event_ids: list[str] = []
 
 
@@ -384,6 +385,7 @@ class LedgerResetResult(OutputSchema):
     cascaded_purchase_invoice_evidence_ids: list[str] = []
     cascaded_attachment_ids: list[str] = []
     blocking_modelo_references: list[LedgerRemovalBlockerPayload] = []
+    stale_draft_revision_references: list[LedgerRemovalBlockerPayload] = []
     bucket_event_ids: list[str] = []
 
 
@@ -1129,12 +1131,19 @@ class InventoryLedgerPayload(OutputSchema):
     bucket_event_ids: list[str] = []
 
 
+class InventoryListRowPayload(InventoryLedgerPayload):
+    """One inventory summary row returned by the list command."""
+
+    schema_version: str = "1"
+    movement_count: int = 0
+
+
 @register_schema("ledger.inventory.list")
 class InventoryListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory list``."""
 
     bucket_id: str
-    rows: list[InventoryLedgerPayload]
+    rows: list[InventoryListRowPayload]
     count: int
 
 
