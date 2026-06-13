@@ -167,6 +167,12 @@ def exclusive_file_lock(
     file itself is left on disk so a racing acquirer never sees a
     transient missing-file state.
 
+    On Windows ``msvcrt.locking`` enforces a mandatory lock against a
+    single byte of the lock file. On POSIX ``fcntl.flock`` is advisory —
+    readers that do not also acquire the lock can still observe the
+    protected resource mid-write. Callers MUST treat the lock as advisory
+    across the whole file regardless of the underlying primitive.
+
     Args:
         target: Path to the resource being protected. The lock sidecar
             is created at ``<target>.lock``. The parent directory must
@@ -187,14 +193,6 @@ def exclusive_file_lock(
             The retryable flag means "another acquirer may release
             shortly and the operation could succeed on retry"; consumers
             that retry MUST bound the retry budget themselves.
-
-    Note:
-        On Windows ``msvcrt.locking`` enforces a mandatory lock against
-        a single byte of the lock file. On POSIX ``fcntl.flock`` is
-        advisory — readers that do not also acquire the lock can still
-        observe the protected resource mid-write. Callers MUST treat
-        the lock as advisory across the whole file regardless of the
-        underlying primitive.
     """
     # Resolve sentinel defaults via load_settings() so override_settings()
     # blocks (test scope) propagate. A literal float passed by the caller

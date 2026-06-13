@@ -376,8 +376,10 @@ class RentaFamilyProfile(BaseModel):
         """Compute the Art. 81 LIRPF guardería incremento for casilla 0613.
 
         Formula (Art. 81 LIRPF — incremento por gastos de custodia en guardería,
-        NOT Art. 81 bis which covers familia numerosa / discapacidad):
-            min(gastos_guarderia_reales, hijos_menores_3 × :data:`INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR`,
+        NOT Art. 81 bis which covers familia numerosa / discapacidad)::
+
+            min(gastos_guarderia_reales,
+                hijos_menores_3 × INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR,
                 cotizaciones_ss_madre_2024)
 
         Only the 2024 filing year is supported by the profile fields

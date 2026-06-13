@@ -99,8 +99,12 @@ class CensoSnapshot(BaseModel):
         superseded_by_snapshot_id: Pointer to the snapshot that
             replaced this one. Required when ``state is SUPERSEDED``;
             absent otherwise.
-        discarded_at, discarded_by, discard_reason: Audit metadata
-            captured when the operator explicitly retired the snapshot.
+        discarded_at: Timestamp captured when the operator explicitly
+            retired the snapshot.
+        discarded_by: Actor label captured when the operator explicitly
+            retired the snapshot.
+        discard_reason: Audit reason captured when the operator explicitly
+            retired the snapshot.
     """
 
     model_config = _STRICT_FROZEN

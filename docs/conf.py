@@ -530,6 +530,26 @@ nitpick_ignore_regex = [
     # Typed-id NewType aliases (CasillaId, SourceRefId, ...) are documented at
     # their definition, not as standalone class targets.
     (r"py:.*", r".*\._ids\.[A-Za-z]\w*$"),
+    # PEP 695 ``type`` aliases are ``TypeAliasType`` instances, not classes, so a
+    # bare cross-reference to one has no autodoc target. The typed-id family
+    # (``type CasillaId = Annotated[...]``, ``RelationId``, ``ModeloId``, ... — 24
+    # ``*Id`` aliases declared across the ``_ids.py`` modules) is matched by the
+    # ``*Id`` suffix, with the two genuine ``*Id`` StrEnum classes (``ManualId``,
+    # ``RegistryManualId``) excluded by negative lookahead so the suppression
+    # cannot mask a real class.
+    (r"py:.*", r"^(?!ManualId$)(?!RegistryManualId$)[A-Z][A-Za-z0-9]*Id$"),
+    # The non-``Id`` PEP 695 ``type`` aliases (every ``type X = ...`` alias whose
+    # name does not end in ``Id``), enumerated by exact name so the suppression
+    # is confined to confirmed aliases and cannot match a real class.
+    (
+        r"py:.*",
+        r"^(CasillaDelta|CasillaInputs|CounterpartSourceKind|FiledCaptureReport|"
+        r"FiledDeclaracionArtefactSink|IvaCompensationAuthority|"
+        r"IvaCompensationAuthoritySourceKind|IvaCompensationDivergence|LocaleNode|"
+        r"ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
+        r"ModeloInputScalar|ModeloInputValue|ModeloInputs|ModeloWorkTarget|"
+        r"RegisteredSchema|UserProfileFactValue)$",
+    ),
     # References into private (single-underscore) modules or to private classes
     # (``pkg._mod.Thing``, ``pkg.mod._Private``), which are implementation
     # internals excluded from the documented cross-reference surface.
@@ -572,7 +592,13 @@ nitpick_ignore_regex = [
     # Dunder and numeric-literal targets that leak out of docstrings as bogus
     # cross-references (a ``:class:`1``` or ``:data:`__all__```), never real
     # documentable objects.
-    (r"py:.*", r"^([0-9]+|__all__|__repr__|__init__|__init_subclass__)$"),
+    (r"py:.*", r"^([0-9]+|__all__|__repr__|__str__|__init__|__init_subclass__)$"),
+    # Playwright SDK classes referenced bare (``:class:`Page```, ``BrowserContext``,
+    # ``Locator``, ``Response``, ``Playwright``) from the browser/sede adapters.
+    # Playwright is in ``autodoc_mock_imports`` (offline, no inventory), so the
+    # dotted ignore above does not cover these short forms; the names are
+    # playwright-owned in this codebase (no project class shares them).
+    (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response)$"),
     # Bound-method references on external (pydantic / SQLAlchemy / asyncio /
     # google) types written ``Owner.method`` or ``obj.method``; the owning type
     # resolves via inventory but the short method target does not.

@@ -180,7 +180,7 @@ dev = [
   "vaultspec-rag>=0.2.14",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
-  "sphinx>=8.1,<10",  # upper bound keeps -W / nitpicky flag semantics stable
+  "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
   "sphinx-autodoc-typehints>=2.5",
   "sphinx-markdown-builder>=0.6",
   "furo>=2024.8",

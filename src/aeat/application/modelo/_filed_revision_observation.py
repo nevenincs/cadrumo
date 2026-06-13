@@ -7,7 +7,7 @@ single-writer filing transition (:func:`persist_filed_revision`), co-emitted
 with ``MODELO_FILED``, that records the filed
 :class:`~aeat.domain.calculations.registry.CalculationRevision` outputs into the
 cross-period observation store so a later period's ``calculate`` can carry them
-forward automatically via the :class:`previous_filing` resolver.
+forward automatically via the ``previous_filing`` resolver.
 
 The persisted observation is stamped with a NON-official ``source_kind``
 (``app_filing``): a value an operator filed through the app is not external AEAT
