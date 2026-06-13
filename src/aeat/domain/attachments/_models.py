@@ -24,7 +24,7 @@ from ._errors import AttachmentValidationError
 from ._ids import AttachmentId
 
 _HEX_DIGITS = frozenset("0123456789abcdef")
-_LINK_ONLY_MIME_TYPE = "text/" "uri-" "list"
+_LINK_ONLY_MIME_TYPE = "text/uri-list"
 
 
 def is_link_only_mime_type(value: str) -> bool:

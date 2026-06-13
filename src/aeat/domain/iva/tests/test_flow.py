@@ -45,7 +45,9 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
     ],
 )
 def test_derive_flow_classifies_issued_non_reverse_charge_as_repercutido(
-    category: IvaCategory, direction: InvoiceKind, expected: IvaFlowDirection,
+    category: IvaCategory,
+    direction: InvoiceKind,
+    expected: IvaFlowDirection,
 ) -> None:
     assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
 
@@ -61,7 +63,9 @@ def test_derive_flow_classifies_issued_non_reverse_charge_as_repercutido(
     ],
 )
 def test_derive_flow_classifies_received_non_reverse_charge_as_soportado(
-    category: IvaCategory, direction: InvoiceKind, expected: IvaFlowDirection,
+    category: IvaCategory,
+    direction: InvoiceKind,
+    expected: IvaFlowDirection,
 ) -> None:
     assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
 
