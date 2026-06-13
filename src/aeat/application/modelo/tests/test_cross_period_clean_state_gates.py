@@ -20,15 +20,20 @@ from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
+    ExternalEvidence,
     ExternalEvidenceKind,
     ModeloCode,
+    ModeloRecord,
     ModeloRecordCatalogueRepository,
+    ModeloRecordStatus,
     VerificationReportCatalogueRepository,
     WorkUnit,
     WorkUnitCatalogueRepository,
     derive_calculation_revision_id,
+    derive_filing_record_id,
     derive_work_unit_id,
     upsert_calculation_revision,
+    upsert_filing_record,
     upsert_work_unit,
 )
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
@@ -166,18 +171,28 @@ def _seed_303_cross_period_sources(
             clock=_CLOCK,
         )
         values = _source_values(period, tuple(sorted(source_casillas)))
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_values=values,
-            evidence_kind=evidence_kind,
-            evidence_reference_id=evidence_reference_id,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            filing_repository=filing_repository,
-            bucket_event_repository=bucket_event_repository,
-            expected_tax_id="X1234567L",
-            clock=_CLOCK,
-        )
+        if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER:
+            _seed_legacy_source_filing_record(
+                work_unit=work_unit,
+                casilla_values=values,
+                evidence_kind=evidence_kind,
+                evidence_reference_id=evidence_reference_id,
+                calculation_repository=calculation_repository,
+                filing_repository=filing_repository,
+            )
+        else:
+            import_external_filing_evidence(
+                work_unit_id=work_unit.work_unit_id,
+                casilla_values=values,
+                evidence_kind=evidence_kind,
+                evidence_reference_id=evidence_reference_id,
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+                filing_repository=filing_repository,
+                bucket_event_repository=bucket_event_repository,
+                expected_tax_id="X1234567L",
+                clock=_CLOCK,
+            )
         observation_repository.save_observation(
             RegistryModeloObservation(
                 modelo="303",
@@ -195,6 +210,70 @@ def _seed_303_cross_period_sources(
                 "authenticated_identity": "X1234567L",
             },
         )
+
+def _seed_legacy_source_filing_record(
+    *,
+    work_unit: WorkUnit,
+    casilla_values: dict[str, Decimal],
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    filing_repository: ModeloRecordCatalogueRepository,
+) -> None:
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    revisions = calculation_repository.load()
+    calculation_repository.save(
+        upsert_calculation_revision(
+            revisions,
+            CalculationRevision(
+                calculation_revision_id=revision_id,
+                work_unit_id=work_unit.work_unit_id,
+                state=CalculationRevisionState.PRESENTADO,
+                casilla_values=casilla_values,
+                created_at=_CLOCK,
+                updated_at=_CLOCK,
+                verified_at=_CLOCK,
+                verified_by="aeat-import-test",
+                filed_at=_CLOCK,
+                filed_by="aeat-import-test",
+            ),
+        ),
+    )
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=_CLOCK,
+        filed_by="aeat-import-test",
+    )
+    filings = filing_repository.load()
+    filing_repository.save(
+        upsert_filing_record(
+            filings,
+            ModeloRecord(
+                filing_record_id=filing_id,
+                work_unit_id=work_unit.work_unit_id,
+                calculation_revision_id=revision_id,
+                bucket_id=work_unit.bucket_id,
+                modelo=ModeloCode(str(work_unit.modelo)),
+                filing_year=work_unit.filing_year,
+                period=work_unit.period,
+                filed_at=_CLOCK,
+                filed_by="aeat-import-test",
+                aeat_accepted=True,
+                status=ModeloRecordStatus.VIGENTE,
+                external_evidence=ExternalEvidence(
+                    kind=evidence_kind,
+                    reference_id=evidence_reference_id,
+                    imported_at=_CLOCK,
+                ),
+            ),
+        ),
+    )
 
 
 def _clean_state_repair_evidence(
@@ -403,6 +482,124 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
     )
     assert report.granted_verificado_completo is False
     assert any(
-        "period=1T" in finding.message and "blockers=missing_justificante_verification" in finding.message
+        "period=1T" in finding.message and "blockers=missing_external_evidence_record" in finding.message
         for finding in cross_period_findings
     )
+
+
+def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_path: Path) -> None:
+    """ADR 2026-06-13: with no activity-start date and missing priors, the gate fails closed.
+
+    A profile that records no ``activity_start_date`` cannot decide whether a
+    missing prior filing is pre-activity (no obligation) or a genuinely missing
+    filing. When an evidence-missing cross-period dependency blocks, the gate
+    surfaces a BLOCKING finding prompting the operator to record the date, rather
+    than silently opening. The grant stays refused.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        work_units = WorkUnitCatalogueRepository(objects=objects)
+        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
+        filings = ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
+        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
+        observations = CalculationObservationRepository(objects=objects)
+        events = BucketEventHistoryRepository(objects=objects)
+        revision_id = _persist_390_draft(
+            work_unit_repository=work_units,
+            calculation_repository=calculations,
+        )
+        no_activity_profile = _workflow_profile()
+        assert no_activity_profile.activity_start_date is None
+
+        report = verify_modelo_revision(
+            revision_id,
+            actor="test-operator",
+            workflow_profile=no_activity_profile,
+            work_unit_repository=work_units,
+            calculation_repository=calculations,
+            filing_repository=filings,
+            verification_repository=reports,
+            calculation_observation_repository=observations,
+            bucket_event_repository=events,
+            clock=_CLOCK,
+        )
+
+    assert report.granted_verificado_completo is False
+    fail_closed_findings = tuple(
+        finding
+        for finding in report.findings
+        if finding.kind.value == "cross_period_dependency_unclean"
+        and "no activity-start date" in finding.message
+    )
+    assert fail_closed_findings
+    finding = fail_closed_findings[0]
+    assert finding.severity.value == "blocking"
+    assert finding.next_action is not None
+    assert "activity-start date" in finding.next_action
+
+
+def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking(tmp_path: Path) -> None:
+    """ADR 2026-06-13: a declared date scopes pre-activity priors out as a NON-BLOCKING advisory.
+
+    With an operator-declared activity-start date of 2025-10-01 (the first day of
+    4T), the three earlier 2025 M303 quarters the M390/2025 target depends on are
+    strictly pre-activity and scoped out: no BLOCKING cross-period finding is
+    produced for them, and each surfaces as a NON-BLOCKING ADVISORY (``WARNING``
+    severity) stating the date is operator-declared and not yet censo-corroborated.
+    The alta-containing 4T quarter stays in scope and (being unevidenced here) keeps
+    the grant refused, proving the advisory rides alongside a still-honest gate.
+    """
+    from datetime import date
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        work_units = WorkUnitCatalogueRepository(objects=objects)
+        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
+        filings = ModeloRecordCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
+        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
+        observations = CalculationObservationRepository(objects=objects)
+        events = BucketEventHistoryRepository(objects=objects)
+        revision_id = _persist_390_draft(
+            work_unit_repository=work_units,
+            calculation_repository=calculations,
+        )
+        first_filer_profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            activity_start_date=date(2025, 10, 1),
+        )
+
+        report = verify_modelo_revision(
+            revision_id,
+            actor="test-operator",
+            workflow_profile=first_filer_profile,
+            work_unit_repository=work_units,
+            calculation_repository=calculations,
+            filing_repository=filings,
+            verification_repository=reports,
+            calculation_observation_repository=observations,
+            bucket_event_repository=events,
+            clock=_CLOCK,
+        )
+
+    advisory_findings = tuple(
+        finding
+        for finding in report.findings
+        if finding.kind.value == "advisory" and "no-prior-obligation (pre-activity)" in finding.message
+    )
+    assert advisory_findings
+    assert all(finding.severity.value == "warning" for finding in advisory_findings)
+    assert {
+        f.message.split("period=")[1].split(" ")[0] for f in advisory_findings
+    } == {"1T", "2T", "3T"}
+    assert any("operator-declared activity-start date 2025-10-01" in f.message for f in advisory_findings)
+    # The only BLOCKING cross-period finding is the in-scope alta-period 4T, never a
+    # suppressed pre-activity quarter.
+    blocking_cross_period = tuple(
+        finding
+        for finding in report.findings
+        if finding.kind.value == "cross_period_dependency_unclean"
+        and finding.severity.value == "blocking"
+    )
+    assert blocking_cross_period
+    assert all("period=4T" in finding.message for finding in blocking_cross_period)
