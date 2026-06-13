@@ -4,14 +4,12 @@
 into the dedicated bucket-scoped evidence store, while the purchase-invoice
 evidence validator historically resolved only the rich
 :class:`InvoiceCatalogue`. These tests assert the validator now accepts an
-``evidence add`` id across the attach, create, and update paths — satisfying the
-receipt-OCR/PDF-evidence ADR's acceptance criterion (an id produced by
-``evidence add`` is accepted by ``aeat app ledger attach`` in the same shell
-session, ADR ``2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence``,
-2026-05-14 amendment) — while still refusing unknown ids and ids minted by the
-slim ``aeat app ledger invoice add`` store (the deliberate store split of ADR
-``2026-06-10-ledger-invoice-unification``). Real adapters only: no mocks, stubs,
-or monkeypatch (``aeat-quality-gates``, ``aeat-roundtrip-discipline``).
+``evidence add`` id across the attach, create, and update paths — an id produced
+by ``evidence add`` is accepted by ``aeat app ledger attach`` in the same shell
+session — while still refusing unknown ids and ids minted by the slim
+``aeat app ledger invoice add`` store (the deliberate evidence/invoice store
+split). Real adapters only: no mocks, stubs, or monkeypatch
+(``aeat-quality-gates``, ``aeat-roundtrip-discipline``).
 """
 
 from __future__ import annotations
@@ -178,8 +176,8 @@ def test_nonexistent_evidence_id_is_refused_with_instructive_message(profile: Te
 
 def test_slim_invoice_add_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
     # An id minted by the slim operator invoice CRUD (`aeat app ledger invoice add`)
-    # is NOT a valid evidence reference per the ledger-invoice unification ADR's
-    # store split (`2026-06-10-ledger-invoice-unification`); attach must refuse it.
+    # is NOT a valid evidence reference under the evidence/invoice store split;
+    # attach must refuse it.
     invoice_service = PayableInvoiceService(
         settings=profile.settings,
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),

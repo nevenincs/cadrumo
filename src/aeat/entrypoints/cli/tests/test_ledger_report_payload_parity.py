@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.ledger import (
+from ....application.ledger import (
     LedgerCatalogueResetReport,
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,

@@ -448,6 +448,41 @@ def test_ledger_view_shows_iva_counterparty_and_notes_detail(
     assert "Q2 furniture" in output
 
 
+_MINIMAL_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+
+
+def test_ledger_view_shows_the_linked_purchase_invoice_evidence_id(tmp_path: Path) -> None:
+    """`ledger view` must surface the linked purchase-invoice evidence id.
+
+    The evidence link is persisted and present on the JSON payload, but the
+    text view dropped it, so an operator who ran ``evidence add`` then
+    ``attach`` could not confirm from ``view`` that the invoice was linked.
+    This drives the documented ``evidence add`` -> ``attach`` -> ``view`` flow
+    end to end (the gap no in-tree test exercised) and pins the rendered id.
+    """
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+
+    pdf = tmp_path / "factura.pdf"
+    pdf.write_bytes(_MINIMAL_PDF)
+    added = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Proveedor SL"],
+    )
+    assert added.exit_code == 0, added.output
+    evidence_id = json.loads(added.output)["result"]["evidence_id"]
+
+    attached = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "attach", txn, "--purchase-invoice-evidence-id", evidence_id],
+    )
+    assert attached.exit_code == 0, attached.output
+
+    viewed = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    assert viewed.exit_code == 0, viewed.output
+    assert f"Purchase invoice evidence\t{evidence_id}" in viewed.output
+
+
 def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     """The JSON payload exposes the typed transaction with every field,
     so the text view and the JSON contract agree."""

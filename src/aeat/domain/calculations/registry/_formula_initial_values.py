@@ -269,6 +269,7 @@ def _previous_filing_selector_has_period_anchor(selector: _PreviousModeloSelecto
         selector.period is not None
         or bool(selector.source_periods)
         or selector.source_period_offset_from_target is not None
+        or selector.prior_quarter_expanding_span
     )
 
 

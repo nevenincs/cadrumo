@@ -529,6 +529,7 @@ def export_modelo_revision(
             cross_period_expected_member_sets,
         ),
         taxpayer_tax_id=workflow_profile.tax_id,
+        activity_start_date=workflow_profile.activity_start_date,
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 

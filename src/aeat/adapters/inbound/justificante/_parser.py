@@ -11,13 +11,14 @@ caller does not supply one.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from ....core.logging import get_logger
 from ....domain.justificante._errors import JustificanteParseError
 from ....domain.justificante._schema import Justificante, JustificanteParserBackend
-from ._extract import extract_justificante
-from ._parsers import extract_text
+from ._extract import extract_justificante, extract_justificante_from_digest
+from ._parsers import extract_text, extract_text_from_bytes
 
 _logger = get_logger(__name__)
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
@@ -54,15 +55,7 @@ def parse_justificante(
             missing=("source_pdf",),
         )
 
-    resolved_backend = backend
-    if resolved_backend is None:
-        # Deferred import: ``aeat.core.config`` imports the public justificante
-        # surface for the ``JustificanteParserBackend`` enum, so importing
-        # it at module scope would form a cycle.
-        from ....core.config import load_settings
-
-        settings = load_settings()
-        resolved_backend = JustificanteParserBackend(settings.aeat_justificante_parser_backend.name)
+    resolved_backend = _resolve_backend(backend)
 
     _logger.debug("parse_justificante: source=<input-pdf> backend=%s", resolved_backend)
     resolved_pdf_path = pdf_path.resolve()
@@ -77,6 +70,38 @@ def parse_justificante(
             )
             raise _redacted_parse_error(exc) from exc
         raise
+
+
+def parse_justificante_bytes(
+    pdf_bytes: bytes,
+    *,
+    backend: JustificanteParserBackend | None = None,
+) -> Justificante:
+    """Parse an AEAT justificante PDF already loaded from secure storage.
+
+    Returns:
+        The parsed :class:`Justificante` extracted from the PDF bytes.
+    """
+    resolved_backend = _resolve_backend(backend)
+    _logger.debug("parse_justificante_bytes: source=in-memory backend=%s", resolved_backend)
+    text = extract_text_from_bytes(pdf_bytes, resolved_backend)
+    return extract_justificante_from_digest(
+        text,
+        source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+        source_label="<input-pdf>",
+    )
+
+
+def _resolve_backend(backend: JustificanteParserBackend | None) -> JustificanteParserBackend:
+    if backend is not None:
+        return backend
+    # Deferred import: ``aeat.core.config`` imports the public justificante
+    # surface for the ``JustificanteParserBackend`` enum, so importing
+    # it at module scope would form a cycle.
+    from ....core.config import load_settings
+
+    settings = load_settings()
+    return JustificanteParserBackend(settings.aeat_justificante_parser_backend.name)
 
 
 def _mentions_source_path(

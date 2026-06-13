@@ -583,10 +583,17 @@ def test_directa_simplificada_autonomo_owes_modelo_130_not_131() -> None:
     assert m131.verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
-def test_autonomo_without_declared_regime_is_incomplete_for_pago_fraccionado() -> None:
+def test_autonomo_without_declared_regime_defaults_to_directa_owes_modelo_130() -> None:
     """An autónomo with actividad económica but no declared estimation
-    regime cannot be assigned 130 or 131 — the engine cannot tell which
-    pago fraccionado applies and refuses to guess."""
+    regime owes Modelo 130, not Modelo 131.
+
+    Estimación directa is the LIRPF default method (art. 16; RIRPF art. 32
+    makes módulos opt-in), so an undeclared regime resolves to directa via
+    the always-definite ``uses_objective_estimation_irpf`` boolean (default
+    ``False``). The engine must not refuse to decide: dropping every M130
+    row for an actividad-económica filer with no regime declared was the
+    silent-omission defect this assertion now guards against. M130 / M131
+    stay mutually exclusive — directa owes only the 130."""
 
     profile = TaxpayerProfile(
         tax_id="A4567890B",
@@ -594,9 +601,31 @@ def test_autonomo_without_declared_regime_is_incomplete_for_pago_fraccionado() -
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
     )
-    for modelo in ("130", "131"):
-        result = derive_modelo_applicability(profile, modelo)
-        assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
+    assert profile.irpf_estimation_regime is None
+    assert profile.uses_objective_estimation_irpf is False
+    assert derive_modelo_applicability(profile, "130").verdict is ApplicabilityVerdict.APPLICABLE
+    assert derive_modelo_applicability(profile, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
+
+
+def test_autonomo_modulos_boolean_without_declared_regime_owes_modelo_131() -> None:
+    """An autónomo who positively flags módulos but leaves the structured
+    regime undeclared owes Modelo 131, not Modelo 130.
+
+    ``uses_objective_estimation_irpf=True`` is the definite objetiva
+    signal: the undeclared-regime resolution routes to estimación objetiva
+    so Modelo 131 is APPLICABLE and Modelo 130 NOT_APPLICABLE — the directa
+    default never overrides a positively-declared módulos election."""
+
+    profile = TaxpayerProfile(
+        tax_id="A4567890B",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        iva_regime=IVARegime.GENERAL,
+        uses_objective_estimation_irpf=True,
+    )
+    assert profile.irpf_estimation_regime is None
+    assert derive_modelo_applicability(profile, "131").verdict is ApplicabilityVerdict.APPLICABLE
+    assert derive_modelo_applicability(profile, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
 def test_landlord_does_not_owe_modelo_131() -> None:

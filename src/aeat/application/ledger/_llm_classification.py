@@ -39,13 +39,16 @@ is looked up from the registry and the base and amount are derived with
 
 from __future__ import annotations
 
+import base64
 import shutil
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from ...adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -63,8 +66,11 @@ from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
 from ...domain.transactions import (
     BusinessClassification,
+    LLMClassificationResponse,
     LLMClassifier,
     LLMSplitProposer,
+    LLMSplitResponse,
+    PromptSpec,
     Transaction,
     TransactionLifecycleState,
     TransactionNotFoundError,
@@ -84,7 +90,7 @@ from ._actions_common import (
 )
 from ._actions_manual import update_manual_transaction_fields
 from ._actions_split_merge import split_transaction
-from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_advisory import printed_iva_advisory
 from ._evidence_input import (
     cloud_evidence_read_permitted,
@@ -94,6 +100,7 @@ from ._evidence_input import (
 from ._evidence_split import derive_child_amounts
 from ._evidence_textlayer import extract_evidence_text
 from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
+from ._vision_classifier import LocalVisionLLMClassifier
 
 _logger = get_logger(__name__)
 
@@ -198,40 +205,54 @@ def _resolve_default_classifier(provider: LLMProvider) -> LLMClassifier:
     return resolve_classifier(provider.value, spec=prompt_spec_with_every_spending_category())
 
 
-def _resolve_evidence_text(
+@dataclass(frozen=True)
+class _ResolvedEvidence:
+    """A transaction's linked evidence resolved for an on-host read.
+
+    Exactly one read mode is populated: ``text`` for a text-layer PDF (inlined into
+    the prompt and fed to the cloud subprocess classifier, consent-gated) or base64
+    ``images`` for a scan-only PDF / image (read in memory by the LOCAL vision
+    model, on-host, gestor-allowed). The ``images`` are transient
+    FINANCIAL-derived bytes and MUST never be persisted or logged
+    (``sensitive-financial-data-secure-storage-only``).
+    """
+
+    reference: str
+    text: str | None
+    images: tuple[str, ...]
+
+    @property
+    def is_images(self) -> bool:
+        """Whether this evidence routes to the on-host vision reader."""
+        return bool(self.images)
+
+
+def _resolve_evidence(
     transaction: Transaction,
     *,
     bucket_id: str,
     settings: Settings,
     evidence_acknowledged: bool,
-) -> tuple[str | None, str | None]:
-    """Resolve a transaction's linked evidence to on-host text plus its reference.
+) -> _ResolvedEvidence | None:
+    """Resolve a transaction's linked evidence to an on-host read, or ``None``.
 
-    Returns ``(None, None)`` when the transaction has no linked evidence,
-    otherwise ``(extracted_text, evidence_reference)`` where the reference is the
-    consulted ``purchase_invoice_evidence_id`` or ``attachment_id`` (for
-    provenance). The only classifiers wired today are cloud subprocess agents, so
-    reading evidence transmits it off-host; this is gated by the cloud-upload
-    consent posture (default-off, gestor-barred, per-invocation). Bytes are read
-    from secure storage into memory and the text layer is extracted on-host --
-    nothing is written to disk (``sensitive-financial-data-secure-storage-only``).
+    Returns ``None`` when the transaction has no linked evidence. A text-layer PDF
+    yields ``text`` and routes to the cloud subprocess classifier, so it is gated by
+    the cloud-upload consent posture (default-off, gestor-barred, per-invocation). A
+    scan-only PDF or an image yields base64 ``images`` and is read in memory by the
+    LOCAL Ollama vision model -- fully on-host, needing no cloud consent and
+    permitted for gestor deployments. Bytes are read from secure storage into memory
+    only; nothing is written to disk
+    (``sensitive-financial-data-secure-storage-only``).
 
     Raises:
-        PurchaseInvoiceEvidenceInputError: When evidence is linked but the cloud
-            consent gate is not satisfied, or the evidence cannot be read on-host
-            (image evidence has no text layer until the on-host vision reader lands).
+        PurchaseInvoiceEvidenceInputError: When a text-layer read would transmit to a
+            cloud model but the per-invocation consent gate is not satisfied.
     """
     evidence_id = transaction.purchase_invoice_evidence_id
     attachment_ids = transaction.attachment_ids
     if evidence_id is None and not attachment_ids:
-        return None, None
-    if not cloud_evidence_read_permitted(settings, acknowledged=evidence_acknowledged):
-        raise PurchaseInvoiceEvidenceInputError(
-            "reading attached evidence sends it to a cloud model, which requires the explicit "
-            "per-invocation consent acknowledgement; it is off by default and barred for gestor "
-            "deployments",
-            suggestion="enable the cloud-upload consent posture and acknowledge the upload",
-        )
+        return None
     store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
     if evidence_id is not None:
         record = PurchaseInvoiceEvidenceService(settings=settings).view(bucket_id=bucket_id, evidence_id=evidence_id)
@@ -240,7 +261,63 @@ def _resolve_evidence_text(
     else:
         reference = attachment_ids[0]
         evidence_input = resolve_attachment_evidence_input(reference, store=store)
-    return extract_evidence_text(evidence_input), reference
+    if evidence_input.media_kind is MediaKind.PDF:
+        try:
+            text = extract_evidence_text(evidence_input)
+        except PurchaseInvoiceEvidenceInputError:
+            text = ""  # scan-only / no usable text layer -> on-host vision path
+        if text:
+            if not cloud_evidence_read_permitted(settings, acknowledged=evidence_acknowledged):
+                raise PurchaseInvoiceEvidenceInputError(
+                    "reading text-layer evidence sends it to a cloud model, which requires the "
+                    "explicit per-invocation consent acknowledgement; it is off by default and barred "
+                    "for gestor deployments (scanned/image evidence is read on-host and needs no consent)",
+                    suggestion="enable the cloud-upload consent posture and acknowledge the upload",
+                )
+            return _ResolvedEvidence(reference=reference, text=text, images=())
+        images = rasterise_pdf_pages_to_base64_png(evidence_input.data)
+    else:
+        images = (base64.b64encode(evidence_input.data).decode("ascii"),)
+    return _ResolvedEvidence(reference=reference, text=None, images=images)
+
+
+def _classify_with_evidence(
+    transaction: Transaction,
+    evidence: _ResolvedEvidence | None,
+    *,
+    text_classifier: LLMClassifier,
+    spec: PromptSpec,
+    vision_classifier: LocalVisionLLMClassifier | None,
+    settings: Settings,
+) -> tuple[LLMClassificationResponse, str]:
+    """Classify, routing scan/image evidence to the on-host vision classifier.
+
+    Returns ``(response, provenance)``. Image evidence is read by the local vision
+    model (``llm:local-vision:<model>`` provenance); text or no evidence runs the
+    cloud subprocess ``text_classifier`` (``llm:<provider>:<model>`` provenance).
+    """
+    if evidence is not None and evidence.is_images:
+        vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings)
+        return vision.classify(transaction, evidence_images=evidence.images), vision.decided_by
+    text = evidence.text if evidence is not None else None
+    return text_classifier.classify(transaction, evidence_text=text), text_classifier.decided_by
+
+
+def _split_with_evidence(
+    transaction: Transaction,
+    evidence: _ResolvedEvidence | None,
+    *,
+    proposer: LLMSplitProposer,
+    spec: PromptSpec,
+    vision_classifier: LocalVisionLLMClassifier | None,
+    settings: Settings,
+) -> tuple[LLMSplitResponse, str]:
+    """Propose a split, routing scan/image evidence to the on-host vision classifier."""
+    if evidence is not None and evidence.is_images:
+        vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings)
+        return vision.propose_split(transaction, evidence_images=evidence.images), vision.decided_by
+    text = evidence.text if evidence is not None else None
+    return proposer.propose_split(transaction, evidence_text=text), proposer.decided_by
 
 
 def suggest_llm_classification(
@@ -249,6 +326,7 @@ def suggest_llm_classification(
     transaction_id: str,
     provider: LLMProvider,
     classifier: LLMClassifier | None = None,
+    vision_classifier: LocalVisionLLMClassifier | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     read_evidence: bool = False,
     evidence_acknowledged: bool = False,
@@ -287,18 +365,26 @@ def suggest_llm_classification(
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+    resolved_settings = settings if settings is not None else load_settings()
     resolved_classifier = classifier if classifier is not None else _resolve_default_classifier(provider)
-    evidence_text, evidence_reference = (
-        _resolve_evidence_text(
+    evidence = (
+        _resolve_evidence(
             transaction,
             bucket_id=bucket_id,
-            settings=settings if settings is not None else load_settings(),
+            settings=resolved_settings,
             evidence_acknowledged=evidence_acknowledged,
         )
         if read_evidence
-        else (None, None)
+        else None
     )
-    response = resolved_classifier.classify(transaction, evidence_text=evidence_text)
+    response, provenance = _classify_with_evidence(
+        transaction,
+        evidence,
+        text_classifier=resolved_classifier,
+        spec=prompt_spec_with_every_spending_category(),
+        vision_classifier=vision_classifier,
+        settings=resolved_settings,
+    )
     _logger.info(
         "llm suggest: transaction=%s provider=%s classification=%s confidence=%s",
         transaction_id,
@@ -309,12 +395,12 @@ def suggest_llm_classification(
     return LLMClassificationSuggestion(
         transaction_id=transaction_id,
         provider=provider,
-        provenance=resolved_classifier.decided_by,
+        provenance=provenance,
         classification=response.classification,
         category=response.category,
         confidence=response.confidence,
         reason=response.reason,
-        evidence_id=evidence_reference,
+        evidence_id=evidence.reference if evidence is not None else None,
     )
 
 
@@ -529,6 +615,7 @@ def saturate_llm_classification(
     transaction_id: str,
     provider: LLMProvider,
     classifier: LLMClassifier | None = None,
+    vision_classifier: LocalVisionLLMClassifier | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     on_date: date | None = None,
     read_evidence: bool = False,
@@ -574,18 +661,28 @@ def saturate_llm_classification(
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+    resolved_settings = settings if settings is not None else load_settings()
     resolved_classifier = classifier if classifier is not None else _resolve_saturation_classifier(provider)
-    evidence_text, evidence_reference = (
-        _resolve_evidence_text(
+    evidence = (
+        _resolve_evidence(
             transaction,
             bucket_id=bucket_id,
-            settings=settings if settings is not None else load_settings(),
+            settings=resolved_settings,
             evidence_acknowledged=evidence_acknowledged,
         )
         if read_evidence
-        else (None, None)
+        else None
     )
-    response = resolved_classifier.classify(transaction, evidence_text=evidence_text)
+    response, provenance = _classify_with_evidence(
+        transaction,
+        evidence,
+        text_classifier=resolved_classifier,
+        spec=prompt_spec_with_saturation_fields(),
+        vision_classifier=vision_classifier,
+        settings=resolved_settings,
+    )
+    evidence_text = evidence.text if evidence is not None else None
+    evidence_reference = evidence.reference if evidence is not None else None
     effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
 
     iva_rate: Decimal | None = None
@@ -610,7 +707,7 @@ def saturate_llm_classification(
     return LLMSaturatedSuggestion(
         transaction_id=transaction_id,
         provider=provider,
-        provenance=resolved_classifier.decided_by,
+        provenance=provenance,
         classification=response.classification,
         category=response.category,
         confidence=response.confidence,
@@ -775,6 +872,10 @@ def derive_operator_iva_substrate(
     touched; the business classification stays as-is. A non-derivable category
     persists nothing and returns an explanatory note.
 
+    Returns:
+        The :class:`OperatorIvaDerivationResult` recording the persisted IVA
+        substrate, or an explanatory note when the category is non-derivable.
+
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
         TransactionValidationError: When the transaction is not classified
@@ -934,6 +1035,7 @@ def suggest_evidence_split(
     transaction_id: str,
     provider: LLMProvider,
     proposer: LLMSplitProposer | None = None,
+    vision_classifier: LocalVisionLLMClassifier | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     on_date: date | None = None,
     read_evidence: bool = True,
@@ -978,18 +1080,27 @@ def suggest_evidence_split(
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
+    resolved_settings = settings if settings is not None else load_settings()
     resolved_proposer = proposer if proposer is not None else _resolve_default_split_proposer(provider)
-    evidence_text, evidence_reference = (
-        _resolve_evidence_text(
+    evidence = (
+        _resolve_evidence(
             transaction,
             bucket_id=bucket_id,
-            settings=settings if settings is not None else load_settings(),
+            settings=resolved_settings,
             evidence_acknowledged=evidence_acknowledged,
         )
         if read_evidence
-        else (None, None)
+        else None
     )
-    response = resolved_proposer.propose_split(transaction, evidence_text=evidence_text)
+    response, provenance = _split_with_evidence(
+        transaction,
+        evidence,
+        proposer=resolved_proposer,
+        spec=prompt_spec_with_saturation_fields(),
+        vision_classifier=vision_classifier,
+        settings=resolved_settings,
+    )
+    evidence_reference = evidence.reference if evidence is not None else None
     proportions = tuple(child.proportion for child in response.children)
     amounts = derive_child_amounts(transaction.raw.amount, proportions)
     effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
@@ -1030,7 +1141,7 @@ def suggest_evidence_split(
     return LLMSplitSuggestion(
         transaction_id=transaction_id,
         provider=provider,
-        provenance=resolved_proposer.decided_by,
+        provenance=provenance,
         reason=response.reason,
         parent_amount=transaction.raw.amount,
         children=tuple(children),

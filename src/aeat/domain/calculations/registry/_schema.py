@@ -1018,6 +1018,15 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "all_nonzero",
         "any_nonzero",
         "cap_le_when_positive",
+        # equals(["lhs_id", "rhs_id"]) — consistency invariant: the two named
+        # casillas must hold the same value. Authored for the M303 official
+        # Diseño box projections (Stage 2): each numbered box copies a semantic
+        # source, so box == source must hold for VERIFICADO_COMPLETO. The
+        # projection cannot drift within one evaluation; the predicate's value is
+        # catching a future mis-edit (a box re-flipped to manual, or a projection
+        # pointed at the wrong source). See the equals branch in
+        # _evaluate_predicate_expression.
+        "equals",
         "implies_any_nonzero",
         "implies_nonzero",
         "profile_field_required",
@@ -1204,32 +1213,8 @@ class RegistrySnapshot(RegistryModel):
     revision: ModeloRevision
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
-    # Accommodates time-codes ("1T", "2T", "0A", "01"-"12", "EXT-1T") and
-    # event-period names from ad_hoc modelos (M036 "alta", "modificacion",
-    # "baja"; M308 "AD-HOC"; M115 etc.). The 32-char ceiling is generous
-    # enough for descriptive future event names without becoming a free-text
-    # field — the matching constraint is enforced upstream in
-    # PeriodSelector + ModeloScheduleDefinition (which validate against
-    # each modelo's declared periods).
-    #
-    # Audit note on the layered max_length contract across the codebase:
-    #
-    #   - RegistrySnapshot.period (this field): max_length=32 — the
-    #     registry-side surface where event-period names live.
-    #   - Application-side serialization buffers (filing/_calculate.py,
-    #     filing/_export.py, aggregation/_service.py, etc.): max_length=16
-    #     — sufficient for every period name registered today
-    #     ("modificacion" is 12).
-    #   - Sede outbound models (sede/_declarations.py, sede/_schema.py):
-    #     max_length=8 — AEAT-side period codes from the sede HTML are
-    #     always ≤ 8 chars (e.g. "1T", "0A"). M036 events never traverse
-    #     these models (censo events do not flow through the
-    #     filed-declaration sede surface).
-    #
-    # Verified end-to-end: M036's "modificacion" period builds a
-    # RegistrySnapshot, threads through the application/filing layer
-    # (16 ≥ 12), and never reaches the sede 8-cap models.
-    # the modelo's declared periods).
+    # Accepts normal period codes and declared event-period names; upstream
+    # PeriodSelector + ModeloScheduleDefinition constrain the token set.
     period: str = Field(min_length=1, max_length=32)
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]

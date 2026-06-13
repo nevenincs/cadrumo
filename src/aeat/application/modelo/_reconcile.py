@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -26,6 +27,9 @@ from ...core.identity import BucketId
 from ...core.time import now
 from ...domain.modelos._ids import WorkUnitId
 from ._action_errors import WorkUnitNotFoundError
+
+if TYPE_CHECKING:
+    from ...domain.justificante import Justificante
 
 
 class ModeloReconciliationSourceKind(StrEnum):
@@ -96,6 +100,24 @@ class ModeloReconciliationCommand(BaseModel):
     work_unit_id: WorkUnitId
     source_kind: ModeloReconciliationSourceKind
     source_path: Path
+    actor: str = Field(default="operator", min_length=1, max_length=64)
+
+
+class ModeloReconciliationBytesCommand(BaseModel):
+    """Strict input contract for reconciling secure-storage evidence bytes.
+
+    Used by authenticated live pulls after the captured justificante has
+    already been persisted in secure storage. The raw bytes remain in memory;
+    ``source_ref`` is the non-file secure-storage reference recorded in the
+    reconciliation event.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    work_unit_id: WorkUnitId
+    source_kind: ModeloReconciliationSourceKind
+    source_bytes: bytes = Field(min_length=1)
+    source_ref: str = Field(min_length=1, max_length=512)
     actor: str = Field(default="operator", min_length=1, max_length=64)
 
 
@@ -174,6 +196,61 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         )
 
     from ...adapters.inbound.justificante import parse_justificante
+    from ...domain.justificante import JustificanteParseError
+
+    try:
+        justificante = parse_justificante(command.source_path)
+    except JustificanteParseError as exc:
+        raise ReconciliationEvidenceInvalidError(
+            f"justificante at {command.source_path!s} could not be parsed: {exc}",
+        ) from exc
+    return _reconcile_parsed_justificante(
+        work_unit_id=command.work_unit_id,
+        source_kind=command.source_kind,
+        source_ref=str(command.source_path),
+        actor=command.actor,
+        justificante=justificante,
+    )
+
+
+def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloReconciliationReport:
+    """Reconcile secure-storage evidence bytes without materialising a plaintext file.
+
+    Returns:
+        The :class:`ModeloReconciliationReport` comparing the parsed evidence to
+        the work unit.
+    """
+    if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
+        raise ReconciliationDeclaracionSourceUnsupportedError(
+            translated_message="application.modelo.errors.reconcile_declaration_unsupported",
+        )
+
+    from ...adapters.inbound.justificante import parse_justificante_bytes
+    from ...domain.justificante import JustificanteParseError
+
+    try:
+        justificante = parse_justificante_bytes(command.source_bytes)
+    except JustificanteParseError as exc:
+        raise ReconciliationEvidenceInvalidError(
+            f"justificante at {command.source_ref} could not be parsed: {exc}",
+        ) from exc
+    return _reconcile_parsed_justificante(
+        work_unit_id=command.work_unit_id,
+        source_kind=command.source_kind,
+        source_ref=command.source_ref,
+        actor=command.actor,
+        justificante=justificante,
+    )
+
+
+def _reconcile_parsed_justificante(
+    *,
+    work_unit_id: WorkUnitId,
+    source_kind: ModeloReconciliationSourceKind,
+    source_ref: str,
+    actor: str,
+    justificante: Justificante,
+) -> ModeloReconciliationReport:
     from ...domain.buckets import (
         BucketEvent,
         BucketEventHistoryRepository,
@@ -182,7 +259,6 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         append_bucket_event,
         derive_bucket_event_id,
     )
-    from ...domain.justificante import JustificanteParseError
     from ...domain.modelos._repository import WorkUnitCatalogueRepository
     from ..workflow._persistence import workflow_state_repository
 
@@ -193,24 +269,17 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         )
 
     catalogue = WorkUnitCatalogueRepository().load()
-    work_unit = catalogue.work_units.get(command.work_unit_id)
+    work_unit = catalogue.work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"work unit {command.work_unit_id!r} not found in the active bucket catalogue",
+            f"work unit {work_unit_id!r} not found in the active bucket catalogue",
         )
     if work_unit.bucket_id != active_bucket_id:
         raise ReconciliationCrossBucketRefusedError(
-            f"work unit {command.work_unit_id!r} belongs to bucket "
+            f"work unit {work_unit_id!r} belongs to bucket "
             f"{work_unit.bucket_id!r} but the active profile bucket is "
             f"{active_bucket_id!r}; switch profile before reconciling",
         )
-
-    try:
-        justificante = parse_justificante(command.source_path)
-    except JustificanteParseError as exc:
-        raise ReconciliationEvidenceInvalidError(
-            f"justificante at {command.source_path!s} could not be parsed: {exc}",
-        ) from exc
 
     diffs: list[ModeloReconciliationDiff] = []
     if work_unit.modelo != justificante.modelo:
@@ -231,18 +300,37 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
                 kind="ejercicio_mismatch",
             ),
         )
+    if work_unit.period != justificante.period:
+        diffs.append(
+            ModeloReconciliationDiff(
+                field_name="period",
+                work_unit_value=work_unit.period.registry_token,
+                evidence_value=justificante.period.registry_token,
+                kind="period_mismatch",
+            ),
+        )
+    profile_tax_id = _active_profile_tax_id(active_bucket_id)
+    if profile_tax_id and profile_tax_id != _normalise_tax_id(justificante.tax_id):
+        diffs.append(
+            ModeloReconciliationDiff(
+                field_name="tax_id",
+                work_unit_value=profile_tax_id,
+                evidence_value=justificante.tax_id,
+                kind="tax_id_mismatch",
+            ),
+        )
 
     verdict = ModeloReconciliationVerdict.MATCHES if not diffs else ModeloReconciliationVerdict.MISMATCHES
     narrative = (
         f"reconciled modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'} "
-        f"against work unit {command.work_unit_id}; verdict={verdict.value}; diffs={len(diffs)}"
+        f"against work unit {work_unit_id}; verdict={verdict.value}; diffs={len(diffs)}"
     )
     reconciled_at = now()
     report = ModeloReconciliationReport(
-        work_unit_id=command.work_unit_id,
+        work_unit_id=work_unit_id,
         bucket_id=work_unit.bucket_id,
-        source_kind=command.source_kind,
-        source_path=str(command.source_path),
+        source_kind=source_kind,
+        source_path=source_ref,
         verdict=verdict,
         diffs=tuple(diffs),
         reconciled_at=reconciled_at,
@@ -250,20 +338,20 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     )
 
     event_payload = {
-        "work_unit_id": command.work_unit_id,
-        "source_kind": command.source_kind.value,
-        "source_path": str(command.source_path),
+        "work_unit_id": work_unit_id,
+        "source_kind": source_kind.value,
+        "source_path": source_ref,
         "verdict": verdict.value,
         "diffs": str(len(diffs)),
     }
-    actor = command.actor.strip()
+    actor = actor.strip()
     event_id = derive_bucket_event_id(
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_RECONCILED,
         occurred_at=reconciled_at,
         actor=actor,
         object_type=BucketEventObjectType.WORK_UNIT,
-        object_id=command.work_unit_id,
+        object_id=work_unit_id,
         payload=event_payload,
     )
     catalogue_repo = BucketEventHistoryRepository()
@@ -276,7 +364,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
             occurred_at=reconciled_at,
             actor=actor,
             object_type=BucketEventObjectType.WORK_UNIT,
-            object_id=command.work_unit_id,
+            object_id=work_unit_id,
             payload_version=1,
             payload=event_payload,
         ),
@@ -284,6 +372,23 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     catalogue_repo.save(next_catalogue)
 
     return report
+
+
+def _active_profile_tax_id(bucket_id: str) -> str:
+    from ..user_profile import record_to_path_values, record_to_values
+    from ..user_profile._orchestration import build_lifecycle_service
+
+    record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
+    path_values = record_to_path_values(record)
+    profile_tax_id = _normalise_tax_id(path_values.get("identity.tax_id"))
+    if profile_tax_id:
+        return profile_tax_id
+    selector_values = record_to_values(record)
+    return _normalise_tax_id(selector_values.get("tax.id"))
+
+
+def _normalise_tax_id(value: object) -> str:
+    return str(value or "").strip().upper()
 
 
 def list_modelo_reconciliations(
@@ -335,6 +440,7 @@ def list_modelo_reconciliations(
 
 
 __all__ = [
+    "ModeloReconciliationBytesCommand",
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
     "ModeloReconciliationHistoryEntry",
@@ -347,4 +453,5 @@ __all__ = [
     "WorkUnitNotFoundError",
     "list_modelo_reconciliations",
     "modelo_reconcile",
+    "modelo_reconcile_bytes",
 ]

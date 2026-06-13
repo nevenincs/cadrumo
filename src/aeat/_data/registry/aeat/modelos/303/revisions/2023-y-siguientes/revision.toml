@@ -569,6 +569,11 @@ op = "negate"
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
 casilla = "iva.resultado"
 
+# The M303 official Diseño box projection formulas (Stage 2) live in the
+# formulas/ fragment directory (formulas/0001-dr303-projections.toml) to keep
+# this file under the reviewability baseline; the directory-mode loader merges
+# them. They are registered by id in the formulas = [...] list below.
+
 [[revisions.2023-y-siguientes.relations]]
 id = "modelo-303-rel-self-compensacion-anteriores"
 kind = "previous_period"
@@ -895,6 +900,7 @@ legal_refs = [
     "ley-37-1992:art-91",
     "ley-37-1992:art-92",
     "ley-37-1992:art-94",
+    "ley-37-1992:art-95",
     "rd-1624-1992:art-71",
     "ley-37-1992:art-99",
     "ley-37-1992:art-115",
@@ -965,6 +971,16 @@ formulas = [
     "modelo-303-compensacion-generada-periodo",
     "modelo-303-compensacion-disponible-fin-periodo",
     "modelo-303-iva-prorrata-porcentaje",
+    "modelo-303-dr303-09-projection",
+    "modelo-303-dr303-06-projection",
+    "modelo-303-dr303-03-projection",
+    "modelo-303-dr303-11-projection",
+    "modelo-303-dr303-13-projection",
+    "modelo-303-dr303-27-projection",
+    "modelo-303-dr303-29-projection",
+    "modelo-303-dr303-33-projection",
+    "modelo-303-dr303-37-projection",
+    "modelo-303-dr303-45-projection",
 ]
 bindings = [
     "modelo-303-iva-repercutido-general-cuota",
@@ -989,109 +1005,6 @@ application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extra
 filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual-sii"]
 deadline_windows = ["modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t", "modelo-303-2026-1t", "modelo-303-2026-2t", "modelo-303-2026-3t", "modelo-303-2026-4t", "modelo-303-2025-01-mensual", "modelo-303-2025-06-mensual", "modelo-303-2025-12-mensual", "modelo-303-2026-01-mensual"]
 
-[revisions.2023-y-siguientes.completeness_manifest]
-source_ref = "aeat-dr-303-2025"
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "109"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "110"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "58"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "64"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "65"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "66"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "68"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "69"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "70"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "71"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "76"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "77"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "78"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "87"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "compensacion-disponible-fin-periodo"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "compensacion-generada-periodo"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.autoconsumo.promotor.base"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.autoconsumo.promotor.cuota"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.soportado.importaciones"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.autorepercutido.intracomunitaria"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.autorepercutido.intracomunitaria.devengado"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.autorepercutido.intracomunitaria.deducible"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.autorepercutido.interior.devengado"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.autorepercutido.interior.deducible"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.cuota-deducible-total"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.cuota-devengada-total"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.repercutido.general"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.repercutido.reducido"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.repercutido.super-reducido"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.resultado-regimen-general"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "iva.soportado.interiores"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "prorrata-porcentaje"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "prorrata-volumen-con-derecho"
-
-[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
-number = "prorrata-volumen-total"
+# The completeness_manifest section lives in the completeness_manifest/ fragment
+# directory (completeness_manifest/0001-completeness_manifest.toml) to keep this
+# file under the reviewability baseline; the directory-mode loader merges it.

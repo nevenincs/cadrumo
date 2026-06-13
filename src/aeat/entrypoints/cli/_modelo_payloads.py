@@ -1,13 +1,7 @@
-"""Typed ``--json`` payload schemas for modelo work-lifecycle commands.
+"""Typed ``--json`` payload schemas for modelo command envelopes.
 
-Each class declared here is a strict :class:`OutputSchema` subclass and is
-decorated with :func:`register_schema` so the JSON-contract test suite can
-enumerate every command surface this module covers.
-
-Field set is additive: legacy callers continue to read the same payload
-shape they always did, while new clients see the additional typed-
-provenance fields (``observations``, ``legal_refs``, ``source_refs``,
-``schema_version``, ``command``).
+Each payload here is a :class:`OutputSchema` subclass registered for its
+command envelope.
 """
 
 from __future__ import annotations
@@ -38,11 +32,6 @@ from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
     from ...application.modelo import ModeloExportResult as _AppModeloExportResult
-
-# ---------------------------------------------------------------------------
-# Shared sub-models (not registered — used as nested types)
-# ---------------------------------------------------------------------------
-
 
 class WorkUnitPayload(OutputSchema):
     """Work unit fields shared across create / status / rename / discard."""
@@ -129,10 +118,6 @@ class CalculationRevisionPayload(OutputSchema):
     state: str
     casilla_values: dict[str, str]  # casilla_id → str(Decimal)
     observations: tuple[ObservationPayload, ...]
-    # Registry-declared lead figures (result-to-pay / result-to-refund
-    # plus key computed casillas) surfaced above the full casilla table.
-    # Empty tuple when the modelo carries no summary mapping or the
-    # revision has no values to summarise.
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
     inputs_snapshot: dict[str, str]
@@ -271,18 +256,8 @@ class FormulaPayload(OutputSchema):
     source_refs: tuple[str, ...]
 
 
-# ---------------------------------------------------------------------------
-# Registered command-level schemas
-# ---------------------------------------------------------------------------
-
-
 @register_schema("modelo.work.create")
 class WorkCreateResult(OutputSchema):
-    # ``operation`` is either ``modelo.work.create`` (a fresh unit was
-    # created) or ``modelo.work.reuse`` (an existing unit matching the
-    # natural-key tuple was returned unchanged); the same shape covers
-    # both lanes so the command surface keeps a single typed contract
-    # and a single envelope-registry key.
     operation: str = "modelo.work.create"
     status: str
     status_message: str
@@ -410,8 +385,6 @@ class WorkDiscardResult(OutputSchema):
 @register_schema("modelo.work.calculate")
 class WorkCalculateResult(OutputSchema):
     operation: str = "modelo.work.calculate"
-    # Persistence-confirmation pair surfaced by the calculate verb so JSON
-    # consumers see the same signal the text-mode confirmation line carries.
     saved: bool = True
     saved_confirmation: str
     calculation_revision_id: CalculationRevisionId
@@ -429,22 +402,9 @@ class WorkCalculateResult(OutputSchema):
     filed_at: str | None = None
     filed_by: str | None = None
     superseded_at: str | None = None
-    # Modelo 202 pago-fraccionado modality (Art. 40.2 vs 40.3 lane).
-    # Populated only when the underlying work unit is modelo 202; other
-    # modelos leave these unset.
     modality: str | None = None
     modality_reason: str | None = None
-    # Backend authorization lifecycle state. Populated when the modelo's
-    # calculation backend is UNAUTHORIZED (not yet proven across >=2 renta
-    # years per the modelo-multiyear-renta gate) but an engine exists, so the
-    # calculation still ran. The accompanying advisory prose is surfaced on
-    # the envelope ``notices`` channel, not as a bespoke payload field.
     authorization_state: str | None = None
-    # Filing-deadline (plazo voluntario) state for the work unit. Structured
-    # result data — the voluntary-filing close date, in-time / overdue
-    # posture, and the resolved Art. 27 LGT recargo band when overdue.
-    # Populated when the deadline is resolvable; ``None`` otherwise. The
-    # overdue-warning prose rides the envelope ``notices`` channel.
     deadline: WorkPlazoDeadlinePayload | None = None
 
 
@@ -568,8 +528,6 @@ class WorkAmendResult(OutputSchema):
     operation: str = "modelo.work.amend"
     amendment_kind: str
     amends_filing_record_id: FilingRecordId
-    # amend uses the same filing-record body as work.file but always
-    # carries the amendment metadata pair above.
     filing_record_id: FilingRecordId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
@@ -657,11 +615,6 @@ class FormulasResult(OutputSchema):
     period: str | None = None
     formula_count: int
     rows: tuple[FormulaPayload, ...]
-
-
-# ---------------------------------------------------------------------------
-# P13 – audit / history verb schemas
-# ---------------------------------------------------------------------------
 
 
 class EvidenceRecordRefPayload(OutputSchema):
@@ -780,11 +733,6 @@ class WorkRunsResult(OutputSchema):
     runs: list[WorkflowRunPayload]
 
 
-# ---------------------------------------------------------------------------
-# P14 – record-query verb schemas (schemas for list/show already existed)
-# ---------------------------------------------------------------------------
-
-
 @register_schema("modelo.filing_record.import")
 class FilingRecordImportResult(OutputSchema):
     """Filing record created by importing external AEAT evidence."""
@@ -808,11 +756,6 @@ class FilingRecordImportResult(OutputSchema):
     superseded_by_filing_record_id: str | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
-
-
-# ---------------------------------------------------------------------------
-# P15 – registry-projection verb schemas
-# ---------------------------------------------------------------------------
 
 
 class ModeloRowPayload(OutputSchema):
@@ -1184,21 +1127,7 @@ class ModeloAggregateResult(OutputSchema):
 
 @register_schema("modelo.work.preview_maritime_exemption")
 class WorkPreviewMaritimeExemptionResult(OutputSchema):
-    """Result payload for ``aeat app modelo work preview-maritime-exemption``.
-
-    Surfaces the maritime worker IRPF exemption resolution for the active
-    profile: typed CasillaObservation rows carrying ``legal_refs`` and
-    ``source_refs`` (the canonical contract per aeat-calculation-grounding)
-    alongside a flat ``casilla_values`` projection for human readability.
-
-    The ``retmar_mandatory_filing`` flag mirrors the RETMAR completeness
-    gate: when ``True`` the operator is informed via the RETMAR warning
-    message that all RETMAR-registered workers must file IRPF regardless
-    of income level (Ley 47/2015 BOE-A-2015-11346). The DA 41 inactive
-    refusal raises ``MaritimeExemptionInactiveError`` and is rendered
-    through the CLI error boundary; this payload is not emitted in that
-    branch.
-    """
+    """Maritime worker IRPF exemption preview result."""
 
     operation: str = "modelo.work.preview_maritime_exemption"
     worker_class: str | None = None
