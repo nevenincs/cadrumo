@@ -12,12 +12,15 @@ related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `m303-form-vs-semantic-casilla-dual-keying` `M303 official Diseno box population via semantic projection (Stage 2)` plan
 
@@ -25,10 +28,8 @@ related:
 
 Produce the authoritative, label-cross-checked projection map as a reference document before any TOML edit: each in-scope numbered box paired with the single semantic casilla id it copies, the box's existing legal_refs, and the resolved box-37 source (or its deferral). No source is wired without an exact 1:1 label match; box 37 stays manual if genuinely ambiguous.
 
-
-
-- [ ] `P01.S01` - Author the authoritative box-to-semantic projection map as a reference document, pairing each in-scope cuota box with its single semantic casilla id, cross-checked box-label against semantic-label, and copying each box's existing legal_refs; `.vault/reference/2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference.md`.
-- [ ] `P01.S02` - Pin box 37 deducible source by label-exact match to iva.autorepercutido.intracomunitaria.deducible (AIC leg), documenting the registry self-label collision with iva.autorepercutido.interior.deducible and deferring box 37 to manual only if genuinely ambiguous after confirmation; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`.
+- [x] `P01.S01` - Author the authoritative box-to-semantic projection map as a reference document, pairing each in-scope cuota box with its single semantic casilla id, cross-checked box-label against semantic-label, and copying each box's existing legal_refs; `.vault/reference/2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference.md`.
+- [x] `P01.S02` - Pin box 37 deducible source by label-exact match to iva.autorepercutido.intracomunitaria.deducible (AIC leg), documenting the registry self-label collision with iva.autorepercutido.interior.deducible and deferring box 37 to manual only if genuinely ambiguous after confirmation; `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`.
 
 ### Phase `P02` - Devengado cuota projections
 
