@@ -128,6 +128,10 @@ def collect_prior_payment_not_deducted_diagnostics(
         observation_repository: The local
             :class:`CalculationObservationRepository` scanned for a prior-period
             filing — the first-filer safeguard.
+
+    Returns:
+        A tuple of :class:`CalculationSourceDiagnostic` advisories — empty when
+        no under-deduction is detected, otherwise the single advisory.
     """
     if modelo != Modelo.M130.value:
         return ()
