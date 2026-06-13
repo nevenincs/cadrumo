@@ -97,6 +97,65 @@ Typer command handlers (`expedientes_pull`, `config_profile_delete`, the
 `__init__` files, pydantic validators, and `@register_schema` payloads — all
 registered/dispatched dynamically; not dead.
 
+## Execution status — function/class dead-code sub-phase complete
+
+All 21 AST-confirmed zero-reference functions/classes were removed across three
+verified batches (ruff + collect-only clean each; the orphaned payload classes
+verified against the 94-test JSON-schema conformance gate):
+
+- **Batch 1** (`dd1cd37ce`) — 4 dead public exports: `core.paths.normalize_project_relative_str`,
+  `core.click_context.current_context_has_any`,
+  `core.classification.default_output_policy_table`,
+  `sql._secure_object_schema.database_datetime`.
+- **Batch 2** (`f74ac9bd6`) — 6 dead private helpers across sede/calc-sheets/manuals/
+  calculations/locales/registry, incl. the orphaned `registry._bindings._manual_input_selector`.
+- **Batch 3** (`6df6b5232`) — 4 dead CLI private helpers + 7 orphaned `OutputSchema`
+  payload classes (registry-corpus sub-models + overview agenda-entry +
+  repair-integrity namespace-row), a legacy shadow left when the registered
+  schemas switched to `list[dict[str, object]]` fields.
+
+A re-run of the vulture→AST→cross-reference pipeline after each batch confirmed
+that the apparent cascade siblings (`_get_navigation_timeout_ms`,
+`_revision_prefill_divergence`, …) carry real external references — subset-vulture
+noise, not dead — so none were wrongly removed.
+
+### Follow-on (confirmed-pending, higher risk)
+
+The 95 vulture-flagged unused *methods* and 30 *attributes* need the same
+confirmation pipeline plus extra care: a dead-looking method may be a Protocol /
+ABC member, an `@override` of a base, or polymorphically dispatched, so the
+confirmation must additionally exclude Protocol/ABC classes, decorated and dunder
+methods, and base-class overrides, and treat the collision-prone `.method` cross-
+reference conservatively.
+
+A strict confirmation pass (exclude Protocol/ABC classes, decorated/dunder
+methods, names defined in two-or-more classes = interface/override, and require
+zero repo-wide `.method` references including tests) reduced the 95 to **59
+strict-confirmed zero-reference methods**. These are NOT bulk-deletable, because a
+zero-reference method splits three ways that vulture cannot distinguish:
+
+1. **Dead-removed** — a method whose caller was deleted (safe to remove). Many of
+   the flagged repository/service CRUD methods (`delete_observation`,
+   `list_submissions`, `load_submission`, `list_portals`, `iter_histories`,
+   `get_by_identifier`, `exists_by_raw_key`, `import_`, `browse`, …) are likely
+   this class.
+2. **Intended-pending** — a computed surface not yet wired to a consumer. The
+   `domain/contribuyente/family.py` cluster (`descendientes_eligible_minimum`,
+   `descendientes_full_year_minimum`, `custodia_compartida_advisory`,
+   `custodia_compartida_prorrata_factor`, `deduccion_maternidad_advisory`,
+   `incremento_guarderia_advisory`) is real IRPF minimum/deduction tax logic that
+   may be awaiting a modelo binding; deleting it could remove intended regulated
+   behaviour. These MUST be judged against the registry/binding roadmap, not
+   bulk-deleted.
+3. **Wiring bug** — a method that *should* be called but isn't (e.g.
+   `_ensure_quarantine_table`, `_validate_storage_state_file`): the fix is to wire
+   it, not delete it; deleting would mask the defect.
+
+Therefore the method batch is deferred to a per-cluster pass that determines, for
+each, which of the three it is — exactly the dead-vs-intentional discipline the
+dedup campaign's substitutability pre-filter encodes. Bulk-deleting 59
+public/domain/private methods at once is explicitly rejected.
+
 ## Recommendations
 
 Delete each confirmed-dead symbol, grouped by domain, as explicit-path commits
