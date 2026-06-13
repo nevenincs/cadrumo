@@ -40,6 +40,7 @@ _MODELO_130_INPUTS = {
 }
 _MODELO_130_BINDINGS = {
     "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+    "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
     "modelo-130-resultados-negativos-anteriores": Decimal("0"),
 }
 _MODELO_111_INPUTS = {

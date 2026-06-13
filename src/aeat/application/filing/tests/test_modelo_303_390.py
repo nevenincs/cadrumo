@@ -37,7 +37,7 @@ def _profile() -> ModeloTestProfile:
             Period.from_year_and_code(2025, "1T"),
             {
                 "07": Decimal("10000.00"),
-                "29": Decimal("200.00"),
+                "iva.soportado.interiores": Decimal("200.00"),
                 "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
             },
         ),

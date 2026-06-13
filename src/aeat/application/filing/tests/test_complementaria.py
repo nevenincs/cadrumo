@@ -116,6 +116,7 @@ class TestBuildComplementaria:
                 "08": Decimal("2000"),
                 "10": Decimal("10"),
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+                "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
                 # Casilla 15 omitted: M130 carry-forward must flow
                 # through binding_values via
                 # `modelo-130-resultados-negativos-anteriores`, not as
@@ -136,6 +137,7 @@ class TestBuildComplementaria:
                 "05": Decimal("400"),
                 "06": Decimal("0"),
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+                "modelo-130-pagos-fraccionados-anteriores": Decimal("400"),
             },
             schema_provider=build_runtime_schema_provider(),
         )

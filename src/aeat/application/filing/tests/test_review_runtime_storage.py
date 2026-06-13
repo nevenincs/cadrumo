@@ -45,6 +45,7 @@ _MODELO_130_INPUTS = {
     "08": "2000.00",
     "10": "10.00",
     "irpf.previous_year_economic_activity_net_income": "13000.00",
+    "modelo-130-pagos-fraccionados-anteriores": "250.00",
     "modelo-130-resultados-negativos-anteriores": "0.00",
     "16": "0.00",
     "18": "0.00",
