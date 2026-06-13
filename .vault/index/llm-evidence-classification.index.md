@@ -31,7 +31,16 @@ related:
   - '[[2026-06-10-llm-evidence-classification-research]]'
   - '[[2026-06-11-llm-evidence-classification-audit]]'
   - '[[2026-06-12-llm-evidence-classification-audit]]'
+  - '[[2026-06-13-llm-evidence-classification-W01-P01-S01]]'
+  - '[[2026-06-13-llm-evidence-classification-W01-P01-S02]]'
+  - '[[2026-06-13-llm-evidence-classification-W01-P01-S03]]'
+  - '[[2026-06-13-llm-evidence-classification-W02-P02-S04]]'
+  - '[[2026-06-13-llm-evidence-classification-W02-P02-S05]]'
+  - '[[2026-06-13-llm-evidence-classification-W02-P02-S06]]'
+  - '[[2026-06-13-llm-evidence-classification-W03-P03-S07]]'
+  - '[[2026-06-13-llm-evidence-classification-W03-P03-S08]]'
   - '[[2026-06-13-llm-evidence-classification-audit]]'
+  - '[[2026-06-13-llm-evidence-classification-plan]]'
 ---
 
 # `llm-evidence-classification` feature index
@@ -73,10 +82,19 @@ Auto-generated index of all documents tagged with `#llm-evidence-classification`
 - `2026-06-10-llm-evidence-classification-W04-P09-S35` - Roll classify --llm with a real cloud CLI (agy/codex) and --read-evidence --evidence-acknowledged
 - `2026-06-10-llm-evidence-classification-W04-P09-S36` - Roll classify --llm --saturate against a real cloud CLI
 - `2026-06-10-llm-evidence-classification-W04-P09-S37` - Roll split --llm --read-evidence --apply against a real multi-line invoice with a real cloud CLI
+- `2026-06-13-llm-evidence-classification-W01-P01-S01` - Thread provider Optional with lazy text-classifier resolution in suggest/saturate/split classification
+- `2026-06-13-llm-evidence-classification-W01-P01-S02` - Route --read-evidence into the LLM path when --llm is absent
+- `2026-06-13-llm-evidence-classification-W01-P01-S03` - Test image evidence without --llm classifies via the vision model and text/no-evidence without --llm refuses instructively
+- `2026-06-13-llm-evidence-classification-W02-P02-S04` - Source licence-clean text-layer PDF, scanned/image PDF, and image invoices into a fixtures corpus
+- `2026-06-13-llm-evidence-classification-W02-P02-S05` - Write a provenance sidecar per corpus fixture declaring real_corpus or synthetic_generated and its source
+- `2026-06-13-llm-evidence-classification-W02-P02-S06` - Generate adversarial fixture variants (prompt-injection invoice, malformed/empty PDF, multi-page, foreign-language)
+- `2026-06-13-llm-evidence-classification-W03-P03-S07` - Adversarially test evidence parsing (text-layer, in-memory rasterise, vision dispatch) against the corpus
+- `2026-06-13-llm-evidence-classification-W03-P03-S08` - Adversarially test parse_response: prompt-injection JSON, hostile/oversized output, out-of-allow-list values are rejected
 
 ### plan
 
 - `2026-06-10-llm-evidence-classification-plan` - `llm-evidence-classification` `Evidence-aware LLM ledger classification (Stage-3)` plan
+- `2026-06-13-llm-evidence-classification-plan` - `llm-evidence-classification` `Evidence corpus and adversarial hardening` plan
 
 ### research
 
