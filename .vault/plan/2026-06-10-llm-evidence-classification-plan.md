@@ -73,10 +73,10 @@ Guard evidence-read category and IVA-category selection with the allow-list, add
 
 Extend the LocalAdapter with the Ollama images field and on-host PDF rasterisation so a local vision model reads scanned and image evidence in-memory, and fold the evidence content address into the LLM cache key.
 
-- [ ] `W02.P05.S17` - Extend the LocalAdapter with the Ollama images field and add on-host PDF rasterisation for a local vision model; `src/aeat/adapters/outbound/llm/_providers/local.py`.
-- [ ] `W02.P05.S18` - Fold Attachment.sha256 into the LLM cache build_key for multimodal evidence inputs; `src/aeat/adapters/outbound/llm/_cache.py`.
-- [ ] `W02.P05.S19` - Add a cache-key collision test proving two evidence docs under the same prompt yield distinct keys; `src/aeat/adapters/outbound/llm/tests/test_cache.py`.
-- [ ] `W02.P05.S20` - Add an on-host vision read test (PDF rasterise plus local in-memory images path); `src/aeat/adapters/outbound/llm/tests/test_local_vision.py`.
+- [x] `W02.P05.S17` - Extend the LocalAdapter with the Ollama images field and add on-host PDF rasterisation for a local vision model; `src/aeat/adapters/outbound/llm/_providers/local.py`.
+- [x] `W02.P05.S18` - Fold Attachment.sha256 into the LLM cache build_key for multimodal evidence inputs; `src/aeat/adapters/outbound/llm/_cache.py`.
+- [x] `W02.P05.S19` - Add a cache-key collision test proving two evidence docs under the same prompt yield distinct keys; `src/aeat/adapters/outbound/llm/tests/test_cache.py`.
+- [x] `W02.P05.S20` - Add an on-host vision read test (PDF rasterise plus local in-memory images path); `src/aeat/adapters/outbound/llm/tests/test_local_vision.py`.
 
 ## Wave `W03` - Splitting (Stage-3b) - evidence-driven N-way split suggestion and application
 
@@ -107,7 +107,7 @@ Update the classify how-to for the evidence-reading and split flow and pass the 
 
 - [x] `W03.P08.S30` - Update the classify how-to with the evidence-reading and evidence-driven split flow; `docs/how-to/classify-with-llm.md`.
 - [x] `W03.P08.S31` - Pass the documented-command-conformance gate for the new evidence and split flags; `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
-- [ ] `W03.P08.S32` - Pass the nitpicky Sphinx docs-build gate; `dev/docs/tests/test_docs_build.py`.
+- [x] `W03.P08.S32` - Pass the nitpicky Sphinx docs-build gate; `dev/docs/tests/test_docs_build.py`.
 
 ## Wave `W04` - Agent persona-driven manual pipeline rolling
 
@@ -117,10 +117,10 @@ A fresh agent persona manually rolls the complete evidence-aware LLM classificat
 
 An operator persona drives the shipped pipeline end to end against real authenticated cloud CLIs (antigravity/agy, codex) and real evidence, recording a testimonial and surfacing every gap as a tracked finding.
 
-- [ ] `W04.P09.S34` - Persona setup: create a fresh profile, import a real-shaped bank statement, and attach a real purchase-invoice PDF as secure-storage evidence; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W04.P09.S35` - Roll classify --llm with a real cloud CLI (agy/codex) and --read-evidence --evidence-acknowledged; `confirm the model reads the invoice and the decision stamps llm provenance; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W04.P09.S36` - Roll classify --llm --saturate against a real cloud CLI; `confirm the model selects the IVA category, the system derives rate/base/amount, and the printed-vs-derived advisory behaves; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W04.P09.S37` - Roll split --llm --read-evidence --apply against a real multi-line invoice with a real cloud CLI; `confirm children sum to parent, registry-derived numbers, evidence links, and provenance; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [x] `W04.P09.S34` - Persona setup: create a fresh profile, import a real-shaped bank statement, and attach a real purchase-invoice PDF as secure-storage evidence; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W04.P09.S35` - Roll classify --llm with a real cloud CLI (agy/codex) and --read-evidence --evidence-acknowledged; `confirm the model reads the invoice and the decision stamps llm provenance; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W04.P09.S36` - Roll classify --llm --saturate against a real cloud CLI; `confirm the model selects the IVA category, the system derives rate/base/amount, and the printed-vs-derived advisory behaves; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W04.P09.S37` - Roll split --llm --read-evidence --apply against a real multi-line invoice with a real cloud CLI; `confirm children sum to parent, registry-derived numbers, evidence links, and provenance; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
 - [x] `W04.P09.S38` - Capture the persona testimonial as a vault audit document and track every surfaced gap or confusion as a follow-up step with a verification gate; `.vault/audit/`.
 
 ## Description

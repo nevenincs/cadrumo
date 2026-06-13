@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#llm-evidence-classification'
-date: '2026-06-10'
+date: '2026-06-12'
 related:
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S01]]'
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S02]]'
@@ -11,10 +11,27 @@ related:
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S05]]'
   - '[[2026-06-10-llm-evidence-classification-W01-P02-S04]]'
   - '[[2026-06-10-llm-evidence-classification-W01-P02-S06]]'
+  - '[[2026-06-10-llm-evidence-classification-W02-P05-S17]]'
+  - '[[2026-06-10-llm-evidence-classification-W02-P05-S18]]'
+  - '[[2026-06-10-llm-evidence-classification-W02-P05-S19]]'
+  - '[[2026-06-10-llm-evidence-classification-W02-P05-S20]]'
+  - '[[2026-06-10-llm-evidence-classification-W03-P07-S25]]'
+  - '[[2026-06-10-llm-evidence-classification-W03-P07-S26]]'
+  - '[[2026-06-10-llm-evidence-classification-W03-P07-S27]]'
+  - '[[2026-06-10-llm-evidence-classification-W03-P07-S28]]'
+  - '[[2026-06-10-llm-evidence-classification-W03-P07-S29]]'
+  - '[[2026-06-10-llm-evidence-classification-W03-P08-S32]]'
+  - '[[2026-06-10-llm-evidence-classification-W04-P09-S34]]'
+  - '[[2026-06-10-llm-evidence-classification-W04-P09-S35]]'
+  - '[[2026-06-10-llm-evidence-classification-W04-P09-S36]]'
+  - '[[2026-06-10-llm-evidence-classification-W04-P09-S37]]'
   - '[[2026-06-10-llm-evidence-classification-adr]]'
   - '[[2026-06-10-llm-evidence-classification-audit]]'
   - '[[2026-06-10-llm-evidence-classification-plan]]'
   - '[[2026-06-10-llm-evidence-classification-research]]'
+  - '[[2026-06-11-llm-evidence-classification-audit]]'
+  - '[[2026-06-12-llm-evidence-classification-audit]]'
+  - '[[2026-06-13-llm-evidence-classification-audit]]'
 ---
 
 # `llm-evidence-classification` feature index
@@ -30,6 +47,9 @@ Auto-generated index of all documents tagged with `#llm-evidence-classification`
 ### audit
 
 - `2026-06-10-llm-evidence-classification-audit` - `llm-evidence-classification` audit: `Wave W01 code review`
+- `2026-06-11-llm-evidence-classification-audit` - `llm-evidence-classification` audit: `Persona roll round 1: evidence-aware LLM classification pipeline`
+- `2026-06-12-llm-evidence-classification-audit` - `llm-evidence-classification` audit: `Plan closeout: 9 remaining-item disposition`
+- `2026-06-13-llm-evidence-classification-audit` - `llm-evidence-classification` audit: `Persona roll round 2: full evidence-aware pipeline against real codex CLI`
 
 ### exec
 
@@ -39,6 +59,20 @@ Auto-generated index of all documents tagged with `#llm-evidence-classification`
 - `2026-06-10-llm-evidence-classification-W01-P01-S05` - Make PurchaseInvoiceEvidence reference an Attachment whose bytes live in the encrypted AttachmentStore, replacing source_path as the byte source with an in-store read
 - `2026-06-10-llm-evidence-classification-W01-P02-S04` - Add the cloud-upload consent-gate posture to central Settings (default-off, re-affirmed per invocation, gestor-barred)
 - `2026-06-10-llm-evidence-classification-W01-P02-S06` - Test the cloud-consent gate is default-off, re-affirmed per invocation, and refused for a gestor context
+- `2026-06-10-llm-evidence-classification-W03-P07-S25` - Add an application path that validates children-sum-to-parent and sign invariants and drives split_transaction from a reviewed suggestion
+- `2026-06-10-llm-evidence-classification-W03-P07-S26` - Derive each child's regulated iva_rate, taxable_base, and iva_amount from the registry, never from the model
+- `2026-06-10-llm-evidence-classification-W03-P07-S27` - Stamp evidence provenance on each child transaction produced by the split
+- `2026-06-10-llm-evidence-classification-W03-P07-S28` - Add a CLI surface for the evidence-driven split suggest and apply flow
+- `2026-06-10-llm-evidence-classification-W03-P07-S29` - Add split-invariant, registry-derived-number, and per-child provenance roundtrip tests
+- `2026-06-10-llm-evidence-classification-W02-P05-S17` - Extend the LocalAdapter with the Ollama images field and add on-host PDF rasterisation for a local vision model
+- `2026-06-10-llm-evidence-classification-W02-P05-S18` - Fold Attachment.sha256 into the LLM cache build_key for multimodal evidence inputs
+- `2026-06-10-llm-evidence-classification-W02-P05-S19` - Add a cache-key collision test proving two evidence docs under the same prompt yield distinct keys
+- `2026-06-10-llm-evidence-classification-W02-P05-S20` - Add an on-host vision read test (PDF rasterise plus local in-memory images path)
+- `2026-06-10-llm-evidence-classification-W03-P08-S32` - Pass the nitpicky Sphinx docs-build gate
+- `2026-06-10-llm-evidence-classification-W04-P09-S34` - Persona setup: create a fresh profile, import a real-shaped bank statement, and attach a real purchase-invoice PDF as secure-storage evidence
+- `2026-06-10-llm-evidence-classification-W04-P09-S35` - Roll classify --llm with a real cloud CLI (agy/codex) and --read-evidence --evidence-acknowledged
+- `2026-06-10-llm-evidence-classification-W04-P09-S36` - Roll classify --llm --saturate against a real cloud CLI
+- `2026-06-10-llm-evidence-classification-W04-P09-S37` - Roll split --llm --read-evidence --apply against a real multi-line invoice with a real cloud CLI
 
 ### plan
 
