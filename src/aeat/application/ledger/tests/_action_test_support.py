@@ -1,6 +1,5 @@
 """Shared support for manual ledger transaction application tests."""
 
-
 from __future__ import annotations
 
 import csv
@@ -219,7 +218,10 @@ def _parsed_import_transaction(
 
 
 def _persist_verified_revision_citing_transaction(
-    objects: SecureObjectRepository, *, transaction_id: str, bucket_id: str = "bucket-a",
+    objects: SecureObjectRepository,
+    *,
+    transaction_id: str,
+    bucket_id: str = "bucket-a",
 ) -> None:
     period = Period.from_year_and_code(2026, "1T")
     work_unit_id = derive_work_unit_id(

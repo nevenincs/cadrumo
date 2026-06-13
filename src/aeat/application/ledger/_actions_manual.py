@@ -666,7 +666,10 @@ def _command_from_patch(
     direction = _required_patched(patch, patch_fields, "direction", current.direction)
     description = _required_patched(patch, patch_fields, "description", raw.description)
     business_classification = _required_patched(
-        patch, patch_fields, "business_classification", current.business_classification,
+        patch,
+        patch_fields,
+        "business_classification",
+        current.business_classification,
     )
     business_pct = _optional_patched(patch, patch_fields, "business_pct", current.business_pct)
     category_id = _optional_patched(patch, patch_fields, "category_id", current.category_id)
@@ -693,7 +696,10 @@ def _command_from_patch(
     attachment_ids = _required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     iva_category = _optional_patched(patch, patch_fields, "iva_category", current.iva_category)
     counterparty_eu_member_state = _optional_patched(
-        patch, patch_fields, "counterparty_eu_member_state", current.counterparty_eu_member_state,
+        patch,
+        patch_fields,
+        "counterparty_eu_member_state",
+        current.counterparty_eu_member_state,
     )
     group_label = _optional_patched(patch, patch_fields, "group_label", current.group_label)
     return ManualLedgerTransactionCommand(

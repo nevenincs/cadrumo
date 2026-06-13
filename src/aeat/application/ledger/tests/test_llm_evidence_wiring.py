@@ -89,7 +89,10 @@ def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
 def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
     txn = _transaction(evidence_id=None)
     resolved = _resolve_evidence(
-        txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True,
+        txn,
+        bucket_id="bucket-001",
+        settings=profile.settings,
+        evidence_acknowledged=True,
     )
     assert resolved is None
 
@@ -110,7 +113,10 @@ def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfi
 
     # Permitted deployment + per-invocation acknowledgement -> on-host text + reference.
     resolved = _resolve_evidence(
-        txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=True,
+        txn,
+        bucket_id="bucket-001",
+        settings=consenting,
+        evidence_acknowledged=True,
     )
     assert resolved is not None
     assert resolved.text is not None

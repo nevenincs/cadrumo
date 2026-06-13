@@ -60,7 +60,10 @@ class TestEvidenceEventEmission:
     """Verify each mutating verb emits the correct BucketEventType and returns the event id."""
 
     def test_add_emits_purchase_invoice_evidence_attached(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
@@ -72,7 +75,10 @@ class TestEvidenceEventEmission:
         assert event.bucket_id == "bucket-001"
 
     def test_default_event_repository_uses_active_runtime_bucket(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
     ) -> None:
         svc = PurchaseInvoiceEvidenceService(settings=isolated_settings)
 
@@ -84,7 +90,10 @@ class TestEvidenceEventEmission:
         assert event.bucket_id == "bucket-001"
 
     def test_update_emits_purchase_invoice_evidence_replaced(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         add_result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
@@ -100,7 +109,10 @@ class TestEvidenceEventEmission:
         assert event.object_id == add_result.record.evidence_id
 
     def test_remove_emits_purchase_invoice_evidence_detached(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         add_result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
@@ -114,7 +126,10 @@ class TestEvidenceEventEmission:
         assert event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED
 
     def test_add_result_carries_the_record(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         result = svc.add(
@@ -128,7 +143,10 @@ class TestEvidenceEventEmission:
         assert result.record.media_kind == "pdf"
 
     def test_remove_result_carries_the_removed_record(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         add_result = svc.add(bucket_id="bucket-001", source_path=pdf_file)
@@ -142,7 +160,10 @@ class TestEvidenceEventEmission:
 
 class TestEvidenceSecureStorage:
     def test_purchase_invoice_evidence_persists_in_secure_object_store(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
 
@@ -157,7 +178,10 @@ class TestEvidenceSecureStorage:
 
 class TestEvidenceErrorPaths:
     def test_add_rejects_missing_file(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, tmp_path: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceInputError, match="does not resolve to a readable file") as exc_info:
@@ -168,7 +192,10 @@ class TestEvidenceErrorPaths:
         assert "path" in exc_info.value.suggestion.lower()
 
     def test_add_rejects_unsupported_extension(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, tmp_path: Path,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
     ) -> None:
         txt_file = tmp_path / "note.txt"
         txt_file.write_text("hello")
@@ -177,7 +204,9 @@ class TestEvidenceErrorPaths:
             svc.add(bucket_id="b1", source_path=txt_file)
 
     def test_update_raises_on_missing_id(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
@@ -188,7 +217,9 @@ class TestEvidenceErrorPaths:
             )
 
     def test_remove_raises_on_missing_id(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):

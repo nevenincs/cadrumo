@@ -60,7 +60,9 @@ def _make_collectible_svc(isolated_settings: Settings, objects: SecureObjectRepo
 
 class TestPayableInvoiceCrud:
     def test_add_creates_persisted_record_with_source_kind(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
@@ -79,7 +81,9 @@ class TestPayableInvoiceCrud:
         assert len(record.invoice_id) == 16
 
     def test_list_returns_only_payable_invoices(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         payable_svc = _make_payable_svc(isolated_settings, secure_objects)
         collectible_svc = _make_collectible_svc(isolated_settings, secure_objects)
@@ -103,7 +107,9 @@ class TestPayableInvoiceCrud:
         assert collectible_records[0].source_kind is BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE
 
     def test_view_returns_record_by_full_id(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
@@ -116,7 +122,9 @@ class TestPayableInvoiceCrud:
         assert viewed == result.record
 
     def test_view_resolves_unambiguous_prefix(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
@@ -130,14 +138,18 @@ class TestPayableInvoiceCrud:
         assert viewed == result.record
 
     def test_view_refuses_on_unknown_id(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         with pytest.raises(BusinessOperationInvoiceNotFoundError):
             svc.view(bucket_id="bucket-001", invoice_id="nonexistent")
 
     def test_update_overwrites_only_provided_fields(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
@@ -161,7 +173,9 @@ class TestPayableInvoiceCrud:
         assert updated.updated_at >= add_result.record.updated_at
 
     def test_remove_deletes_record_and_returns_it(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
@@ -184,7 +198,9 @@ class TestPayableInvoiceEventEmission:
         return BucketEventHistoryRepository(objects=objects)
 
     def test_add_emits_payable_invoice_created(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
@@ -201,7 +217,9 @@ class TestPayableInvoiceEventEmission:
         assert event.bucket_id == "bucket-001"
 
     def test_default_event_repository_uses_active_runtime_bucket(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = PayableInvoiceService(settings=isolated_settings)
 
@@ -218,7 +236,9 @@ class TestPayableInvoiceEventEmission:
         assert event.bucket_id == "bucket-001"
 
     def test_update_emits_payable_invoice_updated(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
@@ -238,7 +258,9 @@ class TestPayableInvoiceEventEmission:
         assert event.event_type is BucketEventType.PAYABLE_INVOICE_UPDATED
 
     def test_remove_emits_payable_invoice_removed(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
@@ -264,7 +286,9 @@ class TestCollectibleInvoiceEventEmission:
         return BucketEventHistoryRepository(objects=objects)
 
     def test_add_emits_collectible_invoice_created(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         result = svc.add(
@@ -280,7 +304,9 @@ class TestCollectibleInvoiceEventEmission:
         assert event.bucket_id == "bucket-001"
 
     def test_remove_emits_collectible_invoice_removed(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         add_result = svc.add(
@@ -301,7 +327,9 @@ class TestCollectibleInvoiceEventEmission:
 
 class TestPrefixCollisionRefusal:
     def test_ambiguous_prefix_refuses_with_full_id_set(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
 
@@ -336,7 +364,9 @@ class TestPrefixCollisionRefusal:
 
 class TestSourceKindIsolation:
     def test_records_are_source_kind_scoped(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         payable_svc = _make_payable_svc(isolated_settings, secure_objects)
         collectible_svc = _make_collectible_svc(isolated_settings, secure_objects)
@@ -355,7 +385,9 @@ class TestSourceKindIsolation:
         assert collectible_records[0].counterparty_nif == "B2"
 
     def test_non_active_bucket_fails_closed(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
 
@@ -380,7 +412,9 @@ class TestRecordImmutability:
 
 class TestRoundTripPersistence:
     def test_secure_object_round_trips_decimals(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         add_result = svc.add(
@@ -480,7 +514,9 @@ class TestIntracomFieldsPersistence:
     """INTRACOM-002 — intracom fields persist through encrypted roundtrip and default to None."""
 
     def test_intracom_fields_default_to_none(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         result = svc.add(
@@ -494,7 +530,9 @@ class TestIntracomFieldsPersistence:
         assert result.record.operation_type is None
 
     def test_intracom_fields_persist_and_roundtrip(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
         svc.add(
@@ -515,7 +553,9 @@ class TestIntracomFieldsPersistence:
         assert record.operation_type is IntracomOperationType.E
 
     def test_invoice_persistence_writes_secure_object_not_jsonl(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
 
@@ -533,7 +573,9 @@ class TestIntracomFieldsPersistence:
         assert any(row.namespace == "aeat.application.ledger.business_operation_invoices" for row in raw_records)
 
     def test_anti_tautology_intracom_fields_actually_differ(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         # Proves the roundtrip test would fail if eu_iva_id were silently dropped:
         # two records with different eu_iva_id must not be equal.
@@ -565,7 +607,9 @@ class TestUnifiedInvoiceAddRoundtrip:
     an anti-tautology proof."""
 
     def test_invoice_add_roundtrip_all_fields(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         added = svc.add(
@@ -601,7 +645,9 @@ class TestUnifiedInvoiceAddRoundtrip:
         assert reloaded == added
 
     def test_invoice_roundtrip_antitautology(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository,
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
     ) -> None:
         # Save a record carrying the EU triple, then rewrite the persisted
         # secure-object document with the SAME record minus its eu_iva_id and

@@ -155,7 +155,9 @@ def test_remove_advises_on_draft_revision_and_still_removes(
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     transaction_id = _create_row(
-        secure_objects, idempotency_key="remove-draft-cited", description="draft-cited income",
+        secure_objects,
+        idempotency_key="remove-draft-cited",
+        description="draft-cited income",
     )
     draft_revision_id = _seed_revision_citing_transaction(
         secure_objects,
@@ -197,7 +199,9 @@ def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     transaction_id = _create_row(
-        secure_objects, idempotency_key="remove-draft-dry", description="draft-cited income",
+        secure_objects,
+        idempotency_key="remove-draft-dry",
+        description="draft-cited income",
     )
     draft_revision_id = _seed_revision_citing_transaction(
         secure_objects,
@@ -228,10 +232,14 @@ def test_remove_uncited_row_yields_empty_draft_advisory(
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     cited_id = _create_row(
-        secure_objects, idempotency_key="remove-draft-other", description="cited income",
+        secure_objects,
+        idempotency_key="remove-draft-other",
+        description="cited income",
     )
     uncited_id = _create_row(
-        secure_objects, idempotency_key="remove-draft-free", description="uncited income",
+        secure_objects,
+        idempotency_key="remove-draft-free",
+        description="uncited income",
     )
     _seed_revision_citing_transaction(
         secure_objects,
@@ -262,7 +270,9 @@ def test_remove_discarded_draft_is_not_advised(
     # cites must NOT raise an advisory.
     transaction_repository, event_repository = _repositories(secure_objects)
     transaction_id = _create_row(
-        secure_objects, idempotency_key="remove-discarded", description="discarded-draft income",
+        secure_objects,
+        idempotency_key="remove-discarded",
+        description="discarded-draft income",
     )
     _seed_revision_citing_transaction(
         secure_objects,
@@ -295,7 +305,9 @@ def test_remove_finalized_revision_still_blocks_and_not_advised(
     # blocker is not laundered into the non-blocking advisory).
     transaction_repository, event_repository = _repositories(secure_objects)
     transaction_id = _create_row(
-        secure_objects, idempotency_key="remove-finalized", description="finalized-cited income",
+        secure_objects,
+        idempotency_key="remove-finalized",
+        description="finalized-cited income",
     )
     finalized_revision_id = _seed_revision_citing_transaction(
         secure_objects,
