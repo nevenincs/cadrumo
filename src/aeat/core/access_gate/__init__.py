@@ -22,6 +22,7 @@ through.
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -116,7 +117,9 @@ class AeatAccessGate:
         still passes through auth/profile/read-only guards, but it is
         not refused by the pytest-only environment variable.
         """
-        return bool(self._pytest_current_test_value(pytest_current_test))
+        if pytest_current_test is not None:
+            return bool(pytest_current_test)
+        return bool(self._pytest_current_test_value()) or "pytest" in sys.modules
 
     def require_live_read(self, *, pytest_current_test: str | None = None) -> None:
         """Refuse pytest-driven live AEAT reads unless the test opt-in is on.

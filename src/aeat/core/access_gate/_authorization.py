@@ -42,8 +42,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .. import NON_REGISTRY_MODELOS, Modelo
-from .. import read_toml
+from .. import NON_REGISTRY_MODELOS, Modelo, read_toml
 from ._errors import AuthorizationManifestError
 
 #: Minimum number of distinct renta (annual) years an enrolling test must

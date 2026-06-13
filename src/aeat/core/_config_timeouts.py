@@ -67,6 +67,15 @@ class AeatTimeoutSettings(BaseSettings):
             "surface is cancelled."
         ),
     )
+    aeat_live_filed_register_walk_timeout_ms: int = Field(
+        default=30_000,
+        gt=0,
+        description=(
+            "Timeout (ms) for one AEAT filed-declaration register query for a single modelo/year. "
+            "Bulk filed-history reads use this per-query budget so one slow modelo cannot block "
+            "all later modelos from returning typed failures."
+        ),
+    )
     aeat_live_iva_cancellation_drain_ms: int = Field(
         default=250,
         ge=0,

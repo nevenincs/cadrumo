@@ -286,6 +286,8 @@ def emit_json_success(
         sort_keys: Sort-keys flag forwarded to :func:`emit_json_document`.
         stream: Target text stream; defaults to :data:`sys.stdout`.
     """
+    from .output_rendering import reveal_cli_identifiers_opt_in
+
     resolved_notices = [] if notices is None else list(notices)
     envelope_payload = redact_structured_for_cli_output(
         {
@@ -295,6 +297,7 @@ def emit_json_success(
             "result": _jsonable_payload(result),
             "notices": [_jsonable_payload(notice) for notice in resolved_notices],
         },
+        reveal_identifiers=reveal_cli_identifiers_opt_in(),
     )
     emit_json_document(
         envelope_payload,

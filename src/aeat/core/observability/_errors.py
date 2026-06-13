@@ -23,14 +23,12 @@ class RunContextMissingError(AeatObservabilityError):
     """
 
 
-
 class RunTraceValidationError(AeatObservabilityError):
     """Raised when persisted ``trace.json`` or ``events.jsonl`` fails strict validation.
 
     Surfaces both shape-level rejections (bad ``run_id``, malformed
     JSON line) and pydantic strict-mode validation failures.
     """
-
 
 
 class RunTracePersistenceError(AeatObservabilityError):
