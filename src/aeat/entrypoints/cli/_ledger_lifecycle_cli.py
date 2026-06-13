@@ -171,10 +171,14 @@ def ledger_doclink(
         help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id."),
     ),
     source: DocumentLinkSource = typer.Option(
-        ..., "--source", help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url."),
+        ...,
+        "--source",
+        help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url."),
     ),
     reference: str = typer.Option(
-        ..., "--reference", help=tr("cli.ledger.doclink.reference_help", default="The document link reference."),
+        ...,
+        "--reference",
+        help=tr("cli.ledger.doclink.reference_help", default="The document link reference."),
     ),
     note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help", default="Optional note.")),
     actor: str | None = typer.Option(
@@ -201,16 +205,6 @@ def ledger_doclink(
     from ...adapters.persistence.storage.attachment import AttachmentStore
     from ...domain.attachments import AttachmentKind, add_attachment_bytes
 
-    # The advertised --source choice set (DocumentLinkSource) is exactly the
-    # three link sources this map covers, so the click Choice gate rejects any
-    # other value with an instructive accepted-set message before the handler
-    # runs; this mapping is therefore total over the option's domain.
-    kind_by_source = {
-        DocumentLinkSource.GMAIL: AttachmentKind.EMAIL_MESSAGE,
-        DocumentLinkSource.GOOGLE_DRIVE: AttachmentKind.DRIVE_DOCUMENT,
-        DocumentLinkSource.URL: AttachmentKind.OTHER,
-    }
-    kind = kind_by_source[source]
     attachment_source = source.to_attachment_source()
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -249,7 +243,7 @@ def ledger_doclink(
     attachment = add_attachment_bytes(
         store,
         data=data,
-        kind=kind,
+        kind=AttachmentKind.DRIVE_DOCUMENT,
         source=attachment_source,
         source_reference=reference,
         mime_type=_sniff_document_mime_type(reference, data),
@@ -700,9 +694,7 @@ def _ledger_split_llm(
             f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
             f"{tr('cli.ledger.labels.children')}\t{len(proposed_children)}",
         ]
-        lines.extend(
-            f"{child.description}\t{child.amount}\t{child.iva_category or ''}" for child in proposed_children
-        )
+        lines.extend(f"{child.description}\t{child.amount}\t{child.iva_category or ''}" for child in proposed_children)
         lines.append(tr("cli.ledger.classify.llm_review_hint"))
         _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
         return

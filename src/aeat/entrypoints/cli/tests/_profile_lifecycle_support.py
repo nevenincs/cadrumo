@@ -47,6 +47,11 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     material the session open fails before the torn state is observable.
     """
 
+    # Provision the master key for the staged bucket so CLI commands can
+    # open a session and reach the profile-record-missing detection point.
+    with profile_create_storage_span(bucket_id):
+        pass
+
     root = load_settings().aeat_local_storage_root
     paths = provision_bucket_directory(root, bucket_id)
     write_manifest(
@@ -70,15 +75,11 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
             status=BucketLifecycleStatus.ACTIVE,
         ),
     )
-    # Provision the master key for the staged bucket so CLI commands can
-    # open a session and reach the profile-record-missing detection point.
     # Clear the active-profile pointer after provisioning so the staged
     # profile is not reported as the active one; the torn-state tests
     # specifically test non-active torn profiles.
     from ....application.user_profile._orchestration import logout_active_profile
 
-    with profile_create_storage_span(bucket_id):
-        pass
     logout_active_profile()
 
 

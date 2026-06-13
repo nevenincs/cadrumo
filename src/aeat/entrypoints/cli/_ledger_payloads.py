@@ -1245,5 +1245,3 @@ class EvidenceListResult(OutputSchema):
     bucket_id: str
     count: int
     rows: list[EvidenceRecordPayload]
-
-

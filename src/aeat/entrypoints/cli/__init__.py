@@ -205,7 +205,10 @@ def _root(
             # session-closed-but-profile-exists path.
             typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
             _emit_envelope(
-                ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing),
+                ctx,
+                command="root.status",
+                result=typed_landing,
+                lines=render_cli_root_landing_lines(landing),
             )
             raise typer.Exit()
         # An active profile resolves AND a session is already open:
@@ -458,6 +461,8 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
     for token in tokens:
         if not hasattr(command, "list_commands"):
             return False
+        # CAST-RATIONALE-CLICK-GROUP: ``list_commands`` is the structural group
+        # marker used above before calling the click group API.
         group = cast("click.Group", command)
         subcommand = group.get_command(ctx, token)
         if subcommand is None:

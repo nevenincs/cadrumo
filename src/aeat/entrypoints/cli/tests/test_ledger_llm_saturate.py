@@ -158,7 +158,8 @@ def test_saturate_preview_derives_substrate_and_persists_nothing(tmp_path: Path,
 
 
 def test_saturate_apply_persists_derived_substrate_with_llm_provenance(
-    tmp_path: Path, _saturating_claude: None,
+    tmp_path: Path,
+    _saturating_claude: None,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 

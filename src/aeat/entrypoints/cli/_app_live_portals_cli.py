@@ -61,14 +61,16 @@ def _portal_row(metadata) -> _PortalRow:
 
 
 @portals_app.command(
-    "list", help=tr("cli.app.live.portals.list_help", default="List portal-registry entries (optionally filtered)."),
+    "list",
+    help=tr("cli.app.live.portals.list_help", default="List portal-registry entries (optionally filtered)."),
 )
 def portals_list(
     ctx: typer.Context,
     category: Annotated[
         PortalCategory | None,
         typer.Option(
-            "--category", help=tr("cli.app.live.portals.category_help", default="Filter to one PortalCategory value."),
+            "--category",
+            help=tr("cli.app.live.portals.category_help", default="Filter to one PortalCategory value."),
         ),
     ] = None,
     modelo: Annotated[
@@ -76,7 +78,8 @@ def portals_list(
         typer.Option(
             "--modelo",
             help=tr(
-                "cli.app.live.portals.modelo_help", default="Filter to portals bound to one modelo code (e.g. 303).",
+                "cli.app.live.portals.modelo_help",
+                default="Filter to portals bound to one modelo code (e.g. 303).",
             ),
         ),
     ] = None,
@@ -110,12 +113,14 @@ def portals_list(
 
 
 @portals_app.command(
-    "view", help=tr("cli.app.live.portals.view_help", default="View one portal-registry entry by Portal id."),
+    "view",
+    help=tr("cli.app.live.portals.view_help", default="View one portal-registry entry by Portal id."),
 )
 def portals_show(
     ctx: typer.Context,
     portal_id: Annotated[
-        str, typer.Argument(help=tr("cli.app.live.portals.portal_id_help", default="Portal enum value.")),
+        str,
+        typer.Argument(help=tr("cli.app.live.portals.portal_id_help", default="Portal enum value.")),
     ],
 ) -> None:
     """Show one portal-registry entry by its ``Portal`` enum value id."""

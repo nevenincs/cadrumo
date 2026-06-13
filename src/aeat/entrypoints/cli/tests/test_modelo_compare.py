@@ -43,6 +43,7 @@ from ....domain.calculations.registry import CasillaObservation, calculate_regis
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ._m130_source_support import seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -53,11 +54,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "modelo-compare-test-profile"
 
-# Two materially different ingresos for 2025 vs 2026.
+# Two materially different source-owned ingresos for 2025 vs 2026.
 # Oracle: rendimiento neto = ingresos - gastos; pago fraccionado = 20%.
 # Authority: AEAT DR 130 Instrucciones, Casilla 03 and 04.
-_INGRESOS_2025 = "12000.00"  # casilla 01 for year 2025
-_INGRESOS_2026 = "20000.00"  # casilla 01 for year 2026
+_INGRESOS_2025 = Decimal("12000.00")
+_INGRESOS_2026 = Decimal("20000.00")
 
 # Same gastos in both years — the anti-tautology casilla.
 # Delta for casilla 02 must be exactly zero.
@@ -141,18 +142,22 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
     return _payload(result.output)["work_unit_id"]
 
 
-def _calculate_m130(work_unit_id: str, ingresos: str, gastos: str) -> dict[str, str]:
+def _calculate_m130(work_unit_id: str, *, filing_year: int, ingresos: Decimal, gastos: str) -> dict[str, str]:
     """Calculate M130 and return casilla_values dict.
 
     Oracle inputs (AEAT DR 130 Instrucciones):
-      casilla 01 = ingresos, 02 = gastos, 05 = 0, 06 = 0.
+      casilla 01 = source-owned ingresos, 02 = gastos, 05 = 0, 06 = 0.
       prev_year_income > 12,000 so minoración (13) = 0.
     """
+    seed_m130_income_transaction(
+        amount=ingresos,
+        filing_year=filing_year,
+        source_key=f"compare-{filing_year}",
+    )
     result = invoke_cached_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", f"01={ingresos}",
             "--casilla", f"02={gastos}",
             "--casilla", "05=0.00",
             "--casilla", "06=0.00",
@@ -199,6 +204,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
     )
     values_2025 = _calculate_m130(
         wuid_2025,
+        filing_year=2025,
         ingresos=_INGRESOS_2025,
         gastos=_GASTOS_BOTH,
     )
@@ -212,6 +218,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
     )
     values_2026 = _calculate_m130(
         wuid_2026,
+        filing_year=2026,
         ingresos=_INGRESOS_2026,
         gastos=_GASTOS_BOTH,
     )

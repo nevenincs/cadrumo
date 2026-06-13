@@ -57,6 +57,7 @@ from ....domain.calculations.registry import calculate_registry_snapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ._m130_source_support import seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -126,7 +127,8 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
 
 _PROFILE_ID = "m130-projection-test-profile"
 
-# Per-quarter M130 oracle inputs (AEAT DR 130 Instrucciones, Casilla 07)
+# Per-quarter M130 oracle inputs (AEAT DR 130 Instrucciones, Casilla 07).
+# One Q1 income row remains in the cumulative source window for each quarter.
 _Q_INGRESOS = Decimal("12000.00")
 _Q_GASTOS = Decimal("4000.00")
 # prev_year > 12.000 → minoración = 0
@@ -299,6 +301,11 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     """
 
     _seed_autónomo_profile(runtime_profile)
+    seed_m130_income_transaction(
+        amount=_Q_INGRESOS,
+        filing_year=_FILING_YEAR,
+        source_key="projection",
+    )
 
     # -- Create and calculate 4 M130 quarterly work units -------------------
     quarters = ["1T", "2T", "3T", "4T"]
@@ -313,7 +320,6 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             [
                 "--format", "json",
                 "app", "modelo", "work", "calculate", work_unit_id,
-                "--casilla", f"01={_Q_INGRESOS}",
                 "--casilla", f"02={_Q_GASTOS}",
                 "--casilla", "05=0.00",
                 "--casilla", "06=0.00",

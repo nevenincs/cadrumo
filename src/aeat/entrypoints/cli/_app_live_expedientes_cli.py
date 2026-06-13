@@ -135,12 +135,7 @@ def expedientes_pull(
     bucket_id = _bucket_id()
     _run_auth_preflight()
     selected_modelos = tuple(modelos or ())
-    single_mode = (
-        len(selected_modelos) == 1
-        and year is not None
-        and year_from is None
-        and year_to is None
-    )
+    single_mode = len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None
     if single_mode:
         persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=selected_modelos[0], year=year))
         result = ExpedientesCaptureResult(
@@ -185,7 +180,7 @@ def expedientes_pull(
             "failure",
             "\t".join((failure.modelo, str(failure.year), failure.error_type, failure.message)),
         )
-            for failure in report.failures
+        for failure in report.failures
     )
     result = ExpedientesCaptureResult(
         mode="bulk",

@@ -55,7 +55,6 @@ from typer.main import get_command
 
 from ....application.operator_surface import HelpSurface, build_help_document
 from ....core.errors._registry import ERROR_REGISTRY
-
 from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

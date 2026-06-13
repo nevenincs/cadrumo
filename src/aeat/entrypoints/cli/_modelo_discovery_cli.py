@@ -238,7 +238,8 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             typer.Option(
                 "--explain",
                 help=tr(
-                    "cli.app.modelo.casillas.explain_help", default="Include localized help text in the text output.",
+                    "cli.app.modelo.casillas.explain_help",
+                    default="Include localized help text in the text output.",
                 ),
             ),
         ] = False,

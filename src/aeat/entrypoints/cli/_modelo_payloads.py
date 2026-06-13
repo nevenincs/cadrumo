@@ -33,6 +33,7 @@ from ._schemas import OutputSchema, register_schema
 if TYPE_CHECKING:
     from ...application.modelo import ModeloExportResult as _AppModeloExportResult
 
+
 class WorkUnitPayload(OutputSchema):
     """Work unit fields shared across create / status / rename / discard."""
 

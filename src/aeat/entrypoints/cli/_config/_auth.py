@@ -4,13 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import cast
 
-import click
 import typer
-import typer._click.types as typer_click_types
 
-from ....application.auth import known_auth_provider_ids as _known_auth_provider_ids
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from .._common import _emit_envelope
@@ -18,14 +14,6 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
-
-# CAST-RATIONALE-AUTH-PROVIDER-CHOICE: typer vendors its own copy of click, so
-# click.Choice is a click.types.ParamType while typer.Option's click_type expects
-# typer._click.types.ParamType. They are the same object at runtime (the vendored
-# click), so the cast only bridges the static type duality — no Any escape.
-_AUTH_PROVIDER_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType, click.Choice(_known_auth_provider_ids()),
-)
 
 
 @auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
@@ -64,7 +52,6 @@ def auth_configure(
     provider: str = typer.Option(
         ...,
         "--provider",
-        click_type=_AUTH_PROVIDER_CHOICE,
         help=tr("cli.config.auth.provider_help"),
     ),
     file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
@@ -131,7 +118,7 @@ def auth_configure(
 @auth_app.command("status", help=tr("cli.config.auth.status_help"))
 def auth_status(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider", click_type=_AUTH_PROVIDER_CHOICE),
+    provider: str | None = typer.Option(None, "--provider"),
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -164,7 +151,7 @@ def auth_status(
 @auth_app.command("test", help=tr("cli.config.auth.test_help"))
 def auth_test(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider", click_type=_AUTH_PROVIDER_CHOICE),
+    provider: str | None = typer.Option(None, "--provider"),
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -202,7 +189,7 @@ def auth_test(
 @auth_app.command("login", help=tr("cli.config.auth.login_help"))
 def auth_login(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider", click_type=_AUTH_PROVIDER_CHOICE),
+    provider: str | None = typer.Option(None, "--provider"),
     fresh: bool = typer.Option(False, "--fresh", help=tr("cli.config.auth.login_fresh_help")),
     reset_lock: bool = typer.Option(False, "--reset-lock", help=tr("cli.config.auth.login_reset_lock_help")),
     output_language: OutputLanguage | None = typer.Option(
@@ -249,7 +236,7 @@ def auth_login(
 @auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
 def auth_clear(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider", click_type=_AUTH_PROVIDER_CHOICE),
+    provider: str | None = typer.Option(None, "--provider"),
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
     sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
     locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
