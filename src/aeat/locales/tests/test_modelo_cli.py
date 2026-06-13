@@ -242,7 +242,4 @@ def _revision_locale_path(registry_root: Path) -> Path:
 
 def _eager_locale_hashes() -> dict[str, str]:
     locales_dir = Path(__file__).resolve().parents[1]
-    return {
-        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in sorted(locales_dir.glob("*.yml"))
-    }
+    return {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(locales_dir.glob("*.yml"))}

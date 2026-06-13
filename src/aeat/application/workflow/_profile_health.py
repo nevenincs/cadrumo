@@ -16,8 +16,8 @@ from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus, BucketManifest
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, write_manifest
 from ...adapters.persistence.storage.errors import StorageValidationError
-from ...core import pointer_path, read_pointer
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import pointer_path, read_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING

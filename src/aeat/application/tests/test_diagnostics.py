@@ -815,7 +815,8 @@ def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> No
 
 
 def _assert_validation_error_caused_by_diagnostic_model_error(
-    exc_info: pytest.ExceptionInfo[Exception], match: str,
+    exc_info: pytest.ExceptionInfo[Exception],
+    match: str,
 ) -> None:
     """Assert a pydantic ValidationError wraps a DiagnosticModelError with the given message."""
 

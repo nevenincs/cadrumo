@@ -170,6 +170,5 @@ def test_no_bare_invoice_source_kind_literals() -> None:
     hits = _scan(files, _RE_INVOICE_SOURCE_KIND)
     assert not hits, (
         f"Found {len(hits)} bare 'invoice' literal(s) in source-kind context; "
-        "use payable_invoice, collectible_invoice, or purchase_invoice_evidence:\n"
-        + "\n".join(f"  {h}" for h in hits)
+        "use payable_invoice, collectible_invoice, or purchase_invoice_evidence:\n" + "\n".join(f"  {h}" for h in hits)
     )

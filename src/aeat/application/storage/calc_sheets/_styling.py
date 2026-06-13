@@ -113,7 +113,12 @@ def _data_tab_ranges(
     """
     ranges: list[SheetStyledRange] = [
         SheetStyledRange(
-            tab=tab, start_row=1, end_row=1, start_column=_COL_SECTION, end_column=_COL_VALUE, role=StyleRole.HEADER,
+            tab=tab,
+            start_row=1,
+            end_row=1,
+            start_column=_COL_SECTION,
+            end_column=_COL_VALUE,
+            role=StyleRole.HEADER,
         ),
         SheetStyledRange(
             tab=tab,
@@ -216,7 +221,12 @@ def compute_styling(
     # Provenance header band + wrapped concepto / legal / source columns.
     styled.append(
         SheetStyledRange(
-            tab=TabName.PROVENANCE, start_row=1, end_row=1, start_column=1, end_column=8, role=StyleRole.HEADER,
+            tab=TabName.PROVENANCE,
+            start_row=1,
+            end_row=1,
+            start_column=1,
+            end_column=8,
+            role=StyleRole.HEADER,
         ),
     )
     for wrap_col in (3, 6, 7):
@@ -235,7 +245,12 @@ def compute_styling(
     # ref columns.
     styled.append(
         SheetStyledRange(
-            tab=TabName.EVIDENCIA, start_row=1, end_row=1, start_column=1, end_column=1, role=StyleRole.TITLE,
+            tab=TabName.EVIDENCIA,
+            start_row=1,
+            end_row=1,
+            start_column=1,
+            end_column=1,
+            role=StyleRole.TITLE,
         ),
     )
     styled.append(

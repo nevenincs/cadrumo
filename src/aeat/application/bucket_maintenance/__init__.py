@@ -12,10 +12,10 @@ delegates to the existing top-level re-exports (``rename_profile``,
 ``delete_profile_with_lifecycle_span``, ``remove_profile_bucket_directory``,
 ``serialize_profile_bundle``, ``deserialize_profile_bundle``).
 
-This package currently exposes ``rename``; the remaining four
-composition verbs (``delete``, ``export``, ``import``, ``browse``) land
-per the ADR's per-verb Step decomposition. The ``search`` verb is
-deferred behind its own ADR.
+This package exposes the lifecycle composition verbs ``browse``, ``delete``,
+``export``, ``import``, and ``rename``. The ``search`` verb is deferred behind
+its own ADR because it must route through domain repositories instead of
+decrypting secure-object storage directly.
 """
 
 from __future__ import annotations
