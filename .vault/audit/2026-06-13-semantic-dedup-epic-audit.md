@@ -141,6 +141,26 @@ overwhelmingly intentional divergence or trivial-idiom sharing; genuinely clean,
 substitutable competing implementations (F3) are now rare. Future passes should
 weight the substitutability pre-filter heavily and expect a high ruled-out rate.
 
+### F5 (MEDIUM) — `storage_validation_error` factory copy-pasted across seven storage modules (Pass 3, landed)
+
+Surfaced by a whole-tree structural sweep (production-only function names defined
+in three or more files) rather than semantic concept search. The
+`_storage_validation_error(message)` factory and its
+`_STORAGE_VALIDATION_MESSAGE_KEY` constant
+(`"errors.integrity.integrity_storage_validation"`) were **byte-identical** in
+seven persistence-storage submodules: `crypto/_encrypted_columns.py`,
+`envelope/_envelope.py`, `runtime.py`, `secret_store/_secret_store.py`, and the
+three `master_key/` helpers (`_bucket_session.py`, `_idle_timeout.py`,
+`_recovery.py`). Every copy constructs the same `StorageValidationError` with the
+same translated-message key — a clean, fully-substitutable duplication (the F3
+shape). Resolved: one canonical `storage_validation_error` promoted to
+`storage/errors.py` (beside the error class), imported under each module's
+existing private name; the seven duplicate defs and seven duplicate constants
+removed. Behaviour-preserving — 842 storage tests pass, ruff and collect-only
+clean. The structural sweep is recorded as the higher-yield discovery instrument
+for this class (identical small helpers across modules), complementing the
+semantic RAG passes.
+
 ### Ruled out under the substitutability pre-filter (no action)
 
 - **Decimal cent-rounding** — `domain/calculations/registry/_formula_runtime.py:_apply_rounding`
@@ -187,12 +207,16 @@ weight the substitutability pre-filter heavily and expect a high ruled-out rate.
 ## Verification status (Passes 1–3)
 
 Three discovery passes have swept ~40 functional concepts via `vaultspec-rag`,
-each candidate confirmed at source under the substitutability pre-filter. Exactly
-one cluster (F3) was a cleanly-actionable, behaviour-preserving consolidation and
-is landed. Every other candidate is intentional divergence, a trivial shared
-idiom wrapped in non-shared logic, an architectural boundary shim, or a
+plus one whole-tree structural symbol sweep, each candidate confirmed at source
+under the substitutability pre-filter. Two clusters were cleanly-actionable,
+behaviour-preserving consolidations and are landed: F3 (repository bucket-id
+resolvers) and F5 (the `storage_validation_error` factory, found by the
+structural sweep). Every other candidate is intentional divergence, a trivial
+shared idiom wrapped in non-shared logic, an architectural boundary shim, or a
 canonical-plus-consumers shape — none safely removable without changing
-behaviour or breaching layer contracts. This is the expected post-hardening
+behaviour or breaching layer contracts. The structural symbol sweep proved the
+higher-yield instrument for the identical-small-helper class and should lead each
+future pass, with semantic RAG covering the cross-vocabulary concept space. This is the expected post-hardening
 profile (the prior `semantic-cluster-hardening` and `code-duplication-sweep`
 campaigns removed the bulk of true duplication). The codebase is, on the swept
 surface, verifiably lean: the remaining lexical/semantic clustering is
