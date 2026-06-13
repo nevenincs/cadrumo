@@ -109,7 +109,6 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         filed_at=current_filed_at,
         filed_by="aeat.cli.modelo.amend",
         notes="rectifying amendment - missing input IVA on invoice INV-2024-0145",
-        aeat_accepted=True,
         status=ModeloRecordStatus.VIGENTE,
         amends_filing_record_id=superseded_id,
     )
@@ -183,7 +182,6 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
                 member_nif="A00000000",
                 filed_at=filed_at,
                 filed_by="aeat.cli.modelo.file",
-                aeat_accepted=True,
             ),
             member_b_id: ModeloRecord(
                 filing_record_id=member_b_id,
@@ -196,7 +194,6 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
                 member_nif="B00000001",
                 filed_at=filed_at + timedelta(minutes=5),
                 filed_by="aeat.cli.modelo.file",
-                aeat_accepted=True,
             ),
         },
     )
@@ -229,6 +226,116 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
             member_nif="B00000001",
         )
     ) == (member_b_id,)
+
+
+def test_filing_record_rejects_aeat_acceptance_without_external_evidence() -> None:
+    """AEAT acceptance must be backed by an external evidence reference."""
+    filed_at = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
+    filing_id = derive_filing_record_id(
+        work_unit_id=_hex("9"),
+        calculation_revision_id=_hex("a"),
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+
+    with pytest.raises(ValidationError, match="AEAT-accepted filing record must carry external evidence"):
+        ModeloRecord(
+            filing_record_id=filing_id,
+            work_unit_id=_hex("9"),
+            calculation_revision_id=_hex("a"),
+            bucket_id="bucket-A",
+            modelo=ModeloCode("303"),
+            filing_year=2024,
+            period=_P_2024_2T,
+            filed_at=filed_at,
+            filed_by="aeat.cli.modelo.file",
+            aeat_accepted=True,
+        )
+
+
+def test_filing_record_model_copy_revalidates_aeat_acceptance_invariant() -> None:
+    """Domain copies must not bypass the external-evidence acceptance invariant."""
+    filed_at = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
+    filing_id = derive_filing_record_id(
+        work_unit_id=_hex("b"),
+        calculation_revision_id=_hex("c"),
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+    record = ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=_hex("b"),
+        calculation_revision_id=_hex("c"),
+        bucket_id="bucket-A",
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+
+    with pytest.raises(ValidationError, match="AEAT-accepted filing record must carry external evidence"):
+        record.model_copy(update={"aeat_accepted": True})
+
+
+def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> None:
+    """External evidence cannot exist as a half-stamped filing record."""
+    filed_at = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
+    filing_id = derive_filing_record_id(
+        work_unit_id=_hex("d"),
+        calculation_revision_id=_hex("e"),
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+    evidence = ExternalEvidence(
+        kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        reference_id="just-303-2024-2T",
+        imported_at=filed_at,
+    )
+
+    with pytest.raises(ValidationError, match="external filing evidence must carry AEAT acceptance"):
+        ModeloRecord(
+            filing_record_id=filing_id,
+            work_unit_id=_hex("d"),
+            calculation_revision_id=_hex("e"),
+            bucket_id="bucket-A",
+            modelo=ModeloCode("303"),
+            filing_year=2024,
+            period=_P_2024_2T,
+            filed_at=filed_at,
+            filed_by="aeat.cli.modelo.file",
+            external_evidence=evidence,
+        )
+
+
+def test_filing_record_model_copy_revalidates_external_evidence_acceptance_invariant() -> None:
+    """Copy updates cannot attach external evidence without the acceptance bit."""
+    filed_at = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
+    filing_id = derive_filing_record_id(
+        work_unit_id=_hex("f"),
+        calculation_revision_id=_hex("0"),
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+    record = ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=_hex("f"),
+        calculation_revision_id=_hex("0"),
+        bucket_id="bucket-A",
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+    )
+    evidence = ExternalEvidence(
+        kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        reference_id="just-303-2024-2T",
+        imported_at=filed_at,
+    )
+
+    with pytest.raises(ValidationError, match="external filing evidence must carry AEAT acceptance"):
+        record.model_copy(update={"external_evidence": evidence})
 
 
 def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> None:
@@ -264,7 +371,6 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     member_nif="A00000000",
                     filed_at=filed_at,
                     filed_by="aeat.cli.modelo.file",
-                    aeat_accepted=True,
                 ),
                 second_id: ModeloRecord(
                     filing_record_id=second_id,
@@ -277,7 +383,6 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     member_nif="A00000000",
                     filed_at=filed_at + timedelta(minutes=5),
                     filed_by="aeat.cli.modelo.file",
-                    aeat_accepted=True,
                 ),
             },
         )
@@ -431,7 +536,6 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
         period=_P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
-        aeat_accepted=True,
         source_transaction_ids=_source_transaction_ids(),
     )
     original = ModeloRecordCatalogue(records={filing_id: record})

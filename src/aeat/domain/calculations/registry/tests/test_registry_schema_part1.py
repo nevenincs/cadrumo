@@ -89,7 +89,9 @@ def test_formula_expression_rejects_mixed_dispatch_table_shapes() -> None:
 
 
 @pytest.mark.parametrize(("attr_path", "expected"), _SNAPSHOT_HEADER_EXPECTATIONS)
-def test_committed_snapshot_resolves_header_field(modelo_130_snapshot: RegistrySnapshot, attr_path: str, expected: object) -> None:
+def test_committed_snapshot_resolves_header_field(
+    modelo_130_snapshot: RegistrySnapshot, attr_path: str, expected: object
+) -> None:
     """Snapshot ``(modelo, revision, filing_year, period)`` tuple matches the committed registry coordinates."""
     actual: object = modelo_130_snapshot
     for segment in attr_path.split("."):
@@ -121,7 +123,9 @@ def test_committed_snapshot_static_cross_reference_carries_layout_tier(modelo_13
     assert modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
 
 
-def test_committed_snapshot_filed_declarations_read_is_authenticated_read_surface(modelo_130_snapshot: RegistrySnapshot) -> None:
+def test_committed_snapshot_filed_declarations_read_is_authenticated_read_surface(
+    modelo_130_snapshot: RegistrySnapshot,
+) -> None:
     """The filed-declarations cross-reference must declare an authenticated read surface."""
     filed_read = modelo_130_snapshot.live_cross_references["modelo-130-filed-declarations-read"]
     assert filed_read.surface == "authenticated_read_surface"

@@ -49,7 +49,13 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="operator",
+                overrides={"identity.tax_id": "00000000T"},
+            ),
+        )
         yield
 
 

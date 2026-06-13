@@ -47,8 +47,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
 
     assert resolved == frozenset()
     assert any(
-        "binding-readiness: registry snapshot unavailable" in record.message
-        and "period=1T" in record.message
+        "binding-readiness: registry snapshot unavailable" in record.message and "period=1T" in record.message
         for record in caplog.records
     )
 

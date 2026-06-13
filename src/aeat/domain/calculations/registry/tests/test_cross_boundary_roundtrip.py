@@ -143,6 +143,27 @@ def test_registry_filing_observation_preserves_observation_tuple() -> None:
     )
 
 
+def test_registry_filing_observation_refuses_display_period_drift() -> None:
+    with pytest.raises(ValueError, match="filing_period code must match period"):
+        RegistryModeloObservation(
+            modelo="303",
+            filing_year=2025,
+            filing_period=Period.from_year_and_code(2025, "1T"),
+            period="2025 1T",
+            observations=(),
+        )
+
+
+def test_registry_filing_observation_refuses_bare_display_period_drift() -> None:
+    with pytest.raises(ValueError, match="period must be a bare registry period token"):
+        RegistryModeloObservation(
+            modelo="303",
+            filing_year=2025,
+            period="2025 1T",
+            observations=(),
+        )
+
+
 # ---------------------------------------------------------------------------
 # Schema-level structural assertions
 #

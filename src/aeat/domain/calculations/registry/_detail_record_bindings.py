@@ -514,7 +514,8 @@ def resolve_refund_binding_row_values(
             "refund_amount": obs.refund_amount,
         }
         for obs in sorted(
-            available, key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id),
+            available,
+            key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id),
         )
     )
     resolved: dict[tuple[str, int], Decimal | str] = {}

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.inbound.justificante import parse_justificante
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.modelos._codes import ModeloCode
@@ -26,6 +27,7 @@ from .._reconcile import (
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
     WorkUnitNotFoundError,
+    _reconcile_parsed_justificante,
     modelo_reconcile,
 )
 
@@ -41,7 +43,13 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="operator",
+                overrides={"identity.tax_id": "00000000T"},
+            ),
+        )
         yield
 
 
@@ -112,6 +120,43 @@ def test_modelo_reconcile_mismatches_when_modelo_differs() -> None:
     assert modelo_diffs
     assert modelo_diffs[0].work_unit_value == "303"
     assert modelo_diffs[0].evidence_value == "130"
+
+
+def test_modelo_reconcile_mismatches_when_period_differs() -> None:
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
+
+    report = modelo_reconcile(
+        ModeloReconciliationCommand(
+            work_unit_id=work_unit_id,
+            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_path=MODELO_130_FIXTURE,
+        ),
+    )
+
+    assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
+    period_diffs = [diff for diff in report.diffs if diff.field_name == "period"]
+    assert period_diffs
+    assert period_diffs[0].work_unit_value == "2T"
+    assert period_diffs[0].evidence_value == "1T"
+
+
+def test_modelo_reconcile_mismatches_when_profile_tax_id_differs() -> None:
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    parsed = parse_justificante(MODELO_130_FIXTURE)
+
+    report = _reconcile_parsed_justificante(
+        work_unit_id=work_unit_id,
+        source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+        source_ref=str(MODELO_130_FIXTURE),
+        actor="operator",
+        justificante=parsed.model_copy(update={"tax_id": "12345678Z"}),
+    )
+
+    assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
+    tax_id_diffs = [diff for diff in report.diffs if diff.field_name == "tax_id"]
+    assert tax_id_diffs
+    assert tax_id_diffs[0].work_unit_value == "00000000T"
+    assert tax_id_diffs[0].evidence_value == "12345678Z"
 
 
 def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:

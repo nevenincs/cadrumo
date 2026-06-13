@@ -186,7 +186,8 @@ class VerificationReportCatalogueRepository:
 
 
 def upsert_verification_report(
-    catalogue: VerificationReportCatalogue, report: VerificationReport,
+    catalogue: VerificationReportCatalogue,
+    report: VerificationReport,
 ) -> VerificationReportCatalogue:
     """Return a new catalogue with ``report`` inserted or replaced.
 

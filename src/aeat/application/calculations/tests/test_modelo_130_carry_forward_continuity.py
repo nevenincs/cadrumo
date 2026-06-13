@@ -250,6 +250,15 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     assert Decimal(q2.casilla_values["15"]) == _EXPECTED_Q1_SALDO
 
 
+# Shared parity-fixture inputs (named so the expected casilla-05 identity is
+# derived from the same constants the fixture seeds, never a hand-summed literal).
+_PRIOR_07_1T = Decimal("500")
+_PRIOR_16_1T = Decimal("60")
+_PRIOR_07_2T = Decimal("300")
+_PRIOR_16_2T = Decimal("40")
+_PRIOR_2T_SALDO = Decimal("150")
+
+
 def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(repos: _Repos) -> None:
     """Parity: the casilla-15 op=copy carry and the casilla-05 op=sum carry coexist.
 
@@ -265,9 +274,9 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
       2T: casilla 07 = +300, casilla 16 = 40, saldo = 150 (a loss carried to 3T)
 
     At 3T:
-      casilla-15 (op=copy, offset -1) = 2T saldo = 150 (the single immediately-prior quarter)
-      casilla-05 (op=sum, expanding span {1T, 2T}) = Σ max(0, 07) − Σ 16
-                = (500 + 300) − (60 + 40) = 700 (independently computed)
+      casilla-15 (op=copy, offset -1) = 2T saldo (the single immediately-prior quarter)
+      casilla-05 (op=sum, expanding span {1T, 2T}) = Σ max(0, 07) − Σ 16,
+                computed in-test from the seeded fixture inputs (not a hand-summed literal).
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo = repos
     _seed_prior_year_m100(obs_repo)
@@ -278,8 +287,8 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
             filing_year=2026,
             period="1T",
             observations=(
-                CasillaObservation(casilla_id="07", value=Decimal("500")),
-                CasillaObservation(casilla_id="16", value=Decimal("60")),
+                CasillaObservation(casilla_id="07", value=_PRIOR_07_1T),
+                CasillaObservation(casilla_id="16", value=_PRIOR_16_1T),
                 CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=Decimal("0")),
             ),
         ),
@@ -292,9 +301,9 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
             filing_year=2026,
             period="2T",
             observations=(
-                CasillaObservation(casilla_id="07", value=Decimal("300")),
-                CasillaObservation(casilla_id="16", value=Decimal("40")),
-                CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=Decimal("150")),
+                CasillaObservation(casilla_id="07", value=_PRIOR_07_2T),
+                CasillaObservation(casilla_id="16", value=_PRIOR_16_2T),
+                CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=_PRIOR_2T_SALDO),
             ),
         ),
         source_kind="app_filing",
@@ -304,11 +313,12 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     snapshot_3t = resources().modelos.authority.snapshot("130", filing_year=2026, period="3T")
     resolved = resolve_bindings_from_local_store(snapshot_3t, repository=obs_repo).binding_values
 
-    # Independent identity (a different code path than either binding):
-    expected_casilla_05 = (max(Decimal("0"), Decimal("500")) + max(Decimal("0"), Decimal("300"))) - (
-        Decimal("60") + Decimal("40")
+    # Independent identity (a different code path than the span binding): the
+    # positive part of each prior 07 minus each prior 16, computed here from the
+    # seeded fixture inputs rather than asserted against a hand-summed literal.
+    expected_casilla_05 = (max(Decimal("0"), _PRIOR_07_1T) + max(Decimal("0"), _PRIOR_07_2T)) - (
+        _PRIOR_16_1T + _PRIOR_16_2T
     )
-    assert expected_casilla_05 == Decimal("700")
     assert resolved.get("modelo-130-pagos-fraccionados-anteriores") == expected_casilla_05
     # The single-offset op=copy carry still reads exactly the immediately-prior quarter's saldo.
-    assert resolved.get(_CARRY_FORWARD_BINDING) == Decimal("150")
+    assert resolved.get(_CARRY_FORWARD_BINDING) == _PRIOR_2T_SALDO

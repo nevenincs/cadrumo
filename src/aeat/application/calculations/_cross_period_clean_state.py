@@ -168,9 +168,7 @@ class NoPriorObligationProvenance(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    facet_kind: NoPriorObligationProvenanceKind = (
-        NoPriorObligationProvenanceKind.NO_PRIOR_OBLIGATION_PRE_ACTIVITY
-    )
+    facet_kind: NoPriorObligationProvenanceKind = NoPriorObligationProvenanceKind.NO_PRIOR_OBLIGATION_PRE_ACTIVITY
     activity_start_date: date
     provenance_kind: NoPriorObligationProvenanceKind = NoPriorObligationProvenanceKind.OPERATOR_DECLARED
     censo_snapshot_id: str | None = None
@@ -182,8 +180,7 @@ class NoPriorObligationProvenance(BaseModel):
             NoPriorObligationProvenanceKind.CENSO_CORROBORATED,
         ):
             raise ValueError(
-                "provenance_kind must be OPERATOR_DECLARED or CENSO_CORROBORATED, "
-                f"got {self.provenance_kind.value!r}",
+                f"provenance_kind must be OPERATOR_DECLARED or CENSO_CORROBORATED, got {self.provenance_kind.value!r}",
             )
         if (
             self.provenance_kind is NoPriorObligationProvenanceKind.CENSO_CORROBORATED
@@ -957,7 +954,9 @@ def _evaluate_requirement(
         taxpayer_tax_id,
     )
     observation_source_kind, observation_values, value_blockers = _resolve_observation_values(
-        requirement, source.value_member_payloads, source.payload,
+        requirement,
+        source.value_member_payloads,
+        source.payload,
     )
     blockers: list[CrossPeriodCleanStateBlocker] = [*source.blockers, *value_blockers]
 
@@ -1207,7 +1206,10 @@ def _evaluate_filing_history(
         ),
     )
     revision_state, revision_blockers = _filing_revision_blockers(
-        filing, requirement, calculation_catalogue, observation_values,
+        filing,
+        requirement,
+        calculation_catalogue,
+        observation_values,
     )
     blockers.extend(revision_blockers)
     verification_status, verification_blockers = _filing_verification_blockers(filing, verification_catalogue)

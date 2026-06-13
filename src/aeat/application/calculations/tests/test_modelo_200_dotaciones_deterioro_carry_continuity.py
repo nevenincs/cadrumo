@@ -112,7 +112,10 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
 
 
 def _calculate_200(
-    *, filing_year: int, relation_values: dict[str, Decimal], obs_repo: CalculationObservationRepository,
+    *,
+    filing_year: int,
+    relation_values: dict[str, Decimal],
+    obs_repo: CalculationObservationRepository,
 ) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
@@ -218,7 +221,9 @@ def test_advisory_fires_when_cumplido_stock_available_but_none_integrated() -> N
     """Cumplido stock present (01495 > 0) but 01496 = 0 surfaces a non-blocking advisory."""
     predicate = _advisory_predicate()
     findings = _evaluate_verification_predicates(
-        (predicate,), {"01495": Decimal("12000.00"), "01496": Decimal("0")}, _CASILLA_ONLY_PROFILE,
+        (predicate,),
+        {"01495": Decimal("12000.00"), "01496": Decimal("0")},
+        _CASILLA_ONLY_PROFILE,
     )
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -230,7 +235,9 @@ def test_advisory_silent_when_some_cumplido_stock_integrated() -> None:
     """Integrating any of the available cumplido stock clears the advisory."""
     predicate = _advisory_predicate()
     findings = _evaluate_verification_predicates(
-        (predicate,), {"01495": Decimal("12000.00"), "01496": Decimal("4000.00")}, _CASILLA_ONLY_PROFILE,
+        (predicate,),
+        {"01495": Decimal("12000.00"), "01496": Decimal("4000.00")},
+        _CASILLA_ONLY_PROFILE,
     )
     assert findings == []
 
@@ -239,6 +246,8 @@ def test_advisory_silent_when_no_cumplido_stock_available() -> None:
     """No cumplido stock (01495 = 0) raises nothing — implies_nonzero holds trivially."""
     predicate = _advisory_predicate()
     findings = _evaluate_verification_predicates(
-        (predicate,), {"01495": Decimal("0"), "01496": Decimal("0")}, _CASILLA_ONLY_PROFILE,
+        (predicate,),
+        {"01495": Decimal("0"), "01496": Decimal("0")},
+        _CASILLA_ONLY_PROFILE,
     )
     assert findings == []

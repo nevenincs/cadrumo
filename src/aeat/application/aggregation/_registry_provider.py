@@ -14,8 +14,8 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from ...core import Modelo, Period
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Modelo, Period
 from ...core.aggregation import COUNTERPART_SOURCE_KINDS, CounterpartSourceKind, counterpart_source_kind
 from ...core.parsing._dates import _parse_iso8601_date
 from ...domain.calculations.registry import (

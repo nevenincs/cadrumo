@@ -193,6 +193,10 @@ def _seed_clean_cross_period_sources_for_m130(
             stamped_revision_id=source_snapshot.revision.id,
             source_metadata={
                 "aeat_register_status": "ALTA",
+                "aeat_expediente_id": (
+                    f"EXP-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period.registry_token}"
+                ),
+                "aeat_justificante_csv": evidence_reference_id,
                 "authenticated_identity": "X1234567L",
             },
         )

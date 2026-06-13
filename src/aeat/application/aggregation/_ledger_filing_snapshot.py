@@ -12,7 +12,7 @@ computing a contributor's content fingerprint from the live
 and evaluating drift between a filed snapshot and the current ledger state.
 
 The fingerprint covers exactly the transaction facts that can move a casilla --
-dates, signed amount, currency, direction, business classification and
+dates, amount magnitude, currency, direction, business classification and
 proportionality, the IVA base/rate/amount/category, the spending and IRPF
 categories, the EU member state, the FX conversion, and the lifecycle state.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so

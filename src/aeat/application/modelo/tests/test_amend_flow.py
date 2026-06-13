@@ -62,8 +62,9 @@ from .. import (
     get_calculation_revision,
     get_filing_record,
     get_work_unit,
-    mark_revision_verificado_completo,
+    verify_modelo_revision,
 )
+from ._file_flow_support import _seed_clean_cross_period_sources, _workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -224,7 +225,7 @@ def _seed_local_filing_record(
 def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
     """A locally-filed return (no ``external_evidence``) cannot be amended."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -246,11 +247,28 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    verified_revision = mark_revision_verificado_completo(
+    _seed_clean_cross_period_sources(
+        work_unit,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+    )
+    report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
+    )
+    assert report.granted_verificado_completo is True
+    verified_revision = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
     )
     locally_filed = _seed_local_filing_record(
         work_unit=work_unit,

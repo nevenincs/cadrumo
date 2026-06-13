@@ -141,26 +141,30 @@ def _prior_pagos_binding() -> DataBindingDefinition:
 def test_prior_pagos_fraccionados_op_computes_positive_07_minus_16() -> None:
     """casilla 05 = Σ max(0, 07_q) − Σ 16_q from per-anchor [07_q, 16_q] pairs.
 
-    Three prior quarters (1T, 2T, 3T) for a 4T target. Per-quarter pairs:
-      1T: 07=+300, 16=40
-      2T: 07=-100 (loss), 16=0
-      3T: 07=+250, 16=60
-    Independently computed identity:
-      Σ max(0,07) = 300 + 0 + 250 = 550 ; Σ 16 = 40 + 0 + 60 = 100
-      casilla 05 = 550 − 100 = 450
-    A raw-07 sum (skipping the per-quarter max-0, summing -100) would give
-    (300 - 100 + 250) - 100 = 350; dropping the minoración would give 550.
-    Both regressions fail this gate.
+    Three prior quarters (1T, 2T, 3T) for a 4T target. The expected value is
+    computed in-test from the per-quarter inputs via the verbatim AEAT identity
+    (positive-part per quarter, then minus the sum of casilla 16) - a different
+    code path than the op under test, and the fixture is chosen so the identity
+    (480) does NOT equal the raw-07 sum (450), so a binding that skipped the
+    per-quarter max-0 OR dropped the minus-16 term fails loudly rather than
+    coinciding.
     """
     binding = _prior_pagos_binding()
-    # Flat per-anchor pairs in source_casillas order: 07 then 16 per quarter.
-    flat_values = [
-        Decimal("300"), Decimal("40"),
-        Decimal("-100"), Decimal("0"),
-        Decimal("250"), Decimal("60"),
-    ]
+    # Per-quarter (07, 16) pairs. 2T is a loss (negative 07 -> contributes 0).
+    quarters = (
+        (Decimal("300"), Decimal("40")),
+        (Decimal("-100"), Decimal("0")),
+        (Decimal("250"), Decimal("30")),
+    )
+    flat_values = [value for pair in quarters for value in pair]
+    expected = sum((max(Decimal("0"), c07) for c07, _c16 in quarters), Decimal("0")) - sum(
+        (c16 for _c07, c16 in quarters), Decimal("0")
+    )
+    raw_07_sum = sum((c07 for c07, _c16 in quarters), Decimal("0"))
+    assert expected != raw_07_sum, "fixture must make the identity differ from a raw-07 sum"
+
     result = _aggregate_previous_filing_binding(binding, flat_values, source_casillas=("07", "16"))
-    assert result == Decimal("450")
+    assert result == expected
 
 
 def test_prior_pagos_fraccionados_op_negative_07_contributes_zero_not_value() -> None:
@@ -171,7 +175,9 @@ def test_prior_pagos_fraccionados_op_negative_07_contributes_zero_not_value() ->
     """
     binding = _prior_pagos_binding()
     result = _aggregate_previous_filing_binding(
-        binding, [Decimal("-500"), Decimal("0")], source_casillas=("07", "16"),
+        binding,
+        [Decimal("-500"), Decimal("0")],
+        source_casillas=("07", "16"),
     )
     assert result == Decimal("0")
 
@@ -183,7 +189,9 @@ def test_prior_pagos_fraccionados_op_subtracts_nonzero_minoracion() -> None:
     """
     binding = _prior_pagos_binding()
     result = _aggregate_previous_filing_binding(
-        binding, [Decimal("700"), Decimal("120")], source_casillas=("07", "16"),
+        binding,
+        [Decimal("700"), Decimal("120")],
+        source_casillas=("07", "16"),
     )
     assert result == Decimal("580")
 
@@ -192,5 +200,3 @@ def test_prior_pagos_fraccionados_op_requires_two_source_casillas() -> None:
     binding = _prior_pagos_binding()
     with pytest.raises(RegistryValidationError, match="requires exactly two source casillas"):
         _aggregate_previous_filing_binding(binding, [Decimal("100")], source_casillas=("07",))
-
-

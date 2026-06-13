@@ -37,7 +37,8 @@ consistency the resumen exists to express. The R2 registry-gap workaround
 (``modelo-303-autoconsumo-promotor-base = 0`` and
 ``modelo-303-profile-state-attribution-ratio = 100``) is applied when
 building the source 303 quarters; 390's own casillas carry no
-profile-source binding.
+profile-source binding. Official 303 boxes [27] and [45] are projections
+from the semantic totals and are not supplied as inputs.
 """
 
 from __future__ import annotations
@@ -92,12 +93,6 @@ _303_AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
 _303_STATE_ATTRIBUTION_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
 _303_CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
-#: 303 manual section totals driving the régimen-general result ([46]=[27]-[45]).
-#: Set equal to the quarter's ledger cuotas so the result casilla the 390
-#: reconciliation sums is consistent with the devengada/deducible totals.
-_CASILLA_TOTAL_DEVENGADA = "27"
-_CASILLA_TOTAL_DEDUCIBLE = "45"
-
 _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 # Per-quarter IVA ledger detail for one renta year: one repercutido (output)
@@ -147,7 +142,10 @@ def _quarter_ledger(filing_year: int, period: str) -> tuple[IvaLedgerObservation
 
 
 def _calculate_303_quarter(
-    *, filing_year: int, period: str, observations: tuple[IvaLedgerObservation, ...],
+    *,
+    filing_year: int,
+    period: str,
+    observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
     """Run the REAL registry 303 calculation for one quarter from IVA ledger detail.
 
@@ -163,17 +161,8 @@ def _calculate_303_quarter(
         _303_STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
-    repercutido, soportado = _QUARTER_IVA[period]
     inputs = {
         **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
-        # The régimen-general result casilla [46] = [27] - [45] is driven by the
-        # manual section totals, independent of the ledger cuota chain. Set them
-        # to the same quarter cuotas the ledger produced so the result casilla
-        # (which the 390 reconciliation.resultado-303 sums) is consistent with
-        # the devengada/deducible totals — the realistic case where the
-        # operator's section totals equal their ledger-derived cuotas.
-        _CASILLA_TOTAL_DEVENGADA: repercutido,
-        _CASILLA_TOTAL_DEDUCIBLE: soportado,
     }
     return calculate_registry_snapshot(
         snapshot,
@@ -185,7 +174,11 @@ def _calculate_303_quarter(
 
 
 def _registry_observation(
-    *, modelo: str, filing_year: int, period: str, result: RegistryCalculationResult,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    result: RegistryCalculationResult,
 ) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo=modelo,
@@ -231,7 +224,9 @@ def _calculate_390_annual(
 
 
 def _file_year_quarters_and_reconcile(
-    *, filing_year: int, repository: CalculationObservationRepository,
+    *,
+    filing_year: int,
+    repository: CalculationObservationRepository,
 ) -> tuple[RegistryCalculationResult, int, dict[str, Decimal]]:
     """File the four 303 quarters of one renta year, then compute the 390 annual.
 
@@ -251,7 +246,9 @@ def _file_year_quarters_and_reconcile(
             captured_at=_CLOCK,
         )
     annual_result, produced = _calculate_390_annual(
-        filing_year=filing_year, annual_ledger=tuple(annual_ledger), repository=repository,
+        filing_year=filing_year,
+        annual_ledger=tuple(annual_ledger),
+        repository=repository,
     )
     return annual_result, produced, quarter_devengada
 
@@ -268,7 +265,8 @@ def test_390_annual_reconciles_to_sum_of_303_quarters(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         annual_result, produced, quarter_devengada = _file_year_quarters_and_reconcile(
-            filing_year=_RENTA_YEARS[0], repository=repository,
+            filing_year=_RENTA_YEARS[0],
+            repository=repository,
         )
 
     assert produced > 0
@@ -277,7 +275,8 @@ def test_390_annual_reconciles_to_sum_of_303_quarters(tmp_path: Path) -> None:
             f"390 {computed_total} must reconcile to {reconciliation} from the four 303 quarters"
         )
     assert annual_result.values["iva.anual.reconciliacion.devengada-303"] == sum(
-        quarter_devengada.values(), Decimal("0"),
+        quarter_devengada.values(),
+        Decimal("0"),
     )
 
 
@@ -292,10 +291,12 @@ def test_390_reconciliation_isolates_renta_years(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         annual_2025, _, devengada_2025 = _file_year_quarters_and_reconcile(
-            filing_year=_RENTA_YEARS[0], repository=repository,
+            filing_year=_RENTA_YEARS[0],
+            repository=repository,
         )
         annual_2026, _, devengada_2026 = _file_year_quarters_and_reconcile(
-            filing_year=_RENTA_YEARS[1], repository=repository,
+            filing_year=_RENTA_YEARS[1],
+            repository=repository,
         )
 
     assert annual_2025.values["iva.anual.reconciliacion.devengada-303"] == sum(devengada_2025.values(), Decimal("0"))
@@ -317,7 +318,8 @@ def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> No
         repository = CalculationObservationRepository()
         for filing_year in _RENTA_YEARS:
             annual_result, produced, quarter_devengada = _file_year_quarters_and_reconcile(
-                filing_year=filing_year, repository=repository,
+                filing_year=filing_year,
+                repository=repository,
             )
             # Wiring invariant per year: annual computed total == 303-quarter sum.
             assert (
@@ -325,7 +327,8 @@ def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> No
                 == annual_result.values["iva.anual.reconciliacion.devengada-303"]
             )
             assert annual_result.values["iva.anual.reconciliacion.devengada-303"] == sum(
-                quarter_devengada.values(), Decimal("0"),
+                quarter_devengada.values(),
+                Decimal("0"),
             )
             recorder.record_calculation_year(filing_year=filing_year, produced_value_count=produced)
 

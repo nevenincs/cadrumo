@@ -77,15 +77,19 @@ def _workflow_profile() -> TaxpayerProfile:
         bienes_extranjero_above_threshold=False,
     )
 
+
 def _snapshot_390():
     return resources().modelos.authority.snapshot("390", filing_year=_M390_YEAR, period=_M390_PERIOD)
+
 
 def _m390_first_quarter_evidence(verdict: CrossPeriodCleanStateVerdict) -> CrossPeriodDependencyEvidence:
     return next(evidence for evidence in verdict.dependencies if evidence.requirement.period == _M390_FIRST_QUARTER)
 
+
 def _source_values(period: str, source_casillas: tuple[str, ...]) -> dict[str, Decimal]:
     period_ordinal = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}[period]
     return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casillas)}
+
 
 def _save_source_observation(
     repository: CalculationObservationRepository,
@@ -109,8 +113,10 @@ def _save_source_observation(
         source_metadata=source_metadata,
     )
 
+
 def _snapshot_353():
     return resources().modelos.authority.snapshot("353", filing_year=_M353_YEAR, period=_M353_PERIOD)
+
 
 def _member_fan_in_requirement():
     return next(
@@ -119,6 +125,7 @@ def _member_fan_in_requirement():
         if requirement.requires_member_fan_in
     )
 
+
 def _member_source_values(member_nif: str, source_casillas: tuple[str, ...]) -> dict[str, Decimal]:
     member_ordinal = {
         _GROUP_MEMBER_A: Decimal("1"),
@@ -126,6 +133,7 @@ def _member_source_values(member_nif: str, source_casillas: tuple[str, ...]) -> 
         _GROUP_MEMBER_C: Decimal("100"),
     }[member_nif]
     return {casilla_id: member_ordinal * Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
+
 
 def _save_member_322_observation(
     repository: CalculationObservationRepository,
@@ -149,6 +157,7 @@ def _save_member_322_observation(
         member_nif=member_nif,
         source_metadata=source_metadata,
     )
+
 
 def _seed_member_322_filing(
     observation_repository: CalculationObservationRepository,
@@ -243,6 +252,7 @@ def _seed_member_322_filing(
         source_metadata=source_metadata,
     )
 
+
 def _persist_justificante_metadata(
     csv: str,
     *,
@@ -271,6 +281,7 @@ def _persist_justificante_metadata(
         ),
     )
 
+
 def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecord:
     work_unit_id = hashlib.sha256(f"130:2026:1T:{csv}".encode()).hexdigest()
     revision_id = hashlib.sha256(f"rev:{csv}".encode()).hexdigest()
@@ -295,6 +306,7 @@ def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecor
         external_evidence=ExternalEvidence(kind=kind, reference_id=csv, imported_at=_CLOCK),
     )
 
+
 def test_live_capture_evidence_clears_justificante_verification(tmp_path: Path) -> None:
     """A filing stamped with AEAT_LIVE_CAPTURE evidence clears the justificante gate."""
     from ....domain.justificante import JustificanteRepository
@@ -316,6 +328,7 @@ def test_live_capture_evidence_clears_justificante_verification(tmp_path: Path) 
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
 
+
 def test_live_capture_evidence_requires_expected_taxpayer_identity(tmp_path: Path) -> None:
     """A matching receipt cannot clear the gate unless the taxpayer axis is known."""
     from ....domain.justificante import JustificanteRepository
@@ -335,6 +348,7 @@ def test_live_capture_evidence_requires_expected_taxpayer_identity(tmp_path: Pat
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
+
 def test_live_capture_taxpayer_match_is_case_insensitive(tmp_path: Path) -> None:
     """Taxpayer comparison is canonicalized while still requiring the same identity."""
     from ....domain.justificante import JustificanteRepository
@@ -353,6 +367,7 @@ def test_live_capture_taxpayer_match_is_case_insensitive(tmp_path: Path) -> None
         )
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
+
 
 def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_path: Path) -> None:
     """A matching ejercicio label cannot override a mismatched typed Period value."""
@@ -390,6 +405,7 @@ def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
+
 def test_live_capture_evidence_rejects_mismatched_filed_history_justificante_csv(
     tmp_path: Path,
 ) -> None:
@@ -411,6 +427,7 @@ def test_live_capture_evidence_rejects_mismatched_filed_history_justificante_csv
         )
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
+
 
 def test_live_capture_evidence_accepts_matching_plural_filed_history_justificante_csv(
     tmp_path: Path,
@@ -438,6 +455,7 @@ def test_live_capture_evidence_accepts_matching_plural_filed_history_justificant
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
 
+
 def test_live_capture_evidence_rejects_plural_filed_history_justificante_csv_without_match(
     tmp_path: Path,
 ) -> None:
@@ -463,6 +481,7 @@ def test_live_capture_evidence_rejects_plural_filed_history_justificante_csv_wit
         )
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
+
 
 def test_live_capture_evidence_rejects_mismatched_filed_history_presentation_id(
     tmp_path: Path,
@@ -497,6 +516,7 @@ def test_live_capture_evidence_rejects_mismatched_filed_history_presentation_id(
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
+
 def test_live_capture_evidence_rejects_expediente_only_metadata_without_comparable_receipt_reference(
     tmp_path: Path,
 ) -> None:
@@ -523,6 +543,7 @@ def test_live_capture_evidence_rejects_expediente_only_metadata_without_comparab
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
+
 def test_csv_register_evidence_clears_with_matching_justificante_metadata(tmp_path: Path) -> None:
     """A CSV-register reference clears the gate only when its justificante is enrolled."""
     from ....domain.justificante import JustificanteRepository
@@ -544,6 +565,7 @@ def test_csv_register_evidence_clears_with_matching_justificante_metadata(tmp_pa
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
 
+
 def test_csv_register_evidence_without_enrolled_justificante_still_blocks(tmp_path: Path) -> None:
     """A CSV-register reference without its parsed receipt cannot clear clean-state."""
     from ....domain.justificante import JustificanteRepository
@@ -560,6 +582,7 @@ def test_csv_register_evidence_without_enrolled_justificante_still_blocks(tmp_pa
         )
 
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD in blockers
+
 
 def test_bare_aeat_acceptance_without_external_evidence_does_not_clear_cross_period_gate(tmp_path: Path) -> None:
     """A bare acceptance bit is not enough without an AEAT evidence reference."""
@@ -581,6 +604,7 @@ def test_bare_aeat_acceptance_without_external_evidence_does_not_clear_cross_per
 
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE in blockers
         assert CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE in blockers
+
 
 def _seed_official_303_source_filings(
     *,
@@ -604,11 +628,15 @@ def _seed_official_303_source_filings(
     for period, source_casillas in sorted(source_casillas_by_period.items()):
         evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
         evidence_reference_id = f"JUST-{period}"
-        if evidence_kind in {
-            ExternalEvidenceKind.AEAT_CSV_REGISTER,
-            ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-        } and period not in skip_justificante_metadata_periods:
+        if (
+            evidence_kind
+            in {
+                ExternalEvidenceKind.AEAT_CSV_REGISTER,
+                ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+            }
+            and period not in skip_justificante_metadata_periods
+        ):
             _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -619,11 +647,15 @@ def _seed_official_303_source_filings(
             clock=_CLOCK,
         )
         values = _source_values(period, tuple(sorted(source_casillas)))
-        if evidence_kind in {
-            ExternalEvidenceKind.AEAT_CSV_REGISTER,
-            ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-        } and period in skip_justificante_metadata_periods:
+        if (
+            evidence_kind
+            in {
+                ExternalEvidenceKind.AEAT_CSV_REGISTER,
+                ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+            }
+            and period in skip_justificante_metadata_periods
+        ):
             _seed_legacy_source_filing_record(
                 work_unit=work_unit,
                 casilla_values=values,
@@ -662,6 +694,7 @@ def _seed_official_303_source_filings(
             source_kind=source_kind_by_period.get(period, "aeat_sede_justificante"),
             source_metadata=source_metadata_by_period.get(period, default_source_metadata),
         )
+
 
 def _seed_legacy_source_filing_record(
     *,
@@ -728,6 +761,7 @@ def _seed_legacy_source_filing_record(
         ),
     )
 
+
 def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = evaluate_cross_period_clean_state(
@@ -745,6 +779,7 @@ def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path
     assert CrossPeriodCleanStateBlocker.MISSING_OBSERVATION in verdict.blockers
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in verdict.blockers
 
+
 def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
@@ -757,6 +792,7 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
         and requirement.period == Period.from_year_and_code(2026, "1T")
         for requirement in requirements
     )
+
 
 def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
     tmp_path: Path,
@@ -793,6 +829,7 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
         for item in inventory.items
     )
 
+
 def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
     tmp_path: Path,
 ) -> None:
@@ -818,6 +855,7 @@ def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
         "193",
     }
 
+
 def test_cross_period_dependency_inventory_documents_patrimonio_foreign_asset_scope(
     tmp_path: Path,
 ) -> None:
@@ -837,6 +875,7 @@ def test_cross_period_dependency_inventory_documents_patrimonio_foreign_asset_sc
     assert all("720" not in inventory.source_modelos for inventory in inventories)
     assert all("721" not in inventory.source_modelos for inventory in inventories)
 
+
 def test_cross_period_clean_state_blocks_missing_group_member_sources(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         snapshot = _snapshot_353()
@@ -855,6 +894,7 @@ def test_cross_period_clean_state_blocks_missing_group_member_sources(tmp_path: 
     assert any(evidence.requirement.requires_member_fan_in for evidence in verdict.dependencies)
     assert CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER in verdict.blockers
     assert CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE in verdict.blockers
+
 
 def test_cross_period_clean_state_blocks_group_member_fan_in_without_expected_roster(
     tmp_path: Path,
@@ -883,6 +923,7 @@ def test_cross_period_clean_state_blocks_group_member_fan_in_without_expected_ro
     assert member_evidence.expected_member_nifs == ()
     assert CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER in member_evidence.blockers
     assert CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE in member_evidence.blockers
+
 
 def test_cross_period_clean_state_blocks_incomplete_expected_group_member_fan_in(
     tmp_path: Path,
@@ -921,6 +962,7 @@ def test_cross_period_clean_state_blocks_incomplete_expected_group_member_fan_in
     assert CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER not in member_evidence.blockers
     assert CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE in member_evidence.blockers
 
+
 def test_cross_period_clean_state_blocks_unexpected_group_member_fan_in(
     tmp_path: Path,
 ) -> None:
@@ -957,6 +999,7 @@ def test_cross_period_clean_state_blocks_unexpected_group_member_fan_in(
     assert member_evidence.missing_member_nifs == ()
     assert member_evidence.unexpected_member_nifs == (_GROUP_MEMBER_C,)
     assert CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE in member_evidence.blockers
+
 
 def test_cross_period_clean_state_accepts_member_scoped_group_filing_records(
     tmp_path: Path,
@@ -997,6 +1040,7 @@ def test_cross_period_clean_state_accepts_member_scoped_group_filing_records(
     assert member_evidence.member_calculation_revision_ids
     assert len(member_evidence.member_calculation_revision_ids) == 2
 
+
 def test_cross_period_clean_state_blocks_member_filing_with_wrong_tax_id_justificante(
     tmp_path: Path,
 ) -> None:
@@ -1031,6 +1075,7 @@ def test_cross_period_clean_state_blocks_member_filing_with_wrong_tax_id_justifi
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in member_evidence.blockers
 
+
 def test_cross_period_clean_state_blocks_taxpayer_filing_with_wrong_tax_id_justificante(
     tmp_path: Path,
 ) -> None:
@@ -1061,6 +1106,8 @@ def test_cross_period_clean_state_blocks_taxpayer_filing_with_wrong_tax_id_justi
     first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
+
 def test_cross_period_clean_state_blocks_superseded_upstream_filing(
     tmp_path: Path,
 ) -> None:
@@ -1106,6 +1153,7 @@ def test_cross_period_clean_state_blocks_superseded_upstream_filing(
     assert CrossPeriodCleanStateBlocker.SUPERSEDED_DEPENDENCY in verdict.blockers
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in verdict.blockers
 
+
 def test_cross_period_clean_state_accepts_aeat_attested_reconciled_sources(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
@@ -1124,6 +1172,7 @@ def test_cross_period_clean_state_accepts_aeat_attested_reconciled_sources(tmp_p
     assert verdict.requires_clean_state is True
     assert verdict.clean is True
     assert verdict.blockers == ()
+
 
 def test_cross_period_clean_state_accepts_matching_aeat_register_observation_provenance(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -1154,6 +1203,7 @@ def test_cross_period_clean_state_accepts_matching_aeat_register_observation_pro
     assert verdict.clean is True
     assert first_quarter.blockers == ()
 
+
 def test_cross_period_clean_state_accepts_matching_filed_history_justificante_csv_provenance(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
@@ -1182,6 +1232,7 @@ def test_cross_period_clean_state_accepts_matching_filed_history_justificante_cs
     first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is True
     assert first_quarter.blockers == ()
+
 
 def test_cross_period_clean_state_blocks_filed_history_justificante_csv_mismatch(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -1280,9 +1331,7 @@ def test_alta_containing_period_stays_in_scope_as_first_obligation(tmp_path: Pat
     assert fourth.suppressed_pre_activity is False
     assert fourth.no_prior_obligation is None
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in fourth.blockers
-    suppressed_periods = {
-        e.requirement.period.registry_token for e in verdict.suppressed_pre_activity_dependencies
-    }
+    suppressed_periods = {e.requirement.period.registry_token for e in verdict.suppressed_pre_activity_dependencies}
     assert suppressed_periods == {"1T", "2T", "3T"}
 
 
@@ -1322,9 +1371,7 @@ def test_activity_start_scoping_applies_to_both_requirement_origins(tmp_path: Pa
 
     relation_suppressed = relation_verdict.suppressed_pre_activity_dependencies
     assert relation_suppressed
-    assert all(
-        e.requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION for e in relation_suppressed
-    )
+    assert all(e.requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION for e in relation_suppressed)
     assert {e.requirement.period.registry_token for e in relation_suppressed} == {"1T", "2T"}
 
     # M303/4T depends on M303/3T (Jul-Sep) via BOTH a previous_filing binding and a
@@ -1381,9 +1428,7 @@ def test_partition_keeps_non_calendar_anchors_in_scope(tmp_path: Path) -> None:
 
     instalment_period = Period.from_year_and_code(_M390_YEAR, "1P")
     assert instalment_period.has_date_span() is False
-    forged = tuple(
-        requirement.model_copy(update={"period": instalment_period}) for requirement in requirements[:1]
-    )
+    forged = tuple(requirement.model_copy(update={"period": instalment_period}) for requirement in requirements[:1])
     partition = partition_cross_period_requirements_by_activity_start(
         forged,
         activity_start_date=date(2099, 1, 1),

@@ -112,7 +112,9 @@ def test_aggregate_audit_collects_failures_across_modelos() -> None:
     catalogue.register(AeatNifIvaCheckerOracle(), environment=OracleEnvironment.PRODUCTION)
 
     failures = audit_registry_oracle_bindings(
-        (bound_130, bound_111), catalogue, environment=OracleEnvironment.PRODUCTION,
+        (bound_130, bound_111),
+        catalogue,
+        environment=OracleEnvironment.PRODUCTION,
     )
 
     assert len(failures) == 2

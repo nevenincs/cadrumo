@@ -111,9 +111,7 @@ def _prior_m130(period: str, *, casilla_07: Decimal, casilla_16: Decimal | None)
 def _resolve_casilla_05(obs_repo: CalculationObservationRepository, *, target_period: str) -> Decimal | None:
     snapshot = resources().modelos.authority.snapshot("130", filing_year=_FILING_YEAR, period=target_period)
     observations = tuple(
-        payload.observation
-        for source_modelo in ("130", "100")
-        for payload in obs_repo.iter_modelo(source_modelo)
+        payload.observation for source_modelo in ("130", "100") for payload in obs_repo.iter_modelo(source_modelo)
     )
     resolved = resolve_previous_filing_binding_values(
         snapshot.revision,
@@ -263,9 +261,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
 
     assert verdict.clean, f"a 2T-alta first filer must be clean; blockers={verdict.blockers}"
     suppressed = verdict.suppressed_pre_activity_dependencies
-    suppressed_origins = {
-        origin_id for dependency in suppressed for origin_id in dependency.requirement.origin_ids
-    }
+    suppressed_origins = {origin_id for dependency in suppressed for origin_id in dependency.requirement.origin_ids}
     assert _CARRY_BINDING_ID in suppressed_origins, (
         "the pre-activity 1T casilla-05 carry requirement must be suppressed as no-prior-obligation"
     )

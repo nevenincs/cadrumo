@@ -365,11 +365,7 @@ class LiveParityCatalogue:
             return tuple(sorted(self._oracles))
         return tuple(
             sorted(
-                [
-                    oracle_id
-                    for oracle_id, declared in self._environments.items()
-                    if declared in {"both", environment}
-                ],
+                [oracle_id for oracle_id, declared in self._environments.items() if declared in {"both", environment}],
             ),
         )
 

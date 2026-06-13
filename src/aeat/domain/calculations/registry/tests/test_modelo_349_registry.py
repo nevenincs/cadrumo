@@ -155,7 +155,8 @@ def test_committed_modelo_349_casilla_numbers_match_official_record_design() -> 
     ],
 )
 def test_committed_modelo_349_casilla_data_types_match_official_record_design(
-    casilla_id: str, expected_data_type: str,
+    casilla_id: str,
+    expected_data_type: str,
 ) -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
@@ -397,7 +398,8 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
     ],
 )
 def test_committed_modelo_349_export_records_open_with_official_record_type_literal(
-    record_type: str, expected_record_type_literal: str,
+    record_type: str,
+    expected_record_type_literal: str,
 ) -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]

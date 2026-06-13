@@ -74,8 +74,7 @@ def test_0609_is_computed_by_the_total_pagos_formula(year: str) -> None:
     assert formula.target == "0609"
     summed = tuple(arg.casilla for arg in formula.expression.args)
     assert summed == _CREDIT_SUM_CASILLAS, (
-        f"M100 {year} total-pagos formula must sum the credit casillas in order; "
-        f"got {summed!r}"
+        f"M100 {year} total-pagos formula must sum the credit casillas in order; got {summed!r}"
     )
 
 
@@ -91,15 +90,11 @@ def test_credit_casillas_bind_their_retencion_relations(year: str) -> None:
 
     assert getattr(c0596, "input_kind", None) == "bound"
     assert c0596.binding == f"renta-{year}-modelo-111-retenciones-periodicas"
-    assert c0596.binding in binding_ids, (
-        f"M100 {year} 0596 binds {c0596.binding!r} which is not a declared binding"
-    )
+    assert c0596.binding in binding_ids, f"M100 {year} 0596 binds {c0596.binding!r} which is not a declared binding"
 
     assert getattr(c0597, "input_kind", None) == "bound"
     assert c0597.binding == f"renta-{year}-modelo-123-retenciones-periodicas"
-    assert c0597.binding in binding_ids, (
-        f"M100 {year} 0597 binds {c0597.binding!r} which is not a declared binding"
-    )
+    assert c0597.binding in binding_ids, f"M100 {year} 0597 binds {c0597.binding!r} which is not a declared binding"
 
 
 @pytest.mark.parametrize("year", _YEARS)

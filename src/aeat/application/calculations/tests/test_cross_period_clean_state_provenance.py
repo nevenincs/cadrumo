@@ -48,6 +48,7 @@ from .test_cross_period_clean_state import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 def test_cross_period_clean_state_blocks_missing_aeat_register_observation_provenance(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
@@ -69,6 +70,7 @@ def test_cross_period_clean_state_blocks_missing_aeat_register_observation_prove
     first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
 
 def test_cross_period_clean_state_blocks_live_capture_observation_without_register_provenance(
     tmp_path: Path,
@@ -97,6 +99,7 @@ def test_cross_period_clean_state_blocks_live_capture_observation_without_regist
     assert first_quarter.observation_source_kind == "aeat_sede_live_capture"
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
+
 def test_cross_period_clean_state_blocks_non_alta_aeat_register_observation_provenance(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
@@ -105,7 +108,7 @@ def test_cross_period_clean_state_blocks_non_alta_aeat_register_observation_prov
             source_metadata_by_period={
                 "1T": {
                     "aeat_register_status": "BAJA",
-                    "aeat_expediente_id": "EXP-303-2025-1T",
+                    "aeat_expediente_id": "EXP-303-REFERENCE-ONE",
                     "authenticated_identity": "X1234567L",
                 },
             },
@@ -124,6 +127,7 @@ def test_cross_period_clean_state_blocks_non_alta_aeat_register_observation_prov
     first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
 
 def test_cross_period_clean_state_blocks_missing_aeat_register_reference(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -153,6 +157,7 @@ def test_cross_period_clean_state_blocks_missing_aeat_register_reference(tmp_pat
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
+
 def test_cross_period_clean_state_blocks_wrong_authenticated_identity_observation_provenance(
     tmp_path: Path,
 ) -> None:
@@ -163,7 +168,7 @@ def test_cross_period_clean_state_blocks_wrong_authenticated_identity_observatio
             source_metadata_by_period={
                 "1T": {
                     "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": "EXP-303-2025-1T",
+                    "aeat_expediente_id": "EXP-303-REFERENCE-ONE",
                     "authenticated_identity": "B12345678",
                 },
             },
@@ -182,6 +187,7 @@ def test_cross_period_clean_state_blocks_wrong_authenticated_identity_observatio
     first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
 
 def test_cross_period_clean_state_blocks_member_observation_authenticated_identity_mismatch(
     tmp_path: Path,
@@ -221,6 +227,7 @@ def test_cross_period_clean_state_blocks_member_observation_authenticated_identi
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in member_evidence.blockers
 
+
 def test_cross_period_clean_state_blocks_dangling_justificante_evidence_reference(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
@@ -244,6 +251,7 @@ def test_cross_period_clean_state_blocks_dangling_justificante_evidence_referenc
     assert verdict.clean is False
     assert first_quarter.external_evidence_kind == "aeat_justificante_pdf"
     assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
 
 def test_cross_period_clean_state_blocks_csv_register_without_justificante_verification(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -270,6 +278,7 @@ def test_cross_period_clean_state_blocks_csv_register_without_justificante_verif
     assert first_quarter.external_evidence_kind == "aeat_csv_register"
     assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
+
 def test_cross_period_clean_state_accepts_csv_register_with_matching_justificante_metadata(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
@@ -291,6 +300,7 @@ def test_cross_period_clean_state_accepts_csv_register_with_matching_justificant
     first_quarter = _m390_first_quarter_evidence(verdict)
     assert first_quarter.external_evidence_kind == "aeat_csv_register"
     assert first_quarter.blockers == ()
+
 
 def test_cross_period_clean_state_accepts_live_capture_with_matching_justificante_metadata(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -314,6 +324,7 @@ def test_cross_period_clean_state_accepts_live_capture_with_matching_justificant
     assert first_quarter.external_evidence_kind == "aeat_live_capture"
     assert first_quarter.blockers == ()
     assert verdict.clean is True
+
 
 def test_cross_period_clean_state_blocks_live_capture_without_justificante_verification(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -344,6 +355,7 @@ def test_cross_period_clean_state_blocks_live_capture_without_justificante_verif
     # dependent period — is preserved; only the blocker classification changed.
     assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
+
 def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
@@ -365,6 +377,7 @@ def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_pa
     first_quarter = _m390_first_quarter_evidence(verdict)
     assert verdict.clean is False
     assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
+
 
 def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):

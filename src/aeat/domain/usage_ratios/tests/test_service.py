@@ -107,14 +107,15 @@ def test_save_replaces_previous_payload(tmp_path: Path) -> None:
 
 def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProfile) -> None:
     """The database record is encrypted at FINANCIAL class."""
+    plaintext_ratio = Decimal("0.213579")
     profile = UsageRatioProfile(
-        ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")},
+        ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: plaintext_ratio},
     )
     save_usage_ratios(profile, bucket_id="bucket-a")
     on_disk = _database_bytes(_runtime_profile)
     assert b"secure_objects" in on_disk
     assert b"financial" in on_disk
-    assert b"0.21" not in on_disk
+    assert str(plaintext_ratio).encode("ascii") not in on_disk
     assert b"suministros_home_office_luz" not in on_disk
     assert b"profile" not in on_disk
 

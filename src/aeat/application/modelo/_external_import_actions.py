@@ -45,6 +45,7 @@ from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 
 _JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
     {
+        ExternalEvidenceKind.AEAT_CSV_REGISTER,
         ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
         ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
     },
@@ -280,7 +281,7 @@ def _require_bound_justificante_artifact(
 ) -> None:
     if evidence_kind not in _JUSTIFICANTE_BOUND_EVIDENCE_KINDS:
         return
-    cleaned_expected_tax_id = (expected_tax_id or "").strip()
+    cleaned_expected_tax_id = (expected_tax_id or "").strip().upper()
     if not cleaned_expected_tax_id:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_tax_id_missing",
@@ -328,5 +329,5 @@ def _justificante_matches_import_target(
         justificante.modelo.strip() == modelo
         and str(justificante.ejercicio or "").strip() == str(filing_year)
         and justificante.period == period
-        and justificante.tax_id.strip() == expected_tax_id
+        and justificante.tax_id.strip().upper() == expected_tax_id.strip().upper()
     )

@@ -702,8 +702,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
             source_modelo=prefilled.source_modelo,
             source_filing_year=prefilled.source_filing_year,
             source_periods=tuple(
-                Period.from_year_and_code(prefilled.source_filing_year, period)
-                for period in prefilled.source_periods
+                Period.from_year_and_code(prefilled.source_filing_year, period) for period in prefilled.source_periods
             ),
             resolved_at=prefilled.resolved_at,
         ),

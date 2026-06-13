@@ -94,7 +94,9 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
         checker.chk_legal_source_refs(cp, casilla.legal_refs, casilla.source_refs)
         if casilla.constraints is not None:
             checker.chk_legal_source_refs(
-                f"{cp}.constraints", casilla.constraints.legal_refs, casilla.constraints.source_refs,
+                f"{cp}.constraints",
+                casilla.constraints.legal_refs,
+                casilla.constraints.source_refs,
             )
 
 
@@ -179,7 +181,9 @@ def _check_cross_reference_refs(checker: _IdReferenceChecker, revision: ModeloRe
         checker.chk_legal_source_refs(crp, cross_ref.legal_refs, cross_ref.source_refs)
         for pred in cross_ref.applicability_predicates:
             checker.chk_legal_source_refs(
-                f"{crp}.applicability_predicates.{pred.field}", pred.legal_refs, pred.source_refs,
+                f"{crp}.applicability_predicates.{pred.field}",
+                pred.legal_refs,
+                pred.source_refs,
             )
 
 
@@ -223,7 +227,9 @@ def _check_filing_schedule_refs(checker: _IdReferenceChecker, revision: ModeloRe
         checker.chk_legal_source_refs(fsp, schedule.legal_refs, schedule.source_refs)
         for condition in schedule.profile_conditions:
             checker.chk_legal_source_refs(
-                f"{fsp}.profile_conditions.{condition.field}", condition.legal_refs, condition.source_refs,
+                f"{fsp}.profile_conditions.{condition.field}",
+                condition.legal_refs,
+                condition.source_refs,
             )
 
 

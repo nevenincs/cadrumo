@@ -71,7 +71,8 @@ def _evaluate_expression(expr: dict[str, object] | None, casilla_values: dict[st
     op = expr.get("op")
     args_val = expr.get("args")
     args_list: list[dict[str, object] | None] = cast(
-        list[dict[str, object] | None], args_val if isinstance(args_val, list) else [],
+        list[dict[str, object] | None],
+        args_val if isinstance(args_val, list) else [],
     )
     raw_values = [_evaluate_expression(a, casilla_values) for a in args_list]
     if any(v is None for v in raw_values):

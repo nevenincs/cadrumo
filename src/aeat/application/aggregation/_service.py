@@ -131,7 +131,8 @@ class PerModeloAggregationContract(BaseModel):
     @field_validator("providers")
     @classmethod
     def _providers_are_unique(
-        cls, value: tuple[PerModeloAggregationProviderContract, ...],
+        cls,
+        value: tuple[PerModeloAggregationProviderContract, ...],
     ) -> tuple[PerModeloAggregationProviderContract, ...]:
         providers = tuple(provider.provider for provider in value)
         if len(providers) != len(set(providers)):

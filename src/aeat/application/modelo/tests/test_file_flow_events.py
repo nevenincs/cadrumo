@@ -26,7 +26,6 @@ from ._file_flow_support import (
     _verify_revision,
     _workflow_profile,
     calculate_modelo_revision,
-    mark_revision_verificado_completo,
     verify_modelo_revision,
 )
 
@@ -177,7 +176,7 @@ def test_file_emits_modelo_filed_event(repos: _Repos) -> None:
     referencing the new filing record id and carrying the modelo /
     year / period plus the underlying revision id."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -189,12 +188,19 @@ def test_file_emits_modelo_filed_event(repos: _Repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verificado_completo(
+    report = _verify_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
+    assert report.granted_verificado_completo is True
     filing = _file_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -228,7 +234,7 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: _Repos)
     ``modelo.filed`` event for the new record (with the prior id in
     the ``supersedes_filing_record_id`` payload key)."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
     revision_one = calculate_modelo_revision(
@@ -241,12 +247,19 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: _Repos)
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verificado_completo(
+    report_one = _verify_revision(
         revision_one.calculation_revision_id,
+        revision=revision_one,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
+    assert report_one.granted_verificado_completo is True
     filing_one = _file_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -269,12 +282,19 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: _Repos)
         bucket_event_repository=bv_repo,
         clock=_T4,
     )
-    mark_revision_verificado_completo(
+    report_two = _verify_revision(
         revision_two.calculation_revision_id,
+        revision=revision_two,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T4,
     )
+    assert report_two.granted_verificado_completo is True
     filing_two = _file_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,

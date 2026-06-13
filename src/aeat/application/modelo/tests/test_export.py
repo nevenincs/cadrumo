@@ -64,7 +64,6 @@ from .._actions import (
     create_work_unit,
     file_modelo_revision,
     import_external_filing_evidence,
-    mark_revision_verificado_completo,
     verify_modelo_revision,
 )
 from .._export import (
@@ -365,6 +364,8 @@ def _seed_modelo_303_1t_clean_state(
         stamped_revision_id=source_snapshot.revision.id,
         source_metadata={
             "aeat_register_status": "ALTA",
+            "aeat_expediente_id": "EXP-303-2026-1T",
+            "aeat_justificante_csv": "JUST-303-2026-1T",
             "authenticated_identity": taxpayer_tax_id,
         },
     )
@@ -729,12 +730,6 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         bucket_event_repository=event_repo,
         clock=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
     )
-    verified = mark_revision_verificado_completo(
-        revision.calculation_revision_id,
-        actor="operator",
-        calculation_repository=calc_repo,
-        clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
-    )
     _seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
         taxpayer_tax_id=taxpayer_nif,
@@ -742,6 +737,19 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
     )
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator",
+        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        verification_repository=VerificationReportCatalogueRepository(),
+        filing_repository=ModeloRecordCatalogueRepository(),
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
+    )
+    assert report.granted_verificado_completo is True
+    verified = calc_repo.load().revisions[revision.calculation_revision_id]
 
     output_path = tmp_path / "modelo-303-wallet-only.txt"
     result = export_modelo_revision(

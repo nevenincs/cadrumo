@@ -343,7 +343,10 @@ def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -
 
 
 def _wallet_for_period(
-    amount: Decimal, period: str, *, captured_at: datetime = _NOW,
+    amount: Decimal,
+    period: str,
+    *,
+    captured_at: datetime = _NOW,
 ) -> IvaCompensationWalletObservation:
     return IvaCompensationWalletObservation(
         taxpayer_nif=_TAXPAYER_REF,

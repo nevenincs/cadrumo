@@ -112,7 +112,10 @@ def _calculate_309(
 
 
 def _registry_observation(
-    *, filing_year: int, period: str, result: RegistryCalculationResult,
+    *,
+    filing_year: int,
+    period: str,
+    result: RegistryCalculationResult,
 ) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo=_MODELO,
@@ -227,7 +230,9 @@ def test_modelo_309_adhoc_calculation_enrolls_two_renta_years(tmp_path: Path) ->
         recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         result_n1, produced_n1 = _calculate_309(
-            filing_year=_YEAR_N_PLUS_1, period=_PERIOD, leaf_cuotas=_YEAR_N_PLUS_1_CUOTAS,
+            filing_year=_YEAR_N_PLUS_1,
+            period=_PERIOD,
+            leaf_cuotas=_YEAR_N_PLUS_1_CUOTAS,
         )
         recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 

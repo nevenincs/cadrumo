@@ -70,7 +70,6 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
         inputs={
             "01": Decimal("10000"),
             "02": Decimal("4000"),
-            "05": Decimal("250"),
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
@@ -141,13 +140,17 @@ def test_registry_formula_runtime_preserves_signed_intermediate_results_from_off
     expectation from the formula under test.
     """
 
+    # Casilla 05 ("Pagos fraccionados anteriores") is now a bound carry that is
+    # absent-by-design (= 0) at a 1T target, so the negative diferencia is driven
+    # by the OTHER deductibles outweighing the gross liability: casilla 06
+    # (retenciones) here exceeds casilla 04 (the 20% pago fraccionado on a 1000
+    # rendimiento neto), forcing casilla 07 = 04 - 05 - 06 strictly negative.
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
         inputs={
             "01": Decimal("1000"),
             "02": Decimal("0"),
-            "05": Decimal("300"),
-            "06": Decimal("50"),
+            "06": Decimal("300"),
             "08": Decimal("100"),
             "10": Decimal("10"),
             "16": Decimal("0"),
@@ -173,7 +176,6 @@ def test_registry_formula_runtime_calculates_income_reduction_from_previous_year
         inputs={
             "01": Decimal("10000"),
             "02": Decimal("4000"),
-            "05": Decimal("250"),
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
@@ -424,14 +426,18 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
     )
 
     requirements_first_period = previous_filing_observation_requirements(
-        extended_revision, filing_year=2026, period="1T",
+        extended_revision,
+        filing_year=2026,
+        period="1T",
     )
     assert all(
         "test-cap-suppressed-binding" not in requirement.binding_ids for requirement in requirements_first_period
     )
 
     requirements_second_period = previous_filing_observation_requirements(
-        extended_revision, filing_year=2026, period="2T",
+        extended_revision,
+        filing_year=2026,
+        period="2T",
     )
     matching = [
         requirement
@@ -475,7 +481,10 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
     )
 
     resolved = resolve_previous_filing_binding_values(
-        extended_revision, observations=(m100_observation,), filing_year=2026, period="1T",
+        extended_revision,
+        observations=(m100_observation,),
+        filing_year=2026,
+        period="1T",
     )
 
     assert "test-cap-suppressed-binding-resolve" not in resolved
@@ -547,7 +556,6 @@ def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot(
         inputs={
             "01": Decimal("100"),
             "02": Decimal("0"),
-            "05": Decimal("0"),
             "06": Decimal("0"),
             "08": Decimal("0"),
             "10": Decimal("0"),
@@ -583,7 +591,6 @@ def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
             inputs={
                 "01": Decimal("100"),
                 "02": Decimal("0"),
-                "05": Decimal("0"),
                 "06": Decimal("0"),
                 "08": Decimal("0"),
                 "10": Decimal("0"),

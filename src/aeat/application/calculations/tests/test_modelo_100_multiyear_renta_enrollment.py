@@ -260,7 +260,8 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
 
         revision_n1 = _calculate_100(filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
         recorder.record_calculation_year(
-            filing_year=_YEAR_N_PLUS_1, produced_value_count=len(revision_n1.casilla_values),
+            filing_year=_YEAR_N_PLUS_1,
+            produced_value_count=len(revision_n1.casilla_values),
         )
 
     # Cross-renta wiring invariant: each year's opening pending equals the prior

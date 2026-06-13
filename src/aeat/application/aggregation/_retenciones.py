@@ -174,7 +174,8 @@ def _aggregate_for_modelo(
     )
     rollups: list[RetencionPerceptorRollup] = []
     for (source_kind, nif, scheme), group in sorted(
-        grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value),
+        grouped.items(),
+        key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value),
     ):
         total_base = sum((g.taxable_base for g in group), Decimal("0"))
         total_ret = sum((g.retencion_amount for g in group), Decimal("0"))
