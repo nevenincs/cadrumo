@@ -587,7 +587,14 @@ class LedgerReviewQuery(BaseModel):
     transaction_id: str | None = Field(default=None, min_length=64, max_length=64)
 
     @field_validator(
-        "bucket_id", "status", "issue", "import_id", "classification", "text", "direction", "transaction_id",
+        "bucket_id",
+        "status",
+        "issue",
+        "import_id",
+        "classification",
+        "text",
+        "direction",
+        "transaction_id",
     )
     @classmethod
     def _trim_optional_query_text(cls, value: str | None) -> str | None:
@@ -697,6 +704,11 @@ class LedgerCatalogueResetReport(BaseModel):
     cascaded_purchase_invoice_evidence_ids: tuple[str, ...] = ()
     cascaded_attachment_ids: tuple[str, ...] = ()
     blocking_modelo_references: tuple[LedgerRemovalBlocker, ...] = ()
+    # DRAFT (BORRADOR) revisions that still cite a reset row. Reset proceeds, but
+    # each named draft will assert an income/expense no longer in the books until
+    # recalculated; surfaced as a non-blocking advisory, kept distinct from
+    # ``blocking_modelo_references`` (no-silent-under-declaration).
+    stale_draft_revision_references: tuple[LedgerRemovalBlocker, ...] = ()
     bucket_event_ids: tuple[str, ...] = ()
 
 

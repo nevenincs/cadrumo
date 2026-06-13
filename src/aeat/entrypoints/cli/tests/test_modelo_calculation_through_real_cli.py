@@ -32,6 +32,7 @@ from ....application.user_profile._repository import UserProfileLifecycleReposit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ._m130_source_support import seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -260,7 +261,8 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
 # Oracle: AEAT Declaración 202 — Instrucciones (DR 202, Agencia Tributaria
 # 2025), Clave [03] «Base del pago fraccionado (modalidad artículo 40.2
 # LIS)», porcentaje del 18 %:
-#   - Clave [01] (base): 10.000,00 EUR
+#   - Clave [01] (base): 10.000,00 EUR, supplied through the M200 relation
+#     binding that owns the base source for the current registry revision.
 #   - Clave [02] (pagos fraccionados anteriores): 0,00 EUR
 #   - Clave [03] = 18 % x 10.000,00 - 0,00 = 1.800,00 EUR
 #
@@ -278,8 +280,9 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
     Oracle: AEAT DR 202 instrucciones, clave [03] «porcentaje del 18 %»;
     LIS Art. 40.2 (BOE-A-2014-12328).
 
-    Input: casilla 01 = 10.000,00 EUR, casilla 02 = 0,00 EUR,
-    INCN = 500.000 EUR (below 6 M threshold → Art. 40.2 lane).
+    Input: prior M200 cuota-base relation = 10.000,00 EUR,
+    casilla 02 = 0,00 EUR, INCN = 500.000 EUR
+    (below 6 M threshold → Art. 40.2 lane).
 
     Expected: casilla 03 (cuota) = 18 % x 10.000 - 0 = 1.800,00 EUR.
     """
@@ -300,10 +303,11 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "01=10000.00",
             "--casilla", "02=0.00",
             # INCN binding: routes Art. 40.2 vs Art. 40.3 lane.
             "--binding", "modelo-202-2025-y-siguientes-incn-prior-12-months=500000",
+            # Prior M200 cuota-base binding: source-owned input for casilla 01.
+            "--binding", "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=10000.00",
             # Prior pagos-fraccionados (casilla 30): zero for first period.
             "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
         ],
@@ -332,7 +336,7 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
 # Instrucciones, Casilla 04 «20 por 100 del importe de la casilla 03».
 #
 # Worked example (AEAT DR 130 Instrucciones, ejemplo estimación directa):
-#   casilla 01 (ingresos): 12.000,00 EUR
+#   casilla 01 (ingresos): 12.000,00 EUR from source-owned ledger income
 #   casilla 02 (gastos):    4.000,00 EUR
 #   casilla 03 (rendimiento neto): 12.000 - 4.000 = 8.000,00 EUR
 #   casilla 04 (pago fraccionado): 20 % x 8.000 = 1.600,00 EUR
@@ -365,12 +369,16 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
         period="1T",
         revision="2019-y-siguientes",
     )
+    seed_m130_income_transaction(
+        amount=Decimal("12000.00"),
+        filing_year=2026,
+        source_key="oracle-calc",
+    )
 
     result = invoke_cached_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "01=12000.00",
             "--casilla", "02=4000.00",
             "--casilla", "05=0.00",
             "--casilla", "06=0.00",

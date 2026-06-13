@@ -63,7 +63,9 @@ def _register_evidence_add_command() -> None:
             help=tr("cli.app.ledger.evidence.source_path_help", default="Path to a PDF or image receipt/invoice."),
         ),
         supplier: str | None = typer.Option(
-            None, "--supplier", help=tr("cli.app.ledger.evidence.supplier_help", default="Supplier name."),
+            None,
+            "--supplier",
+            help=tr("cli.app.ledger.evidence.supplier_help", default="Supplier name."),
         ),
         invoice_number: str | None = typer.Option(
             None,
@@ -91,7 +93,9 @@ def _register_evidence_add_command() -> None:
             help=tr("cli.app.ledger.evidence.iva_amount_help", default="IVA amount (Decimal)."),
         ),
         notes: str = typer.Option(
-            "", "--notes", help=tr("cli.app.ledger.evidence.notes_help", default="Free-text notes."),
+            "",
+            "--notes",
+            help=tr("cli.app.ledger.evidence.notes_help", default="Free-text notes."),
         ),
     ) -> None:
         """Register a purchase invoice evidence record and return its id."""
@@ -127,7 +131,8 @@ def _register_evidence_view_command() -> None:
     def evidence_view(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
-            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
+            ...,
+            help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
         ),
     ) -> None:
         """Show one purchase invoice evidence record by id."""
@@ -185,7 +190,8 @@ def _register_evidence_update_command() -> None:
     def evidence_update(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
-            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
+            ...,
+            help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
         ),
         supplier: str | None = typer.Option(None, "--supplier"),
         invoice_number: str | None = typer.Option(None, "--invoice-number"),
@@ -231,7 +237,8 @@ def _register_evidence_remove_command() -> None:
     def evidence_remove(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
-            ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
+            ...,
+            help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
         ),
         yes: bool = typer.Option(
             False,

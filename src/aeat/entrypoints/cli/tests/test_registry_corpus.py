@@ -19,10 +19,10 @@ import json
 import os
 from pathlib import Path
 
-import click
 import pytest
-from click import Command, Group
 from click.testing import Result
+from typer._click.core import Context as TyperContext
+from typer.core import TyperGroup
 
 from ....core.paths import PROJECT_ROOT
 from ....tests.cli_runner import aeat_click_command, invoke_cached_cli
@@ -297,18 +297,17 @@ def test_rejected_topic_and_help_commands_are_absent_from_discovery() -> None:
     ``.commands`` mapping.
     """
 
-    def _names(group: Command) -> set[str]:
-        assert isinstance(group, Group)
-        return set(group.list_commands(click.Context(group)))
+    def _names(group: TyperGroup) -> set[str]:
+        return set(group.list_commands(TyperContext(group)))
 
-    def _child(group: Command, name: str) -> Command:
-        assert isinstance(group, Group)
-        child = group.get_command(click.Context(group), name)
+    def _child(group: TyperGroup, name: str) -> TyperGroup:
+        child = group.get_command(TyperContext(group), name)
         assert child is not None
+        assert isinstance(child, TyperGroup)
         return child
 
     root = aeat_click_command()
-    assert hasattr(root, "get_command")
+    assert isinstance(root, TyperGroup)
     app_group = _child(root, "app")
     registry_group = _child(app_group, "registry")
     citations_group = _child(registry_group, "citations")

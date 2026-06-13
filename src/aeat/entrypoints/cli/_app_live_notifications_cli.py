@@ -117,7 +117,8 @@ def notifications_list(ctx: typer.Context) -> None:
 
 
 @notifications_app.command(
-    "view", help=tr("cli.app.live.notifications.view_help", default="View one DEHu notification snapshot."),
+    "view",
+    help=tr("cli.app.live.notifications.view_help", default="View one DEHu notification snapshot."),
 )
 def notifications_show(
     ctx: typer.Context,

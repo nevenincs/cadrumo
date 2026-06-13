@@ -313,7 +313,9 @@ def _emit_invoice_event(
 
 
 def _load(
-    settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str,
+    settings: Settings,
+    kind: BusinessOperationInvoiceSourceKind,
+    bucket_id: str,
 ) -> list[BusinessOperationInvoice]:
     document = _repository(settings, bucket_id).load(_document_key(bucket_id, kind))
     return list(document.records) if document is not None else []

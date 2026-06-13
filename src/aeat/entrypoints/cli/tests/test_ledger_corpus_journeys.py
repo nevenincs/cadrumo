@@ -79,7 +79,8 @@ def _import_corpus() -> int:
 def _import_bbva() -> None:
     """Lighter import (single business account) for row-targeted journeys."""
     result = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
+        app,
+        ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
 
@@ -107,7 +108,8 @@ def test_reimport_is_idempotent_dedups() -> None:
     first = len(_list_rows())
     # Re-import one file; fingerprint dedup must skip every row.
     result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(_CORPUS / _FILES[0]), "--provider", "csv"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(_CORPUS / _FILES[0]), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -736,7 +738,8 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
     old_id = target["transaction_id"]
 
     res = _RUNNER.invoke(
-        app, ["app", "ledger", "update", old_id, "--description", "Material oficina (corregido)"],
+        app,
+        ["app", "ledger", "update", old_id, "--description", "Material oficina (corregido)"],
     )
     assert res.exit_code == 0, res.output
 
@@ -812,7 +815,11 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
 
     period = Period.from_year_and_code(2025, "1T")
     work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id, modelo="303", filing_year=2025, period=period, revision_id="2009-y-siguientes",
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=2025,
+        period=period,
+        revision_id="2009-y-siguientes",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -972,7 +979,8 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     )
     assert cls_biz.exit_code == 0, cls_biz.output
     cls_per = _RUNNER.invoke(
-        app, ["app", "ledger", "classify", per_child.transaction_id, "--classification", "PERSONAL"],
+        app,
+        ["app", "ledger", "classify", per_child.transaction_id, "--classification", "PERSONAL"],
     )
     assert cls_per.exit_code == 0, cls_per.output
 
@@ -1036,7 +1044,8 @@ def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
     xlsx_path = tmp_path / "bbva.xlsx"
     _xlsx_mirror_of_csv(csv_path, xlsx_path)
     reimport = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"],
     )
     assert reimport.exit_code == 0, reimport.output
     # Cross-format re-import of identical rows dedups to zero new rows.

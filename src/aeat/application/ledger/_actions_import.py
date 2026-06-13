@@ -126,8 +126,8 @@ def _apply_fx_conversion(
     result = currency_normalizer.normalize(MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date)
     if result.status is not CurrencyNormalizationStatus.NORMALIZED or result.rate is None:
         return (None, None, None, None)
-    # value_in_eur is the non-negative EUR magnitude; the sign is carried by
-    # raw.amount + direction (Transaction.value_in_eur rejects negatives).
+    # value_in_eur is the non-negative EUR magnitude; flow is carried solely by
+    # direction (Transaction.value_in_eur rejects negatives).
     rate_date_iso = result.rate_date.isoformat() if result.rate_date is not None else None
     return (result.rate, abs(result.eur_amount), result.rate_source, rate_date_iso)
 

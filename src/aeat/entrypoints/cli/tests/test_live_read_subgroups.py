@@ -40,18 +40,18 @@ from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._app_live import (
     _iva_remote_state_capture_lines,
-    _live_auth_preflight_lines,
+    _live_iva_evidence_pull_command_timeout_ms,
     _live_iva_outcome_label,
-    _live_iva_remote_state_command_timeout_ms,
     _playwright_profile_tokens,
     _process_command_inventory,
     _reap_new_playwright_profile_processes,
-    _run_live_iva_remote_state_command,
+    _run_live_iva_evidence_pull_command,
     borrador_100_app,
     expedientes_app,
     iva_wallet_app,
     verify_app,
 )
+from .._app_live_auth_preflight import _live_auth_preflight_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -215,33 +215,33 @@ class TestReadOnlyStructuralInvariants:
 
 
 class TestIvaRemoteStateCliSurface:
-    def test_remote_state_command_watchdog_budget_scales_with_year_span(self) -> None:
+    def test_evidence_pull_command_watchdog_budget_scales_with_year_span(self) -> None:
         with override_settings(
             aeat_clave_movil_timeout_ms=120_000,
             aeat_live_iva_surface_timeout_ms=180_000,
             aeat_live_iva_cli_watchdog_timeout_ms=240_000,
         ):
-            one_year = _live_iva_remote_state_command_timeout_ms(year_from=2026, year_to=2026)
-            five_years = _live_iva_remote_state_command_timeout_ms(year_from=2022, year_to=2026)
+            one_year = _live_iva_evidence_pull_command_timeout_ms(year_from=2026, year_to=2026)
+            five_years = _live_iva_evidence_pull_command_timeout_ms(year_from=2022, year_to=2026)
 
         assert one_year == 720_000
         assert five_years == 1_440_000
         assert five_years > one_year
 
-    def test_remote_state_command_watchdog_reports_typed_timeout(self) -> None:
+    def test_evidence_pull_command_watchdog_reports_typed_timeout(self) -> None:
         async def slow_read() -> str:
             await asyncio.sleep(0.05)
             return "unreachable"
 
         async def run() -> None:
             with pytest.raises(LiveIvaSurfaceTimeoutError) as raised:
-                await _run_live_iva_remote_state_command(slow_read(), timeout_ms=1)
+                await _run_live_iva_evidence_pull_command(slow_read(), timeout_ms=1)
 
-            assert raised.value.surface == "remote_state_command"
+            assert raised.value.surface == "iva_evidence_command"
             assert raised.value.timeout_ms == 1
             context = raised.value.context
             assert context is not None
-            assert context["surface"] == "remote_state_command"
+            assert context["surface"] == "iva_evidence_command"
             assert context["timeout_ms"] == 1
             progress_node = context["progress"]
             assert isinstance(progress_node, dict)
@@ -268,13 +268,13 @@ class TestIvaRemoteStateCliSurface:
             import sys
 
             from aeat.application.live import LiveIvaSurfaceTimeoutError
-            from aeat.entrypoints.cli._app_live import _run_live_iva_remote_state_command
+            from aeat.entrypoints.cli._app_live import _run_live_iva_evidence_pull_command
 
             async def slow_read():
                 await asyncio.sleep(30)
 
             try:
-                asyncio.run(_run_live_iva_remote_state_command(slow_read(), timeout_ms=1))
+                asyncio.run(_run_live_iva_evidence_pull_command(slow_read(), timeout_ms=1))
             except LiveIvaSurfaceTimeoutError:
                 sys.exit(0)
             sys.exit(2)
@@ -328,15 +328,16 @@ class TestIvaRemoteStateCliSurface:
             if mode is not LiveIvaAcquisitionFailureMode.UNKNOWN:
                 assert label != _live_iva_outcome_label(LiveIvaAcquisitionFailureMode.UNKNOWN)
 
-    def test_iva_wallet_remote_state_command_is_registered_as_read_capture(self) -> None:
+    def test_iva_wallet_combined_evidence_command_is_registered_as_read_capture(self) -> None:
         registered = {info.name for info in iva_wallet_app.registered_commands}
 
-        assert "pull-remote-state" in registered
+        assert "pull-evidence" in registered
+        assert "pull-remote-state" not in registered
         assert registered.isdisjoint({"submit", "send", "present", "sign", "pay", "modify"})
 
     def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels(self) -> None:
         report = IvaRemoteStateAcquisitionReport(
-            output_root="var/aeat/live/iva-remote-state",
+            output_root="var/aeat/live/iva-read-evidence",
             year_from=2022,
             year_to=2024,
             target_year=2026,

@@ -226,7 +226,8 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
     # The restored row is genuinely active again: it re-enters the
     # active-aggregation set that tax calculations consume.
     restored_summary = summarize_manual_transactions(
-        bucket_id="bucket-a", transaction_repository=transaction_repository,
+        bucket_id="bucket-a",
+        transaction_repository=transaction_repository,
     )
     assert restored_summary.active_count == 1
     assert restored_summary.stashed_count == 0

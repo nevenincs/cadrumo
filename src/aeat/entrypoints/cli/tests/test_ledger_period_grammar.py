@@ -60,7 +60,11 @@ _TOKEN_YEAR_SPAN = (
 
 @pytest.mark.parametrize(("token", "year", "registry_token", "start", "end"), _TOKEN_YEAR_SPAN)
 def test_aeat_token_plus_year_resolves_to_period(
-    token: str, year: int, registry_token: str, start: date, end: date,
+    token: str,
+    year: int,
+    registry_token: str,
+    start: date,
+    end: date,
 ) -> None:
     """A bare AEAT token plus ``--year`` resolves to one typed :class:`Period`."""
 
@@ -74,7 +78,11 @@ def test_aeat_token_plus_year_resolves_to_period(
 
 @pytest.mark.parametrize(("token", "year", "registry_token", "start", "end"), _TOKEN_YEAR_SPAN)
 def test_resolved_period_round_trips_through_registry_token(
-    token: str, year: int, registry_token: str, start: date, end: date,
+    token: str,
+    year: int,
+    registry_token: str,
+    start: date,
+    end: date,
 ) -> None:
     """The resolved :class:`Period` carries the bare registry token back out.
 

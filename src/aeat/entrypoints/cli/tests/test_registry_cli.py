@@ -50,6 +50,7 @@ from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.cli_runner import aeat_click_command
 from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
+from .. import _app_live
 from .._app_live import (
     _filed_list_result_and_lines,
     _iva_wallet_history_lines,
@@ -105,6 +106,18 @@ def _child(group: object, name: str):
     """
     assert isinstance(group, TyperGroup)
     return group.get_command(typer.Context(group), name)
+
+
+def _command_tree_paths(group: TyperGroup, *, prefix: tuple[str, ...] = ()) -> set[tuple[str, ...]]:
+    ctx = typer.Context(group)
+    paths: set[tuple[str, ...]] = set()
+    for name in group.list_commands(ctx):
+        child = group.get_command(ctx, name)
+        path = (*prefix, name)
+        paths.add(path)
+        if isinstance(child, TyperGroup):
+            paths.update(_command_tree_paths(child, prefix=path))
+    return paths
 
 
 def _session() -> BucketSession:
@@ -209,7 +222,8 @@ _INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS = (
 
 @pytest.mark.parametrize("count_key", _INSPECT_PAYLOAD_NON_ZERO_COUNT_KEYS)
 def test_registry_inspect_cli_reports_non_zero_count(
-    _registry_inspect_payload: RegistryTreeReport, count_key: str,
+    _registry_inspect_payload: RegistryTreeReport,
+    count_key: str,
 ) -> None:
     count = getattr(_registry_inspect_payload, count_key)
     assert count > 0, f"{count_key}={count!r}"
@@ -265,7 +279,9 @@ _REVISION_COUNT_PAIRS = (
 
 @pytest.mark.parametrize(("count_key", "ids_key"), _REVISION_COUNT_PAIRS)
 def test_registry_inspect_cli_first_revision_count_matches_id_list(
-    _registry_inspect_payload: RegistryTreeReport, count_key: str, ids_key: str,
+    _registry_inspect_payload: RegistryTreeReport,
+    count_key: str,
+    ids_key: str,
 ) -> None:
     revision = _registry_inspect_payload.revision_details[0]
     assert getattr(revision, count_key) == len(getattr(revision, ids_key))
@@ -700,6 +716,31 @@ def test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all() -> No
     assert _child(filed_group, "pull-all") is None
 
 
+def test_live_filed_bulk_pull_accepts_limit_without_pull_all() -> None:
+    result = invoke_cached_cli(
+        [
+            "app",
+            "live",
+            "filed",
+            "pull",
+            "--modelo",
+            "151",
+            "--from-year",
+            "2024",
+            "--to-year",
+            "2024",
+            "--limit",
+            "10",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "mode=bulk" in result.output
+    assert "failed_count=1" in result.output
+    assert "pull-all" not in result.output
+
+
 def test_live_notifications_latest_cli_help_resolves() -> None:
     result = invoke_cached_cli(
         ["app", "live", "notifications", "latest", "--help"],
@@ -746,6 +787,22 @@ def test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all()
     assert _child(expedientes_group, "pull-all") is None
 
 
+def test_live_command_tree_rejects_pull_all_and_capture_all_aliases() -> None:
+    root = aeat_click_command()
+    app_group = _child(root, "app")
+    assert app_group is not None
+    live_group = _child(app_group, "live")
+    assert isinstance(live_group, TyperGroup)
+
+    paths = _command_tree_paths(live_group)
+    disallowed = sorted(" ".join(("app", "live", *path)) for path in paths if path[-1] in {"capture-all", "pull-all"})
+
+    assert not disallowed
+    assert ("filed", "pull") in paths
+    assert ("expedientes", "pull") in paths
+    assert all("capture" not in exported for exported in _app_live.__all__ if exported.endswith("_cmd"))
+
+
 def test_live_pull_help_locale_keys_do_not_use_capture_all_names() -> None:
     checked_paths = (
         Path("src/aeat/entrypoints/cli/_app_live.py"),
@@ -776,11 +833,16 @@ def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
         ["app", "live", "iva-wallet", "history", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
+    pull_evidence = invoke_cached_cli(
+        ["app", "live", "iva-wallet", "pull-evidence", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
 
     assert group.exit_code == 0
     assert pull.exit_code == 0
     assert capture_history.exit_code == 0
     assert history.exit_code == 0
+    assert pull_evidence.exit_code == 0
     assert "read-only" in group.output or "solo lectura" in group.output
     assert "read query" in pull.output or "lectura" in pull.output
     assert "own-name" in pull.output or "nombre propio" in pull.output
@@ -789,6 +851,35 @@ def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
         or "No se envia ninguna declaracion" in capture_history.output
     )
     assert "--as-of-year" in history.output
+    assert "read-only" in pull_evidence.output or "solo lectura" in pull_evidence.output
+    assert "acquisition" in pull_evidence.output or "adquisicion" in pull_evidence.output
+    assert "remote-state" not in pull_evidence.output.lower()
+
+
+def test_live_iva_wallet_pull_evidence_resolves_target_period_before_backend(tmp_path: Path) -> None:
+    result = invoke_cached_cli(
+        [
+            "app",
+            "live",
+            "iva-wallet",
+            "pull-evidence",
+            "--from-year",
+            "2026",
+            "--to-year",
+            "2026",
+            "--target-year",
+            "2026",
+            "--target-period",
+            "2T",
+            "--output-root",
+            str(tmp_path / "iva-evidence"),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "AttributeError" not in result.output
+    assert "filing_year" not in result.output
+    assert "auth_preflight" in result.output
 
 
 def test_live_iva_wallet_pull_output_lines_name_guarded_read_query_policy() -> None:
@@ -1122,7 +1213,6 @@ def _modelo_130_inputs() -> dict[str, Decimal]:
     return {
         "01": Decimal("10000"),
         "02": Decimal("4000"),
-        "05": Decimal("250"),
         "06": Decimal("100"),
         "08": Decimal("2000"),
         "10": Decimal("10"),

@@ -61,7 +61,8 @@ def _active_profile_pointer() -> ProfileBucketPointer:
 
 
 @scopes_app.command(
-    "list", help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes"),
+    "list",
+    help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes"),
 )
 def apoderado_scopes_list(
     ctx: typer.Context,
@@ -85,7 +86,8 @@ def apoderado_scopes_list(
 
 
 @apoderado_app.command(
-    "status", help=tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration"),
+    "status",
+    help=tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration"),
 )
 def apoderado_status(
     ctx: typer.Context,
@@ -118,7 +120,8 @@ def apoderado_status(
 
 
 @apoderado_app.command(
-    "configure", help=tr("cli.config.auth.apoderado.configure_help", default="Set active apoderado configuration"),
+    "configure",
+    help=tr("cli.config.auth.apoderado.configure_help", default="Set active apoderado configuration"),
 )
 def apoderado_configure(
     ctx: typer.Context,
@@ -164,7 +167,8 @@ def apoderado_configure(
 
 
 @apoderado_app.command(
-    "clear", help=tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration"),
+    "clear",
+    help=tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration"),
 )
 def apoderado_clear(
     ctx: typer.Context,

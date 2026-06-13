@@ -50,6 +50,7 @@ from ._snapshot_base import (
     SecureSnapshotRepository,
     SnapshotNotFoundError,
     StatelessSnapshotService,
+    derive_snapshot_id_from_json,
 )
 
 
@@ -71,11 +72,29 @@ class PersistedNotificationsSnapshot(BaseModel):
     bucket_id: BucketId
     captured_at: datetime
     source_url: str = Field(min_length=1)
+    authenticated_identity: str | None = Field(default=None, min_length=1, max_length=32)
     rows: tuple[RemoteNotification, ...]
     persisted_at: datetime
 
 
-def _derive_snapshot_id(snapshot: NotificationsSnapshot) -> str:
+def _normalise_authenticated_identity(authenticated_identity: str | None) -> str | None:
+    identity = (authenticated_identity or "").strip().upper()
+    return identity or None
+
+
+def _derive_snapshot_id(
+    snapshot: NotificationsSnapshot,
+    *,
+    authenticated_identity: str | None = None,
+) -> str:
+    identity = _normalise_authenticated_identity(authenticated_identity)
+    if identity is not None:
+        return derive_snapshot_id_from_json(
+            {
+                "snapshot": snapshot.model_dump(mode="json"),
+                "authenticated_identity": identity,
+            },
+        )
     canonical = snapshot.model_dump_json()
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
@@ -97,7 +116,8 @@ def notifications_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
 
 
 def _notifications_repository(
-    settings: Settings, bucket_id: str,
+    settings: Settings,
+    bucket_id: str,
 ) -> SecureSnapshotRepository[PersistedNotificationsSnapshot]:
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
@@ -143,6 +163,7 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
         *,
         bucket_id: str,
         snapshot: NotificationsSnapshot,
+        authenticated_identity: str | None = None,
     ) -> PersistedNotificationsSnapshot:
         """Persist a snapshot for the active bucket and return the :class:`PersistedNotificationsSnapshot`.
 
@@ -151,7 +172,11 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
         service does not couple to the event repository so the
         persistence can be tested in isolation.
         """
-        return self._capture_stateless(bucket_id=bucket_id, snapshot=snapshot)
+        return self._capture_stateless(
+            bucket_id=bucket_id,
+            snapshot=snapshot,
+            authenticated_identity=authenticated_identity,
+        )
 
     def show(
         self,
@@ -182,7 +207,10 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
     # contract uses **kwargs to allow concrete subclasses to accept caller-
     # specific keyword arguments without a shared typed parameter set.
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
-        return _derive_snapshot_id(kwargs["snapshot"])
+        return _derive_snapshot_id(
+            kwargs["snapshot"],
+            authenticated_identity=kwargs.get("authenticated_identity"),
+        )
 
     @override
     # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: StatelessSnapshotService[T]
@@ -195,6 +223,7 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
             bucket_id=bucket_id,
             captured_at=snapshot.captured_at,
             source_url=str(snapshot.source_url),
+            authenticated_identity=_normalise_authenticated_identity(kwargs.get("authenticated_identity")),
             rows=snapshot.rows,
             persisted_at=now(),
         )

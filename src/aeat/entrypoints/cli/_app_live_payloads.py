@@ -81,6 +81,12 @@ class FiledCaptureResult(OutputSchema):
     failed_count: int = 0
     observation_paths: list[str]
     artefact_refs: list[str]
+    justificante_metadata_count: int = 0
+    justificante_csvs: list[str] = []
+    filing_evidence_stamped_count: int = 0
+    filing_record_ids: list[str] = []
+    filing_evidence_conflict_count: int = 0
+    filing_evidence_conflict_record_ids: list[str] = []
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: list[str]
@@ -98,6 +104,12 @@ class FiledCaptureSourcesResult(OutputSchema):
     captured_count: int
     observation_paths: list[str]
     artefact_refs: list[str]
+    justificante_metadata_count: int = 0
+    justificante_csvs: list[str] = []
+    filing_evidence_stamped_count: int = 0
+    filing_record_ids: list[str] = []
+    filing_evidence_conflict_count: int = 0
+    filing_evidence_conflict_record_ids: list[str] = []
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: list[str]
@@ -107,7 +119,7 @@ class FiledCaptureSourcesResult(OutputSchema):
 # IVA wallet leaves
 # ---------------------------------------------------------------------------
 #
-# The pull/history/pull-history/pull-remote-state verbs surface
+# The pull/history/pull-history/pull-evidence verbs surface
 # read-only IVA compensation reports. Each registered schema below mirrors
 # the dict payload emitted at the corresponding call site in
 # ``_app_live.py``; tuple-typed report fields are flattened to ``list``
@@ -233,9 +245,9 @@ class LiveIvaAuthOutcomePayload(OutputSchema):
     fresh: bool | None
 
 
-@register_schema("app.live.iva_wallet.pull_remote_state")
-class IvaWalletCaptureRemoteStateResult(OutputSchema):
-    """Payload for ``aeat app live iva-wallet pull-remote-state``."""
+@register_schema("app.live.iva_wallet.pull_evidence")
+class IvaWalletPullEvidenceResult(OutputSchema):
+    """Payload for ``aeat app live iva-wallet pull-evidence``."""
 
     output_root: str
     year_from: int
@@ -494,6 +506,11 @@ class JustificanteCaptureResult(OutputSchema):
     source_kind: str
     state: str
     captured_at: str
+    justificante_metadata_registered: bool
+    calendar_evidence_available: bool
+    modelo_filing_record_required: bool
+    filing_evidence_stamped: bool
+    filing_record_id: str | None = None
 
 
 class JustificanteSnapshotSummaryPayload(OutputSchema):

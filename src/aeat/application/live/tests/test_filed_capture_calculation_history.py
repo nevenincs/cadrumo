@@ -15,28 +15,49 @@ from ....adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
+    FiledDeclaracionObservationStore,
     ObservedCasillaValue,
 )
 from ....adapters.outbound.aeat.sede._declarations import _observed_casillas_from_submitted_file
 from ....core import Period
 from ....core.external_constants import load_external_constants
 from ....core.resources import resources
+from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
-from ....tests.secure_sql import isolated_runtime_profile
+from ....domain.justificante import JustificanteRepository
+from ....domain.modelos import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogueRepository,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+    upsert_filing_record,
+)
+from ....domain.modelos._codes import ModeloCode
+from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....tests import FIXTURES_DIR
+from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
+from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile._testing import register_minimal_profile
+from ...workflow._persistence import workflow_state_repository
 from .. import (
     _latest_declarations_by_period,
     _persist_iva_compensation_history_observations_strict,
     _persist_latest_filed_calculation_observations,
+    enroll_filed_justificante_evidence,
     list_iva_compensation_history,
     load_iva_remote_state,
     persist_filed_calculation_observation,
+    persist_filed_justificante_metadata,
 )
 from .._errors import LiveApplicationInputError
 
@@ -53,6 +74,24 @@ _SESSION_BUCKET_ID = "ephemeral"
 def _secure_backend(tmp_path: Path):
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
         yield profile.paths.db_dir / "aeat.db"
+
+
+@contextmanager
+def _profile_backend(tmp_path: Path, *, tax_id: str):
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span("operator"),
+    ):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="operator",
+                overrides={"identity.tax_id": tax_id},
+            ),
+        )
+        bucket_id = workflow_state_repository().load().active_profile_bucket_id()
+        assert bucket_id is not None
+        yield bucket_id
 
 
 def test_filed_observation_capture_promotes_previous_303_into_recurrence_history(tmp_path: Path) -> None:
@@ -87,6 +126,45 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
         assert recurrence.amount == Decimal("1200.00")
         assert recurrence.source_periods == (Period.from_year_and_code(2026, "1T"),)
         assert recurrence_prefill.binding_values == prefill.binding_values
+
+
+def test_filed_observation_capture_records_single_justificante_csv_metadata(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        repository = CalculationObservationRepository()
+        observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
+
+        persist_filed_calculation_observation(
+            observation,
+            repository=repository,
+            justificante_csvs=("CSV30320261T",),
+        )
+
+        loaded = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+
+    assert loaded is not None
+    assert loaded.source_metadata == {
+        "aeat_register_status": "ALTA",
+        "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
+        "authenticated_identity": _SYNTHETIC_PROFILE_ID,
+        "aeat_justificante_csv": "CSV30320261T",
+    }
+
+
+def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
+
+        keys = _persist_latest_filed_calculation_observations(
+            (observation,),
+            justificante_csvs_by_observation={
+                ("303", 2026, "1T", _SYNTHETIC_EXPEDIENTE_ID): ("CSV30320261T",),
+            },
+        )
+        loaded = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+
+    assert keys == ("303:2026:1T",)
+    assert loaded is not None
+    assert loaded.source_metadata["aeat_justificante_csv"] == "CSV30320261T"
 
 
 def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tmp_path: Path) -> None:
@@ -186,10 +264,258 @@ def test_direct_filed_observation_persist_refuses_non_alta_status(tmp_path: Path
                 ),
             )
 
-        assert (
-            CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
-        )
+        assert CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
         assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
+
+
+def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store)
+
+        csvs = persist_filed_justificante_metadata(observation, store=store)
+
+        assert csvs == ("ABCD1234EFGH5678",)
+        loaded = JustificanteRepository().load("ABCD1234EFGH5678")
+        assert loaded is not None
+        assert loaded.modelo == "130"
+        assert loaded.period == Period.from_year_and_code(2026, "1T")
+        assert loaded.tax_id == "00000000T"
+
+
+def test_filed_observation_capture_refuses_wrong_taxpayer_justificante_metadata(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store, authenticated_identity="X1234567L")
+
+        csvs = persist_filed_justificante_metadata(observation, store=store)
+
+        assert csvs == ()
+        assert JustificanteRepository().load("ABCD1234EFGH5678") is None
+
+
+def test_filed_observation_capture_refuses_mismatched_presentation_id_metadata(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store, expediente_id="13020260410ZZZZ1234EFGH5678")
+
+        csvs = persist_filed_justificante_metadata(observation, store=store)
+
+        assert csvs == ()
+        assert JustificanteRepository().load("ABCD1234EFGH5678") is None
+
+
+def test_filed_observation_capture_stamps_matching_current_filing_record(tmp_path: Path) -> None:
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store)
+        filing = _seed_current_130_filing(bucket_id=bucket_id)
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+
+        assert result.justificante_csvs == ("ABCD1234EFGH5678",)
+        assert result.filing_record_ids == (filing.filing_record_id,)
+        current = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+        assert current is not None
+        assert current.aeat_accepted is True
+        assert current.external_evidence is not None
+        assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_LIVE_CAPTURE
+        assert current.external_evidence.reference_id == "ABCD1234EFGH5678"
+        events = [
+            event
+            for event in BucketEventHistoryRepository().load().events.values()
+            if event.event_type is BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED
+        ]
+        assert len(events) == 1
+        assert events[0].bucket_id == bucket_id
+        assert events[0].actor == "aeat-filed-history"
+        assert events[0].object_id == filing.filing_record_id
+        assert events[0].payload["evidence_reference_id"] == "ABCD1234EFGH5678"
+        assert events[0].payload["expediente_id"] == observation.expediente_id
+
+
+def test_filed_observation_capture_rejects_mismatched_presentation_id_before_stamping(
+    tmp_path: Path,
+) -> None:
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store, expediente_id="13020260410ZZZZ1234EFGH5678")
+        _seed_current_130_filing(bucket_id=bucket_id)
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        current = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+
+    assert result.justificante_csvs == ()
+    assert result.filing_record_ids == ()
+    assert result.conflicting_filing_record_ids == ()
+    assert current is not None
+    assert current.external_evidence is None
+    assert current.aeat_accepted is False
+
+
+def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_same_csv(tmp_path: Path) -> None:
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store)
+        filing = _seed_current_130_filing(
+            bucket_id=bucket_id,
+            aeat_accepted=True,
+            external_evidence=ExternalEvidence(
+                kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                reference_id="ABCD1234EFGH5678",
+                imported_at=_CAPTURED_AT,
+            ),
+        )
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+
+        assert result.filing_record_ids == (filing.filing_record_id,)
+        assert result.conflicting_filing_record_ids == ()
+        current = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+        assert current is not None
+        assert current.external_evidence is not None
+        assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
+        assert current.external_evidence.reference_id == "ABCD1234EFGH5678"
+        events = [
+            event
+            for event in BucketEventHistoryRepository().load().events.values()
+            if event.event_type is BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED
+        ]
+        assert events == []
+
+
+def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same_csv_case_insensitive(
+    tmp_path: Path,
+) -> None:
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store)
+        filing = _seed_current_130_filing(
+            bucket_id=bucket_id,
+            aeat_accepted=True,
+            external_evidence=ExternalEvidence(
+                kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+                reference_id="abcd1234efgh5678",
+                imported_at=_CAPTURED_AT,
+            ),
+        )
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+
+        assert result.filing_record_ids == (filing.filing_record_id,)
+        assert result.conflicting_filing_record_ids == ()
+        current = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+        assert current is not None
+        assert current.external_evidence is not None
+        assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
+        assert current.external_evidence.reference_id == "abcd1234efgh5678"
+        events = [
+            event
+            for event in BucketEventHistoryRepository().load().events.values()
+            if event.event_type is BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED
+        ]
+        assert events == []
+
+
+def test_filed_observation_capture_reports_existing_evidence_conflict_without_overwrite(tmp_path: Path) -> None:
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store)
+        filing = _seed_current_130_filing(
+            bucket_id=bucket_id,
+            aeat_accepted=True,
+            external_evidence=ExternalEvidence(
+                kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                reference_id="DIFFERENTCSV12345",
+                imported_at=_CAPTURED_AT,
+            ),
+        )
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+
+        assert result.filing_record_ids == ()
+        assert result.conflicting_filing_record_ids == (filing.filing_record_id,)
+        current = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+        assert current is not None
+        assert current.external_evidence is not None
+        assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
+        assert current.external_evidence.reference_id == "DIFFERENTCSV12345"
+        events = [
+            event
+            for event in BucketEventHistoryRepository().load().events.values()
+            if event.event_type is BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED
+        ]
+        assert events == []
+
+
+def test_filed_observation_capture_does_not_stamp_current_filing_for_wrong_profile_taxpayer(tmp_path: Path) -> None:
+    with _profile_backend(tmp_path, tax_id="X1234567L") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store)
+        _seed_current_130_filing(bucket_id=bucket_id)
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+
+        assert result.justificante_csvs == ("ABCD1234EFGH5678",)
+        assert result.filing_record_ids == ()
+        current = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+        assert current is not None
+        assert current.aeat_accepted is False
+        assert current.external_evidence is None
 
 
 def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> None:
@@ -294,9 +620,7 @@ def test_iva_history_strict_persist_skips_non_alta_only_period(tmp_path: Path) -
 
         assert keys == ()
         assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
-        assert (
-            CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
-        )
+        assert CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
 
 
 def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(tmp_path: Path) -> None:
@@ -544,6 +868,93 @@ def _parsed_303_submitted_file_observation(
         casillas=observed,
         extraction_coverage={"submitted_file": 1.0},
     )
+
+
+def _stored_130_justificante_observation(
+    store: FiledDeclaracionObservationStore,
+    *,
+    authenticated_identity: str = "00000000T",
+    expediente_id: str = "13020260410ABCD1234EFGH5678",
+) -> FiledDeclaracionObservation:
+    pdf_bytes = (FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf").read_bytes()
+    period = Period.from_year_and_code(2026, "1T")
+    external = load_external_constants().aeat
+    declarations_url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
+    artefact = store.persist_artefact(
+        ("130", 2026, period, expediente_id),
+        FiledDeclaracionArtefact(
+            kind="justificante_pdf",
+            source_url=AnyHttpUrl(declarations_url),
+            content_type="application/pdf",
+            byte_count=len(pdf_bytes),
+            sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+            captured_at=_CAPTURED_AT,
+        ),
+        pdf_bytes,
+    )
+    return FiledDeclaracionObservation(
+        modelo="130",
+        ejercicio=2026,
+        period=period,
+        expediente_id=expediente_id,
+        status="ALTA",
+        presented_at=_CAPTURED_AT,
+        authenticated_identity=authenticated_identity,
+        artefacts=(artefact,),
+    )
+
+
+def _seed_current_130_filing(
+    *,
+    bucket_id: str,
+    aeat_accepted: bool = False,
+    external_evidence: ExternalEvidence | None = None,
+) -> ModeloRecord:
+    period = Period.from_year_and_code(2026, "1T")
+    revision_id = hashlib.sha256(f"{bucket_id}:130:2026:1T".encode()).hexdigest()
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo="130",
+        filing_year=2026,
+        period=period,
+        revision_id=revision_id,
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period=period,
+        revision_id=revision_id,
+        name="130-2026-1T",
+        created_at=_CAPTURED_AT,
+        updated_at=_CAPTURED_AT,
+    )
+    work_unit_repo = WorkUnitCatalogueRepository()
+    work_unit_repo.save(upsert_work_unit(work_unit_repo.load(), work_unit))
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=_CAPTURED_AT,
+        filed_by="operator",
+    )
+    filing = ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period=period,
+        filed_at=_CAPTURED_AT,
+        filed_by="operator",
+        aeat_accepted=aeat_accepted,
+        status=ModeloRecordStatus.VIGENTE,
+        external_evidence=external_evidence,
+    )
+    filing_repo = ModeloRecordCatalogueRepository()
+    filing_repo.save(upsert_filing_record(filing_repo.load(), filing))
+    return filing
 
 
 def _modelo_303_page_03_payload(

@@ -24,7 +24,7 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
     @profile_app.command("history", help=tr("cli.config.profile.history_help"))
     def profile_history(
         ctx: typer.Context,
-        bucket_id: typing.Annotated[
+        profile: typing.Annotated[
             str,
             typer.Argument(help=tr("cli.config.profile.history_bucket_id_help")),
         ],
@@ -75,6 +75,7 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
         from ....domain.buckets import BucketEventHistoryRepository
         from .._config_payloads import BucketHistoryResult
 
+        profile_label, bucket_id = _resolve_profile_history_target(profile)
         selected = _parse_bucket_event_types(event_type)
         since_dt = _parse_bucket_history_instant(since, flag="--since")
         until_dt = _parse_bucket_history_instant(until, flag="--until")
@@ -106,11 +107,29 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
             actor=actor_token,
             events=[dict(_bucket_history_event_payload(event)) for event in events],
         )
-        lines = ["operation\tconfig.bucket.history", f"bucket_id\t{bucket_id}", f"event_count\t{len(events)}"] + [
+        lines = ["operation\tconfig.profile.history", f"profile\t{profile_label}", f"event_count\t{len(events)}"] + [
             f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
             for e in events
         ]
         _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
+
+
+def _resolve_profile_history_target(profile: str) -> tuple[str, str]:
+    """Resolve an operator profile token to ``(label, bucket_id)`` for history reads."""
+    from ....application.workflow import ProfileLabelAmbiguousError, read_profile_bucket, read_profile_bucket_by_id
+
+    token = profile.strip()
+    try:
+        pointer = read_profile_bucket(token)
+    except ProfileLabelAmbiguousError as exc:
+        raise typer.BadParameter(tr("errors.refused.refused_profile_label_ambiguous")) from exc
+    except ValueError as exc:
+        raise typer.BadParameter(tr("cli.config.profile.unknown_profile", name=token)) from exc
+    if pointer is None:
+        pointer = read_profile_bucket_by_id(token)
+    if pointer is None:
+        raise typer.BadParameter(tr("cli.config.profile.unknown_profile", name=token))
+    return pointer.label, pointer.bucket_id
 
 
 def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEventType, ...] | None:

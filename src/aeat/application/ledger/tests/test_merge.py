@@ -61,8 +61,8 @@ def _split_setup(
     event_repository: BucketEventHistoryRepository,
     *,
     parent_amount: Decimal = Decimal("100.00"),
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
 ):
-    direction = TransactionDirection.OUTGOING if parent_amount < Decimal("0") else TransactionDirection.INCOMING
     parent_command = ManualLedgerTransactionCommand(
         bucket_id="bucket-a",
         booked_date=date(2026, 5, 2),

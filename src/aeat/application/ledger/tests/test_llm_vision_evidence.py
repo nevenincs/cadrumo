@@ -103,7 +103,8 @@ def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path, *, name: str, dat
 
 
 def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
-    profile: TestRuntimeProfile, tmp_path: Path,
+    profile: TestRuntimeProfile,
+    tmp_path: Path,
 ) -> None:
     """A scan-only PDF resolves to base64 PNG images on-host, even for a gestor."""
     evidence_id = _add_evidence(profile, tmp_path, name="scan.pdf", data=_scan_only_pdf())
@@ -113,7 +114,10 @@ def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
         update={"aeat_evidence_gestor_mode": True, "aeat_evidence_cloud_upload_permitted": False},
     )
     resolved = _resolve_evidence(
-        _transaction(evidence_id), bucket_id="bucket-001", settings=gestor, evidence_acknowledged=False,
+        _transaction(evidence_id),
+        bucket_id="bucket-001",
+        settings=gestor,
+        evidence_acknowledged=False,
     )
     assert resolved is not None
     assert resolved.text is None
@@ -126,7 +130,10 @@ def test_image_evidence_resolves_to_images(profile: TestRuntimeProfile, tmp_path
     """An image invoice resolves to its base64 bytes for the on-host vision read."""
     evidence_id = _add_evidence(profile, tmp_path, name="receipt.png", data=_png_image())
     resolved = _resolve_evidence(
-        _transaction(evidence_id), bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=False,
+        _transaction(evidence_id),
+        bucket_id="bucket-001",
+        settings=profile.settings,
+        evidence_acknowledged=False,
     )
     assert resolved is not None
     assert resolved.text is None
@@ -229,7 +236,9 @@ def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile)
         },
     )
     evidence = _ResolvedEvidence(
-        reference="ev-1", text=None, images=(base64.b64encode(_png_image()).decode("ascii"),),
+        reference="ev-1",
+        text=None,
+        images=(base64.b64encode(_png_image()).decode("ascii"),),
     )
 
     def _call() -> tuple[LLMClassificationResponse, str]:

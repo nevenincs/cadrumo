@@ -18,6 +18,8 @@ from pydantic_core import ErrorDetails
 from ...application.ledger import list_manual_transactions, resolve_transaction_id
 from ...core.i18n import tr
 from ...domain.categories import SpendingCategory
+from ...domain.contribuyente._renta_codes import FiscalResidency
+from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.transactions import TransactionCatalogueRepository, TransactionIdPrefixError
 from ._common import _bad, parse_decimal_amount, parse_optional_decimal_amount
 
@@ -186,6 +188,48 @@ def _validate_category_id(category_id: str | None) -> str | None:
                 example=example,
             ),
         ) from exc
+
+
+def _resolve_source_jurisdiction(
+    operator_value: str | None,
+    *,
+    fiscal_residency: FiscalResidency | None,
+    irpf_special_regime: IrpfSpecialRegime | None,
+) -> str | None:
+    """Stamp the profile-conditional default for ``--source-jurisdiction``."""
+    if operator_value is not None:
+        return operator_value
+    if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
+        raise _bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
+    if irpf_special_regime is IrpfSpecialRegime.IMPATRIADO:
+        raise _bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
+    return "ES"
+
+
+def _resolve_business_pct_with_censo(
+    *,
+    bucket_id: str,
+    active_profile: str | None,
+    category_id: str | None,
+    operator_supplied: Decimal | None,
+) -> Decimal | None:
+    """Stamp the censo-derived business_pct when the operator omits one."""
+    from ...application.ledger import censo_business_pct_for
+    from ...application.user_profile import CensoSyncService
+
+    if operator_supplied is not None:
+        return operator_supplied
+    if category_id is None or active_profile is None:
+        return operator_supplied
+    try:
+        category_enum = SpendingCategory(category_id.strip())
+    except ValueError:
+        return operator_supplied
+    sync_service = CensoSyncService(bucket_id=bucket_id)
+    raw_afectacion: Decimal | None = sync_service.bound_raw_afectacion_ratio(profile_id=active_profile)
+    if raw_afectacion is None:
+        return operator_supplied
+    return censo_business_pct_for(category_enum, raw_afectacion)
 
 
 def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:

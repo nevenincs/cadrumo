@@ -1,0 +1,103 @@
+"""Text rendering helpers for live AEAT CLI command envelopes."""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from ...application.live import (
+    BulkFiledDataCaptureReport,
+    FiledDataCaptureFailureRow,
+    FiledDataCaptureReport,
+    SourceFiledDataCaptureReport,
+)
+
+type FiledCaptureReport = FiledDataCaptureReport | BulkFiledDataCaptureReport | SourceFiledDataCaptureReport
+
+
+def _metric_line(key: str, value: object) -> str:
+    return f"{key}={value}"
+
+
+def _filed_capture_lines(
+    report: FiledCaptureReport,
+    *,
+    mode: str,
+    modelo: str | None = None,
+    year: int | None = None,
+    modelos: Sequence[str] = (),
+    year_from: int | None = None,
+    year_to: int | None = None,
+    failures: Sequence[FiledDataCaptureFailureRow] = (),
+) -> tuple[str, ...]:
+    """Return text metrics for filed declaration capture reports."""
+    lines: list[str] = [_metric_line("mode", mode)]
+    if modelo is not None:
+        lines.append(_metric_line("modelo", modelo))
+    if year is not None:
+        lines.append(_metric_line("year", year))
+    if modelos:
+        lines.append(_metric_line("modelo_count", len(modelos)))
+    if year_from is not None:
+        lines.append(_metric_line("year_from", year_from))
+    if year_to is not None:
+        lines.append(_metric_line("year_to", year_to))
+    failed_count = getattr(report, "failed_count", len(failures))
+    lines.extend(
+        (
+            _metric_line("captured_count", report.captured_count),
+            _metric_line("failed_count", failed_count),
+            _metric_line("casilla_count", report.casilla_count),
+            _metric_line("justificante_metadata_count", report.justificante_metadata_count),
+            _metric_line("justificante_csvs", ",".join(report.justificante_csvs)),
+            _metric_line("filing_evidence_stamped_count", report.filing_evidence_stamped_count),
+            _metric_line("filing_record_ids", ",".join(report.filing_record_ids)),
+            _metric_line("filing_evidence_conflict_count", report.filing_evidence_conflict_count),
+            _metric_line(
+                "filing_evidence_conflict_record_ids",
+                ",".join(report.filing_evidence_conflict_record_ids),
+            ),
+            _metric_line("calculation_observation_count", report.calculation_observation_count),
+            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
+            _metric_line("observation_paths", ",".join(report.observation_paths)),
+            _metric_line("artefact_refs", ",".join(report.artefact_refs)),
+        ),
+    )
+    lines.extend(_filed_capture_failure_lines(failures))
+    return tuple(lines)
+
+
+def _source_filed_capture_lines(report: SourceFiledDataCaptureReport) -> tuple[str, ...]:
+    """Return text metrics for source-observation filed capture reports."""
+    return (
+        _metric_line("target_modelo", report.target_modelo),
+        _metric_line("target_year", report.target_year),
+        _metric_line("target_period", report.target_period.registry_token),
+        *_filed_capture_lines(report, mode="sources"),
+    )
+
+
+def _filed_capture_failure_lines(failures: Sequence[FiledDataCaptureFailureRow]) -> tuple[str, ...]:
+    return tuple(
+        _metric_line(
+            "failure",
+            "\t".join(
+                (
+                    failure.modelo,
+                    str(failure.year),
+                    failure.period.registry_token if failure.period is not None else "",
+                    failure.expediente_id or "",
+                    failure.error_type,
+                    failure.message,
+                ),
+            ),
+        )
+        for failure in failures
+    )
+
+
+__all__ = [
+    "_filed_capture_failure_lines",
+    "_filed_capture_lines",
+    "_metric_line",
+    "_source_filed_capture_lines",
+]

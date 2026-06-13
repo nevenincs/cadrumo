@@ -71,11 +71,7 @@ def register_readiness_commands(app: typer.Typer) -> None:
             modelo=modelo,
             revision_id=revision_id,
             filing_year=filing_year,
-            period=(
-                Period.from_year_and_code(filing_year, period)
-                if period
-                else None
-            ),
+            period=(Period.from_year_and_code(filing_year, period) if period else None),
         )
         report = _readiness_report(request)
         readiness_result = _readiness_result(

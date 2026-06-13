@@ -26,10 +26,9 @@ def test_three_way_split_remainder_lands_on_last_child() -> None:
     assert amounts[-1] == Decimal("100.00") - amounts[0] - amounts[1]
 
 
-def test_negative_gross_keeps_sign() -> None:
-    amounts = derive_child_amounts(Decimal("-50.00"), [Decimal("0.5"), Decimal("0.5")])
-    assert sum(amounts) == Decimal("-50.00")
-    assert all(a < 0 for a in amounts)
+def test_negative_gross_rejected() -> None:
+    with pytest.raises(ValueError, match="non-negative magnitude"):
+        derive_child_amounts(Decimal("-50.00"), [Decimal("0.5"), Decimal("0.5")])
 
 
 def test_single_child_rejected() -> None:

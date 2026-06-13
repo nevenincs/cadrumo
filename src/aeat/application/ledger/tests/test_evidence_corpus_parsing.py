@@ -35,7 +35,9 @@ def _read(name: str) -> bytes:
 def test_real_text_layer_invoice_extracts_content() -> None:
     """The real EN16931 reference invoice yields its text layer for the classifier."""
     pages = extract_pages_text_from_bytes(
-        _read("zugferd_en16931_invoice.pdf"), error_class=ValueError, pdf_label="the invoice",
+        _read("zugferd_en16931_invoice.pdf"),
+        error_class=ValueError,
+        pdf_label="the invoice",
     )
     joined = "\n".join(pages)
     assert joined.strip()
@@ -63,7 +65,9 @@ def test_real_image_invoice_is_a_valid_image() -> None:
 def test_foreign_language_invoice_still_extracts_text() -> None:
     """A non-Spanish (Hungarian) invoice still yields a usable text layer."""
     pages = extract_pages_text_from_bytes(
-        _read("adversarial_foreign_language_invoice.pdf"), error_class=ValueError, pdf_label="the invoice",
+        _read("adversarial_foreign_language_invoice.pdf"),
+        error_class=ValueError,
+        pdf_label="the invoice",
     )
     assert any("SZAMLA" in p or "AFA" in p or "EUR" in p for p in pages)
 
@@ -76,7 +80,9 @@ def test_prompt_injection_invoice_extracts_text_without_executing_it() -> None:
     the extractor, which must simply not crash on adversarial content.
     """
     pages = extract_pages_text_from_bytes(
-        _read("adversarial_prompt_injection_invoice.pdf"), error_class=ValueError, pdf_label="the invoice",
+        _read("adversarial_prompt_injection_invoice.pdf"),
+        error_class=ValueError,
+        pdf_label="the invoice",
     )
     joined = "\n".join(pages)
     assert "SYSTEM OVERRIDE" in joined  # extracted verbatim as text, carries no authority

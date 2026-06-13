@@ -125,9 +125,7 @@ def test_cli_rename_of_non_active_profile_is_refused_loudly_and_changes_nothing(
 
     active_history = _bucket_history(bravo_pointer.bucket_id)
     foreign_rename_events = [
-        event
-        for event in active_history.events.values()
-        if event.event_type is BucketEventType.BUCKET_RENAMED
+        event for event in active_history.events.values() if event.event_type is BucketEventType.BUCKET_RENAMED
     ]
     assert foreign_rename_events == [], "the active bucket must not carry another bucket's rename event"
 

@@ -171,7 +171,7 @@ def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
             help=tr("cli.config.repair.reset_progress_dry_run_help"),
         ),
     ) -> None:
-        """Reset the saved interrupted-command progress after reporting its corruption fingerprint."""
+        """Clear saved interrupted-command progress after summarising the saved record."""
         from .._config_payloads import RepairResetProgressResult, WorkflowFingerprintPayload
 
         if not dry_run and not yes:
@@ -189,6 +189,9 @@ def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
 
         if dry_run:
             fingerprint = fingerprint_workflow_state()
+            progress_schema_version = fingerprint.schema_version if fingerprint.schema_version is not None else "<none>"
+            saved_at = fingerprint.written_at.isoformat() if fingerprint.written_at is not None else "<none>"
+            stored_bytes = fingerprint.byte_length if fingerprint.byte_length is not None else "<none>"
             fp = WorkflowFingerprintPayload(
                 schema_version=fingerprint.schema_version,
                 written_at=fingerprint.written_at.isoformat() if fingerprint.written_at is not None else None,
@@ -199,15 +202,17 @@ def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
             result = RepairResetProgressResult(dry_run=True, fingerprint=fp)
             lines = (
                 "dry_run\ttrue",
-                f"schema_version\t{fingerprint.schema_version if fingerprint.schema_version is not None else '<none>'}",
-                f"written_at\t{fingerprint.written_at.isoformat() if fingerprint.written_at is not None else '<none>'}",
-                f"byte_length\t{fingerprint.byte_length if fingerprint.byte_length is not None else '<none>'}",
-                f"reason_class\t{fingerprint.reason_class}",
-                f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
+                f"progress_schema_version\t{progress_schema_version}",
+                f"saved_at\t{saved_at}",
+                f"stored_bytes\t{stored_bytes}",
+                f"read_status\t{fingerprint.reason_class}",
             )
             _emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
             return
         fingerprint = reset_workflow_state()
+        progress_schema_version = fingerprint.schema_version if fingerprint.schema_version is not None else "<none>"
+        saved_at = fingerprint.written_at.isoformat() if fingerprint.written_at is not None else "<none>"
+        stored_bytes = fingerprint.byte_length if fingerprint.byte_length is not None else "<none>"
         fp = WorkflowFingerprintPayload(
             schema_version=fingerprint.schema_version,
             written_at=fingerprint.written_at.isoformat() if fingerprint.written_at is not None else None,
@@ -218,11 +223,11 @@ def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
         result = RepairResetProgressResult(dry_run=False, fingerprint=fp)
         lines = (
             "dry_run\tfalse",
-            f"schema_version\t{fingerprint.schema_version if fingerprint.schema_version is not None else '<none>'}",
-            f"written_at\t{fingerprint.written_at.isoformat() if fingerprint.written_at is not None else '<none>'}",
-            f"byte_length\t{fingerprint.byte_length if fingerprint.byte_length is not None else '<none>'}",
-            f"reason_class\t{fingerprint.reason_class}",
-            f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
+            "cleared\ttrue",
+            f"progress_schema_version\t{progress_schema_version}",
+            f"saved_at\t{saved_at}",
+            f"stored_bytes\t{stored_bytes}",
+            f"read_status\t{fingerprint.reason_class}",
         )
         _emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
 

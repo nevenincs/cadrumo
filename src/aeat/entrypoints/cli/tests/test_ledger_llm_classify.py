@@ -147,7 +147,8 @@ def _row_by_id(transaction_id: str) -> dict[str, Any]:
 
 
 def test_llm_suggest_returns_decision_and_persists_nothing(
-    tmp_path: Path, _deterministic_claude: _DeterministicClassifier,
+    tmp_path: Path,
+    _deterministic_claude: _DeterministicClassifier,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
@@ -167,7 +168,8 @@ def test_llm_suggest_returns_decision_and_persists_nothing(
 
 
 def test_llm_reject_no_apply_leaves_row_unchanged(
-    tmp_path: Path, _deterministic_claude: _DeterministicClassifier,
+    tmp_path: Path,
+    _deterministic_claude: _DeterministicClassifier,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
     before = _row_by_id(tx)
@@ -186,7 +188,8 @@ def test_llm_reject_no_apply_leaves_row_unchanged(
 
 
 def test_llm_apply_persists_with_llm_provenance(
-    tmp_path: Path, _deterministic_claude: _DeterministicClassifier,
+    tmp_path: Path,
+    _deterministic_claude: _DeterministicClassifier,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
@@ -260,7 +263,8 @@ def test_llm_unavailable_provider_refuses_instructively(tmp_path: Path) -> None:
 
 
 def test_llm_rejects_combination_with_manual_classification(
-    tmp_path: Path, _deterministic_claude: _DeterministicClassifier,
+    tmp_path: Path,
+    _deterministic_claude: _DeterministicClassifier,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
     result = _RUNNER.invoke(

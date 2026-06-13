@@ -44,6 +44,7 @@ class OverviewCalendarEntryPayload(OutputSchema):
     user_state: str
     recovery: dict[str, object] | None = None
     filing_year: int | None = None
+    censo_enrolment_state: str
     filing_evidence: OverviewCalendarFilingEvidencePayload
 
 
@@ -62,6 +63,8 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     aeat_reference_id: str | None = None
     aeat_snapshot_id: str | None = None
     aeat_evidence_kind: str | None = None
+    aeat_evidence_conflict_reference_ids: list[str] = []
+    verified_justificante_csv: str | None = None
     justificante_required: bool
     justificante_verified: bool
     evidence_source: str | None = None
@@ -82,7 +85,9 @@ class OverviewCalendarEventPayload(OutputSchema):
     status: str | None = None
     source_url: str | None = None
     aeat_submission_state: str | None = None
+    aeat_submitted_at: str | None = None
     justificante_verified: bool | None = None
+    verified_justificante_csv: str | None = None
 
 
 class OverviewCalendarWarningPayload(OutputSchema):

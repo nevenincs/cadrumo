@@ -26,22 +26,23 @@ from ...application.live import (
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
-    filed_data_capture_failure_row,
     list_filed_data,
+    list_filed_data_bulk,
 )
 from ...application.operator_surface import FilingStatus
 from ...core import Period, PeriodError
 from ...core.i18n import tr
+from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
 from ._app_live_expedientes_cli import expedientes_app, register_expedientes_commands
 from ._app_live_justificante_cli import justificante_app, register_justificante_commands
 from ._app_live_notifications_cli import notifications_app, register_notifications_commands
 from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
+from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._app_live_verify_cli import register_verify_commands, verify_app
 from ._common import _emit_envelope
 
 if TYPE_CHECKING:
-    from ...application.auth import LiveAuthPreflightReport
     from ...application.live import VerifyVerdict
 
 
@@ -84,10 +85,6 @@ iva_wallet_app = typer.Typer(
     add_completion=False,
 )
 app.add_typer(iva_wallet_app, name="iva-wallet")
-
-
-def _metric_line(key: str, value: object) -> str:
-    return f"{key}={value}"
 
 
 def _live_period_option(period: str | None, *, year: int) -> Period | None:
@@ -161,44 +158,6 @@ def _live_iva_outcome_label(value: object) -> str:
     if normalized == "wrong_identity":
         return tr("cli.app.live.iva_wallet.acquisition.outcome.wrong_identity", default="wrong identity")
     return tr("cli.app.live.iva_wallet.acquisition.outcome.unknown", default=normalized.replace("_", " "))
-
-
-def _emit_live_auth_preflight(provider: str | None = None) -> None:
-    from ...application.auth import build_live_auth_preflight_report
-    from ...core.redaction import redact_for_cli_output
-
-    report = build_live_auth_preflight_report(provider)
-    for line in _live_auth_preflight_lines(report):
-        typer.echo(redact_for_cli_output(line), err=True)
-
-
-def _live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ...]:
-    return (
-        _metric_line("auth_preflight", "redacted"),
-        _metric_line("auth_provider", report.provider),
-        _metric_line("auth_configured", report.configured),
-        _metric_line("auth_available", report.available),
-        _metric_line("auth_active_profile", "<profile-id>" if report.active_profile else ""),
-        _metric_line("auth_active_profile_status", report.active_profile_status),
-        _metric_line("auth_active_profile_registered", report.active_profile_registered),
-        _metric_line("auth_active_profile_record_present", report.active_profile_record_present),
-        _metric_line("auth_profile_tax_id", "present" if report.profile_tax_id_present else "missing"),
-        _metric_line("auth_provider_identity", "present" if report.provider_identity_present else "missing"),
-        _metric_line("auth_identity_alignment", report.identity_alignment),
-        _metric_line("auth_identity_kind", report.identity_kind),
-        _metric_line("auth_mode", report.auth_mode),
-        _metric_line("auth_prefer_non_qr", report.prefer_non_qr),
-        _metric_line("auth_timeout_ms", report.timeout_ms),
-        _metric_line("auth_dni_fecha", "present" if report.dni_fecha_configured else "missing"),
-        _metric_line("auth_nie_soporte", "present" if report.nie_soporte_configured else "missing"),
-        _metric_line("auth_certificate_path", "present" if report.certificate_path_configured else "missing"),
-        _metric_line("auth_certificate_file", "present" if report.certificate_file_present else "missing"),
-        _metric_line("auth_certificate_backend", report.certificate_backend),
-        _metric_line("auth_persisted_session", "present" if report.persisted_session_present else "missing"),
-        _metric_line("auth_persisted_session_expired", report.persisted_session_expired),
-        _metric_line("auth_persisted_session_state", report.persisted_session_state),
-        _metric_line("auth_probe_result", report.probe_result),
-    )
 
 
 _IVA_WALLET_LIVE_SAFETY_LINES = (
@@ -472,7 +431,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
         ),
     ),
 )
-def iva_wallet_capture_history_cmd(
+def iva_wallet_pull_history_cmd(
     ctx: typer.Context,
     year_from: Annotated[
         int,
@@ -527,16 +486,16 @@ def iva_wallet_capture_history_cmd(
 
 
 @iva_wallet_app.command(
-    "pull-remote-state",
+    "pull-evidence",
     help=tr(
-        "cli.app.live.iva_wallet.pull_remote_state_help",
+        "cli.app.live.iva_wallet.pull_evidence_help",
         default=(
             "Pull filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one "
             "typed read-only acquisition."
         ),
     ),
 )
-def iva_wallet_capture_remote_state_cmd(
+def iva_wallet_pull_evidence_cmd(
     ctx: typer.Context,
     year_from: Annotated[
         int,
@@ -570,32 +529,33 @@ def iva_wallet_capture_remote_state_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/aeat/live/iva-remote-state"),
+    ] = Path("var/aeat/live/iva-read-evidence"),
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as one read-only operation."""
     from ...application.live import capture_iva_remote_state
 
+    resolved_target_period = _required_live_period_option(target_period, year=target_year)
     _emit_live_auth_preflight()
     report = asyncio.run(
-        _run_live_iva_remote_state_command(
+        _run_live_iva_evidence_pull_command(
             capture_iva_remote_state(
                 year_from=year_from,
                 year_to=year_to,
                 target_year=target_year,
-                target_period=target_period,
+                target_period=resolved_target_period,
                 taxpayer_nif=taxpayer_nif,
                 output_root=output_root,
             ),
-            timeout_ms=_live_iva_remote_state_command_timeout_ms(year_from=year_from, year_to=year_to),
+            timeout_ms=_live_iva_evidence_pull_command_timeout_ms(year_from=year_from, year_to=year_to),
         ),
     )
     from ._app_live_payloads import (
-        IvaWalletCaptureRemoteStateResult,
+        IvaWalletPullEvidenceResult,
         LiveIvaAuthOutcomePayload,
         LiveIvaSurfaceOutcomePayload,
     )
 
-    result = IvaWalletCaptureRemoteStateResult(
+    result = IvaWalletPullEvidenceResult(
         output_root=report.output_root,
         year_from=report.year_from,
         year_to=report.year_to,
@@ -629,7 +589,7 @@ def iva_wallet_capture_remote_state_cmd(
     )
     _emit_envelope(
         ctx,
-        command="app.live.iva_wallet.pull_remote_state",
+        command="app.live.iva_wallet.pull_evidence",
         result=result,
         lines=_iva_remote_state_capture_lines(report),
     )
@@ -680,12 +640,12 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
     return tuple(lines)
 
 
-async def _run_live_iva_remote_state_command[T](
+async def _run_live_iva_evidence_pull_command[T](
     awaitable: Awaitable[T],
     *,
     timeout_ms: int | None = None,
 ) -> T:
-    """Run the combined IVA remote-state read under a CLI-level watchdog."""
+    """Run the combined IVA evidence pull under a CLI-level watchdog."""
     from ...application.live import LiveIvaReadSurface, LiveIvaSurfaceTimeoutError
     from ...core.config import load_settings
 
@@ -700,8 +660,8 @@ async def _run_live_iva_remote_state_command[T](
         killed_processes = _reap_new_playwright_profile_processes(preexisting_profiles=preexisting_profiles)
         post_timeout_auth_context = _live_iva_auth_watchdog_context(stage="after")
         raise LiveIvaSurfaceTimeoutError(
-            f"live IVA remote-state command did not complete within {resolved_timeout_ms} ms",
-            surface="remote_state_command",
+            f"live IVA evidence pull command did not complete within {resolved_timeout_ms} ms",
+            surface="iva_evidence_command",
             timeout_ms=resolved_timeout_ms,
             progress_context={
                 "stage": "cli_watchdog",
@@ -713,8 +673,8 @@ async def _run_live_iva_remote_state_command[T](
         ) from exc
 
 
-def _live_iva_remote_state_command_timeout_ms(*, year_from: int, year_to: int) -> int:
-    """Return the CLI watchdog budget for one combined IVA remote-state command."""
+def _live_iva_evidence_pull_command_timeout_ms(*, year_from: int, year_to: int) -> int:
+    """Return the CLI watchdog budget for one combined IVA evidence pull command."""
     from ...core.config import load_settings
 
     settings = load_settings()
@@ -768,10 +728,9 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
                 [powershell, "-NoProfile", "-Command", script],
                 check=True,
                 capture_output=True,
-                text=True,
                 timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
             )
-            payload = completed.stdout.strip()
+            payload = completed.stdout.decode("utf-8", errors="replace").strip()
             if not payload:
                 return ()
             # ANY-RETURN-RATIONALE-JSON-PROCESS-INVENTORY: json.loads returns Any;
@@ -873,37 +832,36 @@ def filed_list_cmd(
     """
     from datetime import date as _date
 
-    from ...core.resources import resources
-
     resolved_from = year_from if year_from is not None else _date.today().year
     resolved_to = year_to if year_to is not None else _date.today().year
-    modelos = tuple(str(m.id) for m in resources().modelos.all()) if modelo is None else (modelo,)
-    all_rows: list[FiledDataListingRow] = []
-    failures: list[FiledDataCaptureFailureRow] = []
-    total_count = 0
     _emit_live_auth_preflight()
-    for code in modelos:
-        try:
-            report = asyncio.run(
-                list_filed_data(
-                    modelo=code,
-                    year_from=resolved_from,
-                    year_to=resolved_to,
-                ),
-            )
-        except Exception as exc:
-            if modelo is not None:
-                raise
-            failures.append(filed_data_capture_failure_row(modelo=code, year=resolved_to, error=exc))
-            continue
-        total_count += report.row_count
-        all_rows.extend(report.rows)
+    if modelo is None:
+        bulk_report = asyncio.run(
+            list_filed_data_bulk(
+                year_from=resolved_from,
+                year_to=resolved_to,
+            ),
+        )
+        rows = bulk_report.rows
+        failures = bulk_report.failures
+        total_count = bulk_report.row_count
+    else:
+        report = asyncio.run(
+            list_filed_data(
+                modelo=modelo,
+                year_from=resolved_from,
+                year_to=resolved_to,
+            ),
+        )
+        rows = report.rows
+        failures = ()
+        total_count = report.row_count
     result, lines = _filed_list_result_and_lines(
         modelo_filter=modelo,
         year_from=resolved_from,
         year_to=resolved_to,
         row_count=total_count,
-        rows=all_rows,
+        rows=rows,
         failures=failures,
     )
     _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
@@ -992,7 +950,7 @@ def _filed_list_result_and_lines(
 
 
 @filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
-def filed_capture_cmd(
+def filed_pull_cmd(
     ctx: typer.Context,
     modelos: Annotated[
         list[str] | None,
@@ -1032,12 +990,7 @@ def filed_capture_cmd(
 
     _emit_live_auth_preflight()
     selected_modelos = tuple(modelos or ())
-    single_mode = (
-        len(selected_modelos) == 1
-        and year is not None
-        and year_from is None
-        and year_to is None
-    )
+    single_mode = len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None
     if single_mode:
         resolved_period = _live_period_option(period, year=year)
         report = asyncio.run(
@@ -1050,14 +1003,7 @@ def filed_capture_cmd(
                 limit=limit,
             ),
         )
-        lines = (
-            _metric_line("captured_count", report.captured_count),
-            _metric_line("casilla_count", report.casilla_count),
-            _metric_line("calculation_observation_count", report.calculation_observation_count),
-            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
-            _metric_line("observation_paths", ",".join(report.observation_paths)),
-            _metric_line("artefact_refs", ",".join(report.artefact_refs)),
-        )
+        lines = _filed_capture_lines(report, mode="single", modelo=report.modelo, year=report.year)
         result = FiledCaptureResult(
             output_root=report.output_root,
             modelo=report.modelo,
@@ -1065,6 +1011,12 @@ def filed_capture_cmd(
             captured_count=report.captured_count,
             observation_paths=list(report.observation_paths),
             artefact_refs=list(report.artefact_refs),
+            justificante_metadata_count=report.justificante_metadata_count,
+            justificante_csvs=list(report.justificante_csvs),
+            filing_evidence_stamped_count=report.filing_evidence_stamped_count,
+            filing_record_ids=list(report.filing_record_ids),
+            filing_evidence_conflict_count=report.filing_evidence_conflict_count,
+            filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
             casilla_count=report.casilla_count,
             calculation_observation_count=report.calculation_observation_count,
             calculation_observation_keys=list(report.calculation_observation_keys),
@@ -1072,8 +1024,8 @@ def filed_capture_cmd(
         _emit_envelope(ctx, command="app.live.filed.pull", result=result, lines=lines)
         return
 
-    if period is not None or expediente_id is not None or limit is not None:
-        raise typer.BadParameter("--period, --expediente, and --limit are only valid for one --modelo with --year")
+    if period is not None or expediente_id is not None:
+        raise typer.BadParameter("--period and --expediente are only valid for one --modelo with --year")
     resolved_from, resolved_to = _resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     report = asyncio.run(
         capture_filed_data_bulk(
@@ -1081,35 +1033,16 @@ def filed_capture_cmd(
             year_to=resolved_to,
             output_root=output_root,
             modelos=selected_modelos or None,
+            limit=limit,
         ),
     )
-    lines = (
-        _metric_line("modelo_count", len(report.modelos)),
-        _metric_line("year_from", report.year_from),
-        _metric_line("year_to", report.year_to),
-        _metric_line("captured_count", report.captured_count),
-        _metric_line("failed_count", report.failed_count),
-        _metric_line("casilla_count", report.casilla_count),
-        _metric_line("calculation_observation_count", report.calculation_observation_count),
-        _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
-        _metric_line("observation_paths", ",".join(report.observation_paths)),
-        _metric_line("artefact_refs", ",".join(report.artefact_refs)),
-        *(
-            _metric_line(
-                "failure",
-                "\t".join(
-                    (
-                        failure.modelo,
-                        str(failure.year),
-                        failure.period.registry_token if failure.period is not None else "",
-                        failure.expediente_id or "",
-                        failure.error_type,
-                        failure.message,
-                    ),
-                ),
-            )
-            for failure in report.failures
-        ),
+    lines = _filed_capture_lines(
+        report,
+        mode="bulk",
+        modelos=report.modelos,
+        year_from=report.year_from,
+        year_to=report.year_to,
+        failures=report.failures,
     )
     result = FiledCaptureResult(
         mode="bulk",
@@ -1121,6 +1054,12 @@ def filed_capture_cmd(
         failed_count=report.failed_count,
         observation_paths=list(report.observation_paths),
         artefact_refs=list(report.artefact_refs),
+        justificante_metadata_count=report.justificante_metadata_count,
+        justificante_csvs=list(report.justificante_csvs),
+        filing_evidence_stamped_count=report.filing_evidence_stamped_count,
+        filing_record_ids=list(report.filing_record_ids),
+        filing_evidence_conflict_count=report.filing_evidence_conflict_count,
+        filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
         casilla_count=report.casilla_count,
         calculation_observation_count=report.calculation_observation_count,
         calculation_observation_keys=list(report.calculation_observation_keys),
@@ -1140,7 +1079,7 @@ def filed_capture_cmd(
 
 
 @filed_app.command("pull-sources", help=tr("cli.app.live.filed.pull_sources_help"))
-def filed_capture_sources_cmd(
+def filed_pull_sources_cmd(
     ctx: typer.Context,
     modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
     year: Annotated[int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))],
@@ -1190,14 +1129,7 @@ def filed_capture_sources_cmd(
             source_root=source_root,
         ),
     )
-    lines = (
-        _metric_line("captured_count", report.captured_count),
-        _metric_line("casilla_count", report.casilla_count),
-        _metric_line("calculation_observation_count", report.calculation_observation_count),
-        _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
-        _metric_line("observation_paths", ",".join(report.observation_paths)),
-        _metric_line("artefact_refs", ",".join(report.artefact_refs)),
-    )
+    lines = _source_filed_capture_lines(report)
     result = FiledCaptureSourcesResult(
         output_root=report.output_root,
         target_modelo=report.target_modelo,
@@ -1206,6 +1138,12 @@ def filed_capture_sources_cmd(
         captured_count=report.captured_count,
         observation_paths=list(report.observation_paths),
         artefact_refs=list(report.artefact_refs),
+        justificante_metadata_count=report.justificante_metadata_count,
+        justificante_csvs=list(report.justificante_csvs),
+        filing_evidence_stamped_count=report.filing_evidence_stamped_count,
+        filing_record_ids=list(report.filing_record_ids),
+        filing_evidence_conflict_count=report.filing_evidence_conflict_count,
+        filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
         casilla_count=report.casilla_count,
         calculation_observation_count=report.calculation_observation_count,
         calculation_observation_keys=list(report.calculation_observation_keys),
@@ -1241,21 +1179,20 @@ register_verify_commands(app, active_bucket_id=_active_bucket_id, verify_expecte
 
 register_borrador_commands(app, active_bucket_id=_active_bucket_id)
 
-
 __all__ = [
     "app",
     "borrador_100_app",
     "borrador_app",
     "expedientes_app",
     "filed_app",
-    "filed_capture_cmd",
-    "filed_capture_sources_cmd",
     "filed_list_cmd",
+    "filed_pull_cmd",
+    "filed_pull_sources_cmd",
     "iva_wallet_app",
-    "iva_wallet_capture_history_cmd",
-    "iva_wallet_capture_remote_state_cmd",
     "iva_wallet_history_cmd",
     "iva_wallet_pull_cmd",
+    "iva_wallet_pull_evidence_cmd",
+    "iva_wallet_pull_history_cmd",
     "justificante_app",
     "notifications_app",
     "portals_app",

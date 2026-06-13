@@ -65,7 +65,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
-        aeat_accepted=False,
+        aeat_accepted=True,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
@@ -172,7 +172,7 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
-        aeat_accepted=False,
+        aeat_accepted=True,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,

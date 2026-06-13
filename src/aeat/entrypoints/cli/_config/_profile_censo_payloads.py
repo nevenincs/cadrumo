@@ -74,8 +74,10 @@ class CensoApplyPayload(OutputSchema):
     calendar_range_to: str | None = None
     calendar_obligation_count: int = 0
     calendar_obligation_modelos: list[str] = []
+    calendar_enrolment_source_paths: list[str] = []
     calendar_warning_codes: list[str] = []
     calendar_defaulted_modelos: list[str] = []
+    calendar_obligation_rows: list[dict[str, object]] = []
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor; mypy
     # assignment check is incorrect.

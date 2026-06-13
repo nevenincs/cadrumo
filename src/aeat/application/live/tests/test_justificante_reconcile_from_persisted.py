@@ -716,6 +716,7 @@ def test_capture_orchestrator_outcome_reports_stamped_filing_record() -> None:
     )
 
     assert outcome.snapshot.csv == "ABCD1234EFGH5678"
+    assert outcome.justificante_metadata_registered is True
     assert outcome.filing_evidence_stamped is True
     assert outcome.filing_record_id == filing.filing_record_id
 
@@ -740,6 +741,7 @@ def test_capture_orchestrator_skips_stamp_when_period_not_filed() -> None:
     )
 
     assert persisted.snapshot_id  # the snapshot is still persisted
+    assert JustificanteRepository().load("ABCD1234EFGH5678") is not None
     events = (
         BucketEventHistoryRepository()
         .load()
@@ -768,8 +770,10 @@ def test_capture_orchestrator_outcome_reports_unstamped_when_period_not_filed() 
     )
 
     assert outcome.snapshot.csv == "ABCD1234EFGH5678"
+    assert outcome.justificante_metadata_registered is True
     assert outcome.filing_evidence_stamped is False
     assert outcome.filing_record_id is None
+    assert JustificanteRepository().load("ABCD1234EFGH5678") is not None
 
 
 def test_capture_orchestrator_refuses_conflicting_existing_aeat_evidence() -> None:

@@ -112,6 +112,31 @@ class TestCapture:
         )
         assert a.snapshot_id != b.snapshot_id
 
+    def test_capture_persists_authenticated_identity_on_live_snapshot(
+        self,
+        secure_engine: TestRuntimeProfile,
+    ) -> None:
+        svc = _service(secure_engine)
+        snapshot = _snapshot(rows=(_row(),))
+        first = svc.capture(
+            bucket_id=secure_engine.bucket_id,
+            snapshot=snapshot,
+            authenticated_identity=" b12345678 ",
+        )
+        second = svc.capture(
+            bucket_id=secure_engine.bucket_id,
+            snapshot=snapshot,
+            authenticated_identity="C12345678",
+        )
+
+        assert first.authenticated_identity == "B12345678"
+        assert second.authenticated_identity == "C12345678"
+        assert first.snapshot_id != second.snapshot_id
+        assert {item.authenticated_identity for item in svc.list_snapshots(bucket_id=secure_engine.bucket_id)} == {
+            "B12345678",
+            "C12345678",
+        }
+
 
 class TestShow:
     def test_show_resolves_full_id(self, secure_engine: TestRuntimeProfile) -> None:

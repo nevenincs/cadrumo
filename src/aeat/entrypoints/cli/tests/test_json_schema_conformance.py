@@ -418,3 +418,126 @@ def test_zero_bare_emit_sites_outside_exemption_set() -> None:
         "every CLI command emit must route through _emit_envelope with a "
         "registered OutputSchema. Violations:\n  " + "\n  ".join(violations)
     )
+
+
+# ---------------------------------------------------------------------
+# Domain-report ↔ CLI payload mirror parity
+# ---------------------------------------------------------------------
+#
+# Several CLI handlers round-trip a backend report onto its CLI
+# ``OutputSchema`` mirror via ``Payload.model_validate(report.model_dump(
+# mode="json"))``. Because ``OutputSchema`` is ``extra="forbid"``, a field
+# added to the backend report but not mirrored onto the payload raises a
+# ``ValidationError`` at dispatch time — a runtime break the per-schema
+# round-trip gate above cannot catch (it never feeds a real report dump
+# through the payload). This table-driven gate constructs a fully-populated
+# backend report (every defaultable field set non-default per
+# ``aeat-roundtrip-discipline``, including a non-empty
+# ``stale_draft_revision_references``), validates the payload mirror against
+# its JSON dump, and asserts the mirror carries the stale-draft advisory.
+# It reds when a report grows a field its paired payload lacks and greens
+# once the mirror catches up — the regression that broke ``aeat app ledger
+# remove`` when ``stale_draft_revision_references`` landed on the report
+# alone.
+
+_HEX_64_A = "a" * 64
+_HEX_64_B = "b" * 64
+_HEX_64_C = "c" * 64
+_HEX_64_D = "d" * 64
+
+
+def _populated_removal_blocker():  # type: ignore[no-untyped-def]
+    """Build a fully-populated ``LedgerRemovalBlocker`` with every field non-default."""
+    from ....application.ledger._models import LedgerRemovalBlocker
+
+    return LedgerRemovalBlocker(
+        work_unit_id=_HEX_64_A,
+        calculation_revision_id=_HEX_64_B,
+        revision_state="borrador",
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+    )
+
+
+def _populated_removal_report():  # type: ignore[no-untyped-def]
+    """Build a ``LedgerTransactionRemovalReport`` with every defaultable field non-default."""
+    from ....application.ledger._models import LedgerTransactionRemovalReport
+
+    return LedgerTransactionRemovalReport(
+        bucket_id="bucket-parity",
+        transaction_id=_HEX_64_C,
+        removed=True,
+        dry_run=False,
+        actor="operator-parity",
+        reason="parity-gate",
+        cascaded_purchase_invoice_evidence_ids=("evidence-1",),
+        cascaded_attachment_ids=("attachment-1",),
+        blocking_modelo_references=(_populated_removal_blocker(),),
+        stale_draft_revision_references=(_populated_removal_blocker(),),
+        bucket_event_ids=(_HEX_64_D,),
+    )
+
+
+def _populated_reset_report():  # type: ignore[no-untyped-def]
+    """Build a ``LedgerCatalogueResetReport`` with every defaultable field non-default."""
+    from ....application.ledger._models import LedgerCatalogueResetReport
+
+    return LedgerCatalogueResetReport(
+        bucket_id="bucket-parity",
+        removed_transaction_ids=(_HEX_64_C,),
+        reset=True,
+        dry_run=False,
+        actor="operator-parity",
+        reason="parity-gate",
+        cascaded_purchase_invoice_evidence_ids=("evidence-1",),
+        cascaded_attachment_ids=("attachment-1",),
+        blocking_modelo_references=(_populated_removal_blocker(),),
+        stale_draft_revision_references=(_populated_removal_blocker(),),
+        bucket_event_ids=(_HEX_64_D,),
+    )
+
+
+def _report_payload_mirror_pairs():  # type: ignore[no-untyped-def]
+    """Known ``(report_factory, payload_class, label)`` mirror pairs.
+
+    Each payload's docstring declares it mirrors the report via
+    ``model_dump(mode="json")``; the handler round-trips the dump under
+    ``extra="forbid"``, so a missing mirrored field is a runtime break.
+    """
+    from .. import _ledger_payloads
+
+    return (
+        (_populated_removal_report, _ledger_payloads.LedgerRemoveResult, "ledger.remove"),
+        (_populated_reset_report, _ledger_payloads.LedgerResetResult, "ledger.reset"),
+    )
+
+
+@pytest.mark.parametrize(
+    ("report_factory", "payload_class", "label"),
+    [pytest.param(factory, payload, label, id=label) for factory, payload, label in _report_payload_mirror_pairs()],
+)
+def test_report_payload_mirror_accepts_full_dump(report_factory, payload_class, label) -> None:  # type: ignore[no-untyped-def]
+    """The CLI payload mirror ``model_validate``s its report's full JSON dump.
+
+    Constructs a fully-populated backend report (including a non-empty
+    ``stale_draft_revision_references``) and validates the ``OutputSchema``
+    mirror against ``report.model_dump(mode="json")``. Under ``extra="forbid"``
+    this raises if the report carries a field the payload does not mirror —
+    exactly the regression that broke ``aeat app ledger remove`` when the
+    stale-draft advisory landed on the report but not its payload. Asserts the
+    round-tripped payload carries the stale-draft advisory so a silent drop is
+    also caught.
+    """
+    report = report_factory()
+    dump = report.model_dump(mode="json")
+    assert dump["stale_draft_revision_references"], (
+        f"{label} fixture must populate stale_draft_revision_references so the parity "
+        "gate exercises the field that broke the round-trip"
+    )
+    payload = payload_class.model_validate(dump)
+    assert payload.stale_draft_revision_references, (
+        f"{label} payload {payload_class.__name__} dropped stale_draft_revision_references "
+        "on the round-trip; mirror the field so the advisory reaches the JSON envelope"
+    )
+    assert len(payload.stale_draft_revision_references) == len(report.stale_draft_revision_references)

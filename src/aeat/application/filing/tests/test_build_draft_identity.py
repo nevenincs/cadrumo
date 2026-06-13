@@ -57,6 +57,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
             # Binding IDs are extracted from the flat inputs dict via
             # _decimal_inputs_for_ids(inputs, decimal_binding_ids).
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
             # Casilla 15 is previous_filing-bound (modelo-130-resultados-
             # negativos-anteriores). For Q1 the prior-quarter anchor is
             # absent by design (max_year_delta=0, no prior trimestre in

@@ -12,17 +12,12 @@ from datetime import UTC, date, datetime
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...core import Modelo as _Modelo
 from ...core import Period as _Period
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
-from ...domain.calculations.registry.applicability import PayerFact as _PayerFact
-from ...domain.calculations.registry.applicability import (
-    iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
-)
 from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
 from ...domain.deadlines import DeadlineEngine as _DeadlineEngine
 from ...domain.deadlines import ModeloDeadline as _ModeloDeadline
@@ -32,10 +27,8 @@ from ...domain.deadlines import TaxpayerProfile as _TaxpayerProfile
 from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
-from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
 from ._calendar_models import (
     CalendarCompleteness,
-    CalendarWarning,
     OverviewAeatSubmissionState,
     OverviewCalendar,
     OverviewCalendarEntry,
@@ -43,10 +36,15 @@ from ._calendar_models import (
     OverviewCalendarEventType,
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
-    OverviewCensoEnrolmentState,
     OverviewLocalFilingState,
     SuppressedCalendarEntry,
     user_state_for,
+)
+from ._calendar_models import (
+    CalendarWarning as CalendarWarning,
+)
+from ._calendar_models import (
+    OverviewCensoEnrolmentState as OverviewCensoEnrolmentState,
 )
 from ._calendar_models import (
     OverviewPeriodState as OverviewPeriodState,
@@ -54,15 +52,30 @@ from ._calendar_models import (
 from ._calendar_models import (
     OverviewStatusReport as OverviewStatusReport,
 )
+from ._calendar_warnings import (
+    _build_completeness_and_warnings,
+    _calendar_aeat_evidence_conflict_warnings,
+    _calendar_censo_enrolment_state,
+    _calendar_censo_reconciliation_warnings,
+    _calendar_unverified_justificante_warnings,
+)
+from ._calendar_warnings import (
+    calendar_applicability_profile_keys_for_modelo as calendar_applicability_profile_keys_for_modelo,
+)
+from ._calendar_warnings import (
+    calendar_censo_enrolment_profile_keys as calendar_censo_enrolment_profile_keys,
+)
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ..live._expedientes import PersistedExpedientesSnapshot
+    from ..live._justificante import JustificanteCaptureSnapshot
     from ..live._notifications import PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
+_IVA_REGIME_MODELOS = IVA_REGIME_MODELOS
 _JUSTIFICANTE_BACKED_EVIDENCE_KINDS = frozenset(
     {
         "aeat_csv_register",
@@ -86,12 +99,14 @@ _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = Mapp
     },
 )
 
+
 def _entry_intersects_range(
     obligation: _ModeloDeadline,
     calendar_range: OverviewCalendarRange,
 ) -> bool:
     """Return whether ``obligation``'s [opens_on, closes_on] intersects the range."""
     return obligation.closes_on >= calendar_range.from_date and obligation.opens_on <= calendar_range.to_date
+
 
 def _calendar_event_sort_key(event: OverviewCalendarEvent) -> tuple[date, str, str, str]:
     """Return the deterministic sort key for observed calendar events."""
@@ -101,6 +116,7 @@ def _calendar_event_sort_key(event: OverviewCalendarEvent) -> tuple[date, str, s
         event.modelo or "",
         event.reference_id,
     )
+
 
 def _dedupe_calendar_events(events: list[OverviewCalendarEvent]) -> tuple[OverviewCalendarEvent, ...]:
     """Deduplicate repeated observations across multiple local snapshots."""
@@ -117,6 +133,7 @@ def _dedupe_calendar_events(events: list[OverviewCalendarEvent]) -> tuple[Overvi
         )
         by_key[key] = event
     return tuple(sorted(by_key.values(), key=_calendar_event_sort_key))
+
 
 def calendar_events_from_expedientes_snapshots(
     snapshots: tuple[PersistedExpedientesSnapshot, ...],
@@ -158,10 +175,12 @@ def calendar_events_from_expedientes_snapshots(
                     source_url=snapshot.source_url,
                     authenticated_identity=snapshot.authenticated_identity,
                     aeat_submission_state=aeat_submission_state,
+                    aeat_submitted_at=declaration.presented_at if aeat_submission_state is not None else None,
                     justificante_verified=False if aeat_submission_state is not None else None,
                 ),
             )
     return _dedupe_calendar_events(events)
+
 
 def calendar_events_from_notification_snapshots(
     snapshots: tuple[PersistedNotificationsSnapshot, ...],
@@ -205,6 +224,53 @@ def calendar_events_from_notification_snapshots(
             )
     return _dedupe_calendar_events(events)
 
+
+def calendar_events_from_justificante_capture_snapshots(
+    snapshots: tuple[JustificanteCaptureSnapshot, ...],
+    calendar_range: OverviewCalendarRange,
+    *,
+    justificantes: tuple[Justificante, ...] = (),
+    expected_tax_id: str | None = None,
+) -> tuple[OverviewCalendarEvent, ...]:
+    """Project verified live justificante captures into calendar filing events."""
+    justificantes_by_csv = _justificantes_by_csv(justificantes)
+    events: list[OverviewCalendarEvent] = []
+    for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
+        evidence = _filing_evidence_from_justificante_capture_snapshot(
+            snapshot,
+            justificantes_by_csv=justificantes_by_csv,
+            expected_tax_id=expected_tax_id,
+        )
+        if evidence is None:
+            continue
+        submitted_at = evidence.aeat_submitted_at or snapshot.captured_at
+        event_date = submitted_at.date()
+        if not calendar_range.covers(event_date):
+            continue
+        events.append(
+            OverviewCalendarEvent(
+                event_type=OverviewCalendarEventType.FILING,
+                event_date=event_date,
+                source="aeat_sede_live_capture",
+                summary=(
+                    f"Modelo {snapshot.modelo} {snapshot.filing_year} "
+                    f"{snapshot.period.registry_token} live justificante"
+                ),
+                reference_id=snapshot.expediente_id,
+                snapshot_id=snapshot.snapshot_id,
+                modelo=snapshot.modelo,
+                filing_year=snapshot.filing_year,
+                period=snapshot.period,
+                status="ALTA",
+                aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+                aeat_submitted_at=submitted_at,
+                justificante_verified=True,
+                verified_justificante_csv=evidence.verified_justificante_csv,
+            ),
+        )
+    return _dedupe_calendar_events(events)
+
+
 def _notification_matches_expected_tax_id(
     row: object,
     expected_tax_id: str | None,
@@ -223,11 +289,14 @@ def _notification_matches_expected_tax_id(
         return allow_missing_row_identity
     return expected in row_tax_ids
 
+
 def build_overview_calendar_events(
     *,
     calendar_range: OverviewCalendarRange,
     expedientes_snapshots: tuple[PersistedExpedientesSnapshot, ...] = (),
     notification_snapshots: tuple[PersistedNotificationsSnapshot, ...] = (),
+    justificante_capture_snapshots: tuple[JustificanteCaptureSnapshot, ...] = (),
+    justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarEvent, ...]:
     """Build :class:`OverviewCalendarEvent` tuples from persisted local live-read snapshots."""
@@ -242,8 +311,15 @@ def build_overview_calendar_events(
             calendar_range,
             expected_tax_id=expected_tax_id,
         ),
+        *calendar_events_from_justificante_capture_snapshots(
+            justificante_capture_snapshots,
+            calendar_range,
+            justificantes=justificantes,
+            expected_tax_id=expected_tax_id,
+        ),
     ]
     return _dedupe_calendar_events(events)
+
 
 def calendar_events_from_modelo_records(
     filing_records: tuple[ModeloRecord, ...],
@@ -269,14 +345,14 @@ def calendar_events_from_modelo_records(
         filing_records,
         key=lambda item: (item.filed_at, str(item.modelo), item.period.registry_token),
     ):
-        event_date = record.filed_at.date()
-        if not calendar_range.covers(event_date):
-            continue
         evidence = _filing_axes_from_modelo_record(
             record,
             justificantes_by_csv=justificantes_by_csv,
             expected_tax_id=expected_tax_id,
         )
+        event_date = _modelo_record_calendar_event_date(record, evidence)
+        if not calendar_range.covers(event_date):
+            continue
         events.append(
             OverviewCalendarEvent(
                 event_type=OverviewCalendarEventType.FILING,
@@ -289,11 +365,20 @@ def calendar_events_from_modelo_records(
                 period=record.period,
                 status=f"{evidence.local_filing_state.value}:{record.status.value}",
                 aeat_submission_state=evidence.aeat_submission_state,
+                aeat_submitted_at=evidence.aeat_submitted_at,
                 justificante_verified=evidence.justificante_verified,
                 verified_justificante_csv=evidence.verified_justificante_csv,
             ),
         )
     return _dedupe_calendar_events(events)
+
+
+def _modelo_record_calendar_event_date(record: ModeloRecord, evidence: OverviewCalendarFilingEvidence) -> date:
+    """Return the event date for a local Modelo record's calendar projection."""
+    if evidence.justificante_verified and evidence.aeat_submitted_at is not None:
+        return evidence.aeat_submitted_at.date()
+    return record.filed_at.date()
+
 
 def calendar_filing_evidence_from_sources(
     *,
@@ -303,6 +388,7 @@ def calendar_filing_evidence_from_sources(
     verified_filed_declaration_artefact_refs: tuple[str, ...] = (),
     verified_filed_declaration_artefact_csvs: Mapping[str, str] | None = None,
     calculation_observations: tuple[object, ...] = (),
+    justificante_capture_snapshots: tuple[JustificanteCaptureSnapshot, ...] = (),
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarFilingEvidence, ...]:
@@ -358,9 +444,15 @@ def calendar_filing_evidence_from_sources(
         )
         if evidence is not None:
             _merge_filing_evidence(by_key, evidence)
-    unique: dict[
-        tuple[str | None, int | None, str | None, str | None], OverviewCalendarFilingEvidence
-    ] = {}
+    for snapshot in justificante_capture_snapshots:
+        evidence = _filing_evidence_from_justificante_capture_snapshot(
+            snapshot,
+            justificantes_by_csv=justificantes_by_csv,
+            expected_tax_id=expected_tax_id,
+        )
+        if evidence is not None:
+            _merge_filing_evidence(by_key, evidence)
+    unique: dict[tuple[str | None, int | None, str | None, str | None], OverviewCalendarFilingEvidence] = {}
     for evidence in (*by_key.values(), *event_specific):
         key_reference = (
             evidence.aeat_reference_id if evidence.evidence_source == "filed_declaration_observation" else None
@@ -371,6 +463,7 @@ def calendar_filing_evidence_from_sources(
         unique[key] = evidence if existing is None else _stronger_filing_evidence(existing, evidence)
     return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))
 
+
 def _justificantes_by_csv(justificantes: tuple[Justificante, ...]) -> dict[str, tuple[Justificante, ...]]:
     """Index loaded justificante metadata by CSV/reference identifier."""
     grouped: dict[str, list[Justificante]] = {}
@@ -380,9 +473,11 @@ def _justificantes_by_csv(justificantes: tuple[Justificante, ...]) -> dict[str, 
             grouped.setdefault(_justificante_csv_key(csv), []).append(justificante)
     return {key: tuple(values) for key, values in grouped.items()}
 
+
 def _justificante_csv_key(csv: str) -> str:
     """Return the canonical lookup key for AEAT CSV identifiers."""
     return csv.strip().casefold()
+
 
 def _filing_evidence_from_modelo_record(
     record: ModeloRecord,
@@ -399,6 +494,7 @@ def _filing_evidence_from_modelo_record(
         expected_tax_id=expected_tax_id,
     )
 
+
 def _filing_axes_from_modelo_record(
     record: ModeloRecord,
     *,
@@ -414,6 +510,7 @@ def _filing_axes_from_modelo_record(
     aeat_state = OverviewAeatSubmissionState.NOT_OBSERVED
     aeat_evidence_kind = None
     aeat_reference_id = None
+    aeat_submitted_at = None
     justificante_verified = False
     verified_justificante_csv = None
     aeat_accepted = bool(getattr(record, "aeat_accepted", False))
@@ -423,10 +520,7 @@ def _filing_axes_from_modelo_record(
         kind = getattr(external_evidence, "kind", None)
         aeat_evidence_kind = str(getattr(kind, "value", kind))
         aeat_reference_id = str(external_evidence.reference_id)
-        if (
-            aeat_accepted
-            and aeat_evidence_kind in _JUSTIFICANTE_BACKED_EVIDENCE_KINDS
-        ):
+        if aeat_accepted and aeat_evidence_kind in _JUSTIFICANTE_BACKED_EVIDENCE_KINDS:
             verified_justificante = _modelo_record_verified_justificante(
                 modelo=modelo,
                 filing_year=filing_year,
@@ -437,6 +531,7 @@ def _filing_axes_from_modelo_record(
             )
             if verified_justificante is not None:
                 aeat_state = OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
+                aeat_submitted_at = verified_justificante.presented_at
                 justificante_verified = True
                 verified_justificante_csv = verified_justificante.csv
         elif aeat_accepted and aeat_state is OverviewAeatSubmissionState.NOT_OBSERVED:
@@ -450,12 +545,14 @@ def _filing_axes_from_modelo_record(
         local_calculation_revision_id=str(record.calculation_revision_id),
         local_filed_at=record.filed_at,
         aeat_submission_state=aeat_state,
+        aeat_submitted_at=aeat_submitted_at,
         aeat_reference_id=aeat_reference_id,
         aeat_evidence_kind=aeat_evidence_kind,
         verified_justificante_csv=verified_justificante_csv,
         justificante_verified=justificante_verified,
         evidence_source="modelo_filing_record",
     )
+
 
 def _modelo_record_verified_justificante(
     *,
@@ -486,6 +583,7 @@ def _modelo_record_verified_justificante(
         return None
     return matching[0]
 
+
 def _justificante_matches_calendar_target(
     justificante: Justificante,
     *,
@@ -501,6 +599,7 @@ def _justificante_matches_calendar_target(
         and justificante.period == period
     )
 
+
 def _local_filing_state_from_modelo_record(record: ModeloRecord) -> OverviewLocalFilingState:
     """Return the local-app axis for one current Modelo record.
 
@@ -513,6 +612,7 @@ def _local_filing_state_from_modelo_record(record: ModeloRecord) -> OverviewLoca
     if filed_by == "aeat-import" or filed_by.startswith("aeat-import:"):
         return OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED
     return OverviewLocalFilingState.READY_TO_FILE
+
 
 def _filing_evidence_from_observed_event(
     event: OverviewCalendarEvent,
@@ -536,13 +636,15 @@ def _filing_evidence_from_observed_event(
         filing_year=event.filing_year,
         period=event.period,
         aeat_submission_state=state,
-        aeat_submitted_at=datetime.combine(event.event_date, datetime.min.time(), tzinfo=UTC),
+        aeat_submitted_at=event.aeat_submitted_at
+        or datetime.combine(event.event_date, datetime.min.time(), tzinfo=UTC),
         aeat_reference_id=event.reference_id,
         aeat_snapshot_id=event.snapshot_id,
         verified_justificante_csv=event.verified_justificante_csv,
         justificante_verified=bool(event.justificante_verified),
         evidence_source=event.source,
     )
+
 
 def _authenticated_identity_matches_expected(
     authenticated_identity: str | None,
@@ -553,6 +655,7 @@ def _authenticated_identity_matches_expected(
         return True
     actual = (authenticated_identity or "").strip().upper()
     return bool(actual) and actual == expected
+
 
 def _filing_evidence_from_filed_declaration_observation(
     observation: FiledDeclaracionObservation,
@@ -600,9 +703,11 @@ def _filing_evidence_from_filed_declaration_observation(
         evidence_source="filed_declaration_observation",
     )
 
+
 def _is_active_aeat_filing_status(status: str | None) -> bool:
     """Return whether an AEAT register row represents the current accepted filing."""
     return (status or "").strip().upper() == "ALTA"
+
 
 def _filing_evidence_from_calculation_observation(
     payload: object,
@@ -620,6 +725,9 @@ def _filing_evidence_from_calculation_observation(
         return None
     status = str(source_metadata.get("aeat_register_status", "")).strip()
     if not _is_active_aeat_filing_status(status):
+        return None
+    aeat_expediente_id = str(source_metadata.get("aeat_expediente_id") or "").strip()
+    if not aeat_expediente_id:
         return None
     expected = (expected_tax_id or "").strip().upper()
     authenticated_identity = str(source_metadata.get("authenticated_identity", "")).strip().upper()
@@ -641,7 +749,7 @@ def _filing_evidence_from_calculation_observation(
             _obs_period = _period_from_registry_token(_obs_year, registry_token)
         except ValueError:
             return None
-    verified_justificante_csv = _calculation_observation_verified_justificante_csv(
+    verified_justificante = _calculation_observation_verified_justificante(
         modelo=str(observation.modelo),
         filing_year=_obs_year,
         period=_obs_period,
@@ -649,7 +757,7 @@ def _filing_evidence_from_calculation_observation(
         justificantes_by_csv=justificantes_by_csv,
         expected_tax_id=expected_tax_id,
     )
-    verified = verified_justificante_csv is not None
+    verified = verified_justificante is not None
     return OverviewCalendarFilingEvidence(
         modelo=str(observation.modelo),
         filing_year=_obs_year,
@@ -659,15 +767,18 @@ def _filing_evidence_from_calculation_observation(
             if verified
             else OverviewAeatSubmissionState.SUBMITTED_OBSERVED
         ),
-        aeat_submitted_at=getattr(payload, "captured_at", None),
-        aeat_reference_id=str(source_metadata.get("aeat_expediente_id") or "") or None,
+        aeat_submitted_at=verified_justificante.presented_at
+        if verified_justificante is not None
+        else getattr(payload, "captured_at", None),
+        aeat_reference_id=aeat_expediente_id,
         aeat_evidence_kind=source_kind,
-        verified_justificante_csv=verified_justificante_csv,
+        verified_justificante_csv=verified_justificante.csv if verified_justificante is not None else None,
         justificante_verified=verified,
         evidence_source=source_kind,
     )
 
-def _calculation_observation_verified_justificante_csv(
+
+def _calculation_observation_verified_justificante(
     *,
     modelo: str,
     filing_year: int,
@@ -675,8 +786,8 @@ def _calculation_observation_verified_justificante_csv(
     source_metadata: Mapping[object, object],
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
     expected_tax_id: str | None,
-) -> str | None:
-    """Resolve filed-history observation metadata to a matching persisted justificante CSV."""
+) -> Justificante | None:
+    """Resolve filed-history observation metadata to matching persisted justificante metadata."""
     expected = str(expected_tax_id or source_metadata.get("authenticated_identity") or "").strip().upper()
     if not expected:
         return None
@@ -695,8 +806,74 @@ def _calculation_observation_verified_justificante_csv(
         )
         if not matching or len(matching) != len(candidates):
             continue
-        return matching[0].csv
+        return matching[0]
     return None
+
+
+def _filing_evidence_from_justificante_capture_snapshot(
+    snapshot: JustificanteCaptureSnapshot,
+    *,
+    justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
+    expected_tax_id: str | None,
+) -> OverviewCalendarFilingEvidence | None:
+    """Project one verified live justificante capture into AEAT-side evidence."""
+    if not _capture_snapshot_is_active(snapshot):
+        return None
+    if not isinstance(snapshot.period, _Period):
+        return None
+    if snapshot.period.filing_year != snapshot.filing_year:
+        return None
+    verified_justificante = _capture_snapshot_verified_justificante(
+        snapshot,
+        justificantes_by_csv=justificantes_by_csv,
+        expected_tax_id=expected_tax_id,
+    )
+    if verified_justificante is None:
+        return None
+    source_kind = str(getattr(snapshot, "source_kind", "aeat_sede_live_capture") or "aeat_sede_live_capture")
+    return OverviewCalendarFilingEvidence(
+        modelo=snapshot.modelo,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+        aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+        aeat_submitted_at=verified_justificante.presented_at,
+        aeat_reference_id=snapshot.expediente_id,
+        aeat_snapshot_id=snapshot.snapshot_id,
+        aeat_evidence_kind=source_kind,
+        verified_justificante_csv=verified_justificante.csv,
+        justificante_verified=True,
+        evidence_source=source_kind,
+    )
+
+
+def _capture_snapshot_is_active(snapshot: JustificanteCaptureSnapshot) -> bool:
+    state = getattr(snapshot, "state", None)
+    return str(getattr(state, "value", state)).strip().lower() == "active"
+
+
+def _capture_snapshot_verified_justificante(
+    snapshot: JustificanteCaptureSnapshot,
+    *,
+    justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
+    expected_tax_id: str | None,
+) -> Justificante | None:
+    expected = (expected_tax_id or "").strip().upper()
+    candidates = justificantes_by_csv.get(_justificante_csv_key(snapshot.csv), ())
+    matching = tuple(
+        justificante
+        for justificante in candidates
+        if _justificante_matches_calendar_target(
+            justificante,
+            modelo=snapshot.modelo,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+            expected_tax_id=expected or justificante.tax_id,
+        )
+    )
+    if not matching or len(matching) != len(candidates):
+        return None
+    return matching[0]
+
 
 def _metadata_justificante_csv_candidates(source_metadata: Mapping[object, object]) -> tuple[str, ...]:
     """Return normalized single/plural justificante CSV metadata candidates."""
@@ -711,8 +888,10 @@ def _metadata_justificante_csv_candidates(source_metadata: Mapping[object, objec
         csvs.extend(item.strip() for item in plural.split(",") if item.strip())
     return tuple(dict.fromkeys(csvs))
 
+
 def _period_from_registry_token(filing_year: int, registry_token: str) -> _Period:
     return _Period.from_year_and_code(filing_year, registry_token)
+
 
 def _merge_filing_evidence(
     by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence],
@@ -725,6 +904,7 @@ def _merge_filing_evidence(
     existing = by_key.get(key)
     merged = candidate if existing is None else _stronger_filing_evidence(existing, candidate)
     by_key[key] = merged
+
 
 def _stronger_filing_evidence(
     existing: OverviewCalendarFilingEvidence,
@@ -751,7 +931,7 @@ def _stronger_filing_evidence(
         local = local.model_copy(
             update={
                 "aeat_submission_state": candidate.aeat_submission_state,
-                "aeat_submitted_at": candidate.aeat_submitted_at or local.aeat_submitted_at,
+                "aeat_submitted_at": _merged_aeat_submitted_at(local, candidate),
                 "aeat_reference_id": candidate.aeat_reference_id or local.aeat_reference_id,
                 "aeat_snapshot_id": candidate.aeat_snapshot_id or local.aeat_snapshot_id,
                 "aeat_evidence_kind": candidate.aeat_evidence_kind or local.aeat_evidence_kind,
@@ -762,6 +942,23 @@ def _stronger_filing_evidence(
             },
         )
     return local
+
+
+def _merged_aeat_submitted_at(
+    existing: OverviewCalendarFilingEvidence,
+    candidate: OverviewCalendarFilingEvidence,
+) -> datetime | None:
+    """Prefer official justificante presentation time over later local capture time."""
+    if (
+        existing.justificante_verified
+        and candidate.justificante_verified
+        and existing.aeat_submitted_at is not None
+        and _AEAT_SUBMISSION_RANK[candidate.aeat_submission_state]
+        == _AEAT_SUBMISSION_RANK[existing.aeat_submission_state]
+    ):
+        return existing.aeat_submitted_at
+    return candidate.aeat_submitted_at or existing.aeat_submitted_at
+
 
 def _merged_conflict_reference_ids(
     existing: OverviewCalendarFilingEvidence,
@@ -785,23 +982,22 @@ def _merged_conflict_reference_ids(
         return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
     if candidate_csv is not None and existing_ref is not None and existing_ref.casefold() == candidate_csv.casefold():
         return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
-    if (
-        existing_ref is not None
-        and candidate_ref is not None
-        and existing_ref.casefold() != candidate_ref.casefold()
-    ):
+    if existing_ref is not None and candidate_ref is not None and existing_ref.casefold() != candidate_ref.casefold():
         references.extend((existing_ref, candidate_ref))
     return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
+
 
 def _clean_reference_id(reference_id: str | None) -> str | None:
     cleaned = (reference_id or "").strip()
     return cleaned or None
+
 
 def _calendar_filing_evidence_sort_key(
     evidence: OverviewCalendarFilingEvidence,
 ) -> tuple[str, int, str]:
     _p = evidence.period
     return (evidence.modelo or "", evidence.filing_year or 0, _p.registry_token if _p is not None else "")
+
 
 def _calendar_entry_filing_evidence(
     *,
@@ -817,6 +1013,7 @@ def _calendar_entry_filing_evidence(
     if match is not None:
         return match.model_copy(update={"modelo": modelo, "filing_year": filing_year, "period": period})
     return OverviewCalendarFilingEvidence(modelo=modelo, filing_year=filing_year, period=period)
+
 
 def _calendar_events_with_filing_evidence(
     events: tuple[OverviewCalendarEvent, ...],
@@ -845,12 +1042,14 @@ def _calendar_events_with_filing_evidence(
             event.model_copy(
                 update={
                     "aeat_submission_state": row.aeat_submission_state,
+                    "aeat_submitted_at": row.aeat_submitted_at or event.aeat_submitted_at,
                     "justificante_verified": row.justificante_verified,
                     "verified_justificante_csv": row.verified_justificante_csv,
                 },
             ),
         )
     return _dedupe_calendar_events(enriched)
+
 
 def _calendar_event_filing_evidence(
     *,
@@ -877,340 +1076,6 @@ def _calendar_event_filing_evidence(
         row = _stronger_filing_evidence(row, candidate)
     return row
 
-_PAYER_FACT_PROFILE_KEY: dict[_PayerFact, tuple[str, str]] = {
-    _PayerFact.PAYS_WITHHELD_INCOME: (
-        "pays_professionals_with_retencion",
-        "cli.overview.warning.retencion_profesionales_unset",
-    ),
-    _PayerFact.PAYS_RENT_WITH_RETENCION: (
-        "pays_rent_with_retencion",
-        "cli.overview.warning.retencion_arrendamientos_unset",
-    ),
-    _PayerFact.TRADES_INTRACOMMUNITY: (
-        "does_intracomunitario",
-        "cli.overview.warning.intracomunitario_unset",
-    ),
-    _PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: (
-        "third_party_transactions_above_347_threshold",
-        "cli.overview.warning.terceros_threshold_unset",
-    ),
-}
-
-_ESTIMATION_REGIME_PROFILE_KEY: dict[_IrpfEstimationRegime, tuple[str, str]] = {
-    _IrpfEstimationRegime.OBJETIVA: (
-        "uses_objective_estimation_irpf",
-        "cli.overview.warning.estimacion_objetiva_unset",
-    ),
-}
-
-_IVA_REGIME_MODELOS = IVA_REGIME_MODELOS
-_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS: MappingProxyType[str, frozenset[str]] = MappingProxyType(
-    {
-        _Modelo.M200.value: frozenset(
-            {
-                "taxpayer_type.legal_entity_form",
-            },
-        ),
-        _Modelo.M202.value: frozenset(
-            {
-                "taxpayer_type.legal_entity_form",
-                "taxpayer_type.incn_prior_12_months",
-                "taxpayer_type.new_entity_first_two_profit_periods",
-            },
-        ),
-    },
-)
-
-def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
-    """Derive the profile-key → (affected_modelos, message_key, fix_command) mapping.
-
-    Iterates :data:`~aeat.domain.calculations.registry._applicability._MODELO_APPLICABILITY_RULES`
-    and builds the completeness-warning table from the rule axes rather than
-    maintaining a hardcoded dict. New rules whose gates use a known _PayerFact
-    or estimation regime automatically surface their gating warning without a
-    manual update here.
-
-    Three rule axes produce gating-field entries:
-
-    * ``required_payer_fact`` — maps to a profile boolean via
-      :data:`_PAYER_FACT_PROFILE_KEY`.
-    * ``required_estimation_regimes`` — when a rule gates on a single
-      non-directa regime, maps to a profile key via
-      :data:`_ESTIMATION_REGIME_PROFILE_KEY`.
-    * IVA-subject modelos — static set :data:`_IVA_REGIME_MODELOS`
-      mapped to the ``iva.regime`` profile key (IVA regime is not yet
-      encoded in the rule schema).
-
-    The ``fix_command`` is always ``"aeat config profile edit"`` — all
-    gating fields are settable via the profile-edit surface.
-    """
-    _FIX = "aeat config profile edit"
-    key_to_modelos: dict[str, set[str]] = {}
-    key_to_meta: dict[str, tuple[str, str]] = {}
-
-    for rule in _iter_modelo_applicability_rules():
-        if rule.required_payer_fact is not None:
-            payer_fact_meta = _PAYER_FACT_PROFILE_KEY.get(rule.required_payer_fact)
-            if payer_fact_meta is not None:
-                profile_key, locale_key = payer_fact_meta
-                key_to_modelos.setdefault(profile_key, set()).add(rule.modelo)
-                key_to_meta[profile_key] = (locale_key, _FIX)
-
-        if len(rule.required_estimation_regimes) == 1:
-            (regime,) = rule.required_estimation_regimes
-            if regime in _ESTIMATION_REGIME_PROFILE_KEY:
-                profile_key, locale_key = _ESTIMATION_REGIME_PROFILE_KEY[regime]
-                key_to_modelos.setdefault(profile_key, set()).add(rule.modelo)
-                key_to_meta[profile_key] = (locale_key, _FIX)
-
-    key_to_modelos["iva.regime"] = set(_IVA_REGIME_MODELOS)
-    key_to_meta["iva.regime"] = ("cli.overview.warning.iva_regime_unset", _FIX)
-
-    return MappingProxyType(
-        {
-            profile_key: (
-                tuple(sorted(key_to_modelos[profile_key])),
-                key_to_meta[profile_key][0],
-                key_to_meta[profile_key][1],
-            )
-            for profile_key in sorted(key_to_modelos)
-        },
-    )
-
-_GATING_FIELDS: MappingProxyType[str, tuple[tuple[str, ...], str, str]] = _gating_fields()
-"""Profile keys derived from :data:`_MODELO_APPLICABILITY_RULES` that the
-deadline engine reads when classifying applicability, mapped to
-``(affected_modelos, message_key, fix_command)``.
-
-Built by :func:`_gating_fields` at import time from the canonical rule
-table so new rules automatically surface their gating warnings without
-a manual update to this mapping."""
-
-_CENSO_ENROLMENT_PROFILE_KEYS = frozenset(
-    {
-        "activities.iae_epigraph",
-        "taxpayer_type.entity_type",
-        "taxpayer_type.irpf_income_categories",
-        "taxpayer_type.legal_entity_form",
-        "taxpayer_type.incn_prior_12_months",
-        "taxpayer_type.new_entity_first_two_profit_periods",
-        "iva.regime",
-    },
-)
-"""Profile paths whose provenance can witness censo-backed Modelo enrolment."""
-
-_CENSO_ENROLMENT_WARNING_CODE = "censo.enrolment_unverified"
-_CENSO_ENROLMENT_WARNING_MESSAGE = "cli.overview.warning.censo_enrolment_unverified"
-_CENSO_ENROLMENT_FIX_COMMAND = "aeat config profile censo pull && aeat config profile censo apply"
-_JUSTIFICANTE_UNVERIFIED_WARNING_CODE = "filing.justificante_unverified"
-_JUSTIFICANTE_UNVERIFIED_WARNING_MESSAGE = "cli.overview.warning.justificante_unverified"
-_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
-_AEAT_EVIDENCE_CONFLICT_WARNING_CODE = "filing.aeat_evidence_conflict"
-_AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE = "cli.overview.warning.aeat_evidence_conflict"
-_AEAT_EVIDENCE_CONFLICT_FIX_COMMAND = "aeat app live filed pull --modelo MODELO --year YEAR --period PERIOD"
-
-
-def calendar_censo_enrolment_profile_keys() -> tuple[str, ...]:
-    """Return profile paths whose censo provenance can witness Modelo enrolment."""
-    return tuple(sorted(_CENSO_ENROLMENT_PROFILE_KEYS))
-
-
-def calendar_applicability_profile_keys_for_modelo(modelo: str) -> tuple[str, ...]:
-    """Return profile keys that can influence calendar applicability for ``modelo``."""
-    keys: set[str] = set()
-    for rule in _iter_modelo_applicability_rules():
-        if rule.modelo != modelo:
-            continue
-        keys.add("taxpayer_type.entity_type")
-        if rule.required_income_categories:
-            keys.add("taxpayer_type.irpf_income_categories")
-        if len(rule.required_estimation_regimes) == 1:
-            (regime,) = rule.required_estimation_regimes
-            if regime in _ESTIMATION_REGIME_PROFILE_KEY:
-                keys.add(_ESTIMATION_REGIME_PROFILE_KEY[regime][0])
-        if rule.required_payer_fact is not None:
-            payer_fact_meta = _PAYER_FACT_PROFILE_KEY.get(rule.required_payer_fact)
-            if payer_fact_meta is not None:
-                keys.add(payer_fact_meta[0])
-        break
-    if modelo in _IVA_REGIME_MODELOS:
-        keys.add("iva.regime")
-    keys.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS.get(modelo, frozenset()))
-    return tuple(sorted(keys))
-
-def _calendar_censo_reconciliation_warnings(
-    *,
-    entries: tuple[OverviewCalendarEntry, ...],
-    live_censo_verified_profile_keys: tuple[str, ...] | None,
-) -> tuple[CalendarWarning, ...]:
-    """Warn when active Modelo obligations lack live-censo enrolment provenance."""
-    if live_censo_verified_profile_keys is None or not entries:
-        return ()
-    affected_modelos: set[str] = set()
-    for entry in entries:
-        if entry.censo_enrolment_state is OverviewCensoEnrolmentState.UNVERIFIED:
-            affected_modelos.add(entry.modelo)
-    if not affected_modelos:
-        return ()
-    return (
-        CalendarWarning(
-            code=_CENSO_ENROLMENT_WARNING_CODE,
-            message=_CENSO_ENROLMENT_WARNING_MESSAGE,
-            fix_command=_CENSO_ENROLMENT_FIX_COMMAND,
-            affected_modelos=tuple(sorted(affected_modelos)),
-        ),
-    )
-
-def _calendar_censo_enrolment_state(
-    *,
-    modelo: str,
-    live_censo_verified_profile_keys: tuple[str, ...] | None,
-) -> OverviewCensoEnrolmentState:
-    """Return the row-level live censo provenance state for one Modelo obligation."""
-    if live_censo_verified_profile_keys is None:
-        return OverviewCensoEnrolmentState.NOT_CHECKED
-    required = set(calendar_applicability_profile_keys_for_modelo(modelo)) & _CENSO_ENROLMENT_PROFILE_KEYS
-    if "taxpayer_type.irpf_income_categories" in required:
-        required.add("activities.iae_epigraph")
-    if not required:
-        return OverviewCensoEnrolmentState.NOT_REQUIRED
-    verified = {key.strip() for key in live_censo_verified_profile_keys if key.strip()}
-    if required <= verified:
-        return OverviewCensoEnrolmentState.VERIFIED
-    return OverviewCensoEnrolmentState.UNVERIFIED
-
-def _calendar_unverified_justificante_warnings(
-    *,
-    entries: tuple[OverviewCalendarEntry, ...],
-    events: tuple[OverviewCalendarEvent, ...],
-) -> tuple[CalendarWarning, ...]:
-    """Warn when AEAT-side filing evidence lacks verified justificante proof."""
-    affected_modelos: set[str] = set()
-    fix_commands: set[str] = set()
-    unresolved_states = {
-        OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
-        OverviewAeatSubmissionState.ACCEPTED,
-    }
-    for entry in entries:
-        evidence = entry.filing_evidence
-        if evidence.aeat_submission_state in unresolved_states and not evidence.justificante_verified:
-            affected_modelos.add(entry.modelo)
-            fix_commands.add(
-                _filed_pull_command(
-                    modelo=entry.modelo,
-                    filing_year=entry.filing_year,
-                    period=entry.period,
-                    fallback=_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND,
-                ),
-            )
-    for event in events:
-        if event.event_type is not OverviewCalendarEventType.FILING or event.modelo is None:
-            continue
-        if event.aeat_submission_state in unresolved_states and event.justificante_verified is not True:
-            affected_modelos.add(event.modelo)
-            fix_commands.add(
-                _filed_pull_command(
-                    modelo=event.modelo,
-                    filing_year=event.filing_year,
-                    period=event.period,
-                    fallback=_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND,
-                ),
-            )
-    if not affected_modelos:
-        return ()
-    return (
-        CalendarWarning(
-            code=_JUSTIFICANTE_UNVERIFIED_WARNING_CODE,
-            message=_JUSTIFICANTE_UNVERIFIED_WARNING_MESSAGE,
-            fix_command=_single_fix_command_or_fallback(fix_commands, fallback=_JUSTIFICANTE_UNVERIFIED_FIX_COMMAND),
-            affected_modelos=tuple(sorted(affected_modelos)),
-        ),
-    )
-
-def _calendar_aeat_evidence_conflict_warnings(
-    *,
-    entries: tuple[OverviewCalendarEntry, ...],
-) -> tuple[CalendarWarning, ...]:
-    """Warn when one calendar obligation carries disagreeing AEAT evidence references."""
-    affected_modelos: set[str] = set()
-    fix_commands: set[str] = set()
-    for entry in entries:
-        if not entry.filing_evidence.aeat_evidence_conflict_reference_ids:
-            continue
-        affected_modelos.add(entry.modelo)
-        fix_commands.add(
-            _filed_pull_command(
-                modelo=entry.modelo,
-                filing_year=entry.filing_year,
-                period=entry.period,
-                fallback=_AEAT_EVIDENCE_CONFLICT_FIX_COMMAND,
-            ),
-        )
-    if not affected_modelos:
-        return ()
-    return (
-        CalendarWarning(
-            code=_AEAT_EVIDENCE_CONFLICT_WARNING_CODE,
-            message=_AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE,
-            fix_command=_single_fix_command_or_fallback(fix_commands, fallback=_AEAT_EVIDENCE_CONFLICT_FIX_COMMAND),
-            affected_modelos=tuple(sorted(affected_modelos)),
-        ),
-    )
-
-
-def _filed_pull_command(
-    *,
-    modelo: str,
-    filing_year: int | None,
-    period: _Period | None,
-    fallback: str,
-) -> str:
-    """Return the exact read-only filed-history pull command for one calendar row."""
-    if filing_year is None or period is None:
-        return fallback
-    return f"aeat app live filed pull --modelo {modelo} --year {filing_year} --period {period.registry_token}"
-
-
-def _single_fix_command_or_fallback(commands: set[str], *, fallback: str) -> str:
-    commands.discard(fallback)
-    if len(commands) == 1:
-        return next(iter(commands))
-    return fallback
-
-def _build_completeness_and_warnings(
-    raw_values: Mapping[str, object] | None,
-    entries: tuple[OverviewCalendarEntry, ...],
-) -> tuple[CalendarCompleteness, tuple[CalendarWarning, ...]]:
-    """Inspect the raw profile values and compute warnings + completeness."""
-    if raw_values is None:
-        return CalendarCompleteness(), ()
-    explicitly_set: list[str] = []
-    defaulted: list[str] = []
-    warnings: list[CalendarWarning] = []
-    defaulted_modelos: set[str] = set()
-    for key, (affected_modelos, message_key, fix_command) in _GATING_FIELDS.items():
-        raw = raw_values.get(key)
-        if raw is not None and str(raw).strip():
-            explicitly_set.append(key)
-            continue
-        defaulted.append(key)
-        warnings.append(
-            CalendarWarning(
-                code=key,
-                message=message_key,
-                fix_command=fix_command,
-                affected_modelos=affected_modelos,
-            ),
-        )
-        defaulted_modelos.update(affected_modelos)
-    computable_modelos = tuple(sorted({entry.modelo for entry in entries}))
-    completeness = CalendarCompleteness(
-        explicitly_set_keys=tuple(explicitly_set),
-        defaulted_keys=tuple(defaulted),
-        computable_modelos=computable_modelos,
-        defaulted_modelos=tuple(sorted(defaulted_modelos & set(computable_modelos))),
-    )
-    return completeness, tuple(warnings)
 
 def _calendar_entry_from_obligation(
     obligation: _ModeloDeadline,
@@ -1267,6 +1132,7 @@ def _calendar_entry_from_obligation(
             evidence=filing_evidence,
         ),
     )
+
 
 def build_overview_calendar(
     profile: _TaxpayerProfile,

@@ -193,7 +193,8 @@ def _register_profile_import_command(
     def config_profile_import(
         ctx: typer.Context,
         path: Path = typer.Argument(
-            ..., help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle."),
+            ...,
+            help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle."),
         ),
         label: str | None = typer.Option(
             None,

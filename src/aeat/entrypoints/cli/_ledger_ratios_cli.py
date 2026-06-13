@@ -231,15 +231,18 @@ def ratios_list(
 
 
 @ratios_app.command(
-    "set", help=tr("cli.app.ledger.ratios.set_help", default="Set or replace one per-category usage-ratio override."),
+    "set",
+    help=tr("cli.app.ledger.ratios.set_help", default="Set or replace one per-category usage-ratio override."),
 )
 def ratios_set(
     ctx: typer.Context,
     category: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.ratios.category_help", default="Spending category id (e.g. USAGE_RATIO_VEHICLE)."),
+        ...,
+        help=tr("cli.app.ledger.ratios.category_help", default="Spending category id (e.g. USAGE_RATIO_VEHICLE)."),
     ),
     ratio: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1]."),
+        ...,
+        help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1]."),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -289,7 +292,8 @@ def ratios_set(
 
 
 @ratios_app.command(
-    "unset", help=tr("cli.app.ledger.ratios.unset_help", default="Clear one per-category usage-ratio override."),
+    "unset",
+    help=tr("cli.app.ledger.ratios.unset_help", default="Clear one per-category usage-ratio override."),
 )
 def ratios_unset(
     ctx: typer.Context,
@@ -342,7 +346,8 @@ def ratios_unset(
 @ratios_app.command(
     "eligible",
     help=tr(
-        "cli.app.ledger.ratios.eligible_help", default="List every category that may carry a per-category override.",
+        "cli.app.ledger.ratios.eligible_help",
+        default="List every category that may carry a per-category override.",
     ),
 )
 def ratios_eligible(

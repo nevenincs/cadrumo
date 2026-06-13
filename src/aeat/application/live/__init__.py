@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import Declaracion, Expediente, SedeCapture
     from ...core import Period
     from ...core.config import Settings
+    from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ._expedientes import ExpedientesCapture, ExpedientesService
     from ._notifications import NotificationsService
@@ -105,6 +106,7 @@ from ._justificante import (
     parse_capture_to_justificante,
     reconcile_capture,
     register_capture_as_filing_evidence,
+    register_capture_justificante_metadata,
     resolve_period_expediente,
     stamp_capture_evidence_if_filed,
 )
@@ -147,7 +149,13 @@ class JustificanteCaptureOutcome:
     """Outcome of one live justificante pull and local filing-evidence enrolment."""
 
     snapshot: JustificanteCaptureSnapshot
+    justificante: Justificante | None
     filing_record: ModeloRecord | None
+
+    @property
+    def justificante_metadata_registered(self) -> bool:
+        """Return whether the captured receipt parsed into stored justificante metadata."""
+        return self.justificante is not None
 
     @property
     def filing_evidence_stamped(self) -> bool:
@@ -411,8 +419,9 @@ async def capture_justificante_snapshot_outcome(
     # Per the ADR, the capture flow stamps the official evidence onto the work
     # unit's filing record in the same flow. Best-effort: a no-op when the period
     # is not yet filed in-app (the snapshot is still persisted).
+    justificante = register_capture_justificante_metadata(snapshot=persisted)
     filing_record = stamp_capture_evidence_if_filed(persisted)
-    return JustificanteCaptureOutcome(snapshot=persisted, filing_record=filing_record)
+    return JustificanteCaptureOutcome(snapshot=persisted, justificante=justificante, filing_record=filing_record)
 
 
 def __getattr__(name: str):
@@ -534,6 +543,7 @@ __all__ = [
     "persist_iva_remote_state_acquisition_report",
     "reconcile_capture",
     "register_capture_as_filing_evidence",
+    "register_capture_justificante_metadata",
     "resolve_period_expediente",
     "select_declarations_for_capture",
     "stamp_capture_evidence_if_filed",

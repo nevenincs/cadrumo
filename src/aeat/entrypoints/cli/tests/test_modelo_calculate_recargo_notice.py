@@ -124,9 +124,7 @@ def _closes_on(period_token: str) -> date:
         _M130_FILING_YEAR,
         Period.from_year_and_code(_M130_FILING_YEAR, period_token),
     )
-    assert closes_on is not None, (
-        f"registry must register an M130 {period_token} {_M130_FILING_YEAR} deadline window"
-    )
+    assert closes_on is not None, f"registry must register an M130 {period_token} {_M130_FILING_YEAR} deadline window"
     return closes_on
 
 

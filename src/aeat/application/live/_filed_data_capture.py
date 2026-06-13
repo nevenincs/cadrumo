@@ -295,9 +295,9 @@ async def capture_filed_data(
             )
             enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
             justificante_csvs.extend(enrollment.justificante_csvs)
-            justificante_csvs_by_observation[
-                _filed_observation_identity_key(observation)
-            ] = enrollment.justificante_csvs
+            justificante_csvs_by_observation[_filed_observation_identity_key(observation)] = (
+                enrollment.justificante_csvs
+            )
             filing_record_ids.extend(enrollment.filing_record_ids)
             conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
             casilla_count += len(observation.casillas)
@@ -333,6 +333,7 @@ async def capture_filed_data_bulk(
     year_to: int,
     output_root: Path,
     modelos: tuple[str, ...] | None = None,
+    limit: int | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`."""
     if year_from > year_to:
@@ -408,6 +409,11 @@ async def capture_filed_data_bulk(
             except Exception as exc:
                 failures.append(filed_data_capture_failure_row(modelo=code, year=year, error=exc))
                 continue
+            if limit is not None:
+                remaining = limit - len(observation_paths)
+                if remaining <= 0:
+                    break
+                declarations = declarations[:remaining]
             for declaration in declarations:
                 try:
                     observation = await register.capture_observation(
@@ -434,13 +440,15 @@ async def capture_filed_data_bulk(
                 )
                 enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
                 justificante_csvs.extend(enrollment.justificante_csvs)
-                justificante_csvs_by_observation[
-                    _filed_observation_identity_key(observation)
-                ] = enrollment.justificante_csvs
+                justificante_csvs_by_observation[_filed_observation_identity_key(observation)] = (
+                    enrollment.justificante_csvs
+                )
                 filing_record_ids.extend(enrollment.filing_record_ids)
                 conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
                 casilla_count += len(observation.casillas)
                 observations_for_calculation.append(observation)
+            if limit is not None and len(observation_paths) >= limit:
+                break
 
     calculation_observation_keys = persist_latest_filed_calculation_observations(
         tuple(observations_for_calculation),
@@ -545,9 +553,7 @@ async def capture_source_filed_data(
         )
         enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
         justificante_csvs.extend(enrollment.justificante_csvs)
-        justificante_csvs_by_observation[
-            _filed_observation_identity_key(observation)
-        ] = enrollment.justificante_csvs
+        justificante_csvs_by_observation[_filed_observation_identity_key(observation)] = enrollment.justificante_csvs
         filing_record_ids.extend(enrollment.filing_record_ids)
         conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
         casilla_count += len(observation.casillas)

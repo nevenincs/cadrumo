@@ -269,7 +269,9 @@ _PROFILE_STATUS_EXPECTATIONS = (
 
 @pytest.mark.parametrize(("key", "expected"), _PROFILE_STATUS_EXPECTATIONS)
 def test_config_app_round_trip_profile_status_records_field(
-    _isolated_cli_backend: Path, key: str, expected: object,
+    _isolated_cli_backend: Path,
+    key: str,
+    expected: object,
 ) -> None:
     outcome = _drive_workflow_round_trip(_isolated_cli_backend)
     assert outcome.status_payload[key] == expected

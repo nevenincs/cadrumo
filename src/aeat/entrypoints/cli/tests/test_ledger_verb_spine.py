@@ -226,3 +226,15 @@ def test_profile_history_verb_is_mounted_on_profile_app() -> None:
         f"`config profile history` is not mounted on profile_app; registered verbs: {sorted(registered)!r}. "
         "The D1 family rename merged `history` into the profile group; do not drop or re-home it."
     )
+
+
+def test_profile_history_help_exposes_profile_argument_not_bucket_id(cli_runner: CliRunner) -> None:
+    """The event-history surface accepts an operator profile token, not a storage noun."""
+
+    from .._config import profile_app
+
+    result = cli_runner.invoke(profile_app, ["history", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "BUCKET_ID" not in result.output
+    assert "PROFILE" in result.output

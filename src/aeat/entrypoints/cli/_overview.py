@@ -22,6 +22,7 @@ from ...application.overview import (
     build_overview_calendar,
     build_overview_calendar_events,
     build_overview_status_report,
+    calendar_events_from_modelo_records,
     calendar_filing_evidence_from_sources,
 )
 from ...core.i18n import tr
@@ -54,24 +55,103 @@ app = typer.Typer(
 )
 
 
-def _local_live_calendar_events(bucket_id: str, rng: OverviewCalendarRange):
+def _refuse_calendar_warnings(cal: OverviewCalendar) -> None:
+    warning_summary = ", ".join(warning.code for warning in cal.warnings)
+    raise _bad(
+        tr(
+            "cli.overview.calendar_refused_incomplete",
+            keys=warning_summary,
+        ),
+    )
+
+
+def _local_live_calendar_events(
+    bucket_id: str,
+    rng: OverviewCalendarRange,
+    *,
+    expected_tax_id: str | None = None,
+):
     """Return observed calendar events from local persisted live-read snapshots."""
-    from ...application.live import ExpedientesService, NotificationsService
+    from ...application.live import ExpedientesService, JustificanteCaptureSnapshotService, NotificationsService
+    from ...domain.justificante import JustificanteRepository
 
     try:
         expedientes = ExpedientesService().list_snapshots(bucket_id=bucket_id)
         notifications = NotificationsService().list_snapshots(bucket_id=bucket_id)
-    except Exception:
+        justificante_captures = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
+        justificantes = tuple(JustificanteRepository().iter_justificantes())
+    except Exception as exc:
         logger.warning(
             "overview calendar: failed to load local live snapshots for bucket %s",
             bucket_id,
             exc_info=True,
         )
-        return ()
+        raise _bad(
+            tr(
+                "cli.overview.calendar_local_live_events_unavailable",
+                default=(
+                    "Overview calendar local live-event evidence is unavailable; "
+                    "refusing to render without persisted AEAT event state."
+                ),
+            ),
+        ) from exc
     return build_overview_calendar_events(
         calendar_range=rng,
         expedientes_snapshots=tuple(expedientes),
         notification_snapshots=tuple(notifications),
+        justificante_capture_snapshots=tuple(justificante_captures),
+        justificantes=justificantes,
+        expected_tax_id=expected_tax_id,
+    )
+
+
+def _local_modelo_record_calendar_events(
+    bucket_id: str,
+    rng: OverviewCalendarRange,
+    *,
+    expected_tax_id: str | None = None,
+):
+    """Return observed calendar events from persisted local Modelo filing records."""
+    try:
+        from ...domain.justificante import JustificanteRepository
+        from ...domain.modelos import ModeloRecordCatalogueRepository
+
+        filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
+        justificantes = tuple(JustificanteRepository().iter_justificantes())
+    except Exception as exc:
+        logger.warning(
+            "overview calendar: failed to load local modelo filing events for bucket %s",
+            bucket_id,
+            exc_info=True,
+        )
+        raise _bad(
+            tr(
+                "cli.overview.calendar_local_modelo_events_unavailable",
+                default=(
+                    "Overview calendar local Modelo filing events are unavailable; "
+                    "refusing to render without persisted filing state."
+                ),
+            ),
+        ) from exc
+    return calendar_events_from_modelo_records(
+        filing_records,
+        rng,
+        justificantes=justificantes,
+        expected_tax_id=expected_tax_id,
+    )
+
+
+def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
+    """Return profile paths whose current value was stamped from live censo sync."""
+    if record is None:
+        return ()
+    from ...application.user_profile import CENSO_DERIVED_SOURCE_TAG, CENSO_SOURCE_TAG
+
+    verified_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
+    return tuple(
+        sorted(
+            {fact.path for fact in record.facts if fact.path.strip() and fact.source in verified_sources},
+        ),
     )
 
 
@@ -85,52 +165,142 @@ def _local_calendar_filing_evidence(
     try:
         from ...adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
         from ...application.calculations import CalculationObservationRepository
+        from ...application.live import JustificanteCaptureSnapshotService
         from ...domain.justificante import JustificanteRepository
         from ...domain.modelos import ModeloRecordCatalogueRepository
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
+        justificante_captures = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
         filed_observation_store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
-        filed_declaration_observations = _calendar_verified_filed_declaration_observations(filed_observation_store)
+        filed_declaration_observations, verified_filed_artefact_csvs = (
+            _calendar_verified_filed_declaration_observations(
+                filed_observation_store,
+                expected_tax_id=expected_tax_id,
+            )
+        )
         calculation_observations = tuple(CalculationObservationRepository().iter_records())
-    except Exception:
+    except Exception as exc:
         logger.warning(
             "overview calendar: failed to load local filing evidence for bucket %s",
             bucket_id,
             exc_info=True,
         )
-        return ()
+        raise _bad(
+            tr(
+                "cli.overview.calendar_local_filing_evidence_unavailable",
+                default=(
+                    "Overview calendar local filing evidence is unavailable; "
+                    "refusing to render without persisted AEAT filing state."
+                ),
+            ),
+        ) from exc
     return calendar_filing_evidence_from_sources(
         filing_records=filing_records,
         observed_events=events,
         filed_declaration_observations=tuple(filed_declaration_observations),
+        verified_filed_declaration_artefact_refs=tuple(verified_filed_artefact_csvs),
+        verified_filed_declaration_artefact_csvs=verified_filed_artefact_csvs,
         calculation_observations=calculation_observations,
+        justificante_capture_snapshots=tuple(justificante_captures),
         justificantes=justificantes,
         expected_tax_id=expected_tax_id,
     )
 
 
-def _calendar_verified_filed_declaration_observations(store):
-    """Return filed observations with justificante PDF refs proven loadable."""
+def _calendar_filing_evidence_text_fields(filing_evidence) -> str:
+    """Return stable text metrics for one calendar row's filing evidence."""
+    fields = [
+        f"local={filing_evidence.local_filing_state.value}",
+        f"aeat={filing_evidence.aeat_submission_state.value}",
+        f"justificante={str(filing_evidence.justificante_verified).lower()}",
+    ]
+    if filing_evidence.local_filing_record_id:
+        fields.append(f"local_record={filing_evidence.local_filing_record_id}")
+    if filing_evidence.aeat_reference_id:
+        fields.append(f"aeat_ref={filing_evidence.aeat_reference_id}")
+    if filing_evidence.aeat_submitted_at:
+        fields.append(f"aeat_submitted_at={filing_evidence.aeat_submitted_at.isoformat()}")
+    if filing_evidence.aeat_evidence_kind:
+        fields.append(f"aeat_kind={filing_evidence.aeat_evidence_kind}")
+    if filing_evidence.aeat_evidence_conflict_reference_ids:
+        fields.append("aeat_conflict_refs=" + ",".join(filing_evidence.aeat_evidence_conflict_reference_ids))
+    if filing_evidence.verified_justificante_csv:
+        fields.append(f"verified_justificante_csv={filing_evidence.verified_justificante_csv}")
+    if filing_evidence.evidence_source:
+        fields.append(f"evidence_source={filing_evidence.evidence_source}")
+    return "\t".join(fields)
+
+
+def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
+    """Return the stable text line for one calendar event."""
+    parts = [
+        "event",
+        event.event_type.value,
+        event.event_date.isoformat(),
+        event.source,
+        event.reference_id,
+        event.summary,
+    ]
+    if event.modelo:
+        parts.append(f"modelo={event.modelo}")
+    if event.filing_year is not None:
+        parts.append(f"year={event.filing_year}")
+    if event.period:
+        parts.append(f"period={event.period}")
+    if event.status:
+        parts.append(f"status={event.status}")
+    if event.aeat_submission_state:
+        parts.append(f"aeat={event.aeat_submission_state.value}")
+    if event.aeat_submitted_at:
+        parts.append(f"aeat_submitted_at={event.aeat_submitted_at.isoformat()}")
+    if event.justificante_verified is not None:
+        parts.append(f"justificante={str(event.justificante_verified).lower()}")
+    if event.verified_justificante_csv:
+        parts.append(f"verified_justificante_csv={event.verified_justificante_csv}")
+    return "\t".join(parts)
+
+
+def _calendar_verified_filed_declaration_observations(
+    store,
+    *,
+    expected_tax_id: str | None = None,
+):
+    """Return filed observations with justificante PDF refs proven parseable and matching."""
     verified_observations = []
+    verified_artefact_csvs: dict[str, str] = {}
     for observation in store.list_observations():
         verified_artefacts = []
         for artefact in observation.artefacts:
             if artefact.kind != "justificante_pdf":
                 verified_artefacts.append(artefact)
                 continue
-            if _stored_filed_artefact_matches(store, artefact):
+            csv = _stored_filed_artefact_matching_observation_csv(
+                store,
+                artefact,
+                observation,
+                expected_tax_id=expected_tax_id,
+            )
+            if csv is not None:
+                if artefact.storage_ref is not None:
+                    verified_artefact_csvs[artefact.storage_ref] = csv
                 verified_artefacts.append(artefact)
                 continue
             verified_artefacts.append(artefact.model_copy(update={"storage_ref": None}))
         verified_observations.append(observation.model_copy(update={"artefacts": tuple(verified_artefacts)}))
-    return tuple(verified_observations)
+    return tuple(verified_observations), dict(sorted(verified_artefact_csvs.items()))
 
 
-def _stored_filed_artefact_matches(store, artefact) -> bool:
+def _stored_filed_artefact_matching_observation_csv(
+    store,
+    artefact,
+    observation,
+    *,
+    expected_tax_id: str | None,
+) -> str | None:
     storage_ref = artefact.storage_ref
     if not storage_ref:
-        return False
+        return None
     try:
         body = store.load_artefact(storage_ref)
     except Exception:
@@ -139,8 +309,47 @@ def _stored_filed_artefact_matches(store, artefact) -> bool:
             storage_ref,
             exc_info=True,
         )
-        return False
-    return len(body) == artefact.byte_count and hashlib.sha256(body).hexdigest() == artefact.sha256
+        return None
+    if len(body) != artefact.byte_count or hashlib.sha256(body).hexdigest() != artefact.sha256:
+        return None
+    return _stored_filed_justificante_matching_observation_csv(
+        body,
+        observation,
+        storage_ref=storage_ref,
+        expected_tax_id=expected_tax_id,
+    )
+
+
+def _stored_filed_justificante_matching_observation_csv(
+    body: bytes,
+    observation,
+    *,
+    storage_ref: str,
+    expected_tax_id: str | None,
+) -> str | None:
+    from ...adapters.inbound.justificante import parse_justificante_bytes
+
+    try:
+        justificante = parse_justificante_bytes(body)
+    except Exception:
+        logger.warning(
+            "overview calendar: ignored unparsable filed-declaration justificante artefact %s",
+            storage_ref,
+            exc_info=True,
+        )
+        return None
+
+    expected = (expected_tax_id or observation.authenticated_identity or "").strip().upper()
+    if not expected:
+        return None
+    if (
+        justificante.modelo.strip() == observation.modelo
+        and str(justificante.ejercicio or "").strip() == str(observation.ejercicio)
+        and justificante.period == observation.period
+        and justificante.tax_id.strip().upper() == expected
+    ):
+        return justificante.csv
+    return None
 
 
 @app.command("status", help=tr("cli.overview.status_help"))
@@ -300,7 +509,13 @@ def overview_calendar(
     if bucket_id is None:
         raise _bad(tr("cli.config.errors.no_active_profile"))
     workflow_profile = _profile_to_taxpayer(current)
-    events = _local_live_calendar_events(bucket_id, rng)
+    live_events = _local_live_calendar_events(bucket_id, rng, expected_tax_id=workflow_profile.tax_id)
+    modelo_record_events = _local_modelo_record_calendar_events(
+        bucket_id,
+        rng,
+        expected_tax_id=workflow_profile.tax_id,
+    )
+    events = (*live_events, *modelo_record_events)
     filing_evidence = _local_calendar_filing_evidence(
         bucket_id,
         events,
@@ -314,6 +529,7 @@ def overview_calendar(
         show_suppressed=show_suppressed,
         events=events,
         filing_evidence=filing_evidence,
+        live_censo_verified_profile_keys=_live_censo_verified_profile_keys(record),
     )
     if not cal.taxpayer_model_declared:
         # The taxpayer model is undeclared — the engine refuses
@@ -321,13 +537,7 @@ def overview_calendar(
         # guidance instead of an empty calendar with no explanation.
         raise _bad(cal.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if cal.warnings and not allow_incomplete:
-        warning_summary = ", ".join(warning.code for warning in cal.warnings)
-        raise _bad(
-            tr(
-                "cli.overview.calendar_refused_incomplete",
-                keys=warning_summary,
-            ),
-        )
+        _refuse_calendar_warnings(cal)
     cal_dump = cal.model_dump(mode="json")
     typed_cal = OverviewCalendarResult.model_validate(cal_dump)
     lines: list[str] = [
@@ -343,34 +553,13 @@ def overview_calendar(
             f"\tcloses={entry.closes_on.isoformat()}"
             f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
             f"\tshift={entry.shift_reason}"
-            f"\tlocal={entry.filing_evidence.local_filing_state.value}"
-            f"\taeat={entry.filing_evidence.aeat_submission_state.value}"
-            f"\tjustificante={str(entry.filing_evidence.justificante_verified).lower()}",
+            f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
+            f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}",
         )
     for warning in cal.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
     for event in cal.events:
-        parts = [
-            "event",
-            event.event_type.value,
-            event.event_date.isoformat(),
-            event.source,
-            event.reference_id,
-            event.summary,
-        ]
-        if event.modelo:
-            parts.append(f"modelo={event.modelo}")
-        if event.filing_year is not None:
-            parts.append(f"year={event.filing_year}")
-        if event.period:
-            parts.append(f"period={event.period}")
-        if event.status:
-            parts.append(f"status={event.status}")
-        if event.aeat_submission_state:
-            parts.append(f"aeat={event.aeat_submission_state.value}")
-        if event.justificante_verified is not None:
-            parts.append(f"justificante={str(event.justificante_verified).lower()}")
-        lines.append("\t".join(parts))
+        lines.append(_calendar_event_text_line(event))
     if cal.completeness.computable_modelos:
         lines.append(
             f"computable\t{len(cal.completeness.computable_modelos)}"
@@ -426,12 +615,21 @@ def _overview_calendar_all_profiles(
                 record = repository.load(bucket_id)
                 raw_values = record_to_values(record.record)
                 taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
-                events = _local_live_calendar_events(bucket_id, rng)
+                live_censo_verified_profile_keys = _live_censo_verified_profile_keys(record.record)
+                live_events = _local_live_calendar_events(bucket_id, rng, expected_tax_id=taxpayer.tax_id)
+                modelo_record_events = _local_modelo_record_calendar_events(
+                    bucket_id,
+                    rng,
+                    expected_tax_id=taxpayer.tax_id,
+                )
+                events = (*live_events, *modelo_record_events)
                 filing_evidence = _local_calendar_filing_evidence(
                     bucket_id,
                     events,
                     expected_tax_id=taxpayer.tax_id,
                 )
+        except typer.BadParameter:
+            raise
         except Exception:
             logger.warning(
                 "overview calendar: skipping unreadable profile %s (%s)",
@@ -450,6 +648,7 @@ def _overview_calendar_all_profiles(
             show_suppressed=show_suppressed,
             events=events,
             filing_evidence=filing_evidence,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
         )
 
         all_lines.append(f"profile\t{bucket_id}\t{pointer.label}")
@@ -462,31 +661,20 @@ def _overview_calendar_all_profiles(
                 f"\tcloses={entry.closes_on.isoformat()}"
                 f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
                 f"\tshift={entry.shift_reason}"
-                f"\tlocal={entry.filing_evidence.local_filing_state.value}"
-                f"\taeat={entry.filing_evidence.aeat_submission_state.value}"
-                f"\tjustificante={str(entry.filing_evidence.justificante_verified).lower()}",
+                f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
+                f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}",
             )
         if not cal.taxpayer_model_declared:
             all_lines.append(
                 f"warning\tINCOMPLETE_TAXPAYER_MODEL\t"
                 f"{cal.incomplete_reason or tr('cli.overview.taxpayer_model_undeclared')}",
             )
+        if cal.warnings and not allow_incomplete:
+            _refuse_calendar_warnings(cal)
         for warning in cal.warnings:
             all_lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
         for event in cal.events:
-            parts = [
-                "event",
-                event.event_type.value,
-                event.event_date.isoformat(),
-                event.source,
-                event.reference_id,
-                event.summary,
-            ]
-            if event.aeat_submission_state:
-                parts.append(f"aeat={event.aeat_submission_state.value}")
-            if event.justificante_verified is not None:
-                parts.append(f"justificante={str(event.justificante_verified).lower()}")
-            all_lines.append("\t".join(parts))
+            all_lines.append(_calendar_event_text_line(event))
         for suppressed in cal.suppressed_entries:
             all_lines.append(
                 f"suppressed\t{suppressed.modelo}\t{suppressed.period}"

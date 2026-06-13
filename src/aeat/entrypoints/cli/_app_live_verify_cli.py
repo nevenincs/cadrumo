@@ -279,7 +279,8 @@ def verify_nif_iva(
 def verify_tgvi(
     ctx: typer.Context,
     nif: Annotated[
-        str, typer.Argument(help=tr("cli.app.live.verify.tgvi_arg_help", default="Spanish NIF/NIE to check.")),
+        str,
+        typer.Argument(help=tr("cli.app.live.verify.tgvi_arg_help", default="Spanish NIF/NIE to check.")),
     ],
     expected: Annotated[
         str | None,

@@ -356,6 +356,12 @@ def reset_ledger_catalogue(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
+    draft_advisories = _draft_revision_advisories(
+        bucket_id=bucket_id,
+        transaction_ids=guard_ids,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
     invoices: InvoiceCatalogueRepository | None = None
     invoice_catalogue = InvoiceCatalogue()
     purchase_evidence_ids: tuple[str, ...] = ()
@@ -389,6 +395,7 @@ def reset_ledger_catalogue(
             cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
             cascaded_attachment_ids=attachment_ids,
             blocking_modelo_references=blockers,
+            stale_draft_revision_references=draft_advisories,
         )
     if dry_run:
         return LedgerCatalogueResetReport(
@@ -399,6 +406,7 @@ def reset_ledger_catalogue(
             reason=reason.strip(),
             cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
             cascaded_attachment_ids=attachment_ids,
+            stale_draft_revision_references=draft_advisories,
         )
     removal_events = tuple(
         event
@@ -456,6 +464,7 @@ def reset_ledger_catalogue(
         reason=reason.strip(),
         cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
         cascaded_attachment_ids=attachment_ids,
+        stale_draft_revision_references=draft_advisories,
         bucket_event_ids=tuple(event.event_id for event in (*removal_events, reset_event)),
     )
 

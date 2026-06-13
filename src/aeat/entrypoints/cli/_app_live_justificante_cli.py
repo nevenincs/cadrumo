@@ -68,51 +68,71 @@ def _period_option(period: str, *, year: int) -> Period:
 def justificante_pull(
     ctx: typer.Context,
     modelo: Annotated[
-        str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help", default="Modelo code (e.g. 130).")),
+        str,
+        typer.Option("--modelo", help=tr("cli.app.live.modelo_help", default="Modelo code (e.g. 130).")),
     ],
     year: Annotated[
-        int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year.")),
+        int,
+        typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year.")),
     ],
     period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help", default="Period (e.g. 1T)."))],
 ) -> None:
     """Live-pull the justificante for one filed period and persist a bucket-scoped capture."""
-    from ...application.live import capture_justificante_snapshot
+    from ...application.live import capture_justificante_snapshot_outcome
     from ._app_live_payloads import JustificanteCaptureResult
 
     bucket_id = _bucket_id()
     _run_auth_preflight()
-    persisted = asyncio.run(
-        capture_justificante_snapshot(
+    outcome = asyncio.run(
+        capture_justificante_snapshot_outcome(
             bucket_id=bucket_id,
             modelo=modelo,
             year=year,
             period=_period_option(period, year=year),
         ),
     )
+    persisted = outcome.snapshot
     result = JustificanteCaptureResult(
         bucket_id=bucket_id,
         snapshot_id=persisted.snapshot_id,
         modelo=persisted.modelo,
         filing_year=persisted.filing_year,
-        period=str(persisted.period),
+        period=persisted.period.registry_token,
         expediente_id=persisted.expediente_id,
         csv=persisted.csv,
         pdf_sha256=persisted.pdf_sha256,
         source_kind=persisted.source_kind,
         state=persisted.state.value,
         captured_at=persisted.captured_at.isoformat(),
+        justificante_metadata_registered=outcome.justificante_metadata_registered,
+        calendar_evidence_available=outcome.justificante_metadata_registered,
+        modelo_filing_record_required=not outcome.filing_evidence_stamped,
+        filing_evidence_stamped=outcome.filing_evidence_stamped,
+        filing_record_id=outcome.filing_record_id,
     )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{persisted.snapshot_id}",
         f"modelo\t{persisted.modelo}",
         f"filing_year\t{persisted.filing_year}",
-        f"period\t{persisted.period}",
+        f"period\t{persisted.period.registry_token}",
         f"expediente_id\t{persisted.expediente_id}",
         f"pdf_sha256\t{persisted.pdf_sha256}",
         f"source_kind\t{persisted.source_kind}",
         f"captured_at\t{persisted.captured_at.isoformat()}",
+        f"justificante_metadata_registered\t{str(outcome.justificante_metadata_registered).lower()}",
+        f"calendar_evidence_available\t{str(outcome.justificante_metadata_registered).lower()}",
+        f"modelo_filing_record_required\t{str(not outcome.filing_evidence_stamped).lower()}",
+        f"filing_evidence_stamped\t{str(outcome.filing_evidence_stamped).lower()}",
     ]
+    if outcome.filing_record_id is not None:
+        lines.append(f"filing_record_id\t{outcome.filing_record_id}")
+    else:
+        lines.append(
+            "modelo_filing_record_import\t"
+            f"aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_live_capture "
+            f"--evidence-id {persisted.csv} --set CASILLA=VALUE",
+        )
     _emit_envelope(ctx, command="app.live.justificante.pull", result=result, lines=lines)
 
 
@@ -138,7 +158,7 @@ def justificante_list(ctx: typer.Context) -> None:
                 snapshot_id=row.snapshot_id,
                 modelo=row.modelo,
                 filing_year=row.filing_year,
-                period=str(row.period),
+                period=row.period.registry_token,
                 pdf_sha256=row.pdf_sha256,
                 state=row.state.value,
                 captured_at=row.captured_at.isoformat(),
@@ -148,7 +168,10 @@ def justificante_list(ctx: typer.Context) -> None:
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for row in rows:
-        lines.append(f"{row.snapshot_id}\t{row.modelo}\t{row.filing_year}\t{row.period}\t{row.captured_at.isoformat()}")
+        lines.append(
+            f"{row.snapshot_id}\t{row.modelo}\t{row.filing_year}\t{row.period.registry_token}"
+            f"\t{row.captured_at.isoformat()}"
+        )
     _emit_envelope(ctx, command="app.live.justificante.list", result=result, lines=lines)
 
 
@@ -182,7 +205,7 @@ def justificante_view(
         snapshot_id=record.snapshot_id,
         modelo=record.modelo,
         filing_year=record.filing_year,
-        period=str(record.period),
+        period=record.period.registry_token,
         expediente_id=record.expediente_id,
         csv=record.csv,
         pdf_sha256=record.pdf_sha256,
@@ -195,7 +218,7 @@ def justificante_view(
         f"snapshot_id\t{record.snapshot_id}",
         f"modelo\t{record.modelo}",
         f"filing_year\t{record.filing_year}",
-        f"period\t{record.period}",
+        f"period\t{record.period.registry_token}",
         f"expediente_id\t{record.expediente_id}",
         f"pdf_sha256\t{record.pdf_sha256}",
         f"source_kind\t{record.source_kind}",

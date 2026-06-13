@@ -390,27 +390,30 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     # to a literal ``<profile-id>`` placeholder (security: bucket ids
     # are sha256 fingerprints that must never reach stdout), so the
     # stdout cannot distinguish alpha from beta. Read each bucket's
-    # event history via ``config bucket history`` to count writes per
+    # event history via ``config profile history`` to count writes per
     # bucket; the bucket whose count increases by 1 is the one the
     # configure verb resolved to.
 
     def _auth_event_counts() -> dict[str, int]:
         counts: dict[str, int] = {}
         for bucket_id in (alpha_id, beta_id):
+            profile_name = labels_by_id[bucket_id]
             result = _run_aeat(
                 tmp_path,
                 (
                     "--profile",
                     bucket_id,
                     "config",
-                    "bucket",
+                    "profile",
                     "history",
-                    bucket_id,
+                    profile_name,
                     "--event-type",
                     "auth.provider.configured",
                 ),
             )
             assert result.returncode == 0, _combined_output(result)
+            assert f"profile\t{profile_name}" in result.stdout
+            assert f"bucket_id\t{bucket_id}" not in result.stdout
             counts[bucket_id] = sum(1 for line in result.stdout.splitlines() if "\tauth.provider.configured\t" in line)
         return counts
 

@@ -436,7 +436,9 @@ def ledger_classify(
     saturate: bool = typer.Option(False, "--saturate", help=tr("cli.ledger.classify.saturate_help")),
     read_evidence: bool = typer.Option(False, "--read-evidence", help=tr("cli.ledger.classify.read_evidence_help")),
     evidence_acknowledged: bool = typer.Option(
-        False, "--evidence-acknowledged", help=tr("cli.ledger.classify.evidence_acknowledged_help"),
+        False,
+        "--evidence-acknowledged",
+        help=tr("cli.ledger.classify.evidence_acknowledged_help"),
     ),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""

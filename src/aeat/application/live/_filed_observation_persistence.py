@@ -278,13 +278,11 @@ def persist_iva_compensation_history_observations_strict(
             key = persist_filed_calculation_observation(observation)
         except SedeParseError as exc:
             raise LiveApplicationError(
-                f"filed Modelo 303 {observation.period!s} "
-                "could not be promoted into IVA compensation history",
+                f"filed Modelo 303 {observation.period!s} could not be promoted into IVA compensation history",
             ) from exc
         if history_repo.load_period(observation.period) is None:
             raise LiveApplicationError(
-                f"secure IVA compensation history did not reload after persisting "
-                f"Modelo 303 {observation.period!s}",
+                f"secure IVA compensation history did not reload after persisting Modelo 303 {observation.period!s}",
             )
         keys.append(key)
     return tuple(keys)

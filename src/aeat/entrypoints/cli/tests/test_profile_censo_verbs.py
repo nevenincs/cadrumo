@@ -11,7 +11,7 @@ adapter is wired through the live driver).
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -76,6 +76,7 @@ def _capture_snapshot(*, include_iae: bool = False) -> str:
     }
     if include_iae:
         censo_facts["activities.iae_epigraph"] = "763"
+        censo_facts["iva.regime"] = "GENERAL"
     snapshot = service.capture(
         profile_id=active,
         captured_at=datetime.now(UTC),
@@ -91,6 +92,13 @@ def test_censo_help_lists_four_verbs(cli_runner: CliRunner) -> None:
     assert result.exit_code == 0
     for verb in ("pull", "show", "compare", "apply"):
         assert verb in result.output
+
+
+def test_censo_refresh_command_is_not_registered(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(profile_app, ["censo", "refresh", "--help"])
+
+    assert result.exit_code != 0
+    assert "No such command" in result.output
 
 
 def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
@@ -112,6 +120,8 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
 
     assert result.exit_code != 0
     haystack = (result.output + " " + str(result.exception or "")).lower()
+    assert "auth_preflight=redacted" in haystack
+    assert "auth_provider" in haystack
     assert "live aeat reads require aeat_live_tests_enabled" in haystack
 
 
@@ -169,6 +179,36 @@ def test_apply_writes_censo_facts_onto_profile(cli_runner: CliRunner) -> None:
     assert "derived\ttaxpayer_type.irpf_income_categories" in result.output
     assert "taxpayer_model_declared\ttrue" in result.output
     assert "calendar_obligations\t" in result.output
+    assert (
+        "calendar_enrolment_sources\t"
+        "activities.iae_epigraph=aeat_censo_read,"
+        "iva.regime=aeat_censo_read,"
+        "taxpayer_type.entity_type=aeat_censo_derived,"
+        "taxpayer_type.irpf_income_categories=aeat_censo_derived"
+    ) in result.output
+    obligation_rows = [
+        line.split("\t") for line in result.output.splitlines() if line.startswith("calendar_obligation\t303\t")
+    ]
+    assert obligation_rows
+    current_year_row = next(row for row in obligation_rows if row[2] == str(date.today().year))
+    fields = dict(cell.split("=", maxsplit=1) for cell in current_year_row[4:])
+    assert current_year_row[3] in {"1T", "2T", "3T", "4T"}
+    assert date.fromisoformat(fields["opens_on"]) <= date.fromisoformat(fields["closes_on"])
+    assert date.fromisoformat(fields["closes_on"]) <= date.fromisoformat(fields["adjusted_closes_on"])
+    assert "payment_cutoff_on" in fields
+    assert fields["status"]
+    assert fields["user_state"]
+    assert fields["enrolment_sources"] == (
+        "activities.iae_epigraph=aeat_censo_read,"
+        "iva.regime=aeat_censo_read,"
+        "taxpayer_type.entity_type=aeat_censo_derived,"
+        "taxpayer_type.irpf_income_categories=aeat_censo_derived"
+    )
+    modelo_100_row = next(
+        line.split("\t") for line in result.output.splitlines() if line.startswith("calendar_obligation\t100\t")
+    )
+    modelo_100_fields = dict(cell.split("=", maxsplit=1) for cell in modelo_100_row[4:])
+    assert modelo_100_fields["enrolment_sources"] == "taxpayer_type.entity_type=aeat_censo_derived"
 
 
 def test_compare_matches_after_apply(cli_runner: CliRunner) -> None:
@@ -280,3 +320,25 @@ def test_apply_emits_json_payload_with_written_paths() -> None:
     assert payload["calendar_range_from"]
     assert payload["calendar_range_to"]
     assert isinstance(payload["calendar_obligation_modelos"], list)
+    assert payload["calendar_enrolment_source_paths"] == [
+        "activities.iae_epigraph=aeat_censo_read",
+        "iva.regime=aeat_censo_read",
+        "taxpayer_type.entity_type=aeat_censo_derived",
+        "taxpayer_type.irpf_income_categories=aeat_censo_derived",
+    ]
+    rows = payload["calendar_obligation_rows"]
+    assert rows, payload
+    modelo_303_rows = [row for row in rows if row["modelo"] == "303"]
+    assert modelo_303_rows
+    current_year_303 = next(row for row in modelo_303_rows if row["filing_year"] == date.today().year)
+    assert current_year_303["period"] in {"1T", "2T", "3T", "4T"}
+    assert date.fromisoformat(current_year_303["opens_on"]) <= date.fromisoformat(current_year_303["closes_on"])
+    assert date.fromisoformat(current_year_303["closes_on"]) <= date.fromisoformat(
+        current_year_303["adjusted_closes_on"],
+    )
+    assert "payment_cutoff_on" in current_year_303
+    assert current_year_303["status"]
+    assert current_year_303["user_state"]
+    assert current_year_303["enrolment_source_paths"] == payload["calendar_enrolment_source_paths"]
+    modelo_100_row = next(row for row in rows if row["modelo"] == "100")
+    assert modelo_100_row["enrolment_source_paths"] == ["taxpayer_type.entity_type=aeat_censo_derived"]

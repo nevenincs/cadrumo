@@ -77,7 +77,8 @@ def runner() -> CliRunner:
 
 
 def test_configure_then_status_agree_on_configured_with_resolvable_file(
-    _isolated_application_layer: None, tmp_path: Path,
+    _isolated_application_layer: None,
+    tmp_path: Path,
 ) -> None:
     """Round-5 B1: configure persists a resolvable cert path; status reports it.
 

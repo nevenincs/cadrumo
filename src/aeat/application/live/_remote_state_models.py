@@ -22,6 +22,12 @@ class FiledDataCaptureReport(BaseModel):
     captured_count: int
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
+    justificante_metadata_count: int = 0
+    justificante_csvs: tuple[str, ...] = ()
+    filing_evidence_stamped_count: int = 0
+    filing_record_ids: tuple[str, ...] = ()
+    filing_evidence_conflict_count: int = 0
+    filing_evidence_conflict_record_ids: tuple[str, ...] = ()
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: tuple[str, ...]
@@ -53,6 +59,12 @@ class BulkFiledDataCaptureReport(BaseModel):
     failed_count: int
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
+    justificante_metadata_count: int = 0
+    justificante_csvs: tuple[str, ...] = ()
+    filing_evidence_stamped_count: int = 0
+    filing_record_ids: tuple[str, ...] = ()
+    filing_evidence_conflict_count: int = 0
+    filing_evidence_conflict_record_ids: tuple[str, ...] = ()
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: tuple[str, ...]
@@ -97,6 +109,12 @@ class SourceFiledDataCaptureReport(BaseModel):
     captured_count: int
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
+    justificante_metadata_count: int = 0
+    justificante_csvs: tuple[str, ...] = ()
+    filing_evidence_stamped_count: int = 0
+    filing_record_ids: tuple[str, ...] = ()
+    filing_evidence_conflict_count: int = 0
+    filing_evidence_conflict_record_ids: tuple[str, ...] = ()
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: tuple[str, ...]

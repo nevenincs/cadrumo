@@ -144,7 +144,8 @@ def _rows() -> list[dict[str, Any]]:
 
 
 def test_llm_split_suggest_returns_children_and_persists_nothing(
-    tmp_path: Path, _deterministic_claude_split: _DeterministicSplitProposer,
+    tmp_path: Path,
+    _deterministic_claude_split: _DeterministicSplitProposer,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
@@ -165,7 +166,8 @@ def test_llm_split_suggest_returns_children_and_persists_nothing(
 
 
 def test_llm_split_apply_persists_split_and_classified_children(
-    tmp_path: Path, _deterministic_claude_split: _DeterministicSplitProposer,
+    tmp_path: Path,
+    _deterministic_claude_split: _DeterministicSplitProposer,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
@@ -194,7 +196,8 @@ def test_llm_split_apply_persists_split_and_classified_children(
 
 
 def test_llm_split_apply_without_yes_is_refused(
-    tmp_path: Path, _deterministic_claude_split: _DeterministicSplitProposer,
+    tmp_path: Path,
+    _deterministic_claude_split: _DeterministicSplitProposer,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
@@ -205,15 +208,24 @@ def test_llm_split_apply_without_yes_is_refused(
 
 
 def test_llm_split_rejects_manual_child_flags(
-    tmp_path: Path, _deterministic_claude_split: _DeterministicSplitProposer,
+    tmp_path: Path,
+    _deterministic_claude_split: _DeterministicSplitProposer,
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "split", tx, "--llm", "claude",
-            "--child-amount", "60.00", "--child-description", "manual",
+            "app",
+            "ledger",
+            "split",
+            tx,
+            "--llm",
+            "claude",
+            "--child-amount",
+            "60.00",
+            "--child-description",
+            "manual",
         ],
     )
     assert result.exit_code != 0

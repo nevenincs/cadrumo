@@ -110,6 +110,7 @@ def test_submission_record_preserves_typed_draft_period(
             "16": Decimal("0"),
             "18": Decimal("0"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
@@ -139,7 +140,8 @@ class TestImportFromJustificante:
     """End-to-end reconstruction from local fixture PDFs."""
 
     def test_modelo_130_justificante_only_import_requires_binding_data(
-        self, schema_provider: RegistrySchemaProvider,
+        self,
+        schema_provider: RegistrySchemaProvider,
     ) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
         with pytest.raises(ModeloImportError, match="previous_year_economic_activity_net_income"):

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from ...core import Period
 from ...core.identity import BucketId
-from ...domain.modelos._ids import WorkUnitId
+from ...domain.modelos import WorkUnitId
 from ._schemas import OutputSchema, register_schema
 
 

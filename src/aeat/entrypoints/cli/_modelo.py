@@ -878,7 +878,8 @@ def work_history(
 
 
 def _calculation_revision_not_found_bad_parameter_wide(
-    calculation_revision_id: str, exc: BaseException,
+    calculation_revision_id: str,
+    exc: BaseException,
 ) -> typer.BadParameter:
     """Widen the exc parameter to BaseException for the register_work_verification_commands contract."""
     assert isinstance(exc, CalculationRevisionNotFoundError)
