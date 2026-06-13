@@ -151,11 +151,6 @@ def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
     return value
 
 
-def _category_catalogue_text() -> str:
-    """Return the comma-joined recognised spending-category ids."""
-    return ", ".join(category.value for category in SpendingCategory)
-
-
 def _validate_category_id(category_id: str | None) -> str | None:
     """Reject a `--category-id` value outside the closed spending taxonomy.
 
