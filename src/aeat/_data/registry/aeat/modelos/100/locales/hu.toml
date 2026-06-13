@@ -1,11 +1,11 @@
 [labels]
-"irpf.deduccion-autonomica.galicia.otras" = "irpf.deduccion-autonomica.galicia.otras"
-"irpf.inmueble.porcentaje-propiedad" = "irpf.inmueble.porcentaje-propiedad"
-"irpf.inmueble.vivienda-habitual-flag" = "irpf.inmueble.vivienda-habitual-flag"
-"irpf.intereses-demora-regularizacion.estatal" = "irpf.intereses-demora-regularizacion.estatal"
+"irpf.deduccion-autonomica.galicia.otras" = "Egyéb kedvezmények"
+"irpf.inmueble.porcentaje-propiedad" = "Tulajdoni hányad (%)"
+"irpf.inmueble.vivienda-habitual-flag" = "Szokásos lakóhely 2024-ben"
+"irpf.intereses-demora-regularizacion.estatal" = "Az előző rendezéshez kapcsolódó késedelmi kamatok: állami rész"
 
 [help]
-"irpf.deduccion-autonomica.galicia.otras" = "irpf.deduccion-autonomica.galicia.otras"
-"irpf.inmueble.porcentaje-propiedad" = "irpf.inmueble.porcentaje-propiedad"
-"irpf.inmueble.vivienda-habitual-flag" = "irpf.inmueble.vivienda-habitual-flag"
-"irpf.intereses-demora-regularizacion.estatal" = "irpf.intereses-demora-regularizacion.estatal"
+"irpf.deduccion-autonomica.galicia.otras" = "Adja meg az egyéb kedvezményeket."
+"irpf.inmueble.porcentaje-propiedad" = "Adja meg a tulajdoni hányad százalékát."
+"irpf.inmueble.vivienda-habitual-flag" = "Jelezze, hogy 2024-ben szokásos lakóhely volt-e."
+"irpf.intereses-demora-regularizacion.estatal" = "Adja meg az előző rendezéshez kapcsolódó késedelmi kamatok állami részét."
