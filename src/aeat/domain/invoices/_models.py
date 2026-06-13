@@ -33,7 +33,7 @@ from ._errors import InvoiceValidationError
 from ._ids import InvoiceId
 
 if TYPE_CHECKING:
-    from ..iva import IvaInvoiceClassification
+    pass
 from ._validators import (
     is_eu_member_state_code,
     validate_country_code,
@@ -495,42 +495,6 @@ class Invoice(BaseModel):
         applies.
         """
         return self.counterparty_eu_member_state is not None
-
-    def iva_classification_for_line(self, line: InvoiceLine) -> IvaInvoiceClassification:
-        """Build the canonical IVA classification record for ``line``.
-
-        Routes through the standard-case helper for the most common
-        autónomo case: domestic IVA, where the line's IvaRate slot
-        determines the IvaCategory + IvaRateKind and the Invoice's
-        :attr:`kind` determines the IvaFlowDirection. The returned
-        record bundles the substrate triple (IvaCategory + IvaRateKind
-        + IvaFlowDirection) plus the derived IvaSettlementSide set
-        (devengada and / or deducible cornerstone classification).
-
-        For reverse-charge, intra-community, OSS / IOSS, export, and
-        import lines, callers must construct
-        :class:`IvaInvoiceClassification` directly with the appropriate
-        substrate :class:`IvaCategory` (the standard-case helper only
-        handles domestic operations). The classifier
-        :func:`aeat.domain.iva.classify_iva` is the authority for those
-        cases.
-
-        Args:
-            line: One of the invoice's :class:`InvoiceLine` records.
-
-        Returns:
-            The substrate-grounded :class:`IvaInvoiceClassification`
-            for the line.
-
-        """
-        # Local import to avoid circular dependency at module load.
-        from ..iva import classify_invoice_line_for_iva
-
-        return classify_invoice_line_for_iva(
-            iva_rate=line.iva_rate,
-            invoice_kind=self.kind,
-        )
-
 
 def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
