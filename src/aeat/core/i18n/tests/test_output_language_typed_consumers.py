@@ -39,7 +39,8 @@ def _find_language_axis_fields(src: str) -> list[tuple[int, str]]:
     results = []
     for i, line in enumerate(lines, start=1):
         if re.search(r"output_language|output[_-]language", line, re.IGNORECASE) and not re.search(
-            r"#.*exempt|#.*cache.*key|#.*internal", line,
+            r"#.*exempt|#.*cache.*key|#.*internal",
+            line,
         ):
             results.append((i, line))
     return results

@@ -48,12 +48,19 @@ if TYPE_CHECKING:
     # resolve through ``__getattr__`` (cycle-safe); the type checker reads the
     # real callable signatures here.
     from ._bucket_pointer import BucketPointer
-    from ._bucket_pointer_io import pointer_path, read_pointer, require_active_bucket_id, resolve_active_bucket_id, write_pointer
+    from ._bucket_pointer_io import (
+        pointer_path,
+        read_pointer,
+        require_active_bucket_id,
+        resolve_active_bucket_id,
+        write_pointer,
+    )
 
 __all__: list[str] = [
     "NON_REGISTRY_MODELOS",
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
+    "BucketPointer",
     "LedgerSortField",
     "LedgerSortOrder",
     "Modelo",
@@ -63,7 +70,6 @@ __all__: list[str] = [
     "RegistryPeriodCode",
     "StandardPeriodCode",
     "TaxDomain",
-    "BucketPointer",
     "accepted_period_codes",
     "accepted_period_patterns",
     "freeze_toml",
@@ -88,7 +94,13 @@ def __getattr__(name: str) -> object:
         from ._bucket_pointer import BucketPointer
 
         return BucketPointer
-    if name in ("pointer_path", "read_pointer", "resolve_active_bucket_id", "require_active_bucket_id", "write_pointer"):
+    if name in (
+        "pointer_path",
+        "read_pointer",
+        "resolve_active_bucket_id",
+        "require_active_bucket_id",
+        "write_pointer",
+    ):
         from . import _bucket_pointer_io
 
         return getattr(_bucket_pointer_io, name)
