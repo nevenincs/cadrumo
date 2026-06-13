@@ -28,22 +28,26 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
         yield storage_root
 
 
-def test_apoderado_status_fails_without_profile(runner: CliRunner) -> None:
-    result = runner.invoke(app, ["auth", "apoderado", "status"])
-    # Must refuse — any non-zero exit code is acceptable (boundary maps
-    # refusals to its own exit category).
-    assert result.exit_code != 0
-    # The _config sub-app is invoked directly so the error boundary
-    # (applied only to the root CLI app) is absent. CliRefusedBoundaryError
-    # leaks as result.exception. Pin the exception type so an unrelated
-    # leaked exception cannot satisfy the check vacuously.
-    assert isinstance(result.exception, CliRefusedBoundaryError), (
-        f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
-    )
-    # CliRefusedBoundaryError carries the operator-facing copy via its
-    # translated_message key; str(exception) is intentionally empty
-    # because the rendering happens in the boundary, not on the exception.
-    assert result.exception.translated_message == "cli.config.profile.no_active_profile"
+def test_apoderado_status_fails_without_profile(runner: CliRunner, tmp_path: Path) -> None:
+    # Pin an isolated storage root with no active profile so an ambient
+    # active-profile pointer left by a peer test cannot mask the
+    # no-active-profile refusal this test asserts.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        result = runner.invoke(app, ["auth", "apoderado", "status"])
+        # Must refuse — any non-zero exit code is acceptable (boundary maps
+        # refusals to its own exit category).
+        assert result.exit_code != 0
+        # The _config sub-app is invoked directly so the error boundary
+        # (applied only to the root CLI app) is absent. CliRefusedBoundaryError
+        # leaks as result.exception. Pin the exception type so an unrelated
+        # leaked exception cannot satisfy the check vacuously.
+        assert isinstance(result.exception, CliRefusedBoundaryError), (
+            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
+        )
+        # CliRefusedBoundaryError carries the operator-facing copy via its
+        # translated_message key; str(exception) is intentionally empty
+        # because the rendering happens in the boundary, not on the exception.
+        assert result.exception.translated_message == "cli.config.profile.no_active_profile"
 
 
 def test_apoderado_scopes_list(runner: CliRunner) -> None:
