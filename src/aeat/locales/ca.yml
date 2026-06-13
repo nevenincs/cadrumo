@@ -2632,8 +2632,7 @@ cli:
         50 per cent.
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
       command_input_invalid_fallback: un o més camps no han superat la validació
-      confirm_required: Passa --yes per confirmar aquesta operació destructiva del
-        llibre, o usa --dry-run primer
+      confirm_required: 'Passa --yes per confirmar aquesta operació destructiva del llibre.'
       filter_parse_error: 'Fallada en analitzar el filtre del llibre prop de %{token}:
         %{reason}.'
       id_prefix_collision: 'El prefix d''id de transacció %{prefix!r} coincideix amb
@@ -2858,6 +2857,7 @@ cli:
         al proposant de divisio --llm.
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la divisió de la transacció
+      classification_dropped: 'La classificació del pare %{classification} no s''ha copiat als fills de la divisió; cada fill queda com a NOT_YET_PROCESSED i necessita reclassificar-se amb ''aeat app ledger classify''.'
     stash:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Apartar un moviment del llibre al perfil actiu

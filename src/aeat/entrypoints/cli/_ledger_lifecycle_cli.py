@@ -29,12 +29,15 @@ from ...application.ledger import (
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
 from ...domain.attachments import DocumentLinkSource
 from ...domain.transactions import (
+    BusinessClassification,
     LLMClassifierError,
     Transaction,
     TransactionValidationError,
+    is_classified,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _resolve_id
@@ -540,6 +543,15 @@ def ledger_split(
         raise _ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerSplitResult
 
+    notices = _split_classification_dropped_notices(result.parent_transaction.business_classification)
+    lines = [
+        f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
+        f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
+        f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
+        f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
+        f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}",
+    ]
+    lines.extend(f"ADVISORY\t{notice.message}" for notice in notices)
     _emit_envelope(
         ctx,
         command="ledger.split",
@@ -552,14 +564,36 @@ def ledger_split(
                 "bucket_event_id": result.bucket_event_id,
             },
         ),
-        lines=[
-            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
-            f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
-            f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
-            f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
-            f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}",
-        ],
+        lines=lines,
+        notices=notices or None,
     )
+
+
+def _split_classification_dropped_notices(
+    parent_classification: BusinessClassification,
+) -> list[Notice]:
+    """Build the non-blocking advisory when a split drops the parent's classification.
+
+    Split children deliberately default to ``NOT_YET_PROCESSED`` to force
+    conscious per-row tax treatment; the parent's classification is not cloned.
+    When the parent carried a real classified outcome (BUSINESS / PERSONAL /
+    MIXED), that drop is surfaced as an ``info`` :class:`Notice` so it is not
+    silent — the operator is told the children need re-classification.
+    """
+    if not is_classified(parent_classification):
+        return []
+    return [
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="ledger.split.classification_dropped",
+            message=tr(
+                "cli.ledger.split.classification_dropped",
+                classification=parent_classification.value,
+            ),
+            suggestion="aeat app ledger classify",
+            context={"parent_classification": parent_classification.value},
+        ),
+    ]
 
 
 def _ledger_split_llm(

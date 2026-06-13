@@ -2591,8 +2591,7 @@ cli:
         tartományon kívül esik. Adj meg 0 és 1 közötti arányt, pl. 0.5 az 50 százalékhoz.
       command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
       command_input_invalid_fallback: Egy vagy több mező érvényesítése sikertelen.
-      confirm_required: Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez,
-        vagy először használja a --dry-run kapcsolót.
+      confirm_required: 'Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez.'
       filter_parse_error: 'A főkönyvi szűrő elemzése sikertelen %{token} közelében:
         %{reason}.'
       id_prefix_collision: 'A(z) %{prefix!r} tranzakcióazonosító-előtag több tranzakcióra
@@ -2835,6 +2834,7 @@ cli:
         rögzített ok.
       yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
         N gyermek tranzakciót).
+      classification_dropped: 'A szülő %{classification} besorolása nem öröklődött át a felosztás gyermekeire; minden gyermek NOT_YET_PROCESSED állapotú, és újra kell osztályozni az ''aeat app ledger classify'' paranccsal.'
     stash:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       help: Egyetlen főkönyvi tranzakció elrejtése az aktív profilban.

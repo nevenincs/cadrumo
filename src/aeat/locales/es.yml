@@ -2668,8 +2668,7 @@ cli:
         el 50 por ciento.
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
       command_input_invalid_fallback: uno o más campos no superaron la validación
-      confirm_required: Pasa --yes para confirmar esta operación destructiva del libro,
-        o usa --dry-run primero
+      confirm_required: 'Pasa --yes para confirmar esta operación destructiva del libro.'
       filter_parse_error: 'Fallo al analizar el filtro del libro cerca de %{token}:
         %{reason}.'
       id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
@@ -2895,6 +2894,7 @@ cli:
         al proponente de division --llm.
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la división de la transacción
+      classification_dropped: 'La clasificación del padre %{classification} no se copió a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita reclasificarse con ''aeat app ledger classify''.'
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el perfil activo
