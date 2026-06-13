@@ -34,6 +34,10 @@ class ProviderRequest(BaseModel):
         max_tokens: Maximum number of output tokens to request.
         temperature: Sampling temperature in the inclusive range ``[0.0, 1.0]``.
         timeout_s: Per-request timeout in seconds.
+        images: Base64-encoded on-host-prepared image inputs for a multimodal
+            read (empty for a text-only request). Transient and in-memory only;
+            a provider adapter forwards them to a local vision model and they are
+            never persisted (sensitive-financial-data-secure-storage-only).
     """
 
     model_config = ConfigDict(strict=True, frozen=True)
@@ -45,6 +49,10 @@ class ProviderRequest(BaseModel):
     max_tokens: int = Field(ge=1, description="Maximum output tokens.")
     temperature: float = Field(ge=0.0, le=1.0, description="Sampling temperature.")
     timeout_s: int = Field(ge=1, description="Per-request timeout in seconds.")
+    images: tuple[str, ...] = Field(
+        default=(),
+        description="Base64-encoded on-host image inputs for a multimodal request; empty for text-only.",
+    )
 
 
 class ProviderCompletion(BaseModel):

@@ -63,6 +63,43 @@ def test_cache_key_distinguishes_request_axes(tmp_path: Path) -> None:
     assert len(keys) == len(set(k.model_dump_json() for k in keys))
 
 
+def test_cache_key_distinguishes_multimodal_evidence(tmp_path: Path) -> None:
+    """Two evidence documents under one prompt must yield distinct cache keys.
+
+    The cache key folds each multimodal input's content address (the
+    :class:`Attachment` SHA-256). A text-only request and two requests carrying
+    evidence with different content addresses must all map to distinct keys, and
+    the same content address must reproduce the same key even when the base64
+    payload differs (the key folds the content address, never the bytes).
+    """
+    from .. import MultimodalImageInput
+
+    cache = LLMCache(root_dir=tmp_path)
+    sha_a = "a" * 64
+    sha_b = "b" * 64
+    prompt = "Read the attached invoice and report the total."
+
+    text_only = cache.build_key(LLMRequest(prompt=prompt), LLMProvider.LOCAL, "gpt-oss")
+    with_a = cache.build_key(
+        LLMRequest(prompt=prompt, images=(MultimodalImageInput(content_sha256=sha_a, base64_data="QQ=="),)),
+        LLMProvider.LOCAL,
+        "gpt-oss",
+    )
+    with_b = cache.build_key(
+        LLMRequest(prompt=prompt, images=(MultimodalImageInput(content_sha256=sha_b, base64_data="Qg=="),)),
+        LLMProvider.LOCAL,
+        "gpt-oss",
+    )
+    with_a_other_bytes = cache.build_key(
+        LLMRequest(prompt=prompt, images=(MultimodalImageInput(content_sha256=sha_a, base64_data="ZGlmZmVyZW50"),)),
+        LLMProvider.LOCAL,
+        "gpt-oss",
+    )
+
+    assert len({text_only.args_hash, with_a.args_hash, with_b.args_hash}) == 3
+    assert with_a.args_hash == with_a_other_bytes.args_hash
+
+
 def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
     """Cache should miss before write and hit after write."""
 
