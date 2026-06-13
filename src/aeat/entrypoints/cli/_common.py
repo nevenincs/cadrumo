@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 
 __all__ = [
+    "emit_help_text",
     "parse_decimal_amount",
     "parse_optional_decimal_amount",
 ]
@@ -71,6 +72,11 @@ def _emit(ctx: typer.Context, payload: object, lines: Iterable[str]) -> None:
     rendered = render_command_output(format_name=_format_of(ctx), payload=payload, lines=lines)
     if rendered.text:
         typer.echo(rendered.text)
+
+
+def emit_help_text(ctx: typer.Context) -> None:
+    """Emit Click/Typer help text through the shared CLI output boundary."""
+    typer.echo(ctx.get_help())
 
 
 def _emit_envelope(

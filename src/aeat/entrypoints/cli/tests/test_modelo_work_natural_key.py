@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -11,6 +12,8 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ._m130_source_support import seed_m130_income_transaction
+from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -31,6 +34,13 @@ def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
+
+
+def _envelope_status(output: str) -> str:
+    """Return the outer envelope ``status`` field from a CLI ``--json`` document."""
+    import json
+
+    return json.loads(output)["status"]
 
 
 def _create_profile() -> None:
@@ -82,6 +92,10 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     assert verified.exit_code == 0, verified.output
     assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
     assert _payload(verified.output)["granted_verificado_completo"] is True
+    # A granted (clean) verify stays on the success spine with no notices, in
+    # lock-step with its exit-0.
+    assert _envelope_status(verified.output) == "success", verified.output
+    assert _notices(verified.output) == [], verified.output
 
     out = tmp_path / "modelo-111.txt"
     exported = _invoke(
@@ -104,6 +118,11 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     """Modelo 130 cannot be verified as complete without upstream clean-state proof."""
 
     _create_profile()
+    seed_m130_income_transaction(
+        amount=Decimal("12000.00"),
+        filing_year=2025,
+        source_key="natural-key",
+    )
     created = _invoke(
         [
             "--format", "json",
@@ -119,7 +138,6 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
             "--format", "json",
             "app", "modelo", "work", "calculate",
             "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--casilla", "01=12000.00",
             "--casilla", "02=3000.00",
             "--binding", "irpf.previous_year_economic_activity_net_income=13000",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
@@ -142,10 +160,28 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert payload["granted_verificado_completo"] is False
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
     assert (
-        "aeat app live filed pull-sources --modelo 130 --year 2025 --period 1T"
-        in payload["findings"][0]["next_action"]
+        "aeat app live filed pull-sources --modelo 130 --year 2025 --period 1T" in payload["findings"][0]["next_action"]
     )
     assert "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in payload["findings"][0]["next_action"]
+
+    # The shared-spine contract: a verify carrying a blocking finding must NOT
+    # read status "success" with an empty notices list while exit code is 1.
+    # The blocking finding is projected onto the notices channel and the
+    # envelope status derives to "warning" in lock-step with the exit-1
+    # (NoticeSeverity has no ERROR member; a non-granted verify must read a
+    # non-success status).
+    assert _envelope_status(verified.output) == "warning", verified.output
+    notices = _notices(verified.output)
+    assert notices, verified.output
+    blocking = next(
+        notice for notice in notices if notice["code"] == "modelo.work.verify.finding.cross_period_dependency_unclean"
+    )
+    # The finding's true severity and its next-step action survive onto the
+    # notice; the blocking-vs-advisory distinction lives on the context.
+    assert blocking["severity"] == "warning"
+    assert blocking["context"]["severity"] == "blocking"
+    assert blocking["context"]["kind"] == "cross_period_dependency_unclean"
+    assert blocking["suggestion"] == payload["findings"][0]["next_action"]
 
 
 def test_work_create_refuses_conflicting_registry_revision_for_visible_target() -> None:

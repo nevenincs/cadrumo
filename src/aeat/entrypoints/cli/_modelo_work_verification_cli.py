@@ -27,9 +27,11 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError
-from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ...domain.modelos import (
+    CalculationRevisionCatalogueRepository,
+    ModeloRecordCatalogueRepository,
+    VerificationReportCatalogueRepository,
+)
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
@@ -44,6 +46,7 @@ from ._modelo_rendering import (
     filing_record_lines,
     filing_record_payload,
     verification_report_lines,
+    verification_report_notices,
     verification_report_payload,
 )
 
@@ -183,7 +186,8 @@ def _register_work_verify_command(
 
         result = WorkVerifyResult.model_validate(verification_report_payload(report).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.verify", *verification_report_lines(report)]
-        _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines)
+        notices = verification_report_notices(report)
+        _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
 
         if not report.granted_verificado_completo:
             raise typer.Exit(code=1)
