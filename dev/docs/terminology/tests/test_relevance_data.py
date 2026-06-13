@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -38,6 +39,14 @@ from dev.docs.terminology._sweep import SweepResult, enumerate_query_vocabulary
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _RELEVANCE_PATH = PROJECT_ROOT / "src" / "aeat" / "_data" / "terminology" / "relevance" / "relevance.json"
+
+
+class _BuildSurfaces(TypedDict):
+    """Resolvable target inventories for the committed relevance drift gate."""
+
+    concept_ids: set[str]
+    casilla_modelos: set[str]
+    permalinks: set[str]
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +101,7 @@ def test_every_mapping_query_is_shippable_vocabulary(relevance: SweepResult) -> 
 
 
 @pytest.fixture(scope="module")
-def build_surfaces() -> dict[str, object]:
+def build_surfaces() -> _BuildSurfaces:
     """The current build's resolvable surfaces, for the target-resolves gate."""
     handbook = load_terminology_handbook()
     authority = bundled_authority()
@@ -115,15 +124,11 @@ def build_surfaces() -> dict[str, object]:
     }
 
 
-def _target_resolves(target: str, surfaces: dict[str, object]) -> bool:
+def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     """Return whether a deep-link target points at a surface in the current build."""
     concept_ids = surfaces["concept_ids"]
     casilla_modelos = surfaces["casilla_modelos"]
     permalinks = surfaces["permalinks"]
-    assert isinstance(concept_ids, set)
-    assert isinstance(casilla_modelos, set)
-    assert isinstance(permalinks, set)
-
     # Concept card anchor: _generated/glossary.html#term-<concept_id>
     concept_match = re.fullmatch(r"_generated/glossary\.html#term-(?P<id>[a-z0-9-]+)", target)
     if concept_match:
@@ -174,7 +179,7 @@ def _docs_source_exists(rel: str) -> bool:
 
 def test_every_target_resolves_in_the_current_build(
     relevance: SweepResult,
-    build_surfaces: dict[str, object],
+    build_surfaces: _BuildSurfaces,
 ) -> None:
     """Every relevance target deep-links to a surface present in the current build.
 
@@ -192,7 +197,7 @@ def test_every_target_resolves_in_the_current_build(
     )
 
 
-def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: dict[str, object]) -> None:
+def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: _BuildSurfaces) -> None:
     """Anti-tautology: a fabricated stale target is rejected by the resolver check.
 
     Proves the drift gate has teeth -- a target pointing at a non-existent
@@ -203,7 +208,7 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: dict[str, ob
     assert not _target_resolves("search.html?q=000+99999", build_surfaces)
     assert not _target_resolves("api/aeat.module.that.is.not.real.html", build_surfaces)
     # A real one resolves (sanity: the check is not refusing everything).
-    real_concept = next(iter(build_surfaces["concept_ids"]))  # type: ignore[arg-type]
+    real_concept = next(iter(build_surfaces["concept_ids"]))
     assert _target_resolves(f"_generated/glossary.html#term-{real_concept}", build_surfaces)
 
 

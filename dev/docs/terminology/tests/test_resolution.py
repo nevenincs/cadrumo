@@ -18,21 +18,20 @@ from __future__ import annotations
 import pytest
 
 from aeat.domain.calculations.registry import bundled_authority
+from dev.docs.terminology._resolution import ChunkHit, TargetResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 @pytest.fixture(scope="module")
-def resolver() -> object:
+def resolver() -> TargetResolver:
     """Build the resolver once (projects casilla records + legal index)."""
     from dev.docs.terminology._resolution import TargetResolver
 
     return TargetResolver()
 
 
-def _hit(path: str, *, score: float = 0.7) -> object:
-    from dev.docs.terminology._resolution import ChunkHit
-
+def _hit(path: str, *, score: float = 0.7) -> ChunkHit:
     return ChunkHit(path=path, line_start=1, line_end=20, score=score)
 
 
@@ -41,19 +40,19 @@ def _hit(path: str, *, score: float = 0.7) -> object:
 # ---------------------------------------------------------------------------
 
 
-def test_casilla_toml_resolves_to_the_casilla_surface(resolver: object) -> None:
+def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) -> None:
     """A real casilla TOML fragment resolves to its modelo's casilla target."""
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
     path = "src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.part-001.toml"
-    out = resolver.resolve(_hit(path))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CASILLA
     assert out.record.metadata.modelo == "303"
     assert "303" in out.record.target
 
 
-def test_diseno_sidecar_resolves_to_the_casilla_surface(resolver: object) -> None:
+def test_diseno_sidecar_resolves_to_the_casilla_surface(resolver: TargetResolver) -> None:
     """A Diseno de Registro sidecar resolves to its modelo's casilla target."""
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
@@ -61,13 +60,13 @@ def test_diseno_sidecar_resolves_to_the_casilla_surface(resolver: object) -> Non
         "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_036/files/"
         "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md"
     )
-    out = resolver.resolve(_hit(path))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CASILLA
     assert out.record.metadata.modelo == "036"
 
 
-def test_normatives_sidecar_resolves_to_the_boe_article_anchor(resolver: object) -> None:
+def test_normatives_sidecar_resolves_to_the_boe_article_anchor(resolver: TargetResolver) -> None:
     """A normatives sidecar resolves to the BOE permalink via the legal corpus_ref.
 
     The legal catalogue's ``corpus_ref`` points at the normatives html path;
@@ -79,7 +78,7 @@ def test_normatives_sidecar_resolves_to_the_boe_article_anchor(resolver: object)
 
     # ley-37-1992:art-104 has corpus_ref corpus/normatives/html/ley-37-1992-art-104.html#a104
     path = "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md"
-    out = resolver.resolve(_hit(path))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
     assert out.record.target.startswith("https://www.boe.es/")
@@ -87,19 +86,19 @@ def test_normatives_sidecar_resolves_to_the_boe_article_anchor(resolver: object)
     assert out.record.metadata.legal_refs == ("ley-37-1992:art-104",)
 
 
-def test_normatives_target_matches_the_catalogue_permalink(resolver: object) -> None:
+def test_normatives_target_matches_the_catalogue_permalink(resolver: TargetResolver) -> None:
     """The resolved BOE link equals the legal catalogue's permalink (real authority)."""
     from dev.docs.terminology._resolution import ResolvedTarget
 
     catalogue = bundled_authority().catalogues.legal
     entry = catalogue["ley-37-1992:art-104"]
     path = "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md"
-    out = resolver.resolve(_hit(path))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.record.target == entry.permalink
 
 
-def test_legal_toml_resolves_to_a_legal_target(resolver: object) -> None:
+def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None:
     """A legal catalogue TOML resolves to a legal-grounding target.
 
     The file declares many provisions under ``[legal."<id>"]`` headers; the
@@ -108,14 +107,14 @@ def test_legal_toml_resolves_to_a_legal_target(resolver: object) -> None:
     """
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    out = resolver.resolve(_hit("src/aeat/_data/registry/aeat/legal/iva.toml"))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit("src/aeat/_data/registry/aeat/legal/iva.toml"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
     assert out.record.target.startswith("https://www.boe.es/")
     assert out.record.metadata.legal_refs  # at least one legal ref carried
 
 
-def test_code_module_resolves_to_its_api_stub(resolver: object) -> None:
+def test_code_module_resolves_to_its_api_stub(resolver: TargetResolver) -> None:
     """A real src/aeat module resolves to its generated API-stub page.
 
     The codebase grounding surface: ``src/aeat/foo/bar.py`` ->
@@ -123,22 +122,22 @@ def test_code_module_resolves_to_its_api_stub(resolver: object) -> None:
     """
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/_temporal.py"))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/_temporal.py"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CODEBASE
     assert out.record.target == "api/aeat.domain.calculations.registry._temporal.html"
 
 
-def test_package_init_resolves_to_the_package_stub(resolver: object) -> None:
+def test_package_init_resolves_to_the_package_stub(resolver: TargetResolver) -> None:
     """A package ``__init__.py`` resolves to the package's dotted stub page."""
     from dev.docs.terminology._resolution import ResolvedTarget
 
-    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/__init__.py"))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/__init__.py"))
     assert isinstance(out, ResolvedTarget)
     assert out.record.target == "api/aeat.domain.calculations.registry.html"
 
 
-def test_cli_reference_page_resolves_to_the_cli_surface(resolver: object) -> None:
+def test_cli_reference_page_resolves_to_the_cli_surface(resolver: TargetResolver) -> None:
     """A generated CLI-reference page resolves to the CLI grounding surface.
 
     Reaches the CLI surface WITHOUT the live CLI tree walk: the reference page
@@ -146,17 +145,17 @@ def test_cli_reference_page_resolves_to_the_cli_surface(resolver: object) -> Non
     """
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    out = resolver.resolve(_hit("docs/cli/app.rst"))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit("docs/cli/app.rst"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CLI
     assert out.record.target == "cli/app.html"
 
 
-def test_docs_page_resolves_to_its_built_page(resolver: object) -> None:
+def test_docs_page_resolves_to_its_built_page(resolver: TargetResolver) -> None:
     """A docs source page resolves to its built HTML page anchor."""
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    out = resolver.resolve(_hit("docs/how-to/profile-setup.md"))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit("docs/how-to/profile-setup.md"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.DOCS
     assert out.record.target == "how-to/profile-setup.html"
@@ -167,7 +166,7 @@ def test_docs_page_resolves_to_its_built_page(resolver: object) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_unknown_path_is_dropped_and_reported(resolver: object) -> None:
+def test_unknown_path_is_dropped_and_reported(resolver: TargetResolver) -> None:
     """A junk path matches no rule: it is dropped and reported, not mapped.
 
     Anti-tautology: a path the map cannot resolve MUST surface in the dropped
@@ -175,22 +174,22 @@ def test_unknown_path_is_dropped_and_reported(resolver: object) -> None:
     """
     from dev.docs.terminology._resolution import DroppedHit, DropReason
 
-    out = resolver.resolve(_hit("some/random/unmapped/file.xyz"))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit("some/random/unmapped/file.xyz"))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.UNKNOWN_PATH
     assert "some/random/unmapped/file.xyz" in out.detail
 
 
-def test_test_surface_is_dropped_as_excluded(resolver: object) -> None:
+def test_test_surface_is_dropped_as_excluded(resolver: TargetResolver) -> None:
     """A test/fixture path is dropped as an excluded surface (never indexed)."""
     from dev.docs.terminology._resolution import DroppedHit, DropReason
 
-    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/tests/test_temporal.py"))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit("src/aeat/domain/calculations/registry/tests/test_temporal.py"))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.EXCLUDED_SURFACE
 
 
-def test_casilla_for_unknown_modelo_is_dropped(resolver: object) -> None:
+def test_casilla_for_unknown_modelo_is_dropped(resolver: TargetResolver) -> None:
     """A casilla path for a modelo with no projected records is dropped+reported.
 
     Defence: the path matches the casilla rule but the entity is absent, so it
@@ -199,7 +198,7 @@ def test_casilla_for_unknown_modelo_is_dropped(resolver: object) -> None:
     from dev.docs.terminology._resolution import DroppedHit, DropReason
 
     path = "src/aeat/_data/registry/aeat/modelos/999/revisions/2099/casillas/0001-casillas.toml"
-    out = resolver.resolve(_hit(path))  # type: ignore[attr-defined]
+    out = resolver.resolve(_hit(path))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.NO_TARGET_ENTITY
 
@@ -218,7 +217,7 @@ def test_batch_resolution_partitions_resolved_and_dropped() -> None:
         _hit("docs/how-to/profile-setup.md"),
         _hit("totally/unmapped/path.bin"),
     )
-    result = resolve_chunk_hits(tuple(hits))  # type: ignore[arg-type]
+    result = resolve_chunk_hits(tuple(hits))
     assert result.resolved_count == 2
     assert result.dropped_count == 1
     # Every resolved record is a unified SearchRecord with a non-empty target.
@@ -232,8 +231,8 @@ def test_resolver_reuse_avoids_reprojection() -> None:
     from dev.docs.terminology._resolution import TargetResolver, resolve_chunk_hits
 
     shared = TargetResolver()
-    first = resolve_chunk_hits((_hit("docs/index.md"),), resolver=shared)  # type: ignore[arg-type]
-    second = resolve_chunk_hits((_hit("docs/tutorials/index.md"),), resolver=shared)  # type: ignore[arg-type]
+    first = resolve_chunk_hits((_hit("docs/index.md"),), resolver=shared)
+    second = resolve_chunk_hits((_hit("docs/tutorials/index.md"),), resolver=shared)
     assert first.resolved_count == 1
     assert second.resolved_count == 1
 
