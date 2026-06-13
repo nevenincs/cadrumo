@@ -302,7 +302,13 @@ class PromptSpec:
         """
         return frozenset(choice.value for choice in self.iva_categories)
 
-    def render(self, transaction: Transaction, *, evidence_text: str | None = None) -> str:
+    def render(
+        self,
+        transaction: Transaction,
+        *,
+        evidence_text: str | None = None,
+        evidence_image_present: bool = False,
+    ) -> str:
         """Render the prompt for ``transaction`` against this spec.
 
         Args:
@@ -312,8 +318,16 @@ class PromptSpec:
                 the prompt for the model to read; the model uses it only to select
                 the classification/category/iva_category and must never copy a euro
                 figure from it (the regulated numbers stay registry-derived).
+            evidence_image_present: Set when the evidence is attached as an image
+                (the on-host vision-read path) instead of inlined text; the prompt
+                then points the model at the attached image.
         """
-        return _render_prompt(self, transaction, evidence_text=evidence_text)
+        return _render_prompt(
+            self,
+            transaction,
+            evidence_text=evidence_text,
+            evidence_image_present=evidence_image_present,
+        )
 
 
 def default_prompt_spec() -> PromptSpec:
@@ -476,8 +490,46 @@ def _evidence_section(evidence_text: str) -> list[str]:
     ]
 
 
-def _render_prompt(spec: PromptSpec, transaction: Transaction, *, evidence_text: str | None = None) -> str:
-    """Build the full prompt string for one transaction against a spec."""
+def _vision_evidence_section() -> list[str]:
+    """Render the attached-image evidence instruction (selection-only; never emit numbers).
+
+    Used when the evidence is a scanned or image invoice read on-host by a local
+    vision model: the document is attached as an image rather than inlined as
+    text, so the prompt points the model at the attached image instead of
+    embedding extracted text.
+    """
+    return [
+        "An invoice or receipt image is attached to this message. Read it carefully; "
+        "it is authoritative for what was purchased. Use it ONLY to choose the "
+        "classification, category, and iva_category. Do NOT copy or output any euro "
+        "amount, rate, taxable base, or IVA figure from it -- those are computed "
+        "elsewhere from the registry.",
+        "",
+    ]
+
+
+def _evidence_block(evidence_text: str | None, evidence_image_present: bool) -> list[str]:
+    """Select the evidence instruction: inlined text, attached image, or none."""
+    if evidence_text:
+        return _evidence_section(evidence_text)
+    if evidence_image_present:
+        return _vision_evidence_section()
+    return []
+
+
+def _render_prompt(
+    spec: PromptSpec,
+    transaction: Transaction,
+    *,
+    evidence_text: str | None = None,
+    evidence_image_present: bool = False,
+) -> str:
+    """Build the full prompt string for one transaction against a spec.
+
+    When ``evidence_text`` is given it is inlined for the model to read. When
+    ``evidence_image_present`` is set (and no text), the prompt instead points the
+    model at an attached invoice image (the on-host vision-read path).
+    """
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
     classification_block = _render_choices((choice.value.value, choice.hint) for choice in spec.classifications)
@@ -494,7 +546,7 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction, *, evidence_text:
         f"  Counterparty: {raw.counterparty or '(unknown)'}",
         f"  Description: {raw.description}",
         "",
-        *(_evidence_section(evidence_text) if evidence_text else []),
+        *_evidence_block(evidence_text, evidence_image_present),
         "Classify it as exactly one of these BusinessClassification values:",
         classification_block,
     ]
@@ -622,12 +674,15 @@ def build_split_prompt(
     *,
     spec: PromptSpec | None = None,
     evidence_text: str | None = None,
+    evidence_image_present: bool = False,
 ) -> str:
     """Build a prompt asking the model to propose an evidence-driven N-way split.
 
     The model reads the attached invoice and proposes per-child *proportions* plus
     selections; it must never emit a euro amount (the application derives the
-    amounts from the parent gross and the tax substrate from the registry).
+    amounts from the parent gross and the tax substrate from the registry). The
+    invoice is supplied as inlined text (``evidence_text``) or, on the on-host
+    vision-read path, as an attached image (``evidence_image_present``).
     """
     resolved_spec = spec or default_prompt_spec()
     raw = transaction.raw
@@ -641,7 +696,7 @@ def build_split_prompt(
         f"  Counterparty: {raw.counterparty or '(unknown)'}",
         f"  Description: {raw.description}",
         "",
-        *(_evidence_section(evidence_text) if evidence_text else []),
+        *_evidence_block(evidence_text, evidence_image_present),
         "Propose how to divide this transaction into TWO OR MORE children, one per distinct line or "
         "category on the invoice. For each child give a proportion (a fraction of the total; all "
         "proportions MUST sum to 1.0), a spending category, an iva_category, and a short "

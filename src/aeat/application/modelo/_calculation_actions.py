@@ -59,7 +59,10 @@ from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
 from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
-from ._prior_payment_advisory import collect_prior_payment_not_deducted_diagnostics
+from ._prior_payment_advisory import (
+    collect_prior_payment_minoracion_not_captured_diagnostics,
+    collect_prior_payment_not_deducted_diagnostics,
+)
 from ._registry_helpers import normalize_casilla_input_aliases as _normalize_casilla_input_aliases
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
@@ -797,14 +800,28 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     # filer (whose casilla 05 is legitimately null) stays silent.
     from ..calculations import CalculationObservationRepository
 
+    prior_payment_observation_repository = CalculationObservationRepository()
     prior_payment_diagnostics = collect_prior_payment_not_deducted_diagnostics(
         revision.casilla_values,
         modelo=work_unit.modelo,
         period_token=work_unit.period.registry_token,
         filing_year=work_unit.filing_year,
-        observation_repository=CalculationObservationRepository(),
+        observation_repository=prior_payment_observation_repository,
     )
     source_diagnostics = source_diagnostics + prior_payment_diagnostics
+    # Stage-2 honesty (no-silent-under-declaration): once casilla 05 is a bound
+    # carry, a prior filing that carries casilla 07 but no casilla-16 entry is
+    # "not captured" - the carry treats the absent minoración as zero, so surface
+    # the gap rather than silently dropping it (ADR
+    # 2026-06-13-modelo-130-pagos-fraccionados-carry, casilla-16
+    # filed-zero-vs-not-captured).
+    minoracion_diagnostics = collect_prior_payment_minoracion_not_captured_diagnostics(
+        modelo=work_unit.modelo,
+        period_token=work_unit.period.registry_token,
+        filing_year=work_unit.filing_year,
+        observation_repository=prior_payment_observation_repository,
+    )
+    source_diagnostics = source_diagnostics + minoracion_diagnostics
     return BucketAggregationCalculationResult(
         revision=revision,
         source_diagnostics=source_diagnostics,

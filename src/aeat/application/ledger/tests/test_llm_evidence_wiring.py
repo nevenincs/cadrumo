@@ -27,7 +27,7 @@ from ....domain.transactions import (
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
-from .._llm_classification import _resolve_evidence_text
+from .._llm_classification import _resolve_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -88,19 +88,19 @@ def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
 
 def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
     txn = _transaction(evidence_id=None)
-    text, reference = _resolve_evidence_text(
+    resolved = _resolve_evidence(
         txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True,
     )
-    assert text is None
-    assert reference is None
+    assert resolved is None
 
 
-def test_consent_off_refuses_evidence_read(profile: TestRuntimeProfile, tmp_path: Path) -> None:
+def test_consent_off_refuses_text_layer_evidence_read(profile: TestRuntimeProfile, tmp_path: Path) -> None:
     evidence_id = _add_evidence(profile, tmp_path)
     txn = _transaction(evidence_id=evidence_id)
-    # Default posture: cloud upload not permitted -> refuse even when acknowledged.
+    # A text-layer PDF routes to the cloud subprocess classifier; default posture
+    # is cloud upload not permitted -> refuse even when acknowledged.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence_text(txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True)
+        _resolve_evidence(txn, bucket_id="bucket-001", settings=profile.settings, evidence_acknowledged=True)
 
 
 def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfile, tmp_path: Path) -> None:
@@ -109,13 +109,15 @@ def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfi
     consenting: Settings = profile.settings.model_copy(update={"aeat_evidence_cloud_upload_permitted": True})
 
     # Permitted deployment + per-invocation acknowledgement -> on-host text + reference.
-    text, reference = _resolve_evidence_text(
+    resolved = _resolve_evidence(
         txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=True,
     )
-    assert text is not None
-    assert "Acme SL" in text
-    assert reference == evidence_id
+    assert resolved is not None
+    assert resolved.text is not None
+    assert "Acme SL" in resolved.text
+    assert resolved.images == ()
+    assert resolved.reference == evidence_id
 
     # Permitted but not acknowledged this invocation -> refused.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence_text(txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=False)
+        _resolve_evidence(txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=False)

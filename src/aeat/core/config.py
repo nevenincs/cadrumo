@@ -112,6 +112,14 @@ class Settings(AeatTimeoutSettings):
         default="http://127.0.0.1:11434/api/chat",
         description="Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments",
     )
+    aeat_llm_ollama_vision_model: str = Field(
+        default="llama3.2-vision",
+        description=(
+            "Local Ollama vision model used to read scanned/image evidence on-host "
+            "(the default, gestor-allowed posture); must be a multimodal model pulled "
+            "into the local Ollama runtime"
+        ),
+    )
     aeat_llm_default_max_tokens: int = Field(
         default=1024,
         gt=0,
@@ -425,6 +433,21 @@ class Settings(AeatTimeoutSettings):
             "variable; pydantic-settings reads NO_COLOR (uppercased field name) "
             "out of os.environ on Settings() instantiation, so the no-color "
             "convention is honoured without per-call-site os.environ reads."
+        ),
+    )
+    aeat_cli_reveal_identifiers: bool = Field(
+        default=False,
+        description=(
+            "Reveal raw profile and bucket identifiers in CLI success output "
+            "instead of the paste-safe ``<profile-id>`` / ``<bucket-id>`` "
+            "placeholders. Default off keeps the centralised-output-redaction "
+            "policy (profile/bucket UUIDs are redacted so diagnostics are safe "
+            "to paste into shared notes). A multi-client gestor who must "
+            "disambiguate which bucket a command addressed sets "
+            "``AEAT_CLI_REVEAL_IDENTIFIERS=1`` to opt out. This only un-redacts "
+            "the opaque profile/bucket UUIDs; NIF/NIE/CIF tax identities, "
+            "bearer tokens, URLs, and secure-object keys stay redacted "
+            "unconditionally."
         ),
     )
 

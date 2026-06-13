@@ -36,3 +36,4 @@ Submodules
    aeat.application.ledger._ratios
    aeat.application.ledger._review_projection
    aeat.application.ledger._rule_repository
+   aeat.application.ledger._vision_classifier

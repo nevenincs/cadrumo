@@ -11,7 +11,7 @@ from .base import ProviderCompletion, ProviderRequest
 from .base import _ProviderAdapter as _ProviderAdapter
 from .deterministic import _DeterministicAdapter as _DeterministicAdapter
 from .gemini import GeminiAdapter
-from .local import LocalAdapter
+from .local import LocalAdapter, rasterise_pdf_pages_to_base64_png
 from .openai import OpenAIAdapter
 
 __all__ = [
@@ -21,4 +21,5 @@ __all__ = [
     "OpenAIAdapter",
     "ProviderCompletion",
     "ProviderRequest",
+    "rasterise_pdf_pages_to_base64_png",
 ]

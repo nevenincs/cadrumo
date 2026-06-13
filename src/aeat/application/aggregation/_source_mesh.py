@@ -53,6 +53,7 @@ CalculationSourceDiagnosticReason = Literal[
     "missing_transaction_evidence",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
+    "prior_payment_minoracion_not_captured",
 ]
 
 # Source kinds that are explicitly deferred — no mesh resolver is built yet, but
