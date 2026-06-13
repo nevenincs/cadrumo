@@ -130,6 +130,16 @@ Replace the per-domain copy-pasted explicit-or-active-bucket resolver bodies wit
 - [x] `W01.P03.S06` - Add one shared resolve_repository_bucket_id helper parameterised by error_type as the single explicit-or-active-bucket resolver; `src/aeat/core/identity/_bucket.py`.
 - [x] `W01.P03.S07` - Redirect every per-domain resolve_*_repository_bucket_id function to the shared helper and remove the copied bodies; `src/aeat/domain/filing/_runtime_repository.py`.
 
+## Wave `W03` - Pass 3 — Structural Sweep Removal
+
+Clean duplications surfaced by the whole-tree structural symbol sweep (production function names defined in 3+ files), confirmed fully substitutable and landed.
+
+### Phase `W03.P05` - F5 — Consolidate storage_validation_error factory
+
+Promote one canonical storage_validation_error to storage/errors.py and remove the seven byte-identical per-module copies and constants.
+
+- [x] `W03.P05.S15` - Promote one canonical storage_validation_error to storage/errors.py and redirect the seven duplicate storage-module copies, removing the duplicate defs and message-key constants; `src/aeat/adapters/persistence/storage/errors.py`.
+
 ## Description
 
 <!-- Briefly describe the proposed work. Reference `{adr}`s,
