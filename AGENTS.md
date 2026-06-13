@@ -32,8 +32,10 @@ You MUST respect these rules at all times:
 @.codex/rules/cli-single-subject-id-is-positional.md
 @.codex/rules/composition-service-no-parallel-write-path.md
 @.codex/rules/core-struct-docstring-links.md
+@.codex/rules/firmware-reference-parity.builtin.md
 @.codex/rules/fixture-provenance-declared-in-sidecar.md
 @.codex/rules/full-tree-gate-must-distinguish-owner.md
+@.codex/rules/generated-reference-is-cli-owned.builtin.md
 @.codex/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.codex/rules/ledger-derived-revisions-bundle-evidence.md
 @.codex/rules/ledger-evidence-bytes-not-links.md
