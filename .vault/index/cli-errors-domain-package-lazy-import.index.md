@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-errors-domain-package-lazy-import'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-adr]]'
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-plan]]'

@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-sede-constants-centralization'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-26-aeat-sede-constants-centralization-adr]]'
   - '[[2026-06-04-aeat-sede-constants-centralization-research]]'

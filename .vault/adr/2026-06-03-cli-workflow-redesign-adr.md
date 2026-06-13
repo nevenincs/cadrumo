@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-06-03-cli-workflow-redesign-research]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
@@ -124,9 +125,11 @@ writes the sealed archive to the operator-specified path, emits
 guard (live-profile-id and bucket-id collision; refuse unless
 `force_replace=True`), provisions the target bucket if new, calls
 `deserialize_profile_bundle`, emits `BUCKET_IMPORTED`. `browse` resolves the
-per-bucket `SecureObjectRepository`, composes `list_namespaces` +
-`list_keys` + `peek_metadata`, applies `SensitivityClass` redaction,
-paginates with a cursor. `search` is deferred to a separate ADR.
+active bucket `SecureObjectRepository` and composes `list_namespaces` +
+per-namespace `list_keys` counts for a namespace-level inventory. Key-level
+browse with `peek_metadata`, `SensitivityClass` redaction, and cursor
+pagination remains follow-up work. `search` is deferred to the accepted
+bucket-search ADR.
 
 Pydantic command and result contracts (`RenameBucketCommand` /
 `RenameBucketResult`, etc.) live in `_contracts.py`. They use the existing
@@ -182,14 +185,25 @@ precedent for the next caller to do the same.
 ## Consequences
 
 The five composition-pattern Steps (rename, delete, export, import, browse)
-become tractable single-turn landings, each as one atomic explicit-path
-commit per the relocation-atomicity rule: service method + Pydantic
-contracts + service-contract test + event emission. The atomic-commit gate
-keeps the per-verb work auditable in isolation and prevents the W77 work
-from accumulating into a single oversized commit. The `search` verb leaves
-the wave open until its dedicated ADR closes the design questions; the
-remaining five verbs unblock the W77.P374 CLI-mount Step and the
-W77.P374.S2152 apex ADR R08 closure.
+become tractable single-turn landings, each as one explicit-path service
+method, Pydantic contract, service-contract test, and event emission. The `search`
+verb is intentionally deferred to the accepted bucket-search ADR. The
+2026-06-10 operator-surface decision also retires the older `config bucket`
+CLI mount, so W77.P374.S2152 closes R08 for the shipped service scope without
+restoring a storage-noun operator command.
+
+## 2026-06-12 closeout amendment - W77 service scope
+
+The W77 closeout verified the backend/application service scope:
+`BucketMaintenanceService` now ships `browse`, `rename`, `delete`, `export`,
+and `import`. Export writes sealed archives through the adapter-layer archive
+writer and emits `BUCKET_EXPORTED`; import reads sealed archives, enforces
+schema/passphrase/collision guards, provisions missing buckets through the
+profile create span, deserializes via the profile bundle service, and emits
+`BUCKET_IMPORTED`.
+
+Search remains out of scope for this ADR and is owned by the bucket-search ADR.
+No `aeat config bucket` CLI mount is required or allowed for W77 closure.
 
 The two-event co-emission per operator action increases the bucket-event
 history volume (every rename writes two events, every delete writes two

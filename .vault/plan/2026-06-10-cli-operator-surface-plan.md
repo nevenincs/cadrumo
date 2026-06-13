@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#cli-operator-surface'
 date: '2026-06-10'
+modified: '2026-06-10'
 tier: L3
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'
@@ -33,19 +34,19 @@ Add the conformance gate that pins command-naming hint strings and enum-choice-v
 
 Default preflight to the active revision for the natural key so the readiness question stops demanding an internal revision id, keeping --revision-id as an explicit override, and simplify the choose-modelo guide in the same commit.
 
-- [ ] `W01.P02.S07` - default preflight --revision-id to the active revision resolved from modelo, filing_year, and period through the modelo-addressing resolver, keeping --revision-id as an explicit override and refusing with a candidate list when the natural key is ambiguous; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W01.P02.S08` - add real-behavior tests proving preflight answers from the natural key alone, that the explicit --revision-id override still selects an exact revision, and that an ambiguous natural key refuses with candidates; `src/aeat/entrypoints/cli/tests`.
-- [ ] `W01.P02.S09` - simplify the choose-modelo guide to remove the run modelo describe, read out the revision id, paste it back detour in the same commit; `docs/how-to/choose-modelo.md`.
-- [ ] `W01.P02.S10` - update locale strings for the preflight help text via the aeat.locales CLI and regenerate the CLI reference for the changed signature; `src/aeat/locales/en.yml`.
+- [x] `W01.P02.S07` - default preflight --revision-id to the active revision resolved from modelo, filing_year, and period through the modelo-addressing resolver, keeping --revision-id as an explicit override and refusing with a candidate list when the natural key is ambiguous; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W01.P02.S08` - add real-behavior tests proving preflight answers from the natural key alone, that the explicit --revision-id override still selects an exact revision, and that an ambiguous natural key refuses with candidates; `src/aeat/entrypoints/cli/tests`.
+- [x] `W01.P02.S09` - simplify the choose-modelo guide to remove the run modelo describe, read out the revision id, paste it back detour in the same commit; `docs/how-to/choose-modelo.md`.
+- [x] `W01.P02.S10` - update locale strings for the preflight help text via the aeat.locales CLI and regenerate the CLI reference for the changed signature; `src/aeat/locales/en.yml`.
 
 ### Phase `W01.P03` - honest --language help-text contract (D6)
 
 Resolve the eager --language flag's silent help-text failure per the accepted ordering work-then-remove-then-warn, after a feasibility spike on deferred help rendering.
 
-- [ ] `W01.P03.S11` - run a feasibility spike on deferring help-text rendering until after eager-option resolution to determine whether --language can be made to actually localize help text without destabilising the import-time i18n model; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `W01.P03.S12` - implement the highest feasible D6 outcome in ordering work-then-remove-then-warn: make --language localize help text if the spike succeeds, else remove it from the help surface it cannot affect, else emit a one-line warning naming AEAT_OUTPUT_LANGUAGE; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `W01.P03.S13` - add real-behavior tests proving --language no longer silently fails for help text, asserting the chosen outcome and leaving the profile-owned precedence and AEAT_OUTPUT_LANGUAGE override unchanged; `src/aeat/entrypoints/cli/tests`.
-- [ ] `W01.P03.S14` - update locale strings via the aeat.locales CLI for any new warning text and regenerate the CLI reference if the flag surface changes; `src/aeat/locales/en.yml`.
+- [x] `W01.P03.S11` - run a feasibility spike on deferring help-text rendering until after eager-option resolution to determine whether --language can be made to actually localize help text without destabilising the import-time i18n model; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `W01.P03.S12` - implement the highest feasible D6 outcome in ordering work-then-remove-then-warn: make --language localize help text if the spike succeeds, else remove it from the help surface it cannot affect, else emit a one-line warning naming AEAT_OUTPUT_LANGUAGE; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `W01.P03.S13` - add real-behavior tests proving --language no longer silently fails for help text, asserting the chosen outcome and leaving the profile-owned precedence and AEAT_OUTPUT_LANGUAGE override unchanged; `src/aeat/entrypoints/cli/tests`.
+- [x] `W01.P03.S14` - update locale strings via the aeat.locales CLI for any new warning text and regenerate the CLI reference if the flag surface changes; `src/aeat/locales/en.yml`.
 
 ## Wave `W02` - reversal and lineage
 
@@ -55,28 +56,28 @@ Close the single highest-leverage CRUD gap (D2 ledger restore to ACTIVE) and the
 
 Build the restore-to-ACTIVE lifecycle transition, application action, CLI verb, and audit event with full operator-hardening guarantees and real-behavior tests including the bulk-stash recovery journey, updating the honest-permanence docs in the same commit.
 
-- [ ] `W02.P04.S15` - add a public restore-to-ACTIVE lifecycle transition over the state-generic primitive that moves STASHED to ACTIVE and ARCHIVED to ACTIVE, keeping SPLIT and MERGED lineage out of scope; `src/aeat/application/ledger/_actions_lifecycle.py`.
-- [ ] `W02.P04.S16` - add a restore_manual_transaction application action that honours the finalized-modelo guard and records --reason into its own audit event, mirroring the forward archive and stash actions; `src/aeat/application/ledger/_actions_lifecycle.py`.
-- [ ] `W02.P04.S17` - add a new ledger restore BucketEventType audit event distinct from the forward set-aside events; `src/aeat/application/ledger/_actions_lifecycle.py`.
-- [ ] `W02.P04.S18` - add the aeat app ledger restore --id ID CLI verb accepting the _resolve_id prefix form and carrying --yes and --reason, with the enum-choice and hint strings conforming to the W01 D5 gate; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [ ] `W02.P04.S19` - add real-behavior roundtrip and anti-tautology tests for the restore transition with every defaultable field populated non-default, asserting STASHED-to-ACTIVE and ARCHIVED-to-ACTIVE round-trip and the finalized-modelo guard refusal; `src/aeat/application/ledger/tests`.
-- [ ] `W02.P04.S20` - add a real-behavior test reproducing the bulk-stash recovery journey end to end, stashing several rows then restoring them to active without a whole-ledger reset; `src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P04.S21` - add restore help and event locale strings via the aeat.locales CLI; `src/aeat/locales/en.yml`.
-- [ ] `W02.P04.S22` - remove the Both are permanent honest-limitation sentence and document the restore verb in the correct-ledger-entries guide in the same commit; `docs/how-to/correct-ledger-entries.md`.
-- [ ] `W02.P04.S23` - remove the matching permanent-stash sentence from the import-bank-statements guide in the same commit; `docs/how-to/import-bank-statements.md`.
-- [ ] `W02.P04.S24` - run the documented-command conformance gate and regenerate the CLI reference for the new restore verb; `src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P04.S15` - add a public restore-to-ACTIVE lifecycle transition over the state-generic primitive that moves STASHED to ACTIVE and ARCHIVED to ACTIVE, keeping SPLIT and MERGED lineage out of scope; `src/aeat/application/ledger/_actions_lifecycle.py`.
+- [x] `W02.P04.S16` - add a restore_manual_transaction application action that honours the finalized-modelo guard and records --reason into its own audit event, mirroring the forward archive and stash actions; `src/aeat/application/ledger/_actions_lifecycle.py`.
+- [x] `W02.P04.S17` - add a new ledger restore BucketEventType audit event distinct from the forward set-aside events; `src/aeat/application/ledger/_actions_lifecycle.py`.
+- [x] `W02.P04.S18` - add the aeat app ledger restore --id ID CLI verb accepting the _resolve_id prefix form and carrying --yes and --reason, with the enum-choice and hint strings conforming to the W01 D5 gate; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [x] `W02.P04.S19` - add real-behavior roundtrip and anti-tautology tests for the restore transition with every defaultable field populated non-default, asserting STASHED-to-ACTIVE and ARCHIVED-to-ACTIVE round-trip and the finalized-modelo guard refusal; `src/aeat/application/ledger/tests`.
+- [x] `W02.P04.S20` - add a real-behavior test reproducing the bulk-stash recovery journey end to end, stashing several rows then restoring them to active without a whole-ledger reset; `src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P04.S21` - add restore help and event locale strings via the aeat.locales CLI; `src/aeat/locales/en.yml`.
+- [x] `W02.P04.S22` - remove the Both are permanent honest-limitation sentence and document the restore verb in the correct-ledger-entries guide in the same commit; `docs/how-to/correct-ledger-entries.md`.
+- [x] `W02.P04.S23` - remove the matching permanent-stash sentence from the import-bank-statements guide in the same commit; `docs/how-to/import-bank-statements.md`.
+- [x] `W02.P04.S24` - run the documented-command conformance gate and regenerate the CLI reference for the new restore verb; `src/aeat/entrypoints/cli/tests`.
 
 ### Phase `W02.P05` - stable ledger lineage handle across edits (D3)
 
 Make ledger history/view/track resolve any id in a row's edit-lineage chain to the current row so an old written-down id keeps answering after a correction, with real tests proving the old id still resolves.
 
-- [ ] `W02.P05.S25` - make ledger history resolve any id in a row's TransactionEditLineageEntry chain to the current row so an old written-down id keeps answering after an edit re-derives the transaction_id; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [ ] `W02.P05.S26` - make ledger view resolve any id in the edit-lineage chain to the current row so a pre-edit id still views the corrected row; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [ ] `W02.P05.S27` - make ledger track resolve any id in the edit-lineage chain to the current row so the lineage handle survives a correction; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [ ] `W02.P05.S28` - keep the content-addressed transaction_id authoritative for storage and audit while exposing the lineage resolution at the operator read boundary, not freezing the id across edits; `src/aeat/domain/transactions/_models.py`.
-- [ ] `W02.P05.S29` - add real-behavior tests recording an id, editing the row, and asserting the old id still resolves through history, view, and track to the current row; `src/aeat/entrypoints/cli/tests`.
-- [ ] `W02.P05.S30` - update locale strings for any changed lineage help text via the aeat.locales CLI and update the correct-ledger-entries guide id-churn note in the same commit; `docs/how-to/correct-ledger-entries.md`.
-- [ ] `W02.P05.S31` - run the documented-command conformance gate and the D5 gate to confirm the lineage surface introduces no hint drift; `src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S25` - make ledger history resolve any id in a row's TransactionEditLineageEntry chain to the current row so an old written-down id keeps answering after an edit re-derives the transaction_id; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [x] `W02.P05.S26` - make ledger view resolve any id in the edit-lineage chain to the current row so a pre-edit id still views the corrected row; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [x] `W02.P05.S27` - make ledger track resolve any id in the edit-lineage chain to the current row so the lineage handle survives a correction; `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [x] `W02.P05.S28` - keep the content-addressed transaction_id authoritative for storage and audit while exposing the lineage resolution at the operator read boundary, not freezing the id across edits; `src/aeat/domain/transactions/_models.py`.
+- [x] `W02.P05.S29` - add real-behavior tests recording an id, editing the row, and asserting the old id still resolves through history, view, and track to the current row; `src/aeat/entrypoints/cli/tests`.
+- [x] `W02.P05.S30` - update locale strings for any changed lineage help text via the aeat.locales CLI and update the correct-ledger-entries guide id-churn note in the same commit; `docs/how-to/correct-ledger-entries.md`.
+- [x] `W02.P05.S31` - run the documented-command conformance gate and the D5 gate to confirm the lineage surface introduces no hint drift; `src/aeat/entrypoints/cli/tests`.
 
 ## Wave `W03` - hard renames and one grammar
 
@@ -86,29 +87,29 @@ Execute the strict no-alias hard renames (D1 switch-replaces-unlock as one atomi
 
 Replace unlock with the intent-named switch verb as one atomic relocation commit: rename, every caller, the retired-verb test, locale strings, docs sweep, and regenerated CLI reference in the same change, tagged relocation:switch. Exclusive file-heavy step; coordinate with peers.
 
-- [ ] `W03.P06.S32` - rename unlock to switch at the config surface as one atomic relocation commit tagged relocation:switch: the canonical-site rename, every caller, the _RETIRED_VERBS test recording unlock as retired, locale strings via the aeat.locales CLI, the docs sweep, and the regenerated CLI reference all in one git index with clean pytest collection observed before commit; `src/aeat/entrypoints/cli/_config/_custody.py`.
-- [ ] `W03.P06.S33` - update the retired-verb inventory test to record unlock as retired and switch as the live intent verb within the same atomic commit; `src/aeat/entrypoints/cli/tests/test_config_profile_surface_inventory.py`.
-- [ ] `W03.P06.S34` - sweep every how-to guide that taught unlock onto switch within the same atomic commit, removing the switch by unlocking gloss; `docs/how-to`.
-- [ ] `W03.P06.S35` - add real-behavior tests proving switch performs the session-unlock mechanics underneath, that unlock resolves to no command, and that no alias or deprecation surface survives; `src/aeat/entrypoints/cli/tests`.
+- [x] `W03.P06.S32` - reconcile the already-landed unlock-to-switch hard rename at the config surface: canonical site, callers, locale strings via the aeat.locales CLI, docs sweep, generated CLI reference, and clean collection evidence all show switch as the live operator verb; `src/aeat/entrypoints/cli/_config/_custody.py`.
+- [x] `W03.P06.S33` - reconcile the post-rename deletion of the retired-verb inventory subsystem: `_RETIRED_VERBS` no longer exists, the ADR records that deletion, and retired spellings are asserted by no-command behavior rather than a retained ledger; `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py`.
+- [x] `W03.P06.S34` - verify every how-to guide that taught unlock was swept onto switch and the switch-by-unlocking gloss is absent from operator docs; `docs/how-to`.
+- [x] `W03.P06.S35` - verify real-behavior tests proving switch performs the session-unlock mechanics underneath, that unlock resolves to no command, and that no alias or deprecation surface survives; `src/aeat/entrypoints/cli/tests`.
 
 ### Phase `W03.P07` - queued leaked-term hard renames
 
 Apply the same hard-rename discipline to the other storage-leak terms the ADR queued: config repair reset-state and the operator-facing bucket noun, each as a separate atomic relocation commit with one intent-named spelling replacing the leaked term outright.
 
-- [ ] `W03.P07.S36` - rename config repair reset-state to its intent-named spelling as a separate atomic relocation commit replacing the storage-mechanic term outright with no coexisting alias, including callers, the retired-verb test, locale strings via the aeat.locales CLI, docs sweep, and regenerated CLI reference; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W03.P07.S37` - rename the operator-facing bucket noun to profile across CLI help and locale strings as a separate atomic relocation commit, keeping bucket only where it names the internal encrypted-storage concept, via the aeat.locales CLI with docs sweep and regenerated CLI reference; `src/aeat/locales/en.yml`.
-- [ ] `W03.P07.S38` - add real-behavior tests asserting the renamed verbs and nouns resolve, the leaked terms are retired with no alias, and the D5 gate and documented-command gate stay green; `src/aeat/entrypoints/cli/tests`.
+- [x] `W03.P07.S36` - close the already-landed config repair reset-state to reset-progress hard rename by de-jargoning the remaining reset-progress help, text-mode notices, locale strings via the aeat.locales CLI, docs sweep, retired-verb guard, and regenerated CLI reference with no reset-state alias; `src/aeat/entrypoints/cli/_config`.
+- [x] `W03.P07.S37` - rename the operator-facing bucket noun to profile across CLI help and locale strings as a separate atomic relocation commit, keeping bucket only where it names the internal encrypted-storage concept, via the aeat.locales CLI with docs sweep and regenerated CLI reference; `src/aeat/locales/en.yml`.
+- [x] `W03.P07.S38` - add real-behavior tests asserting the renamed verbs and nouns resolve, the leaked terms are retired with no alias, and the D5 gate and documented-command gate stay green; `src/aeat/entrypoints/cli/tests`.
 
 ### Phase `W03.P08` - one operator period grammar (D4)
 
-Make the AEAT token grammar canonical everywhere while the ledger --period sites accept and convert their calendar shapes internally, with refusal messages naming both notations and the troubleshooting trap section updated in the same commit.
+Make the AEAT token grammar canonical everywhere per the 2026-06-10 ADR amendment: ledger --period sites accept AEAT tokens plus --year, reject calendar shapes and year-qualified hybrids, and teach one grammar in help and troubleshooting docs.
 
-- [ ] `W03.P08.S39` - make the ledger --period parser accept the canonical AEAT tokens (1T-4T, 0A, 01-12, plus the registry union members) in addition to the calendar shapes, normalising each to the internal representation each store needs and validating against the registry period union; `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `W03.P08.S40` - lead the ledger --period --help with the canonical AEAT tokens so operators are taught one grammar while the calendar shapes remain accepted-and-converted; `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `W03.P08.S41` - make ledger period refusal messages name both notations (AEAT tokens and calendar shapes) and the accepted set, via the aeat.locales CLI; `src/aeat/locales/en.yml`.
-- [ ] `W03.P08.S42` - add real-behavior tests proving the ledger --period site accepts both AEAT tokens and calendar shapes for the same period, normalises to one internal representation, and passes the registry validator for advertised codes including the EVENT-N member; `src/aeat/entrypoints/cli/tests`.
-- [ ] `W03.P08.S43` - update the troubleshooting period-trap section to teach the one canonical grammar and note the ledger conversion in the same commit; `docs/how-to/troubleshooting.md`.
-- [ ] `W03.P08.S44` - run the documented-command conformance gate and regenerate the CLI reference for the changed period help text; `src/aeat/entrypoints/cli/tests`.
+- [x] `W03.P08.S39` - make the ledger --period parser accept the canonical AEAT tokens (1T-4T, 0A, 01-12, plus registry-union members with ledger date spans) with --year, normalising to the internal representation and validating against the registry period union; `src/aeat/entrypoints/cli/_common.py`.
+- [x] `W03.P08.S40` - lead the ledger --period --help with the canonical AEAT tokens and --year so operators are taught one grammar and no calendar-shape conversion promise remains; `src/aeat/entrypoints/cli/_common.py`.
+- [x] `W03.P08.S41` - make ledger period refusal messages reject calendar shapes/year-qualified hybrids and name the AEAT-token grammar plus --year requirement, via the aeat.locales CLI; `src/aeat/locales/en.yml`.
+- [x] `W03.P08.S42` - add real-behavior tests proving ledger --period accepts AEAT tokens with --year, refuses calendar shapes and year-qualified hybrids, normalises to one internal representation, and passes the registry validator for advertised date-span codes; `src/aeat/entrypoints/cli/tests`.
+- [x] `W03.P08.S43` - update the troubleshooting period-trap section to teach the one canonical grammar and note that calendar shapes/year-qualified hybrids are refused; `docs/how-to/troubleshooting.md`.
+- [x] `W03.P08.S44` - run the documented-command conformance gate and regenerate the CLI reference for the changed period help text; `src/aeat/entrypoints/cli/tests`.
 
 ## Wave `W04` - read-back baseline
 
@@ -118,22 +119,22 @@ Establish the D7 read-back baseline guarantee for record-creating verbs in audit
 
 Add m036 list and m036 view reading through the already-shipped declaration repository with no parallel read path, removing the modelo-036 honest-limitation sentences in the same commit.
 
-- [ ] `W04.P09.S45` - add a list_declarations read surface in the M036 lifecycle application module reading through the already-shipped declaration repository with no parallel read path; `src/aeat/application/modelo/_m036_lifecycle.py`.
-- [ ] `W04.P09.S46` - add the aeat app modelo m036 list and m036 view CLI verbs over the declaration read surface with hint strings conforming to the W01 D5 gate; `src/aeat/entrypoints/cli/_modelo_m036_cli.py`.
-- [ ] `W04.P09.S47` - add real-behavior tests recording an M036 declaration then listing and viewing it back, asserting the read path reads through the owning repository; `src/aeat/application/modelo/tests`.
-- [ ] `W04.P09.S48` - remove the no command yet lists recorded declarations honest-limitation sentence from the modelo-036 guide in the same commit; `docs/how-to/modelo-036.md`.
-- [ ] `W04.P09.S49` - add m036 list and view locale strings via the aeat.locales CLI and regenerate the CLI reference for the new verbs; `src/aeat/locales/en.yml`.
+- [x] `W04.P09.S45` - add a list_declarations read surface in the M036 lifecycle application module reading through the already-shipped declaration repository with no parallel read path; `src/aeat/application/modelo/_m036_lifecycle.py`.
+- [x] `W04.P09.S46` - add the aeat app modelo m036 list and m036 view CLI verbs over the declaration read surface with hint strings conforming to the W01 D5 gate; `src/aeat/entrypoints/cli/_modelo_m036_cli.py`.
+- [x] `W04.P09.S47` - add real-behavior tests recording an M036 declaration then listing and viewing it back, asserting the read path reads through the owning repository; `src/aeat/application/modelo/tests`.
+- [x] `W04.P09.S48` - remove the no command yet lists recorded declarations honest-limitation sentence from the modelo-036 guide in the same commit; `docs/how-to/modelo-036.md`.
+- [x] `W04.P09.S49` - add m036 list and view locale strings via the aeat.locales CLI and regenerate the CLI reference for the new verbs; `src/aeat/locales/en.yml`.
 
 ### Phase `W04.P10` - reconciliation history and IVA wallet correction (D7)
 
 Add the reconciliation-history list surface and the IVA wallet correction/read path under the read-back baseline guarantee, closing the in-scope CRUD surfaces and deferring the filing-record unfile decision per the ADR.
 
-- [ ] `W04.P10.S50` - add a reconciliation-history list surface so past reconciliation verdicts are enumerable, reading through the owning repository with no parallel read path; `src/aeat/application/modelo`.
-- [ ] `W04.P10.S51` - add the aeat app modelo reconciliation-history CLI verb with hint strings conforming to the D5 gate; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P10.S52` - add a guarded IVA wallet correction path so a wrong seed for a pre-history period can be corrected or re-read rather than being unrecoverable, gated on --confirm; `src/aeat/application/modelo`.
-- [ ] `W04.P10.S53` - add the aeat app modelo iva-wallet correction CLI verb with the read path and hint strings conforming to the D5 gate; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P10.S54` - add real-behavior tests for the reconciliation-history list and the IVA wallet correction path asserting round-trip read-back; `src/aeat/application/modelo/tests`.
-- [ ] `W04.P10.S55` - update the affected how-to guides removing the no reconciliation-history and seed-once honest-limitation sentences and add locale strings via the aeat.locales CLI in the same commits, regenerating the CLI reference; `docs/how-to`.
+- [x] `W04.P10.S50` - add a reconciliation-history list surface so past reconciliation verdicts are enumerable, reading through the owning repository with no parallel read path; `src/aeat/application/modelo`.
+- [x] `W04.P10.S51` - add the aeat app modelo reconciliation-history CLI verb with hint strings conforming to the D5 gate; `src/aeat/entrypoints/cli`.
+- [x] `W04.P10.S52` - add a guarded IVA wallet correction path so a wrong seed for a pre-history period can be corrected or re-read rather than being unrecoverable, gated on --confirm; `src/aeat/application/modelo`.
+- [x] `W04.P10.S53` - add the aeat app modelo iva-wallet correction CLI verb with the read path and hint strings conforming to the D5 gate; `src/aeat/entrypoints/cli`.
+- [x] `W04.P10.S54` - add real-behavior tests for the reconciliation-history list and the IVA wallet correction path asserting round-trip read-back; `src/aeat/application/modelo/tests`.
+- [x] `W04.P10.S55` - update the affected how-to guides removing the no reconciliation-history and seed-once honest-limitation sentences and add locale strings via the aeat.locales CLI in the same commits, regenerating the CLI reference; `docs/how-to`.
 
 ## Description
 
@@ -161,7 +162,7 @@ The plan is complete when every Step in every Wave is closed. Each Wave addition
 - Docs drift gates: `python -m dev.docs.apidocs scaffold --check` exits clean after any `src/aeat` module-tree change, and the Sphinx nitpicky build gate `pytest dev/docs/tests/test_docs_build.py` passes after every docs sweep.
 - CLI-reference regeneration is committed in the same change as every command-tree mutation (W02.P04 restore verb, W03.P06 and W03.P07 renames, W03.P08 period help, W04 read-back verbs).
 - CRUD-audit journey re-runs as acceptance evidence: after W02 the bulk-stash recovery journey (CRUD audit journey (e), finding F-01) MUST PASS end to end without `ledger reset` - stash several rows, restore them, assert active; after W02 plus W03 the quarter-end loop (journey (a)) re-runs with its id-churn sharp edge resolved - an id written down before `ledger update` still answers through history, view, and track.
-- W03 rename acceptance: `unlock` resolves to no command, `switch` performs the session-unlock mechanics, `_RETIRED_VERBS` records the retirement, no alias or deprecation surface exists, and the relocation commit passes `uv run --no-sync pytest --collect-only -q` clean immediately before landing.
+- W03 rename acceptance: `unlock` resolves to no command, `switch` performs the session-unlock mechanics, no `_RETIRED_VERBS` subsystem or deprecation ledger remains, no alias or deprecation surface exists, and the relocation commit passes `uv run --no-sync pytest --collect-only -q` clean immediately before landing.
 - W04 read-back acceptance: an M036 declaration recorded by alta is listed by `m036 list` and shown by `m036 view`; the modelo-036 guide no longer carries the no-read-back honest-limitation sentence; reconciliation history and the IVA wallet correction path round-trip in real-behavior tests.
 - All new tests are real-behavior per the quality-gates rule: no mocks, skips, xfail, stubs, or tautological assertions; lifecycle roundtrips populate every defaultable field non-default per the roundtrip discipline.
 - Closure gate: per the campaign-close honesty review rule, a fresh-context honesty review runs against the closing summary before this plan is declared structurally complete, and `uv run --no-sync vaultspec-core vault check all` stays green throughout.

@@ -12,21 +12,7 @@ related:
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace modelo-130-pagos-fraccionados-carry with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 
 # `modelo-130-pagos-fraccionados-carry` adr: `casilla 05 cumulative pagos-fraccionados carry (target-relative same-ejercicio sum)` | (**status:** `accepted`)
@@ -83,8 +69,6 @@ defaults. The open questions are resolved as follows:
 
 ## Problem Statement
 
-<!-- Briefly describe the architectural problem or concern.
-Describe why the ADR is being persisted. Is this a new feature? Result of an audit? -->
 
 Modelo 130 (IRPF pago fraccionado, estimacion directa) accumulates from the
 start of the ejercicio: casilla 01 (Ingresos) is a year-to-date cumulative sum,
@@ -126,7 +110,6 @@ Rationale) and is not the naive "sum of prior casilla 07".
 
 ## Considerations
 
-<!-- Key factors, constraints, requirements. Tech/libraries considered. -->
 
 The AEAT-grounded accumulation rule (resolved). The official Modelo 130
 instrucciones (AEAT sede, `aeat-modelo-130-instructions`) define casilla 05
@@ -183,7 +166,6 @@ from the verbatim quote.
 
 ## Constraints
 
-<!-- Technical limitations: depends on non-mature library, frontier feature, requires rigorous research. Frontier risk, e.g. technology is new and falls outside the implementing model training cutoff. List blocking constraints and gaps needed for reliable implementation; evaluate how stable parent features are. -->
 
 - Primitive gap is the blocker. The single-offset / static-period selector
   cannot express the target-relative prior-quarter span. Stage 2 cannot ship as
@@ -214,7 +196,6 @@ from the verbatim quote.
 
 ## Implementation
 
-<!-- A high-level overview (not a plan) of HOW and WHAT will be implemented. Do not add code. -->
 
 ### S1 - Canonical mechanism and the chosen extension
 
@@ -323,7 +304,6 @@ not run, not alongside a correct carry.
 
 ## Rationale
 
-<!-- Brief rationale why architecture descision was made. Reference research findings and grounding reference. -->
 
 The accumulation rule is taken verbatim from the authoritative AEAT sede Modelo
 130 instrucciones (the same aeat-modelo-130-instructions source the registry
@@ -346,7 +326,6 @@ wasteful fixed slots. It keeps one resolver, one source kind, one mesh enrollmen
 
 ## Consequences
 
-<!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->
 
 Gains. Cumulative 2T/3T/4T filings stop over-stating the resultado; the operator
 no longer hand-enters casilla 05; the silent over-payment closes at the value
@@ -389,7 +368,6 @@ live surface is functional.
 
 ## Codification candidates
 
-<!-- Name durable cross-session constraints as candidates for promotion into a project rule via the codify pipeline phase. An empty section is a positive signal. -->
 
 - Rule slug: m130-casilla-05-is-positive-07-minus-16-cumulative.
   Rule: Modelo 130 casilla 05 MUST be computed as the same-ejercicio sum of each
@@ -401,7 +379,6 @@ live surface is functional.
 
 ## Open questions (operator)
 
-<!-- Honest open questions carried for the operator. -->
 
 - Casilla 16 availability across prior filings. The minoracion term assumes each
   prior M130 filing casilla 16 is present in its persisted observation set.

@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mandatory-citations'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-04-25-mandatory-citations-adr]]'
   - '[[2026-04-25-mandatory-citations-phase1-step1-exec]]'

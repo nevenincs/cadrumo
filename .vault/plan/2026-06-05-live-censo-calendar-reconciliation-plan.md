@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#live-censo-calendar-reconciliation'
 date: '2026-06-05'
+modified: '2026-06-05'
 tier: L3
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-reference]]'
@@ -11,15 +12,6 @@ related:
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `live-censo-calendar-reconciliation` `implementation` plan
 
@@ -57,6 +49,9 @@ Verify that authenticated live censo evidence is the source of profile enrolment
 - [ ] `W03.P03.S06` - Reconcile live censo snapshot into profile-derived taxpayer model and obligation enrolment facts; `src/aeat/application/user_profile/_censo_sync.py`.
 - [ ] `W03.P03.S07` - Verify reconciled taxpayer obligations project to actual calendar entries with real filing dates; `src/aeat/application/overview/__init__.py`.
 - [x] `W03.P03.S08` - Verify calendar evidence includes live-backed filings messages and justificante states without conflating local filing readiness; `src/aeat/entrypoints/cli/_overview.py`.
+- [x] `W03.P03.S28` - Expose censo-apply calendar obligation rows with concrete filing dates after taxpayer-model reconciliation; `src/aeat/entrypoints/cli/_config/_profile_censo.py, src/aeat/entrypoints/cli/_config/_profile_censo_payloads.py, src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py, src/aeat/application/user_profile/tests/test_censo_sync.py`.
+- [x] `W03.P03.S31` - Expose censo-derived taxpayer-model provenance on censo-apply calendar obligation rows; `src/aeat/entrypoints/cli/_config/_profile_censo.py, src/aeat/entrypoints/cli/_config/_profile_censo_payloads.py, src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py`.
+- [x] `W03.P03.S32` - Narrow censo-apply calendar enrolment provenance to each Modelo obligation row; `src/aeat/application/overview/_calendar.py, src/aeat/application/overview/__init__.py, src/aeat/entrypoints/cli/_config/_profile_censo.py, src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py`.
 
 ## Wave `W04` - live profile-store unlock and final calendar proof
 
@@ -70,6 +65,7 @@ Run the full profile-bound live CLI sequence after the encrypted secret store is
 - [ ] `W04.P04.S10` - Rerun live Modelo 036 censo pull, compare, apply, expedientes, notifications, filed history, and justificante pulls; `src/aeat/entrypoints/cli/_config/_profile_censo.py`.
 - [ ] `W04.P04.S11` - Prove the active profile calendar contains legal obligation rows reconciled with live submitted and justificante-verified evidence; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W04.P04.S12` - Fail fast when profile-bound live CLI cannot prompt for secret-store passphrase; `src/aeat/adapters/persistence/storage/master_key/_master_key_io.py, src/aeat/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py`.
+- [x] `W04.P04.S30` - Verify fresh password-backed profile creation path and record current active-profile live unlock blocker; `.vault/exec/2026-06-05-live-censo-calendar-reconciliation`.
 
 ## Wave `W05` - authenticated live surface proof
 
@@ -87,7 +83,14 @@ Use the fresh password-backed profile and persisted live Clave session to prove 
 - [x] `W05.P05.S18` - Require ALTA AEAT register status before persisting filed observations into official calculation and IVA history; `src/aeat/application/live/_filed_observation_persistence.py, src/aeat/application/live/tests/test_filed_capture_calculation_history.py`.
 - [x] `W05.P05.S19` - Stamp encrypted AEAT register provenance on official calculation observations and project it to calendar evidence; `src/aeat/application/calculations/_observations_repository.py, src/aeat/application/live/_filed_observation_persistence.py, src/aeat/application/overview/_calendar.py`.
 - [x] `W05.P05.S20` - Enforce stamped AEAT register provenance in cross-period clean-state source observations; `src/aeat/application/calculations/_cross_period_clean_state.py, src/aeat/application/calculations/tests/test_cross_period_clean_state.py`.
-- [ ] `W05.P05.S21` - Refuse missing AEAT register provenance when projecting official calculation observations into calendar filing evidence; `src/aeat/application/overview/_calendar.py, src/aeat/application/overview/tests/test_calendar.py, src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
+- [x] `W05.P05.S21` - Refuse missing AEAT register provenance when projecting official calculation observations into calendar filing evidence; `src/aeat/application/overview/_calendar.py, src/aeat/application/overview/tests/test_calendar.py, src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
+- [x] `W05.P05.S22` - Require store-verified filed-declaration justificante artefacts before calendar justificante verification; `src/aeat/application/overview/_calendar.py, src/aeat/entrypoints/cli/_overview.py, src/aeat/application/overview/tests/test_calendar.py, src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py`.
+- [x] `W05.P05.S23` - Refuse live justificante evidence stamping when the parsed receipt does not match the current filing record; `src/aeat/application/live/_justificante.py, src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py`.
+- [x] `W05.P05.S24` - Re-verify live filed and expedientes expose bulk authenticated reads through pull only, with no pull-all command registered after Period/backend drift; `src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
+- [x] `W05.P05.S25` - Refuse bare AEAT-accepted calendar state without external evidence and canonicalize taxpayer identity matching across calendar, import, and cross-period evidence checks; `src/aeat/application/overview/_calendar.py, src/aeat/application/modelo/_external_import_actions.py, src/aeat/application/calculations/_cross_period_clean_state.py`.
+- [x] `W05.P05.S26` - Enforce at the ModeloRecord domain boundary that AEAT acceptance cannot exist without external evidence; `src/aeat/domain/modelos/_filing_record.py, src/aeat/domain/modelos/tests/test_filing_record_repository_roundtrip.py`.
+- [x] `W05.P05.S27` - Reject external Modelo evidence without AEAT acceptance and prevent legacy torn records from upgrading calendar submission state; `src/aeat/domain/modelos/_filing_record.py, src/aeat/application/overview/_calendar.py, src/aeat/domain/modelos/tests/test_filing_record_repository_roundtrip.py, src/aeat/application/overview/tests/test_calendar.py`.
+- [x] `W05.P05.S29` - Enforce live command-tree pull-only drift guard across all authenticated read facades; `src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
 
 ## Description
 

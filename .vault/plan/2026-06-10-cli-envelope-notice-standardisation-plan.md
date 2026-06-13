@@ -3,21 +3,12 @@ tags:
   - '#plan'
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
+modified: '2026-06-10'
 tier: L3
 related:
   - '[[2026-06-10-cli-envelope-notice-standardisation-adr]]'
+  - '[[2026-06-10-cli-envelope-notice-standardisation-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S20 -->
 
 # `cli-envelope-notice-standardisation` `CLI notice and status standardisation burndown` plan
@@ -79,7 +70,7 @@ Audit every success site for status correctness, run the full suite plus extende
 
 Status-correctness audit across success sites, full suite plus gate green, and generated-docs plus docstring refresh.
 
-- [ ] `W04.P05.S17` - Audit every success emit site for correct derived status and run the full CLI suite plus extended conformance gate to green; `src/aeat/entrypoints/cli`.
+- [x] `W04.P05.S17` - Audit every success emit site for correct derived status and run the full CLI suite plus extended conformance gate to green; `src/aeat/entrypoints/cli`.
 - [x] `W04.P05.S18` - Refresh generated docs/api stubs and correct the stale json_contract module docstring describing bare-emit migration; `src/aeat/core/json_contract.py`.
 - [x] `W04.P05.S21` - Audit complete: every CLI command module routes through _emit_envelope, no raw-JSON echo bypass, no residual bespoke advisory/next/suggestion on registered schemas, and all 46 spine/notice/error-document/redaction gate assertions green. Full-suite-green (S17) remains blocked only by two EXTERNAL peer campaigns: pull/file verb-rename register_schema drift and terminology TerminologyError(ValueError) hygiene; `src/aeat/entrypoints/cli`.
 - [x] `W04.P05.S22` - Evidence: the register_schema gate is the pull/file peer campaign's ACTIVELY in-flight rename, not passive drift - peer dirty diffs edit the exact command-registration lines (reconcile_pull_verb command=modelo.reconcile, reconcile_history_verb command=modelo.reconciliation_history, iva_wallet seed/correct commands). The 13 orphan keys include peer-dirty modelo.reconcile.* and iva_wallet.* keys; `making the gate green requires editing peer-WIP files, forbidden by the absolute worktree-safety prohibition. S17 full-green is owned by that peer campaign; `src/aeat/entrypoints/cli`.

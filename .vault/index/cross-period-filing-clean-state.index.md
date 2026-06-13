@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-period-filing-clean-state'
-date: '2026-06-11'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-P01-S01]]'
   - '[[2026-06-05-cross-period-filing-clean-state-P01-S02]]'

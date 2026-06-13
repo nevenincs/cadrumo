@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-invoice-unification'
-date: '2026-06-11'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-ledger-invoice-unification-P01-S01]]'
   - '[[2026-06-10-ledger-invoice-unification-P01-S02]]'
@@ -29,6 +30,7 @@ related:
   - '[[2026-06-10-ledger-invoice-unification-P04-S22]]'
   - '[[2026-06-10-ledger-invoice-unification-P04-S23]]'
   - '[[2026-06-10-ledger-invoice-unification-P04-S24]]'
+  - '[[2026-06-10-ledger-invoice-unification-P04-summary]]'
   - '[[2026-06-10-ledger-invoice-unification-P05-S25]]'
   - '[[2026-06-10-ledger-invoice-unification-P05-S26]]'
   - '[[2026-06-10-ledger-invoice-unification-P05-S27]]'
@@ -81,6 +83,7 @@ Auto-generated index of all documents tagged with `#ledger-invoice-unification`.
 - `2026-06-10-ledger-invoice-unification-P04-S22` - Enum Inventory Gate Update
 - `2026-06-10-ledger-invoice-unification-P04-S23` - API Stub Scaffold
 - `2026-06-10-ledger-invoice-unification-P04-S24` - Full Collect-Only Gate
+- `2026-06-10-ledger-invoice-unification-P04-summary` - `ledger-invoice-unification` `P04` summary
 - `2026-06-10-ledger-invoice-unification-P05-S25` - Unified Invoice CLI Tests
 - `2026-06-10-ledger-invoice-unification-P05-S26` - Invoice List No-Kind Guard
 - `2026-06-10-ledger-invoice-unification-P05-S27` - Invoice Roundtrip Equality

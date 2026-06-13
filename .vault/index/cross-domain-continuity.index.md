@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-domain-continuity'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-26-cross-domain-continuity-P01-S05]]'
   - '[[2026-05-26-cross-domain-continuity-P01-S06]]'

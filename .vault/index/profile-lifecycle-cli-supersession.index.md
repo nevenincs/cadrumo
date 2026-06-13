@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-cli-supersession'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-deferral-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-supersession-research]]'

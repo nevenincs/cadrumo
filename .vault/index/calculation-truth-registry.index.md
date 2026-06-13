@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-truth-registry'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-phase5-step1-exec]]'

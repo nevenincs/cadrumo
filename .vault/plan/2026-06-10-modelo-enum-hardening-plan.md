@@ -3,12 +3,12 @@ tags:
   - '#plan'
   - '#modelo-enum-hardening'
 date: '2026-06-10'
+modified: '2026-06-10'
 tier: L2
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
+  - '[[2026-06-10-modelo-enum-hardening-research]]'
 ---
-
-
 # `modelo-enum-hardening` `Modelo enum hardening and centralisation follow-ups` plan
 
 ### Phase `P01` - Discovery and decisions

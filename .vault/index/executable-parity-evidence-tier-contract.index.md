@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#executable-parity-evidence-tier-contract'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-executable-parity-evidence-tier-contract-adr]]'
   - '[[2026-06-04-executable-parity-evidence-tier-contract-research]]'

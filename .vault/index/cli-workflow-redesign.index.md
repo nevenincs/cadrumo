@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -412,6 +413,12 @@ related:
   - '[[2026-06-03-cli-workflow-redesign-audit]]'
   - '[[2026-06-03-cli-workflow-redesign-exec]]'
   - '[[2026-06-03-cli-workflow-redesign-research]]'
+  - '[[2026-06-12-cli-workflow-redesign-W77-P370-S2131]]'
+  - '[[2026-06-12-cli-workflow-redesign-W77-P370-S2132]]'
+  - '[[2026-06-12-cli-workflow-redesign-W77-P373-S2145]]'
+  - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2150]]'
+  - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2152]]'
+  - '[[2026-06-12-cli-workflow-redesign-W77-P374-S2153]]'
 ---
 
 # `cli-workflow-redesign` feature index
@@ -447,7 +454,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr` - `cli-workflow-redesign` adr: `festivos deadline shift` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr` - `cli-workflow-redesign` adr: `foreign currency normalization` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-inventory-placement-adr` - `cli-workflow-redesign` adr: `inventory placement and execution` | (**status:** `accepted`)
-- `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr` - `cli-workflow-redesign` adr: `Invoice domain decoupling` | (**status:** `accepted`)
+- `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr` - `cli-workflow-redesign` adr: `Invoice domain decoupling` | (**status:** `superseded`)
 - `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr` - `cli-workflow-redesign` adr: `IVA prorrata arts 101-103` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr` - `cli-workflow-redesign` adr: `ledger transaction management` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr` - `cli-workflow-redesign` adr: `libros BOE format exporters` | (**status:** `accepted`)
@@ -790,6 +797,12 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-13-cli-workflow-redesign-W57-P285-S1710` - Validate help text for evidence bundle lifecycle uses accepted vocabulary only
 - `2026-05-13-cli-workflow-redesign-W85-P414-S2349` - W85.P414.S2349 Modelo 036 lifecycle verbs registered
 - `2026-06-03-cli-workflow-redesign-exec` - `cli-workflow-redesign` exec: `W77.P370 bucket-maintenance composition partial landing (rename + delete + browse)`
+- `2026-06-12-cli-workflow-redesign-W77-P370-S2131` - W77.P370.S2131 - BucketMaintenanceService lifecycle operations
+- `2026-06-12-cli-workflow-redesign-W77-P370-S2132` - W77.P370.S2132 - bucket-maintenance command and result contracts
+- `2026-06-12-cli-workflow-redesign-W77-P373-S2145` - W77.P373.S2145 - BucketMaintenanceService service-contract tests
+- `2026-06-12-cli-workflow-redesign-W77-P374-S2150` - W77.P374.S2150 - retired config bucket mount reconciliation
+- `2026-06-12-cli-workflow-redesign-W77-P374-S2152` - W77.P374.S2152 - apex R08 closeout reconciliation
+- `2026-06-12-cli-workflow-redesign-W77-P374-S2153` - W77.P374.S2153 - child ADR amendment verification
 
 ### plan
 

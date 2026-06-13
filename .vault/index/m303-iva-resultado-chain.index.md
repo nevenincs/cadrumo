@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-iva-resultado-chain'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-01-m303-iva-resultado-semantic-casilla-mismatch-research]]'
 ---

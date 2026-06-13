@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
+modified: '2026-06-13'
 tier: L2
 related:
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'
@@ -12,15 +13,6 @@ related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `m303-form-vs-semantic-casilla-dual-keying` `M303 official Diseno box population via semantic projection (Stage 2)` plan
 

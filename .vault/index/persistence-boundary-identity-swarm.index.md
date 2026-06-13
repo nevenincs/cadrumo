@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#persistence-boundary-identity-swarm'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-16-persistence-boundary-identity-swarm-audit]]'
 ---

@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#semantic-cluster-hardening'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-01-semantic-cluster-hardening-adr]]'
   - '[[2026-06-01-semantic-cluster-hardening-audit]]'

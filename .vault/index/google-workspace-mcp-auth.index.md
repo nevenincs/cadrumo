@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#google-workspace-mcp-auth'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-04-16-google-workspace-mcp-auth-adr-audit]]'
   - '[[2026-04-16-google-workspace-mcp-auth-adr]]'

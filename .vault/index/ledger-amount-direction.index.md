@@ -4,6 +4,7 @@ tags:
   - '#index'
   - '#ledger-amount-direction'
 date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-ledger-amount-direction-adr]]'
   - '[[2026-06-10-ledger-amount-direction-plan]]'
@@ -22,10 +23,10 @@ related:
   - '[[2026-06-12-ledger-amount-direction-P04-S12]]'
   - '[[2026-06-12-ledger-amount-direction-P04-S13]]'
   - '[[2026-06-12-ledger-amount-direction-P04-S14]]'
-  - '[[2026-06-12-ledger-amount-direction-P05-S15-attempts]]'
   - '[[2026-06-12-ledger-amount-direction-P05-S16]]'
-  - '[[2026-06-12-ledger-amount-direction-closeout-status]]'
+  - '[[2026-06-12-ledger-amount-direction-closeout-status-exec]]'
   - '[[2026-06-12-ledger-amount-direction-code-review-audit]]'
+  - '[[2026-06-12-ledger-amount-direction-p05-s15-attempts-exec]]'
   - '[[2026-06-13-ledger-amount-direction-P05-S15]]'
   - '[[2026-06-13-ledger-amount-direction-audit]]'
 ---
@@ -61,9 +62,9 @@ Auto-generated index of all documents tagged with `#ledger-amount-direction`.
 - `2026-06-12-ledger-amount-direction-P04-S12` - CLI Amount Magnitude Gate
 - `2026-06-12-ledger-amount-direction-P04-S13` - CLI Amount Tests
 - `2026-06-12-ledger-amount-direction-P04-S14` - Import Docs Follow-Up Flag
-- `2026-06-12-ledger-amount-direction-P05-S15-attempts` - Full Sequential Suite Attempts
 - `2026-06-12-ledger-amount-direction-P05-S16` - Amount Direction Rule Codified
-- `2026-06-12-ledger-amount-direction-closeout-status` - Ledger Amount Direction Closeout Status
+- `2026-06-12-ledger-amount-direction-closeout-status-exec` - Ledger Amount Direction Closeout Status
+- `2026-06-12-ledger-amount-direction-p05-s15-attempts-exec` - Full Sequential Suite Attempts
 - `2026-06-13-ledger-amount-direction-P05-S15` - Full Sequential Suite Green-Pass
 
 ### plan

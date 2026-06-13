@@ -3,32 +3,14 @@ tags:
   - '#exec'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
+modified: '2026-06-13'
 step_id: 'S12'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace modelo-130-pagos-fraccionados-carry with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-     step_id is the originating Step's canonical identifier, e.g. S01.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar-plan]]' and link the
-     parent plan.
 
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path. -->
 
 # build a multi-quarter M130 fixture (prior 1T/2T/3T filings with chosen ingresos/gastos including at least one quarter whose casilla 07 is negative and at least one non-zero casilla 16), let the engine produce each prior 07 and 16, and assert the 4T casilla 05 equals sum max(0,07_q) minus sum 16_q computed from the AEAT instrucciones rule via an independent helper, a different code path than the span binding under test, per no-tautological-calculation-tests
 

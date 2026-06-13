@@ -10,21 +10,7 @@ related:
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace first-filer-attestation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `first-filer-attestation` adr: `operator-declared activity-start scoping, censo-corroborated (supersedes G313 grounding)` | (**status:** `accepted`)
 
@@ -40,8 +26,6 @@ now, censo-corroborated when the live surface is fixed.
 
 ## Problem Statement
 
-<!-- Briefly describe the architectural problem or concern.
-Describe why the ADR is being persisted. Is this a new feature? Result of an audit? -->
 
 A business whose first-ever filing is the period in which its economic activity
 begins cannot file that period locally. The cross-period clean-state gate
@@ -117,7 +101,6 @@ revision.
 
 ## Considerations
 
-<!-- Key factors, constraints, requirements. Tech/libraries considered. -->
 
 The legal reality is unchanged and remains the foundation. Spanish tax law does
 not require a first-period filer to have filed anything for periods before
@@ -148,10 +131,6 @@ operator-declared field.
 
 ## Constraints
 
-<!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
-
-List out the blocking constrainst, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
-relies on another feature. -->
 
 This decision amends an accepted gate and must thread two sibling ADRs without
 weakening them:
@@ -185,9 +164,6 @@ ratifies it and the open questions below are settled.
 
 ## Implementation
 
-<!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condense but clear prose that describes functionality layering.
-
-Do not add code (code references must be persisted in separate `{reference}` document. Important `{reference}` snippets must be summarised and referenced explicitly. -->
 
 Adopt activity-start scoping of the cross-period requirement graph, with the
 registry's existing absent-by-design value path materialising the resulting zero.
@@ -263,7 +239,6 @@ Which refusal points this unblocks:
 
 ## Rationale
 
-<!-- Brief rationale why architecture descision was made. Reference `{research}` findings and grounding `{reference}`. -->
 
 The censo-grounding concept the superseded ADR chose was correct in substance -
 the activity-start date is real AEAT authority and is the right axis to scope the
@@ -306,7 +281,6 @@ has scoped which periods are pre-activity.
 
 ## Consequences
 
-<!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->
 
 The first-period filer gains a legitimate offline path that is actually reachable
 today: verify completes on the merits of the current period, export and file open
@@ -460,19 +434,6 @@ recommended default for each open question. The resolved defaults:
 
 ## Codification candidates
 
-<!-- If this decision introduces a durable cross-session constraint
-that should bind future agents (an obligation, a prohibition, a
-discipline that survives this feature's lifecycle), name it here as
-a candidate for promotion into a project rule under
-`.vaultspec/rules/rules/` via the codify pipeline phase.
-
-Each candidate names the proposed rule slug (kebab-case, naming the
-constraint's subject) and a one-sentence statement of the rule.
-
-Not every ADR produces a codification candidate. Decisions that are
-local to one feature, or that describe rather than constrain, leave
-this section empty. An empty Codification candidates section is a
-positive signal, not a failure. -->
 
 - Rule slug: `cross-period-scoping-by-declared-activity-start`. Rule: A
   cross-period dependency may be scoped out as no-prior-obligation only when a

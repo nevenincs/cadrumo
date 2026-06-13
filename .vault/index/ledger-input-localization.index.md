@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-input-localization'
-date: '2026-06-12'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-ledger-input-localization-P01-S01]]'
   - '[[2026-06-10-ledger-input-localization-P01-S02]]'

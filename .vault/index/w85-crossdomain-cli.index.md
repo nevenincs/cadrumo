@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#w85-crossdomain-cli'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-16-w85-crossdomain-cli-audit]]'
 ---

@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#draft-approval-staleness'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-04-18-draft-approval-staleness-adr-audit]]'
   - '[[2026-04-18-draft-approval-staleness-adr]]'

@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
+modified: '2026-05-12'
 related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
@@ -132,7 +133,7 @@ per-modelo section, and shrink the list of open questions.
   taxonomy.
 - The bucket-event-history ADR mandates append-only event history for every
   material state transition, requires app status/list views to surface event
-  context, and places history browsing at `aeat config bucket history`.
+  context, and places history browsing at `aeat config profile history PROFILE`.
 - Five accepted ADRs outside the redesign series are required pre-conditions
   for the redesign to land:
   - `config-cli-profile-surface` (2026-05-07) defines `aeat config profile`
@@ -208,9 +209,10 @@ records, not in compatibility aliases or support surfaces.
 
 ### 1. Root tree contract (locked by bucket ADR)
 
-- `aeat config`: profile lifecycle, bucket lifecycle, first-run/init
-  migration, durable environment/configuration state. Storage-maintenance
-  and diagnostic verbs live here.
+- `aeat config`: profile lifecycle, first-run/init migration, durable
+  environment/configuration state, and profile-named storage diagnostics.
+  Storage lifecycle services remain backend/application surfaces unless a
+  profile-named operator design is accepted.
 - `aeat app`: operational tax workflow. Ledger transactions, payable and
   collectible invoices, purchase invoice evidence, modelo, status, and
   list views over the active bucket.
@@ -222,7 +224,8 @@ records, not in compatibility aliases or support surfaces.
 **Fold-under map.** The retired roots resolve as:
 
 - `aeat setup` → `aeat config` (profile, auth, init, status).
-- `aeat archive` → `aeat config bucket` (export, import, browse).
+- `aeat archive` → retired. Export/import/browse are backend bucket-maintenance
+  service operations until a profile-named operator surface is accepted.
 - `aeat deadlines` → `aeat app overview` (calendar, agenda, explain).
 - `aeat financial` → split across `aeat app ledger` (ingest, txs,
   classification, ratios) and hard removal of the old invoice surface.
@@ -414,17 +417,21 @@ as representative shortcuts are rejected.
 Migration: `aeat setup auth`, top-level `aeat auth`, and all aliases/shims are
 removed from operator UX.
 
-#### 3.4 `aeat config bucket` (locked)
+#### 3.4 Profile storage maintenance (backend/application locked)
 
-Storage-level bucket management. Verbs (from bucket ADR):
+Storage-level bucket management is no longer an operator-facing `config bucket`
+command group. The backend/application lifecycle operations are:
 
-- `browse`, `search`, `export`, `import`, `rename`, `delete` (with
-  destructive safeguards).
+- `browse`, `export`, `import`, `rename`, `delete` (with destructive
+  safeguards).
+- `search` is deferred to the accepted bucket-search ADR and must route through
+  domain repositories rather than scanning secure-object ciphertext directly.
 
 Bucket semantics, identity, and the relationship between bucket and active
-profile are restated in §2.
+profile are restated in §2. Future operator exposure must use profile-named
+vocabulary and consume the application service.
 
-#### 3.5 `aeat config bucket history` (locked)
+#### 3.5 `aeat config profile history PROFILE` (locked)
 
 Append-only event history view per bucket-event-history ADR. Verbs:
 
@@ -551,7 +558,7 @@ Migration mapping:
 
 Overview commands are read-only and emit no bucket events for normal reads.
 They summarize recent material events using the bucket-event-history fields,
-while full event browsing stays at `aeat config bucket history`.
+while full event browsing stays at `aeat config profile history PROFILE`.
 `overview status` and `overview backlog` may summarize review counts and point
 to `aeat app review queue`, but they do not own review queue rows or review
 mutations.
@@ -887,8 +894,9 @@ The retirement decisions below are design-locked by the ledger + modelo ADRs.
   workflows; match becomes ledger check/reconcile workflow. Business-
   operation invoice objects (`payable_invoice`, `collectible_invoice`) are
   modelo inputs, not a standalone `app invoice` surface.
-- `aeat app archive` — moved to `aeat config bucket` (browse, search,
-  export, import, rename, delete).
+- `aeat app archive` — retired. Browse/export/import/rename/delete remain
+  backend/application bucket-maintenance lifecycle operations; search remains a
+  bucket-search ADR follow-up.
 
 ### 5. Per-modelo requirements
 
@@ -1011,9 +1019,9 @@ explicitly adopted or retired.
   backlog`) — **adopted as `aeat app overview`**. `status show` becomes
   `app overview status`; the daily-status view becomes `app overview agenda`;
   `backlog show/scaffold` becomes read-only `app overview backlog`;
-  `history` is satisfied by `app modelo history` plus `config bucket
-  history`; `resume` becomes `app modelo work resume <workflow_run_id>` per the
-  workflow-resumption-semantics ADR.
+  `history` is satisfied by `app modelo history` plus
+  `config profile history PROFILE`; `resume` becomes
+  `app modelo work resume <workflow_run_id>` per the workflow-resumption-semantics ADR.
 - **`compare` family** (`compare show / explain / fix / verify`,
   `ComparisonCase`) — **retired**. Reconciliation (the underlying
   question "does my draft agree with AEAT's record?") is served by `aeat
@@ -1225,9 +1233,10 @@ implementation reflects the apex contract:
 - **`app declaration` retirement** — `_declaration.py` registered at
   `entrypoints/cli/__init__.py:165` must be removed; behavior folds into
   `app modelo` per the app-modelo-shape ADR.
-- **`app archive` relocation** — `_archive.py` registered at
-  `entrypoints/cli/__init__.py:169` must move from `app archive` to
-  `config bucket` per the bucket ADR.
+- **`app archive` retirement** — `_archive.py` registered at
+  `entrypoints/cli/__init__.py:169` must be removed from operator UX.
+  Export/import/browse are backend bucket-maintenance service operations until
+  a profile-named operator surface is accepted.
 - **`app topic` retirement** — `_topic_module` registered at
   `entrypoints/cli/__init__.py:170` must be removed; help content folds
   into inline command help and `app registry citations` / `manuals` per
@@ -1381,7 +1390,7 @@ suggestion, not a silent acceptance):
 - `aeat setup` → suggest `aeat config init` / `aeat config profile`
 - `aeat status` → suggest `aeat app overview status`
 - `aeat sanitize` → suggest `aeat app ledger check`
-- `aeat archive` → suggest `aeat config bucket`
+- `aeat archive` → reject with "archive is retired; use profile-named workflows"
 - `aeat submit` → reject with "live submission is permanently disabled"
 
 ### 11. Cross-references and conventions
@@ -1649,7 +1658,7 @@ amendments to the affected child ADR.
 | R05 | `aeat config profile` ships 5 of 13 locked verbs (`list/get/set/unset/status`); missing `add/remove/edit/show/duplicate/export/import/validate/preflight` + `use` alias | config-cli-profile-surface ADR, config-profile-use-and-status ADR, W10, W19 | Evolution — adopt key-value-as-record exception for value editing (`set/get/unset` ratified); add profile-lifecycle CRUD (`add/remove/update/view/list` for profile *records*) and the `use` alias | `W74` |
 | R06 | `aeat config auth apoderado` subgroup entirely absent; `--scope` catalogue absent | apoderamientos-surface ADR, apoderado-scope-vocabulary ADR, W20, W21 | Regression — ship full subgroup; ship `registry/aeat/apoderamientos/scopes.toml` | `W75` |
 | R07 | `aeat app ledger inventory` Typer mount absent; `application/inventory` layer absent; domain layer exists | inventory-management-cli-design ADR, inventory-placement ADR, W24, W25 | Regression — wire application service + Typer mount; reconcile verbs to W71 contract | `W76` |
-| R08 | `aeat app ledger ratios` and `aeat config bucket` ship partial verb sets vs locked grammar | app-ledger-ratios-shape ADR, bucket ADR, W13, W26 | Evolution — ratios are key-value records (apply exception); bucket maintenance verbs (`browse/search/export/import/rename/delete`) are lifecycle operations, not CRUD (document explicitly) | `W77` |
+| R08 | `aeat app ledger ratios` and the historically locked `aeat config bucket` shape shipped partial verb sets vs locked grammar | app-ledger-ratios-shape ADR, bucket ADR, W13, W26 | Evolution — ratios are key-value records (apply exception); bucket maintenance verbs (`browse/search/export/import/rename/delete`) are lifecycle operations, not CRUD (document explicitly); operator `config bucket` is retired | `W77` |
 | R09 | `aeat app modelo file --by ACTOR` mandatory; ADR specifies optional with default = active profile display_name | actor-attribution ADR, W44 | Regression — change Typer Option to optional with default factory | `W78` |
 | R10 | `aeat app modelo discard` exists but `modelo.work_unit.discarded` is not a `BucketEventType` enum member and is never emitted | app-modelo-discard ADR, bucket-event-history ADR, W45 | Regression — add enum entry; emit event in `discard_work_unit` action | `W78` |
 | R11 | `aeat app modelo calculate --borrador SNAPSHOT_ID` flag absent | borrador-100-binding-integration ADR, W48 | Regression — wire borrador-100 binding integration per ADR | `W78` |
@@ -1685,7 +1694,7 @@ second direct preflight policy path.
 | `W74` — profile noun-group | §3.2 | `config-cli-profile-surface`, `config-profile-use-and-status` | Closes R05 |
 | `W75` — apoderado noun-group | §3.3 | `apoderamientos-surface`, `apoderado-scope-vocabulary` | Closes R06 |
 | `W76` — inventory noun-group | §4.2 | `inventory-management-cli-design`, `inventory-placement` | Closes R07 |
-| `W77` — ratios + bucket noun-groups | §3.4, §4.2 | `app-ledger-ratios-shape`, `bucket` | Closes R08 |
+| `W77` — ratios + bucket lifecycle services | §3.4, §4.2 | `app-ledger-ratios-shape`, `bucket` | Closes R08 service scope; search deferred by bucket-search ADR |
 | `W78` — modelo lifecycle drift fixes | §4.3 | `actor-attribution`, `app-modelo-discard`, `borrador-100-binding-integration` | Closes R09, R10, R11 |
 | `W79` — app live shape completion | §4.4 | `app-live-shape`, `domain-portals-harvest` | Closes R12, R13 |
 | `W80` — workflow + preflight + resume wiring | §4.3, §8 | `workflow-engine-harvest`, `workflow-resumption-semantics` | Closes R14, R15, R16 |
@@ -1854,9 +1863,9 @@ against.
 | `rename` | ✅ landed | Delegates to top-level `rename_profile`; emits `BUCKET_RENAMED` alongside the inner `PROFILE_RENAMED`. |
 | `delete` | ✅ landed | Composes `delete_profile_with_lifecycle_span` + `remove_profile_bucket_directory`; service-side `confirmed=True` + active-bucket refusals. |
 | `browse` | ✅ landed | Namespace-level inventory via `SecureObjectRepository.list_namespaces` + per-namespace `list_keys`. Key-level browse with `SensitivityClass` redaction is a follow-up. |
-| `export` | ⏳ pending | Composes `serialize_profile_bundle` + `ExportArchiveHeader`. Sealed-archive write is the remaining new code. |
-| `import` | ⏳ pending | Composes sealed-archive parse + two-tier collision guard + `deserialize_profile_bundle`. |
-| `search` | 🔍 scoped | Search scoping decided in `[[2026-06-03-bucket-search-adr]]`: per-domain repository dispatch via a closed `BucketSearchScope` enum, recency-first ranking MVP. |
+| `export` | ✅ landed | Composes `serialize_profile_bundle`, `ExportArchiveHeader`, sealed-archive writer, active bucket DEK or recovery passphrase wrap, and emits `BUCKET_EXPORTED`. |
+| `import` | ✅ landed | Composes sealed-archive parse, schema/collision/passphrase guards, bucket provisioning, `deserialize_profile_bundle`, and emits `BUCKET_IMPORTED`. |
+| `search` | 🔍 deferred | Search scoping is owned by the accepted bucket-search ADR: per-domain repository dispatch via a closed `BucketSearchScope` enum, recency-first ranking MVP. It is not part of W77 service closure. |
 
 Bucket maintenance verbs are intentionally lifecycle operations, not
 CRUD, per W71's contract — the `browse` / `search` axes are key-value
@@ -1867,25 +1876,45 @@ events `BUCKET_RENAMED` / `BUCKET_DELETED` / `BUCKET_EXPORTED` /
 events the inner primitives emit; two-event co-emission per operator
 action is the audit shape.
 
-### CLI mount deferred
+### CLI mount retired
 
-Mounting the three operational verbs (`rename`, `delete`, `browse`)
-under `aeat config bucket` requires editing
-`src/aeat/entrypoints/cli/_config/__init__.py` (Step `W77.P374.S2150`).
-That file has been under peer-WIP throughout the composition-pattern
-landing, so the mount stays deferred until the file settles. The
-pre-landing pin
-`test_bucket_app_verb_roster_pins_pre_s2150_state` fires the moment
-the mount lands, forcing an explicit roster update.
+The older `aeat config bucket` mount requested by `W77.P374.S2150` is
+superseded by the 2026-06-10 operator-surface decision. The command group is
+retired and must not be restored. `BucketMaintenanceService` remains the
+backend/application owner for storage lifecycle operations; any future operator
+surface must use profile-named vocabulary and keep the CLI as a service
+consumer.
 
 ### R08 closure target
 
-R08 closes when the remaining three verbs ship (`export`, `import`,
-`search`) AND the CLI mount lands AND the child ADRs
-(`app-ledger-ratios-shape`, bucket ADR) carry the composition-pattern
-amendment named in `W77.P374.S2153`. The progression above is not a
-closure claim — it is an honest inventory recording the partial
-landing per the campaign-close honesty-review discipline.
+R08 closes when the ledger ratios key-value exception is documented, the
+bucket-maintenance service owns the verified lifecycle operations
+(`browse`, `export`, `import`, `rename`, `delete`), the old `config bucket`
+operator mount is retired, and the child ADRs carry the composition-pattern
+amendment named in `W77.P374.S2153`. Search is deferred to the accepted
+bucket-search ADR and no longer blocks W77.
+
+## 2026-06-12 amendment - `config bucket` operator surface superseded
+
+The 2026-06-10 operator-surface ADR supersedes the older `aeat config
+bucket` operator mount. The command group is retired and must not be
+reintroduced by W77 closeout work. The accepted operator-facing history
+surface is `aeat config profile history PROFILE`; it resolves the supplied
+profile through the workflow/profile registry and uses the immutable bucket id
+only inside the application/domain event-history read. The stable JSON envelope
+token remains `config.bucket.history` as a machine-API carve-out, not as an
+operator-facing spelling.
+
+This supersedes the literal `bucket_app` mount requested by
+`W77.P374.S2150`. Bucket-maintenance service verbs (`rename`, `delete`,
+`browse`, `export`, `import`) remain backend/application lifecycle operations.
+They should not be exposed through `aeat config bucket`; any future operator
+surface for those operations needs a fresh profile-named design rather than
+resurrecting the retired storage noun.
+
+R08 is closed for W77 after export/import landed and the retired mount was
+recorded. Search remains a separate bucket-search follow-up rather than a W77
+closure blocker.
 
 ## 2026-06-03 amendment — full R-row refresh from ground-truth audit
 
@@ -1902,7 +1931,7 @@ state.
 | R02 | reopened | ✅ closed | `aeat app modelo reconcile` at `src/aeat/entrypoints/cli/_modelo.py:4739` + coverage in `test_modelo_reconcile_verb.py` |
 | R03 | reopened | ✅ closed | `link` / `check` / `preflight` at `src/aeat/entrypoints/cli/_ledger.py:1226` / `:1372` / `:1481` + coverage |
 | R05 | partial | ✅ closed | `PROFILE_EXPORTED` emission at `_config/__init__.py:1623`, `PROFILE_IMPORTED` at `:1794`, `PROFILE_ACTIVATED` at `_orchestration.py:277` and `:291` |
-| R08 | reopened | 🔄 partial (3/6 verbs) | `BucketMaintenanceService` at `_service.py:49`; rename + delete + browse operational, export + import + search pending. See R08 progression amendment above. |
+| R08 | reopened | ✅ closed | `BucketMaintenanceService` at `_service.py:49`; rename + delete + browse + export + import operational; search deferred by bucket-search ADR; retired `config bucket` mount recorded. See R08 progression amendment above. |
 | R14 | partial | ✅ closed | `WorkflowResult.resumed_from` at `_models.py:484` + engine propagation at `_engine.py:254-429` |
 | R17 | partial | ✅ closed | overview `calendar` / `agenda` / `backlog` / `explain` verbs at `_overview.py:109` / `:336` / `:431` / `:509` |
 | R18 | partial | ✅ closed | `next_due` field at `_agenda.py:76` + computation at `:138-158` + test gate `test_agenda_next_due_is_earliest_future_or_today_deadline` |

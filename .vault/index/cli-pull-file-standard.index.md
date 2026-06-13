@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-pull-file-standard'
-date: '2026-06-11'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-cli-pull-file-standard-adr]]'
   - '[[2026-06-10-cli-pull-file-standard-plan]]'

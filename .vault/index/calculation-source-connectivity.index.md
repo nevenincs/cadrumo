@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-source-connectivity'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-20-calculation-source-connectivity-W02-P04-S24]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'

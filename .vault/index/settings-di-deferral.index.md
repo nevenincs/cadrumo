@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#settings-di-deferral'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-settings-di-deferral-adr]]'
   - '[[2026-06-04-settings-di-deferral-research]]'

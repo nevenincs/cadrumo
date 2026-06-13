@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-test-oracle-discipline'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
   - '[[2026-06-01-calculation-test-oracle-discipline-research]]'

@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#operator-testimonial'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-19-operator-blind-dual-testimony-audit]]'
   - '[[2026-05-19-operator-blind-fumbler-testimony-audit]]'

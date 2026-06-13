@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-enum-hardening'
-date: '2026-06-10'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
   - '[[2026-06-10-modelo-enum-hardening-audit]]'

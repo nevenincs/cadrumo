@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#identity-primitives'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-30-identity-primitives-W01-P01-S01]]'
   - '[[2026-05-30-identity-primitives-W01-P01-S02]]'

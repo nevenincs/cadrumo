@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-wireframe'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-04-24-aeat-cli-wireframe-adr]]'
   - '[[2026-04-24-aeat-cli-wireframe-reference]]'

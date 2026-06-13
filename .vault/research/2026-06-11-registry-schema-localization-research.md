@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#registry-schema-localization'
 date: '2026-06-11'
+modified: '2026-06-11'
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
 ---
@@ -159,11 +160,24 @@ Verified commands:
 
 During the M100 CLI batch, the registry package public import contract was found inconsistent: `registry.__init__` still expected `parse_modelo_period`, while `_queries.py` no longer exposed it. The helper and public re-export were restored so `from aeat.domain.calculations.registry import parse_modelo_period` works and the locale CLI remains importable.
 
+## 2026-06-12 M100 closeout progress
+
+The M100 `2024` translation campaign has advanced through present keys up to `1856` in `en`, `ca`, and `hu`. The current closeout verified the dirty Catalan and English shards as already complete for that boundary and filled the remaining Hungarian help placeholders `1838` through `1856` with `python -m aeat.locales modelo set`.
+
+Verified commands:
+
+- `uv run --no-sync python -m aeat.locales modelo coverage ca 100 2024` -> `locale=ca modelo=100 revision=2024 etiquetas=1797/2068 ayuda=1797/2068`.
+- `uv run --no-sync python -m aeat.locales modelo coverage en 100 2024` -> `locale=en modelo=100 revision=2024 etiquetas=1797/2068 ayuda=1797/2068`.
+- `uv run --no-sync python -m aeat.locales modelo coverage hu 100 2024` -> `locale=hu modelo=100 revision=2024 etiquetas=1797/2068 ayuda=1797/2068`.
+- Structured placeholder scans over present casillas `0750` through `1856` found no remaining placeholder labels or help in `en`, `ca`, or `hu`.
+
+The full M100 `2024` campaign remains incomplete. The next untranslated placeholder boundary starts at `1857`; later placeholders continue through `2148` and `DPFNAC_D`.
+
 ## Remaining campaigns
 
 Prioritize work in this order:
 
-1. M100 `2024`: continue after completed casilla `0749`, from `labels=718/2068 help=718/2068` per locale. The scaffold still exposes 1350 untranslated label/help leaves per locale, so work should continue by registry section or source grouping.
+1. M100 `2024`: continue after completed casilla `1856`, from `labels=1797/2068 help=1797/2068` per locale. The scaffold still exposes 271 untranslated label/help leaves per locale, so work should continue by registry section or source grouping.
 2. M200 `2024-y-siguientes`: continue from the two translated seeded leaves per locale. The scaffold exposes 3232 label/help leaves per locale, so this should be planned as a separate large-model translation campaign.
 3. New modelo/revision enrollment: run `coverage`, then `scaffold`, then translate with `set`, and finish with `coverage` evidence. Do not create Spanish schema-local TOML as part of routine enrollment.
 

@@ -3,27 +3,14 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-adr]]"
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace calculation-correctness-campaign with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 
 # `calculation-correctness-campaign` audit: `calculation-correctness campaign close honesty review`

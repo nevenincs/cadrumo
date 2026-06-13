@@ -3,32 +3,14 @@ tags:
   - '#exec'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
+modified: '2026-06-13'
 step_id: 'S13'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace m303-form-vs-semantic-casilla-dual-keying with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-     step_id is the originating Step's canonical identifier, e.g. S01.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar-plan]]' and link the
-     parent plan.
 
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path. -->
 
 # Author the ten single-leaf projection FormulaDefinition blocks (modelo-303-dr303-NN-projection for boxes 09/06/03/11/13/27/29/33/37/45) in revision.toml, each with target the box id, an expression that is the one semantic casilla-id leaf, money-2 rounding, and the box legal_refs
 

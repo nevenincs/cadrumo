@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
+modified: '2026-05-13'
 tier: L4
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
@@ -859,7 +860,7 @@ This Phase delivers thin cli exposure for profile scoped storage bucket as requi
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` decision for bucket event history ledger. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
-> **Completion note.** Append-only bucket event store lives at `src/aeat/domain/buckets/` (`BucketEvent`, `BucketEventType`, `BucketEventObjectType`, `BucketEventHistoryCatalogue`, `BucketEventHistoryRepository`, `derive_bucket_event_id`, `append_bucket_event`). Encrypted SQL persistence over `SecureObjectRepository` namespace `aeat.domain.buckets.event_history` (FINANCIAL classification). The closed `BucketEventType` enum currently covers the modelo lifecycle families: `MODELO_CALCULATION_CREATED`, `MODELO_VERIFICATION_PASSED`, `MODELO_VERIFICATION_REFUSED`, `MODELO_FILED`, `MODELO_FILED_SUPERSEDED`, `MODELO_AMENDED`, `MODELO_FILING_IMPORTED`. Emission helper `_emit_bucket_event` at `src/aeat/application/modelo/_actions.py` is consumed by calculate / verify / file / amend / import. CLI surface `aeat config bucket history BUCKET_ID [--event-type ...]` at `src/aeat/entrypoints/cli/_config.py`. Per-service emitters for non-modelo families (transactions, invoices, rental, profile, auth, review queue, live-read snapshot capture) land with their owning waves; their enum additions extend `BucketEventType` as those waves close.
+> **Completion note.** Append-only bucket event store lives at `src/aeat/domain/buckets/` (`BucketEvent`, `BucketEventType`, `BucketEventObjectType`, `BucketEventHistoryCatalogue`, `BucketEventHistoryRepository`, `derive_bucket_event_id`, `append_bucket_event`). Encrypted SQL persistence over `SecureObjectRepository` namespace `aeat.domain.buckets.event_history` (FINANCIAL classification). The closed `BucketEventType` enum currently covers the modelo lifecycle families: `MODELO_CALCULATION_CREATED`, `MODELO_VERIFICATION_PASSED`, `MODELO_VERIFICATION_REFUSED`, `MODELO_FILED`, `MODELO_FILED_SUPERSEDED`, `MODELO_AMENDED`, `MODELO_FILING_IMPORTED`. Emission helper `_emit_bucket_event` at `src/aeat/application/modelo/_actions.py` is consumed by calculate / verify / file / amend / import. The retired bucket-history CLI spelling is superseded by `aeat config profile history PROFILE [--event-type ...]` at `src/aeat/entrypoints/cli/_config/_bucket_history.py`; the JSON token remains `config.bucket.history` as a machine API. Per-service emitters for non-modelo families (transactions, invoices, rental, profile, auth, review queue, live-read snapshot capture) land with their owning waves; their enum additions extend `BucketEventType` as those waves close.
 
 ### Phase `W14.P066` - backend implementation
 
@@ -881,7 +882,7 @@ This Phase delivers shadow duplicate removal for bucket event history ledger as 
 - [x] `W14.P067.S0399` - Remove stale aliases that bypass the canonical service for bucket event history ledger (No prior CLI alias existed.); `src/aeat/entrypoints/cli`.
 - [x] `W14.P067.S0400` - Migrate internal callers to the canonical service for bucket event history ledger (calculate / verify / file now emit via the canonical repository.); `src/aeat/adapters/persistence`.
 - [x] `W14.P067.S0401` - Remove stale fixtures and tests that encode duplicate behavior for bucket event history ledger (The in-memory fakes in `test_file_flow.py` are removed - every test now uses the encrypted SQL repositories end-to-end.); `tests/adapters/persistence`.
-- [x] `W14.P067.S0402` - Update boundary inventory entries that describe duplicate behavior for bucket event history ledger (No prior CLI entry existed - the new `aeat config bucket history` verb is the first.); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W14.P067.S0402` - Update boundary inventory entries that describe duplicate behavior for bucket event history ledger (the retired `aeat config bucket history` spelling is superseded by `aeat config profile history PROFILE`; `the machine JSON token remains `config.bucket.history`); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W14.P068` - de-shim and de-stub cleanup
 
@@ -890,7 +891,7 @@ This Phase delivers de-shim and de-stub cleanup for bucket event history ledger 
 - [x] `W14.P068.S0403` - Delete compatibility shims that preserve rejected behavior for bucket event history ledger (No compatibility shims introduced.); `src/aeat/adapters/persistence`.
 - [x] `W14.P068.S0404` - Delete placeholder stubs that claim support for bucket event history ledger (No stubs - the closed `BucketEventType` enum reserves emission names for future emitters, only modelo families have emitters yet, but every enum value maps to an ADR-sanctioned future wave.); `src/aeat/adapters/persistence`.
 - [x] `W14.P068.S0405` - Replace stubbed paths with real backend service calls for bucket event history ledger (modelo lifecycle services emit through the real encrypted repository.); `src/aeat/adapters/persistence`.
-- [x] `W14.P068.S0406` - Remove deprecated command spelling and help text for bucket event history ledger (No deprecated spelling - `aeat config bucket history` is the first surface.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P068.S0406` - Remove deprecated command spelling and help text for bucket event history ledger (the accepted operator spelling is now `aeat config profile history PROFILE`; `aeat config bucket history` is retired); `src/aeat/entrypoints/cli`.
 - [x] `W14.P068.S0407` - Remove tests that assert shim or stub behavior for bucket event history ledger (All file-flow tests dropped in-memory fakes in favour of the `repos` fixture over encrypted SQLite.); `tests/adapters/persistence`.
 - [x] `W14.P068.S0408` - Record the removed shim and stub surfaces for bucket event history ledger (No prior shim or stub existed.); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
@@ -909,7 +910,7 @@ This Phase delivers real behavior verification for bucket event history ledger a
 
 This Phase delivers thin cli exposure for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [x] `W14.P070.S0415` - Expose accepted command handlers for bucket event history ledger under `aeat config` or `aeat app` (`aeat config bucket history BUCKET_ID [--event-type ...]` lives at `src/aeat/entrypoints/cli/_config.py`.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P070.S0415` - Expose accepted command handlers for bucket event history ledger under `aeat config` or `aeat app` (`aeat config profile history PROFILE [--event-type ...]` lives at `src/aeat/entrypoints/cli/_config/_bucket_history.py`; `config.bucket.history` is retained only as a JSON token).; `src/aeat/entrypoints/cli`.
 - [x] `W14.P070.S0416` - Keep argument parsing for bucket event history ledger separate from backend behavior (CLI parses `--event-type` strings into the closed `BucketEventType` enum, backend takes typed enum tuples.); `src/aeat/entrypoints/cli`.
 - [x] `W14.P070.S0417` - Delegate bucket event history ledger execution to centralized backend services (CLI calls `BucketEventHistoryRepository().load().for_bucket(...)`, no business logic at entrypoint.); `src/aeat/entrypoints/cli`.
 - [x] `W14.P070.S0418` - Render bucket event history ledger results with `_emit` or schema emitters (`_emit(ctx, payload, lines)` produces text + JSON output.); `src/aeat/entrypoints/cli`.
@@ -4392,8 +4393,8 @@ Ratify ratios verbs and implement BucketMaintenanceService.
 
 - [x] `W77.P370.S2129` - Read the app-ledger-ratios-shape, bucket, and ledger-ratios-eligible-and-validate ADRs; `.vault/adr`.
 - [x] `W77.P370.S2130` - Ratify aeat app ledger ratios list set unset as canonical key-value-exception verbs per W71 and add eligible and validate per the 2026-05-13 ADR extension; `src/aeat/application/ledger`.
-- [ ] `W77.P370.S2131` - Implement BucketMaintenanceService with verbs browse, search, export, import, rename, delete documented as lifecycle operations; `src/aeat/application`.
-- [ ] `W77.P370.S2132` - Add Pydantic command and result contracts and ensure destructive operations require explicit yes flag; `src/aeat/application`.
+- [x] `W77.P370.S2131` - Implement BucketMaintenanceService with browse, export, import, rename, and delete documented as lifecycle operations, and record search as deferred to the bucket-search ADR rather than a storage-wide scan; `src/aeat/application`.
+- [x] `W77.P370.S2132` - Add Pydantic command and result contracts and ensure destructive operations require explicit yes/confirmed flag at the service boundary; `src/aeat/application`.
 - [x] `W77.P370.S2133` - Add bucket.exported, bucket.imported, bucket.renamed, bucket.deleted enum members; `src/aeat/domain/buckets`.
 
 ### Phase `W77.P371` - shadow duplicate removal
@@ -4401,7 +4402,7 @@ Ratify ratios verbs and implement BucketMaintenanceService.
 Retire archive root and audit bucket app for gaps.
 
 - [x] `W77.P371.S2134` - Confirm aeat archive root retirement per apex §1 fold-under; `src/aeat/entrypoints/cli`.
-- [x] `W77.P371.S2135` - Audit _config bucket app for verb gaps; `src/aeat/entrypoints/cli/_config`.
+- [x] `W77.P371.S2135` - Audit the superseded _config bucket app/mount for retirement and verify bucket-maintenance verbs stay backend/application lifecycle operations; `src/aeat/entrypoints/cli/_config`.
 - [x] `W77.P371.S2136` - Migrate any legacy archive or browse callers to BucketMaintenanceService; `src/aeat/application`.
 - [x] `W77.P371.S2137` - Remove stale tests; `tests/entrypoints/cli`.
 - [x] `W77.P371.S2138` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
@@ -4421,8 +4422,8 @@ Wire events and reject retired roots.
 Test ratios, bucket maintenance, and destructive-action safeguards.
 
 - [x] `W77.P373.S2144` - Add service-contract tests for ledger ratios covering list, set, unset, eligible, validate; `tests/application/ledger`.
-- [ ] `W77.P373.S2145` - Add service-contract tests for BucketMaintenanceService; `tests/application`.
-- [x] `W77.P373.S2146` - Add CLI surface tests for aeat app ledger ratios and aeat config bucket maintenance verbs; `tests/entrypoints/cli`.
+- [x] `W77.P373.S2145` - Add service-contract tests for BucketMaintenanceService; `tests/application`.
+- [x] `W77.P373.S2146` - Add CLI surface tests for aeat app ledger ratios and verify the superseded aeat config bucket maintenance mount remains retired; `tests/entrypoints/cli`.
 - [x] `W77.P373.S2147` - Add destructive-action safeguard tests asserting delete refuses without explicit yes; `tests/entrypoints/cli`.
 - [x] `W77.P373.S2148` - Run the W71 contract-conformance harness with key-value-exception and lifecycle-state-verb annotations; `tests/entrypoints/cli`.
 
@@ -4431,10 +4432,10 @@ Test ratios, bucket maintenance, and destructive-action safeguards.
 Register ratios and bucket maintenance verbs and update apex.
 
 - [x] `W77.P374.S2149` - Register ratios_app under ledger_app and add eligible and validate verbs; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W77.P374.S2150` - Register browse, search, export, import, rename, delete verbs under bucket_app; `src/aeat/entrypoints/cli/_config`.
+- [x] `W77.P374.S2150` - Reconcile the superseded bucket_app mount: keep aeat config bucket retired, keep event history under aeat config profile history, and record that bucket-maintenance service verbs are backend/application lifecycle operations until a future profile-named operator surface is explicitly accepted; `src/aeat/entrypoints/cli/_config`.
 - [x] `W77.P374.S2151` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W77.P374.S2152` - Update apex ADR §3.4 and §4.2 to document the dual annotation and mark R08 closed by W77; `.vault/adr`.
-- [ ] `W77.P374.S2153` - Amend app-ledger-ratios-shape and bucket child ADRs; `.vault/adr`.
+- [x] `W77.P374.S2152` - Update apex ADR §3.4 and §4.2 to document ratios as a key-value exception, bucket maintenance as backend/application lifecycle services, search as deferred, and mark R08 closed by W77; `.vault/adr`.
+- [x] `W77.P374.S2153` - Amend app-ledger-ratios-shape and bucket child ADRs; `.vault/adr`.
 
 ## Wave `W78` - Reconciliation: modelo lifecycle drift fixes
 
@@ -4477,7 +4478,7 @@ Test actor defaults, discard event, borrador snapshot consumption.
 - [x] `W78.P378.S2169` - Add tests asserting by-actor defaults to active profile display_name and is overridable; `tests/entrypoints/cli`.
 - [x] `W78.P378.S2170` - Add tests asserting modelo.work_unit.discarded event is emitted on every discard with actor and reason payload; `tests/application/modelo`.
 - [x] `W78.P378.S2171` - Add tests asserting calculate borrador-snapshot-id consumes the snapshot, records source trace per casilla, and refuses missing snapshots; `tests/application/modelo`.
-- [x] `W78.P378.S2172` - Add bucket-event-history surfacing test confirming discarded work units appear in aeat config bucket history filtered output; `tests/entrypoints/cli`.
+- [x] `W78.P378.S2172` - Add bucket-event-history surfacing test confirming discarded work units appear in aeat config profile history filtered output; `tests/entrypoints/cli`.
 - [x] `W78.P378.S2173` - Run end-to-end app live borrador 100 fetch then modelo calculate then verify then file asserting the source-trace is preserved through the lifecycle; `tests`.
 
 ### Phase `W78.P379` - thin cli exposure
@@ -4716,7 +4717,7 @@ Build the atomic initialize_workspace service and wire events.
 
 - [x] `W83.P400.S2279` - Read the config-init-shape and aeat-cli-config-vs-setup-namespace ADRs; `.vault/adr`.
 - [x] `W83.P400.S2280` - Implement application setup service exposing initialize_workspace that atomically creates first bucket, profile record, active selection, validates readiness, runs internal setup-state migration; `src/aeat/application/setup`.
-- [ ] `W83.P400.S2281` - Wire emission of bucket.created, profile.created, profile.activated, profile.updated, auth.provider.configured, optional config.env.updated, setup.state.migrated events; `src/aeat/application/setup`.
+- [x] `W83.P400.S2281` - Wire emission of bucket.created, profile.created, profile.activated, profile.updated, auth.provider.configured, optional config.env.updated, setup.state.migrated events; `src/aeat/application/setup`.
 - [x] `W83.P400.S2282` - Salvage typed answers, prompter abstraction, verifier checks from SetupWizard per apex §8 - the wizard command surface is retired in favor of the atomic service; `src/aeat/application/setup`.
 - [x] `W83.P400.S2283` - Close the aeat config auth setup orphan reference W11 P051 blocker by either shipping the verb or removing the diagnostic next-action that points at it; `src/aeat/application/config`.
 
