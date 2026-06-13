@@ -10,6 +10,7 @@ import typer
 
 from ...core import Period, PeriodError
 from ...core.i18n import tr
+from ._app_live_auth_preflight import run_auth_preflight
 from ._common import _emit_envelope
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -45,12 +46,6 @@ def _bucket_id() -> str:
     return _active_bucket_id()
 
 
-def _run_auth_preflight() -> None:
-    if _auth_preflight is None:
-        raise RuntimeError("live justificante commands were not registered")
-    _auth_preflight()
-
-
 def _period_option(period: str, *, year: int) -> Period:
     try:
         return Period.from_year_and_code(year, period)
@@ -82,7 +77,7 @@ def justificante_pull(
     from ._app_live_payloads import JustificanteCaptureResult
 
     bucket_id = _bucket_id()
-    _run_auth_preflight()
+    run_auth_preflight(_auth_preflight, family="justificante")
     outcome = asyncio.run(
         capture_justificante_snapshot_outcome(
             bucket_id=bucket_id,

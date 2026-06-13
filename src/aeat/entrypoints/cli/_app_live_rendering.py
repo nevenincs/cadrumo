@@ -10,12 +10,9 @@ from ...application.live import (
     FiledDataCaptureReport,
     SourceFiledDataCaptureReport,
 )
+from ._app_live_auth_preflight import _metric_line
 
 type FiledCaptureReport = FiledDataCaptureReport | BulkFiledDataCaptureReport | SourceFiledDataCaptureReport
-
-
-def _metric_line(key: str, value: object) -> str:
-    return f"{key}={value}"
 
 
 def _filed_capture_lines(
