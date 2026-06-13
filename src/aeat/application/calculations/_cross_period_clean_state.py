@@ -403,7 +403,12 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
     @property
     def suppressed_pre_activity_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
-        """Return dependencies scoped out as no-prior-obligation pre-activity."""
+        """Return dependencies scoped out as no-prior-obligation pre-activity.
+
+        Returns:
+            The :class:`CrossPeriodDependencyEvidence` entries suppressed as
+            pre-activity.
+        """
         return tuple(item for item in self.dependencies if item.suppressed_pre_activity)
 
     @property
@@ -752,6 +757,10 @@ def _aeat_register_provenance_blockers(
     blockers: list[CrossPeriodCleanStateBlocker] = []
     register_status = metadata.get("aeat_register_status", "").strip().upper()
     if not register_status or register_status != "ALTA":
+        blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
+
+    expediente_id = metadata.get("aeat_expediente_id", "").strip()
+    if not expediente_id:
         blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
 
     authenticated_identity = metadata.get("authenticated_identity", "").strip().upper()
