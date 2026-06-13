@@ -177,7 +177,11 @@ def resolve_previous_filing_binding_values(
         values = _resolve_binding_values(binding, available, filing_year=filing_year, period=period)
         if values is None:
             continue
-        resolved[binding.id] = _aggregate_previous_filing_binding(binding, values)
+        resolved[binding.id] = _aggregate_previous_filing_binding(
+            binding,
+            values,
+            source_casillas=_previous_filing_source_ids(_previous_filing_selector(binding)),
+        )
     return resolved
 
 
@@ -196,6 +200,7 @@ class _PreviousModeloSelector(BaseModel):
     period: str | None = Field(default=None, min_length=1, max_length=8)
     source_periods: tuple[str, ...] = ()
     source_period_offset_from_target: int | None = None
+    prior_quarter_expanding_span: bool = False
     source_casillas: tuple[str, ...] = ()
     source_output: str | None = Field(default=None, min_length=1)
     max_year_delta: int | None = None
@@ -225,8 +230,10 @@ class _PreviousModeloSelector(BaseModel):
         return tuple(period for _year_delta, period in self.required_period_anchors_for_target(target_period))
 
     def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
-        if self.source_period_offset_from_target is None:
-            anchors: tuple[tuple[int, str], ...] = tuple((0, period) for period in self.required_periods)
+        if self.prior_quarter_expanding_span:
+            anchors: tuple[tuple[int, str], ...] = _prior_quarter_expanding_span_anchors(target_period)
+        elif self.source_period_offset_from_target is None:
+            anchors = tuple((0, period) for period in self.required_periods)
         else:
             anchors = (
                 _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period),
@@ -251,6 +258,15 @@ class _PreviousModeloSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_period_selector(self) -> _PreviousModeloSelector:
+        if self.prior_quarter_expanding_span and (
+            self.period is not None
+            or self.source_periods
+            or self.source_period_offset_from_target is not None
+        ):
+            raise RegistryValidationError(
+                "previous-filing prior_quarter_expanding_span is mutually exclusive with "
+                "period, source_periods, and source_period_offset_from_target",
+            )
         if self.source_period_offset_from_target is not None:
             if self.period is not None or self.source_periods:
                 raise RegistryValidationError(
@@ -265,10 +281,12 @@ class _PreviousModeloSelector(BaseModel):
             self.period is None
             and not self.source_periods
             and self.source_period_offset_from_target is None
+            and not self.prior_quarter_expanding_span
             and self.source_casillas
         ):
             raise RegistryValidationError(
-                "previous-filing selector must declare period, source_periods, or source_period_offset_from_target",
+                "previous-filing selector must declare period, source_periods, "
+                "source_period_offset_from_target, or prior_quarter_expanding_span",
             )
         return self
 
@@ -314,12 +332,84 @@ def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[in
         ) from exc
 
 
-def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:
-    op = str((binding.aggregation or {}).get("op", "sum"))
+_QUARTER_ORDINAL: dict[str, int] = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}
+_ORDINAL_QUARTER: dict[int, str] = {ordinal: code for code, ordinal in _QUARTER_ORDINAL.items()}
+
+
+def _prior_quarter_expanding_span_anchors(target_period: str) -> tuple[tuple[int, str], ...]:
+    """Enumerate the same-ejercicio quarters strictly preceding ``target_period``.
+
+    Models the AEAT Modelo 130 casilla-05 ``trimestres anteriores del mismo
+    ejercicio`` span: ``1T`` yields the empty span (no prior quarter within the
+    ejercicio, absent-by-design), ``2T`` yields ``{1T}``, ``3T`` yields
+    ``{1T, 2T}``, and ``4T`` yields ``{1T, 2T, 3T}``. Every anchor carries
+    ``year_delta = 0`` because the span never reaches across the ejercicio
+    boundary (paired with ``max_year_delta = 0`` on the binding).
+    """
+    ordinal = _QUARTER_ORDINAL.get(target_period)
+    if ordinal is None:
+        raise RegistryValidationError(
+            "previous-filing prior_quarter_expanding_span cannot interpret target period "
+            f"{target_period!r}; only quarterly codes 1T..4T are supported",
+        )
+    return tuple((0, _ORDINAL_QUARTER[prior]) for prior in range(1, ordinal))
+
+
+def _aggregate_previous_filing_binding(
+    binding: DataBindingDefinition,
+    values: list[Decimal],
+    *,
+    source_casillas: tuple[str, ...] = (),
+) -> Decimal:
+    aggregation = binding.aggregation or {}
+    op = str(aggregation.get("op", "sum"))
     if op == "sum":
         return sum(values, Decimal("0"))
     if op == "copy":
         if len(values) != 1:
             raise RegistryValidationError(f"binding {binding.id!r} copy aggregation requires one source casilla")
         return values[0]
+    if op == "prior_pagos_fraccionados":
+        return _aggregate_prior_pagos_fraccionados(binding, values, source_casillas=source_casillas)
     raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op!r}")
+
+
+def _aggregate_prior_pagos_fraccionados(
+    binding: DataBindingDefinition,
+    values: list[Decimal],
+    *,
+    source_casillas: tuple[str, ...],
+) -> Decimal:
+    """Compute the AEAT Modelo 130 casilla-05 identity from per-anchor pairs.
+
+    casilla 05 = SUM over prior quarters q of max(0, casilla 07_q)
+                 minus SUM over the same q of casilla 16_q
+
+    The flat ``values`` list carries per-anchor groups in ``source_casillas``
+    order (``[07_q1, 16_q1, 07_q2, 16_q2, ...]``); the op slices that grouping,
+    applies the positive-part to the first casilla (07) PER QUARTER before
+    summing, and subtracts the sum of the second casilla (16). Both terms are
+    load-bearing: a negative prior 07 contributes 0 (not its negative value),
+    and the prior casilla-16 minoración is never dropped (per the
+    aeat-modelo-130-instructions verbatim rule).
+    """
+    if len(source_casillas) != 2:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} prior_pagos_fraccionados aggregation requires exactly two "
+            f"source casillas (positive-part casilla then minoracion casilla); got {source_casillas!r}",
+        )
+    group_size = len(source_casillas)
+    if len(values) % group_size != 0:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} prior_pagos_fraccionados aggregation expected per-quarter pairs; "
+            f"got {len(values)} values for {group_size} source casillas",
+        )
+    zero = Decimal("0")
+    positive_part_total = zero
+    minoracion_total = zero
+    for index in range(0, len(values), group_size):
+        positive_casilla_value = values[index]
+        minoracion_casilla_value = values[index + 1]
+        positive_part_total += positive_casilla_value if positive_casilla_value > zero else zero
+        minoracion_total += minoracion_casilla_value
+    return positive_part_total - minoracion_total
