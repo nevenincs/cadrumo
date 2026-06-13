@@ -11,13 +11,12 @@ from decimal import Decimal
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions import (
-    TX_BUCKET_NAMESPACE,
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionNotFoundError,
 )
 from ..review import LedgerReviewStatus
+from ._actions_common import _require_transaction
 from ._models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow, LedgerTransactionPayload
 
 
@@ -194,16 +193,6 @@ def _bucket_event_repository(
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
-
-
-def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
-    transaction = catalogue.get(transaction_id)
-    if transaction is None:
-        raise TransactionNotFoundError(
-            f"transaction not found: {transaction_id}",
-            context={"namespace": TX_BUCKET_NAMESPACE, "transaction_id": transaction_id},
-        )
-    return transaction
 
 
 def _display_decimal(value: Decimal) -> str:
