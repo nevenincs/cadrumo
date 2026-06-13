@@ -60,6 +60,7 @@ class ExpedientesCapture(BaseModel):
     declarations: tuple[Declaracion, ...]
     captured_at: datetime
     source_url: str = Field(min_length=1)
+    authenticated_identity: str | None = Field(default=None, max_length=32)
     mode: str = Field(default="read", pattern=r"^read$")
 
 
@@ -72,6 +73,7 @@ class PersistedExpedientesSnapshot(BaseModel):
     bucket_id: BucketId
     captured_at: datetime
     source_url: str = Field(min_length=1)
+    authenticated_identity: str | None = Field(default=None, max_length=32)
     declarations: tuple[Declaracion, ...]
     persisted_at: datetime
 
@@ -98,7 +100,8 @@ def expedientes_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
 
 
 def _expedientes_repository(
-    settings: Settings, bucket_id: str,
+    settings: Settings,
+    bucket_id: str,
 ) -> SecureSnapshotRepository[PersistedExpedientesSnapshot]:
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
@@ -179,6 +182,7 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot])
             bucket_id=bucket_id,
             captured_at=capture.captured_at,
             source_url=capture.source_url,
+            authenticated_identity=capture.authenticated_identity,
             declarations=capture.declarations,
             persisted_at=now(),
         )
