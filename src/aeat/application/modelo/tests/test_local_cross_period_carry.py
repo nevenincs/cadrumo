@@ -43,7 +43,6 @@ from .. import (
     APP_FILING_SOURCE_KIND,
     calculate_modelo_revision,
     create_work_unit,
-    mark_revision_verificado_completo,
 )
 from .._calculation_actions import (
     _previous_filing_resolution_excluding_iva_compensation,
@@ -53,6 +52,7 @@ from ._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
     _file_revision,
     _Repos,
+    _verify_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -71,10 +71,12 @@ _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 # casilla 13 = 100 (prev-year net income binding defaults to 0); casilla 14 = 3500;
 # a manual casilla-16 deduction of 5000 forces casilla 17 = 3500 - 0 - 5000 = -1500,
 # so saldo-negativo-fin-periodo = max(0, 1500) = 1500 > 0 and seeds the next quarter.
+# Casilla 05 ("Pagos fraccionados anteriores") is now a bound carry (Stage 2);
+# at 1T its expanding span is empty (absent-by-design = 0), so it is NOT supplied
+# as a manual input here.
 _NEGATIVE_1T_INPUTS: dict[str, Decimal] = {
     "01": Decimal("30000"),
     "02": Decimal("12000"),
-    "05": Decimal("0"),
     "06": Decimal("0"),
     "08": Decimal("0"),
     "10": Decimal("0"),
@@ -88,9 +90,10 @@ _NEGATIVE_1T_INPUTS: dict[str, Decimal] = {
 # bucket, which is correct for these carry-forward tests that do not seed income
 # transactions.  The carry-forward assertion (casilla 15 == 1T saldo-negativo)
 # is independent of casilla 01 and remains valid with resolver-supplied zero.
+# Casilla 05 (now a bound carry) and casilla 15 (the carry under test) are both
+# resolved by the previous_filing pipeline at 2T, never supplied as manual inputs.
 _2T_INPUTS_WITHOUT_15: dict[str, Decimal] = {
     "02": Decimal("12000"),
-    "05": Decimal("0"),
     "06": Decimal("0"),
     "08": Decimal("0"),
     "10": Decimal("0"),
@@ -119,7 +122,7 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
     ``saldo-negativo-fin-periodo`` (read back from the persisted revision, never
     hand-derived from the formula — anti-tautology).
     """
-    wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos_
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos_
     work_unit = _seed_130(repos_, period="1T", clock=_T1)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -132,14 +135,26 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
     )
     saldo = Decimal(revision.casilla_values["saldo-negativo-fin-periodo"])
     assert saldo > 0, "1T inputs must produce a positive carry-forward seed for the test to be meaningful"
-    mark_revision_verificado_completo(
+    # 1T's casilla-05 expanding-span and casilla-15 single-offset previous_filing
+    # bindings are both absent-by-design at 1T (max_year_delta=0, no prior quarter),
+    # but the M100 prior-year minoración relation is a real cross-period dependency,
+    # so the direct mark-complete shortcut is refused and the full verify pipeline
+    # is required. _verify_revision seeds the clean M100 prior-year evidence and
+    # marks the 1T revision VERIFICADO_COMPLETO so filing can proceed.
+    _verify_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
-    # 1T's own previous_filing binding is absent-by-design (max_year_delta=0, no prior
-    # quarter), so the clean-state guard has no upstream to satisfy: filing succeeds.
+    # Filing then succeeds because the M100 dependency is clean and the M130
+    # same-ejercicio bindings have no prior quarter at 1T.
     # _file_revision threads the workflow gate and lets file_modelo_revision use its
     # default CalculationObservationRepository(), which binds to the active bucket and
     # persists the app_filing carry observation co-emitted with MODELO_FILED.
@@ -206,6 +221,7 @@ def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repo
     The non-official source is the single decision that keeps the carry from laundering
     an unevidenced chain past the filing gate.
     """
+    from ....domain.modelos import CalculationRevisionState, upsert_calculation_revision
     from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
     from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
     from ...calculations._cross_period_clean_state import CrossPeriodCleanStateBlocker
@@ -230,12 +246,23 @@ def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repo
         bucket_event_repository=bv_repo,
         clock=_T4,
     ).revision
-    mark_revision_verificado_completo(
-        revision_2t.calculation_revision_id,
-        actor="operator-A",
-        calculation_repository=cr_repo,
-        clock=_T4,
+    # The 2T cross-period state is deliberately UNCLEAN (the only upstream 1T
+    # evidence is the non-official app_filing carry), so the verify pipeline cannot
+    # legitimately grant VERIFICADO_COMPLETO and the direct mark-complete shortcut is
+    # refused for a cross-period revision. To exercise the FILE gate's own
+    # cross-period refusal, force the revision into VERIFICADO_COMPLETO directly
+    # through the catalogue - this is fixture setup for the file-transition assertion
+    # below, not a test of the mark path.
+    verificado_2t = revision_2t.model_copy(
+        update={
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+            "verified_at": _T4,
+            "verified_by": "operator-A",
+            "updated_at": _T4,
+        },
     )
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), verificado_2t))
+    revision_2t = verificado_2t
 
     # Structural proof (robust to message truncation): the 2T clean-state verdict for the
     # 1T previous_filing dependency carries LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE, the
