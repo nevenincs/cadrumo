@@ -57,23 +57,6 @@ def normalize_project_relative_path(value: Path | None) -> Path | None:
     return resolve_project_path(value)
 
 
-def normalize_project_relative_str(value: str) -> str:
-    """Normalise an optional string-backed path setting to an absolute string.
-
-    Args:
-        value: Configured path string; an empty string is passed
-            through unchanged so that callers can model "unset" with
-            an empty string.
-
-    Returns:
-        The resolved absolute path as a string, or the original empty
-        string.
-    """
-    if not value:
-        return value
-    return str(resolve_project_path(value))
-
-
 def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) -> Path:
     """Resolve ``relative_path`` under ``root`` and enforce containment.
 
