@@ -650,14 +650,10 @@ application:
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
-      calculate_casilla_ambiguous: 'A --casilla %{key} tobb casillahoz illeszkedik
-        ebben a revizioban: %{candidates}. A pontositashez adja meg a PREFIX:NNNNN
-        alaku azonositot.'
+      calculate_casilla_ambiguous: 'A --casilla %{key} több casillához illeszkedik ebben a revízióban: %{candidates}. A pontosításhoz adja meg a PREFIX:NNNNN alakú azonosítót.'
       calculate_casilla_non_numeric: 'A --casilla %{casilla_id} nem numerikus adattipusra
         mutat: %{data_type} (%{label}); hasznaljon --binding opciot vagy profilforrast.'
-      calculate_casilla_unknown: 'A --casilla %{key} nem illeszkedik egyetlen casilla
-        szamra sem ebben a revizioban. Ervenyes azonositohoz futtassa: `aeat app modelo
-        casillas <MODELO>`.'
+      calculate_casilla_unknown: 'A --casilla %{key} nem illeszkedik egyetlen casilla számra sem ebben a revízióban. Érvényes azonosítóhoz futtassa: `aeat app modelo casillas <MODELO>`.'
       calculate_decimal_input_invalid: 'A(z) %{flag} ertek %{key} kulcshoz nem decimalis
         szam: %{value}'
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak reszesedesi
@@ -668,8 +664,7 @@ application:
         kell megadni.
       calculate_sal_inputs_incomplete: A SAL/SLL kulonleges tartalek adatait egyutt
         kell megadni.
-      calculate_semantic_role_missing: 'A modell revizioja nem tartalmaz casillat
-        ezzel a szemantikus szereppel: %{semantic_role}.'
+      calculate_semantic_role_missing: 'A modell revíziója nem tartalmaz casillát ezzel a szemantikus szereppel: %{semantic_role}.'
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -680,29 +675,17 @@ application:
         bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed_casillas}.'
-      cross_period_clean_state_incomplete: A keresztidoszaki tiszta allapot igazolasa
-        hianyos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megallapitas
-        maradt.
-      export_cross_bucket_refused: A megcimzett revizio nem az aktiv profil bucketjehez
-        tartozik. Exportalas elott valtson profilt.
-      export_draft_approval_failed: Nem sikerult jovahagyni a(z) %{calculation_revision_id}
-        szamitasi revizio tervezetet.
-      export_draft_write_failed: Nem sikerult kiirni a(z) %{calculation_revision_id}
-        szamitasi revizio exportfajljat.
-      export_ledger_evidence_missing: A(z) %{calculation_revision_id} ledgerbol szarmazo
-        szamitasi revizio nem tartalmaz csatolt ledger-evidenciat vagy feloldhato
-        ledger-pillanatkep hivatkozast; exportalas elott ellenorizze ujra a reviziot.
+      cross_period_clean_state_incomplete: 'A keresztidőszaki tiszta állapot igazolása hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megállapítás maradt.'
+      export_cross_bucket_refused: 'A megcímzett revízió nem az aktív profil bucketjéhez tartozik. Exportálás előtt váltson profilt.'
+      export_draft_approval_failed: 'Nem sikerült jóváhagyni a(z) %{calculation_revision_id} számítási revízió tervezetét.'
+      export_draft_write_failed: 'Nem sikerült kiírni a(z) %{calculation_revision_id} számítási revízió exportfájlját.'
+      export_ledger_evidence_missing: 'A(z) %{calculation_revision_id} ledgerből származó számítási revízió nem tartalmaz csatolt ledger-evidenciát vagy feloldható ledger-pillanatkép hivatkozást; exportálás előtt ellenőrizze újra a revíziót.'
       export_no_active_bucket: Nincs aktív profil bucket; a modelo-revízió exportálása
         előtt futtassa az `aeat config profile create NÉV` parancsot.
-      export_operator_name_missing: 'Az exportalashoz szukseg van az operator nevere
-        az aktiv profilban; hianyzo profiladatok: %{missing}.'
-      export_operator_profile_missing: Az exportalashoz szukseg van az operator nevere
-        az aktiv profilbol, de nincs perzisztalt profil; exportalas elott toltse ki
-        az identity.surnames es identity.name mezoket.
-      export_period_unmappable: A(z) %{work_unit_id} munkaegyseg %{period} idoszakot
-        tartalmaz, amely nem kepezheto le regiszter bevallasi idoszakra.
-      export_revision_state_refused: A(z) %{calculation_revision_id} szamitasi revizio
-        nincs ellenorzott-teljes vagy beadott allapotban, ezert nem exportalhato.
+      export_operator_name_missing: 'Az exportáláshoz szükség van az operátor nevére az aktív profilban; hiányzó profiladatok: %{missing}.'
+      export_operator_profile_missing: 'Az exportáláshoz szükség van az operátor nevére az aktív profilból, de nincs perzisztált profil; exportálás előtt töltse ki az identity.surnames és identity.name mezőket.'
+      export_period_unmappable: 'A(z) %{work_unit_id} munkaegység %{period} időszakot tartalmaz, amely nem képezhető le regiszter bevallási időszakra.'
+      export_revision_state_refused: 'A(z) %{calculation_revision_id} számítási revízió nincs ellenőrzött-teljes vagy beadott állapotban, ezért nem exportálható.'
       external_filing_evidence_reference_blank: A külső bevallás importálásához nem
         üres evidence_reference_id szükséges.
       external_filing_no_casilla_values: A külső bevallás importálásához legalább
@@ -716,9 +699,7 @@ application:
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.
-      external_import_tax_id_missing: A kulso bevallasimport bizonyiteka %{evidence_reference_id}
-        (%{evidence_kind}) megkoveteli a bevallo adoazonositojat, mielott igazolo
-        artefakthoz kotheto.
+      external_import_tax_id_missing: 'A külső bevallásimport bizonyítéka %{evidence_reference_id} (%{evidence_kind}) megköveteli a bevalló adóazonosítóját, mielőtt igazoló artefakthoz köthető.'
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
@@ -759,18 +740,12 @@ application:
         reconcile file paranccsal, amíg a bevallás-elemző elérhetővé válik.
       reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config
         profile create NÉV` az egyeztetés előtt.'
-      revision_pick_explicit_id_required: Az explicit revizio kivalasztasahoz calculation_revision_id
-        szukseges.
-      revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
-        explicit revizio kivalasztoval ervenyes.
+      revision_pick_explicit_id_required: 'Az explicit revízió kiválasztásához calculation_revision_id szükséges.'
+      revision_pick_id_requires_explicit_selector: 'A calculation_revision_id csak explicit revízió kiválasztóval érvényes.'
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
-      work_period_token_invalid: 'A --period ''%{token}'' nem ervenyes idoszak-token
-        a(z) %{modelo} modellhez. Adja meg kulon: --year %{year}, es hasznalja ezek
-        egyiket: %{tokens}.'
-      work_period_token_unrecognised: 'A --period ''%{token}'' nem felismerheto. Adja
-        meg kulon: --year %{year}, es hasznaljon idoszak-tokent, peldaul 0A, Q1, 1T
-        vagy 01.'
+      work_period_token_invalid: 'A --period ''%{token}'' nem érvényes időszak-token a(z) %{modelo} modellhez. Adja meg külön: --year %{year}, és használja ezek egyikét: %{tokens}.'
+      work_period_token_unrecognised: 'A --period ''%{token}'' nem felismerhető. Adja meg külön: --year %{year}, és használjon időszak-tokent, például 0A, Q1, 1T vagy 01.'
       work_unit_already_discarded: A munkakérés már el van vetve.
       work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett
         dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modelo, év és
@@ -782,10 +757,7 @@ application:
         a folytatáshoz.
       work_unit_not_found: 'Nem található modelo munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
-      work_unit_revision_divergence: A(z) %{work_unit_id} munkaegyseg a(z) %{work_unit_revision}
-        nyilvantartasi revizioval jott letre, de a(z) %{modelo} %{filing_year} %{period}
-        modellhez torveny altal meghatarozott revizio most %{law_revision}. Hozza
-        letre ujra a munkaegyseget.
+      work_unit_revision_divergence: 'A(z) %{work_unit_id} munkaegység a(z) %{work_unit_revision} nyilvántartási revízióval jött létre, de a(z) %{modelo} %{filing_year} %{period} modellhez törvény által meghatározott revízió most %{law_revision}. Hozza létre újra a munkaegységet.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
     findings:
@@ -995,8 +967,7 @@ application:
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
-      profile_already_exists: A(z) %{profile} profil mar letezik; futtasd aeat config
-        switch NAME az aktivalashoz, vagy aeat config profile delete NAME a torleshez.
+      profile_already_exists: 'A(z) %{profile} profil már létezik; futtasd: aeat config switch NÉV az aktiváláshoz, vagy aeat config profile delete NÉV a törléshez.'
       profile_bucket_directory_removal_failed: A profil konyvtara nem tavolithato
         el.
       profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
@@ -1875,15 +1846,9 @@ cli:
           a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-capital-social
           opciókkal együtt.
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
-        selector_ambiguous: Tobb aktiv munkaegyseg illeszkedik erre a modelo/ev/idoszak
-          parosra. Valasszon nyilvantartasi reviziot vagy adjon meg pontos munkaegyseg-azonositot.
-          {candidates}
-        selector_not_found: 'Nincs aktiv munkaegyseg ehhez a modelo/ev/idoszak paroshoz.
-          Futtassa eloszor: aeat app modelo work create.'
-        selector_revision_conflict: Ehhez a modelo/ev/idoszak paroshoz mar letezik
-          aktiv munkaegyseg {existing_revision} nyilvantartasi revizioval; a kert
-          revizio {requested_revision}. Folytassa a meglevo munkaegyseget, dobja el
-          explicit modon, vagy adjon meg pontos azonositot.
+        selector_ambiguous: 'Több aktív munkaegység illeszkedik erre a modelo/év/időszak párosra. Válasszon nyilvántartási revíziót vagy adjon meg pontos munkaegység-azonosítót. {candidates}'
+        selector_not_found: 'Nincs aktív munkaegység ehhez a modelo/év/időszak pároshoz. Futtassa először: aeat app modelo work create.'
+        selector_revision_conflict: 'Ehhez a modelo/év/időszak pároshoz már létezik aktív munkaegység {existing_revision} nyilvántartási revízióval; a kért revízió {requested_revision}. Folytassa a meglévő munkaegységet, dobja el explicit módon, vagy adjon meg pontos azonosítót.'
         set_not_decimal: 'A --set értékének decimálisnak kell lennie; kapott: {value}.'
         set_override_help: Javított mezőérték CASILLA=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
@@ -2029,8 +1994,7 @@ cli:
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
           befejezéséhez: {detail}'
         network: 'Nem sikerült elérni a Google-t: {detail}'
-        profile_unbound: Nincs aktiv profil. Futtasd aeat config switch NAME, vagy
-          add meg a --profile kapcsolot.
+        profile_unbound: 'Nincs aktív profil. Futtasd: aeat config switch NÉV, vagy add meg a --profile kapcsolót.'
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
           Futtassa: `aeat config google login` és fogadjon el minden engedélyt.'
         storage: 'Nem sikerült elérni a Google Drive tárolót: {detail}'
@@ -3751,9 +3715,8 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
-    modelo_calculation_revision_selector: A szamitasi revizio kivalasztasa sikertelen.
-    modelo_calculation_revision_selector_not_found: Nincs a megadott valasztonak megfelelo
-      szamitasi revizio.
+    modelo_calculation_revision_selector: 'A számítási revízió kiválasztása sikertelen.'
+    modelo_calculation_revision_selector_not_found: 'Nincs a megadott választónak megfelelő számítási revízió.'
     modelo_compare_no_revisions: Nem találhatók összehasonlítható számítási revíziók.
     modelo_compare_no_usable_revisions: Vannak összehasonlítható revíziók, de egyik
       sem használható ehhez az összehasonlításhoz.
@@ -3764,7 +3727,7 @@ errors:
     modelo_work_address_not_found: Nincs aktív nyomtatvány-munkaegység a kért nyomtatványhoz,
       évhez és időszakhoz.
     modelo_work_selector: A modelo munkavalaszto hibazott.
-    modelo_work_selector_unit_not_found: A kivalasztott modelo munkaegyseg nem talalhato.
+    modelo_work_selector_unit_not_found: 'A kiválasztott modelo munkaegység nem található.'
   fail:
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -3898,8 +3861,7 @@ errors:
     validate_expects_str: Az azonosítóérvényesítés szöveges értéket vár; {got_type}
       érkezett.
   integrity:
-    integrity_active_profile_pointer: Az aktivprofil-mutato ervenytelen; javitsa a
-      kivalasztott profilt a folytatas elott.
+    integrity_active_profile_pointer: 'Az aktívprofil-mutató érvénytelen; javítsa a kiválasztott profilt a folytatás előtt.'
     integrity_aeat_core_validation: Belső adatintegritás-ellenőrzés meghiúsult.
     integrity_cli_output_schema: A CLI kimeneti séma nyilvántartása helytelenül van
       konfigurálva.
@@ -4043,10 +4005,8 @@ errors:
     modelo_calculate_input: errors.refused.modelo_calculate_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
-    modelo_calculation_revision_selector_ambiguous: A szamitasi revizio valaszto tobb
-      reviziora illeszkedik; pontositsa a valasztot.
-    modelo_calculation_revision_selector_state: A kivalasztott szamitasi revizio nincs
-      ehhez a muvelethez hasznalhato allapotban.
+    modelo_calculation_revision_selector_ambiguous: 'A számítási revízió választó több revízióra illeszkedik; pontosítsa a választót.'
+    modelo_calculation_revision_selector_state: 'A kiválasztott számítási revízió nincs ehhez a művelethez használható állapotban.'
     modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
       után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
       a legfrissebb censo alapján.'
@@ -4060,16 +4020,14 @@ errors:
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
       decimális összeg.
     modelo_revision_pick: errors.refused.modelo_revision_pick
-    modelo_work_period_token: Ervenytelen modello idoszak.
+    modelo_work_period_token: 'Érvénytelen modello időszak.'
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.
-    modelo_work_selector_ambiguous: Tobb modelo munkaegyseg is illeszkedik a valasztora.
+    modelo_work_selector_ambiguous: 'Több modelo munkaegység is illeszkedik a választóra.'
     modelo_work_selector_contradiction: A modelo munkavalaszto argumentumai ellentmondanak
       egymasnak.
-    modelo_work_selector_no_active_bucket: Valasszon aktiv profilt a modelo munkaegyseg
-      feloldasa elott.
-    modelo_work_selector_revision_conflict: A kivalasztott modelo munkaegyseg masik
-      reviziohoz tartozik.
+    modelo_work_selector_no_active_bucket: 'Válasszon aktív profilt a modelo munkaegység feloldása előtt.'
+    modelo_work_selector_revision_conflict: 'A kiválasztott modelo munkaegység másik revízióhoz tartozik.'
     profile_already_registered: Ilyen nevű profil már létezik. Profil váltáshoz használja
       az  parancsot.
     profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.
@@ -4257,8 +4215,7 @@ errors:
       kell állnia.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
-    refused_storage_session_expired: Az aktiv munkamenet inaktivitas miatt lejart.
-      Aktivald ujra az aeat config switch NAME paranccsal.
+    refused_storage_session_expired: 'Az aktív munkamenet inaktivitás miatt lejárt. Aktiváld újra az aeat config switch NÉV paranccsal.'
     refused_storage_unsecured_mode: A nem biztonságos tároló háttérrendszert az szükséges
       engedélyezés nélkül kérték. Valós adatokhoz nem biztonságos.
     refused_taxation_comparison: A közös-vs-egyéni adózás összehasonlítása nem végezhető
@@ -4320,8 +4277,7 @@ errors:
         bucket kiválasztása előtt érhető el.
       cold_bootstrap_explicit_database_refused: A hidegindítási tároló nem kerülheti
         meg a megadott adatbázis-útvonalat.
-      no_active_session: Nincs aktiv bucket-munkamenet. Futtasd aeat config switch
-        NAME a profil feloldasahoz.
+      no_active_session: 'Nincs aktív bucket-munkamenet. Futtasd: aeat config switch NÉV a profil feloldásához.'
       no_detail: Nem jelentetett részletes készültségi problémát.
       not_ready: 'A tárolási futtatókörnyezet nem áll készen profil-kötött tároláshoz:
         %{details}'
@@ -4329,10 +4285,8 @@ errors:
       route_not_active_bucket: Az adatbázis-útvonal nincs aktív profil bucket-hez
         csatolva.
       session_changed: Az aktív bucket-munkamenet megváltozott. Oldja fel újra a célprofilt.
-      session_expired: Az aktiv bucket-munkamenet lejart. Futtasd aeat config switch
-        NAME a profil ujraaktivalasahoz.
-      session_sealed: Az aktiv bucket-munkamenet le van zarva. Futtasd aeat config
-        switch NAME a profil ujraaktivalasahoz.
+      session_expired: 'Az aktív bucket-munkamenet lejárt. Futtasd: aeat config switch NÉV a profil újraaktiválásához.'
+      session_sealed: 'Az aktív bucket-munkamenet le van zárva. Futtasd: aeat config switch NÉV a profil újraaktiválásához.'
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos háttérrendszert
         használja. A gyártási profil-kötött tároláshoz fájl- vagy kulcstár-felügyelet
         szükséges.
