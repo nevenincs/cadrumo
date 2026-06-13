@@ -102,6 +102,24 @@ return trimmed; ... fall back to active bucket`), differing only by the typed
 runtime-repository modules; it can be expressed once as a shared helper
 parameterised by `error_type` (the modelo resolver already takes `error_type`).
 
+### F4 (MEDIUM) — Spanish/European decimal-format parsing is reimplemented inline across six files (Pass 2)
+
+The European number-format normalisation that maps a Spanish-formatted numeric
+string (thousands dot, decimal comma) to a `Decimal` is open-coded inline in six
+production files, with no canonical helper: `sede/_iva_compensation_wallet_parsing.py`,
+`sede/_censo.py`, `ledger/_evidence_advisory.py` (`_parse_amount`),
+`registry/_export_parse.py` (two sites), `registry/_renta_web_open_oracle.py`,
+and `inbound/pdf/_label_regex.py` (two sites). Two variants exist and are NOT
+interchangeable: the full form `.replace(".", "").replace(",", ".")` (strips
+thousands dots) and the comma-only form `.replace(",", ".")` (assumes no
+thousands separators). A value like `"1.234"` parses to `1234` under the full
+form and `1.234` under the comma-only form, so a naive merge would change
+behaviour. The actionable consolidation is one canonical helper with an explicit
+thousands-separator mode, plus a per-site substitutability check before each
+redirect (some sites also strip currency symbols or signs and must keep that).
+This is a clean cluster (a true shared primitive is missing) but a careful one;
+it is tracked as plan Wave W02 with one step per site.
+
 ### Ruled out under the substitutability pre-filter (no action)
 
 - **Decimal cent-rounding** — `domain/calculations/registry/_formula_runtime.py:_apply_rounding`
