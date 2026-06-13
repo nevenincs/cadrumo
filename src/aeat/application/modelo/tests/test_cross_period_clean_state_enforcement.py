@@ -317,6 +317,8 @@ def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                 stamped_revision_id=source_snapshot.revision.id,
                 source_metadata={
                     "aeat_register_status": "ALTA",
+                    "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
+                    "aeat_justificante_csv": evidence_reference_id,
                     "authenticated_identity": "X1234567L",
                 },
             )
@@ -441,7 +443,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
 
 
 def test_no_prior_obligation_provenance_never_enters_official_source_kinds() -> None:
-    """ADR 2026-06-13 honesty: pre-activity suppression provenance is never official.
+    """Honesty: pre-activity suppression provenance is never official.
 
     The no-prior-obligation facet records a SUPPRESSION (no obligation existed),
     not a filing's AEAT evidence. None of its enum values - the facet
@@ -458,7 +460,7 @@ def test_no_prior_obligation_provenance_never_enters_official_source_kinds() -> 
 
 
 def test_first_local_filing_still_persists_under_non_official_app_filing() -> None:
-    """ADR 2026-06-13 honesty: the first local filing stays non-official ``app_filing``.
+    """Honesty: the first local filing stays non-official ``app_filing``.
 
     The first-filer fix scopes a pre-activity DEMAND for evidence out of the graph;
     it never mints evidence. The local ``file`` flow still stamps its persisted
