@@ -160,30 +160,37 @@ def _iva_transaction(
     )
 
 
-def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> None:
+def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> dict[str, dict[str, Decimal]]:
     """Persist all four quarters' issued + received IVA operations once upfront.
 
     Each M303 quarter's bucket aggregation selects only its own period's
     operations by date (IVA is declared per period, not cumulative-YTD), so the
     whole year is persisted once and the per-quarter window does the slicing.
+
+    Returns, per period, the IVA amounts actually STORED on the persisted
+    transactions (``devengada`` = issued invoice's ``iva_amount``, ``deducible``
+    = received invoice's ``iva_amount``). The caller asserts the engine-computed
+    M303 totals against these stored field values — proving the aggregator
+    transports the stored ``iva_amount`` rather than re-deriving base×rate, and
+    avoiding a shared-literal between the seed and the expectation.
     """
     transactions: list[Transaction] = []
+    stored: dict[str, dict[str, Decimal]] = {}
     for period, (issued_base, received_base) in _QUARTER_BASES.items():
-        transactions.append(
-            _iva_transaction(
-                f"sale-{period}", direction=TransactionDirection.INCOMING, taxable_base=issued_base, period=period
-            )
+        issued = _iva_transaction(
+            f"sale-{period}", direction=TransactionDirection.INCOMING, taxable_base=issued_base, period=period
         )
-        transactions.append(
-            _iva_transaction(
-                f"purchase-{period}",
-                direction=TransactionDirection.OUTGOING,
-                taxable_base=received_base,
-                period=period,
-            )
+        received = _iva_transaction(
+            f"purchase-{period}",
+            direction=TransactionDirection.OUTGOING,
+            taxable_base=received_base,
+            period=period,
         )
+        transactions.extend((issued, received))
+        stored[period] = {"devengada": issued.iva_amount, "deducible": received.iva_amount}
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(tuple(transactions)))
+    return stored
 
 
 def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
@@ -293,18 +300,25 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
 ) -> None:
     """The full yearly IVA cadence: persisted ledger → 4×M303 → M390 reconciliation."""
     _store_profile(secure_objects)
-    _persist_year_of_invoices(secure_objects)
+    stored = _persist_year_of_invoices(secure_objects)
 
     computed: dict[str, dict[str, Decimal]] = {}
     for period in _QUARTER_ORDER:
         revision = _calculate_and_file_m303_quarter(secure_objects, period=period)
 
-        # Transport invariant #1: the computed devengada equals the persisted
-        # issued-invoice IVA for the quarter (ledger → M303, not re-keyed).
-        expected_devengada = (_QUARTER_BASES[period][0] * _IVA_RATE).quantize(Decimal("0.01"))
-        assert Decimal(revision.casilla_values[_DEVENGADA_TOTAL]) == expected_devengada, (
-            f"{period}: cuota-devengada-total must equal issued IVA {expected_devengada}; "
+        # Transport invariant #1: the computed cuota totals equal the IVA amounts
+        # STORED on the persisted invoices (the aggregator sums the stored
+        # iva_amount field — it does not re-derive base×rate, confirmed in
+        # application/aggregation/_iva_ledger.py). Asserting against the stored
+        # field, not a fresh base*rate, keeps the seed and the expectation from
+        # sharing a literal.
+        assert Decimal(revision.casilla_values[_DEVENGADA_TOTAL]) == stored[period]["devengada"], (
+            f"{period}: cuota-devengada-total must equal the stored issued IVA {stored[period]['devengada']}; "
             f"got {revision.casilla_values.get(_DEVENGADA_TOTAL)}"
+        )
+        assert Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]) == stored[period]["deducible"], (
+            f"{period}: cuota-deducible-total must equal the stored received IVA {stored[period]['deducible']}; "
+            f"got {revision.casilla_values.get(_DEDUCIBLE_TOTAL)}"
         )
         computed[period] = {
             _DEVENGADA_TOTAL: Decimal(revision.casilla_values[_DEVENGADA_TOTAL]),
@@ -312,10 +326,11 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
             _RESULTADO: Decimal(revision.casilla_values[_RESULTADO]),
         }
 
-    # The four computed devengada totals are distinct → a coincidental or
-    # off-by-one-quarter fold cannot satisfy the annual assertion.
-    devengada_values = [computed[p][_DEVENGADA_TOTAL] for p in _QUARTER_ORDER]
-    assert len(set(devengada_values)) == 4, f"quarterly devengada must be distinct: {devengada_values}"
+    # The four computed totals are distinct on every folded axis → a coincidental
+    # or off-by-one-quarter fold cannot satisfy the annual assertions below.
+    for axis in (_DEVENGADA_TOTAL, _DEDUCIBLE_TOTAL, _RESULTADO):
+        values = [computed[p][axis] for p in _QUARTER_ORDER]
+        assert len(set(values)) == 4, f"quarterly {axis} must be distinct: {values}"
 
     annual = _calculate_m390_annual(secure_objects)
     casillas = annual.casilla_values
