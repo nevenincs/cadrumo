@@ -91,6 +91,39 @@ subsequent peer ledger campaigns (IVA derivation, `_resolve_id` collapse,
 is owned by the broader CLI surface, and is trending down. Fixing it is
 explicitly out of scope for this goal (no broad ledger changes).
 
+### F4 — Operator-authorized full-tree sweep: 1 gate cleared, 10 abort-on-WIP blocked
+
+The operator authorized overriding `full-tree-gate-must-distinguish-owner` to
+fix all 11 gates regardless of ownership. On execution, a pre-edit WIP check
+(`aeat-swarm-orchestration` abort-on-WIP) found that the target files of 10 of
+the 11 gates carry **live uncommitted peer WIP** at this moment — the
+ownership-override does not extend to the categorical destroy-peer-work
+prohibition in `aeat-git-worktree-safety`, so those files cannot be edited
+without stranding peer changes:
+
+- module-size: `modelo/_verification_actions.py` (peer −50/+32, already
+  shrinking the file), `registry/_schema.py` (peer −26/+11, already shrinking),
+  `overview/tests/test_calendar_filing_evidence.py` (untracked peer file).
+- callable-size: `modelo/_calculation_actions.py` (peer +35).
+- env.example: peer WIP adds a *different* field (`AEAT_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS`), not the flagged `AEAT_CLI_REVEAL_IDENTIFIERS`.
+- utf8 literals: `bucket_maintenance/_service.py` (peer +259).
+- locale parity: all four `locales/*.yml` carry peer WIP (and must be edited
+  only through the locales CLI per `aeat-locales-cli`).
+- marker integrity & docstring-link gates: violation sets span files that are
+  partly WIP/untracked (`test_modelo_303_official_box_under_declaration.py`
+  modified, `test_service_import_export.py` untracked), so the gates cannot be
+  cleared even by fixing their clean members.
+
+The single fully-clean gate, `test_no_absolute_self_imports_in_aeat_package`,
+was fixed and committed (`c0a624c8b`): the 4 absolute intra-`aeat` imports in
+`test_ledger_report_payload_parity.py` and `test_suggestion_command_conformance.py`
+became relative `....` imports; both files pass 10/10. That gate is now green.
+
+The two oversized modules are already being reduced by peers, so two size gates
+may self-resolve once that WIP lands. The honest closeout path is to re-run the
+full-tree gate after peer WIP settles and fix any genuinely-unowned residue on a
+clean tree — not to edit files mid-peer-edit.
+
 ## Recommendations
 
 - **Leave `P05.S15` unchecked** as a deferred carry-forward. Per the
