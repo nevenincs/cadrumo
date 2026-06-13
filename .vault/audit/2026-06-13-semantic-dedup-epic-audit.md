@@ -161,6 +161,27 @@ clean. The structural sweep is recorded as the higher-yield discovery instrument
 for this class (identical small helpers across modules), complementing the
 semantic RAG passes.
 
+### Structural-sweep candidates queued for a focused pass (confirmed, marginal)
+
+The structural symbol sweep surfaced further same-named production helpers whose
+consolidation is genuine but low-value; they are recorded here so a fresh-context
+pass can decide them without re-discovery, rather than churn-landed at marginal
+gain:
+
+- `_metric_line` — byte-identical one-line `f"{key}={value}"` in
+  `cli/_app_live_auth_preflight.py`, `cli/_app_live_expedientes_cli.py`,
+  `cli/_app_live_rendering.py` (the `cli/registry.py` copy diverges: it translates
+  the key). A one-line formatter; a shared helper adds import indirection for
+  near-zero dedup.
+- `_run_auth_preflight` — a four-line registration guard in
+  `cli/_app_live_expedientes_cli.py`, `_app_live_justificante_cli.py`,
+  `_app_live_notifications_cli.py`, identical except the command-family name in the
+  error message and coupled to each module's `_auth_preflight` global; a shared
+  helper would need both threaded through.
+- `_active_bucket_id` (6 CLI modules), `_bucket_id` (4), `_drive_service` (3,
+  divergent return/service), `_snapshot_from_record` (3 live modules) — not yet
+  source-confirmed; next structural pass.
+
 ### Ruled out under the substitutability pre-filter (no action)
 
 - **Decimal cent-rounding** — `domain/calculations/registry/_formula_runtime.py:_apply_rounding`
