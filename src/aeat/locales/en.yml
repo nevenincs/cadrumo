@@ -1860,7 +1860,7 @@ cli:
     app_help: Manage local configuration and diagnostics
     auth:
       apoderado:
-        check_help: Read-only live verification
+        check_help: 'Verify against AEAT (unavailable; live reads are sealed). Use ''status'' for the offline read.'
         clear_help: Retire the apoderado configuration
         configure:
           represented_nif_help: NIF of the represented party
@@ -2168,6 +2168,8 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
+      export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive financial data: the raw tax id (not redacted), the full ledger, calculation revisions, and filing records. It was written to {out}. Delete it after transfer; do not email, sync, or leave it on disk.'
+      import_active_switch_info: 'The imported profile {name} is now the ACTIVE profile; subsequent commands operate on it. Run ''aeat config switch <name>'' to change the active profile.'
     recover:
       help: Recover the file secret store with a recovery key and bind it to a new
         passphrase.

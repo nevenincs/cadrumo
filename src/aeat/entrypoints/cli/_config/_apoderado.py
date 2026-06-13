@@ -193,7 +193,13 @@ def apoderado_clear(
     _emit_envelope(ctx, command="config.auth.apoderado.clear", result=clear_result, lines=lines)
 
 
-@apoderado_app.command("check", help=tr("cli.config.auth.apoderado.check_help", default="Read-only live verification"))
+@apoderado_app.command(
+    "check",
+    help=tr(
+        "cli.config.auth.apoderado.check_help",
+        default="Verify against AEAT (unavailable; live reads are sealed). Use 'status' for the offline read.",
+    ),
+)
 def apoderado_check(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
@@ -207,33 +213,20 @@ def apoderado_check(
     from ....application.auth import ApoderadoLiveCheckUnavailableError, ApoderadoService
     from ....application.workflow import workflow_state_repository
     from ....core.errors import resolve_error_message
-    from .._config_payloads import ApoderadoCheckResult
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
     svc = ApoderadoService()
 
+    # ``check`` is the live-verification verb. The live AEAT-read path is not
+    # wired (live reads are refused at this boundary per the safety gate), so
+    # the service refuses rather than silently re-reading stored configuration
+    # and presenting it as a live result. Surface the registered refusal copy;
+    # ``status`` is the offline configuration read.
     try:
-        result = svc.check(bucket_id=pointer.bucket_id)
+        svc.check(bucket_id=pointer.bucket_id)
     except ApoderadoLiveCheckUnavailableError as exc:
-        # Render the registered AeatError message instead of losing it through str(exc).
         raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-
-    apoderado_result = ApoderadoCheckResult(
-        bucket_id=result.bucket_id,
-        configured=result.configured,
-        represented_nif=result.represented_nif if result.configured else None,
-        granted_scopes=list(result.granted_scopes) if result.configured else None,
-    )
-    lines = [
-        f"bucket_id\t{result.bucket_id}",
-        f"configured\t{result.configured}",
-    ]
-    if result.configured:
-        lines.append(f"represented_nif\t{result.represented_nif}")
-        lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
-
-    _emit_envelope(ctx, command="config.auth.apoderado.check", result=apoderado_result, lines=lines)
 
 
 __all__ = ["apoderado_app", "register_apoderado_commands"]
