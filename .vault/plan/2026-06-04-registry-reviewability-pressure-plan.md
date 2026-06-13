@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#registry-reviewability-pressure'
 date: '2026-06-04'
+modified: '2026-06-04'
 tier: L2
 related:
   - '[[2026-06-04-registry-generic-fragmentation-contract-audit]]'

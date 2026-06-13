@@ -1,6 +1,7 @@
 ---
 tags: ['#exec', '#period-grammar-standardisation']
 date: '2026-06-11'
+modified: '2026-06-11'
 step_id: 'S30'
 related:
   - '[[2026-06-11-period-grammar-standardisation-plan]]'

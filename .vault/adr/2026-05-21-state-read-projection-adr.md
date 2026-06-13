@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-21'
+modified: '2026-05-21'
 related:
   - "[[2026-05-20-cli-state-architecture-research]]"
   - "[[2026-05-21-profile-uuid-identity-adr]]"

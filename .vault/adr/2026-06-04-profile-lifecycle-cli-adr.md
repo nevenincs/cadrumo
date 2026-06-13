@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#profile-lifecycle-cli'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-04-profile-lifecycle-cli-research]]"
 ---

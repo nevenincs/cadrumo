@@ -4,6 +4,7 @@ tags:
   - '#exec'
   - '#cli-backend-boundary'
 date: '2026-06-09'
+modified: '2026-06-09'
 related:
   - '[[2026-05-08-cli-backend-boundary-plan]]'
   - '[[2026-05-08-cli-backend-boundary-reference]]'

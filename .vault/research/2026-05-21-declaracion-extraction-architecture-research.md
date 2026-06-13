@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#declaracion-extraction-architecture'
 date: '2026-05-21'
+modified: '2026-05-21'
 related:
   - '[[2026-05-20-branch-reconciliation-audit]]'
   - '[[2026-04-21-declaracion-extractor-adr]]'

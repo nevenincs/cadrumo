@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-06-03'
+modified: '2026-06-03'
 step_id: 'S33'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'

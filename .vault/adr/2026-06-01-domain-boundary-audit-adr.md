@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#domain-boundary-audit'
 date: '2026-06-01'
+modified: '2026-06-01'
 related:
   - '[[2026-04-30-aeat-restructure-research]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'

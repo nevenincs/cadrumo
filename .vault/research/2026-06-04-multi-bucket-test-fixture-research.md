@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#multi-bucket-test-fixture'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-03-multi-bucket-test-fixture-adr]]"
 ---

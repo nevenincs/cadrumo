@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#error-code-registry"
 date: 2026-04-25
+modified: '2026-04-25'
 title: "error-code-registry phase1 summary"
 related:
   - "[[2026-04-25-error-code-registry-plan]]"

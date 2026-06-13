@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#test-topology-refactor'
 date: '2026-06-05'
+modified: '2026-06-05'
 related:
   - '[[2026-04-12-base-module-structure-adr]]'
   - '[[2026-04-17-pytest-markers-research]]'

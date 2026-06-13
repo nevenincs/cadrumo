@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#aeat-cli-redesign'
 date: '2026-05-05'
+modified: '2026-05-05'
 related:
   - '[[2026-05-02-aeat-cli-redesign-research]]'
   - '[[2026-05-02-aeat-cli-redesign-adr]]'

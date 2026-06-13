@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#google-auth-ux'
 date: '2026-04-21'
+modified: '2026-04-21'
 related:
   - '[[2026-04-16-google-workspace-mcp-auth-research]]'
   - '[[2026-04-16-google-workspace-mcp-auth-adr]]'

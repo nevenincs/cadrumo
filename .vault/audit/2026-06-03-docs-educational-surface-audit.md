@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#docs-educational-surface'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-06-02-docs-educational-surface-audit]]"
   - "[[2026-06-01-docs-educational-surface-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#cli-persona-testimonials'
 date: '2026-05-20'
+modified: '2026-05-20'
 related:
   - "[[2026-05-20-cli-persona-testimonials-audit]]"
 ---

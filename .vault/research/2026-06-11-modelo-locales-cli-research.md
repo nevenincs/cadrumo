@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#modelo-locales-cli'
 date: '2026-06-11'
+modified: '2026-06-11'
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-11-registry-schema-localization-research]]'

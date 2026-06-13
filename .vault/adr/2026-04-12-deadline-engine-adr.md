@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#deadline-engine"
 date: 2026-04-12
+modified: '2026-04-12'
 title: Filing-Deadline Computation Engine
 related:
   - "[[2026-04-12-deadline-engine-research]]"

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#aeat-cli-config-vs-setup-namespace'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-12-aeat-cli-config-vs-setup-namespace-adr]]"
 ---

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#calendar-live-filing-integration'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - '[[2026-05-12-cli-workflow-redesign-app-registry-boundary-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'

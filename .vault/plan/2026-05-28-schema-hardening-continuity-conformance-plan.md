@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-05-28'
+modified: '2026-05-28'
 tier: L2
 related:
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'

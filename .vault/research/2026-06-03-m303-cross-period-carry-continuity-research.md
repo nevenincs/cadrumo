@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - '[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]'
   - '[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]'

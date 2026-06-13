@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#docs-cli-buildtime'
 date: '2026-06-01'
+modified: '2026-06-01'
 related:
   - "[[2026-06-01-docs-cli-buildtime-research]]"
 ---

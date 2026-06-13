@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#test-topology-refactor'
 date: '2026-06-05'
+modified: '2026-06-05'
 related:
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-04-12-base-module-structure-adr]]'

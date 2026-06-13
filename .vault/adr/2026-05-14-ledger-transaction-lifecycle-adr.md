@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#ledger-transaction-lifecycle"
 date: '2026-05-14'
+modified: '2026-05-14'
 related:
   - "[[2026-05-14-ledger-transaction-lifecycle-research]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"

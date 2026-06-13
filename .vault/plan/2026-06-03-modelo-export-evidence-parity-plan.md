@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#modelo-export-evidence-parity'
 date: '2026-06-03'
+modified: '2026-06-03'
 tier: L3
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'

@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#profile-lifecycle-cli-cascade-supersession'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - '[[2026-05-16-profile-lifecycle-cli-plan]]'
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'

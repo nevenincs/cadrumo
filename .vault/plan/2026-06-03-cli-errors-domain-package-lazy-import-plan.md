@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#cli-errors-domain-package-lazy-import'
 date: '2026-06-03'
+modified: '2026-06-03'
 tier: L2
 related:
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-adr]]'

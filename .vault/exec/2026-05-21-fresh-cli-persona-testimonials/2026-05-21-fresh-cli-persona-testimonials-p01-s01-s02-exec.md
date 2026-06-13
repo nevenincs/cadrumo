@@ -1,6 +1,7 @@
 ---
 tags: ["#exec", "#cli-testimonial"]
 date: '2026-05-21'
+modified: '2026-05-21'
 step_id: 'P01.S01-P01.S02'
 related:
   - '[[2026-05-21-fresh-cli-persona-testimonial-wave-plan]]'

@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#schedule-predicate-catalogue'
 date: '2026-05-31'
+modified: '2026-05-31'
 tier: L2
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-adr]]'

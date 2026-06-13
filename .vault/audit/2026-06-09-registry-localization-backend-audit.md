@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#registry-localization-backend'
 date: '2026-06-09'
+modified: '2026-06-09'
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-08-registry-localization-backend-research]]'

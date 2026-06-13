@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#corpus-strict-gate'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-04-corpus-strict-gate-research]]"
 ---

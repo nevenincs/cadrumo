@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-ledger-testimonials'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
   - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'

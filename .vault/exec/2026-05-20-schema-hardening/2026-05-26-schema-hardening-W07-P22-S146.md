@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#schema-hardening"
 date: "2026-05-26"
+modified: '2026-05-26'
 step_id: "W07.P22.S146"
 related:
   - "[[2026-05-20-schema-hardening-plan]]"

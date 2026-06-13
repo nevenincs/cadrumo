@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - "[[2026-05-27-yara-cli-testimonial-audit]]"
   - "[[2026-05-27-lourdes-cli-testimonial-audit]]"

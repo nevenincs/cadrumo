@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#registry-row-width-pressure'
 date: '2026-06-04'
+modified: '2026-06-04'
 step_id: 'S06'
 related:
   - '[[2026-06-04-registry-row-width-pressure-plan]]'

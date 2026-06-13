@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-036-census-sync'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - '[[2026-06-03-m036-lifecycle-verbs-research]]'
   - '[[2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr]]'

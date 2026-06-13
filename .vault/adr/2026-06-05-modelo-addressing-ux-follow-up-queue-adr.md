@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-addressing-ux'
 date: '2026-06-05'
+modified: '2026-06-05'
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-research]]'

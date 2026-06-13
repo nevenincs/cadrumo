@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
+modified: '2026-06-09'
 related:
   - "[[2026-06-09-modelo-iva-routing-carry-research]]"
 ---

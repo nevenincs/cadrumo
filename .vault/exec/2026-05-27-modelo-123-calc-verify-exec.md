@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#modelo-123-calc-verify'
 date: '2026-05-27'
+modified: '2026-05-27'
 step_id: 'S-aitor-211'
 related:
   - '[[2026-04-27-modelo-123-calc-verify-plan]]'

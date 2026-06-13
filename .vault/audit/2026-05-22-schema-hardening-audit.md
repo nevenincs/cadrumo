@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-22'
+modified: '2026-05-22'
 related:
   - "[[2026-05-22-schema-hardening-plan]]"
   - "[[2026-05-22-schema-hardening-adr]]"

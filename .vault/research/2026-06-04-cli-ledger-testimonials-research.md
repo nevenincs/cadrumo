@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#cli-ledger-testimonials'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-03-cli-ledger-testimonials-adr]]"
 ---

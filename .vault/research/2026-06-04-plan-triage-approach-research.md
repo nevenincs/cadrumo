@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#plan-triage-approach'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-03-plan-triage-approach-adr]]"
 ---

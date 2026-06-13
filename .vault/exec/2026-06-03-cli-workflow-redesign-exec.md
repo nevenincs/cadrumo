@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
+modified: '2026-06-03'
 step_id: 'W77.P370.S2131'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"

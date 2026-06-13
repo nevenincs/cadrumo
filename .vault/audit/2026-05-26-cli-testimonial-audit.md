@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-26'
+modified: '2026-05-26'
 related:
   - "[[2026-05-21-cli-testimonial-audit]]"
   - "[[2026-05-21-persona-fleet-round3-findings-audit]]"

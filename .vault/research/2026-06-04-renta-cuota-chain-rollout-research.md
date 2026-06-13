@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#renta-cuota-chain-rollout'
 date: '2026-06-04'
+modified: '2026-06-04'
 related: []
 related:
   - '[[2026-05-06-renta-cuota-chain-rollout-adr]]'

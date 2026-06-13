@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-07'
+modified: '2026-05-07'
 related:
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'

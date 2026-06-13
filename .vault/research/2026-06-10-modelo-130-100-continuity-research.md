@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#modelo-130-100-continuity'
 date: '2026-06-10'
+modified: '2026-06-10'
 related:
   - "[[2026-06-10-modelo-130-100-continuity-plan]]"
 ---

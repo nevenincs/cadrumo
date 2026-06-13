@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#docs-navigability'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-04-docs-navigability-research]]"
 ---

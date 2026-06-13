@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#fichero-boe-golden-sha-contract-shape'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"

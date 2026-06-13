@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
+modified: '2026-06-10'
 related:
   - "[[2026-06-10-cli-envelope-notice-standardisation-research]]"
   - "[[2026-06-02-emit-envelope-schema-burndown-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-05-27'
+modified: '2026-05-27'
 tier: L2
 related:
   - '[[2026-05-26-schema-hardening-m130-standardization-plan]]'

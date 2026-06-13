@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#config-cli-profile-surface'
 date: '2026-05-07'
+modified: '2026-05-07'
 related:
   - "[[2026-05-07-user-profile-schema-research]]"
   - "[[2026-05-07-user-profile-filing-export-dependencies-reference]]"

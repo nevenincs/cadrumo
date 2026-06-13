@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#quadlingual-i18n'
 date: '2026-05-01'
+modified: '2026-05-01'
 related:
   - "[[2026-04-12-trilingual-i18n-research]]"
   - "[[2026-04-12-trilingual-i18n-adr]]"

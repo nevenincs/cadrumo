@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#cli-testimonial'
 date: '2026-05-21'
+modified: '2026-05-21'
 related:
   - '[[2026-05-21-fresh-cli-persona-repair-plan]]'
   - '[[2026-05-21-fresh-cli-persona-findings-inventory-audit]]'

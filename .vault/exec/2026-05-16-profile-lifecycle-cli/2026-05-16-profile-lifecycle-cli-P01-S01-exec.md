@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#profile-lifecycle-cli"
 date: "2026-05-16"
+modified: '2026-05-16'
 step_id: S01
 related:
   - "[[2026-05-16-profile-lifecycle-cli-plan]]"

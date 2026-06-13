@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#executable-parity-evidence-tier-contract'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-06-03-bare-invocation-bucket-session-gate-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"

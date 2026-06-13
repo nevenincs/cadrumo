@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
+modified: '2026-06-10'
 related:
   - '[[2026-06-02-emit-envelope-schema-burndown-adr]]'
   - '[[2026-04-25-json-output-contract-adr]]'

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#cli-design'
 date: '2026-05-12'
+modified: '2026-05-12'
 related:
   - "[[2026-05-10-eliminate-user-cli-shim-plan]]"
   - "[[2026-05-10-cli-structural-localization-audit]]"

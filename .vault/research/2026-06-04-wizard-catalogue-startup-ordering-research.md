@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#wizard-catalogue-startup-ordering'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-03-wizard-catalogue-startup-ordering-adr]]"
 ---

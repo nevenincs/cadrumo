@@ -6,6 +6,7 @@ tags:
   - "#research"
   - "#docs-rewrite"
 date: 2026-04-12
+modified: '2026-04-12'
 related:
   - "[[2026-04-12-docs-rewrite-adr]]"
   - "[[2026-04-12-docs-rewrite-plan]]"

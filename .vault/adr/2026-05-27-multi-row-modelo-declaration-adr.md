@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#multi-row-modelo-declaration'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-work-units-adr]]"
   - "[[2026-04-13-modelo-inventory-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#declaracion-extraction-architecture'
 date: '2026-05-28'
+modified: '2026-05-28'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - "[[2026-04-21-declaracion-extractor-adr]]"

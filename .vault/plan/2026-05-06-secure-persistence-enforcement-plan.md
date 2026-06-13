@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#secure-persistence-enforcement'
 date: '2026-05-06'
+modified: '2026-05-06'
 related:
   - '[[2026-05-06-secure-persistence-enforcement-research]]'
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'

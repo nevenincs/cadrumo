@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#pytest-markers"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-pytest-markers-plan]]"
   - "[[2026-04-17-pytest-markers-adr]]"

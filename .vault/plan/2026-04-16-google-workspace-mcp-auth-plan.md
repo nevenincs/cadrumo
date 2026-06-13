@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#google-workspace-mcp-auth"
 date: "2026-04-16"
+modified: '2026-04-16'
 related:
   - "[[2026-04-16-google-workspace-mcp-auth-research]]"
   - "[[2026-04-16-google-workspace-mcp-auth-reference]]"

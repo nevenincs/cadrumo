@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#justificante-parser'
 date: '2026-04-12'
+modified: '2026-04-12'
 related:
   - '[[2026-04-12-justificante-parser-research]]'
   - '[[2026-04-12-justificante-parser-adr]]'

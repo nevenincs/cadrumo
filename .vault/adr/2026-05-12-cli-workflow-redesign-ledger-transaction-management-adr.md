@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
+modified: '2026-05-12'
 related:
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-research]]"
   - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#schema-hardening-coti'
 date: '2026-05-22'
+modified: '2026-05-22'
 related:
   - '[[2026-05-22-schema-hardening-research]]'
   - '[[2026-05-22-schema-hardening-audit]]'

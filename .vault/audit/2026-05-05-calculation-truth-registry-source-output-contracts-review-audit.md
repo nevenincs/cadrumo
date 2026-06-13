@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#calculation-truth-registry'
 date: '2026-05-05'
+modified: '2026-05-05'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-05-calculation-truth-registry-phase0b-source-output-contracts-exec]]'

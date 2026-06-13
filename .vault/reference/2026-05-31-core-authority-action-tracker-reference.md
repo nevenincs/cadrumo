@@ -3,6 +3,7 @@ tags:
   - '#reference'
   - '#core-authority-action-tracker'
 date: '2026-05-31'
+modified: '2026-05-31'
 related:
   - "[[2026-05-31-core-authority-constants-reference]]"
   - "[[2026-05-31-core-authority-shims-reference]]"

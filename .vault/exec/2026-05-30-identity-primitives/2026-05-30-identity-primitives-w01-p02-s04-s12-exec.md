@@ -4,6 +4,7 @@ tags:
   - '#exec'
   - '#identity-primitives'
 date: '2026-05-30'
+modified: '2026-05-30'
 related:
   - '[[2026-05-30-identity-primitives-plan]]'
   - '[[2026-05-30-identity-primitives-adr]]'

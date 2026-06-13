@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#modelo-multiyear-renta-income'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---

@@ -3,6 +3,7 @@ tags:
   - "#audit"
   - "#deferred-scope-state-machine"
 date: "2026-05-19"
+modified: '2026-05-19'
 related:
   - "[[2026-05-19-spanish-stem-terminology-authority-adr]]"
   - "[[2026-05-19-code-duplication-sweep-audit]]"

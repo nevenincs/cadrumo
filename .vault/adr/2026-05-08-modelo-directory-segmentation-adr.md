@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-08'
+modified: '2026-05-08'
 related:
   - "[[2026-05-08-modelo-100-bulk-segmentation-audit]]"
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"

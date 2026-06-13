@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#llm-ledger-classification'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-03-llm-ledger-classification-adr]]"
   - "[[2026-06-03-llm-ledger-classification-research]]"

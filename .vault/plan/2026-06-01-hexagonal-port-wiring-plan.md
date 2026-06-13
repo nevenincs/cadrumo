@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#hexagonal-port-wiring'
 date: '2026-06-01'
+modified: '2026-06-01'
 tier: L2
 related:
   - '[[2026-05-31-hexagonal-port-necessity-audit]]'

@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#modelo-100-renta-full-calc'
 date: '2026-05-20'
+modified: '2026-05-20'
 step_id: 'S01'
 related:
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"

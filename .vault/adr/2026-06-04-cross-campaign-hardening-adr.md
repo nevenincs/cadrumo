@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cross-campaign-hardening'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-21-cross-campaign-hardening-plan]]"
   - "[[2026-06-04-cross-campaign-hardening-research]]"

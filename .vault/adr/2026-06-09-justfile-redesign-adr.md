@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#justfile-redesign'
 date: '2026-06-09'
+modified: '2026-06-09'
 related:
   - '[[2026-06-09-justfile-redesign-research]]'
 ---

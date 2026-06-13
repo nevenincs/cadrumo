@@ -3,6 +3,7 @@ tags:
   - "#audit"
   - "#finding-coverage"
 date: "2026-05-27"
+modified: '2026-05-27'
 related:
   - "[[2026-05-27-eva-cli-testimonial-audit]]"
   - "[[2026-05-27-david-cli-testimonial-audit]]"

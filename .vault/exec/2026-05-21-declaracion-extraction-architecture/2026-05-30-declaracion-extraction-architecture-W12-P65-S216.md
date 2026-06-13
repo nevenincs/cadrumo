@@ -1,6 +1,7 @@
 ---
 step_id: "W12.P65.S216"
 date: 2026-05-30
+modified: '2026-05-30'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

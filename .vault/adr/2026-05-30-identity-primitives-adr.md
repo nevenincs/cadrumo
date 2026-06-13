@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#identity-primitives"
 date: '2026-05-30'
+modified: '2026-05-30'
 related:
   - "[[2026-05-30-identity-primitives-reference]]"
   - "[[2026-05-13-identity-adr]]"

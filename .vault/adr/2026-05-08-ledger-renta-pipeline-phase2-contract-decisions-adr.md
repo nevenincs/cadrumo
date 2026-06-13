@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
+modified: '2026-05-08'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-research]]"
   - "[[2026-05-08-ledger-renta-pipeline-reference]]"

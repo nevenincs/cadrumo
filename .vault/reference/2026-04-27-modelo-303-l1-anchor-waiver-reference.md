@@ -3,6 +3,7 @@ tags:
   - '#reference'
   - '#modelo-303-calc-verify'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-303-rule-delta-reference]]"
   - "[[2026-04-27-modelo-303-calc-verify-research]]"

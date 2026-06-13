@@ -3,6 +3,7 @@ tags:
   - "#audit"
   - "#hexagonal-port-necessity"
 date: "2026-05-31"
+modified: '2026-05-31'
 related:
   - "[[2026-05-31-core-authority-W06-P16-S50]]"
   - "[[2026-05-31-core-authority-W06-P16-S51]]"

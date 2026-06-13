@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cross-domain-continuity'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - "[[2026-05-12-cli-workflow-redesign-verified-complete-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"

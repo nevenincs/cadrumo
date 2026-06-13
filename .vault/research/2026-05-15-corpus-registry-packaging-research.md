@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#corpus-registry-packaging'
 date: '2026-05-15'
+modified: '2026-05-15'
 related:
   - "[[2026-05-01-corpus-data-hydration-adr]]"
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"

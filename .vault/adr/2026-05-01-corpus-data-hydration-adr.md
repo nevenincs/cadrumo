@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#corpus-data-hydration'
 date: '2026-05-01'
+modified: '2026-05-01'
 related:
   - "[[2026-05-01-corpus-data-hydration-research]]"
   - "[[2026-04-12-casilla-db-adr]]"

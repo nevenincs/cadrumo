@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
   - '[[2026-05-20-registry-casilla-identity-research]]'

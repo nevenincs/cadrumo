@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#attachment-service"
 date: "2026-04-17"
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-attachment-service-plan]]"
   - "[[2026-04-17-attachment-service-adr]]"

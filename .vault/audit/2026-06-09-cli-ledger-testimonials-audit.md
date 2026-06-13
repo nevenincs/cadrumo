@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#cli-ledger-testimonials'
 date: '2026-06-09'
+modified: '2026-06-09'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-audit]]'
   - '[[2026-06-03-cli-ledger-testimonials-plan]]'

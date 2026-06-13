@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
+modified: '2026-05-14'
 tier: L2
 related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'

@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#profile-keys-i18n-migration'
 date: '2025-02-13'
+modified: '2025-02-13'
 related:
   - '[[2025-02-13-profile-keys-i18n-migration-exec]]'
   - '[[2026-04-12-trilingual-i18n-research]]'

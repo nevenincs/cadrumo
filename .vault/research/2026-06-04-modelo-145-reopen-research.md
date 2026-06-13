@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#modelo-145-reopen'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]"
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]"

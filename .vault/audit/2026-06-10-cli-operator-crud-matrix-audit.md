@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#cli-operator-surface'
 date: '2026-06-10'
+modified: '2026-06-10'
 related:
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'

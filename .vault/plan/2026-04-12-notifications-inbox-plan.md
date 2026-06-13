@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#notifications-inbox"
 date: 2026-04-12
+modified: '2026-04-12'
 title: AEAT notifications inbox — plan
 related:
   - "[[2026-04-12-notifications-inbox-research]]"

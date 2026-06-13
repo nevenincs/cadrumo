@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cross-period-calculation-guards'
 date: '2026-06-05'
+modified: '2026-06-05'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-research]]'
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'

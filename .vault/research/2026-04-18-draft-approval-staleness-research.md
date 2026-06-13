@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#draft-approval-staleness"
 date: "2026-04-18"
+modified: '2026-04-18'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-17-export-first-roadmap-plan]]"

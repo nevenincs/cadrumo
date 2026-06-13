@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#sal-sll-legal-entity-form'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-27-sal-sll-legal-entity-form-adr]]"
 ---

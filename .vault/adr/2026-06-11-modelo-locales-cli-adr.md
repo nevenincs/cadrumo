@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-locales-cli'
 date: '2026-06-11'
+modified: '2026-06-11'
 related:
   - '[[2026-06-11-modelo-locales-cli-research]]'
 ---

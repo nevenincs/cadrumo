@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#renta-cuota-chain-rollout'
 date: '2026-05-06'
+modified: '2026-05-06'
 related:
   - '[[2026-05-06-renta-cuota-chain-rollout-plan]]'
   - '[[2026-04-21-modelo-100-renta-research]]'

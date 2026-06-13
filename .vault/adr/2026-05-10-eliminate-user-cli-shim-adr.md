@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#eliminate-user-cli-shim'
 date: '2026-05-10'
+modified: '2026-05-10'
 related:
   - '[[2026-05-10-eliminate-user-cli-shim-plan]]'
   - '[[2026-05-10-cli-structural-localization-audit]]'

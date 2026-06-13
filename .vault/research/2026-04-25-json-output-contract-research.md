@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#json-output-contract'
 date: '2026-04-25'
+modified: '2026-04-25'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-reference]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-06-02-modelo-720-prior-year-baseline-adr]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"

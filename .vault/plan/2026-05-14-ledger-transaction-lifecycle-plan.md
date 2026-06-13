@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#ledger-transaction-lifecycle'
 date: '2026-05-14'
+modified: '2026-05-14'
 tier: L2
 related:
   - '[[2026-05-14-ledger-transaction-lifecycle-adr]]'

@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#aeat-filing-detail-fetch"
 date: 2026-04-18
+modified: '2026-04-18'
 title: exec — phase 6 summary — PR and review
 issue: wgergely/aeat#227
 related:

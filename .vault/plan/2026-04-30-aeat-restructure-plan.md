@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#aeat-restructure'
 date: '2026-04-30'
+modified: '2026-04-30'
 related:
   - '[[2026-04-30-aeat-restructure-adr]]'
   - '[[2026-04-30-aeat-restructure-research]]'

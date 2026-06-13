@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#persona-testimonial-wave'
 date: '2026-05-28'
+modified: '2026-05-28'
 related:
   - "[[2026-05-27-source-jurisdiction-axis-adr]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"

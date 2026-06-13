@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#aeat-filing-detail-fetch"
 date: 2026-04-18
+modified: '2026-04-18'
 title: ADR — StatusReader.fetch_filing_detail (#227)
 status: accepted
 issue: wgergely/aeat#227

@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#google-auth-ux"
 date: "2026-04-21"
+modified: '2026-04-21'
 related:
   - "[[2026-04-21-google-auth-ux-research]]"
   - "[[2026-04-21-google-auth-ux-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#agent-rule-consolidation'
 date: '2026-06-01'
+modified: '2026-06-01'
 related:
   - "[[2026-06-01-agent-rule-consolidation-research]]"
 ---

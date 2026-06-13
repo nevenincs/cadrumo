@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#m200-internal-casilla-discipline'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-06-03-m200-internal-casilla-discipline-research]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"

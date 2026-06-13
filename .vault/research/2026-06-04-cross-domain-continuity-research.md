@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#cross-domain-continuity'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-26-cross-domain-continuity-adr]]"
   - "[[2026-05-27-cross-domain-continuity-adr]]"

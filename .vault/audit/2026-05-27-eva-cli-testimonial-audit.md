@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - "[[2026-05-26-cli-testimonial-audit]]"
 ---

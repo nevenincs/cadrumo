@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-04-registry-hardening-next-work-research]]"
 ---

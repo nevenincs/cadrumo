@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#pdf-import"
 date: "2026-04-20"
+modified: '2026-04-20'
 related:
   - "[[2026-04-20-pdf-import-research]]"
   - "[[2026-04-17-export-first-adr]]"

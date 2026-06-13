@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#renta-full-coverage'
 date: '2026-05-07'
+modified: '2026-05-07'
 related:
   - "[[2026-05-07-renta-scope-audit-audit]]"
   - "[[2026-05-06-renta-cuota-chain-rollout-plan]]"

@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#aeat-cli-redesign'
 date: '2026-05-03'
+modified: '2026-05-03'
 related:
   - '[[2026-05-02-aeat-cli-redesign-adr]]'
   - '[[2026-05-02-aeat-cli-redesign-reference]]'

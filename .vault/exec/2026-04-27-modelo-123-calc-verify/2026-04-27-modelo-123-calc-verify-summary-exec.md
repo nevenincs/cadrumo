@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#modelo-123-calc-verify'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - '[[2026-04-27-modelo-123-calc-verify-plan]]'
   - '[[2026-04-27-modelo-123-rule-delta-reference]]'

@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#ledger-operator-hardening'
 date: '2026-06-02'
+modified: '2026-06-02'
 tier: L3
 related:
   - '[[2026-06-02-ledger-operator-hardening-adr]]'

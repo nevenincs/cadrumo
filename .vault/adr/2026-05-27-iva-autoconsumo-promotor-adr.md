@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#iva-autoconsumo-promotor'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-17-modelo-formulas-adr]]"

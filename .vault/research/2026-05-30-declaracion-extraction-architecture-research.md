@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#declaracion-extraction-architecture'
 date: '2026-05-30'
+modified: '2026-05-30'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]"

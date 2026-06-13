@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#linkage-design-audit'
 date: '2026-05-17'
+modified: '2026-05-17'
 tier: L2
 related:
   - '[[2026-05-15-linkage-design-audit-research]]'

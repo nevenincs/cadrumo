@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#aeat-cli-gap-discovery'
 date: '2026-05-08'
+modified: '2026-05-08'
 related:
   - "[[2026-05-08-aeat-cli-hardening-plan]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"

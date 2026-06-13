@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#renta-full-coverage'
 date: '2026-06-04'
+modified: '2026-06-04'
 related: []
 related:
   - '[[2026-05-07-renta-full-coverage-adr]]'

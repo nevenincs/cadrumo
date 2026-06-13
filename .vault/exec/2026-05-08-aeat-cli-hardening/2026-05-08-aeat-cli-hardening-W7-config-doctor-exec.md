@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#aeat-cli-hardening'
 date: '2026-05-08'
+modified: '2026-05-08'
 related:
   - '[[2026-05-08-aeat-cli-hardening-plan]]'
 ---

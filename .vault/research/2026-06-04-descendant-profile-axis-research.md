@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#descendant-profile-axis'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-27-descendant-profile-axis-adr]]"
 ---

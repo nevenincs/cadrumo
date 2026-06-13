@@ -4,6 +4,7 @@ tags:
   - '#index'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S01]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S02]]'

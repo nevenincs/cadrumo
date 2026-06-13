@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
+modified: '2026-06-05'
 related:
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'
