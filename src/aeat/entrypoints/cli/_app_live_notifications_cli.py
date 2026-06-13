@@ -10,7 +10,7 @@ import typer
 
 from ...application.live import NotificationsService, capture_notifications
 from ...core.i18n import tr
-from ._app_live_auth_preflight import run_auth_preflight
+from ._app_live_auth_preflight import resolve_active_bucket, run_auth_preflight
 from ._app_live_payloads import (
     NotificationRowPayload,
     NotificationsCaptureResult,
@@ -39,9 +39,7 @@ def register_notifications_commands(
 
 
 def _bucket_id() -> str:
-    if _active_bucket_id is None:
-        raise RuntimeError("live notifications commands were not registered")
-    return _active_bucket_id()
+    return resolve_active_bucket(_active_bucket_id, family="notifications")
 
 
 notifications_app = typer.Typer(

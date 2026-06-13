@@ -11,7 +11,7 @@ import typer
 
 from ...application.live import capture_expedientes_bulk
 from ...core.i18n import tr
-from ._app_live_auth_preflight import _metric_line, run_auth_preflight
+from ._app_live_auth_preflight import _metric_line, resolve_active_bucket, run_auth_preflight
 from ._common import _emit_envelope
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -39,9 +39,7 @@ def register_expedientes_commands(
 
 
 def _bucket_id() -> str:
-    if _active_bucket_id is None:
-        raise RuntimeError("live expedientes commands were not registered")
-    return _active_bucket_id()
+    return resolve_active_bucket(_active_bucket_id, family="expedientes")
 
 
 def _resolve_pull_year_range(
