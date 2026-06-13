@@ -214,19 +214,30 @@ you explicitly use `--reaffirm`.
 ## Read attached evidence
 
 Attach a purchase invoice or receipt to a transaction, then let the model read it
-while classifying. The text is extracted from the document on your machine; only
-that text reaches the classifier. The document bytes stay in secure storage.
+while classifying. The document bytes always stay in secure storage; nothing is
+written to a temporary file. How the document is read depends on its kind.
 
-Reading evidence with a cloud provider (claude, codex, antigravity) sends the
-extracted text off your machine. This is off by default. Enable it for the
-deployment, then acknowledge the upload each time:
+A PDF with a text layer is read on your machine, and only the extracted text is
+sent to the cloud provider (claude, codex, antigravity). Sending that text off
+your machine is off by default and barred for gestor or professional
+deployments. Enable it for the deployment, then acknowledge the upload each time:
 
 ```bash
 aeat app ledger classify <transaction-id> --llm claude --saturate --read-evidence --evidence-acknowledged
 ```
 
-Acknowledge the upload every time. Evidence reading is not available in gestor or
-professional deployments.
+A scanned PDF or an image invoice is read entirely on your machine by a local
+vision model. Nothing leaves the host, so no acknowledgement is needed and it
+works in gestor and professional deployments. Run it without
+`--evidence-acknowledged`:
+
+```bash
+aeat app ledger classify <transaction-id> --llm claude --saturate --read-evidence
+```
+
+The local vision model reads scanned and image evidence regardless of the
+`--llm` provider you pass. Install a local Ollama vision model first; see
+[Set up LLM classification providers](setup-llm-classification.md).
 
 The model reads the document only to choose the spending category and the IVA
 situation. It never copies a euro amount from the invoice. The tax numbers are
