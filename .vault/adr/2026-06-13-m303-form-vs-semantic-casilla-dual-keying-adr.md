@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-09-modelo-iva-routing-carry-adr]]"
@@ -12,7 +13,7 @@ related:
   - "[[2026-06-01-m303-iva-resultado-semantic-casilla-mismatch-research]]"
 ---
 
-# `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 official Diseno box population via semantic projection (Stage 2)` | (**status:** `proposed`)
+# `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 official Diseno box population via semantic projection (Stage 2)` | (**status:** `accepted`)
 
 This ADR amends and extends the accepted 2026-06-01 dual-keying ADR. It supersedes that ADR's stale Finding A (corrected below) and authorises Stage 2 of the official-Diseno box wiring. The Stage 1 advisory floor (calculate-path advisory plus two ADVISORY verify predicates) shipped at commit 330ab6771; this ADR specifies the mechanism that POPULATES the official numbered boxes so the operator transcribes real cuota rather than zeros, and the verify-gate transition that follows. Status is proposed: the operator ratifies before any Stage-2 code lands. No code is changed by this ADR.
 
@@ -111,6 +112,18 @@ The projection mechanism is the only candidate that does not create a second agg
 2. **Box 37 source.** Box `37` (AIC corrientes deducible cuota) has two plausible single sources in the current semantic layer (the interior-deducible autorepercutido casilla vs the AIC-deducible parity casilla). The executor will pin the exact 1:1 source against the box label before wiring; flag if you want a specific source mandated now.
 3. **Verify transition style.** Prefer (a) authoring an equality/consistency predicate per projected box (requires a DSL equality operator, separately grounded), or (b) retiring the now-satisfied Stage 1 advisory for populated constituents and relying on the copy being inherently consistent. The ADR permits either; name a preference if you have one.
 4. **Prior-ADR disposition.** This ADR corrects Finding A of the 2026-06-01 ADR in prose. Confirm whether you also want the 2026-06-01 ADR's body edited to stamp Finding A as corrected/superseded by 2026-06-13, or whether the cross-reference in this ADR is sufficient.
+
+## Ratification
+
+The operator ratified this ADR on 2026-06-13 and authorised the recommended defaults. Status moves `proposed` -> `accepted`. The four open questions are resolved as follows.
+
+1. **Population scope (Open Question 1) -- selective in-scope set ratified.** Populate ONLY the listed cuota boxes via single-source projection: devengado cuotas `09` / `06` / `03`, inversion-del-sujeto-pasivo cuotas `11` / `13`, the devengado total `27`, deducible cuotas `29` / `33` / `37`, and the deducible total `45`. Base boxes, tipo (percentage) boxes, the boxes blocked on the eight LIVA articles still absent from the corpus, and the regimen-simplificado boxes (`47` onward) STAY `manual` and remain advisory-covered. They are NOT force-fitted to any semantic source. Partial population is the intended Stage-2 scope.
+
+2. **Box 37 source (Open Question 2) -- executor pins the exact 1:1 source; no force-fit.** The executor pins box `37`'s deducible source from the M303 registry by label-match against the box's own label and the semantic casilla self-documentation. The registry carries a genuine self-label collision: BOTH `iva.autorepercutido.intracomunitaria.deducible` (label "...oficial casillas 36/37") AND `iva.autorepercutido.interior.deducible` (label "...oficial casilla 37") name casilla 37. Box `37`'s label is "IVA deducible adquisiciones intracomunitarias corrientes - Cuota", which is the AIC (adquisiciones intracomunitarias) leg, so the label-exact source is `iva.autorepercutido.intracomunitaria.deducible`. The executor MUST confirm this against the box label and the 2026-06-09 routing decisions before wiring. If the executor judges the two candidates genuinely ambiguous after that confirmation, box `37` stays `manual` and the Stage 1 advisory continues to cover it -- no guess.
+
+3. **Verify transition (Open Question 3) -- NARROW the advisory AND add a consistency predicate.** Both moves are authorised. The Stage 1 ADVISORY `implies_any_nonzero` predicates are NARROWED so each constituent list retains only the boxes that REMAIN manual after Stage 2 (so the advisory keeps firing for base/tipo/blocked boxes and any box left manual, e.g. `37` if deferred) and drops the now-populated constituents. Because the advisory module reuses these same predicates as its single source of truth, narrowing the predicate lists narrows both the verify finding and the calculate advisory in lock-step. Separately, a consistency predicate (numbered box value == its semantic source value) is added for each populated box. The DSL has no equality operator today (only `implies_nonzero` / `implies_any_nonzero`); the executor adds a small, separately-grounded equality/consistency operator to the predicate DSL (registry `KNOWN_VERIFICATION_PREDICATE_OPERATORS`, the `_validate_surfaces` gate, and the `_verification_actions` evaluator) to express it. The consistency predicate is near-tautological within one evaluation (a copy cannot drift from its source); its value is catching a future mis-edit (a box re-flipped to manual, or a projection pointed at the wrong source).
+
+4. **Prior-ADR disposition (Open Question 4) -- superseding-pointer added to the 2026-06-01 ADR body.** A superseding-pointer note is added to the 2026-06-01 ADR body flagging its Finding A as corrected/superseded by this 2026-06-13 ADR.
 
 ## Codification candidates
 

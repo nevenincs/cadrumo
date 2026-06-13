@@ -8,6 +8,7 @@ related:
   - '[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]'
   - '[[2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'
+  - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]'
 ---
 
 # `m303-form-vs-semantic-casilla-dual-keying` feature index
@@ -19,7 +20,11 @@ Auto-generated index of all documents tagged with `#m303-form-vs-semantic-casill
 ### adr
 
 - `2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr` - `m303-form-vs-semantic-casilla-dual-keying` adr: M303 form-numbered vs semantic casilla dual-keying convention | (**status:** `accepted`)
-- `2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr` - `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 official Diseno box population via semantic projection (Stage 2)` | (**status:** `proposed`)
+- `2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr` - `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 official Diseno box population via semantic projection (Stage 2)` | (**status:** `accepted`)
+
+### plan
+
+- `2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan` - `m303-form-vs-semantic-casilla-dual-keying` `M303 official Diseno box population via semantic projection (Stage 2)` plan
 
 ### research
 
