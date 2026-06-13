@@ -113,11 +113,14 @@ class Settings(AeatTimeoutSettings):
         description="Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments",
     )
     aeat_llm_ollama_vision_model: str = Field(
-        default="llama3.2-vision",
+        default="qwen2.5vl:3b",
         description=(
             "Local Ollama vision model used to read scanned/image evidence on-host "
             "(the default, gestor-allowed posture); must be a multimodal model pulled "
-            "into the local Ollama runtime"
+            "into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is "
+            "document/OCR-grade and runs on normal consumer hardware (modest GPU or "
+            "CPU); override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for "
+            "CPU-only/low-memory (see the consumer-hardware vision-model ADR)"
         ),
     )
     aeat_llm_default_max_tokens: int = Field(
