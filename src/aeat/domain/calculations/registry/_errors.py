@@ -292,8 +292,8 @@ class NoRevisionForPeriodError(RegistrySnapshotError):
     preflight`` resolver) can build an instructive refusal without
     parsing the message. Catchable as :class:`RegistrySnapshotError`.
 
-    Structured attributes: :attr:`modelo_id`, :attr:`filing_year`,
-    :attr:`period`, :attr:`revision_id`.
+    Structured attributes: ``modelo_id``, ``filing_year``,
+    ``period``, ``revision_id``.
     """
 
     def __init__(
@@ -337,7 +337,7 @@ class AmbiguousRevisionSelectionError(RegistrySnapshotError):
     operator refusal without re-parsing the message. Catchable as
     :class:`RegistrySnapshotError`.
 
-    Structured attributes: :attr:`modelo_id`, :attr:`candidate_ids`.
+    Structured attributes: ``modelo_id``, ``candidate_ids``.
     """
 
     def __init__(self, *, modelo_id: str, candidate_ids: Iterable[str]) -> None:
@@ -346,7 +346,7 @@ class AmbiguousRevisionSelectionError(RegistrySnapshotError):
         Args:
             modelo_id: The modelo whose revisions were searched.
             candidate_ids: The matching revision ids; stored sorted as a
-                tuple on :attr:`candidate_ids`.
+                tuple on ``candidate_ids``.
         """
         ids = tuple(sorted(candidate_ids))
         self.modelo_id: str = modelo_id

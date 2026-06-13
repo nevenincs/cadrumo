@@ -8,8 +8,8 @@ can consume it.
 CRITICAL (``sensitive-financial-data-secure-storage-only``): this object holds
 decrypted ``FINANCIAL`` bytes in process memory ONLY. It MUST NEVER be persisted,
 serialized to disk, written to a temp file, embedded in a persisted document, or
-logged. It carries no JSON serializer; :meth:`EvidenceInput.model_dump` and
-:meth:`EvidenceInput.model_dump_json` are overridden to raise so a stray
+logged. It carries no JSON serializer; ``EvidenceInput.model_dump`` and
+``EvidenceInput.model_dump_json`` are overridden to raise so a stray
 persistence call fails loudly rather than leaking bytes out of secure storage. The
 raw ``data`` field is excluded from ``repr`` for the same reason.
 """
