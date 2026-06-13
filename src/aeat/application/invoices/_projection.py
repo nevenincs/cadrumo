@@ -111,7 +111,8 @@ def project_invoice_review(invoice: Invoice, review: InvoiceReviewRecord | None)
 
 
 def invoice_display_amounts(
-    invoice: Invoice, review: InvoiceReviewRecord | None,
+    invoice: Invoice,
+    review: InvoiceReviewRecord | None,
 ) -> tuple[Decimal | None, Decimal | None]:
     """Compute review-adjusted base and IVA display totals."""
     base = invoice.base_total

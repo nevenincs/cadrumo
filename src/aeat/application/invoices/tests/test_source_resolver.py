@@ -41,8 +41,7 @@ class TestInvoiceDirectionToSourceKind:
 
     def test_received_maps_to_payable(self) -> None:
         assert (
-            invoice_direction_to_source_kind(InvoiceKind.RECEIVED)
-            is BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
+            invoice_direction_to_source_kind(InvoiceKind.RECEIVED) is BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
         )
 
     def test_mapping_is_total_over_invoice_kind(self) -> None:

@@ -69,7 +69,8 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
 
 
 def test_register_rejects_schema_violations(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     with pytest.raises(ProfileSchemaValidationError) as exc_info:
@@ -85,7 +86,8 @@ def test_register_rejects_schema_violations(
 
 
 def test_register_persists_when_all_required_facts_present(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     result = svc.register(
@@ -100,7 +102,8 @@ def test_register_persists_when_all_required_facts_present(
 
 
 def test_register_refuses_duplicate_profile_id(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
@@ -213,7 +216,8 @@ def test_rename_updates_label_only(secure_objects: SecureObjectRepository, schem
 
 
 def test_rename_refuses_a_tombstoned_profile(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """``rename`` on a tombstoned profile is refused — only live profiles relabel."""
 
@@ -238,7 +242,8 @@ def test_rename_refuses_a_tombstoned_profile(
 
 
 def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
@@ -356,7 +361,8 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
 
 
 def test_list_profiles_returns_sorted_listings(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     svc = _service(secure_objects, schema)
     svc.register(
@@ -387,7 +393,8 @@ def test_read_returns_persisted_record(secure_objects: SecureObjectRepository, s
 
 
 def test_read_raises_on_unknown_profile(
-    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition,
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
 ) -> None:
     """Service-contract gate: read() refuses an unknown profile id with
     :class:`ProfileNotFoundError`, not a silent empty record."""

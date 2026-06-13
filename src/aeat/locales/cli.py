@@ -352,8 +352,7 @@ def _echo_modelo_drift(drift: ModeloLocaleDriftRecord) -> None:
         tr(
             "locales.cli.modelo.audit.missing",
             default=(
-                "missing locale={locale_code} modelo={modelo} revision={revision} "
-                "scope={scope} field={field} key={key}"
+                "missing locale={locale_code} modelo={modelo} revision={revision} scope={scope} field={field} key={key}"
             ),
             locale_code=drift.target.locale.value,
             modelo=drift.target.modelo_id,
