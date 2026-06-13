@@ -24,6 +24,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....core.config import override_settings
@@ -248,6 +249,94 @@ def test_profile_import_with_structurally_invalid_bundle_surfaces_as_refused(
 # ---------------------------------------------------------------------------
 # G4: ConfigBoundaryError is a registered AeatError subclass (structural)
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# G5: Locked store (no passphrase) is NOT mislabelled profile_record_unreadable
+#     and is NOT routed at the destructive `config repair profile` verb.
+# ---------------------------------------------------------------------------
+
+
+def _switch_against_locked_store(name: str) -> Result:
+    """Run ``config switch NAME`` against a healthy-but-locked store.
+
+    The profile bucket is HEALTHY; only the master-key passphrase is
+    withheld (``aeat_secret_passphrase=None``) and stdin is non-interactive
+    (the ``CliRunner`` stdin is never a tty), reproducing the operator's
+    locked-store condition. Cached SQL connections are flushed so the read
+    re-resolves the master-key provider and hits the no-passphrase refusal
+    rather than a still-warm engine.
+    """
+    dispose_engine()
+    with override_settings(aeat_secret_passphrase=None):
+        return invoke_cached_cli(["config", "switch", name])
+
+
+def test_config_switch_against_locked_store_gives_passphrase_refusal_not_repair() -> None:
+    """A healthy-but-locked store yields the passphrase-instructive refusal.
+
+    The operator withheld the master-key passphrase (locked store); the
+    profile record itself is healthy. ``config switch`` must surface the
+    same instructive refusal every other verb gives — naming
+    ``AEAT_SECRET_PASSPHRASE`` and the interactive path — and must NOT
+    report ``profile_record_unreadable`` nor prescribe the destructive
+    ``config repair profile`` verb (prescribing a data-damaging repair for a
+    merely-locked store is the defect under test).
+
+    Real-behavior: a genuine profile is provisioned, the passphrase is then
+    withheld, and the full CLI surface is invoked with non-interactive stdin.
+    """
+    _create_profile("locked-store-probe")
+
+    result = _switch_against_locked_store("locked-store-probe")
+
+    combined = (result.output or "") + ((result.stderr if hasattr(result, "stderr") else "") or "")
+    assert "AEAT_SECRET_PASSPHRASE" in combined, combined
+    assert "profile_record_unreadable" not in combined, combined
+    assert "repair profile" not in combined, combined
+    # The no-passphrase condition exits with the FAIL category (5), the same
+    # code every other verb's SecretStoreError produces — never REFUSED (2),
+    # the code the old profile_record_unreadable misdiagnosis returned.
+    assert result.exit_code == 5, (result.exit_code, combined)
+
+
+def test_config_switch_against_locked_store_json_envelope_is_passphrase_refusal() -> None:
+    """In JSON mode the locked-store refusal is a typed error envelope, not a repair hint.
+
+    The stderr error document must carry the shared envelope spine and must
+    not smuggle a ``profile_record_unreadable`` status or a ``repair
+    profile`` next_action.
+    """
+    _create_profile("locked-json-probe")
+
+    dispose_engine()
+    with override_settings(aeat_secret_passphrase=None):
+        result = invoke_cached_cli(["--format", "json", "config", "switch", "locked-json-probe"])
+
+    assert result.exit_code == 5, result.output
+    stderr_payload = (result.stderr if hasattr(result, "stderr") else "") or result.output
+    assert "profile_record_unreadable" not in stderr_payload, stderr_payload
+    assert "repair profile" not in stderr_payload, stderr_payload
+
+
+def test_config_switch_against_corrupt_record_still_routes_to_repair(tmp_path: Path) -> None:
+    """A genuinely-corrupt record still reports unreadable and routes to repair.
+
+    This is the locked-vs-corrupt distinction's negative pole: with the
+    passphrase available but the per-bucket database physically corrupted,
+    ``config switch`` cannot read the record, so reporting
+    ``profile_record_unreadable`` and prescribing the ``config repair
+    profile`` recovery verb is correct and must survive the locked-store fix.
+    """
+    _create_profile("corrupt-switch-probe")
+    _corrupt_bucket_db(tmp_path)
+
+    result = invoke_cached_cli(["config", "switch", "corrupt-switch-probe"])
+
+    assert result.exit_code == 2, result.output
+    combined = result.output
+    assert "profile_record_unreadable" in combined or "unreadable" in combined, combined
+    assert "repair profile" in combined, combined
 
 
 def test_config_boundary_error_is_registered_aeat_error_subclass() -> None:
