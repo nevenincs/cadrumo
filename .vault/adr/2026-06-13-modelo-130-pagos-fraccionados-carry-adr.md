@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - "[[2026-06-04-m130-casilla-15-override-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
@@ -28,7 +29,57 @@ related:
        class, or function, use inline backtick code: `src/module.py`. -->
 
 
-# `modelo-130-pagos-fraccionados-carry` adr: `casilla 05 cumulative pagos-fraccionados carry (target-relative same-ejercicio sum)` | (**status:** `proposed`)
+# `modelo-130-pagos-fraccionados-carry` adr: `casilla 05 cumulative pagos-fraccionados carry (target-relative same-ejercicio sum)` | (**status:** `accepted`)
+
+## Ratification
+
+The operator ratified this ADR on 2026-06-13 and authorised the recommended
+defaults. The open questions are resolved as follows:
+
+- Prior casilla 16 materialisation. Casilla 16 MUST be materialised (even as a
+  Decimal zero) in stored M130 observations. The minoracion term reads the
+  prior filing casilla 16 from each prior revision observation set. Where a
+  prior observation genuinely carries casilla 16 = 0 (the common case) the term
+  is a no-op. Where a prior observation LACKS a casilla-16 entry entirely
+  ("not captured", distinct from "filed 0"), the carry still proceeds but
+  raises a non-blocking advisory naming the gap - the minoracion is never
+  silently dropped (consistent with `no-silent-under-declaration`). The plan
+  must encode this filed-zero-vs-not-captured distinction explicitly and prove
+  the advisory fires only on the not-captured case.
+
+- Operator-overridability of casilla 05. Casilla 05 is carry-only / bound
+  initially; it is NOT operator-overridable in this work. The casilla-15
+  override affordance is NOT replicated here. If a manual override is needed
+  later (e.g. to reconcile against an AEAT Pre130 figure), it is the subject of
+  a future ADR and is explicitly out of scope; do not build it now. The S3
+  manual-override reconciliation paragraph is resolved as carry-only.
+
+- Mid-year-alta boundary. The alta-CONTAINING quarter is the first owed
+  quarter (the first obligation). The expanding prior-quarter span starts
+  strictly AFTER the alta quarter - i.e. the span includes only quarters that
+  were actually owed (post-alta, strictly prior to the target). This boundary
+  is bound to the first-filer activity-start authority
+  (`2026-06-13-first-filer-attestation-adr`): the candidate prior-quarter set
+  is intersected with the periods for which a filing obligation actually
+  existed, using the same operator-declared `activity_start_date` axis the
+  deadline engine already consumes for pre-alta suppression. The span operator
+  and the pre-alta suppression MUST agree on the candidate quarter set so
+  neither double-counts nor demands a filing that was never owed.
+
+- Selector-grammar surface. Option B is confirmed: the executor names and
+  shapes the new target-relative prior-quarter EXPANDING-SPAN mode on
+  `_PreviousModeloSelector`, validated against its existing model validation
+  and the relation-source collision gate
+  (`validate_slot_source_hygiene` / `_is_direct_previous_filing_binding`). The
+  new mode stays a DIRECT previous_filing binding (no carve-out required) so it
+  passes the collision gate by construction.
+
+- Live Pre130 oracle. Deferred. The work uses the AEAT instrucciones-identity
+  multi-quarter fixture oracle now (the verbatim casilla-05 accumulation rule
+  applied to an independently-fixed multi-quarter fixture). A live AEAT Pre130
+  capture of an auto-filled casilla 05 is added later under the live-test gate
+  once that surface is functional; it is the stronger oracle but is not a
+  blocker for landing Stage 2.
 
 ## Problem Statement
 
