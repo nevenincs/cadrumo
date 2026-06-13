@@ -55,6 +55,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
@@ -78,6 +79,7 @@ from .. import (
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
     persist_filed_revision_observation,
+    verify_modelo_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -390,4 +392,59 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     casilla_0604 = Decimal(annual.casilla_values[_M100_PAGOS_CASILLA])
     assert casilla_0604 == expected_total, (
         f"M100 0604 must fold in the four computed M130 c19 (sum {expected_total}); got {casilla_0604}"
+    )
+
+
+def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The operator verify gate refuses verificado-completo on the ledger chain.
+
+    Completes the operator flow calculate → VERIFY on the same vertical, and
+    proves the cross-period clean-state safety invariant fires end-to-end: the
+    M130 quarters and the prior-year M100/2023 carry were filed locally through
+    ``persist_filed_revision_observation`` with the NON-official ``app_filing``
+    source_kind. Filing a dependent period (M100/2024) whose upstream evidence is
+    local-only — not an external AEAT justificante / CSV register / live capture —
+    must NOT be granted verificado-completo. The verify gate therefore returns a
+    BLOCKING ``cross_period_dependency_unclean`` finding naming the non-official
+    prior-year filing (modelo 100 / 2023), per
+    ``local-filed-observations-are-non-official-evidence`` and
+    ``aeat-safety-legal-gates``. This is the correct refusal, not a defect: it
+    proves the chain reaches the verify gate and the safety guard engages on a
+    real ledger-derived multi-period chain.
+    """
+    _persist_year_of_income(secure_objects)
+    _seed_prior_year_m100(secure_objects)
+    _seed_m131_zero_quarters(secure_objects)
+    for period in _QUARTER_ORDER:
+        _calculate_and_file_m130_quarter(secure_objects, period=period)
+    annual = _calculate_m100_annual(secure_objects)
+
+    report = verify_modelo_revision(
+        annual.calculation_revision_id,
+        actor="system",
+        workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+    )
+
+    assert report.calculation_revision_id == annual.calculation_revision_id
+    # The chain carries non-official (app_filing) upstream evidence, so the gate
+    # must NOT grant verificado-completo.
+    assert report.granted_verificado_completo is False
+    unclean = [
+        finding
+        for finding in report.findings
+        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
+    ]
+    assert unclean, (
+        f"verify gate must raise a BLOCKING cross_period_dependency_unclean finding "
+        f"for the non-official prior-year carry; got {report.findings}"
+    )
+    # The blocking finding names the non-official prior-year M100/2023 carry.
+    assert any("100" in finding.message and "2023" in finding.message for finding in unclean), (
+        f"the unclean finding must name the non-official prior-year filing; got {unclean}"
     )
