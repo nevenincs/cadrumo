@@ -69,10 +69,14 @@ class LocalVisionLLMClassifier:
         resolved_settings = settings if settings is not None else load_settings()
         self._spec = spec
         self._model = model if model is not None else resolved_settings.aeat_llm_ollama_vision_model
-        self._client = client if client is not None else LLMClient(
-            settings=resolved_settings,
-            caller="aeat.application.ledger.vision",
-            prompt_id="ledger-vision-classify",
+        self._client = (
+            client
+            if client is not None
+            else LLMClient(
+                settings=resolved_settings,
+                caller="aeat.application.ledger.vision",
+                prompt_id="ledger-vision-classify",
+            )
         )
 
     @property

@@ -98,7 +98,8 @@ def _create_outgoing_business_transaction(
 
 
 def test_evidence_add_id_is_accepted_by_attach_and_persisted(
-    profile: TestRuntimeProfile, pdf_file: Path,
+    profile: TestRuntimeProfile,
+    pdf_file: Path,
 ) -> None:
     evidence_id = _mint_evidence_id(profile, pdf_file)
     transaction_id = _create_outgoing_business_transaction(profile, idempotency_key="attach-evidence-add")
