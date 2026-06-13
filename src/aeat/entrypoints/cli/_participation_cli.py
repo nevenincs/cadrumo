@@ -17,8 +17,9 @@ import typer
 
 from ...application.ledger import get_transaction_participation
 from ...application.modelo import rebuild_participation_index
+from ...core.i18n import tr
 from ...domain.transactions import TransactionCatalogueRepository
-from ._common import _active_bucket_id_or_bad, _emit_envelope, _state, _tx_repo
+from ._common import _active_bucket_id_or_bad, _emit_envelope, _state, _tx_repo, emit_help_text
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload
@@ -40,7 +41,7 @@ def register_participation_commands(
     """
     participation = typer.Typer(
         name="participation",
-        help="Audit which finalized modelo revisions and filings consumed a ledger transaction.",
+        help=tr("Audit which finalized modelo revisions and filings consumed a ledger transaction."),
         invoke_without_command=True,
     )
 
@@ -49,19 +50,14 @@ def register_participation_commands(
         ctx: typer.Context,
         transaction_id: str | None = typer.Argument(
             None,
-            help="Ledger transaction id whose finalized-revision participations to list.",
-        ),
-        include_borradores: bool = typer.Option(
-            False,
-            "--include-borradores",
-            help="Reserved: include pending-draft (borrador) participations (deferred; no effect yet).",
+            help=tr("Ledger transaction id whose finalized-revision participations to list."),
         ),
     ) -> None:
         """List the finalized modelo revisions and filings that consumed a transaction."""
         if ctx.invoked_subcommand is not None:
             return
         if transaction_id is None:
-            typer.echo(ctx.get_help())
+            emit_help_text(ctx)
             raise typer.Exit(code=0)
         _emit_participation_lookup(
             ctx,
