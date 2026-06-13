@@ -43,6 +43,7 @@ from ._models import (
     UsageRecord,
     UsageSummary,
 )
+from ._providers import rasterise_pdf_pages_to_base64_png
 from ._usage import UsageRecorder
 
 __all__ = [
@@ -60,6 +61,7 @@ __all__ = [
     "LLMRequest",
     "LLMResponse",
     "MultimodalImageInput",
+    "rasterise_pdf_pages_to_base64_png",
     "PromptDefinition",
     "PromptRegistry",
     "Translation",
