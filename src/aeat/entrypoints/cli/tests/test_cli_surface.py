@@ -22,7 +22,8 @@ from typing import Any, cast
 
 import pytest
 
-from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER
+from ....core.config import override_settings
+from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -439,6 +440,97 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     )
     _assert_ledger_review_returns_transaction(transaction_id)
     _assert_ledger_review_filtered_by_period_returns_empty(transaction_id)
+
+
+def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Default ledger list JSON redacts ``bucket_id``; the reveal opt-out shows the real UUID.
+
+    Multi-client gestors must be able to disambiguate which bucket a command
+    addressed. The ``AEAT_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the
+    profile/bucket identifier surfaces while the paste-safe placeholder stays
+    the default.
+    """
+    _isolate(monkeypatch, tmp_path)
+    init = _invoke(
+        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
+    )
+    assert init.exit_code == 0, init.output
+    bucket_id = _active_bucket_id()
+    _ledger_add_manual_transaction(bucket_id)
+
+    default_listed = _run_ledger_cli_json(["app", "ledger", "list"])
+    assert default_listed["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
+    assert bucket_id not in json.dumps(default_listed, sort_keys=True)
+
+    with override_settings(aeat_cli_reveal_identifiers=True):
+        revealed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
+    assert revealed.exit_code == 0, revealed.output
+    revealed_payload = _json(revealed)
+    assert revealed_payload["bucket_id"] == bucket_id
+    assert revealed_payload["bucket_id"] != CLI_BUCKET_ID_PLACEHOLDER
+
+
+def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Default ``config profile show`` JSON redacts ``profile_id``; the opt-out reveals it.
+
+    ``config profile show`` is the profile inspection surface. The
+    centralised-output-redaction policy rewrites the ``profile_id`` field to the
+    paste-safe ``<profile-id>`` placeholder by default; the
+    ``AEAT_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the opaque profile UUID so
+    a multi-client gestor's automation can key on the addressed profile.
+    """
+    _isolate(monkeypatch, tmp_path)
+    init = _invoke(
+        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
+    )
+    assert init.exit_code == 0, init.output
+    profile_id = _active_bucket_id()
+
+    default_shown = _run_ledger_cli_json(["config", "profile", "show"])
+    assert default_shown["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert profile_id not in json.dumps(default_shown, sort_keys=True)
+
+    with override_settings(aeat_cli_reveal_identifiers=True):
+        revealed = invoke_cached_cli(["--format", "json", "config", "profile", "show"])
+    assert revealed.exit_code == 0, revealed.output
+    revealed_payload = _json(revealed)
+    assert revealed_payload["profile_id"] == profile_id
+    assert revealed_payload["profile_id"] != CLI_PROFILE_ID_PLACEHOLDER
+
+
+def test_app_modelo_filing_record_list_text_header_is_well_formed(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The ``filing-record list`` text column header survives the identifier redactor.
+
+    The tab-delimited header places ``bucket_id`` immediately before the
+    ``modelo`` column name. The ``label<TAB>value`` redaction heuristic must not
+    rewrite the next column name into a ``<bucket-id>`` placeholder: a column
+    header carries field names, never identifier values. The header row must pass
+    through verbatim so automation can parse the columns.
+    """
+    _isolate(monkeypatch, tmp_path)
+    init = _invoke(
+        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
+    )
+    assert init.exit_code == 0, init.output
+
+    listed = _invoke(["app", "modelo", "filing-record", "list"])
+    assert listed.exit_code == 0, listed.output
+
+    header_line = "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by"
+    assert header_line in listed.output
+    # The corruption symptom was ``bucket_id<TAB><bucket-id>`` replacing the
+    # ``modelo`` column name; the well-formed header keeps every column name.
+    assert "\tbucket_id\tmodelo\t" in listed.output
+    assert f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}" not in listed.output
 
 
 def _json_object(value: object) -> dict[str, object]:
