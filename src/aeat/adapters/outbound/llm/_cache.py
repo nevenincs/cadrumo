@@ -61,6 +61,12 @@ class LLMCache:
             "language": request.language,
             "cache_key": request.cache_key,
             "model_override": request.model_override,
+            # Fold each multimodal evidence input's content address (Attachment
+            # SHA-256) into the key so two distinct evidence documents under an
+            # identical prompt never collide on one cache entry. Only the content
+            # address enters the key -- never the base64 bytes
+            # (sensitive-financial-data-secure-storage-only).
+            "image_content_addresses": [image.content_sha256 for image in request.images],
         }
         prompt_hash = hashlib.sha256(prompt_material.encode("utf-8")).hexdigest()
         args_hash = hashlib.sha256(

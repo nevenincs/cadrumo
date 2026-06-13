@@ -92,6 +92,7 @@ class LLMClient:
                 request.temperature if request.temperature is not None else self.settings.aeat_llm_default_temperature
             ),
             timeout_s=self.settings.aeat_llm_default_timeout_s,
+            images=tuple(image.base64_data for image in request.images),
         )
         try:
             completion = await adapter.complete(provider_request)

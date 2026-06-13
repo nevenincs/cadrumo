@@ -1,28 +1,68 @@
 """Local provider adapter for Ollama-compatible runtimes.
 
-Speaks the Ollama ``/api/chat`` endpoint exposed at
-:data:`_OLLAMA_API_URL` and adapts its response into the
+Speaks the Ollama ``/api/chat`` endpoint (resolved per call from
+``Settings.aeat_llm_ollama_chat_url``) and adapts its response into the
 :class:`aeat.adapters.outbound.llm._providers.base.ProviderCompletion` shape.
 The adapter assumes the runtime is reachable on localhost; remote Ollama
 deployments are out of scope.
+
+For multimodal evidence, :func:`rasterise_pdf_pages_to_base64_png` renders an
+in-memory PDF to base64 PNG pages fully on-host so a local vision model can read
+a scan-only invoice; the adapter forwards those base64 images on the Ollama
+``images`` message field. No file is written and nothing leaves the host
+(``sensitive-financial-data-secure-storage-only``).
 """
 
 from __future__ import annotations
 
+import base64
 import logging
+from io import BytesIO
 from typing import override
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....core.config import Settings
+from .....core.config import load_settings
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
 
 _LOG = logging.getLogger(__name__)
 
-_OLLAMA_API_URL = Settings().aeat_llm_ollama_chat_url
-"""Ollama ``/api/chat`` endpoint targeted by :class:`LocalAdapter`."""
+
+def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -> tuple[str, ...]:
+    """Rasterise each page of an in-memory PDF to a base64-encoded PNG, on-host.
+
+    Renders every page in process memory via pypdfium2 and Pillow so a local
+    vision model can read a scan-only or image-only PDF that has no extractable
+    text layer. Nothing is written to disk and nothing leaves the host
+    (``sensitive-financial-data-secure-storage-only``).
+
+    Args:
+        pdf_bytes: In-memory PDF bytes (read transiently from secure storage).
+        scale: pypdfium2 render scale; a larger value yields a larger raster.
+
+    Returns:
+        One base64-encoded PNG string per page, in page order.
+    """
+    import pypdfium2 as pdfium  # lazy: keep the adapter import light, mirror the declaración fast-path
+
+    document = pdfium.PdfDocument(pdf_bytes)
+    try:
+        pages: list[str] = []
+        for page in document:
+            # pypdfium2's iterated page type carries ``render`` at runtime; its
+            # bundled stub omits it (third-party API boundary).
+            bitmap = page.render(scale=scale)  # ty: ignore[unresolved-attribute]  # pypdfium2 stub gap
+            image = bitmap.to_pil()
+            buffer = BytesIO()
+            image.save(buffer, format="PNG")
+            pages.append(base64.b64encode(buffer.getvalue()).decode("ascii"))
+            bitmap.close()
+            page.close()
+        return tuple(pages)
+    finally:
+        document.close()
 
 
 class _LocalMessage(BaseModel):
@@ -78,13 +118,19 @@ class LocalAdapter(_ProviderAdapter):
         Raises:
             LLMProviderError: When the runtime returns a non-2xx HTTP error status.
         """
-        messages: list[dict[str, str]] = []
+        messages: list[dict[str, object]] = []
         if request.system is not None:
             messages.append({"role": "system", "content": request.system})
-        messages.append({"role": "user", "content": request.prompt})
+        user_message: dict[str, object] = {"role": "user", "content": request.prompt}
+        if request.images:
+            # Ollama carries multimodal inputs as base64 strings on the message
+            # ``images`` field; only present them when a vision read supplied them.
+            user_message["images"] = list(request.images)
+        messages.append(user_message)
+        chat_url = load_settings().aeat_llm_ollama_chat_url
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:
             response = await client.post(
-                _OLLAMA_API_URL,
+                chat_url,
                 json={
                     "model": request.model,
                     "messages": messages,
