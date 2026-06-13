@@ -10,6 +10,7 @@ import typer
 from ...application.live import VerifyVerdict
 from ...core.i18n import tr
 from ...core.time import now
+from ._app_live_auth_preflight import resolve_active_bucket
 from ._common import _emit_envelope
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -50,9 +51,7 @@ def register_verify_commands(
 
 
 def _bucket_id() -> str:
-    if _active_bucket_id is None:
-        raise RuntimeError("live verify commands were not registered")
-    return _active_bucket_id()
+    return resolve_active_bucket(_active_bucket_id, family="verify")
 
 
 def _expected(value: str | None) -> VerifyVerdict | None:

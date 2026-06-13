@@ -10,7 +10,7 @@ import typer
 
 from ...core import Period, PeriodError
 from ...core.i18n import tr
-from ._app_live_auth_preflight import run_auth_preflight
+from ._app_live_auth_preflight import resolve_active_bucket, run_auth_preflight
 from ._common import _emit_envelope
 
 _active_bucket_id: Callable[[], str] | None = None
@@ -41,9 +41,7 @@ def register_justificante_commands(
 
 
 def _bucket_id() -> str:
-    if _active_bucket_id is None:
-        raise RuntimeError("live justificante commands were not registered")
-    return _active_bucket_id()
+    return resolve_active_bucket(_active_bucket_id, family="justificante")
 
 
 def _period_option(period: str, *, year: int) -> Period:
