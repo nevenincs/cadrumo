@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-01'
+modified: '2026-06-01'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-05-22-schema-hardening-adr]]"
@@ -53,6 +54,8 @@ Filed under task #127 (W30.P64 hardening cluster) for ADR-level adjudication on 
 ## Investigation findings
 
 ### Finding A — The M303 2023-y-siguientes casilla schema is ALREADY semantic-keyed by `id`
+
+> **SUPERSEDED / CORRECTED (2026-06-13).** Finding A's claim "There are no purely form-numbered ids in this revision" was true on 2026-06-01 but is STALE against HEAD. A 2026-06-10 registry pass added 93 purely form-numbered Diseño rows (`id = "NN"`, `semantic_role = "dr303_NN"`, `input_kind = "manual"`) that coexist with the semantic layer. The corrected Finding A is recorded in `[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]` (which amends and extends this ADR). This ADR's load-bearing D1/D2 contract — the engine resolves casilla state only by `casilla.id`, never by `casilla.number` — is UNAFFECTED and still holds. Read the 2026-06-13 ADR for the dual-layer correction and the Stage-2 projection decision.
 
 Read-only inspection of `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.toml` confirms a uniform pattern across all 70+ casilla rows:
 
