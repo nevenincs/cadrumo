@@ -300,8 +300,8 @@ def _seed_clean_cross_period_sources(
             filing_year=filing_year,
             period=source_period,
         )
+        evidence_reference_id = f"JUST-{source_modelo}-{filing_year}-{period}"
         if current is None:
-            evidence_reference_id = f"JUST-{source_modelo}-{filing_year}-{period}"
             persist_justificante_metadata(
                 evidence_reference_id,
                 modelo=source_modelo,
@@ -346,6 +346,8 @@ def _seed_clean_cross_period_sources(
             stamped_revision_id=source_snapshot.revision.id,
             source_metadata={
                 "aeat_register_status": "ALTA",
+                "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
+                "aeat_justificante_csv": evidence_reference_id,
                 "authenticated_identity": "X1234567L",
             },
         )
