@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#first-filer-attestation'
 date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - "[[2026-06-12-first-filer-attestation-research]]"
   - "[[2026-06-12-first-filer-attestation-adr]]"
@@ -25,7 +26,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `first-filer-attestation` adr: `operator-declared activity-start scoping, censo-corroborated (supersedes G313 grounding)` | (**status:** `proposed`)
+# `first-filer-attestation` adr: `operator-declared activity-start scoping, censo-corroborated (supersedes G313 grounding)` | (**status:** `accepted`)
 
 This ADR **supersedes** `2026-06-12-first-filer-attestation-adr` (now marked
 `superseded`). It keeps that ADR's sound concept - the activity-start date is
@@ -423,6 +424,34 @@ that must be tracked and fixed on its own track:
   First-filer scoping must not block on it; it consumes the operator-declared date
   today and corroborates against the censo only once this defect is fixed and the
   live read works.
+
+## Ratification
+
+The operator ratified this ADR on 2026-06-13 and authorised taking the
+recommended default for each open question. The resolved defaults:
+
+- Boundary semantics: the alta-CONTAINING period IS the first obligation; only
+  STRICTLY-prior periods are suppressed. Rationale: M130 cumulative-from-start
+  semantics make the partial alta-period the first owed return, and the single
+  boundary authority (`period-filter-single-boundary-authority`) governs the
+  comparison so there is no parallel inclusion override.
+- Where scoping lives: an application-layer filter over the derived cross-period
+  requirements. Rationale: keeps the registry pure (no selector-grammar facet,
+  no per-call ad hoc shrink) and treats the operator-declared activity-start
+  date as a grounded input, mirroring how the same field already drives the
+  deadline engine's pre-start suppression.
+- Provenance marker: an explicit typed no-prior-obligation evidence facet
+  carrying operator-declared provenance and an optional censo snapshot id, NOT a
+  silent omission. Rationale: the suppression must be auditable and visible per
+  `no-silent-under-declaration`; a typed facet records the scoping decision and
+  carries the operator-declared-vs-censo-corroborated distinction.
+- Relation uniformity: the scoping applies uniformly to BOTH `previous_filing`
+  bindings and `relation_source_requirements`. Rationale: a first filer must not
+  be unblocked on one requirement origin while still trapped on the other.
+- Censo-corroboration semantics: deferred. The operator-declared
+  `activity_start_date` is the authority NOW, with a non-blocking advisory that
+  the suppression rests on a declared-but-uncorroborated date; declared-vs-censo
+  divergence handling lands when the live censo read is fixed and works.
 
 ## Codification candidates
 
