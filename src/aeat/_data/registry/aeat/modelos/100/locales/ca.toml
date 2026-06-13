@@ -1,11 +1,11 @@
 [labels]
-"irpf.deduccion-autonomica.galicia.otras" = "irpf.deduccion-autonomica.galicia.otras"
-"irpf.inmueble.porcentaje-propiedad" = "irpf.inmueble.porcentaje-propiedad"
-"irpf.inmueble.vivienda-habitual-flag" = "irpf.inmueble.vivienda-habitual-flag"
-"irpf.intereses-demora-regularizacion.estatal" = "irpf.intereses-demora-regularizacion.estatal"
+"irpf.deduccion-autonomica.galicia.otras" = "Altres deduccions"
+"irpf.inmueble.porcentaje-propiedad" = "Propietat (%)"
+"irpf.inmueble.vivienda-habitual-flag" = "Habitatge habitual el 2024"
+"irpf.intereses-demora-regularizacion.estatal" = "Interessos de demora corresponents a la regularització anterior: part estatal"
 
 [help]
-"irpf.deduccion-autonomica.galicia.otras" = "irpf.deduccion-autonomica.galicia.otras"
-"irpf.inmueble.porcentaje-propiedad" = "irpf.inmueble.porcentaje-propiedad"
-"irpf.inmueble.vivienda-habitual-flag" = "irpf.inmueble.vivienda-habitual-flag"
-"irpf.intereses-demora-regularizacion.estatal" = "irpf.intereses-demora-regularizacion.estatal"
+"irpf.deduccion-autonomica.galicia.otras" = "Introduïu altres deduccions."
+"irpf.inmueble.porcentaje-propiedad" = "Introduïu el percentatge de propietat."
+"irpf.inmueble.vivienda-habitual-flag" = "Indiqueu si era l'habitatge habitual el 2024."
+"irpf.intereses-demora-regularizacion.estatal" = "Introduïu la part estatal dels interessos de demora corresponents a la regularització anterior."

@@ -1,11 +1,11 @@
 [labels]
-"irpf.deduccion-autonomica.galicia.otras" = "irpf.deduccion-autonomica.galicia.otras"
-"irpf.inmueble.porcentaje-propiedad" = "irpf.inmueble.porcentaje-propiedad"
-"irpf.inmueble.vivienda-habitual-flag" = "irpf.inmueble.vivienda-habitual-flag"
-"irpf.intereses-demora-regularizacion.estatal" = "irpf.intereses-demora-regularizacion.estatal"
+"irpf.deduccion-autonomica.galicia.otras" = "Other deductions"
+"irpf.inmueble.porcentaje-propiedad" = "Ownership (%)"
+"irpf.inmueble.vivienda-habitual-flag" = "Main residence in 2024"
+"irpf.intereses-demora-regularizacion.estatal" = "Late-payment interest corresponding to the previous regularization: State part"
 
 [help]
-"irpf.deduccion-autonomica.galicia.otras" = "irpf.deduccion-autonomica.galicia.otras"
-"irpf.inmueble.porcentaje-propiedad" = "irpf.inmueble.porcentaje-propiedad"
-"irpf.inmueble.vivienda-habitual-flag" = "irpf.inmueble.vivienda-habitual-flag"
-"irpf.intereses-demora-regularizacion.estatal" = "irpf.intereses-demora-regularizacion.estatal"
+"irpf.deduccion-autonomica.galicia.otras" = "Enter other deductions."
+"irpf.inmueble.porcentaje-propiedad" = "Enter the ownership percentage."
+"irpf.inmueble.vivienda-habitual-flag" = "Indicate whether it was the main residence in 2024."
+"irpf.intereses-demora-regularizacion.estatal" = "Enter the state part of late-payment interest corresponding to the previous regularization."
