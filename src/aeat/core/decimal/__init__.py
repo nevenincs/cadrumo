@@ -13,11 +13,12 @@ Public surface
 
 from __future__ import annotations
 
-from ._coerce import coerce_decimal, coerce_decimal_strict
+from ._coerce import coerce_decimal, coerce_decimal_strict, normalize_decimal_separators
 from ._format import format_decimal
 
 __all__ = [
     "coerce_decimal",
     "coerce_decimal_strict",
     "format_decimal",
+    "normalize_decimal_separators",
 ]

@@ -18,6 +18,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
+from ....core.decimal import normalize_decimal_separators
+
 # AEAT per UNE 82100 uses a non-breaking space (U+00A0)
 # or narrow no-break space (U+202F) as the thousands separator —
 # NEVER a regular ASCII space (which is reserved for column
@@ -84,11 +86,11 @@ def parse_spanish_decimal(raw: str) -> Decimal | None:
         return None
     if "," in cleaned and "." in cleaned:
         if cleaned.rfind(",") > cleaned.rfind("."):
-            cleaned = cleaned.replace(".", "").replace(",", ".")
+            cleaned = normalize_decimal_separators(cleaned, strip_thousands=True)
         else:
             cleaned = cleaned.replace(",", "")
     elif "," in cleaned:
-        cleaned = cleaned.replace(",", ".")
+        cleaned = normalize_decimal_separators(cleaned, strip_thousands=False)
     try:
         parsed = Decimal(cleaned)
     except InvalidOperation:

@@ -121,3 +121,23 @@ def coerce_decimal_strict(value: object) -> Decimal:
     if isinstance(value, Decimal):
         return value
     return Decimal(str(value))
+
+
+def normalize_decimal_separators(text: str, *, strip_thousands: bool) -> str:
+    """Normalise a European-formatted numeric string to a dot-decimal form.
+
+    Maps the decimal comma to a dot so the result is parsable by
+    :class:`~decimal.Decimal`. When ``strip_thousands`` is ``True`` the
+    thousands dot is removed first (Spanish ``"1.234,56"`` -> ``"1234.56"``);
+    when ``False`` only the comma is converted (``"1234,56"`` -> ``"1234.56"``),
+    for inputs already free of thousands separators.
+
+    Single canonical home for the comma/dot separator normalisation that the
+    sede, registry-export, renta-web-oracle, and PDF-label parsers previously
+    open-coded inline. Each caller keeps its own surrounding validation,
+    symbol-stripping, locale-detection, and error handling; only the separator
+    transform is shared.
+    """
+    if strip_thousands:
+        return text.replace(".", "").replace(",", ".")
+    return text.replace(",", ".")
