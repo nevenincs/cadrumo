@@ -130,7 +130,6 @@ class AddressReplacement(_ReplacementBase):
     """Replacement entry for a postal address."""
 
 
-
 class ExpedienteReplacement(_ReplacementBase):
     """Replacement entry for an AEAT expediente identifier.
 
@@ -206,7 +205,6 @@ class ArbitraryReplacement(_ReplacementBase):
     deep-extractor regression. Reserve for ad-hoc strings such as
     capture-time fingerprints or one-off identifiers.
     """
-
 
 
 class TokenMap(BaseModel):

@@ -103,7 +103,6 @@ class FinancialValidationError(FinancialProviderError):
     """Raised when a specific field (date, amount) fails domain validation."""
 
 
-
 class BankStatementParseError(FinancialProviderError):
     """Raised when a bank statement PDF cannot be fully parsed.
 

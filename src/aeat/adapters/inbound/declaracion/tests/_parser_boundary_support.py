@@ -1,6 +1,5 @@
 """Shared support for split adapter tests."""
 
-
 from __future__ import annotations
 
 import logging

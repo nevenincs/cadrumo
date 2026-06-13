@@ -373,7 +373,8 @@ async def collect_nif_iva_check_observations(
 
         # Sede entry: acquire the session cookies the form servlet requires.
         await browser_session.navigate(
-            page, f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}",
+            page,
+            f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}",
         )
         await _playwright_stage(
             page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),

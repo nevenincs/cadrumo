@@ -53,7 +53,9 @@ def test_gmail_link_refused_with_gmail_scope() -> None:
 def test_external_url_refused_with_drive_readonly_scope() -> None:
     with pytest.raises(OutboundStoragePermissionError) as excinfo:
         resolve_document_link(
-            source=AttachmentSource.URL, reference="https://example.com/justificante.pdf", credentials=None,
+            source=AttachmentSource.URL,
+            reference="https://example.com/justificante.pdf",
+            credentials=None,
         )
     assert excinfo.value.context is not None
     assert excinfo.value.context["required_scope"] == "https://www.googleapis.com/auth/drive.readonly"

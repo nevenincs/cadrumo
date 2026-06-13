@@ -19,7 +19,6 @@ class SanitizationError(AeatError):
     """Base error for the :mod:`aeat.adapters.inbound.sanitizer` subpackage."""
 
 
-
 class SanitizerValidationError(SanitizationError, ValueError):
     """Raised when synthetic parameters or field values fail domain validation.
 
@@ -28,7 +27,6 @@ class SanitizerValidationError(SanitizationError, ValueError):
     validator contract while remaining catchable under the package's
     unified error hierarchy.
     """
-
 
 
 class SanitizerSourceParseError(SanitizationError):
@@ -75,7 +73,6 @@ class SignaturePresentError(SanitizationError):
     sanitiser refuses such inputs and requires the operator to
     escalate to human review.
     """
-
 
 
 class AlreadySanitizedError(SanitizationError):

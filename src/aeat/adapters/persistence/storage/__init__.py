@@ -144,7 +144,6 @@ from ._namespace_registry import (
     secure_object_namespace_logical_path,
 )
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
-from .attachment import AttachmentStore
 from ._rotation import (
     RotationPlanEntry,
     RotationSummary,
@@ -153,6 +152,7 @@ from ._rotation import (
     rotate_blob_stores,
     rotate_master_key,
 )
+from .attachment import AttachmentStore
 from .blob_store._blob_store import (
     BlobManifest,
     BlobReference,

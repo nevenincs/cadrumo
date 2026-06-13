@@ -301,10 +301,25 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
         JustificanteParseError: If any required field is missing or cannot be
             coerced into its target type.
     """
+    sha256 = sha256_file(pdf_path)
+    return extract_justificante_from_digest(
+        text,
+        source_pdf_sha256=sha256,
+        source_label=pdf_path,
+    )
+
+
+def extract_justificante_from_digest(
+    text: str,
+    *,
+    source_pdf_sha256: str,
+    source_label: object = "<input-pdf>",
+) -> Justificante:
+    """Extract a :class:`Justificante` when the caller already has the PDF digest."""
     if not text.strip():
-        raise JustificanteParseError(f"empty text extracted from {pdf_path}", missing=("text",))
+        raise JustificanteParseError(f"empty text extracted from {source_label}", missing=("text",))
     normalised = _strip_accents(text)
-    csv_value = _extract_csv(text, normalised, pdf_path)
+    csv_value = _extract_csv(text, normalised, source_label)
     modelo = _require(_MODELO_RE.search(normalised), "modelo")
     period, ejercicio = _extract_period_and_ejercicio(normalised)
     nif_match = _NIF_RE.search(normalised) or _NIF_INVERTED_RE.search(normalised)
@@ -312,9 +327,8 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     presented_at = _extract_presented_at(normalised)
     presentation_id = _extract_presentation_id(normalised)
     total_ingresar, total_devolver = _extract_totals(normalised)
-    verification_url = _extract_verification_url(text, pdf_path)
-    sha256 = sha256_file(pdf_path)
-    source_pdf_path = source_pdf_reference_path(sha256)
+    verification_url = _extract_verification_url(text, source_label)
+    source_pdf_path = source_pdf_reference_path(source_pdf_sha256)
     parsed_at = now()
     try:
         record = Justificante(
@@ -329,12 +343,12 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
             total_a_devolver=total_devolver,
             verification_url=verification_url,
             source_pdf_path=source_pdf_path,
-            source_pdf_sha256=sha256,
+            source_pdf_sha256=source_pdf_sha256,
             parsed_at=parsed_at,
         )
     except ValidationError as exc:
         raise JustificanteParseError(
-            f"failed to validate Justificante for {pdf_path}: {exc}",
+            f"failed to validate Justificante for {source_label}: {exc}",
             malformed=("record",),
         ) from exc
     _logger.info(
@@ -347,7 +361,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     return record
 
 
-def _extract_csv(text: str, normalised: str, pdf_path: Path) -> str:
+def _extract_csv(text: str, normalised: str, source_label: object) -> str:
     """Locate the Código Seguro de Verificación across the five regex tiers."""
     csv_match = (
         _CSV_AUTHENTICITY_FOOTER_RE.search(text)
@@ -361,7 +375,7 @@ def _extract_csv(text: str, normalised: str, pdf_path: Path) -> str:
         or _CSV_FALLBACK_RE.search(normalised)
     )
     if csv_match is None:
-        raise JustificanteCsvNotFoundError(f"no Código Seguro de Verificación found in {pdf_path}")
+        raise JustificanteCsvNotFoundError(f"no Código Seguro de Verificación found in {source_label}")
     return csv_match.group(1).upper()
 
 
@@ -427,11 +441,11 @@ def _extract_totals(normalised: str) -> tuple[Decimal | None, Decimal | None]:
     return total_ingresar, total_devolver
 
 
-def _extract_verification_url(text: str, pdf_path: Path) -> AnyHttpUrl:
+def _extract_verification_url(text: str, source_label: object) -> AnyHttpUrl:
     """Locate the verification URL and validate it as an AnyHttpUrl."""
     url_match = _URL_RE.search(text)
     if url_match is None:
-        raise JustificanteParseError(f"no verification URL found in {pdf_path}", missing=("verification_url",))
+        raise JustificanteParseError(f"no verification URL found in {source_label}", missing=("verification_url",))
     verification_url_raw = url_match.group(0).rstrip(".,);")
     try:
         # CAST-RATIONALE-JUSTIFICANTE-EXTRACT-TYPEADAPTER: pydantic's
@@ -443,6 +457,6 @@ def _extract_verification_url(text: str, pdf_path: Path) -> AnyHttpUrl:
         return _ANY_HTTP_URL_ADAPTER.validate_python(verification_url_raw)
     except ValidationError as exc:
         raise JustificanteParseError(
-            f"invalid verification URL in {pdf_path}: {verification_url_raw!r}",
+            f"invalid verification URL in {source_label}: {verification_url_raw!r}",
             malformed=("verification_url",),
         ) from exc

@@ -1,6 +1,5 @@
 """Shared support for split adapter tests."""
 
-
 from __future__ import annotations
 
 from datetime import date
@@ -42,11 +41,14 @@ def _registry_snapshot(modelo: str, filing_year: int, period: str):
     return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
 
 
+_DR303_PROJECTION_CASILLAS = frozenset({"03", "06", "09", "11", "13", "27", "29", "33", "37", "45"})
+
 _COMPUTED_CASILLAS_M303 = frozenset(
     {
         "iva.cuota-devengada-total",
         "iva.cuota-deducible-total",
         "iva.resultado-regimen-general",
+        *_DR303_PROJECTION_CASILLAS,
         "64",  # suma de resultados (46 + 58 + 76) — Orden HAC/819/2024 art. 1
         "66",  # atribuible Estado (64 × 65 / 100) — Orden HAC/819/2024 art. 1
         "iva.compensacion-aplicada-periodo",

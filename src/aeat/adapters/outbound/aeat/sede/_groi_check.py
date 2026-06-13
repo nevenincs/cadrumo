@@ -192,7 +192,9 @@ class GroiSedeDriver:
             raise RegistryValidationError("GroiSedeDriver.planned_operations requires at least one expected NIF")
         operations: list[RemoteOperation] = [
             RemoteOperation(
-                kind="http", method="GET", url=AnyUrl(Settings.external_constants().aeat.oracles.groi_check),
+                kind="http",
+                method="GET",
+                url=AnyUrl(Settings.external_constants().aeat.oracles.groi_check),
             ),
             RemoteOperation(kind="browser_action", action="open-groi-form"),
         ]

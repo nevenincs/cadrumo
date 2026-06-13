@@ -526,10 +526,13 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             is None
         )
         assert IvaWalletDecisionRepository().list_decisions() == ()
-        assert IvaWalletDecisionRepository().load_decision_history(
-            "ESBUCKET-A",
-            Period.from_year_and_code(2026, "2T"),
-        ) == ()
+        assert (
+            IvaWalletDecisionRepository().load_decision_history(
+                "ESBUCKET-A",
+                Period.from_year_and_code(2026, "2T"),
+            )
+            == ()
+        )
         assert IvaCompensationHistoryRepository(bucket_id="bucket-b").list_periods() == ()
         assert load_usage_ratios(bucket_id="bucket-b") == UsageRatioProfile()
         ModeloHistoryRepository(bucket_id="bucket-b").save(history_b)

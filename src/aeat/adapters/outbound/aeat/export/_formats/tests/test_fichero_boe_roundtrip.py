@@ -480,6 +480,7 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
             "08": Decimal("0"),
             "10": Decimal("0"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
@@ -613,7 +614,7 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
 # corresponds to.  The golden SHA is a byte-identity lock; any change to the
 # 303.toml export layout that alters offset, length, encoding, or sign flag
 # will alter the SHA and fail this test.
-_M303_GOLDEN_SHA256 = "ac71fd62a25b87143c4ae031826b2790521578584472d3957aab821f465993dc"
+_M303_GOLDEN_SHA256 = "68a507454ec1cdfcc9ee0c328a2eaf3b8f62353d77cce4fe4de0f04ace2c9ee8"
 
 # Cumulative record-start offsets (0-based byte index):
 #   DP30300 starts at 0
@@ -656,7 +657,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         ),
         inputs={
             "07": Decimal("10000.00"),
-            "09": Decimal("2100.00"),
+            "iva.repercutido.general": Decimal("2100.00"),
             # Compensation carry-over binding required by the
             # iva.compensacion-pendiente-periodos-anteriores bound casilla
             # (registry change made this a mandatory input for export
@@ -754,7 +755,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     assert _p1(303, 5) == b"02100", "DR DP30301 row 38: tipo 08 must be constant '02100' (21%)"
 
     # DR DP30301 row 39 (offset 308-324): casilla [09] cuota devengada 21%
-    # Input: 2100.00 → 210000 cents → 17-byte unsigned zero-padded
+    # Semantic input: 2100.00 → 210000 cents → 17-byte unsigned zero-padded
     assert _p1(308, 17) == _money_bytes(Decimal("2100.00"), signed=False), (
         "DR DP30301 row 39: casilla 09 cuota 21% must be 2100.00"
     )
