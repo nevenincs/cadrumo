@@ -53,15 +53,14 @@ import click
 import pytest
 from typer.main import get_command
 
-import aeat
-from aeat.application.operator_surface import HelpSurface, build_help_document
-from aeat.core.errors._registry import ERROR_REGISTRY
+from ....application.operator_surface import HelpSurface, build_help_document
+from ....core.errors._registry import ERROR_REGISTRY
 
 from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PACKAGE_ROOT = Path(aeat.__file__).resolve().parent
+_PACKAGE_ROOT = Path(__file__).resolve().parents[3]
 _AST_SCAN_ROOTS = (
     _PACKAGE_ROOT / "adapters",
     _PACKAGE_ROOT / "application",
