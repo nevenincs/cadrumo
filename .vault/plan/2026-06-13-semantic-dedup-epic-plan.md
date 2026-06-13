@@ -162,6 +162,12 @@ Promote a canonical normalize_decimal_separators and redirect the eight inline s
 
 - [x] `W04.P08.S18` - Promote canonical normalize_decimal_separators and redirect the eight inline European-decimal separator sites; `src/aeat/core/decimal/_coerce.py`.
 
+### Phase `W04.P09` - F8 — Dedupe ledger _require_transaction guard
+
+Consolidate the two identical application-ledger _require_transaction guards onto _actions_common.
+
+- [x] `W04.P09.S19` - Consolidate the duplicate _require_transaction guard in _review_projection onto the canonical in _actions_common; `src/aeat/application/ledger/_review_projection.py`.
+
 ## Description
 
 <!-- Briefly describe the proposed work. Reference `{adr}`s,

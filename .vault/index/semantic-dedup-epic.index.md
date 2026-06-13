@@ -13,6 +13,7 @@ related:
   - '[[2026-06-13-semantic-dedup-epic-W04-P06-S16]]'
   - '[[2026-06-13-semantic-dedup-epic-W04-P07-S17]]'
   - '[[2026-06-13-semantic-dedup-epic-W04-P08-S18]]'
+  - '[[2026-06-13-semantic-dedup-epic-W04-P09-S19]]'
   - '[[2026-06-13-semantic-dedup-epic-adr]]'
   - '[[2026-06-13-semantic-dedup-epic-audit]]'
   - '[[2026-06-13-semantic-dedup-epic-plan]]'
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#semantic-dedup-epic`.
 - `2026-06-13-semantic-dedup-epic-W04-P06-S16` - Consolidate the live-CLI _metric_line and auth-preflight guard onto shared helpers in _app_live_auth_preflight and redirect rendering, expedientes, justificante, notifications
 - `2026-06-13-semantic-dedup-epic-W04-P07-S17` - Consolidate the four identical _bucket_id active-bucket guards onto a shared resolve_active_bucket helper
 - `2026-06-13-semantic-dedup-epic-W04-P08-S18` - Promote canonical normalize_decimal_separators and redirect the eight inline European-decimal separator sites
+- `2026-06-13-semantic-dedup-epic-W04-P09-S19` - Consolidate the duplicate _require_transaction guard in _review_projection onto the canonical in _actions_common
 
 ### plan
 
