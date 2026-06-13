@@ -25,6 +25,8 @@ import pytest
 from aeat.core import Modelo
 from aeat.core.external_constants import OutputLanguage
 from aeat.domain.calculations.registry import bundled_authority
+from dev.docs.terminology._casilla_projection import CasillaProjectionStats
+from dev.docs.terminology._search_record import CasillaSearchRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -32,7 +34,7 @@ _FOUR_LANGUAGES = frozenset(OutputLanguage)
 
 
 @pytest.fixture(scope="module")
-def full_projection() -> tuple[tuple[object, ...], object]:
+def full_projection() -> tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats]:
     """Project the full registry once for the module (the bounded full run)."""
     from dev.docs.terminology._casilla_projection import project_casilla_search_records
 
@@ -55,7 +57,7 @@ def _independent_raw_casilla_count() -> int:
 
 
 def test_projection_walks_every_casilla_row(
-    full_projection: tuple[tuple[object, ...], object],
+    full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
 ) -> None:
     """The raw projection count equals an independent count of every casilla row.
 
@@ -66,8 +68,8 @@ def test_projection_walks_every_casilla_row(
     """
     _records, stats = full_projection
     independent = _independent_raw_casilla_count()
-    assert stats.raw_casilla_rows == independent, (  # type: ignore[attr-defined]
-        f"projection raw count {stats.raw_casilla_rows} != independent count {independent} "  # type: ignore[attr-defined]
+    assert stats.raw_casilla_rows == independent, (
+        f"projection raw count {stats.raw_casilla_rows} != independent count {independent} "
         "-- a casilla was dropped on the way to the projection"
     )
 
@@ -104,7 +106,7 @@ def test_m303_emits_every_distinct_casilla_identity() -> None:
 
 
 def test_dedup_collapses_cross_revision_duplicates(
-    full_projection: tuple[tuple[object, ...], object],
+    full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
 ) -> None:
     """Dedup collapses many raw rows into one record per identity.
 
@@ -113,17 +115,17 @@ def test_dedup_collapses_cross_revision_duplicates(
     accounts for the difference exactly.
     """
     records, stats = full_projection
-    assert stats.deduplicated_records == len(records)  # type: ignore[attr-defined]
-    assert stats.deduplicated_records < stats.raw_casilla_rows  # type: ignore[attr-defined]
-    assert stats.collapsed == stats.raw_casilla_rows - stats.deduplicated_records  # type: ignore[attr-defined]
+    assert stats.deduplicated_records == len(records)
+    assert stats.deduplicated_records < stats.raw_casilla_rows
+    assert stats.collapsed == stats.raw_casilla_rows - stats.deduplicated_records
 
 
 def test_dedup_key_is_unique_across_records(
-    full_projection: tuple[tuple[object, ...], object],
+    full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
 ) -> None:
     """Each ``(modelo, number, segmento)`` identity yields exactly one record."""
     records, _stats = full_projection
-    keys = [record.dedup_key for record in records]  # type: ignore[attr-defined]
+    keys = [record.dedup_key for record in records]
     assert len(keys) == len(set(keys)), "duplicate dedup_key -- cross-revision collapse failed"
 
 
@@ -151,7 +153,7 @@ def test_record_carries_contributing_revisions_latest_first() -> None:
 
 
 def test_every_record_carries_legal_and_source_refs(
-    full_projection: tuple[tuple[object, ...], object],
+    full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
 ) -> None:
     """Every projected record carries non-empty legal_refs and source_refs.
 
@@ -161,12 +163,12 @@ def test_every_record_carries_legal_and_source_refs(
     """
     records, _stats = full_projection
     for record in records:
-        assert record.legal_refs, f"casilla {record.number} has empty legal_refs"  # type: ignore[attr-defined]
-        assert record.source_refs, f"casilla {record.number} has empty source_refs"  # type: ignore[attr-defined]
+        assert record.legal_refs, f"casilla {record.number} has empty legal_refs"
+        assert record.source_refs, f"casilla {record.number} has empty source_refs"
 
 
 def test_all_legal_refs_resolve_in_the_catalogue(
-    full_projection: tuple[tuple[object, ...], object],
+    full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
 ) -> None:
     """Every projected legal_ref resolves in the bundled legal catalogue.
 
@@ -177,7 +179,7 @@ def test_all_legal_refs_resolve_in_the_catalogue(
     legal_keys = set(bundled_authority().catalogues.legal)
     unresolved: set[str] = set()
     for record in records:
-        for ref in record.legal_refs:  # type: ignore[attr-defined]
+        for ref in record.legal_refs:
             if ref not in legal_keys:
                 unresolved.add(ref)
     assert not unresolved, f"projected legal_refs not in the catalogue: {sorted(unresolved)}"
@@ -234,7 +236,7 @@ def test_m303_has_multilingual_casilla_labels() -> None:
 
 
 def test_es_description_is_always_present(
-    full_projection: tuple[tuple[object, ...], object],
+    full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
 ) -> None:
     """Spanish is the invariant: every record carries an es description.
 
@@ -243,10 +245,10 @@ def test_es_description_is_always_present(
     """
     records, _stats = full_projection
     for record in records:
-        assert OutputLanguage.ES in record.descriptions  # type: ignore[attr-defined]
-        assert record.descriptions[OutputLanguage.ES].strip()  # type: ignore[attr-defined]
-        assert set(record.descriptions).issubset(_FOUR_LANGUAGES)  # type: ignore[attr-defined]
-        assert record.description_es == record.descriptions[OutputLanguage.ES]  # type: ignore[attr-defined]
+        assert OutputLanguage.ES in record.descriptions
+        assert record.descriptions[OutputLanguage.ES].strip()
+        assert set(record.descriptions).issubset(_FOUR_LANGUAGES)
+        assert record.description_es == record.descriptions[OutputLanguage.ES]
 
 
 # ---------------------------------------------------------------------------
@@ -274,7 +276,7 @@ def test_full_projection_completes_within_a_bounded_time() -> None:
 
 
 def test_records_are_frozen(
-    full_projection: tuple[tuple[object, ...], object],
+    full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
 ) -> None:
     """The strict-frozen contract: a projected record rejects mutation."""
     from pydantic import ValidationError

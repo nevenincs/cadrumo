@@ -57,7 +57,10 @@ _ConceptId = Annotated[
 _DomainRef = Annotated[
     str,
     StringConstraints(
-        strip_whitespace=True, min_length=2, max_length=128, pattern=r"^[a-z][a-z0-9.-]*:[A-Za-z0-9:._-]+$",
+        strip_whitespace=True,
+        min_length=2,
+        max_length=128,
+        pattern=r"^[a-z][a-z0-9.-]*:[A-Za-z0-9:._-]+$",
     ),
 ]
 # Legal catalogue id, e.g. ``ley-37-1992:art-104``; resolution against the
@@ -65,7 +68,10 @@ _DomainRef = Annotated[
 _LegalRef = Annotated[
     str,
     StringConstraints(
-        strip_whitespace=True, min_length=2, max_length=128, pattern=r"^[a-z0-9][a-z0-9.-]*:[a-z0-9][A-Za-z0-9.-]*$",
+        strip_whitespace=True,
+        min_length=2,
+        max_length=128,
+        pattern=r"^[a-z0-9][a-z0-9.-]*:[a-z0-9][A-Za-z0-9.-]*$",
     ),
 ]
 _ShortDescription = Annotated[

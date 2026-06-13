@@ -22,6 +22,7 @@ import pytest
 from docutils.nodes import make_id
 
 from aeat.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
+from dev.docs.terminology._cli_projection import CliOptionRecord, CliProjectionStats, CliSurfaceRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
@@ -29,7 +30,7 @@ _FOUR_LANGUAGES = frozenset(OutputLanguage(code) for code in SUPPORTED_OUTPUT_LA
 
 
 @pytest.fixture(scope="module")
-def projection() -> tuple[tuple[object, ...], tuple[object, ...], object]:
+def projection() -> tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats]:
     """Project the live CLI tree once for the whole module (4 subprocess walks)."""
     from dev.docs.terminology._cli_projection import project_cli_search_records
 
@@ -45,7 +46,7 @@ def live_leaf_keys() -> set[str]:
 
 
 def test_command_records_cover_the_live_leaf_set(
-    projection: tuple[tuple[object, ...], tuple[object, ...], object],
+    projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
     live_leaf_keys: set[str],
 ) -> None:
     """One command record per live leaf -- exact parity with the house walk.
@@ -55,7 +56,7 @@ def test_command_records_cover_the_live_leaf_set(
     invented a command; a missing record means it dropped one.
     """
     commands, _options, _stats = projection
-    emitted_keys = {record.registry_key for record in commands}  # type: ignore[attr-defined]
+    emitted_keys = {record.registry_key for record in commands}
 
     assert emitted_keys == live_leaf_keys, (
         "CLI command records diverge from the live leaf set:\n"
@@ -68,7 +69,7 @@ def test_command_records_cover_the_live_leaf_set(
 
 
 def test_every_command_record_carries_a_spanish_description(
-    projection: tuple[tuple[object, ...], tuple[object, ...], object],
+    projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
 ) -> None:
     """Spanish is the invariant: every command record carries an ``es`` help string.
 
@@ -79,14 +80,14 @@ def test_every_command_record_carries_a_spanish_description(
     """
     commands, _options, _stats = projection
     for record in commands:
-        descriptions = record.descriptions  # type: ignore[attr-defined]
-        assert OutputLanguage.ES in descriptions, f"{record.command_path}: no es description"  # type: ignore[attr-defined]
+        descriptions = record.descriptions
+        assert OutputLanguage.ES in descriptions, f"{record.command_path}: no es description"
         assert set(descriptions).issubset(_FOUR_LANGUAGES)
         assert descriptions[OutputLanguage.ES].strip()
 
 
 def test_prorrata_relevant_command_is_fully_translated(
-    projection: tuple[tuple[object, ...], tuple[object, ...], object],
+    projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
 ) -> None:
     """A core command (``aeat app ledger add``) carries all four languages.
 
@@ -96,17 +97,17 @@ def test_prorrata_relevant_command_is_fully_translated(
     """
     commands, _options, _stats = projection
     add = next(
-        (r for r in commands if r.command_path == "aeat app ledger add"),  # type: ignore[attr-defined]
+        (r for r in commands if r.command_path == "aeat app ledger add"),
         None,
     )
     assert add is not None, "expected the stable 'aeat app ledger add' command in the projection"
-    assert set(add.descriptions) == _FOUR_LANGUAGES, (  # type: ignore[attr-defined]
-        f"'aeat app ledger add' missing translations: {_FOUR_LANGUAGES - set(add.descriptions)}"  # type: ignore[attr-defined]
+    assert set(add.descriptions) == _FOUR_LANGUAGES, (
+        f"'aeat app ledger add' missing translations: {_FOUR_LANGUAGES - set(add.descriptions)}"
     )
 
 
 def test_every_target_anchor_resolves_to_the_cli_reference_shape(
-    projection: tuple[tuple[object, ...], tuple[object, ...], object],
+    projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
 ) -> None:
     """Every command target is ``cli/<family>.html#<docutils-slug-of-path>``.
 
@@ -118,16 +119,16 @@ def test_every_target_anchor_resolves_to_the_cli_reference_shape(
     """
     commands, _options, _stats = projection
     for record in commands:
-        expected_anchor = make_id(record.command_path)  # type: ignore[attr-defined]
-        expected_target = f"cli/{record.family}.html#{expected_anchor}"  # type: ignore[attr-defined]
-        assert record.target == expected_target, (  # type: ignore[attr-defined]
-            f"{record.command_path}: target {record.target!r} != expected {expected_target!r}"  # type: ignore[attr-defined]
+        expected_anchor = make_id(record.command_path)
+        expected_target = f"cli/{record.family}.html#{expected_anchor}"
+        assert record.target == expected_target, (
+            f"{record.command_path}: target {record.target!r} != expected {expected_target!r}"
         )
-        assert record.family in {"app", "config"}  # type: ignore[attr-defined]
+        assert record.family in {"app", "config"}
 
 
 def test_option_records_attach_to_their_command_and_carry_help(
-    projection: tuple[tuple[object, ...], tuple[object, ...], object],
+    projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
 ) -> None:
     """Every option record names its command, shares its target, and has es help.
 
@@ -137,21 +138,21 @@ def test_option_records_attach_to_their_command_and_carry_help(
     the four supported languages.
     """
     commands, options, _stats = projection
-    command_target = {r.command_path: r.target for r in commands}  # type: ignore[attr-defined]
+    command_target = {r.command_path: r.target for r in commands}
 
     assert options, "expected option records for a CLI with parameterised commands"
     for option in options:
-        assert option.command_path in command_target, (  # type: ignore[attr-defined]
-            f"option {option.option_names} attaches to unknown command {option.command_path!r}"  # type: ignore[attr-defined]
+        assert option.command_path in command_target, (
+            f"option {option.option_names} attaches to unknown command {option.command_path!r}"
         )
-        assert option.target == command_target[option.command_path]  # type: ignore[attr-defined]
-        assert option.option_names, f"{option.command_path}: option with no surface name"  # type: ignore[attr-defined]
-        assert OutputLanguage.ES in option.descriptions  # type: ignore[attr-defined]
-        assert set(option.descriptions).issubset(_FOUR_LANGUAGES)  # type: ignore[attr-defined]
+        assert option.target == command_target[option.command_path]
+        assert option.option_names, f"{option.command_path}: option with no surface name"
+        assert OutputLanguage.ES in option.descriptions
+        assert set(option.descriptions).issubset(_FOUR_LANGUAGES)
 
 
 def test_required_amount_option_is_marked_required(
-    projection: tuple[tuple[object, ...], tuple[object, ...], object],
+    projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
 ) -> None:
     """The ``--amount`` option of ``aeat app ledger add`` is a required option.
 
@@ -160,20 +161,16 @@ def test_required_amount_option_is_marked_required(
     """
     _commands, options, _stats = projection
     amount = next(
-        (
-            o
-            for o in options
-            if o.command_path == "aeat app ledger add" and "--amount" in o.option_names  # type: ignore[attr-defined]
-        ),
+        (o for o in options if o.command_path == "aeat app ledger add" and "--amount" in o.option_names),
         None,
     )
     assert amount is not None, "expected the --amount option on 'aeat app ledger add'"
-    assert amount.required is True  # type: ignore[attr-defined]
-    assert amount.is_argument is False  # type: ignore[attr-defined]
+    assert amount.required is True
+    assert amount.is_argument is False
 
 
 def test_records_are_frozen(
-    projection: tuple[tuple[object, ...], tuple[object, ...], object],
+    projection: tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats],
 ) -> None:
     """The strict-frozen contract: a projected record rejects mutation."""
     from pydantic import ValidationError

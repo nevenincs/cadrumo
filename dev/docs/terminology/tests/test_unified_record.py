@@ -19,13 +19,14 @@ import pytest
 
 from aeat.core import Modelo
 from aeat.core.external_constants import OutputLanguage
+from dev.docs.terminology._cli_projection import CliOptionRecord, CliSurfaceRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _FOUR_LANGUAGES = frozenset(OutputLanguage)
 
 
-def _cli_command_record() -> object:
+def _cli_command_record() -> CliSurfaceRecord:
     from dev.docs.terminology._cli_projection import CliSurfaceRecord
     from dev.docs.terminology._search_record import SearchRecordKind
 
@@ -39,7 +40,7 @@ def _cli_command_record() -> object:
     )
 
 
-def _cli_option_record() -> object:
+def _cli_option_record() -> CliOptionRecord:
     from dev.docs.terminology._cli_projection import CliOptionRecord
     from dev.docs.terminology._search_record import SearchRecordKind
 
@@ -101,13 +102,13 @@ def test_cli_command_and_option_funnel_to_search_records() -> None:
     from dev.docs.terminology._search_record import SearchRecordKind
     from dev.docs.terminology._unified_record import to_search_record
 
-    command = to_search_record(_cli_command_record())  # type: ignore[arg-type]
+    command = to_search_record(_cli_command_record())
     assert command.kind is SearchRecordKind.CLI
     assert command.id == "cli:ledger.add"
     assert command.title == "aeat app ledger add"
     assert command.metadata.registry_key == "ledger.add"
 
-    option = to_search_record(_cli_option_record())  # type: ignore[arg-type]
+    option = to_search_record(_cli_option_record())
     assert option.kind is SearchRecordKind.CLI
     assert option.id == "cli-option:aeat app ledger add:--amount"
     assert option.metadata.option_names == ("--amount",)
@@ -124,8 +125,8 @@ def test_all_kinds_serialise_to_the_same_shape() -> None:
     kinds = [
         to_search_record(cards[0]),
         to_search_record(casillas[0]),
-        to_search_record(_cli_command_record()),  # type: ignore[arg-type]
-        to_search_record(_cli_option_record()),  # type: ignore[arg-type]
+        to_search_record(_cli_command_record()),
+        to_search_record(_cli_option_record()),
     ]
     expected_fields = set(SearchRecord.model_fields)
     for record in kinds:
