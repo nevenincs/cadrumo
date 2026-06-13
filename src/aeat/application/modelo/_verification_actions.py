@@ -9,7 +9,7 @@ from __future__ import annotations
 import decimal as _decimal
 import re as _re
 from collections.abc import Iterable, Mapping
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -567,7 +567,16 @@ def _cross_period_clean_state_verdict_for_work_unit(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
+    activity_start_date: date | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
+    """Evaluate the cross-period clean-state verdict for a work unit.
+
+    ``activity_start_date`` is the operator-declared
+    :attr:`TaxpayerProfile.activity_start_date` - the exact field the deadline
+    engine consumes for pre-start obligation suppression. When supplied, a
+    dependency whose period falls strictly before it is scoped out as
+    no-prior-obligation (ADR 2026-06-13-first-filer-attestation-adr).
+    """
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -587,13 +596,33 @@ def _cross_period_clean_state_verdict_for_work_unit(
         verification_repository=verification_repository,
         expected_member_sets=expected_member_sets,
         taxpayer_tax_id=taxpayer_tax_id,
+        activity_start_date=activity_start_date,
     )
+
+
+#: Blocker codes a genuine first filer would hit on a pre-activity dependency:
+#: there is simply no prior filing or evidence because no obligation ever existed.
+#: When these block AND no activity-start date is recorded, the gate prompts the
+#: operator to record the date (fail-closed) rather than silently demanding
+#: evidence of a filing the law never required.
+_FIRST_FILER_CANDIDATE_BLOCKERS: frozenset[CrossPeriodCleanStateBlocker] = frozenset(
+    {
+        CrossPeriodCleanStateBlocker.MISSING_OBSERVATION,
+        CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA,
+        CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD,
+        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
+        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
+        CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
+        CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION,
+    },
+)
 
 
 def _cross_period_clean_state_findings(
     verdict: CrossPeriodCleanStateVerdict | None,
     *,
     iva_compensation_decision: object | None = None,
+    activity_start_date: date | None = None,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return verification findings for a cross-period clean-state verdict.
 
@@ -605,15 +634,30 @@ def _cross_period_clean_state_findings(
     Ruling 3 / R2 mandates that a legacy-unstamped carry must never degrade
     silently. The WARNING severity keeps the grant path open (see
     :func:`_classify_verification_outcome`) while making the carry operator-visible.
+
+    ADR 2026-06-13-first-filer-attestation-adr adds two outcomes:
+
+    * A dependency scoped out as no-prior-obligation pre-activity on an
+      operator-declared (uncorroborated) date emits a NON-BLOCKING ``ADVISORY``
+      (``WARNING``) so the suppression is operator-visible and never trusted
+      silently, while keeping the grant path open.
+    * When an evidence-missing dependency blocks AND ``activity_start_date`` is
+      ``None`` (the profile records no activity-start date at all), a single
+      BLOCKING finding prompts the operator to record the date so the gate fails
+      closed instructively rather than silently demanding evidence of a filing the
+      law may never have required.
     """
     if verdict is None:
         return ()
     findings: list[ModeloVerificationFinding] = []
+    has_first_filer_candidate_block = False
     for evidence in verdict.dependencies:
         if not evidence.clean:
             if _iva_wallet_decision_covers_cross_period_dependency(verdict, evidence, iva_compensation_decision):
                 pass
             else:
+                if set(evidence.blockers) & _FIRST_FILER_CANDIDATE_BLOCKERS:
+                    has_first_filer_candidate_block = True
                 requirement = evidence.requirement
                 requirement_period = requirement.period.registry_token
                 blocker_text = _summarize_cross_period_ids(tuple(blocker.value for blocker in evidence.blockers))
@@ -633,7 +677,76 @@ def _cross_period_clean_state_findings(
                 )
         if evidence.unstamped_revision_advisory:
             findings.append(_cross_period_unstamped_revision_advisory_finding(verdict, evidence))
+        if evidence.operator_declared_suppression_advisory:
+            findings.append(_cross_period_operator_declared_suppression_advisory_finding(verdict, evidence))
+    if activity_start_date is None and has_first_filer_candidate_block:
+        findings.append(_cross_period_missing_activity_start_finding(verdict))
     return tuple(findings)
+
+
+def _cross_period_operator_declared_suppression_advisory_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> ModeloVerificationFinding:
+    """Build the NON-BLOCKING advisory for an operator-declared pre-activity suppression.
+
+    ADR 2026-06-13-first-filer-attestation-adr (operator-declared now,
+    censo-corroborated when the live censo surface is fixed): a dependency was
+    scoped out as no-prior-obligation because its period falls strictly before the
+    operator-declared activity-start date. The date has NOT been corroborated
+    against an AEAT censo snapshot, so the suppression is surfaced as a
+    non-blocking advisory - never presented as AEAT-authoritative, never trusted
+    silently - mirroring the WARNING severity that keeps the grant path open.
+    """
+    requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
+    provenance = evidence.no_prior_obligation
+    declared_date = provenance.activity_start_date.isoformat() if provenance is not None else "unknown"
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message=(
+            "cross-period dependency scoped out as no-prior-obligation (pre-activity): "
+            f"modelo={requirement.source_modelo} year={requirement.filing_year} "
+            f"period={requirement_period} origin={requirement.origin.value}. The period falls "
+            f"strictly before the operator-declared activity-start date {declared_date}, which has "
+            "not yet been corroborated against an AEAT censo snapshot."
+        ),
+        next_action=(
+            "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is "
+            "available, the date will be corroborated and this advisory cleared."
+        ),
+    )
+
+
+def _cross_period_missing_activity_start_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+) -> ModeloVerificationFinding:
+    """Build the BLOCKING fail-closed finding when no activity-start date is recorded.
+
+    ADR 2026-06-13-first-filer-attestation-adr: a dependency blocks with an
+    evidence-missing reason a genuine first filer would hit, but the profile
+    records no ``activity_start_date`` at all, so the gate cannot decide whether
+    the dependency is pre-activity (no prior obligation) or a genuinely missing
+    filing. The gate fails CLOSED, prompting the operator to record the
+    activity-start date, rather than silently opening.
+    """
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message=(
+            "a cross-period dependency is missing its prior filing or evidence and the profile records "
+            f"no activity-start date for modelo={verdict.target_modelo} year={verdict.target_filing_year} "
+            f"period={verdict.target_period.registry_token}. If this is the first period of economic "
+            "activity, no prior obligation existed; record the activity-start date so the pre-activity "
+            "dependency can be scoped out. Otherwise capture the missing AEAT evidence."
+        ),
+        next_action=(
+            "Record the operator-declared activity-start date on the taxpayer profile "
+            "(`aeat config profile setup`), then rerun verification. If a prior obligation genuinely "
+            "existed, capture or import its AEAT justificante/CSV/live evidence instead."
+        ),
+    )
 
 
 def _cross_period_unstamped_revision_advisory_finding(
@@ -786,6 +899,7 @@ def _require_cross_period_clean_state(
     iva_compensation_decision: object | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
+    activity_start_date: date | None = None,
 ) -> None:
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
@@ -795,10 +909,12 @@ def _require_cross_period_clean_state(
         verification_repository=verification_repository,
         expected_member_sets=expected_member_sets,
         taxpayer_tax_id=taxpayer_tax_id,
+        activity_start_date=activity_start_date,
     )
     findings = _cross_period_clean_state_findings(
         verdict,
         iva_compensation_decision=iva_compensation_decision,
+        activity_start_date=activity_start_date,
     )
     # Only BLOCKING findings gate the file/export path. NON-BLOCKING WARNING
     # advisories (e.g. the legacy/indeterminate revision-stamp advisory) surface
@@ -992,8 +1108,10 @@ def verify_modelo_revision(
                     cross_period_expected_member_sets,
                 ),
                 taxpayer_tax_id=workflow_profile.tax_id,
+                activity_start_date=workflow_profile.activity_start_date,
             ),
             iva_compensation_decision=iva_compensation_decision,
+            activity_start_date=workflow_profile.activity_start_date,
         ),
     )
     findings.extend(
