@@ -384,10 +384,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
                 record.payload.decode(UTF_8_ENCODING),
             )
             decision = envelope.payload.decision
-            if (
-                decision.taxpayer_nif.strip().upper() == taxpayer_token
-                and decision.target_period == filing_period
-            ):
+            if decision.taxpayer_nif.strip().upper() == taxpayer_token and decision.target_period == filing_period:
                 decisions.append(decision)
         return tuple(sorted(decisions, key=lambda item: (item.decided_at, item.wallet_captured_at or item.decided_at)))
 

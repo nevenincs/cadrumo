@@ -79,8 +79,7 @@ def test_orden_aplicabilidad_follow_up_count_does_not_exceed_ceiling() -> None:
         f"DO NOT raise the ceiling. Instead, backfill orden_aplicabilidad "
         f"for the newly-added pre-ratchet revisions or ensure new revisions "
         f"(valid_from >= 2026-06-10) declare it (hard failure, not follow-up). "
-        f"Affected revisions ({len(affected)}):\n"
-        + "\n".join(f"  {r}" for r in affected)
+        f"Affected revisions ({len(affected)}):\n" + "\n".join(f"  {r}" for r in affected)
     )
 
 
@@ -104,8 +103,6 @@ def test_orden_aplicabilidad_no_hard_failures_in_registry() -> None:
             )
             all_hard.extend(f"{modelo.id}/{rev_id}: {msg}" for msg in hard)
 
-    assert not all_hard, (
-        f"Hard gate failures found in the committed registry "
-        f"({len(all_hard)} total):\n"
-        + "\n".join(f"  {item}" for item in all_hard)
+    assert not all_hard, f"Hard gate failures found in the committed registry ({len(all_hard)} total):\n" + "\n".join(
+        f"  {item}" for item in all_hard
     )

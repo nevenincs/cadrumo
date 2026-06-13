@@ -182,7 +182,11 @@ def _resolve_binding_values(
         expected_year = filing_year + selector.filing_year_delta + period_year_delta
         values.extend(
             _resolve_anchor_values(
-                binding, selector, available, expected_year=expected_year, required_period=required_period,
+                binding,
+                selector,
+                available,
+                expected_year=expected_year,
+                required_period=required_period,
             ),
         )
     return values
@@ -291,9 +295,7 @@ class _PreviousModeloSelector(BaseModel):
     @model_validator(mode="after")
     def _validate_period_selector(self) -> _PreviousModeloSelector:
         if self.prior_quarter_expanding_span and (
-            self.period is not None
-            or self.source_periods
-            or self.source_period_offset_from_target is not None
+            self.period is not None or self.source_periods or self.source_period_offset_from_target is not None
         ):
             raise RegistryValidationError(
                 "previous-filing prior_quarter_expanding_span is mutually exclusive with "

@@ -15,7 +15,8 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 @pytest.fixture(scope="module")
 def _registry_relation_cases() -> tuple[
-    tuple[ModeloDefinition, ModeloRevision, RelationDefinition, dict[str, ModeloDefinition]], ...,
+    tuple[ModeloDefinition, ModeloRevision, RelationDefinition, dict[str, ModeloDefinition]],
+    ...,
 ]:
     """Pre-load the committed registry once and expose every (modelo, revision, relation) triple.
 
@@ -93,7 +94,12 @@ def _source_revision_consistency_errors(
         )
     errors.extend(
         _offset_derived_period_errors(
-            modelo, revision, relation, source_modelo, source_revision, revision_periods=revision_periods,
+            modelo,
+            revision,
+            relation,
+            source_modelo,
+            source_revision,
+            revision_periods=revision_periods,
         ),
     )
     return errors
@@ -129,7 +135,8 @@ def _offset_derived_period_errors(
 
 def test_registry_relations_reference_existing_modelo_outputs_and_target_bindings(
     _registry_relation_cases: tuple[
-        tuple[ModeloDefinition, ModeloRevision, RelationDefinition, Mapping[str, ModeloDefinition]], ...,
+        tuple[ModeloDefinition, ModeloRevision, RelationDefinition, Mapping[str, ModeloDefinition]],
+        ...,
     ],
 ) -> None:
     """Every relation in the committed registry must point at real source/target rows.

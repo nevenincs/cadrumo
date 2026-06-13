@@ -71,7 +71,10 @@ def test_committed_registry_passes_referential_integrity(
                 # Pre-existing registry defects prevent snapshot construction;
                 # _check_all_id_references cannot fire here -- log and skip.
                 logging.getLogger(__name__).debug(
-                    "skipping revision %s/%s: snapshot build failed: %s", modelo.id, revision.id, exc,
+                    "skipping revision %s/%s: snapshot build failed: %s",
+                    modelo.id,
+                    revision.id,
+                    exc,
                 )
                 continue
             _check_all_id_references(snapshot)  # must not raise

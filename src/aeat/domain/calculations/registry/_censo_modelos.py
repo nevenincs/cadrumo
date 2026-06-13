@@ -15,8 +15,8 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
-from ....core import Modelo
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Modelo
 from ....core.logging import get_logger
 from ....core.resources import resources
 from ._authority import ValidatedRegistryAuthority

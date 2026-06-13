@@ -438,7 +438,8 @@ def resolve_profile_sourced_bindings(
 
 
 def _resolve_one(
-    binding: DataBindingDefinition, fact_index: Mapping[str, UserProfileFactValue],
+    binding: DataBindingDefinition,
+    fact_index: Mapping[str, UserProfileFactValue],
 ) -> UserProfileFactValue | None:
     """Return the typed profile fact value for one profile binding, or None if absent."""
     for selector in profile_binding_selectors(binding.selector):

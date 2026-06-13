@@ -117,7 +117,10 @@ class TestModelo184MemberRow:
         assert len(rows) == 3
         # Anti-tautology: changing one row's importe only affects that row
         modified = Modelo184MemberRow(
-            nif="11111111A", nombre="Sòcia 1", porcentaje=Decimal("40"), importe=Decimal("13000"),
+            nif="11111111A",
+            nombre="Sòcia 1",
+            porcentaje=Decimal("40"),
+            importe=Decimal("13000"),
         )
         assert modified.importe != rows[0].importe
         assert rows[1].importe == Decimal("10500")
@@ -342,21 +345,30 @@ class TestModelo349OperadorRow:
     def test_nif_comunitario_uppercased(self) -> None:
         """nif_comunitario is normalised to uppercase."""
         row = Modelo349OperadorRow(
-            codigo_pais="FR", nif_comunitario="fr12345678901", clave_operacion="S", importe=Decimal("1"),
+            codigo_pais="FR",
+            nif_comunitario="fr12345678901",
+            clave_operacion="S",
+            importe=Decimal("1"),
         )
         assert row.nif_comunitario == "FR12345678901"
 
     def test_razon_social_defaults_empty(self) -> None:
         """razon_social defaults to empty string."""
         row = Modelo349OperadorRow(
-            codigo_pais="IT", nif_comunitario="IT12345678901", clave_operacion="M", importe=Decimal("1000"),
+            codigo_pais="IT",
+            nif_comunitario="IT12345678901",
+            clave_operacion="M",
+            importe=Decimal("1000"),
         )
         assert row.razon_social == ""
 
     def test_importe_zero_is_valid(self) -> None:
         """importe=0 is valid per Orden HAC/174/2020 (zero-value ops can appear)."""
         row = Modelo349OperadorRow(
-            codigo_pais="PT", nif_comunitario="PT123456789", clave_operacion="T", importe=Decimal("0"),
+            codigo_pais="PT",
+            nif_comunitario="PT123456789",
+            clave_operacion="T",
+            importe=Decimal("0"),
         )
         assert row.importe == Decimal("0")
 
@@ -364,14 +376,20 @@ class TestModelo349OperadorRow:
         """Negative importe is rejected per Orden HAC/174/2020 non_negative constraint."""
         with pytest.raises(ValidationError, match="non-negative"):
             Modelo349OperadorRow(
-                codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("-1"),
+                codigo_pais="DE",
+                nif_comunitario="DE123456789",
+                clave_operacion="E",
+                importe=Decimal("-1"),
             )
 
     def test_codigo_pais_must_be_uppercase_alpha(self) -> None:
         """codigo_pais must be uppercase two-letter ISO code."""
         with pytest.raises(ValidationError):
             Modelo349OperadorRow(
-                codigo_pais="de", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("1"),
+                codigo_pais="de",
+                nif_comunitario="DE123456789",
+                clave_operacion="E",
+                importe=Decimal("1"),
             )
 
     def test_invalid_clave_operacion_rejected(self) -> None:
@@ -387,7 +405,10 @@ class TestModelo349OperadorRow:
     def test_frozen_model_immutable(self) -> None:
         """Modelo349OperadorRow is frozen."""
         row = Modelo349OperadorRow(
-            codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("1"),
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            clave_operacion="E",
+            importe=Decimal("1"),
         )
         with pytest.raises((ValidationError, TypeError)):
             row.codigo_pais = "FR"  # type: ignore[misc]
@@ -399,14 +420,23 @@ class TestModelo349OperadorRow:
         Changing one row's importe does not affect the other.
         """
         row1 = Modelo349OperadorRow(
-            codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("50000"),
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            clave_operacion="E",
+            importe=Decimal("50000"),
         )
         row2 = Modelo349OperadorRow(
-            codigo_pais="FR", nif_comunitario="FR12345678901", clave_operacion="S", importe=Decimal("30000"),
+            codigo_pais="FR",
+            nif_comunitario="FR12345678901",
+            clave_operacion="S",
+            importe=Decimal("30000"),
         )
         assert row1.importe != row2.importe
         row1_modified = Modelo349OperadorRow(
-            codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("75000"),
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            clave_operacion="E",
+            importe=Decimal("75000"),
         )
         assert row1_modified.importe == Decimal("75000")
         assert row2.importe == Decimal("30000")

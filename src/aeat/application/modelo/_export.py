@@ -359,13 +359,21 @@ def _compose_export_headers(
     """
     surnames, name = _operator_name_facts(work_unit.bucket_id)
     try:
-        period_start = period.start_date if period.has_date_span() else period_start_date(
-            period.filing_year,
-            period.registry_token,
+        period_start = (
+            period.start_date
+            if period.has_date_span()
+            else period_start_date(
+                period.filing_year,
+                period.registry_token,
+            )
         )
-        period_end = period.end_date if period.has_date_span() else period_end_date(
-            period.filing_year,
-            period.registry_token,
+        period_end = (
+            period.end_date
+            if period.has_date_span()
+            else period_end_date(
+                period.filing_year,
+                period.registry_token,
+            )
         )
     except PeriodValidationError as exc:
         raise ModeloExportError(

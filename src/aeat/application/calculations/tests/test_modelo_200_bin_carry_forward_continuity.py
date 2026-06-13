@@ -141,7 +141,9 @@ def _calculate_200(*, filing_year: int, relation_values: dict[str, Decimal]) -> 
 
 
 def _resolve_and_supply_relations(
-    *, filing_year: int, obs_repo: CalculationObservationRepository,
+    *,
+    filing_year: int,
+    obs_repo: CalculationObservationRepository,
 ) -> dict[str, Decimal]:
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
     resolved = {

@@ -176,6 +176,7 @@ _validate_iban_string = _scalars._validate_iban_string
 _validate_nif_string = _scalars._validate_nif_string
 _validate_period_code = _scalars._validate_period_code
 
+
 class RegistrySnapshotRef(RegistryModel):
     """Typed coordinates that identify a registry snapshot.
 
@@ -499,7 +500,8 @@ class ExtractionProfileDefinition(RegistryModel):
     @field_validator("target_casillas")
     @classmethod
     def _target_casillas_unique(
-        cls, value: tuple[ExtractionTargetDefinition, ...],
+        cls,
+        value: tuple[ExtractionTargetDefinition, ...],
     ) -> tuple[ExtractionTargetDefinition, ...]:
         casilla_ids = [t.casilla_id for t in value]
         if len(set(casilla_ids)) != len(casilla_ids):

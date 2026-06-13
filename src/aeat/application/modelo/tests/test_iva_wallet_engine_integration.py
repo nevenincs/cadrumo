@@ -46,9 +46,10 @@ from .. import (
     calculate_modelo_revision,
     create_work_unit,
     file_modelo_revision,
-    mark_revision_verificado_completo,
+    verify_modelo_revision,
 )
 from .._actions import _require_persisted_iva_compensation_decision_matches_revision
+from ._file_flow_support import _seed_clean_cross_period_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -671,15 +672,27 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
         )
-        verified = mark_revision_verificado_completo(
+        _seed_clean_cross_period_sources(
+            work_unit,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            filing_repository=filing_repo,
+            bucket_event_repository=event_repo,
+        )
+        verification_report = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator",
+            workflow_profile=_workflow_profile(taxpayer_nif),
+            work_unit_repository=work_repo,
             calculation_repository=calc_repo,
+            filing_repository=filing_repo,
+            bucket_event_repository=event_repo,
             clock=datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC),
         )
+        assert verification_report.granted_verificado_completo is True
 
         filing = file_modelo_revision(
-            verified.calculation_revision_id,
+            revision.calculation_revision_id,
             actor="operator",
             workflow_profile=_workflow_profile(taxpayer_nif),
             work_unit_repository=work_repo,
@@ -696,12 +709,12 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
         assert filing.status is ModeloRecordStatus.VIGENTE
         assert filing.aeat_accepted is False
         assert filing.external_evidence is None
-        stored_revision = calc_repo.load().get(verified.calculation_revision_id)
+        stored_revision = calc_repo.load().get(revision.calculation_revision_id)
         assert stored_revision is not None
         assert stored_revision.state is CalculationRevisionState.PRESENTADO
         stored_work_unit = work_repo.load().get(work_unit.work_unit_id)
         assert stored_work_unit is not None
-        assert stored_work_unit.filed_calculation_revision_id == verified.calculation_revision_id
+        assert stored_work_unit.filed_calculation_revision_id == revision.calculation_revision_id
         assert (
             filing_repo.load().current_for(
                 bucket_id="operator",
@@ -783,10 +796,13 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
             decided_at=_DECIDED_AT,
             persist=False,
         )
-        assert IvaWalletDecisionRepository().load_decision(
-            _TAXPAYER_NIF,
-            _period(_TARGET_YEAR, _TARGET_PERIOD),
-        ) is None
+        assert (
+            IvaWalletDecisionRepository().load_decision(
+                _TAXPAYER_NIF,
+                _period(_TARGET_YEAR, _TARGET_PERIOD),
+            )
+            is None
+        )
 
         work_repo, calc_repo, event_repo = _work_unit_repositories()
         work_unit = create_work_unit(

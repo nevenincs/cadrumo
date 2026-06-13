@@ -229,7 +229,8 @@ class CalculationRevisionCatalogueRepository:
 
 
 def upsert_calculation_revision(
-    catalogue: CalculationRevisionCatalogue, revision: CalculationRevision,
+    catalogue: CalculationRevisionCatalogue,
+    revision: CalculationRevision,
 ) -> CalculationRevisionCatalogue:
     """Return a new :class:`CalculationRevisionCatalogue` with ``revision`` inserted or replaced.
 

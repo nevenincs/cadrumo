@@ -328,6 +328,13 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
         clock=_T1,
     )
 
+    persist_justificante_metadata(
+        "CSV-SECOND",
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+        captured_at=_T2,
+    )
     second = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
         casilla_values={"01": Decimal("1600")},
@@ -337,6 +344,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        expected_tax_id=_TAX_ID,
         clock=_T2,
     )
 
@@ -599,6 +607,56 @@ def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Rep
     assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_mismatch"
 
 
+def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    persist_justificante_metadata(
+        "JUST-CASE-TAXPAYER",
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+        captured_at=_T1,
+        tax_id="X1234567L",
+    )
+
+    filing = import_external_filing_evidence(
+        work_unit_id=work_unit.work_unit_id,
+        casilla_values={"01": Decimal("1500")},
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id="JUST-CASE-TAXPAYER",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        expected_tax_id="x1234567l",
+        clock=_T1,
+    )
+
+    assert filing.aeat_accepted is True
+    assert filing.external_evidence is not None
+    assert filing.external_evidence.reference_id == "JUST-CASE-TAXPAYER"
+
+
+def test_import_csv_register_refuses_without_enrolled_justificante(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    with pytest.raises(ExternalModeloImportError) as exc_info:
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={"01": Decimal("1500")},
+            evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+            evidence_reference_id="CSV-MISSING-JUSTIFICANTE",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            expected_tax_id=_TAX_ID,
+            clock=_T1,
+        )
+    assert exc_info.value.translated_message == "application.modelo.errors.external_import_justificante_missing"
+
+
 def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
     """A discarded work unit cannot accept new imports."""
 
@@ -650,22 +708,30 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
     and the amend path still refuses it."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="111",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2019-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
         casilla_inputs={
-            "01": Decimal("1500"),
-            "02": Decimal("0"),
-            "05": Decimal("0"),
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "15": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            "03": Decimal("180.25"),
+            "06": Decimal("12.10"),
+            "09": Decimal("300.00"),
+            "12": Decimal("14.40"),
+            "15": Decimal("25.00"),
+            "18": Decimal("0.50"),
+            "21": Decimal("7.00"),
+            "24": Decimal("8.00"),
+            "27": Decimal("9.00"),
+            "29": Decimal("40.00"),
         },
-        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,

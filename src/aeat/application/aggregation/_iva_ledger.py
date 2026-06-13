@@ -287,9 +287,7 @@ def aggregate_iva_ledger_candidates(
                 IvaLedgerAggregationIssue(
                     transaction_id=candidate.ledger_id,
                     reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-                    detail=(
-                        f"transaction date {candidate.transaction_date.isoformat()} is outside {resolved_period}"
-                    ),
+                    detail=(f"transaction date {candidate.transaction_date.isoformat()} is outside {resolved_period}"),
                 ),
             )
             continue

@@ -190,7 +190,10 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
     [("3T", "2T", 10), ("4T", "3T", 1)],
 )
 def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarter_saldo(
-    modelo_130_registry: _ModeloFixture, target_period: str, prior_period: str, filing_date_month: int,
+    modelo_130_registry: _ModeloFixture,
+    target_period: str,
+    prior_period: str,
+    filing_date_month: int,
 ) -> None:
     """Extend regression coverage to 3T and 4T quarters.
 
@@ -252,7 +255,8 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
     # casilla 05 = Σ max(0, 07_q) − Σ 16_q computed independently from the seeded
     # prior-quarter inputs (a different code path than the span binding).
     expected_casilla_05 = sum(
-        (max(Decimal("0"), _PRIOR_07[q]) for q in prior_quarters), Decimal("0"),
+        (max(Decimal("0"), _PRIOR_07[q]) for q in prior_quarters),
+        Decimal("0"),
     ) - sum((_PRIOR_16[q] for q in prior_quarters), Decimal("0"))
     assert resolved_bindings["modelo-130-pagos-fraccionados-anteriores"] == expected_casilla_05
 

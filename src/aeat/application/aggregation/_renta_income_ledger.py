@@ -398,9 +398,9 @@ def _income_casilla_aggregation(
     provenance_rows: list[CasillaProvenance] = []
     grouped: dict[str, list[RentaIncomeObservation]] = {}
     for observation in observations:
-        totals[observation.target_casilla] = (
-            totals.get(observation.target_casilla, Decimal("0")) + _computable_income_amount(observation)
-        )
+        totals[observation.target_casilla] = totals.get(
+            observation.target_casilla, Decimal("0")
+        ) + _computable_income_amount(observation)
         grouped.setdefault(observation.target_casilla, []).append(observation)
     for casilla, rows in sorted(grouped.items()):
         provenance_rows.append(

@@ -309,7 +309,9 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         # Year N+1: same pipeline.
         expected_n1 = _compute_year_111_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
         _q1_result_n1 = _calculate_111(
-            filing_year=_YEAR_N_PLUS_1, period="1T", casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"],
+            filing_year=_YEAR_N_PLUS_1,
+            period="1T",
+            casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"],
         )
         recorder_111.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values))
 

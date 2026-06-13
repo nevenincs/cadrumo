@@ -162,8 +162,7 @@ def test_enrolled_resolvers_exist_and_satisfy_the_protocol() -> None:
     )
     assert not not_source_mesh, (
         "Declared enrolled resolvers no longer satisfy the source-mesh protocol "
-        "(resolver_id / owned_sources / resolve):\n"
-        + "\n".join(f"  * {name}" for name in not_source_mesh)
+        "(resolver_id / owned_sources / resolve):\n" + "\n".join(f"  * {name}" for name in not_source_mesh)
     )
 
 
@@ -196,15 +195,12 @@ def test_discovery_count_is_pinned() -> None:
     enrolled or non-mesh set changes this count and fails here.
     """
     discovered = _discover_resolve_bearing_classes()
-    source_mesh = [
-        name for name, is_mesh in discovered.items() if is_mesh and name != _PROTOCOL_QUALNAME
-    ]
+    source_mesh = [name for name, is_mesh in discovered.items() if is_mesh and name != _PROTOCOL_QUALNAME]
     non_mesh = [name for name, is_mesh in discovered.items() if not is_mesh]
 
     assert len(source_mesh) == len(_ENROLLED_SOURCE_MESH_RESOLVERS), (
         f"Expected {len(_ENROLLED_SOURCE_MESH_RESOLVERS)} concrete source-mesh "
-        f"resolvers, discovered {len(source_mesh)}:\n"
-        + "\n".join(f"  {name}" for name in sorted(source_mesh))
+        f"resolvers, discovered {len(source_mesh)}:\n" + "\n".join(f"  {name}" for name in sorted(source_mesh))
     )
     assert len(non_mesh) == len(_KNOWN_NON_MESH_RESOLVERS), (
         f"Expected {len(_KNOWN_NON_MESH_RESOLVERS)} known non-mesh resolver(s), "

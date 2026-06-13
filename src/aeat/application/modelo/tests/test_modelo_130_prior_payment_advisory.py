@@ -341,6 +341,5 @@ def test_first_trimestre_does_not_fire(
     result = _calculate(objects, period="1T")
 
     assert _prior_payment_advisories(result) == (), (
-        "a 1T first-obligation filing has no prior trimestre and must never fire "
-        "the undeducted-prior-payment advisory"
+        "a 1T first-obligation filing has no prior trimestre and must never fire the undeducted-prior-payment advisory"
     )

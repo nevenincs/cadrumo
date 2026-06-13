@@ -29,7 +29,7 @@ import json
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, override
+from typing import Annotated, Self, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -208,6 +208,10 @@ class ModeloRecord(BaseModel):
             raise ModeloValidationError(
                 f"filing_record_id {self.filing_record_id!r} does not match the derived id {derived!r}",
             )
+        if self.aeat_accepted and self.external_evidence is None:
+            raise ModeloValidationError("AEAT-accepted filing record must carry external evidence")
+        if self.external_evidence is not None and not self.aeat_accepted:
+            raise ModeloValidationError("external filing evidence must carry AEAT acceptance")
         if self.status is ModeloRecordStatus.VIGENTE:
             if self.superseded_at is not None or self.superseded_by_filing_record_id is not None:
                 raise ModeloValidationError("current filing record must not carry supersession metadata")
@@ -221,6 +225,13 @@ class ModeloRecord(BaseModel):
                     f"superseded_at {self.superseded_at.isoformat()} precedes filed_at {self.filed_at.isoformat()}",
                 )
         return self
+
+    @override
+    def model_copy(self, *, update: Mapping[str, object] | None = None, deep: bool = False) -> Self:
+        copied = super().model_copy(update=update, deep=deep)
+        if update:
+            return type(self).model_validate(copied.model_dump(mode="python"))
+        return copied
 
 
 class ModeloRecordCatalogue(BaseModel):

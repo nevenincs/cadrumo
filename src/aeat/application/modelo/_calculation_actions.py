@@ -34,6 +34,7 @@ from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
 from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS as _DEFERRED_SOURCE_KINDS
+from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ..live import Borrador100SnapshotRepository
 from . import _iva_wallet_gate
 from ._action_errors import (
@@ -41,6 +42,7 @@ from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloAggregationBindingError,
+    ModeloCrossPeriodCleanStateError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     WorkUnitRevisionDivergenceError,
@@ -1008,6 +1010,7 @@ def mark_revision_verificado_completo(
     *,
     actor: str,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Transition a draft revision to ``VERIFICADO_COMPLETO``.
@@ -1021,6 +1024,9 @@ def mark_revision_verificado_completo(
         actor: Operator identifier stamped as ``verified_by``.
         calculation_repository: Optional calculation-revision catalogue
             repository override.
+        work_unit_repository: Optional work-unit catalogue repository
+            override used to refuse direct promotion for cross-period
+            dependency revisions.
         clock: Optional UTC timestamp override for ``verified_at``.
 
     Returns:
@@ -1045,6 +1051,7 @@ def mark_revision_verificado_completo(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete",
         )
+    _refuse_direct_cross_period_verification(existing, work_unit_repository=work_unit_repository)
     now = clock or _utc_now()
     verified = existing.model_copy(
         update={
@@ -1056,3 +1063,31 @@ def mark_revision_verificado_completo(
     )
     cr_repo.save(upsert_calculation_revision(catalogue, verified))
     return verified
+
+
+def _refuse_direct_cross_period_verification(
+    revision: CalculationRevision,
+    *,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+) -> None:
+    """Require the full verification pipeline for cross-period dependency revisions."""
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    work_unit = wu_repo.load().get(revision.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": revision.work_unit_id},
+        )
+    snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
+    if tuple(_cross_period_dependency_requirements(snapshot)):
+        raise ModeloCrossPeriodCleanStateError(
+            translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
+            context={
+                "calculation_revision_id": revision.calculation_revision_id,
+                "work_unit_id": revision.work_unit_id,
+                "modelo": work_unit.modelo,
+                "filing_year": str(work_unit.filing_year),
+                "period": work_unit.period.registry_token,
+            },
+            suggestion="aeat app modelo work verify",
+        )

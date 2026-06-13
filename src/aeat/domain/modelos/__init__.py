@@ -39,6 +39,7 @@ from ._filing_record import (
     derive_filing_record_id,
 )
 from ._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
+from ._ids import WorkUnitId
 from ._participation_index import (
     PARTICIPATION_INDEX_NAMESPACE,
     PARTICIPATION_INDEX_SCHEMA_VERSION,
@@ -114,6 +115,7 @@ __all__ = (
     "WorkUnitCatalogue",
     "WorkUnitCatalogueRepository",
     "WorkUnitCatalogueRepositoryProtocol",
+    "WorkUnitId",
     "derive_calculation_revision_id",
     "derive_filing_record_id",
     "derive_participation_index_id",

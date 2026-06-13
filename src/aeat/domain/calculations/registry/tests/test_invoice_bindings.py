@@ -104,7 +104,8 @@ def test_invoice_observation_validates_country_and_clave_enums() -> None:
 
 def test_invoice_observation_rejects_inconsistent_rectification_metadata() -> None:
     with pytest.raises(
-        ValidationError, match=r"rectification observation must declare rectified_year and rectified_period",
+        ValidationError,
+        match=r"rectification observation must declare rectified_year and rectified_period",
     ):
         InvoiceObservation(
             invoice_id="inv-1",
@@ -115,7 +116,8 @@ def test_invoice_observation_rejects_inconsistent_rectification_metadata() -> No
             is_rectification=True,
         )
     with pytest.raises(
-        ValidationError, match=r"non-rectification observation must not declare rectified_base_previous",
+        ValidationError,
+        match=r"non-rectification observation must not declare rectified_base_previous",
     ):
         InvoiceObservation(
             invoice_id="inv-1",
@@ -252,7 +254,8 @@ def test_resolve_invoice_binding_values_rejects_unsupported_fact() -> None:
 def test_resolve_invoice_binding_values_rejects_op_mismatch_for_fact() -> None:
     revision = _revision(_with_aggregation(_binding("iva-349-declarante-numero-operadores"), "sum"))
     with pytest.raises(
-        RegistryValidationError, match=r"fact 'operator_count' requires aggregation op 'count_distinct'",
+        RegistryValidationError,
+        match=r"fact 'operator_count' requires aggregation op 'count_distinct'",
     ):
         resolve_invoice_binding_values(revision, ())
 

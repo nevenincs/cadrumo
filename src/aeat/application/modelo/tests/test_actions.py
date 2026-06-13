@@ -168,7 +168,9 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     )
     # Both casillas are zero — predicate is violated.
     findings = _evaluate_verification_predicates(
-        (predicate,), {"0001": Decimal(0), "0002": Decimal(0)}, _resident_profile(),
+        (predicate,),
+        {"0001": Decimal(0), "0002": Decimal(0)},
+        _resident_profile(),
     )
 
     assert len(findings) == 1
@@ -189,7 +191,9 @@ def test_cross_casilla_invariant_next_action_is_localised() -> None:
         finding_kind="BLOCKING_RULE",
     )
     findings = _evaluate_verification_predicates(
-        (predicate,), {"0003": Decimal(0), "0004": Decimal(0)}, _resident_profile(),
+        (predicate,),
+        {"0003": Decimal(0), "0004": Decimal(0)},
+        _resident_profile(),
     )
 
     assert len(findings) == 1

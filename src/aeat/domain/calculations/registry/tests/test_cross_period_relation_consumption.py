@@ -105,8 +105,7 @@ def test_no_inert_value_feeding_cross_period_relations() -> None:
 
     assert not gaps, (
         "Inert value-feeding cross-period relation(s) found — each carries a "
-        "prior-period value into a slot nothing consumes:\n"
-        + "\n".join(f"  * {gap}" for gap in gaps)
+        "prior-period value into a slot nothing consumes:\n" + "\n".join(f"  * {gap}" for gap in gaps)
     )
 
 
