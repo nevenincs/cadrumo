@@ -26,15 +26,19 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
+    NoPriorObligationProvenanceKind,
     cross_period_dependency_requirements,
 )
+from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
 from .. import (
+    APP_FILING_SOURCE_KIND,
     ModeloCrossPeriodCleanStateError,
     ModeloExportCommand,
     create_work_unit,
     export_modelo_revision,
     file_modelo_revision,
     import_external_filing_evidence,
+    mark_revision_verificado_completo,
     verify_modelo_revision,
 )
 from .justificante_metadata import persist_justificante_metadata
@@ -166,6 +170,30 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_p
             )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
+
+
+def test_direct_mark_verified_refuses_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-mark") as profile:
+        revision_id = _seed_draft_revision(
+            bucket_id=profile.bucket_id,
+            modelo="390",
+            filing_year=2025,
+            period="0A",
+        )
+
+        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
+            mark_revision_verificado_completo(
+                revision_id,
+                actor="operator-test",
+                clock=_CLOCK,
+            )
+
+        stored = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
+
+    assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
+    assert stored.state is CalculationRevisionState.BORRADOR
+    assert stored.verified_at is None
+    assert stored.verified_by is None
 
 
 @pytest.mark.parametrize(
@@ -410,3 +438,33 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
     message = str(exc_info.value)
     assert "incomplete_group_member_coverage" in message
     assert "missing_expected_group_member_roster" not in message
+
+
+def test_no_prior_obligation_provenance_never_enters_official_source_kinds() -> None:
+    """ADR 2026-06-13 honesty: pre-activity suppression provenance is never official.
+
+    The no-prior-obligation facet records a SUPPRESSION (no obligation existed),
+    not a filing's AEAT evidence. None of its enum values - the facet
+    discriminator, the operator-declared provenance, or the censo-corroborated
+    provenance - may ever be a member of ``_OFFICIAL_SOURCE_KINDS``. Were any
+    admitted, an unevidenced pre-activity scoping could masquerade as official
+    AEAT evidence and launder a dependent filing past the evidence gate.
+    """
+    for kind in NoPriorObligationProvenanceKind:
+        assert kind.value not in _OFFICIAL_SOURCE_KINDS
+    assert frozenset(
+        {"aeat_sede_justificante", "aeat_sede_live_capture", "aeat_csv_register"},
+    ) == _OFFICIAL_SOURCE_KINDS
+
+
+def test_first_local_filing_still_persists_under_non_official_app_filing() -> None:
+    """ADR 2026-06-13 honesty: the first local filing stays non-official ``app_filing``.
+
+    The first-filer fix scopes a pre-activity DEMAND for evidence out of the graph;
+    it never mints evidence. The local ``file`` flow still stamps its persisted
+    observation as the non-official ``app_filing`` source kind, so a later dependent
+    period still demands real AEAT evidence of that filing - the
+    ``local-filed-observations-are-non-official-evidence`` invariant is unchanged.
+    """
+    assert APP_FILING_SOURCE_KIND == "app_filing"
+    assert APP_FILING_SOURCE_KIND not in _OFFICIAL_SOURCE_KINDS
