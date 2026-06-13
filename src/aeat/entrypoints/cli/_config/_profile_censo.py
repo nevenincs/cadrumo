@@ -7,7 +7,8 @@ thin Typer layer that resolves the active profile/bucket, calls the
 application service, emits payload + text, and surfaces typed refusals.
 Censo lifecycle event enrollment is owned by the application service.
 
-This module uses :class:`BucketEventHistoryRepository` for event recording.
+This module uses :class:`BucketEventHistoryRepository` for event recording
+and reads the active :class:`UserProfileRecord` to project its censo keys.
 
 ``refresh`` is mounted but refuses with a typed CLI boundary error
 until the sede G313 driver lands - the verb is visible in ``--help``
@@ -20,19 +21,24 @@ Use of :class:`BucketEventHistoryRepository` for compliance.
 from __future__ import annotations
 
 from datetime import date
+from typing import TYPE_CHECKING
 
 import typer
 
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
+from .._app_live_auth_preflight import _emit_live_auth_preflight
 from .._common import _emit_envelope
-from .._errors import CliRefusedBoundaryError
+from .._errors import CliRefusedBoundaryError, decorate_typer_app
 from ._profile_censo_payloads import (
     CensoApplyPayload,
     CensoCompareResult,
     CensoRefreshResult,
     CensoShowResult,
 )
+
+if TYPE_CHECKING:
+    from ....domain.user_profile import UserProfileRecord
 
 
 def _active_pointer() -> tuple[str, str]:
@@ -63,6 +69,45 @@ def _build_service(bucket_id: str):
     )
 
 
+def _calendar_enrolment_source_paths(
+    record: UserProfileRecord,
+    *,
+    modelo: str | None = None,
+) -> list[str]:
+    from ....application.overview import calendar_censo_enrolment_profile_keys
+    from ....application.user_profile import CENSO_DERIVED_SOURCE_TAG, CENSO_SOURCE_TAG
+
+    enrolment_paths = set(calendar_censo_enrolment_profile_keys())
+    if modelo is not None:
+        from ....application.overview import calendar_applicability_profile_keys_for_modelo
+
+        row_paths = set(calendar_applicability_profile_keys_for_modelo(modelo))
+        if "taxpayer_type.irpf_income_categories" in row_paths:
+            row_paths.add("activities.iae_epigraph")
+        enrolment_paths &= row_paths
+    stamped_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
+    return [
+        f"{fact.path}={fact.source}"
+        for fact in sorted(record.facts, key=lambda item: item.path)
+        if fact.path in enrolment_paths and fact.source in stamped_sources
+    ]
+
+
+def _live_censo_verified_profile_keys(record: UserProfileRecord) -> tuple[str, ...]:
+    from ....application.user_profile import CENSO_DERIVED_SOURCE_TAG, CENSO_SOURCE_TAG
+
+    stamped_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
+    return tuple(
+        sorted(
+            {
+                fact.path
+                for fact in record.facts
+                if fact.path.strip() and fact.source in stamped_sources
+            },
+        ),
+    )
+
+
 def _calendar_summary_after_apply(*, bucket_id: str, profile_id: str) -> dict[str, object]:
     from ....application.overview import OverviewCalendarRange, build_overview_calendar
     from ....application.user_profile import (
@@ -82,13 +127,32 @@ def _calendar_summary_after_apply(*, bucket_id: str, profile_id: str) -> dict[st
         rng,
         today=today,
         raw_values=record_to_values(record),
+        live_censo_verified_profile_keys=_live_censo_verified_profile_keys(record),
     )
+    enrolment_sources = _calendar_enrolment_source_paths(record)
+    obligation_rows = [
+        {
+            "modelo": entry.modelo,
+            "filing_year": entry.filing_year,
+            "period": entry.period.registry_token,
+            "opens_on": entry.opens_on.isoformat(),
+            "closes_on": entry.closes_on.isoformat(),
+            "adjusted_closes_on": entry.adjusted_closes_on.isoformat(),
+            "payment_cutoff_on": entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on else None,
+            "status": entry.status.value,
+            "user_state": entry.user_state.value,
+            "enrolment_source_paths": _calendar_enrolment_source_paths(record, modelo=entry.modelo),
+        }
+        for entry in calendar.entries
+    ]
     return {
         "taxpayer_model_declared": calendar.taxpayer_model_declared,
         "calendar_range_from": rng.from_date.isoformat(),
         "calendar_range_to": rng.to_date.isoformat(),
         "calendar_obligation_count": len(calendar.entries),
         "calendar_obligation_modelos": sorted({entry.modelo for entry in calendar.entries}),
+        "calendar_enrolment_source_paths": enrolment_sources,
+        "calendar_obligation_rows": obligation_rows,
         "calendar_warning_codes": [warning.code for warning in calendar.warnings],
         "calendar_defaulted_modelos": list(calendar.completeness.defaulted_modelos),
     }
@@ -110,6 +174,14 @@ def _register_censo_refresh(censo_app: typer.Typer) -> None:
         from ....application.user_profile import CensoNotAvailableError
 
         profile_id, bucket_id = _active_pointer()
+        _emit_live_auth_preflight()
+        from ....core.access_gate import AeatAccessGate, AeatLiveReadNotEnabledError
+        from ....core.config import load_settings
+
+        try:
+            AeatAccessGate(load_settings()).require_live_read()
+        except AeatLiveReadNotEnabledError as exc:
+            raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         service = _build_service(bucket_id)
         try:
             snapshot = asyncio.run(service.refresh_censo_from_sede(profile_id=profile_id))
@@ -284,6 +356,25 @@ def _register_censo_apply(censo_app: typer.Typer) -> None:
         ]
         if typed_apply.calendar_obligation_modelos:
             lines.append(f"calendar_modelos\t{','.join(typed_apply.calendar_obligation_modelos)}")
+        if typed_apply.calendar_enrolment_source_paths:
+            lines.append(
+                "calendar_enrolment_sources\t"
+                f"{','.join(typed_apply.calendar_enrolment_source_paths)}",
+            )
+        for row in typed_apply.calendar_obligation_rows:
+            lines.append(
+                "calendar_obligation\t"
+                f"{row.get('modelo', '')}\t"
+                f"{row.get('filing_year', '')}\t"
+                f"{row.get('period', '')}\t"
+                f"opens_on={row.get('opens_on', '')}\t"
+                f"closes_on={row.get('closes_on', '')}\t"
+                f"adjusted_closes_on={row.get('adjusted_closes_on', '')}\t"
+                f"payment_cutoff_on={row.get('payment_cutoff_on') or ''}\t"
+                f"status={row.get('status', '')}\t"
+                f"user_state={row.get('user_state', '')}\t"
+                f"enrolment_sources={','.join(str(item) for item in row.get('enrolment_source_paths', ()))}",
+            )
         if typed_apply.calendar_warning_codes:
             lines.append(f"calendar_warnings\t{','.join(typed_apply.calendar_warning_codes)}")
         for path in result.written_paths:
@@ -309,6 +400,7 @@ def register(profile_app: typer.Typer) -> None:
     _register_censo_show(censo_app)
     _register_censo_compare(censo_app)
     _register_censo_apply(censo_app)
+    decorate_typer_app(censo_app)
     profile_app.add_typer(censo_app, name="censo")
 
 
