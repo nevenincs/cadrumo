@@ -7,6 +7,7 @@ application-link, and deadline-window sections declared on a
 
 from __future__ import annotations
 
+import re as _re
 from collections.abc import Mapping
 
 from ._schema import (
@@ -98,6 +99,29 @@ def _predicate_operator_name(expression: str) -> str | None:
     return stripped[:paren_idx]
 
 
+# equals(["lhs", "rhs"]) — the consistency operator must name EXACTLY two casilla
+# ids. The shape mirrors the runtime regex in
+# aeat.application.modelo._verification_actions._PREDICATE_EQUALS; this validator
+# is the authoring-time gate so a malformed arity fails registry load rather than
+# silently holding at evaluation time.
+_EQUALS_PREDICATE = _re.compile(r"^equals\(\[(?P<ids>[^\]]*)\]\)$")
+
+
+def _equals_predicate_arity_failures(prefix: str, owner: str, expression: str) -> list[str]:
+    """Return failures for a malformed ``equals`` predicate (not exactly two ids)."""
+    match = _EQUALS_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f'{prefix}: {owner} equals expression {expression!r} is malformed; expected equals(["lhs_id", "rhs_id"])',
+        ]
+    ids = [token.strip().strip('"').strip("'") for token in match.group("ids").split(",") if token.strip()]
+    if len(ids) != 2:
+        return [
+            f"{prefix}: {owner} equals expression must name exactly two casilla ids, got {len(ids)}: {ids!r}",
+        ]
+    return []
+
+
 def validate_verification_expectation_section(
     failures: list[str],
     *,
@@ -138,6 +162,11 @@ def validate_verification_expectation_section(
                 f"{prefix}: {owner} expression uses unknown operator {op_name!r}; known operators: "
                 f"{sorted(KNOWN_VERIFICATION_PREDICATE_OPERATORS)!r}",
             )
+        elif op_name == "equals":
+            # equals(["lhs_id", "rhs_id"]) is a binary consistency check; reject a
+            # malformed arity at authoring time rather than letting the runtime
+            # evaluator silently hold (its <2-id defensive branch returns True).
+            failures.extend(_equals_predicate_arity_failures(prefix, owner, predicate.expression))
 
 
 def validate_application_link_section(

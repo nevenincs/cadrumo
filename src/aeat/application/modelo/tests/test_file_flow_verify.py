@@ -58,11 +58,27 @@ def test_mark_verificado_completo_requires_borrador_state(repos: _Repos) -> None
     verificado-completo."""
 
     wu_repo, cr_repo, _, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(
+        wu_repo,
+        modelo="111",
+        filing_year=2026,
+        period="1T",
+        revision_id="2019-y-siguientes",
+    )
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs={
+            "03": Decimal("180.25"),
+            "06": Decimal("12.10"),
+            "09": Decimal("300.00"),
+            "12": Decimal("14.40"),
+            "15": Decimal("25.00"),
+            "18": Decimal("0.50"),
+            "21": Decimal("7.00"),
+            "24": Decimal("8.00"),
+            "27": Decimal("9.00"),
+            "29": Decimal("40.00"),
+        },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
