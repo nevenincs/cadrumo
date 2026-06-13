@@ -19,3 +19,34 @@ source_refs = ["aeat-modelo-130-instructions"]
 source_ref = "aeat-modelo-130-instructions"
 required_text = ["Resultados negativos"]
 
+# AEAT Modelo 130 instrucciones, casilla 05 ("Pagos fraccionados
+# anteriores"): the same-ejercicio carry of prior-quarter payments.
+# Verbatim rule: "la suma de las cantidades positivas consignadas en la
+# casilla 07 ... correspondientes a los trimestres anteriores del mismo
+# ejercicio, minorada en el importe de la suma de las cantidades
+# consignadas en la casilla 16 ... No se computaran las cantidades
+# negativas consignadas en la casilla 07". The selector enumerates every
+# same-ejercicio quarter strictly preceding the target
+# (prior_quarter_expanding_span; 2T->{1T}, 3T->{1T,2T}, 4T->{1T,2T,3T},
+# 1T->empty/absent-by-design), bounded by max_year_delta = 0. The
+# prior_pagos_fraccionados aggregation computes
+# SUM max(0, casilla 07_q) - SUM casilla 16_q over those quarters: the
+# per-quarter positive-part (a negative prior 07 contributes 0) and the
+# casilla-16 minoracion are both load-bearing. Casilla 07 = 04 - 05 - 06
+# reads the populated casilla 05 unchanged.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-pagos-fraccionados-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "130", source_casillas = ["07", "16"], prior_quarter_expanding_span = true, max_year_delta = 0 }
+aggregation = { op = "prior_pagos_fraccionados" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+    "suma de las cantidades positivas consignadas en la casilla 07",
+    "minorada en el importe de la suma de las cantidades consignadas en la casilla 16",
+    "No se computaran las cantidades negativas consignadas en la casilla 07",
+]
+

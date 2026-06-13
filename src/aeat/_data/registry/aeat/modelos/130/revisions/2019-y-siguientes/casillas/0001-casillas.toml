@@ -71,7 +71,13 @@ data_type = "money"
 semantic_role = "pago_fraccionado_previo"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
 required = false
-input_kind = "manual"
+# Same-ejercicio carry of prior-quarter pagos fraccionados (AEAT
+# instrucciones casilla 05): SUM max(0, prior casilla 07_q) - SUM prior
+# casilla 16_q over the trimestres anteriores del mismo ejercicio. Bound
+# via the prior_quarter_expanding_span previous_filing binding; at 1T the
+# span is empty and casilla 05 materialises Decimal(0) absent-by-design.
+input_kind = "bound"
+binding = "modelo-130-pagos-fraccionados-anteriores"
 export_refs = ["modelo-130-casilla-05"]
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
