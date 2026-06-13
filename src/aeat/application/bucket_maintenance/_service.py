@@ -18,6 +18,7 @@ import json
 import secrets
 from typing import TYPE_CHECKING
 
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
 from ...domain.buckets import (
     BucketEvent,
@@ -311,11 +312,11 @@ class BucketMaintenanceService:
                 salt = secrets.token_bytes(_RECOVERY_WRAP_SALT_BYTES)
                 recovery_wrap_bytes = _recovery_wrap_bytes(salt)
                 sealing_key = derive_key(
-                    key_material=command.recovery_wrap_passphrase.encode("utf-8"),
+                    key_material=command.recovery_wrap_passphrase.encode(UTF_8_ENCODING),
                     salt=salt,
                     context=_RECOVERY_WRAP_CONTEXT,
                 )
-            payload = bundle.model_dump_json().encode("utf-8")
+            payload = bundle.model_dump_json().encode(UTF_8_ENCODING)
             encrypted = encrypt_record(
                 payload,
                 key=sealing_key,
@@ -397,7 +398,7 @@ class BucketMaintenanceService:
                     context={"bucket_id": header.bucket_id},
                 )
             sealing_key = derive_key(
-                key_material=command.recovery_wrap_passphrase.encode("utf-8"),
+                key_material=command.recovery_wrap_passphrase.encode(UTF_8_ENCODING),
                 salt=_salt_from_recovery_wrap(contents.recovery_wrap_bytes),
                 context=_RECOVERY_WRAP_CONTEXT,
             )
@@ -503,12 +504,12 @@ def _archive_associated_data(bucket_id: str, manifest_digest: str) -> bytes:
 
 
 def _recovery_wrap_bytes(salt: bytes) -> bytes:
-    return json.dumps({"kdf": "hkdf-sha256", "salt_b64": base64.b64encode(salt).decode("ascii")}).encode("utf-8")
+    return json.dumps({"kdf": "hkdf-sha256", "salt_b64": base64.b64encode(salt).decode("ascii")}).encode(UTF_8_ENCODING)
 
 
 def _salt_from_recovery_wrap(payload: bytes) -> bytes:
     try:
-        raw = json.loads(payload.decode("utf-8"))
+        raw = json.loads(payload.decode(UTF_8_ENCODING))
         salt_b64 = raw["salt_b64"]
         if raw.get("kdf") != "hkdf-sha256":
             raise ValueError("unsupported recovery-wrap kdf")
