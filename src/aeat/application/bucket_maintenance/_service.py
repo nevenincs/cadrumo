@@ -13,6 +13,9 @@ This module uses :class:`BucketEventHistoryRepository` for event emission.
 
 from __future__ import annotations
 
+import base64
+import json
+import secrets
 from typing import TYPE_CHECKING
 
 from ...core.time import now
@@ -21,13 +24,18 @@ from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
+    BucketImportError,
     append_bucket_event,
     derive_bucket_event_id,
 )
 from ..user_profile import (
     delete_profile_with_lifecycle_span,
+    deserialize_profile_bundle,
+    profile_create_storage_span,
+    profile_storage_session,
     remove_profile_bucket_directory,
     rename_profile,
+    serialize_profile_bundle,
 )
 from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
@@ -36,9 +44,14 @@ from ._contracts import (
     BucketNamespaceInventoryRow,
     DeleteBucketCommand,
     DeleteBucketResult,
+    ExportBucketCommand,
+    ExportBucketResult,
+    ImportBucketCommand,
+    ImportBucketResult,
     RenameBucketCommand,
     RenameBucketResult,
 )
+from ._manifest_digest import compute_manifest_digest
 
 if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -46,6 +59,11 @@ if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
 
 _RENAME_PAYLOAD_VERSION = 1
 _DELETE_PAYLOAD_VERSION = 1
+_EXPORT_PAYLOAD_VERSION = 1
+_IMPORT_PAYLOAD_VERSION = 1
+_ARCHIVE_SCHEMA_VERSION = 1
+_RECOVERY_WRAP_SALT_BYTES = 16
+_RECOVERY_WRAP_CONTEXT = b"aeat.bucket-maintenance.recovery-wrap.v1"
 
 
 class BucketMaintenanceService:
@@ -252,3 +270,250 @@ class BucketMaintenanceService:
             BucketNamespaceInventoryRow(namespace=ns, row_count=len(repository.list_keys(ns))) for ns in namespaces
         )
         return BrowseBucketResult(bucket_id=command.bucket_id, rows=rows)
+
+    def export(self, command: ExportBucketCommand) -> ExportBucketResult:
+        """Write a sealed bucket archive for ``command.bucket_id``.
+
+        The method composes the existing profile portable-bundle serializer,
+        sealed-archive writer, active bucket DEK, and bucket-event history.
+        It does not reimplement profile export logic. When a recovery
+        passphrase is supplied, the payload is sealed under a passphrase-derived
+        key and the archive carries a small recovery-wrap salt member; otherwise
+        the currently active bucket DEK seals the payload for same-host backup.
+
+        Returns:
+            An :class:`ExportBucketResult` describing the written sealed archive.
+        """
+        from ...adapters.persistence.storage import get_active_master_key
+        from ...adapters.persistence.storage.bucket import ExportArchiveHeader, bucket_paths, read_manifest
+        from ...adapters.persistence.storage.bucket._sealed_archive_writer import write_sealed_archive
+        from ...adapters.persistence.storage.crypto import derive_key, encrypt_record
+        from ...core.config import load_settings
+
+        pointer = read_profile_bucket_by_id(command.bucket_id)
+        if pointer is None:
+            from ...domain.user_profile import ProfileNotFoundError
+
+            raise ProfileNotFoundError(
+                translated_message="application.user_profile.errors.no_active_profile_selected",
+                context={"bucket_id": command.bucket_id},
+            )
+
+        with profile_storage_session(command.bucket_id):
+            bundle = serialize_profile_bundle(bucket_id=command.bucket_id)
+            manifest = read_manifest(bucket_paths(load_settings().aeat_local_storage_root, command.bucket_id))
+            manifest_digest = compute_manifest_digest(manifest)
+            occurred_at = now()
+            recovery_wrap_bytes: bytes | None = None
+            if command.recovery_wrap_passphrase is None:
+                sealing_key = get_active_master_key()
+            else:
+                salt = secrets.token_bytes(_RECOVERY_WRAP_SALT_BYTES)
+                recovery_wrap_bytes = _recovery_wrap_bytes(salt)
+                sealing_key = derive_key(
+                    key_material=command.recovery_wrap_passphrase.encode("utf-8"),
+                    salt=salt,
+                    context=_RECOVERY_WRAP_CONTEXT,
+                )
+            payload = bundle.model_dump_json().encode("utf-8")
+            encrypted = encrypt_record(
+                payload,
+                key=sealing_key,
+                associated_data=_archive_associated_data(command.bucket_id, manifest_digest),
+            )
+            header = ExportArchiveHeader(
+                bucket_id=command.bucket_id,
+                manifest_digest=manifest_digest,
+                recovery_wrap_present=recovery_wrap_passphrase_present(command),
+                archive_schema_version=_ARCHIVE_SCHEMA_VERSION,
+                created_at=occurred_at,
+            )
+            command.output_path.parent.mkdir(parents=True, exist_ok=True)
+            write_sealed_archive(
+                command.output_path,
+                header=header,
+                payload_envelope_bytes=encrypted.to_wire(),
+                recovery_wrap_bytes=recovery_wrap_bytes,
+            )
+            self._append_event(
+                bucket_id=command.bucket_id,
+                event_type=BucketEventType.BUCKET_EXPORTED,
+                object_id=command.bucket_id,
+                occurred_at=occurred_at,
+                payload_version=_EXPORT_PAYLOAD_VERSION,
+                payload={
+                    "output_path": str(command.output_path),
+                    "manifest_digest": manifest_digest,
+                    "archive_schema_version": str(_ARCHIVE_SCHEMA_VERSION),
+                    "recovery_wrap_present": str(header.recovery_wrap_present).lower(),
+                },
+            )
+        return ExportBucketResult(
+            bucket_id=command.bucket_id,
+            output_path=command.output_path,
+            manifest_digest=manifest_digest,
+            recovery_wrap_present=command.recovery_wrap_passphrase is not None,
+            occurred_at=occurred_at,
+        )
+
+    def import_(self, command: ImportBucketCommand) -> ImportBucketResult:
+        """Import a sealed bucket archive through the profile bundle service.
+
+        Archives with a recovery-wrap member require the matching passphrase.
+        Archives without one are same-host backups and require the active bucket
+        DEK to match the archive payload. New buckets are provisioned through
+        the canonical profile create span before the bundle data is restored.
+
+        Returns:
+            An :class:`ImportBucketResult` describing the restored bucket.
+        """
+        from ...adapters.persistence.storage import get_active_master_key
+        from ...adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
+        from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key
+        from ...domain.user_profile import UserProfilePortableExport
+
+        contents = read_sealed_archive(command.source_path)
+        header = contents.header
+        if header.archive_schema_version != _ARCHIVE_SCHEMA_VERSION:
+            raise BucketImportError(
+                translated_message="application.bucket_maintenance.errors.unsupported_archive_schema_version",
+                context={"archive_schema_version": str(header.archive_schema_version)},
+            )
+        existing = read_profile_bucket_by_id(header.bucket_id)
+        if existing is not None and not command.force_replace:
+            raise BucketImportError(
+                translated_message="application.bucket_maintenance.errors.import_bucket_collision",
+                context={"bucket_id": header.bucket_id},
+            )
+        if header.recovery_wrap_present:
+            if command.recovery_wrap_passphrase is None:
+                raise BucketImportError(
+                    translated_message="application.bucket_maintenance.errors.import_recovery_passphrase_required",
+                    context={"bucket_id": header.bucket_id},
+                )
+            if contents.recovery_wrap_bytes is None:
+                raise BucketImportError(
+                    translated_message="application.bucket_maintenance.errors.import_recovery_wrap_missing",
+                    context={"bucket_id": header.bucket_id},
+                )
+            sealing_key = derive_key(
+                key_material=command.recovery_wrap_passphrase.encode("utf-8"),
+                salt=_salt_from_recovery_wrap(contents.recovery_wrap_bytes),
+                context=_RECOVERY_WRAP_CONTEXT,
+            )
+        else:
+            sealing_key = get_active_master_key()
+
+        try:
+            decrypted = decrypt_record(
+                EncryptedBlob.from_wire(contents.payload_envelope_bytes),
+                key=sealing_key,
+                associated_data=_archive_associated_data(header.bucket_id, header.manifest_digest),
+            )
+            bundle = UserProfilePortableExport.model_validate_json(decrypted)
+        except Exception as exc:
+            raise BucketImportError(
+                translated_message="application.bucket_maintenance.errors.import_payload_invalid",
+                context={"bucket_id": header.bucket_id},
+            ) from exc
+
+        if existing is None:
+            self._provision_imported_bucket(bundle)
+        with profile_storage_session(header.bucket_id):
+            deserialize_profile_bundle(bundle, target_bucket_id=header.bucket_id)
+            occurred_at = now()
+            self._append_event(
+                bucket_id=header.bucket_id,
+                event_type=BucketEventType.BUCKET_IMPORTED,
+                object_id=header.bucket_id,
+                occurred_at=occurred_at,
+                payload_version=_IMPORT_PAYLOAD_VERSION,
+                payload={
+                    "source_path": str(command.source_path),
+                    "manifest_digest": header.manifest_digest,
+                    "archive_schema_version": str(header.archive_schema_version),
+                    "force_replace": str(command.force_replace).lower(),
+                },
+            )
+        return ImportBucketResult(
+            bucket_id=header.bucket_id,
+            manifest_digest=header.manifest_digest,
+            archive_schema_version=header.archive_schema_version,
+            occurred_at=occurred_at,
+        )
+
+    def _append_event(
+        self,
+        *,
+        bucket_id: str,
+        event_type: BucketEventType,
+        object_id: str,
+        occurred_at,
+        payload_version: int,
+        payload: dict[str, str],
+    ) -> None:
+        event = BucketEvent(
+            event_id=derive_bucket_event_id(
+                bucket_id=bucket_id,
+                event_type=event_type,
+                occurred_at=occurred_at,
+                actor="bucket-maintenance",
+                object_type=BucketEventObjectType.BUCKET,
+                object_id=object_id,
+                payload=payload,
+            ),
+            bucket_id=bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor="bucket-maintenance",
+            object_type=BucketEventObjectType.BUCKET,
+            object_id=object_id,
+            payload_version=payload_version,
+            payload=payload,
+        )
+        repository = self._event_repository or self._event_repository_for_bucket(bucket_id)
+        repository.save(append_bucket_event(repository.load(), event))
+
+    @staticmethod
+    def _provision_imported_bucket(bundle) -> None:
+        from ..user_profile import register_active_profile
+        from ..workflow import workflow_state_repository
+
+        profile_id = bundle.profile.profile_id
+        with profile_create_storage_span(profile_id) as routing_profile_id:
+            workflow_state_repository().update(
+                lambda current: register_active_profile(
+                    current,
+                    profile_id=profile_id,
+                    display_name=bundle.profile.display_name,
+                    facts=bundle.profile.facts,
+                    enforce_unique_tax_id=False,
+                    routing_profile_id=routing_profile_id,
+                ),
+            )
+
+
+def recovery_wrap_passphrase_present(command: ExportBucketCommand) -> bool:
+    """Return whether ``command`` requests a recovery-passphrase archive."""
+    return command.recovery_wrap_passphrase is not None
+
+
+def _archive_associated_data(bucket_id: str, manifest_digest: str) -> bytes:
+    return f"aeat.bucket-maintenance.archive.v1:{bucket_id}:{manifest_digest}".encode()
+
+
+def _recovery_wrap_bytes(salt: bytes) -> bytes:
+    return json.dumps({"kdf": "hkdf-sha256", "salt_b64": base64.b64encode(salt).decode("ascii")}).encode("utf-8")
+
+
+def _salt_from_recovery_wrap(payload: bytes) -> bytes:
+    try:
+        raw = json.loads(payload.decode("utf-8"))
+        salt_b64 = raw["salt_b64"]
+        if raw.get("kdf") != "hkdf-sha256":
+            raise ValueError("unsupported recovery-wrap kdf")
+        return base64.b64decode(salt_b64.encode("ascii"), validate=True)
+    except Exception as exc:
+        raise BucketImportError(
+            translated_message="application.bucket_maintenance.errors.import_recovery_wrap_invalid",
+        ) from exc

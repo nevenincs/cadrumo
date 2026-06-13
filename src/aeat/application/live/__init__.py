@@ -9,6 +9,7 @@ to the correct revision.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import Declaracion, Expediente, SedeCapture
     from ...core import Period
     from ...core.config import Settings
+    from ...domain.modelos import ModeloRecord
     from ._expedientes import ExpedientesCapture, ExpedientesService
     from ._notifications import NotificationsService
     from ._verify import VerifyService, VerifySurface, VerifyVerdict
@@ -45,6 +47,7 @@ from ._errors import (
     classify_live_iva_acquisition_failure,
 )
 from ._filed_data import (
+    BulkFiledDataListingReport,
     FiledDataListingReport,
     FiledDataListingRow,
     filed_data_listing_row,
@@ -56,12 +59,15 @@ from ._filed_data_capture import (
     capture_source_filed_data,
     filed_data_capture_failure_row,
     list_filed_data,
+    list_filed_data_bulk,
+)
+from ._filed_observation_persistence import (
+    enroll_filed_justificante_evidence,
+    persist_filed_calculation_observation,
+    persist_filed_justificante_metadata,
 )
 from ._filed_observation_persistence import (
     latest_declarations_by_period as _latest_declarations_by_period,
-)
-from ._filed_observation_persistence import (
-    persist_filed_calculation_observation,
 )
 from ._filed_observation_persistence import (
     persist_iva_compensation_history_observations_strict as _persist_iva_compensation_history_observations_strict,
@@ -135,6 +141,24 @@ from ._snapshot_base import (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class JustificanteCaptureOutcome:
+    """Outcome of one live justificante pull and local filing-evidence enrolment."""
+
+    snapshot: JustificanteCaptureSnapshot
+    filing_record: ModeloRecord | None
+
+    @property
+    def filing_evidence_stamped(self) -> bool:
+        """Return whether the live receipt is locked to a local filing record."""
+        return self.filing_record is not None
+
+    @property
+    def filing_record_id(self) -> str | None:
+        """Return the stamped local filing record id, when one was found."""
+        return self.filing_record.filing_record_id if self.filing_record is not None else None
+
+
 async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     """Live-walk the AEAT declaration register and persist a bucket-scoped snapshot.
 
@@ -155,6 +179,7 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
         declarations=tuple(declarations),
         captured_at=_now(),
         source_url=f"declarations:modelo={modelo}:ejercicio={year}",
+        authenticated_identity=session.identity_nif,
     )
     persisted = ExpedientesService(settings=settings).capture(bucket_id=bucket_id, capture=capture)
     return persisted
@@ -210,6 +235,7 @@ async def capture_expedientes_bulk(
             declarations=tuple(declarations_for_snapshot),
             captured_at=_now(),
             source_url=(f"declarations:bulk:modelos={','.join(resolved_modelos)}:ejercicios={year_from}-{year_to}"),
+            authenticated_identity=session.identity_nif,
         )
         persisted = service.capture(bucket_id=bucket_id, capture=capture)
         snapshot_ids.append(persisted.snapshot_id)
@@ -259,7 +285,11 @@ async def capture_notifications(*, bucket_id: str):
 
     session, settings = await _active_verified_session()
     snapshot = await fetch_notifications_query(session, settings=settings)
-    persisted = NotificationsService(settings=settings).capture(bucket_id=bucket_id, snapshot=snapshot)
+    persisted = NotificationsService(settings=settings).capture(
+        bucket_id=bucket_id,
+        snapshot=snapshot,
+        authenticated_identity=session.identity_nif,
+    )
     return persisted
 
 
@@ -328,6 +358,35 @@ async def capture_justificante_snapshot(
     tests inject canned typed records to exercise the wiring offline without
     a network round-trip. The persistence path always uses the real service.
     """
+    outcome = await capture_justificante_snapshot_outcome(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        session_provider=session_provider,
+        declarations_provider=declarations_provider,
+        expedientes_provider=expedientes_provider,
+        justificante_provider=justificante_provider,
+    )
+    return outcome.snapshot
+
+
+async def capture_justificante_snapshot_outcome(
+    *,
+    bucket_id: str,
+    modelo: str,
+    year: int,
+    period: Period,
+    session_provider: Callable[[], Awaitable[tuple[AeatSession, Settings]]] = _default_justificante_session,
+    declarations_provider: Callable[..., Awaitable[Sequence[Declaracion]]] = _default_justificante_declarations,
+    expedientes_provider: Callable[..., Awaitable[Sequence[Expediente]]] = _default_justificante_expedientes,
+    justificante_provider: Callable[..., Awaitable[SedeCapture]] = _default_justificante_capture,
+) -> JustificanteCaptureOutcome:
+    """Live-pull one AEAT justificante and report local filing-evidence enrolment.
+
+    Returns:
+        A :class:`JustificanteCaptureOutcome` with the capture and enrolment result.
+    """
     session, settings = await session_provider()
     declarations = await declarations_provider(session, settings, modelo=modelo, year=year)
     expedientes = await expedientes_provider(session, settings, modelo=modelo)
@@ -351,8 +410,8 @@ async def capture_justificante_snapshot(
     # Per the ADR, the capture flow stamps the official evidence onto the work
     # unit's filing record in the same flow. Best-effort: a no-op when the period
     # is not yet filed in-app (the snapshot is still persisted).
-    stamp_capture_evidence_if_filed(persisted)
-    return persisted
+    filing_record = stamp_capture_evidence_if_filed(persisted)
+    return JustificanteCaptureOutcome(snapshot=persisted, filing_record=filing_record)
 
 
 def __getattr__(name: str):
@@ -390,6 +449,7 @@ __all__ = [
     "Borrador100SnapshotService",
     "BorradorSnapshotNotFoundError",
     "BulkFiledDataCaptureReport",
+    "BulkFiledDataListingReport",
     "CensoSnapshotNotFoundError",
     "ExpedientesBulkCaptureFailureRow",
     "ExpedientesBulkCaptureReport",
@@ -410,6 +470,7 @@ __all__ = [
     "IvaRemoteStateStoredEvidenceReport",
     "IvaWalletAuthorityDecisionRow",
     "IvaWalletCaptureReport",
+    "JustificanteCaptureOutcome",
     "JustificanteCaptureSnapshot",
     "JustificanteCaptureSnapshotNotFoundError",
     "JustificanteCaptureSnapshotRepository",
@@ -449,15 +510,18 @@ __all__ = [
     "capture_iva_compensation_wallet",
     "capture_iva_remote_state",
     "capture_justificante_snapshot",
+    "capture_justificante_snapshot_outcome",
     "capture_notifications",
     "capture_source_filed_data",
     "classify_live_iva_acquisition_failure",
     "derive_borrador_100_snapshot_id",
     "derive_justificante_capture_snapshot_id",
+    "enroll_filed_justificante_evidence",
     "filed_data_capture_failure_row",
     "filed_data_listing_row",
     "justificante_capture_snapshot_object_key",
     "list_filed_data",
+    "list_filed_data_bulk",
     "list_iva_compensation_history",
     "list_iva_remote_state_acquisition_manifests",
     "load_iva_remote_state",
@@ -465,6 +529,7 @@ __all__ = [
     "parse_capture_to_justificante",
     "persist_and_reconcile_iva_compensation_wallet",
     "persist_filed_calculation_observation",
+    "persist_filed_justificante_metadata",
     "persist_iva_remote_state_acquisition_report",
     "reconcile_capture",
     "register_capture_as_filing_evidence",

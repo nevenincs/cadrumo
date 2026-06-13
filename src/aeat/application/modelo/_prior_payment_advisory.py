@@ -47,7 +47,10 @@ from ...core import Modelo
 from ..aggregation import CalculationSourceDiagnostic
 from ..calculations import CalculationObservationRepository
 
-__all__ = ["collect_prior_payment_not_deducted_diagnostics"]
+__all__ = [
+    "collect_prior_payment_minoracion_not_captured_diagnostics",
+    "collect_prior_payment_not_deducted_diagnostics",
+]
 
 #: Quarterly ordinal for the within-ejercicio cumulative model. ``1T`` is the
 #: first-obligation period (no prior pago fraccionado); ``2T``/``3T``/``4T`` are
@@ -60,6 +63,16 @@ _PRIOR_PAYMENT_CASILLA: Final[str] = "05"
 
 #: The cumulative ingresos casilla whose positivity proves real activity.
 _CUMULATIVE_INGRESOS_CASILLA: Final[str] = "01"
+
+#: The prior-quarter casilla whose presence proves the prior filing carried a
+#: pago fraccionado the casilla-05 carry deducts.
+_PRIOR_POSITIVE_PART_CASILLA: Final[str] = "07"
+
+#: The prior-quarter minoración casilla (Deducción por inversión en vivienda
+#: habitual) the casilla-05 carry subtracts. A prior filing carrying casilla 07
+#: but LACKING any casilla-16 entry is "not captured" (distinct from "filed 0");
+#: the carry proceeds treating absence as zero, but the gap must surface.
+_PRIOR_MINORACION_CASILLA: Final[str] = "16"
 
 
 def _prior_trimestre_codes(period_token: str) -> tuple[str, ...]:
@@ -159,8 +172,88 @@ def collect_prior_payment_not_deducted_diagnostics(
                 f"casilla 05 ('Pagos fraccionados anteriores') is zero while a prior-trimestre "
                 f"{filing_year} filing exists; casilla 07 = 04 - 05 - 06 therefore does not deduct "
                 f"the pago fraccionado already paid in {', '.join(prior_codes)}, so this filing "
-                f"over-declares (RD 439/2007 art. 110). File the prior trimestre through the app so "
-                f"the carry resolves, or enter the prior pago fraccionado in casilla 05 before filing"
+                f"over-declares (RD 439/2007 art. 110). The casilla-05 carry could not populate the "
+                f"deduction from the prior filing's observation (it is absent or unreadable); re-file "
+                f"the prior trimestre through the app so the carry resolves, or enter the prior pago "
+                f"fraccionado in casilla 05 before filing"
+            ),
+            casilla_id=_PRIOR_PAYMENT_CASILLA,
+        ),
+    )
+
+
+def collect_prior_payment_minoracion_not_captured_diagnostics(
+    *,
+    modelo: str,
+    period_token: str,
+    filing_year: int,
+    observation_repository: CalculationObservationRepository,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return an advisory when a carried prior M130 filing lacks its casilla-16 minoración.
+
+    The casilla-05 carry (``modelo-130-pagos-fraccionados-anteriores``) computes
+    ``Σ max(0, prior 07_q) − Σ prior 16_q``. A prior-trimestre filing that carries
+    casilla 07 (a real pago fraccionado the carry deducts) but LACKS any casilla-16
+    entry is "not captured" - distinct from a filing that genuinely declared
+    casilla 16 = 0. Per the ratified ADR
+    ``2026-06-13-modelo-130-pagos-fraccionados-carry`` casilla-16
+    filed-zero-vs-not-captured distinction, the carry proceeds (treating the absent
+    minoración as zero) but the gap MUST surface as a non-blocking advisory naming
+    it - the minoración is never silently dropped (``no-silent-under-declaration``).
+
+    The advisory fires for the SAME ejercicio's prior trimestres of a non-first
+    target quarter, only when at least one prior filing carries casilla 07 but no
+    casilla-16 entry. A prior filing that declares casilla 16 = 0 explicitly is a
+    silent no-op (the value is captured; it just happens to be zero).
+
+    Args:
+        modelo: The modelo identifier of the filing being calculated; the advisory
+            applies only to Modelo 130.
+        period_token: The bare registry period code of the target filing.
+        filing_year: The ejercicio whose prior trimestres are scanned.
+        observation_repository: The local
+            :class:`CalculationObservationRepository` scanned for prior-period
+            observations.
+
+    Returns:
+        A tuple of :class:`CalculationSourceDiagnostic` advisories — empty when
+        every carried prior filing captured its casilla-16 minoración.
+
+    Returns:
+        A tuple with a single ``prior_payment_minoracion_not_captured`` advisory
+        when a prior filing carries casilla 07 but no casilla-16 entry, otherwise
+        empty.
+    """
+    if modelo != Modelo.M130.value:
+        return ()
+    prior_codes = _prior_trimestre_codes(period_token)
+    if not prior_codes:
+        return ()
+    wanted = set(prior_codes)
+    uncaptured_periods: list[str] = []
+    for payload in observation_repository.iter_modelo(Modelo.M130.value):
+        observation = payload.observation
+        if observation.filing_year != filing_year or observation.period not in wanted:
+            continue
+        casilla_values = observation.casilla_values
+        has_positive_part = _PRIOR_POSITIVE_PART_CASILLA in casilla_values
+        has_minoracion = _PRIOR_MINORACION_CASILLA in casilla_values
+        if has_positive_part and not has_minoracion:
+            uncaptured_periods.append(observation.period)
+    if not uncaptured_periods:
+        return ()
+    gap = ", ".join(sorted(set(uncaptured_periods)))
+    return (
+        CalculationSourceDiagnostic(
+            reason="prior_payment_minoracion_not_captured",
+            source_kind="modelo_130_prior_pago_fraccionado",
+            message=(
+                f"Modelo 130 {period_token} casilla 05 carries the prior pago fraccionado from {gap}, "
+                f"but those prior {filing_year} filings carry no casilla 16 (minoración) entry. The "
+                f"carry treats the absent minoración as zero; if those trimestres declared a non-zero "
+                f"casilla 16 the deduction is over-stated. Re-file the prior trimestre(s) so casilla 16 "
+                f"is captured, or confirm it was genuinely zero (AEAT instr.: casilla 05 minorada en la "
+                f"casilla 16)"
             ),
             casilla_id=_PRIOR_PAYMENT_CASILLA,
         ),
