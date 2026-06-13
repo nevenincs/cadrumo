@@ -202,10 +202,6 @@ class AttachmentStore(BaseModel):
         """Return a logical object marker for ``attachment_id``."""
         return self.manifests_dir / _require_digest(attachment_id)
 
-    def _manifest_lock_target(self, attachment_id: str) -> Path:
-        """Return a logical lock marker; SQL transactions govern writes."""
-        return self.manifest_path(attachment_id).with_suffix(".lock")
-
     def put_bytes(self, data: bytes) -> str:
         """Write ``data`` under its SHA-256 digest if not already present."""
         digest = hashlib.sha256(data).hexdigest()

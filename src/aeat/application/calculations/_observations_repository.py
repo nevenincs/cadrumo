@@ -275,15 +275,6 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         )
         self.save(payload)
 
-    def delete_observation(
-        self,
-        modelo: str,
-        period: Period,
-    ) -> bool:
-        """Remove the observation for one (modelo, year, period token); return whether a row was deleted."""
-        filing_period = _require_observation_period(period)
-        return self.delete(observation_key(modelo, filing_period))
-
     def iter_modelo(self, modelo: str) -> Iterator[_ObservationEnvelopePayload]:
         """Yield every persisted observation for `modelo` in unspecified order.
 

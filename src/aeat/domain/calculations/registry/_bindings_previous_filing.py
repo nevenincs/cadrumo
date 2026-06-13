@@ -262,9 +262,6 @@ class _PreviousModeloSelector(BaseModel):
             return (self.period,)
         return self.source_periods
 
-    def required_periods_for_target(self, target_period: str) -> tuple[str, ...]:
-        return tuple(period for _year_delta, period in self.required_period_anchors_for_target(target_period))
-
     def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
         if self.prior_quarter_expanding_span:
             anchors: tuple[tuple[int, str], ...] = _prior_quarter_expanding_span_anchors(target_period)
