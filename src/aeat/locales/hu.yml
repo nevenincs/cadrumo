@@ -498,6 +498,12 @@ application:
     errors:
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
+      import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      import_payload_invalid: application.bucket_maintenance.errors.import_payload_invalid
+      import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
+      import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
+      import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
       errors:
@@ -833,6 +839,18 @@ application:
         százalék).
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: A számviteli
         eredmény pozitív, de az adóalap (C552) nulla; ellenőrizze az adóalap meghatározását.
+      modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: A
+        teljes levonhato AFA (cuota-deducible-total) pozitiv, de a Diseño de Registros
+        minden hivatalos szamozott rovata (29 belfoldi folyo, 33 import, 37 kozossegen
+        beluli beszerzes) tovabbra is nulla. A szamitas nem tolti ki automatikusan
+        a hivatalos szamozott rovatokat; a benyujtas elott vezesse at az osszeget
+        a megfelelo rovatokba.
+      modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: A
+        teljes felszamitott AFA (cuota-devengada-total) pozitiv, de a Diseño de Registros
+        minden hivatalos szamozott rovata (03 4%, 06 10%, 09 21%, 11 kozossegen beluli,
+        13 forditott adozas) tovabbra is nulla. A szamitas nem tolti ki automatikusan
+        a hivatalos szamozott rovatokat; a benyujtas elott vezesse at az osszeget
+        a megfelelo rovatokba.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
@@ -840,8 +858,6 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
-      modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: 'A teljes felszamitott AFA (cuota-devengada-total) pozitiv, de a Diseño de Registros minden hivatalos szamozott rovata (03 4%, 06 10%, 09 21%, 11 kozossegen beluli, 13 forditott adozas) tovabbra is nulla. A szamitas nem tolti ki automatikusan a hivatalos szamozott rovatokat; a benyujtas elott vezesse at az osszeget a megfelelo rovatokba.'
-      modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: 'A teljes levonhato AFA (cuota-deducible-total) pozitiv, de a Diseño de Registros minden hivatalos szamozott rovata (29 belfoldi folyo, 33 import, 37 kozossegen beluli beszerzes) tovabbra is nulla. A szamitas nem tolti ki automatikusan a hivatalos szamozott rovatokat; a benyujtas elott vezesse at az osszeget a megfelelo rovatokba.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -1255,14 +1271,14 @@ cli:
           év.
         history_help: Helyi biztonságos IVA-kompenzációs előzmények, átviteli tételek
           és Modelo 303 rögzítésekből származó megőrzött pénztárca-döntések listázása.
+        pull_evidence_help: Letolti a benyujtott Modelo 303 elozmenyeket es megkiserli
+          az AEAT tarca/IVA olvasast egy tipizalt, csak olvashato lekereskent.
         pull_help: Az AEAT IVA-kompenzációs pénztárcájának élő lekérése és megőrzése.
           Az egyetlen engedélyezett AEAT-formanyomtatvány-művelet a védett pénztárca-lekérdezés;
           képviseleti kapuk csak saját nevű módban folytatódnak.
         pull_history_help: Letolti a benyujtott Modelo 303 elozmenyeket es biztonsagos
           IVA-kompenzacios allapotot ment. Nem kuld be AEAT nyilatkozatot vagy tarca-urlap
           valasztast.
-        pull_evidence_help: Letolti a benyujtott Modelo 303 elozmenyeket es megkiserli
-          az AEAT tarca/IVA olvasast egy tipizalt, csak olvashato lekereskent.
         taxpayer_nif_help: 'Az adóalany NIF-je; alapértelmezés: a hitelesített azonosság.'
       justificante:
         app_help: 'AEAT igazolás-rögzítések (csak olvasható): tölts le egy benyújtott
@@ -2287,12 +2303,14 @@ cli:
       quarantine_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra a
         --yes kapcsolóval a megerősítéshez.
       quarantine_yes_help: A karantén-művelet explicit megerősítése.
-      reset_progress_dry_run_help: 'Megmutatja a torlendo mentett folyamatot.'
-      reset_progress_help: 'Megszakitott parancs mentett folyamatainak torlese (visszafordithatatlan; --yes szukseges).'
+      reset_progress_dry_run_help: Megmutatja a torlendo mentett folyamatot.
+      reset_progress_help: Megszakitott parancs mentett folyamatainak torlese (visszafordithatatlan;
+        --yes szukseges).
       reset_progress_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra
         a --yes kapcsolóval a megerősítéshez, vagy a --dry-run kapcsolóval, hogy lássa,
         mi törlődne.
-      reset_progress_yes_help: 'Megszakitott parancs mentett folyamatainak torlesenek megerositese.'
+      reset_progress_yes_help: Megszakitott parancs mentett folyamatainak torlesenek
+        megerositese.
       yes_help: Javítás megerősítése.
     reset:
       help: Üzemeltető által megadott konfigurációs hatókörök visszaállítása.
@@ -2385,7 +2403,8 @@ cli:
       auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete.
       auth_none: A hitelesítés nincs konfigurálva.
       auth_session_ready: 'A hitelesítési munkamenet kész: %{provider}.'
-      auth_state_unreadable: 'A hitelesitesi keszultseg nem ellenorizheto, amig a mentett helyi munkamenetadatok nem olvashatok.'
+      auth_state_unreadable: A hitelesitesi keszultseg nem ellenorizheto, amig a mentett
+        helyi munkamenetadatok nem olvashatok.
       profile_keys_set: '%{present}/%{total} profilkulcs beállítva.'
       profile_missing_keys: '%{count} profilkulcs hiányzik.'
       profile_none: Nincs beállított profil.
@@ -2547,7 +2566,10 @@ cli:
       saturate_help: 'Telites LLM-mel: az IVA-kategoria kivalasztasa, valamint a kulcs,
         az alap es az IVA-osszeg szarmaztatasa.'
       saturate_non_derivable: A kulcs nem szarmaztathato
-      saturate_requires_llm: 'A --saturate szarmaztatashoz AFA-kategoria kell: adja meg az --iva-category kapcsolot (a rendszer szarmaztatja az alapot, a kulcsot es az osszeget), vagy az --llm <szolgaltato> kapcsolot, hogy egy modell valassza ki a kategoriat.'
+      saturate_requires_llm: 'A --saturate szarmaztatashoz AFA-kategoria kell: adja
+        meg az --iva-category kapcsolot (a rendszer szarmaztatja az alapot, a kulcsot
+        es az osszeget), vagy az --llm <szolgaltato> kapcsolot, hogy egy modell valassza
+        ki a kategoriat.'
       taxable_base_help: Adóköteles alapösszeg.
     doclink:
       actor_help: Operátor címke.
@@ -2638,6 +2660,7 @@ cli:
       active: Aktív
       amount: Összeg
       archived: Archivált
+      attachment_ids: Mellékletek
       bucket: Mappa
       business_classification: Besorolás
       business_pct: Üzleti %
@@ -2670,6 +2693,7 @@ cli:
       parent_id: Szülő tranzakcióazonosító
       pending: Felülvizsgálatra vár
       period: Időszak
+      purchase_invoice_evidence_id: Beszerzési számla bizonylat
       readiness_issues: Készültségi problémák
       ready: Kész
       removed: Eltávolítva
@@ -2688,21 +2712,28 @@ cli:
       warning: Figyelmeztetés
       warnings: Figyelmeztetések
       'yes': Igen
-      purchase_invoice_evidence_id: 'Beszerzési számla bizonylat'
-      attachment_ids: 'Mellékletek'
     link:
       actor_help: A bucket esemenyekhez rogzitett operatori cimke.
       errors:
         cross_bucket_invoice: A számla egy másik buckethez tartozik, mint az aktív
           profil.
-        invoice_not_found: 'Ez az azonosító nem szerepel a reconciliációs számlakatalógusban, amelyet a számlaimportálási és -reconciliációs folyamatok töltenek fel. Az ''aeat app ledger invoice add'' által létrehozott azonosítók operatori számlarekordok, és itt nem kapcsolhatók össze. Vásárlásiszámla-bizonyíték csatolásához futtassa az ''aeat app ledger link <tx> --evidence-id <id>'' (vagy ''aeat app ledger attach'') parancsot egy ''aeat app ledger evidence add'' azonosítóval.'
+        invoice_not_found: Ez az azonosító nem szerepel a reconciliációs számlakatalógusban,
+          amelyet a számlaimportálási és -reconciliációs folyamatok töltenek fel.
+          Az 'aeat app ledger invoice add' által létrehozott azonosítók operatori
+          számlarekordok, és itt nem kapcsolhatók össze. Vásárlásiszámla-bizonyíték
+          csatolásához futtassa az 'aeat app ledger link <tx> --evidence-id <id>'
+          (vagy 'aeat app ledger attach') parancsot egy 'aeat app ledger evidence
+          add' azonosítóval.
         missing_target: 'Adjon meg legalább egyet: --invoice-id vagy --evidence-id.'
-      evidence_id_help: 'Az ''aeat app ledger evidence add'' által létrehozott vásárlásiszámla-bizonyíték azonosítója, amely a tranzakcióhoz kapcsolódik.'
+      evidence_id_help: Az 'aeat app ledger evidence add' által létrehozott vásárlásiszámla-bizonyíték
+        azonosítója, amely a tranzakcióhoz kapcsolódik.
       help: Főkönyvi tranzakció összekapcsolása számlával és/vagy vásárlásiszámla-bizonyítékkal
         egyetlen kanonikus hívásban. Keresztbucket-hivatkozásokat elutasít. Csak helyi;
         soha nem lép kapcsolatba az AEAT-tal.
       id_help: Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).
-      invoice_id_help: 'A bővített számlakatalógus azonosítója egy importált vagy reconciliált számlából, amely kétirányúan kapcsolódik a tranzakcióhoz. Ez NEM ''aeat app ledger invoice add'' azonosító.'
+      invoice_id_help: A bővített számlakatalógus azonosítója egy importált vagy reconciliált
+        számlából, amely kétirányúan kapcsolódik a tranzakcióhoz. Ez NEM 'aeat app
+        ledger invoice add' azonosító.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.
       filter_help: Sorok szűrése állapot, időszak (egyszerű AEAT token, pl. period=1T)
@@ -2777,7 +2808,9 @@ cli:
         rögzítenek.
       apply_help: Mentsd el a javasolt --llm felosztast (--yes szukseges); enelkul
         a javaslat csak elonezetben jelenik meg.
-      child_amount_help: 'Egy gyermek összege nem negatív magnitúdóként a szülő pénznemében. Ismételje meg minden gyermek esetén; a darabszámnak egyeznie kell a --child-description értékekkel.'
+      child_amount_help: Egy gyermek összege nem negatív magnitúdóként a szülő pénznemében.
+        Ismételje meg minden gyermek esetén; a darabszámnak egyeznie kell a --child-description
+        értékekkel.
       child_description_help: Egy gyermek narratívája. Ismételje meg minden gyermek
         esetén; a darabszámnak egyeznie kell a --child-amount értékekkel.
       errors:
@@ -2817,7 +2850,7 @@ cli:
       transaction_id_help: A vizsgálandó főkönyvi tranzakció azonosítója.
     update:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
-      amount_help: 'Új nem negatív összegmagnitúdó (teljes csere).'
+      amount_help: Új nem negatív összegmagnitúdó (teljes csere).
       counterparty_help: Új szerződő fél leírása.
       currency_help: Új háromjegyű ISO 4217 pénznemkód.
       date_help: Új könyvelési dátum (ÉÉÉÉ-HH-NN).
@@ -2919,7 +2952,7 @@ cli:
         diagnostics_logs: A beállított naplóútvonal és a legújabb sorok megjelenítése.
         diagnostics_quarantine: Olvashatatlan biztonságos objektumok karanténba helyezése.
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
-        diagnostics_reset_progress: 'Elakadt megszakitott-parancs folyamat torlese.'
+        diagnostics_reset_progress: Elakadt megszakitott-parancs folyamat torlese.
         first_run_bootstrap: Helyi adóprofil létrehozása.
         first_run_edit: A profilvarázsló újrafuttatása meglévő profilhoz.
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
@@ -3010,21 +3043,16 @@ cli:
         kapcsolatba az AEAT-tal.
       show_suppressed_help: Elnyomott bejegyzések megjelenítése is a naptárban.
       to_help: A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
+    calendar_local_filing_evidence_unavailable: Az attekinto naptar helyi bevallasi
+      bizonyiteka nem erheto el; a megjelenites megtagadva perzisztalt AEAT bevallasi
+      allapot nelkul.
+    calendar_local_live_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
+      élő eseménybizonyíték.
+    calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
+      modelo eseménybizonyíték.
     calendar_refused_incomplete: 'A naptárnak megoldatlan profilellenőrzései vannak:
       %{keys}. Futtassa a figyelmeztetés javító parancsát, vagy adja meg a --allow-incomplete
       kapcsolót az ideiglenes naptár megtekintéséhez.'
-    calendar_local_filing_evidence_unavailable: 'Az attekinto naptar helyi bevallasi bizonyiteka nem erheto el; a megjelenites megtagadva perzisztalt AEAT bevallasi allapot nelkul.'
-    calendar_local_live_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
-      élő eseménybizonyíték.
-    calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el
-      helyi modelo eseménybizonyíték.
-    warning:
-      censo_enrolment_unverified: A naptári kötelezettségek olyan profiladatokból
-        származnak, amelyek nincsenek egyeztetve élő AEAT Modelo 036 censo-lekéréssel.
-      justificante_unverified: Van AEAT benyújtási bizonyíték, de egy vagy több
-        naptári kötelezettséghez nincs egyező igazolás ellenőrizve.
-      aeat_evidence_conflict: A naptari bevallasi bizonyitek eltero AEAT
-        bevallasi hivatkozasokat tartalmaz egy vagy tobb kotelezettseghez.
     drafts: Tervezetek
     explain:
       help: Egy nyomtatvány alkalmazhatóságának elemzése az aktív profillal szemben.

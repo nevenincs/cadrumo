@@ -543,6 +543,12 @@ application:
     errors:
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
+      import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      import_payload_invalid: application.bucket_maintenance.errors.import_payload_invalid
+      import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
+      import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
+      import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
   calculations:
     iva_compensation:
       errors:
@@ -898,6 +904,18 @@ application:
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: El resultado
         contable es positivo pero la base imponible (C552) es cero; revise la determinación
         de la base imponible.
+      modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: El
+        IVA deducible total (cuota-deducible-total) es positivo, pero todas las casillas
+        oficiales del Diseño de Registros (29 interiores corrientes, 33 importaciones,
+        37 adquisiciones intracomunitarias) siguen a cero. El calculo no rellena automaticamente
+        las casillas oficiales numeradas; traslade la cuota a las casillas correspondientes
+        antes de presentar.
+      modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: El
+        IVA devengado total (cuota-devengada-total) es positivo, pero todas las casillas
+        oficiales del Diseño de Registros (03 4%, 06 10%, 09 21%, 11 intracomunitarias,
+        13 inversion del sujeto pasivo) siguen a cero. El calculo no rellena automaticamente
+        las casillas oficiales numeradas; traslade la cuota a las casillas correspondientes
+        antes de presentar.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
@@ -905,8 +923,6 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
-      modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: 'El IVA devengado total (cuota-devengada-total) es positivo, pero todas las casillas oficiales del Diseño de Registros (03 4%, 06 10%, 09 21%, 11 intracomunitarias, 13 inversion del sujeto pasivo) siguen a cero. El calculo no rellena automaticamente las casillas oficiales numeradas; traslade la cuota a las casillas correspondientes antes de presentar.'
-      modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: 'El IVA deducible total (cuota-deducible-total) es positivo, pero todas las casillas oficiales del Diseño de Registros (29 interiores corrientes, 33 importaciones, 37 adquisiciones intracomunitarias) siguen a cero. El calculo no rellena automaticamente las casillas oficiales numeradas; traslade la cuota a las casillas correspondientes antes de presentar.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -1327,6 +1343,9 @@ cli:
         history_help: Lista el historial local seguro de compensación de IVA, saldos
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
+        pull_evidence_help: Descarga el historial del Modelo 303 presentado e intenta
+          la lectura de la cartera/IVA de AEAT como una adquisicion tipada de solo
+          lectura.
         pull_help: Descarga en directo y persiste la cartera de compensación de IVA
           de la AEAT. La única acción de formulario AEAT permitida es la consulta
           de lectura protegida de cartera; las puertas de representación solo continuan
@@ -1334,9 +1353,6 @@ cli:
         pull_history_help: Descarga el historial del Modelo 303 presentado y guarda
           el estado seguro de compensacion de IVA. No se envia ninguna declaracion
           ni opcion de formulario de cartera AEAT.
-        pull_evidence_help: Descarga el historial del Modelo 303 presentado e
-          intenta la lectura de la cartera/IVA de AEAT como una adquisicion tipada
-          de solo lectura.
         taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
       justificante:
         app_help: 'Capturas de justificantes AEAT (solo lectura): descarga un justificante
@@ -2362,11 +2378,13 @@ cli:
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
-      reset_progress_dry_run_help: 'Muestra el progreso guardado que se borraria'
-      reset_progress_help: 'Borra el progreso guardado de un comando interrumpido (destructivo; requiere --yes)'
+      reset_progress_dry_run_help: Muestra el progreso guardado que se borraria
+      reset_progress_help: Borra el progreso guardado de un comando interrumpido (destructivo;
+        requiere --yes)
       reset_progress_requires_yes: Esta operación es destructiva. Vuelve a ejecutar
         con --yes para confirmar o pasa --dry-run para ver qué se borraría.
-      reset_progress_yes_help: 'Confirmar el borrado del progreso guardado de un comando interrumpido'
+      reset_progress_yes_help: Confirmar el borrado del progreso guardado de un comando
+        interrumpido
       yes_help: Confirmar la reparación.
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
@@ -2461,7 +2479,8 @@ cli:
         lista
       auth_none: La autenticación no está configurada
       auth_session_ready: Sesión de autenticación lista para %{provider}
-      auth_state_unreadable: 'No se puede comprobar la autenticacion hasta que los datos locales de sesion guardados sean legibles.'
+      auth_state_unreadable: No se puede comprobar la autenticacion hasta que los
+        datos locales de sesion guardados sean legibles.
       profile_keys_set: '%{present}/%{total} claves de perfil configuradas.'
       profile_missing_keys: '%{count} claves de perfil ausentes.'
       profile_none: No hay perfil configurado
@@ -2717,6 +2736,7 @@ cli:
       active: Activas
       amount: Importe
       archived: Archivadas
+      attachment_ids: Adjuntos
       bucket: Bucket
       business_classification: Clasificación
       business_pct: Porcentaje de negocio
@@ -2749,6 +2769,7 @@ cli:
       parent_id: id_padre
       pending: Pendientes de revisión
       period: Periodo
+      purchase_invoice_evidence_id: Evidencia de factura de compra
       readiness_issues: Incidencias de preparación
       ready: Preparado
       removed: Eliminado
@@ -2767,21 +2788,27 @@ cli:
       warning: Aviso
       warnings: Avisos
       'yes': Sí
-      purchase_invoice_evidence_id: 'Evidencia de factura de compra'
-      attachment_ids: 'Adjuntos'
     link:
       actor_help: Etiqueta del operador registrada en los eventos del bucket.
       errors:
         cross_bucket_invoice: La factura pertenece a un bucket distinto del perfil
           activo.
-        invoice_not_found: 'Este id no existe en el catálogo de facturas de reconciliación, que se rellena con los flujos de importación y reconciliación de facturas. Los id generados por ''aeat app ledger invoice add'' son registros de factura del operador y no se pueden vincular aquí. Para adjuntar evidencia de factura de compra, ejecuta ''aeat app ledger link <tx> --evidence-id <id>'' (o ''aeat app ledger attach'') con un id de ''aeat app ledger evidence add''.'
+        invoice_not_found: Este id no existe en el catálogo de facturas de reconciliación,
+          que se rellena con los flujos de importación y reconciliación de facturas.
+          Los id generados por 'aeat app ledger invoice add' son registros de factura
+          del operador y no se pueden vincular aquí. Para adjuntar evidencia de factura
+          de compra, ejecuta 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
+          app ledger attach') con un id de 'aeat app ledger evidence add'.
         missing_target: Indica al menos uno de --invoice-id o --evidence-id.
-      evidence_id_help: 'Id de evidencia de factura de compra generado por ''aeat app ledger evidence add'', adjuntado al movimiento.'
+      evidence_id_help: Id de evidencia de factura de compra generado por 'aeat app
+        ledger evidence add', adjuntado al movimiento.
       help: Vincula un movimiento contable con una factura y/o con un registro de
         evidencia de factura de compra en una única llamada canónica. Rechaza vínculos
         entre buckets. Local; nunca contacta con AEAT.
       id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
-      invoice_id_help: 'Id del catálogo de facturas enriquecido, procedente de una factura importada o reconciliada, vinculado bidireccionalmente con el movimiento. NO es un id de ''aeat app ledger invoice add''.'
+      invoice_id_help: Id del catálogo de facturas enriquecido, procedente de una
+        factura importada o reconciliada, vinculado bidireccionalmente con el movimiento.
+        NO es un id de 'aeat app ledger invoice add'.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
       filter_help: Filtre las filas por estado, periodo (un token AEAT simple, p.
@@ -2848,7 +2875,8 @@ cli:
       actor_help: Nombre del operador registrado en el evento del bucket
       apply_help: Persiste la division --llm propuesta (requiere --yes); sin ella
         la propuesta solo se previsualiza.
-      child_amount_help: 'Importe de una transacción hija como magnitud no negativa; se puede repetir'
+      child_amount_help: Importe de una transacción hija como magnitud no negativa;
+        se puede repetir
       child_description_help: Descripción de una transacción hija; se puede repetir
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
@@ -2881,7 +2909,7 @@ cli:
       transaction_id_help: Id del movimiento del libro a inspeccionar
     update:
       actor_help: Nombre del operador registrado en el evento del bucket
-      amount_help: 'Nueva magnitud de importe no negativa de la transacción'
+      amount_help: Nueva magnitud de importe no negativa de la transacción
       counterparty_help: Nueva descripción de la contraparte
       currency_help: Nuevo código de moneda ISO 4217
       date_help: Nueva fecha contable (AAAA-MM-DD)
@@ -2984,7 +3012,7 @@ cli:
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
           la aplicacion.
-        diagnostics_reset_progress: 'Borrar progreso atascado de comandos interrumpidos.'
+        diagnostics_reset_progress: Borrar progreso atascado de comandos interrumpidos.
         first_run_bootstrap: Inicializar la configuracion en el primer uso.
         first_run_edit: Editar la configuracion inicial.
         footer: Ejecute 'aeat config <comando> --help' para obtener mas informacion
@@ -3084,22 +3112,16 @@ cli:
       show_suppressed_help: Mostrar también las entradas suprimidas (no aplicables)
         en el calendario.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
-    calendar_refused_incomplete: 'El calendario tiene comprobaciones de perfil sin
-      resolver: %{keys}. Ejecuta el comando de correccion del aviso o usa --allow-incomplete
-      para inspeccionar el calendario provisional.'
-    calendar_local_filing_evidence_unavailable: 'La evidencia local de presentacion del calendario no esta disponible; se rechaza el renderizado sin estado de presentacion AEAT persistido.'
+    calendar_local_filing_evidence_unavailable: La evidencia local de presentacion
+      del calendario no esta disponible; se rechaza el renderizado sin estado de presentacion
+      AEAT persistido.
     calendar_local_live_events_unavailable: La evidencia local de eventos en vivo
       no esta disponible para esta fila del calendario.
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
       no esta disponible para esta fila del calendario.
-    warning:
-      censo_enrolment_unverified: Las obligaciones del calendario se derivan de datos
-        del perfil que no se han conciliado con una lectura en vivo del censo AEAT
-        Modelo 036.
-      justificante_unverified: Hay evidencia de presentación AEAT, pero no se ha
-        verificado un justificante coincidente para una o más obligaciones del calendario.
-      aeat_evidence_conflict: La evidencia de presentacion del calendario contiene
-        referencias AEAT discrepantes para una o mas obligaciones.
+    calendar_refused_incomplete: 'El calendario tiene comprobaciones de perfil sin
+      resolver: %{keys}. Ejecuta el comando de correccion del aviso o usa --allow-incomplete
+      para inspeccionar el calendario provisional.'
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
