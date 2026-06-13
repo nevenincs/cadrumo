@@ -41,7 +41,6 @@ if TYPE_CHECKING:
     from ...application.workflow import WorkflowState
     from ...core import Period
     from ...core.json_contract import Notice
-    from ...domain.contribuyente import ProfileKey
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft, ModeloDraftRepository
     from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
@@ -159,10 +158,6 @@ def _state() -> WorkflowState:
     return workflow_state_repository().load()
 
 
-def _description_for(entry: AuthProviderListing | ProfileKey) -> str:
-    return _translate(entry.description)
-
-
 def _label_for(listing: AuthProviderListing) -> str:
     return _translate(listing.label)
 
@@ -172,13 +167,6 @@ def _translate(translatable: str) -> str:
     from ...core.i18n import tr
 
     return tr(translatable)
-
-
-def _fmt_decimal(value: Decimal | None) -> str:
-    if value is None:
-        return "0"
-    normalized = value.normalize()
-    return format(normalized, "f")
 
 
 # ---------------------------------------------------------------------
@@ -448,15 +436,6 @@ def _draft_by_id(draft_id: str) -> ModeloDraft:
         if draft.draft_id == draft_id:
             return draft
     raise _bad(tr("cli.common.errors.draft_id_not_found", draft_id=draft_id))
-
-
-def _annual_filing_year(period: str) -> int | None:
-    text = period.strip().upper()
-    if _re.fullmatch(r"\d{4}", text):
-        return int(text)
-    if _re.fullmatch(r"\d{4}A", text):
-        return int(text[:4])
-    return None
 
 
 # ---------------------------------------------------------------------
