@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-180-calc-verify'
 date: '2026-04-28'
+modified: '2026-04-28'
 related:
   - "[[2026-04-28-modelo-180-calc-verify-research]]"
   - "[[2026-04-27-modelo-115-calc-verify-adr]]"

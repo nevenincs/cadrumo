@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#live-submit-excision"
 date: 2026-04-18
+modified: '2026-04-18'
 title: ADR — excise the live-submit CLI surface (charter #197)
 status: accepted
 issue: wgergely/aeat#116

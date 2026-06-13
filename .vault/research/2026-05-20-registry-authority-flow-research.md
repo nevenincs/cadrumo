@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#registry-authority-flow'
 date: '2026-05-20'
+modified: '2026-05-20'
 related:
   - "[[2026-05-19-modelo-registry-fragment-architecture-research]]"
 ---

@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#locale-scaffold-fstring'
 date: '2026-05-31'
+modified: '2026-05-31'
 step_id: S01
 related:
   - "[[2026-05-31-locale-scaffold-fstring-research]]"

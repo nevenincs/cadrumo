@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
+modified: '2026-05-13'
 related:
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-audit-research]]"

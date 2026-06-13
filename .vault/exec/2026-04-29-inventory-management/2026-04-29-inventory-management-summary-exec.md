@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#inventory-management'
 date: '2026-04-29'
+modified: '2026-04-29'
 related:
   - '[[2026-04-29-inventory-management-plan]]'
   - '[[2026-04-29-inventory-management-code-review-audit]]'

@@ -6,6 +6,7 @@ tags:
   - "#adr"
   - "#r1-vat-enumeration"
 date: 2026-04-13
+modified: '2026-04-13'
 related:
   - "[[2026-04-13-r1-vat-enumeration-research]]"
   - "[[2026-04-13-r1-vat-enumeration-plan]]"

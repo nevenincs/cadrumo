@@ -1,6 +1,7 @@
 ---
 tags: ["#exec", "#calculation-source-connectivity"]
 date: '2026-05-21'
+modified: '2026-05-21'
 step_id: 'S01-S06'
 related:
   - '[[2026-05-20-calculation-source-connectivity-plan]]'

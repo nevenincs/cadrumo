@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#modelo-addressing-ux'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - '[[2026-06-03-cli-workflow-redesign-epic-adr]]'
   - '[[2026-06-04-cli-workflow-redesign-epic-research]]'

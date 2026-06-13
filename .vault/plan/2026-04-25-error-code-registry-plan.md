@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#error-code-registry'
 date: '2026-04-25'
+modified: '2026-04-25'
 related:
   - "[[2026-04-25-error-code-registry-adr]]"
   - "[[2026-04-25-error-code-registry-research]]"

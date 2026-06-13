@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#core-authority'
 date: '2026-05-31'
+modified: '2026-05-31'
 tier: L4
 related:
   - '[[2026-05-31-core-authority-adr]]'

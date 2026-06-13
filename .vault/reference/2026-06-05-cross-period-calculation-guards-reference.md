@@ -3,6 +3,7 @@ tags:
   - '#reference'
   - '#cross-period-calculation-guards'
 date: '2026-06-05'
+modified: '2026-06-05'
 related: []
 ---
 

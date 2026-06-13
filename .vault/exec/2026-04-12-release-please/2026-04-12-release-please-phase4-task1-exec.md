@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#release-please"
 date: 2026-04-12
+modified: '2026-04-12'
 title: release-please phase-4 task-1 — tests/test_release_config.py tripwire
 related:
   - "[[2026-04-12-release-please-plan]]"

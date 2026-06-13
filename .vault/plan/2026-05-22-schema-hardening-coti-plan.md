@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening-coti'
 date: '2026-05-22'
+modified: '2026-05-22'
 tier: L2
 related:
   - '[[2026-05-22-schema-hardening-coti-adr]]'

@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#docstring-google-style'
 date: '2026-06-09'
+modified: '2026-06-09'
 tier: L1
 related:
   - '[[2026-05-30-docs-architecture-adr]]'

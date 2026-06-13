@@ -3,6 +3,7 @@ tags:
   - '#reference'
   - '#identity-primitives'
 date: '2026-05-30'
+modified: '2026-05-30'
 related:
   - "[[2026-05-13-identity-adr]]"
   - "[[2026-05-20-registry-casilla-identity-adr]]"

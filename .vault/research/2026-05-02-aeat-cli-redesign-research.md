@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#aeat-cli-redesign'
 date: '2026-05-02'
+modified: '2026-05-02'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-research]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"

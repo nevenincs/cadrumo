@@ -5,6 +5,7 @@ tags:
   - "#plan"
   - "#pytest-only-testing"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-pytest-only-testing-adr]]"
   - "[[2026-04-17-pytest-only-testing-research]]"

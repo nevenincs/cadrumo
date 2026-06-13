@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#settings-di-deferred'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-03-settings-di-deferred-test-migration-adr]]"
 ---

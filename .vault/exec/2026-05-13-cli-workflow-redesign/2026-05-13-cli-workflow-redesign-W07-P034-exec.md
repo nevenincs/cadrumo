@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
+modified: '2026-05-13'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr]]'

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#bucket-sealed-archive'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-03-bucket-sealed-archive-adr]]"
 ---

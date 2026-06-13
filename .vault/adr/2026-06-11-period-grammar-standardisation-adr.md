@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
+modified: '2026-06-11'
 related:
   - "[[2026-06-11-period-grammar-standardisation-plan]]"
   - "[[2026-06-04-registry-period-code-union-research]]"

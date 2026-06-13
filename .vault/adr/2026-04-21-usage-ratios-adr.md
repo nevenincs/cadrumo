@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#usage-ratios"
 date: "2026-04-21"
+modified: '2026-04-21'
 related:
   - "[[2026-04-21-usage-ratios-research]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"

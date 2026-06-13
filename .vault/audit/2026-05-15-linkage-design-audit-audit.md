@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#linkage-design-audit'
 date: '2026-05-15'
+modified: '2026-05-15'
 related:
   - "[[2026-05-15-linkage-design-audit-plan]]"
   - "[[2026-05-15-linkage-design-audit-research]]"

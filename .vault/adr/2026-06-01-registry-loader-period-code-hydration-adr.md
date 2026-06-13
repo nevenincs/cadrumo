@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#registry-authority-flow'
 date: '2026-06-01'
+modified: '2026-06-01'
 related:
   - "[[2026-05-20-registry-authority-flow-adr]]"
   - '[[2026-05-20-registry-authority-flow-research]]'

@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#modelo-131-calc-verify'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-131-calc-verify-plan]]"
 ---

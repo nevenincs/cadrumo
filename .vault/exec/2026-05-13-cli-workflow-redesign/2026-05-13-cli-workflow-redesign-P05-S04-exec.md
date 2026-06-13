@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
+modified: '2026-05-13'
 step_id: 'P05.S04'
 related:
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-plan]]"

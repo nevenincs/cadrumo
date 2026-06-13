@@ -3,6 +3,7 @@ tags:
   - '#reference'
   - '#google-oauth'
 date: '2026-05-14'
+modified: '2026-05-14'
 related:
   - "[[2026-05-13-google-oauth-calc-sheets-adr]]"
   - "[[2026-05-13-google-oauth-twoway-adr]]"

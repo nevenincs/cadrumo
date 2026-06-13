@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#registry-drift-validator-blocking-gap'
 date: '2026-06-04'
+modified: '2026-06-04'
 step_id: 'S02'
 related:
   - '[[2026-06-04-registry-drift-validator-blocking-gap-plan]]'

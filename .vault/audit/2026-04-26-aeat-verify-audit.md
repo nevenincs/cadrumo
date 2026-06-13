@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#aeat-verify'
 date: '2026-04-26'
+modified: '2026-04-26'
 related:
   - "[[2026-04-25-aeat-verify-plan]]"
   - "[[2026-04-25-aeat-verify-adr]]"

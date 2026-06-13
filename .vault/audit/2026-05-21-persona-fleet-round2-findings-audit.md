@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#cli-testimonial'
 date: '2026-05-21'
+modified: '2026-05-21'
 related:
   - "[[2026-05-21-persona-fleet-bug-inventory-audit]]"
   - "[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]"

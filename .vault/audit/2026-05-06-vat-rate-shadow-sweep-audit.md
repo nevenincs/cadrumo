@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#vat-rate-shadow-sweep'
 date: '2026-05-06'
+modified: '2026-05-06'
 related:
   - '[[2026-05-06-modelo-369-vat-centralization-audit]]'
   - '[[2026-05-06-modelo-369-vat-centralization-research]]'

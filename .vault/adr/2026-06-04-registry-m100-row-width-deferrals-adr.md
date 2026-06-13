@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#registry-m100-row-width-deferrals'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - '[[2026-06-04-registry-m100-row-width-deferrals-research]]'
   - "[[2026-06-04-registry-row-width-pressure-audit]]"

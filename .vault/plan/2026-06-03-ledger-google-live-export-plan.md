@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#ledger-google-live-export'
 date: '2026-06-03'
+modified: '2026-06-03'
 tier: L2
 related:
   - '[[2026-06-02-ledger-operator-hardening-plan]]'

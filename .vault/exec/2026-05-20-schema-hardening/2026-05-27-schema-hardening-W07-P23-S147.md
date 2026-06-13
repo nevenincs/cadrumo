@@ -2,6 +2,7 @@
 step_id: "S147"
 plan: "[[2026-05-20-schema-hardening-plan]]"
 date: 2026-05-27
+modified: '2026-05-27'
 tags:
   - "#exec"
   - "#schema-hardening"

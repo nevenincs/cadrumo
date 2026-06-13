@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#repo-health-triage'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'

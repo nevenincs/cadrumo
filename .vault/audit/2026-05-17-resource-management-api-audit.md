@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#resource-management-api'
 date: '2026-05-17'
+modified: '2026-05-17'
 related:
   - "[[2026-05-16-resource-management-api-plan]]"
   - "[[2026-05-16-resource-management-api-adr]]"

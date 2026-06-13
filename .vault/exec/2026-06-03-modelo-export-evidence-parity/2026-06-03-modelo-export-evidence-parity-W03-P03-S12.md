@@ -1,6 +1,7 @@
 ---
 tags: ['#exec', '#modelo-export-evidence-parity']
 date: '2026-06-04'
+modified: '2026-06-04'
 step_id: 'S12'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-plan]]'

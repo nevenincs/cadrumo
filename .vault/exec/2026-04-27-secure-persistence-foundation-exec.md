@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#secure-persistence-foundation'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-secure-persistence-foundation-plan]]"
   - "[[2026-04-27-secure-persistence-foundation-adr]]"

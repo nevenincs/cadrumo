@@ -1,6 +1,7 @@
 ---
 tags: ["#exec", "#declaracion-extraction-architecture"]
 date: '2026-05-21'
+modified: '2026-05-21'
 step_id: 'W02.P02.S44'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'

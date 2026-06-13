@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#purchase-invoice-ocr-extraction-discipline'
 date: '2026-06-04'
+modified: '2026-06-04'
 related: []
 related:
   - '[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]'

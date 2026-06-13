@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#live-iva-compensation-wallet'
 date: '2026-05-19'
+modified: '2026-05-19'
 related:
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'
   - '[[2026-05-19-iva-compensation-chain-adr]]'

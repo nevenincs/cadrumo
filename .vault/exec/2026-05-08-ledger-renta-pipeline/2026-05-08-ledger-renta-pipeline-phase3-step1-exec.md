@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
+modified: '2026-05-08'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-plan]]"
   - "[[2026-05-08-ledger-renta-pipeline-phase2-contract-decisions-adr]]"

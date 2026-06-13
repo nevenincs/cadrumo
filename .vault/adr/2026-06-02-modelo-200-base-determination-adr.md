@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-200-base-determination'
 date: '2026-06-02'
+modified: '2026-06-02'
 related: []
 related:
   - '[[2026-06-04-modelo-200-base-determination-research]]'

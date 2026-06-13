@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#calculation-test-oracle-discipline'
 date: '2026-06-01'
+modified: '2026-06-01'
 related:
   - "[[2026-06-01-calculation-test-oracle-discipline-research]]"
 ---

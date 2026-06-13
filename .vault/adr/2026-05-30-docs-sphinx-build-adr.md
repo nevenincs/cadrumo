@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#docs-sphinx-build'
 date: '2026-05-30'
+modified: '2026-05-30'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-05-30-docs-architecture-adr]]"

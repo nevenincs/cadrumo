@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#dsl-conditional-predicate'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - "[[2026-04-21-calc-verification-adr]]"
   - "[[2026-05-26-modelo-130-relation-regression-adr]]"

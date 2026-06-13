@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#google-oauth'
 date: '2026-05-14'
+modified: '2026-05-14'
 related:
   - "[[2026-05-14-google-oauth-reference]]"
   - "[[2026-05-14-google-oauth-research]]"

@@ -1,6 +1,7 @@
 ---
 tags: ["#plan", "#aeat-cli-hardening"]
 date: 2026-05-08
+modified: '2026-05-08'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-05-07-user-profile-backend-schema-plan]]"

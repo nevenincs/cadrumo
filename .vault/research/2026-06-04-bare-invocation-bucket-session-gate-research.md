@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#bare-invocation-bucket-session-gate'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-03-bare-invocation-bucket-session-gate-adr]]"
 ---

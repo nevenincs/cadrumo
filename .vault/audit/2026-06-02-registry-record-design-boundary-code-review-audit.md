@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#registry-record-design-boundary'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-record-design-boundary-audit]]"

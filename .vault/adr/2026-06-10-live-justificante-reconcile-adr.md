@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
+modified: '2026-06-10'
 related:
   - '[[2026-06-10-live-justificante-reconcile-research]]'
   - '[[2026-04-25-aeat-verify-adr]]'

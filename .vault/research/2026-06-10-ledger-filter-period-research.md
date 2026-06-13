@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#ledger-filter-period'
 date: '2026-06-10'
+modified: '2026-06-10'
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'

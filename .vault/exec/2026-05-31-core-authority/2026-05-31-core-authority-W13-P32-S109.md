@@ -4,6 +4,7 @@ tags:
   - '#exec'
   - '#core-authority'
 date: '2026-05-31'
+modified: '2026-05-31'
 related:
   - "[[2026-05-31-core-authority-plan]]"
   - "[[2026-05-31-core-authority-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#live-iva-compensation-wallet'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
   - '[[2026-05-28-live-iva-read-only-auth-success-surface-failures-audit]]'

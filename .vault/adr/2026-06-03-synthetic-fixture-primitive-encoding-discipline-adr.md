@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#synthetic-fixture-primitive-encoding-discipline'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"

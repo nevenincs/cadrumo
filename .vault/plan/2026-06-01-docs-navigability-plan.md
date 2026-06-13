@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#docs-navigability'
 date: '2026-06-01'
+modified: '2026-06-01'
 tier: L3
 related:
   - '[[2026-05-30-docs-architecture-plan]]'

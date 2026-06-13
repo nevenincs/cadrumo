@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#registry-drift-validator-blocking-gap'
 date: '2026-06-04'
+modified: '2026-06-04'
 tier: L1
 related:
   - '[[2026-06-04-registry-drift-validator-blocking-gap-adr]]'

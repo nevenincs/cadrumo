@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#modelo-multiyear-renta'
 date: '2026-06-04'
+modified: '2026-06-04'
 related: []
 related:
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-adr]]'

@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#emit-envelope-schema-burndown'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-04-25-json-output-contract-adr]]"
   - "[[2026-05-31-emit-envelope-schema-burndown-plan]]"

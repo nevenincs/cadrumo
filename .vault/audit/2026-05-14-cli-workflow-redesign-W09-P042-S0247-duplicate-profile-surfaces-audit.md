@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
+modified: '2026-05-14'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-07-user-profile-backend-schema-adr]]'

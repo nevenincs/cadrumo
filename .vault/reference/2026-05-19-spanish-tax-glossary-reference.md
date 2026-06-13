@@ -3,6 +3,7 @@ tags:
   - '#reference'
   - '#spanish-tax-glossary'
 date: '2026-05-19'
+modified: '2026-05-19'
 related: []
 ---
 

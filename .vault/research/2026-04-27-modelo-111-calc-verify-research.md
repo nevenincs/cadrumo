@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#modelo-111-calc-verify'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-130-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"

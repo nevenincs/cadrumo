@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#docs-architecture'
 date: '2026-05-30'
+modified: '2026-05-30'
 tier: L4
 related:
   - '[[2026-05-30-docs-architecture-research]]'

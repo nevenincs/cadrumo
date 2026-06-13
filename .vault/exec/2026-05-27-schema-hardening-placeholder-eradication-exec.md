@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - '[[2026-05-27-schema-hardening-placeholder-eradication-plan]]'
   - '[[2026-05-27-schema-hardening-label-artifact-inventory-exec]]'

@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#no-synthetic-sede-live-surfaces'
 date: '2026-05-26'
+modified: '2026-05-26'
 related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-plan]]'
 ---

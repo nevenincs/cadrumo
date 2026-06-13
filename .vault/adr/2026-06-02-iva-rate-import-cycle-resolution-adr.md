@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#iva-rate-import-cycle-resolution'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"

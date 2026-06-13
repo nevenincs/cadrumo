@@ -5,6 +5,7 @@ tags:
   - "#research"
   - "#data-storage"
 date: 2026-04-12
+modified: '2026-04-12'
 related:
   - "[[2026-04-12-data-storage-adr]]"
   - "[[2026-04-12-base-module-structure-adr]]"

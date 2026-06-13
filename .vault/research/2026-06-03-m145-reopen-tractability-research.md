@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#m145-reopen-tractability'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]"
   - "[[2026-06-03-m036-lifecycle-verbs-research]]"

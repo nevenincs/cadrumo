@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#real-pdf-import"
 date: 2026-04-22
+modified: '2026-04-22'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-ruleset-architecture-adr]]"

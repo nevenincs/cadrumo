@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#rental-income-hardening'
 date: '2026-04-29'
+modified: '2026-04-29'
 related: []
 ---
 

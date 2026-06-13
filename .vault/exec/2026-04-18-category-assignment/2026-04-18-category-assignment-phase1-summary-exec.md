@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#category-assignment"
 date: 2026-04-18
+modified: '2026-04-18'
 related:
   - "[[2026-04-18-category-assignment-cli-plan]]"
   - "[[2026-04-18-category-assignment-phase1-step1-exec]]"

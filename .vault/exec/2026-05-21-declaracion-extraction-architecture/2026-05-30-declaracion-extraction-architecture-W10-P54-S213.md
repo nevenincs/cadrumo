@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#declaracion-extraction-architecture'
 date: '2026-05-30'
+modified: '2026-05-30'
 step_id: S213
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-adr]]'

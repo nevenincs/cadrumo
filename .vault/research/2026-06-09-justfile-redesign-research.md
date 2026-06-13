@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#justfile-redesign'
 date: '2026-06-09'
+modified: '2026-06-09'
 related:
   - '[[2026-04-17-pytest-markers-adr]]'
 ---

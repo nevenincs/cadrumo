@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-05-28-schema-hardening-m100-continuity-inventory-research]]'

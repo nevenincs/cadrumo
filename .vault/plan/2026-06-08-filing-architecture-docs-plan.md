@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#filing-architecture-docs'
 date: '2026-06-08'
+modified: '2026-06-08'
 tier: L3
 related:
   - '[[2026-06-01-docs-educational-surface-adr]]'

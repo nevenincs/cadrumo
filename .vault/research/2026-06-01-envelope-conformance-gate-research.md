@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#envelope-conformance-gate'
 date: '2026-06-01'
+modified: '2026-06-01'
 related:
   - "[[2026-05-31-coverage-canonicalisation-audit]]"
 ---

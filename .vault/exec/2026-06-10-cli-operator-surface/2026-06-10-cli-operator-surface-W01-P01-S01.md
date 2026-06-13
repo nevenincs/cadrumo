@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#cli-operator-surface'
 date: '2026-06-10'
+modified: '2026-06-10'
 step_id: 'S01'
 related:
   - "[[2026-06-10-cli-operator-surface-plan]]"

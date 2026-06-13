@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
+modified: '2026-05-06'
 related:
   - '[[2026-05-06-live-parity-oracle-backend-research]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'

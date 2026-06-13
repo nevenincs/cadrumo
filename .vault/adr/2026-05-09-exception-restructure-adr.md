@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#exception-restructure'
 date: '2026-05-09'
+modified: '2026-05-09'
 related:
   - "[[2026-05-09-exception-restructure-research]]"
   - "[[2026-06-01-semantic-cluster-hardening-plan]]"

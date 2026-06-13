@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#iva-autoconsumo-promotor'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-27-iva-autoconsumo-promotor-adr]]"
 ---

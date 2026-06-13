@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#wizard-registration-bootstrap'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-06-02-wizard-registration-bootstrap-research]]"
   - "[[2026-06-01-domain-boundary-audit-adr]]"

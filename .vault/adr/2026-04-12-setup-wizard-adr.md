@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#setup-wizard"
 date: 2026-04-12
+modified: '2026-04-12'
 title: First-run setup wizard — ADR
 related:
   - "[[2026-04-12-setup-wizard-research]]"

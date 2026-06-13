@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#workflow-live-flag-excision'
 date: '2026-04-25'
+modified: '2026-04-25'
 related:
   - "[[2026-04-25-workflow-live-flag-excision-research]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"

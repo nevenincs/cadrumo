@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#calendar-live-operational-hardening'
 date: '2026-06-05'
+modified: '2026-06-05'
 tier: L3
 related:
   - '[[2026-06-05-calendar-live-operational-hardening-adr]]'

@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#non-resident-axis'
 date: '2026-05-27'
+modified: '2026-05-27'
 step_id: 'S02'
 related:
   - '[[2026-05-27-non-resident-axis-S01]]'

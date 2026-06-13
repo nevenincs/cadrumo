@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#ledger-filter-period'
 date: '2026-06-12'
+modified: '2026-06-12'
 step_id: 'S02'
 related:
   - "[[2026-06-10-ledger-filter-period-plan]]"

@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#cert-pre-expiry-gate"
 date: 2026-04-13
+modified: '2026-04-13'
 title: "Certificate Pre-Expiry Gate — Phase 1 Summary"
 related:
   - "[[2026-04-13-cert-pre-expiry-gate-research]]"

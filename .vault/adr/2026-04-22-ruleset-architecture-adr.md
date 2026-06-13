@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#real-pdf-import"
 date: 2026-04-22
+modified: '2026-04-22'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"

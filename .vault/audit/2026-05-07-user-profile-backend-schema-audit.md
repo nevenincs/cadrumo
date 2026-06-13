@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#user-profile-backend-schema'
 date: '2026-05-07'
+modified: '2026-05-07'
 related:
   - "[[2026-05-07-user-profile-backend-schema-exec]]"
   - "[[2026-05-07-user-profile-backend-schema-plan]]"

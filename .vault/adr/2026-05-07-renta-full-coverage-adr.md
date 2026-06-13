@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#renta-full-coverage'
 date: '2026-05-07'
+modified: '2026-05-07'
 related:
   - '[[2026-05-07-renta-full-coverage-plan]]'
   - '[[2026-05-07-renta-scope-audit-audit]]'

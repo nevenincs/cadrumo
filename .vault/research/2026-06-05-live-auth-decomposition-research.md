@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#live-auth-decomposition'
 date: '2026-06-05'
+modified: '2026-06-05'
 related:
   - "[[2026-06-04-repo-health-triage-research]]"
   - "[[2026-06-04-repo-health-triage-live-auth-split-invariants-audit]]"

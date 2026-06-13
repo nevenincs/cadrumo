@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#cert-auth"
 date: 2026-04-12
+modified: '2026-04-12'
 title: "cert-auth phase1 step4 — settings + env example"
 related:
   - "[[2026-04-12-cert-auth-plan]]"

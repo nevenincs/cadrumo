@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#registry-m303-fragments'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-hardening-m303-fragment-pressure-audit]]"

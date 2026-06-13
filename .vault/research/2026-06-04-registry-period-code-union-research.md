@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#registry-period-code-union'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
 ---

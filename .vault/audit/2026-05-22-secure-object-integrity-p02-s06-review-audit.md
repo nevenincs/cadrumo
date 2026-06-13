@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#secure-object-integrity'
 date: '2026-05-22'
+modified: '2026-05-22'
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
   - '[[2026-05-22-secure-object-integrity-P02-S06]]'

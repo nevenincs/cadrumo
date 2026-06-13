@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
+modified: '2026-06-04'
 tier: L1
 related:
   - '[[2026-06-04-just-tooling-bootstrap-research]]'

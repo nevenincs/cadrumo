@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#relative-imports"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-relative-imports-research]]"
 ---

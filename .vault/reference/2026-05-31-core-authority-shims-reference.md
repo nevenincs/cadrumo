@@ -3,6 +3,7 @@ tags:
   - "#reference"
   - "#core-authority-shims"
 date: 2026-05-31
+modified: '2026-05-31'
 related:
   - "[[2026-05-30-identity-primitives-adr]]"
 ---

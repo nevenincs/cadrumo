@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#export-first"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-18-auth-provider-ecosystem-research]]"

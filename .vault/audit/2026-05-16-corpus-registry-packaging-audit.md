@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#corpus-registry-packaging'
 date: '2026-05-16'
+modified: '2026-05-16'
 related:
   - "[[2026-05-15-corpus-registry-packaging-plan]]"
   - "[[2026-05-15-corpus-registry-packaging-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#aeat-cli-wireframe'
 date: '2026-04-24'
+modified: '2026-04-24'
 related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"

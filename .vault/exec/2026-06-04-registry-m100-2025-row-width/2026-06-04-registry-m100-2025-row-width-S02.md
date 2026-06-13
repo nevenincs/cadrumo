@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#registry-m100-2025-row-width'
 date: '2026-06-04'
+modified: '2026-06-04'
 step_id: 'S02'
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-plan]]'

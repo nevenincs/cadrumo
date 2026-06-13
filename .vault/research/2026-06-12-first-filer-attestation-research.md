@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#first-filer-attestation'
 date: '2026-06-12'
+modified: '2026-06-12'
 related:
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
   - "[[2026-06-05-cross-period-calculation-guards-adr]]"

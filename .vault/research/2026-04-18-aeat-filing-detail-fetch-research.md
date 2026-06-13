@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#aeat-filing-detail-fetch"
 date: 2026-04-18
+modified: '2026-04-18'
 title: Research — StatusReader.fetch_filing_detail (#227)
 issue: wgergely/aeat#227
 epic: wgergely/aeat#70

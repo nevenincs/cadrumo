@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#live-parity-oracle'
 date: '2026-05-08'
+modified: '2026-05-08'
 related:
   - "[[2026-05-07-live-parity-oracle-plan]]"
   - "[[2026-05-07-live-parity-oracle-adr]]"

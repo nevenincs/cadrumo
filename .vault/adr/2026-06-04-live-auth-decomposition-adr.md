@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#live-auth-decomposition'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - '[[2026-06-05-live-auth-decomposition-research]]'
   - '[[2026-06-04-repo-health-triage-research]]'

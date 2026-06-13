@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#schema-driven-wizard-closure'
 date: '2026-05-12'
+modified: '2026-05-12'
 related:
   - "[[2026-05-12-schema-driven-wizard-adr]]"
   - "[[2026-05-12-schema-driven-wizard-plan]]"

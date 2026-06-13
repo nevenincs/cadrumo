@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#calculation-source-connectivity"
 date: 2026-05-21
+modified: '2026-05-21'
 plan: 2026-05-20-calculation-source-connectivity-plan
 wave: W01
 phase: W01.P02

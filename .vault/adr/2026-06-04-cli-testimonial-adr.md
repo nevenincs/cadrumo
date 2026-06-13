@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-testimonial'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-21-fresh-cli-persona-repair-plan]]"
   - "[[2026-05-21-fresh-cli-persona-testimonial-wave-plan]]"

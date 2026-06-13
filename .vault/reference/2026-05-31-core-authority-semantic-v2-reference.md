@@ -3,6 +3,7 @@ tags:
   - '#reference'
   - '#core-authority-semantic-v2'
 date: '2026-05-31'
+modified: '2026-05-31'
 related:
   - "[[2026-05-31-core-authority-enums-reference]]"
   - "[[2026-05-31-core-authority-duplicates-reference]]"

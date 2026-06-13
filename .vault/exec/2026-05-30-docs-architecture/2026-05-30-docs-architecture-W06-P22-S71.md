@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#docs-architecture'
 date: '2026-06-01'
+modified: '2026-06-01'
 step_id: 'S71'
 related:
   - "[[2026-05-30-docs-architecture-plan]]"

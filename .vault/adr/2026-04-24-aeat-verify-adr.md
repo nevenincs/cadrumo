@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#aeat-verify'
 date: '2026-04-24'
+modified: '2026-04-24'
 related:
   - "[[2026-04-24-aeat-verify-research]]"
   - "[[2026-04-21-calc-verification-adr]]"

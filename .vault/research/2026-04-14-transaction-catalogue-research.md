@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#transaction-catalogue"
 date: "2026-04-14"
+modified: '2026-04-14'
 related:
   - "[[2026-04-13-p2a-financial-provider-research]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"

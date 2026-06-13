@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-persona-testimonials'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-05-21-cli-persona-testimonials-plan]]"
   - "[[2026-05-20-cli-persona-testimonials-research]]"

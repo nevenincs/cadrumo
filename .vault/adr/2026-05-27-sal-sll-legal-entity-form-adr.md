@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#sal-sll-legal-entity-form'
 date: '2026-05-27'
+modified: '2026-05-27'
 related:
   - "[[2026-05-21-corporate-entity-calculation-adr]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"

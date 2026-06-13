@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#m349-payable-invoice-authoring'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
 ---

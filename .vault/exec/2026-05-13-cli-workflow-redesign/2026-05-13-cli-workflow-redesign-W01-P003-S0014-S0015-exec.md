@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
+modified: '2026-05-13'
 step_id: 'W01.P003.S0014-S0015'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"

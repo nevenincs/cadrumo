@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#resource-management-api'
 date: '2026-05-16'
+modified: '2026-05-16'
 related:
   - "[[2026-05-15-corpus-registry-packaging-adr]]"
   - "[[2026-05-15-corpus-registry-packaging-research]]"

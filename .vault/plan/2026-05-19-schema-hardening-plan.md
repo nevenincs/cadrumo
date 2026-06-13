@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-05-19'
+modified: '2026-05-19'
 tier: L1
 related:
   - '[[2026-05-18-schema-hardening-adr]]'

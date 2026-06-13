@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-03'
+modified: '2026-05-03'
 related:
   - '[[2026-05-03-calculation-truth-inventory-research]]'
   - '[[2026-05-03-external-tax-definition-engines-reference]]'

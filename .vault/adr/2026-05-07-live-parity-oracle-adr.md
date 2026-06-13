@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-07'
+modified: '2026-05-07'
 related:
   - "[[2026-05-06-oracle-surface-compatibility-adr]]"
   - "[[2026-05-07-aeat-vies-surface-split-ixvi-vs-groi-adr]]"

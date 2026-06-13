@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#user-profile-lazy-import'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - '[[2026-06-03-user-profile-lazy-import-research]]'
   - '[[2026-06-03-bare-invocation-bucket-session-gate-adr]]'

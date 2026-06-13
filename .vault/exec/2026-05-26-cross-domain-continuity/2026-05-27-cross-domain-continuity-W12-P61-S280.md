@@ -4,6 +4,7 @@ tags:
   - "#exec"
   - "#cross-domain-continuity"
 date: 2026-05-27
+modified: '2026-05-27'
 related:
   - "[[2026-05-27-cross-domain-continuity-W12-P61-S279]]"
   - "[[2026-05-27-cross-domain-continuity-W12-P61-S278]]"

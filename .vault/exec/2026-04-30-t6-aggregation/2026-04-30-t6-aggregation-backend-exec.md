@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#t6-aggregation"
 date: 2026-04-30
+modified: '2026-04-30'
 related:
   - "[[2026-04-30-t6-aggregation-plan]]"
   - "[[2026-04-30-t6-aggregation-adr]]"

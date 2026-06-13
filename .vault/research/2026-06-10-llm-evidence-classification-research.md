@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#llm-evidence-classification'
 date: '2026-06-10'
+modified: '2026-06-10'
 related:
   - "[[2026-06-03-llm-ledger-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"

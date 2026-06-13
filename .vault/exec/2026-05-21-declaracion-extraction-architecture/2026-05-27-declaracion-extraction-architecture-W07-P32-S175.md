@@ -1,6 +1,7 @@
 ---
 step_id: "S175"
 date: 2026-05-27
+modified: '2026-05-27'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#modelo-work-revision-cli-decomposition'
 date: '2026-06-05'
+modified: '2026-06-05'
 related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-plan]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'

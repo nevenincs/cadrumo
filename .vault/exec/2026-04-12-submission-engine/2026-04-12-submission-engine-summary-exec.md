@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#submission-engine"
 date: 2026-04-12
+modified: '2026-04-12'
 title: submission engine — execution summary
 related:
   - "[[2026-04-12-submission-engine-research]]"

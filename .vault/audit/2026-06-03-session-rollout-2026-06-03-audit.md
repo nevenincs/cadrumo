@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#session-rollout-2026-06-03'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-bucket-sealed-archive-adr]]"

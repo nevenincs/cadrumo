@@ -1,6 +1,7 @@
 ---
 tags: ['#exec', '#ledger-modelo-crossref']
 date: '2026-06-12'
+modified: '2026-06-12'
 step_id: 'S14'
 related:
   - '[[2026-06-10-ledger-modelo-crossref-plan]]'

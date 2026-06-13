@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#m100-per-ano-test-parity'
 date: '2026-04-29'
+modified: '2026-04-29'
 related:
   - "[[2026-04-29-m100-per-ano-test-parity-research]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"

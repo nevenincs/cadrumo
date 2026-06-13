@@ -3,6 +3,7 @@ tags:
   - "#audit"
   - "#aeat-cli-userdocs-hardening"
 date: 2026-06-05
+modified: '2026-06-05'
 related:
   - "[[2026-06-04-aeat-cli-userdocs-hardening-plan]]"
   - "[[2026-06-04-aeat-cli-userdocs-hardening-adr]]"

@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
+modified: '2026-06-03'
 tier: L2
 related:
   - '[[2026-06-03-m303-cross-period-carry-continuity-adr]]'

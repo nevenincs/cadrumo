@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#source-mesh-evidence-resolver'
 date: '2026-06-03'
+modified: '2026-06-03'
 related:
   - "[[2026-05-20-calculation-source-connectivity-adr]]"
 ---

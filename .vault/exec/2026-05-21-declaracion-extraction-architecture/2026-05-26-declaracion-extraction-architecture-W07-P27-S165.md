@@ -1,6 +1,7 @@
 ---
 tags: ["#exec", "#declaracion-extraction-architecture"]
 date: '2026-05-26'
+modified: '2026-05-26'
 step_id: 'W07.P27.S165'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'

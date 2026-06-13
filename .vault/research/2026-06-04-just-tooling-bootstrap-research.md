@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - '[[2026-05-15-linkage-tooling-prior-art-research]]'
   - '[[2026-04-30-aeat-restructure-research]]'

@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#centralized-output-redaction'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - '[[2026-05-28-centralized-output-redaction-plan]]'
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'

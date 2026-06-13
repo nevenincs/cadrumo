@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#ledger-hardening-close'
 date: '2026-06-12'
+modified: '2026-06-12'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'
   - '[[2026-06-10-ledger-evidence-enforcement-plan]]'

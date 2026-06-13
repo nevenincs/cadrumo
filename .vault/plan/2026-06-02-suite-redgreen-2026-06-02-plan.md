@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#suite-redgreen-2026-06-02'
 date: '2026-06-02'
+modified: '2026-06-02'
 tier: L2
 related:
   - '[[2026-04-21-calc-verification-adr]]'

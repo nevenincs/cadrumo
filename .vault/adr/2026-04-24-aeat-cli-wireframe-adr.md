@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#aeat-cli-wireframe'
 date: '2026-04-24'
+modified: '2026-04-24'
 related:
   - "[[2026-04-24-aeat-cli-wireframe-research]]"
   - "[[2026-04-17-export-first-adr]]"

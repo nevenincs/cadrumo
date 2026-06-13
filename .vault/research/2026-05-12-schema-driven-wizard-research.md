@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#schema-driven-wizard"
 date: "2026-05-12"
+modified: '2026-05-12'
 related:
   - "[[2026-04-12-setup-wizard-research]]"
 ---

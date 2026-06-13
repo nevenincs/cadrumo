@@ -3,6 +3,7 @@ tags:
   - '#research'
   - '#wizard-registration-bootstrap'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-06-01-domain-boundary-audit-audit]]"
 ---

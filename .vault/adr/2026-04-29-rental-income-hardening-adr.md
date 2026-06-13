@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#rental-income-hardening'
 date: '2026-04-29'
+modified: '2026-04-29'
 related:
   - "[[2026-04-29-rental-income-hardening-research]]"
   - "[[2026-04-28-modelo-100-renta-full-calc-reference]]"

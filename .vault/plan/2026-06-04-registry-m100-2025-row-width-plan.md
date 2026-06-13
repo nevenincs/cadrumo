@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#registry-m100-2025-row-width'
 date: '2026-06-04'
+modified: '2026-06-04'
 tier: L1
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-adr]]'

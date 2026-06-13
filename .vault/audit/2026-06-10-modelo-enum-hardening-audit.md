@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#modelo-enum-hardening'
 date: '2026-06-10'
+modified: '2026-06-10'
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'
   - '[[2026-06-10-modelo-enum-hardening-plan]]'

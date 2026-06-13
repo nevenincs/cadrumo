@@ -3,6 +3,7 @@ tags:
   - '#exec'
   - '#secure-object-integrity'
 date: '2026-05-22'
+modified: '2026-05-22'
 step_id: 'S12'
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'

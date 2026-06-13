@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#secure-object-integrity'
 date: '2026-06-04'
+modified: '2026-06-04'
 related:
   - "[[2026-06-04-secure-object-integrity-research]]"
 ---

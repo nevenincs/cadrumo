@@ -4,6 +4,7 @@ tags:
   - "#exec"
   - "#codebase-solidification"
 date: 2026-05-30
+modified: '2026-05-30'
 related:
   - "[[2026-05-28-codebase-solidification-plan]]"
   - "[[2026-05-28-codebase-solidification-adr]]"

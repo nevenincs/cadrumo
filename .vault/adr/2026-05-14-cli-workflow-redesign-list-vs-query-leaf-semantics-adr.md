@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
+modified: '2026-05-14'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr]]"

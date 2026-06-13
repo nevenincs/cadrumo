@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-02'
+modified: '2026-06-02'
 related:
   - "[[2026-06-02-modelo-721-cripto-data-fidelity-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
