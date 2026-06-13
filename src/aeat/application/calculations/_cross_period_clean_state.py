@@ -11,6 +11,7 @@ to prove a dependent period's upstream filings carry official evidence.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import date
 from enum import StrEnum
 from typing import Final, NamedTuple, Protocol, Self
 
@@ -52,6 +53,9 @@ _OFFICIAL_SOURCE_KINDS: Final = frozenset(
 )
 _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
     {
+        # A CSV-register import is filing-grade only after the CSV resolves to
+        # persisted justificante metadata and the receipt matches the filing.
+        "aeat_csv_register",
         "aeat_justificante_pdf",
         # A live-captured justificante is the authentic AEAT-signed receipt
         # pulled read-only from the sede (the same PDF an operator would
@@ -120,6 +124,102 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     carry is refused until the operator re-files and re-stamps under the correct
     revision.
     """
+
+
+class NoPriorObligationProvenanceKind(StrEnum):
+    """Provenance family for a no-prior-obligation pre-activity suppression.
+
+    ADR 2026-06-13-first-filer-attestation-adr: a cross-period dependency anchor
+    whose period falls strictly before the taxpayer's recorded activity-start
+    date is scoped out of the requirement graph. The scoping is stamped with the
+    provenance of the activity-start date that justified it.
+
+    The ``NO_PRIOR_OBLIGATION_PRE_ACTIVITY`` value is the facet-kind discriminator
+    carried on the evidence row; it names a *suppression*, not an evidence source,
+    and is therefore categorically never a member of :data:`_OFFICIAL_SOURCE_KINDS`
+    (which families a *filing's* AEAT evidence). The regression in
+    ``test_cross_period_clean_state_enforcement.py`` pins that exclusion.
+    """
+
+    #: The facet-kind discriminator: this requirement was suppressed because its
+    #: period is pre-activity (no prior obligation could have existed).
+    NO_PRIOR_OBLIGATION_PRE_ACTIVITY = "no_prior_obligation_pre_activity"
+
+    #: The activity-start date is the operator-declared ``activity_start_date``
+    #: field (not corroborated by an AEAT censo snapshot). Carries the advisory.
+    OPERATOR_DECLARED = "operator_declared"
+
+    #: The activity-start date was corroborated against an AEAT censo snapshot.
+    #: Deferred per the accepted ADR until the live censo read is functional;
+    #: declared above for the upgrade path so the facet vocabulary is stable.
+    CENSO_CORROBORATED = "censo_corroborated"
+
+
+class NoPriorObligationProvenance(BaseModel):
+    """Typed marker that a dependency was scoped out as no-prior-obligation.
+
+    ADR 2026-06-13-first-filer-attestation-adr (operator-declared now,
+    censo-corroborated when the live censo surface is fixed): records the
+    activity-start date that scoped a pre-activity dependency out of the
+    requirement graph, the provenance kind of that date, and - when present - the
+    AEAT censo snapshot id that corroborated it. The suppression is an explicit,
+    auditable outcome (``no-silent-under-declaration``), never a silent omission.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    facet_kind: NoPriorObligationProvenanceKind = (
+        NoPriorObligationProvenanceKind.NO_PRIOR_OBLIGATION_PRE_ACTIVITY
+    )
+    activity_start_date: date
+    provenance_kind: NoPriorObligationProvenanceKind = NoPriorObligationProvenanceKind.OPERATOR_DECLARED
+    censo_snapshot_id: str | None = None
+
+    @model_validator(mode="after")
+    def _provenance_kind_is_a_source_kind(self) -> Self:
+        if self.provenance_kind not in (
+            NoPriorObligationProvenanceKind.OPERATOR_DECLARED,
+            NoPriorObligationProvenanceKind.CENSO_CORROBORATED,
+        ):
+            raise ValueError(
+                "provenance_kind must be OPERATOR_DECLARED or CENSO_CORROBORATED, "
+                f"got {self.provenance_kind.value!r}",
+            )
+        if (
+            self.provenance_kind is NoPriorObligationProvenanceKind.CENSO_CORROBORATED
+            and self.censo_snapshot_id is None
+        ):
+            raise ValueError("censo_corroborated provenance requires a censo_snapshot_id")
+        return self
+
+    @property
+    def is_operator_declared(self) -> bool:
+        """True when the activity-start date is operator-declared (carries the advisory)."""
+        return self.provenance_kind is NoPriorObligationProvenanceKind.OPERATOR_DECLARED
+
+
+def _period_strictly_before_activity_start(period: Period, activity_start_date: date) -> bool:
+    """Return whether ``period`` falls STRICTLY before the activity-start date.
+
+    ADR 2026-06-13-first-filer-attestation-adr, ratified boundary semantics: the
+    alta-CONTAINING period IS the first obligation; only STRICTLY-prior periods
+    are suppressed. A period is strictly-prior when its entire inclusive span ends
+    before the activity-start date - mirroring the deadline engine's pre-start
+    gate (``closes_on < activity_start_date``,
+    :func:`aeat.domain.deadlines._engine`) against the same operator-declared
+    field. The comparison is routed through :class:`Period` boundary authority
+    (:attr:`Period.end_date`) per ``period-filter-single-boundary-authority`` - no
+    parallel inclusion math.
+
+    A period whose span contains the activity-start date returns ``False`` (it is
+    the first obligation, in scope). A period with no calendar span
+    (instalment/extended claves) cannot be positioned against a date and returns
+    ``False`` (never suppressed), so the scoping never silently drops a
+    non-calendar anchor.
+    """
+    if not period.has_date_span():
+        return False
+    return period.end_date < activity_start_date
 
 
 class CrossPeriodDependencyRequirement(BaseModel):
@@ -236,10 +336,36 @@ class CrossPeriodDependencyEvidence(BaseModel):
     record. A divergent stamp produces ``REGISTRY_REVISION_DIVERGENCE`` in
     :attr:`blockers` instead.
     """
+    no_prior_obligation: NoPriorObligationProvenance | None = None
+    """Typed marker that this dependency was scoped out as no-prior-obligation.
+
+    ADR 2026-06-13-first-filer-attestation-adr: when the requirement's period
+    falls strictly before the taxpayer's recorded activity-start date, the
+    dependency is suppressed (no prior obligation could have legally existed) and
+    this facet records the activity-start date and provenance that justified it.
+    A suppressed requirement carries no blockers and is :attr:`clean`, but the
+    suppression is explicit and auditable here rather than a silent omission
+    (``no-silent-under-declaration``). ``None`` for an in-scope dependency.
+    """
 
     @property
     def clean(self) -> bool:
         return not self.blockers
+
+    @property
+    def suppressed_pre_activity(self) -> bool:
+        """True when this dependency was scoped out as no-prior-obligation pre-activity."""
+        return self.no_prior_obligation is not None
+
+    @property
+    def operator_declared_suppression_advisory(self) -> bool:
+        """True when the suppression rests on an operator-declared (uncorroborated) date.
+
+        The verification caller raises a NON-BLOCKING advisory for this case per
+        the accepted ADR (operator-declared now, censo-corroborated when the live
+        censo surface is fixed).
+        """
+        return self.no_prior_obligation is not None and self.no_prior_obligation.is_operator_declared
 
 
 class CrossPeriodCleanStateVerdict(BaseModel):
@@ -275,6 +401,16 @@ class CrossPeriodCleanStateVerdict(BaseModel):
         """True when any dependency carries a legacy unstamped-revision advisory."""
         return any(item.unstamped_revision_advisory for item in self.dependencies)
 
+    @property
+    def suppressed_pre_activity_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
+        """Return dependencies scoped out as no-prior-obligation pre-activity."""
+        return tuple(item for item in self.dependencies if item.suppressed_pre_activity)
+
+    @property
+    def has_operator_declared_suppression_advisory(self) -> bool:
+        """True when any suppression rests on an operator-declared (uncorroborated) date."""
+        return any(item.operator_declared_suppression_advisory for item in self.dependencies)
+
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
     """Return the :class:`CrossPeriodDependencyRequirement` records for ``snapshot``.
@@ -300,6 +436,49 @@ def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[Cr
         for item in _requirements_from_relation(requirement):
             requirements.setdefault(item.key, item)
     return tuple(requirements.values())
+
+
+class _RequirementPartition(NamedTuple):
+    """In-scope vs. pre-activity-suppressed split of a registry-derived graph."""
+
+    in_scope: tuple[CrossPeriodDependencyRequirement, ...]
+    suppressed: tuple[CrossPeriodDependencyRequirement, ...]
+
+
+def partition_cross_period_requirements_by_activity_start(
+    requirements: Iterable[CrossPeriodDependencyRequirement],
+    *,
+    activity_start_date: date | None,
+) -> _RequirementPartition:
+    """Split registry-derived requirements into in-scope and pre-activity-suppressed.
+
+    ADR 2026-06-13-first-filer-attestation-adr: a dependency anchor whose period
+    falls strictly before ``activity_start_date`` is no-prior-obligation
+    (absent-by-design) and is scoped out of the evaluated graph. The scoping is an
+    application-layer filter over the registry-derived requirements - the registry
+    stays pure and the declared date is a grounded input (the same field the
+    deadline engine consumes), not a per-call ad hoc shrink
+    (``2026-06-05-cross-period-calculation-guards-adr``).
+
+    The suppression is uniform across BOTH ``previous_filing`` bindings and
+    ``relation_source_requirements`` origins (the requirement carries its
+    :attr:`CrossPeriodDependencyRequirement.origin`; this predicate is
+    origin-agnostic), so a first filer is never unblocked on one origin and
+    trapped on the other.
+
+    When ``activity_start_date`` is ``None`` every requirement stays in scope; the
+    caller decides whether a missing declared date should fail closed.
+    """
+    if activity_start_date is None:
+        return _RequirementPartition(tuple(requirements), ())
+    in_scope: list[CrossPeriodDependencyRequirement] = []
+    suppressed: list[CrossPeriodDependencyRequirement] = []
+    for requirement in requirements:
+        if _period_strictly_before_activity_start(requirement.period, activity_start_date):
+            suppressed.append(requirement)
+        else:
+            in_scope.append(requirement)
+    return _RequirementPartition(tuple(in_scope), tuple(suppressed))
 
 
 def cross_period_dependency_inventory(
@@ -356,6 +535,29 @@ def cross_period_dependency_inventory(
     )
 
 
+def _suppressed_pre_activity_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+    *,
+    activity_start_date: date,
+) -> CrossPeriodDependencyEvidence:
+    """Build the clean, facet-stamped evidence row for a pre-activity dependency.
+
+    ADR 2026-06-13-first-filer-attestation-adr: the requirement's period is
+    strictly before the recorded activity-start date, so no prior obligation could
+    have legally existed. There is no observation to load and nothing to stamp; the
+    binding value resolves to a provenance-marked ``Decimal`` zero through the
+    existing absent-by-design path, recorded here as an explicit, auditable
+    no-prior-obligation outcome with NO blockers (the row is :attr:`clean`).
+    """
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        no_prior_obligation=NoPriorObligationProvenance(
+            activity_start_date=activity_start_date,
+            provenance_kind=NoPriorObligationProvenanceKind.OPERATOR_DECLARED,
+        ),
+    )
+
+
 def evaluate_cross_period_clean_state(
     snapshot: RegistrySnapshot,
     *,
@@ -367,17 +569,31 @@ def evaluate_cross_period_clean_state(
     justificante_repository: JustificanteRepository | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
+    activity_start_date: date | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a :class:`CrossPeriodCleanStateVerdict`.
 
     Uses :class:`RegistrySnapshot` to derive the dependency requirements.
+
+    ``activity_start_date`` is the operator-declared activity-start date carried on
+    the profile (the same field the deadline engine consumes for pre-start
+    suppression). When supplied, a dependency whose period falls strictly before it
+    is scoped out as no-prior-obligation
+    (ADR 2026-06-13-first-filer-attestation-adr): it produces a clean,
+    facet-stamped evidence row instead of an evaluated blocker, and is NOT loaded
+    from storage. When ``None`` every dependency is evaluated as before - the
+    caller decides whether a missing declared date should fail closed.
     """
     filing_catalogue = filing_repository.load()
     calculation_catalogue = calculation_repository.load()
     verification_catalogue = verification_repository.load()
     resolved_justificante_repository = justificante_repository or JustificanteRepository()
     expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
-    dependencies = tuple(
+    partition = partition_cross_period_requirements_by_activity_start(
+        cross_period_dependency_requirements(snapshot),
+        activity_start_date=activity_start_date,
+    )
+    in_scope_dependencies = tuple(
         _evaluate_requirement(
             requirement,
             bucket_id=bucket_id,
@@ -391,14 +607,20 @@ def evaluate_cross_period_clean_state(
                 (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
             ),
         )
-        for requirement in cross_period_dependency_requirements(snapshot)
+        for requirement in partition.in_scope
+    )
+    # ``activity_start_date`` is non-None whenever ``suppressed`` is non-empty.
+    suppressed_dependencies = tuple(
+        _suppressed_pre_activity_evidence(requirement, activity_start_date=activity_start_date)
+        for requirement in partition.suppressed
+        if activity_start_date is not None
     )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
         target_modelo=str(snapshot.modelo.id),
         target_filing_year=snapshot.filing_year,
         target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-        dependencies=dependencies,
+        dependencies=(*in_scope_dependencies, *suppressed_dependencies),
     )
 
 
@@ -521,7 +743,7 @@ def _aeat_register_provenance_blockers(
     *,
     expected_tax_id: str | None,
 ) -> list[CrossPeriodCleanStateBlocker]:
-    if payload.source_kind != "aeat_sede_justificante":
+    if payload.source_kind not in _OFFICIAL_SOURCE_KINDS:
         return []
     metadata = payload.source_metadata
     if not metadata:
@@ -672,6 +894,8 @@ def _aggregate_member_history(
     for member_nif in members_to_check:
         member_payload = member_payload_by_nif.get(member_nif)
         member_values = dict(member_payload.observation.casilla_values) if member_payload is not None else {}
+        member_source_kind = member_payload.source_kind if member_payload is not None else observation_source_kind
+        member_source_metadata = member_payload.source_metadata if member_payload is not None else None
         member_result = _evaluate_filing_history(
             requirement,
             bucket_id=bucket_id,
@@ -680,7 +904,8 @@ def _aggregate_member_history(
             verification_catalogue=verification_catalogue,
             justificante_repository=justificante_repository,
             taxpayer_tax_id=taxpayer_tax_id,
-            observation_source_kind=observation_source_kind,
+            observation_source_kind=member_source_kind,
+            observation_source_metadata=member_source_metadata,
             observation_values=member_values,
             member_nif=member_nif,
         )
@@ -768,6 +993,7 @@ def _evaluate_requirement(
         justificante_repository=justificante_repository,
         taxpayer_tax_id=taxpayer_tax_id,
         observation_source_kind=observation_source_kind,
+        observation_source_metadata=source.payload.source_metadata if source.payload is not None else None,
         observation_values=observation_values,
         member_nif=None,
     )
@@ -796,6 +1022,7 @@ def _filing_external_evidence_blockers(
     observation_source_kind: str | None,
     justificante_repository: JustificanteRepository,
     taxpayer_tax_id: str | None,
+    observation_source_metadata: Mapping[str, str] | None = None,
 ) -> list[CrossPeriodCleanStateBlocker]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     if filing.status is not ModeloRecordStatus.VIGENTE:
@@ -814,7 +1041,46 @@ def _filing_external_evidence_blockers(
             blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
         elif not _justificante_matches_filing(filing, justificante, taxpayer_tax_id=taxpayer_tax_id):
             blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
+        else:
+            blockers.extend(_justificante_observation_reference_blockers(justificante, observation_source_metadata))
     return blockers
+
+
+def _justificante_observation_reference_blockers(
+    justificante: Justificante,
+    observation_source_metadata: Mapping[str, str] | None,
+) -> list[CrossPeriodCleanStateBlocker]:
+    """Require comparable filed-history references to agree with the parsed receipt."""
+    if not observation_source_metadata:
+        return []
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    metadata_csv = _clean_metadata_value(
+        observation_source_metadata.get("aeat_justificante_csv") or observation_source_metadata.get("justificante_csv"),
+    )
+    if metadata_csv is not None and metadata_csv.casefold() != justificante.csv.casefold():
+        blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
+    metadata_csvs = _clean_metadata_csvs(observation_source_metadata.get("aeat_justificante_csvs"))
+    if metadata_csvs and justificante.csv.casefold() not in {csv.casefold() for csv in metadata_csvs}:
+        blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
+
+    metadata_expediente_id = _clean_metadata_value(observation_source_metadata.get("aeat_expediente_id"))
+    presentation_id = _clean_metadata_value(justificante.presentation_id)
+    if metadata_expediente_id is not None:
+        has_csv_reference = metadata_csv is not None or bool(metadata_csvs)
+        if (presentation_id is None and not has_csv_reference) or (
+            presentation_id is not None and metadata_expediente_id.casefold() != presentation_id.casefold()
+        ):
+            blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
+    return blockers
+
+
+def _clean_metadata_value(value: str | None) -> str | None:
+    cleaned = (value or "").strip()
+    return cleaned or None
+
+
+def _clean_metadata_csvs(value: str | None) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(item.strip() for item in (value or "").split(",") if item.strip()))
 
 
 def _justificante_matches_filing(
@@ -824,7 +1090,9 @@ def _justificante_matches_filing(
     taxpayer_tax_id: str | None,
 ) -> bool:
     expected_tax_id = filing.member_nif or taxpayer_tax_id
-    tax_id_matches = expected_tax_id is None or justificante.tax_id.strip() == expected_tax_id.strip()
+    if expected_tax_id is None or not expected_tax_id.strip():
+        return False
+    tax_id_matches = justificante.tax_id.strip().upper() == expected_tax_id.strip().upper()
     return (
         justificante.modelo.strip() == str(filing.modelo)
         and str(justificante.ejercicio or "").strip() == str(filing.filing_year)
@@ -897,6 +1165,7 @@ def _evaluate_filing_history(
     justificante_repository: JustificanteRepository,
     taxpayer_tax_id: str | None,
     observation_source_kind: str | None,
+    observation_source_metadata: Mapping[str, str] | None,
     observation_values: Mapping[str, object],
     member_nif: str | None,
 ) -> _FilingHistory:
@@ -925,6 +1194,7 @@ def _evaluate_filing_history(
             observation_source_kind,
             justificante_repository,
             taxpayer_tax_id,
+            observation_source_metadata,
         ),
     )
     revision_state, revision_blockers = _filing_revision_blockers(
@@ -973,7 +1243,10 @@ __all__ = [
     "CrossPeriodDependencyOrigin",
     "CrossPeriodDependencyRequirement",
     "CrossPeriodExpectedMemberSet",
+    "NoPriorObligationProvenance",
+    "NoPriorObligationProvenanceKind",
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",
+    "partition_cross_period_requirements_by_activity_start",
 ]
