@@ -41,6 +41,7 @@ def _valid_inputs(*, ingresos: Decimal = Decimal("10000")) -> dict[str, Decimal]
 def _valid_bindings() -> dict[str, Decimal]:
     return {
         "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+        "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
     }
 

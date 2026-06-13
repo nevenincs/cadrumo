@@ -54,9 +54,7 @@ def _schema_provider(
     provider = _SCHEMA_PROVIDER_CACHE.get(key)
     if provider is None:
         typed_period = (
-            Period.from_year_and_code(filing_year, period)
-            if filing_year is not None and period is not None
-            else None
+            Period.from_year_and_code(filing_year, period) if filing_year is not None and period is not None else None
         )
         provider = build_runtime_schema_provider(
             filing_year=filing_year,
@@ -94,6 +92,7 @@ def _approved_registry_draft():
             "08": Decimal("0"),
             "10": Decimal("0"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),

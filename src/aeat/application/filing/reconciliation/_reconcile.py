@@ -64,6 +64,8 @@ class _RegistryReconciliationProvider(Protocol):
 # Shared with aeat.application.verification: "one cent" is the operator-visible
 # rounding floor on every monetary comparison across the CLI.
 _TOLERANCE: Final[Decimal] = Decimal("0.01")
+
+
 def reconcile(
     draft: ModeloDraft,
     justificante: Justificante | None,
