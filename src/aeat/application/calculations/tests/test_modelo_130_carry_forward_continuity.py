@@ -248,3 +248,67 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
         binding_values=dict(resolved),
     )
     assert Decimal(q2.casilla_values["15"]) == _EXPECTED_Q1_SALDO
+
+
+def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(repos: _Repos) -> None:
+    """Parity: the casilla-15 op=copy carry and the casilla-05 op=sum carry coexist.
+
+    The casilla-15 single-offset op=copy carry (binding
+    ``modelo-130-resultados-negativos-anteriores``) and the casilla-05
+    expanding-span op=sum carry (binding ``modelo-130-pagos-fraccionados-anteriores``)
+    both resolve from the same multi-quarter local store on a 3T target, proving the
+    expanding-span selector extension does not regress the single-offset carry
+    (the modelo-130-relation-regression guarantee).
+
+    Shared fixture (prior 1T/2T observations, engine-independent for this wiring gate):
+      1T: casilla 07 = +500 (a real pago fraccionado), casilla 16 = 60, saldo = 0
+      2T: casilla 07 = +300, casilla 16 = 40, saldo = 150 (a loss carried to 3T)
+
+    At 3T:
+      casilla-15 (op=copy, offset -1) = 2T saldo = 150 (the single immediately-prior quarter)
+      casilla-05 (op=sum, expanding span {1T, 2T}) = Σ max(0, 07) − Σ 16
+                = (500 + 300) − (60 + 40) = 700 (independently computed)
+    """
+    _wu_repo, _cr_repo, _bv_repo, obs_repo = repos
+    _seed_prior_year_m100(obs_repo)
+
+    obs_repo.save_observation(
+        RegistryModeloObservation(
+            modelo="130",
+            filing_year=2026,
+            period="1T",
+            observations=(
+                CasillaObservation(casilla_id="07", value=Decimal("500")),
+                CasillaObservation(casilla_id="16", value=Decimal("60")),
+                CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=Decimal("0")),
+            ),
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
+    )
+    obs_repo.save_observation(
+        RegistryModeloObservation(
+            modelo="130",
+            filing_year=2026,
+            period="2T",
+            observations=(
+                CasillaObservation(casilla_id="07", value=Decimal("300")),
+                CasillaObservation(casilla_id="16", value=Decimal("40")),
+                CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=Decimal("150")),
+            ),
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
+    )
+
+    snapshot_3t = resources().modelos.authority.snapshot("130", filing_year=2026, period="3T")
+    resolved = resolve_bindings_from_local_store(snapshot_3t, repository=obs_repo).binding_values
+
+    # Independent identity (a different code path than either binding):
+    expected_casilla_05 = (max(Decimal("0"), Decimal("500")) + max(Decimal("0"), Decimal("300"))) - (
+        Decimal("60") + Decimal("40")
+    )
+    assert expected_casilla_05 == Decimal("700")
+    assert resolved.get("modelo-130-pagos-fraccionados-anteriores") == expected_casilla_05
+    # The single-offset op=copy carry still reads exactly the immediately-prior quarter's saldo.
+    assert resolved.get(_CARRY_FORWARD_BINDING) == Decimal("150")
