@@ -729,16 +729,6 @@ def _translated_keys(table: dict[str, str], expected_keys: set[str]) -> set[str]
     return {key for key in expected_keys if key in table and table[key] != key}
 
 
-def _target_sort_key(target: ModeloLocaleFileTarget) -> tuple[str, str, str, str]:
-    """Return a deterministic sort key for locale file targets."""
-    return (
-        target.modelo_id,
-        target.scope.value,
-        target.revision_id or "",
-        target.locale.value,
-    )
-
-
 def _coerce_translation_table(raw: object, *, path: Path, table_name: str) -> dict[str, str]:
     """Return ``raw`` as a str-to-str translation table."""
     if not isinstance(raw, dict):
