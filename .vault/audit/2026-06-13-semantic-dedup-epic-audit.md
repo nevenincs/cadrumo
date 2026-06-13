@@ -246,6 +246,38 @@ standing cadence over the still-unswept functional surface, not as open
 remediation debt — F2's owner-gated `_formats` deletion is the one tracked
 open decision.
 
+## Execution update — behavior-preserving consolidations landed (F4, F6, F7)
+
+A directive correction reframed the campaign's action threshold: the
+substitutability pre-filter blocks only **behavior-changing** merges (F1's
+documented CIF legacy tolerance, F2's safety-critical encoder); every
+**behavior-preserving** consolidation — even of a trivial idiom — is to be
+landed, not deferred as "marginal." Under that corrected stance the following
+clusters, earlier recorded as ruled-out or queued, were consolidated and landed:
+
+- **F4 (now landed)** — `core.decimal.normalize_decimal_separators` (explicit
+  `strip_thousands` mode) promoted; the eight inline comma/dot separator sites in
+  `sede/_iva_compensation_wallet_parsing.py`, `sede/_censo.py`,
+  `registry/_export_parse.py`, `registry/_renta_web_open_oracle.py`, and
+  `inbound/pdf/_label_regex.py` redirected, each keeping its own validation,
+  symbol-stripping, locale-detection and error handling. 1080 parsing tests pass.
+- **F6 (landed)** — the live-CLI `_metric_line` formatter (3 identical copies)
+  and the auth-preflight registration guard (3 copies) consolidated onto
+  `_app_live_auth_preflight._metric_line` and a shared
+  `run_auth_preflight(preflight, *, family)`.
+- **F7 (landed)** — the live-CLI `_bucket_id` active-bucket guard (4 identical
+  copies: expedientes, justificante, notifications, verify) consolidated onto a
+  shared `resolve_active_bucket(active_bucket_id, *, family)`; the per-module
+  wrappers delegate, leaving 24 call sites unchanged.
+
+Running total: six clusters consolidated and landed (F3, F4, F5, F6, F7 plus the
+F4 separator kernel), removing roughly twenty-seven duplicate definitions/idioms,
+all behavior-preserving and individually tested. Still genuinely not actionable
+without a behavior change: **F1** (the strict-vs-legacy-tolerant tax-id surfaces
+diverge on the CIF leader set and return type) and **F2** (the dormant fichero
+`_formats` stack — an owner/ADR decision because it is the AEAT submission
+wire-format encoder).
+
 ## Recommendations
 
 Track each confirmed finding (F1–F3) as a plan phase whose steps name the
