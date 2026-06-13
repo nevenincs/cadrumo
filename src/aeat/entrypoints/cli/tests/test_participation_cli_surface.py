@@ -1,10 +1,10 @@
 """Surface contract for the ``ledger participation`` verb and ``track`` extension.
 
 Introspects the live Typer command tree (without invoking the CLI runtime) to
-assert the participation verb, its ``--include-borradores`` reserved flag, and
-the ``rebuild`` subcommand are registered, and that ``LedgerTrackResult`` carries
-the ``participated_in`` field. Also exercises the read action end-to-end against
-a real participation index built from a real revision lifecycle.
+assert the participation verb and the ``rebuild`` subcommand are registered, that
+no dead ``--include-borradores`` flag is shipped, and that ``LedgerTrackResult``
+carries the ``participated_in`` field. Also exercises the read action end-to-end
+against a real participation index built from a real revision lifecycle.
 """
 
 from __future__ import annotations
@@ -38,15 +38,26 @@ def _participation_group() -> typer.models.TyperInfo:
     return command.commands["participation"]
 
 
-def test_participation_verb_and_flag_are_registered() -> None:
-    """The participation group declares the id argument and the reserved flag."""
+def test_participation_verb_declares_subject_argument() -> None:
+    """The participation group declares the transaction-id subject argument."""
     group = _participation_group()
 
     param_names = {param.name for param in group.params}
     assert "transaction_id" in param_names
 
+
+def test_participation_verb_carries_no_dead_borradores_flag() -> None:
+    """The deferred ``--include-borradores`` flag is removed, not shipped dead.
+
+    The participation index records only finalized-revision participations;
+    borrador (draft) participation tracking is unbuilt. A dead operator-facing
+    flag whose help admitted "no effect yet" was removed rather than shipped, so
+    this guards against its re-introduction.
+    """
+    group = _participation_group()
+
     declared_opts = {opt for param in group.params for opt in getattr(param, "opts", [])}
-    assert "--include-borradores" in declared_opts
+    assert "--include-borradores" not in declared_opts
 
 
 def test_participation_rebuild_subcommand_is_registered() -> None:
