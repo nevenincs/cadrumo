@@ -213,6 +213,7 @@ def _seed_303_cross_period_sources(
             },
         )
 
+
 def _seed_legacy_source_filing_record(
     *,
     work_unit: WorkUnit,
@@ -530,8 +531,7 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
     fail_closed_findings = tuple(
         finding
         for finding in report.findings
-        if finding.kind.value == "cross_period_dependency_unclean"
-        and "no activity-start date" in finding.message
+        if finding.kind.value == "cross_period_dependency_unclean" and "no activity-start date" in finding.message
     )
     assert fail_closed_findings
     finding = fail_closed_findings[0]
@@ -591,17 +591,14 @@ def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking
     )
     assert advisory_findings
     assert all(finding.severity.value == "warning" for finding in advisory_findings)
-    assert {
-        f.message.split("period=")[1].split(" ")[0] for f in advisory_findings
-    } == {"1T", "2T", "3T"}
+    assert {f.message.split("period=")[1].split(" ")[0] for f in advisory_findings} == {"1T", "2T", "3T"}
     assert any("operator-declared activity-start date 2025-10-01" in f.message for f in advisory_findings)
     # The only BLOCKING cross-period finding is the in-scope alta-period 4T, never a
     # suppressed pre-activity quarter.
     blocking_cross_period = tuple(
         finding
         for finding in report.findings
-        if finding.kind.value == "cross_period_dependency_unclean"
-        and finding.severity.value == "blocking"
+        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
     )
     assert blocking_cross_period
     assert all("period=4T" in finding.message for finding in blocking_cross_period)

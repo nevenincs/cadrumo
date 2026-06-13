@@ -284,7 +284,9 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     _pre_mesh_handled: frozenset[str] = frozenset({"profile", "borrador", "iva_wallet_decision"})
     handled = frozenset(source_resolution.owned_sources) | _pre_mesh_handled
     unhandled = collect_unhandled_source_diagnostics(
-        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"}),
+        revision,
+        handled_sources=handled,
+        manual_sources=frozenset({"manual_input"}),
     )
     unrouted_income = [d for d in unhandled if d.source_kind == "ledger_renta_income_aggregation"]
     assert not unrouted_income, (
@@ -467,7 +469,9 @@ def test_s27_withholding_deferred_advisory_fires() -> None:
     # The live _handled set: relation_prefill is owned (enrolled resolver), withholding is not.
     handled = frozenset({"relation_prefill", "profile", "borrador", "iva_wallet_decision"})
     unhandled = collect_unhandled_source_diagnostics(
-        revision, handled_sources=handled, manual_sources=frozenset({"manual_input"}),
+        revision,
+        handled_sources=handled,
+        manual_sources=frozenset({"manual_input"}),
     )
     withholding_advisories = [
         d for d in unhandled if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"

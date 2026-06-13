@@ -368,7 +368,12 @@ class CalculationRevision(BaseModel):
         elif self.state is CalculationRevisionState.VERIFICADO_COMPLETO:
             self._require_set("verified_at", "verified_by")
             self._require_none(
-                "filed_at", "filed_by", "superseded_at", "discarded_at", "discarded_by", "discard_reason",
+                "filed_at",
+                "filed_by",
+                "superseded_at",
+                "discarded_at",
+                "discarded_by",
+                "discard_reason",
             )
         elif self.state is CalculationRevisionState.PRESENTADO:
             self._require_set("verified_at", "verified_by", "filed_at", "filed_by")

@@ -928,6 +928,7 @@ class RegistryQueryService:
         )
         return definition, snapshot.revision, registry_period
 
+
 def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
     """Build the typed binding rows for one revision.
 

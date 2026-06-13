@@ -18,4 +18,4 @@ side-effect. Making the domain registration independent of application bootstrap
 is a larger refactor tracked separately.
 """
 
-import aeat.application.wizard  # noqa: F401  -- side-effect import: registers profile keys
+from .....application import wizard as _wizard  # noqa: F401  -- side-effect import: registers profile keys

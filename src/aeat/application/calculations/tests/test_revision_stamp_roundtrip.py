@@ -273,7 +273,9 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
+            "303",
+            filing_year=_M303_CARRY_YEAR,
+            period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
@@ -309,7 +311,9 @@ def test_carry_missing_stamp_advises_and_carries(tmp_path: Path) -> None:
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
+            "303",
+            filing_year=_M303_CARRY_YEAR,
+            period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 
@@ -341,7 +345,9 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
         )
 
         snapshot = resources().modelos.authority.snapshot(
-            "303", filing_year=_M303_CARRY_YEAR, period=_M303_CARRY_TARGET_PERIOD,
+            "303",
+            filing_year=_M303_CARRY_YEAR,
+            period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(snapshot, repository=repo)
 

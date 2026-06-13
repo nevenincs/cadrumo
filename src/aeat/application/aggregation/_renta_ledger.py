@@ -389,7 +389,7 @@ def _classify_renta_transaction(
         transaction_id=transaction_id,
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         category_id=category_id,
-        signed_transaction_amount=eur_amount,
+        transaction_amount=eur_amount,
     )
     if isinstance(evidence_payload, RentaLedgerAggregationIssue):
         return evidence_payload
@@ -471,11 +471,12 @@ def _renta_direction_for(
 
 
 def _business_amount(
-    signed_amount: Decimal,
+    amount: Decimal,
     classification: BusinessClassification,
     business_pct: Decimal | None,
 ) -> Decimal | None:
-    amount = abs(signed_amount)
+    if amount < Decimal("0"):
+        raise ValueError("ledger amount must be a non-negative magnitude")
     proportion = business_proportion(classification, business_pct)
     if proportion is None:
         return None
@@ -489,7 +490,7 @@ def _purchase_invoice_evidence_payload(
     transaction_id: str,
     purchase_invoice_evidence_id: str | None,
     category_id: str | None,
-    signed_transaction_amount: Decimal,
+    transaction_amount: Decimal,
 ) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
     if purchase_invoice_evidence_id is None:
         return _PurchaseInvoiceEvidencePayload()
@@ -534,7 +535,7 @@ def _purchase_invoice_evidence_payload(
             reason=RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE,
             detail="first-slice aggregation only accepts one transaction per purchase invoice evidence record",
         )
-    if abs(signed_transaction_amount) != invoice.grand_total:
+    if transaction_amount != invoice.grand_total:
         return RentaLedgerAggregationIssue(
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,

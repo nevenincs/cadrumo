@@ -56,10 +56,14 @@ def profile_resolvable_binding_ids(
         raise RegistryValidationError(
             f"binding-readiness period {period} does not match filing year {filing_year}",
         )
-    resolved_period = period.registry_token if period is not None else _annual_period_for_year(
-        authority,
-        modelo=modelo,
-        filing_year=filing_year,
+    resolved_period = (
+        period.registry_token
+        if period is not None
+        else _annual_period_for_year(
+            authority,
+            modelo=modelo,
+            filing_year=filing_year,
+        )
     )
     if resolved_period is None:
         return frozenset()

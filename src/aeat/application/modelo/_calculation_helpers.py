@@ -103,7 +103,9 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
 
 
 def build_typed_observations(
-    *, engine_result: RegistryCalculationResult, snapshot: RegistrySnapshot,
+    *,
+    engine_result: RegistryCalculationResult,
+    snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
     """Build a :class:`CasillaObservation` tuple for every engine-result casilla.
 

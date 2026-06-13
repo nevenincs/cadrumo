@@ -11,7 +11,7 @@ silently halve every mixed-use deductible expense.
 
 Tests here are structural / contract assertions on the helpers, not
 calculation tautologies — `_business_amount` is verified against
-the helper's declared contract (apply pct to abs amount), not
+the helper's declared contract (apply pct to amount magnitude), not
 against any external authoritative-tax calculation.
 """
 
@@ -85,18 +85,17 @@ def test_renta_direction_for_incoming_without_invoice_is_unsupported() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _business_amount — apply BusinessClassification to the signed amount
+# _business_amount — apply BusinessClassification to the amount magnitude
 # ---------------------------------------------------------------------------
 
 
-def test_business_amount_business_classification_preserves_absolute_value() -> None:
-    """BUSINESS rows pass through abs(signed_amount); business_pct ignored."""
+def test_business_amount_business_classification_preserves_magnitude() -> None:
+    """BUSINESS rows pass through the canonical amount magnitude; business_pct ignored."""
     assert _business_amount(Decimal("100.00"), BusinessClassification.BUSINESS, None) == Decimal("100.00")
-    assert _business_amount(Decimal("-250.50"), BusinessClassification.BUSINESS, None) == Decimal("250.50")
 
 
 def test_business_amount_mixed_classification_scales_by_business_pct() -> None:
-    """MIXED rows multiply abs(amount) by the operator-declared
+    """MIXED rows multiply amount magnitude by the operator-declared
     business percentage — for example a 60% business-use phone bill of
     100 EUR yields a 60 EUR deductible base."""
     result = _business_amount(Decimal("100.00"), BusinessClassification.MIXED, Decimal("0.60"))
@@ -104,10 +103,9 @@ def test_business_amount_mixed_classification_scales_by_business_pct() -> None:
     assert result == Decimal("60.00")
 
 
-def test_business_amount_mixed_handles_negative_signed_amount_via_abs() -> None:
-    result = _business_amount(Decimal("-100.00"), BusinessClassification.MIXED, Decimal("0.30"))
-
-    assert result == Decimal("30.00")
+def test_business_amount_rejects_negative_amount() -> None:
+    with pytest.raises(ValueError, match="non-negative magnitude"):
+        _business_amount(Decimal("-100.00"), BusinessClassification.MIXED, Decimal("0.30"))
 
 
 def test_business_amount_personal_classification_returns_none() -> None:

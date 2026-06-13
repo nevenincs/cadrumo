@@ -38,7 +38,8 @@ def modelo_111_registry():
 
 @pytest.mark.parametrize("period", ["1T", "01"])
 def test_modelo_111_validated_snapshot_owns_workflow_surfaces(
-    modelo_111_registry: tuple[ModeloDefinition, RegistryCatalogues], period: str,
+    modelo_111_registry: tuple[ModeloDefinition, RegistryCatalogues],
+    period: str,
 ) -> None:
     modelo, catalogues = modelo_111_registry
     snapshot = build_snapshot(

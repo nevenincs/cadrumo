@@ -1,6 +1,5 @@
 """Shared support for modelo file-flow application tests."""
 
-
 from __future__ import annotations
 
 import asyncio

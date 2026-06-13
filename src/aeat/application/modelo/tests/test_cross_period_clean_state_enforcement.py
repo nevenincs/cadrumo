@@ -454,9 +454,12 @@ def test_no_prior_obligation_provenance_never_enters_official_source_kinds() -> 
     """
     for kind in NoPriorObligationProvenanceKind:
         assert kind.value not in _OFFICIAL_SOURCE_KINDS
-    assert frozenset(
-        {"aeat_sede_justificante", "aeat_sede_live_capture", "aeat_csv_register"},
-    ) == _OFFICIAL_SOURCE_KINDS
+    assert (
+        frozenset(
+            {"aeat_sede_justificante", "aeat_sede_live_capture", "aeat_csv_register"},
+        )
+        == _OFFICIAL_SOURCE_KINDS
+    )
 
 
 def test_first_local_filing_still_persists_under_non_official_app_filing() -> None:

@@ -34,7 +34,6 @@ from ._file_flow_support import (
     get_filing_record,
     get_work_unit,
     list_filing_records,
-    mark_revision_verificado_completo,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -69,13 +68,13 @@ def test_file_requires_verificado_completo_state(repos: _Repos) -> None:
 
 
 def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None:
-    """The happy-path file flow: calculate → mark verified-complete
+    """The happy-path file flow: calculate → verify
     → file. After file: a ModeloRecord exists, the revision is in
     FILED state, the work unit's filed_calculation_revision_id and
     current_filing_record_id pointers point at the new IDs, and
     filing-record current_for(...) resolves to the new record."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
     revision = calculate_modelo_revision(
@@ -87,10 +86,16 @@ def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verificado_completo(
+    _verify_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
     filing = _file_revision(
@@ -151,7 +156,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
     persisted.
     """
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -162,10 +167,16 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verificado_completo(
+    _verify_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
 
@@ -279,7 +290,7 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
     CURRENT. ``history_for(...)`` returns both records in
     filed_at order."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
     # First filing: revision-1, filed at T3.
@@ -292,10 +303,16 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verificado_completo(
+    _verify_revision(
         revision_one.calculation_revision_id,
+        revision=revision_one,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
     filing_one = _file_revision(
@@ -320,10 +337,16 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
         bucket_event_repository=bv_repo,
         clock=_T4,
     )
-    mark_revision_verificado_completo(
+    _verify_revision(
         revision_two.calculation_revision_id,
+        revision=revision_two,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T4,
     )
     filing_two = _file_revision(
@@ -399,7 +422,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
     """The default listing surfaces operator-visible state (current
     filings). Pass include_superseded=True to walk audit history."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
     revision_one = calculate_modelo_revision(
@@ -411,10 +434,16 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    mark_revision_verificado_completo(
+    _verify_revision(
         revision_one.calculation_revision_id,
+        revision=revision_one,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
     _file_revision(
@@ -438,10 +467,16 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
         bucket_event_repository=bv_repo,
         clock=_T4,
     )
-    mark_revision_verificado_completo(
+    _verify_revision(
         revision_two.calculation_revision_id,
+        revision=revision_two,
+        work_unit=work_unit,
         actor="operator-A",
+        work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T4,
     )
     _file_revision(

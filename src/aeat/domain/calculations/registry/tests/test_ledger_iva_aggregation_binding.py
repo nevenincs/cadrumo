@@ -134,7 +134,10 @@ def _calculate_390_from_observations_and_303_filings(
         for period, result in quarterly_results.items()
     )
     relation_values = resolve_relation_values_from_observations(
-        snapshot.revision, m303_observations, filing_year=filing_year, period="0A",
+        snapshot.revision,
+        m303_observations,
+        filing_year=filing_year,
+        period="0A",
     )
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**ledger_binding_values, **relation_binding_values}

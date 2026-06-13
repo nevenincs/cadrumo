@@ -248,8 +248,8 @@ class RegistryModeloObservation(BaseModel):
             return data
         try:
             filing_period = Period.from_year_and_code(filing_year, period)
-        except ValueError:
-            return data
+        except ValueError as exc:
+            raise RegistryValidationError("observation period must be a bare registry period token") from exc
         return {**data, "filing_period": filing_period}
 
     @field_validator("observations", mode="before")
@@ -264,10 +264,6 @@ class RegistryModeloObservation(BaseModel):
         if self.filing_period.filing_year != self.filing_year:
             raise RegistryValidationError("observation filing_period year must match filing_year")
         if self.filing_period.registry_token != self.period:
-            try:
-                Period.from_year_and_code(self.filing_year, self.period)
-            except ValueError:
-                return self
             raise RegistryValidationError("observation filing_period code must match period")
         return self
 

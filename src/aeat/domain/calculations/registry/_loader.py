@@ -460,7 +460,10 @@ def _apply_locales(modelo_dir: Path, merged_revisions: dict[str, object]) -> Non
     revision_translations = _load_revision_translations(modelo_dir)
     valid_casilla_ids, valid_continuidad_ids = _collect_valid_locale_ids(merged_revisions)
     _check_locale_referential_integrity(
-        modelo_translations, revision_translations, valid_casilla_ids, valid_continuidad_ids,
+        modelo_translations,
+        revision_translations,
+        valid_casilla_ids,
+        valid_continuidad_ids,
     )
     _inject_localized_translations(merged_revisions, modelo_translations, revision_translations)
 

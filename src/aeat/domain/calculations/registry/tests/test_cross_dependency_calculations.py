@@ -266,11 +266,20 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
 ) -> None:
     filing_year = 2025
     modelo_130_results = {}
+    # Casilla 05 ("Pagos fraccionados anteriores") is now a bound carry, so the
+    # cumulative prior-payment figure per quarter is supplied through the carry
+    # binding_value (the source of truth) rather than as a manual casilla input.
+    casilla_05_carry = {
+        "1T": Decimal("0"),
+        "2T": Decimal("500"),
+        "3T": Decimal("1100"),
+        "4T": Decimal("1800"),
+    }
     for period, inputs in {
         "1T": {"01": Decimal("10000"), "02": Decimal("3000"), "06": Decimal("100")},
-        "2T": {"01": Decimal("16000"), "02": Decimal("6000"), "05": Decimal("500"), "06": Decimal("250")},
-        "3T": {"01": Decimal("22000"), "02": Decimal("9000"), "05": Decimal("1100"), "06": Decimal("450")},
-        "4T": {"01": Decimal("28000"), "02": Decimal("12000"), "05": Decimal("1800"), "06": Decimal("650")},
+        "2T": {"01": Decimal("16000"), "02": Decimal("6000"), "06": Decimal("250")},
+        "3T": {"01": Decimal("22000"), "02": Decimal("9000"), "06": Decimal("450")},
+        "4T": {"01": Decimal("28000"), "02": Decimal("12000"), "06": Decimal("650")},
     }.items():
         modelo_130_results[period] = calculate_registry_snapshot(
             registry_snapshot("130", filing_year, period),
@@ -278,6 +287,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
                 "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+                "modelo-130-pagos-fraccionados-anteriores": casilla_05_carry[period],
             },
             date_context={"filing_period": _modelo_130_filing_date(filing_year, period)},
         )
