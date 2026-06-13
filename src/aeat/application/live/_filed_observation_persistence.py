@@ -1,6 +1,8 @@
 """Persist filed AEAT observations into calculation-history repositories.
 
-Use of :class:`CasillaObservation` for compliance.
+Use of :class:`CasillaObservation` for compliance. Stamps matching
+:class:`ModeloRecord` filings and appends the enrolment to the profile
+:class:`BucketEventHistoryRepository` audit trail.
 """
 
 from __future__ import annotations

@@ -4,7 +4,8 @@ Live capture services store observations as encrypted objects in a
 :class:`SecureObjectRepository` scoped to the active profile bucket.
 Parsed observations are typed as :class:`CasillaObservation` rows
 and routed through a :class:`ValidatedRegistryAuthority` to bind them
-to the correct revision.
+to the correct revision. Justificante capture stamps the matching
+:class:`ModeloRecord` filings with their local filing evidence.
 """
 
 from __future__ import annotations
