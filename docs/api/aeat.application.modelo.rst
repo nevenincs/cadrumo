@@ -36,6 +36,7 @@ Submodules
    aeat.application.modelo._maritime_preview
    aeat.application.modelo._official_box_advisory
    aeat.application.modelo._participation_index_rebuild
+   aeat.application.modelo._prior_payment_advisory
    aeat.application.modelo._profile_binding
    aeat.application.modelo._projection
    aeat.application.modelo._reconcile

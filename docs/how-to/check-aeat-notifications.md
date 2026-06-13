@@ -185,9 +185,9 @@ Reconstruct the history of past IVA compensation decisions from prior Modelo
 aeat app live iva-wallet pull-history --from-year 2020 --to-year 2026
 ```
 
-Capture past returns and pull the current remote state in a single run:
+Capture past returns and pull the current IVA evidence in a single read-only run:
 ```bash
-aeat app live iva-wallet pull-remote-state --from-year 2020 --to-year 2026 --target-year 2026 --target-period 4T
+aeat app live iva-wallet pull-evidence --from-year 2020 --to-year 2026 --target-year 2026 --target-period 4T
 ```
 
 ### View local history
