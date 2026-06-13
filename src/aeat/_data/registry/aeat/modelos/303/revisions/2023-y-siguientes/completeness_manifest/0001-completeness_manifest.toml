@@ -1,0 +1,153 @@
+# Modelo 303 calculation-completeness manifest.
+#
+# Enumerates the casillas in this revision's calculation closure -- every formula
+# target, every casilla referenced inside a formula expression, every
+# formula/binding endpoint casilla, and every verification-expectation operand.
+# Cross-modelo binding source casillas belong to foreign modelos and are
+# excluded. Derived off-load-path from the calculation surface; re-derived by the
+# record-design gate (test_record_design) and asserted to match this manifest.
+# Moved out of revision.toml into this fragment (directory-mode loader merges it)
+# to keep revision.toml under the reviewability baseline after the Stage-2 box
+# projections joined the closure. The ten official Diseño box numbers
+# (03/06/09/11/13/27/29/33/37/45) are now computed projection targets and part of
+# the closure.
+
+[revisions.2023-y-siguientes.completeness_manifest]
+source_ref = "aeat-dr-303-2025"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "109"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "110"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "58"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "64"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "65"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "66"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "68"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "69"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "70"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "71"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "76"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "77"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "78"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "87"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "compensacion-disponible-fin-periodo"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "compensacion-generada-periodo"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autoconsumo.promotor.base"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autoconsumo.promotor.cuota"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.soportado.importaciones"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.intracomunitaria.devengado"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.intracomunitaria.deducible"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autorepercutido.interior.deducible"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.cuota-deducible-total"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.cuota-devengada-total"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.repercutido.general"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.repercutido.reducido"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.repercutido.super-reducido"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.resultado-regimen-general"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.soportado.interiores"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "prorrata-porcentaje"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "prorrata-volumen-con-derecho"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "prorrata-volumen-total"
+
+# Official Diseño box projections (Stage 2): each numbered cuota box is now a
+# computed formula target that copies its semantic source, so it joins the
+# calculation-completeness surface.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "03"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "06"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "09"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "11"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "13"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "27"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "29"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "33"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "37"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "45"
