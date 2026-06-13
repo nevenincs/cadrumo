@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from typing import Final
 
 from sqlalchemy import Engine, text
@@ -99,13 +98,6 @@ def database_bytes(value: object) -> bytes:
     if isinstance(value, str):
         return value.encode(UTF_8_ENCODING)
     raise TypeError(f"database_bytes: expected bytes-like or str, found {type(value).__name__}")
-
-
-def database_datetime(value: object) -> datetime:
-    """Normalise SQLite datetime values returned through text queries."""
-    if isinstance(value, datetime):
-        return value
-    return datetime.fromisoformat(str(value))
 
 
 def quarantine_timestamp() -> str:

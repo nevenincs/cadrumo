@@ -381,15 +381,3 @@ def default_policy_table() -> Mapping[SensitivityClass, ClassificationPolicy]:
         mutate either.
     """
     return _DEFAULT_POLICY_TABLE
-
-
-def default_output_policy_table() -> Mapping[OutputSensitivityClass, OutputClassificationPolicy]:
-    """Return the immutable default-output-policy mapping.
-
-    Returns:
-        The shared :class:`MappingProxyType` view mapping each
-        :class:`OutputSensitivityClass` to its :class:`OutputClassificationPolicy`.
-        CLI public output is represented here rather than in the
-        persisted sensitivity table.
-    """
-    return _DEFAULT_OUTPUT_POLICY_TABLE

@@ -10,7 +10,7 @@ dependency direction onto :mod:`aeat.entrypoints.cli`.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Protocol
+from typing import Protocol, cast
 
 import click
 
@@ -42,7 +42,10 @@ def _current_context() -> _ContextLike | None:
         except ImportError:  # pragma: no cover - typer without a vendored fork
             return None
         ctx = _vendored_get(silent=True)
-    return ctx  # pyright: ignore[reportReturnType]  # reason: structural typing across the two Click runtimes
+    # CAST-RATIONALE-CLICK-CONTEXT: either Click runtime's context object is
+    # structurally a ``_ContextLike``; the concrete classes differ across the
+    # upstream and vendored forks, so the runtime type is asserted here.
+    return cast("_ContextLike | None", ctx)
 
 
 def _iter_context_chain() -> Iterable[_ContextLike]:
@@ -69,36 +72,13 @@ def current_cli_flag(name: str) -> bool:
         truthy; ``False`` otherwise.
     """
     for ctx in _iter_context_chain():
-        if isinstance(ctx.obj, dict) and name in ctx.obj:
-            return bool(ctx.obj[name])
-    return False
-
-
-def current_context_has_any(names: Iterable[str]) -> bool:
-    """Return ``True`` when any of ``names`` is truthy on an ancestor context.
-
-    Checks both ``ctx.params`` (the parsed CLI arguments for the
-    current command) and ``ctx.obj`` (the ad-hoc state dict callers
-    use to share root-level flags) for every candidate name on every
-    ancestor.
-
-    Args:
-        names: Candidate parameter / state names to probe.
-
-    Returns:
-        ``True`` if any name resolves to a truthy value anywhere on the
-        context chain; ``False`` otherwise (including when no context is
-        active).
-    """
-    candidates = tuple(names)
-    for ctx in _iter_context_chain():
-        for name in candidates:
-            if bool(ctx.params.get(name, False)):
-                return True
-        if isinstance(ctx.obj, dict):
-            for name in candidates:
-                if bool(ctx.obj.get(name, False)):
-                    return True
+        obj = ctx.obj
+        if isinstance(obj, dict):
+            # CAST-RATIONALE-CLICK-CONTEXT-OBJ: click types ctx.obj as Any; the
+            # isinstance guard above proves the str-keyed dict shape used here.
+            obj_map = cast("dict[str, object]", obj)
+            if name in obj_map:
+                return bool(obj_map[name])
     return False
 
 
@@ -160,7 +140,10 @@ def _context_layer_requests_json(ctx: _ContextLike) -> bool:
     """Return True when this single context layer carries any recognised JSON request."""
     if _params_request_json(ctx.params):
         return True
-    return isinstance(ctx.obj, dict) and _params_request_json(ctx.obj)
+    obj = ctx.obj
+    # CAST-RATIONALE-CLICK-CONTEXT-OBJ: click types ctx.obj as Any; the isinstance
+    # guard on the same expression narrows it to the str-keyed dict before lookup.
+    return isinstance(obj, dict) and _params_request_json(cast("dict[str, object]", obj))
 
 
 def _params_request_json(params: dict[str, object]) -> bool:
