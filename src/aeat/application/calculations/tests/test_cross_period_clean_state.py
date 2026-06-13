@@ -1216,7 +1216,7 @@ def test_cross_period_clean_state_blocks_filed_history_justificante_csv_mismatch
 def test_empty_pre_activity_span_produces_no_cross_period_blocker_for_genuine_first_filer(
     tmp_path: Path,
 ) -> None:
-    """ADR 2026-06-13: a genuine first filer with no prior obligations verifies clean.
+    """A genuine first filer with no prior obligations verifies clean.
 
     The M390/2025 target depends on the four 2025 M303 quarters. An activity-start
     date of 2026-01-01 places every dependency strictly before activity start, so
@@ -1254,7 +1254,7 @@ def test_empty_pre_activity_span_produces_no_cross_period_blocker_for_genuine_fi
 
 
 def test_alta_containing_period_stays_in_scope_as_first_obligation(tmp_path: Path) -> None:
-    """ADR 2026-06-13 ratified boundary: the alta-CONTAINING period is in scope.
+    """At the ratified boundary, the alta-CONTAINING period is in scope.
 
     With activity start on 2025-10-01 (the first day of 4T), the M390/2025
     dependency graph suppresses 1T/2T/3T (strictly prior) but keeps 4T - the
@@ -1287,7 +1287,7 @@ def test_alta_containing_period_stays_in_scope_as_first_obligation(tmp_path: Pat
 
 
 def test_activity_start_scoping_applies_to_both_requirement_origins(tmp_path: Path) -> None:
-    """ADR 2026-06-13: scoping is uniform across previous_filing and relation origins.
+    """Scoping is uniform across previous_filing and relation origins.
 
     M180/0A derives its prior-quarter dependencies via registry RELATIONS over
     M115; M303/4T derives its prior-quarter dependency via a PREVIOUS_FILING
@@ -1340,7 +1340,7 @@ def test_activity_start_scoping_applies_to_both_requirement_origins(tmp_path: Pa
 
 
 def test_real_prior_filing_post_dating_alta_still_blocks_anti_tautology(tmp_path: Path) -> None:
-    """ADR 2026-06-13 anti-tautology: a real prior obligation after the alta still blocks.
+    """Anti-tautology: a real prior obligation after the alta still blocks.
 
     The scoping is NOT a vacuous open: a dependency whose period is on or after the
     declared activity-start date stays in scope and still demands official AEAT
@@ -1369,7 +1369,7 @@ def test_real_prior_filing_post_dating_alta_still_blocks_anti_tautology(tmp_path
 
 
 def test_partition_keeps_non_calendar_anchors_in_scope(tmp_path: Path) -> None:
-    """ADR 2026-06-13: a dependency with no calendar span is never silently dropped.
+    """A dependency with no calendar span is never silently dropped.
 
     The strictly-before predicate is guarded by Period.has_date_span(); a period
     that cannot be positioned against a date (e.g. an instalment clave) stays in

@@ -4,7 +4,7 @@ Operator testimony across three rounds found that under ``--format json``
 every failure printed human prose (or a Rich usage box, or a raw
 traceback) to stderr with an empty stdout — the shared-spine
 ``ErrorEnvelope`` document mandated by the
-cli-envelope-notice-standardisation ADR never appeared on any reachable
+cli-envelope-notice-standardisation contract never appeared on any reachable
 failure. Two structural causes, both fixed and pinned here:
 
 - ``json_output_requested()`` resolved the current context from upstream

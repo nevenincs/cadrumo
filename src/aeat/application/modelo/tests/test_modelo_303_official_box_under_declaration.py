@@ -12,7 +12,7 @@ official numbered cuota box stayed zero (``input_kind = "manual"``), and the
 calculate path emitted an ``official_box_unpopulated`` advisory plus two ADVISORY
 ``implies_any_nonzero`` verify predicates.
 
-Stage 2 (2026-06-13 dual-keying ADR, this module) POPULATES every in-scope cuota
+Stage 2 (dual-keying, this module) POPULATES every in-scope cuota
 box by a single-source PROJECTION: each numbered box flips to
 ``input_kind = "computed"`` with a single-leaf formula copying its semantic source
 id, evaluated by the formula engine in topological order. The box therefore equals

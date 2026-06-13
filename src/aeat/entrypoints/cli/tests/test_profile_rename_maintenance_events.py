@@ -1,6 +1,6 @@
 """CLI tests for the ``config profile rename`` maintenance audit contract.
 
-The composition ADR (``2026-06-03-cli-workflow-redesign-adr``) mandates
+The composition contract mandates
 two-event co-emission per operator rename invocation: the inner
 single-writer primitive emits ``PROFILE_RENAMED`` (the data change) and
 the maintenance surface emits ``BUCKET_RENAMED`` (the operator's verb).
@@ -61,7 +61,7 @@ def test_cli_rename_co_emits_profile_renamed_and_bucket_renamed() -> None:
     The lifecycle event records the record relabel; the maintenance
     event records the operator's verb invocation. Before the CLI was
     routed through ``BucketMaintenanceService`` only ``PROFILE_RENAMED``
-    fired, so the ADR's two-event audit contract was dead at the actual
+    fired, so the two-event audit contract was dead at the actual
     operator surface.
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
