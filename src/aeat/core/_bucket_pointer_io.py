@@ -12,8 +12,12 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from . import BucketPointer
+
+if TYPE_CHECKING:  # pragma: no cover — annotation-only import
+    from .errors import AeatError
 
 _POINTER_FILENAME = "active-profile"
 
@@ -121,10 +125,48 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
     os.replace(tmp, target)
 
 
+def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[AeatError]) -> str:
+    """Resolve an explicit-or-active profile bucket id for a runtime repository.
+
+    Single canonical home for the per-domain repository bucket-id resolution
+    that the ``domain.modelos``, ``domain.filing``, and ``application.filing``
+    runtime-repository modules each previously copied verbatim, differing only
+    in the domain error they raise. An explicit, non-blank ``bucket_id`` is
+    returned trimmed; a blank explicit id or an absent active profile both
+    raise ``error_type`` (the caller's domain error) carrying the shared
+    ``no_active_profile_bucket`` message and a structured reason.
+
+    Args:
+        bucket_id: An explicit bucket id, or ``None`` to fall back to the
+            active profile bucket.
+        error_type: The caller's domain error class raised when no usable
+            bucket id can be resolved.
+
+    Returns:
+        The resolved bucket id.
+    """
+    if bucket_id is not None:
+        trimmed = bucket_id.strip()
+        if trimmed:
+            return trimmed
+        raise error_type(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+            context={"reason": "blank_explicit_bucket_id"},
+        )
+    active = resolve_active_bucket_id()
+    if active is None:
+        raise error_type(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+            context={"reason": "missing_active_profile_bucket"},
+        )
+    return active
+
+
 __all__ = [
     "pointer_path",
     "read_pointer",
     "require_active_bucket_id",
     "resolve_active_bucket_id",
+    "resolve_repository_bucket_id",
     "write_pointer",
 ]

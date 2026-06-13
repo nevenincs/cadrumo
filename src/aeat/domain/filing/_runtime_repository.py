@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core import resolve_active_bucket_id
+from ...core import resolve_repository_bucket_id
 from ._errors import ModeloDraftError
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -17,21 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 def resolve_filing_repository_bucket_id(bucket_id: str | None) -> str:
     """Return an explicit or active profile bucket id for filing repositories."""
-    if bucket_id is not None:
-        trimmed = bucket_id.strip()
-        if trimmed:
-            return trimmed
-        raise ModeloDraftError(
-            context={"reason": "blank_explicit_bucket_id"},
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-        )
-    active = resolve_active_bucket_id()
-    if active is None:
-        raise ModeloDraftError(
-            context={"reason": "missing_active_profile_bucket"},
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-        )
-    return active
+    return resolve_repository_bucket_id(bucket_id, error_type=ModeloDraftError)
 
 
 def secure_objects_for_filing_bucket(bucket_id: str) -> SecureObjectRepository:

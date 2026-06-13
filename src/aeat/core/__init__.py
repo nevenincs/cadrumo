@@ -53,6 +53,7 @@ if TYPE_CHECKING:
         read_pointer,
         require_active_bucket_id,
         resolve_active_bucket_id,
+        resolve_repository_bucket_id,
         write_pointer,
     )
 
@@ -80,6 +81,7 @@ __all__: list[str] = [
     "read_toml",
     "require_active_bucket_id",
     "resolve_active_bucket_id",
+    "resolve_repository_bucket_id",
     "to_str_keyed_dict",
     "write_pointer",
 ]
@@ -98,6 +100,7 @@ def __getattr__(name: str) -> object:
         "pointer_path",
         "read_pointer",
         "resolve_active_bucket_id",
+        "resolve_repository_bucket_id",
         "require_active_bucket_id",
         "write_pointer",
     ):
