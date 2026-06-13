@@ -41,7 +41,6 @@ def test_authority_snapshot_runs_real_modelo_calculation() -> None:
         inputs={
             "01": Decimal("10000.00"),
             "02": Decimal("4000.00"),
-            "05": Decimal("100.00"),
             "06": Decimal("50.00"),
             "08": Decimal("5000.00"),
             "10": Decimal("20.00"),
