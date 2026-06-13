@@ -2731,6 +2731,8 @@ cli:
       warning: Avís
       warnings: Avisos
       'yes': Sí
+      purchase_invoice_evidence_id: 'Evidència de factura de compra'
+      attachment_ids: 'Adjunts'
     link:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:

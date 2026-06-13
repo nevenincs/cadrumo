@@ -509,6 +509,9 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"{tr('cli.ledger.labels.irpf_category', default='IRPF category')}"
             f"\t{_field(transaction_payload.irpf_category)}",
             f"{tr('cli.ledger.labels.notes', default='Notes')}\t{_field(transaction_payload.notes)}",
+            f"{tr('cli.ledger.labels.purchase_invoice_evidence_id')}"
+            f"\t{_field(transaction_payload.purchase_invoice_evidence_id)}",
+            f"{tr('cli.ledger.labels.attachment_ids')}\t{_field(', '.join(transaction_payload.attachment_ids))}",
             f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
             f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
         ]
