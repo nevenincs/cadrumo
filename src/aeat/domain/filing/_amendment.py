@@ -33,8 +33,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ...core import Period
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ._protocols import ModeloInputs
 from ._schema import ModeloDraft
 
