@@ -185,3 +185,29 @@ specified, with exec records); the ADR's broader operator-facing on-host vision
 read is honestly recorded here as **not shipped** and deferred to the
 `llm-evidence-vision-consumer` follow-up, rather than implied complete by the
 38/38 count.
+
+## Follow-up landed: `llm-evidence-vision-consumer`
+
+The deferred follow-up has now shipped, closing H1/H2/M1/L1.
+
+- **H1/H2 (closed).** `_resolve_evidence` routes a text-layer PDF to the cloud
+  subprocess classifier (consent-gated) and a scan-only PDF or image to the new
+  `LocalVisionLLMClassifier`, which reads the in-memory rasterised pages with a
+  local Ollama vision model (`aeat_llm_ollama_vision_model`) via
+  `LLMClient`/`LocalAdapter` and parses through the same allow-list. The on-host
+  image read needs no cloud consent and is permitted for gestor deployments, so a
+  gestor now has a working evidence-read path. The domain prompt gained the
+  `evidence_image_present` vision instruction; provenance stamps
+  `llm:local-vision:<model>`. Operator-reachable through the existing
+  `classify --read-evidence` / `split --read-evidence` flow with no new flag.
+- **M1 (closed).** The S18 multimodal cache key now has a live consumer (the
+  vision path's `LLMClient` calls).
+- **L1 (closed).** The "until the on-host vision reader lands" phrasing is gone;
+  the surviving comments are accurate capability statements now that the reader
+  is wired.
+- **Verification.** 3 real-behaviour vision tests (loopback Ollama, in-memory
+  rasterise, gestor-allowed), the updated wiring test, 465 ledger+domain+llm
+  regression, lint+ty clean, nitpicky docs build green, documented-command
+  conformance green. The classify how-to documents both read paths. The bytes
+  never leave secure storage and the model still never emits a regulated number.
+  Landed on `chore/eliminate-shims` (vision wiring + how-to).
