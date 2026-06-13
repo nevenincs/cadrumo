@@ -55,6 +55,9 @@ from ..errors import (
     SecretNotFoundError,
     StorageValidationError,
 )
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
 from ..master_key._active_session import get_active_master_key
 from ..master_key._master_key import MasterKeyProvider
 
@@ -63,11 +66,6 @@ _log = get_logger(__name__)
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
 _HKDF_CONTEXT_SECRET_LOOKUP = b"aeat.secret_store.lookup.v1"
-_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
-
-
-def _storage_validation_error(message: str) -> StorageValidationError:
-    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 class SecretRecord(BaseModel):

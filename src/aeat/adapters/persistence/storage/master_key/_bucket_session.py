@@ -27,17 +27,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from .....core.errors import CoreValidationError
 from .....core.logging import get_logger
 from ..bucket._errors import BucketLockedError
-from ..errors import StorageValidationError
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
 from ._zeroise import zeroise as _zeroise
 
 _KEK_BYTES = 32
 _DEK_BYTES = 32
-_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
 _log = get_logger(__name__)
-
-
-def _storage_validation_error(message: str) -> StorageValidationError:
-    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 class BucketSession:

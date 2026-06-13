@@ -23,15 +23,12 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..errors import StorageValidationError
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
 from ._bucket_session import BucketSession
 
 DEFAULT_IDLE_LOCK_MINUTES = 15
-_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
-
-
-def _storage_validation_error(message: str) -> StorageValidationError:
-    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 class IdleEvaluation(BaseModel):

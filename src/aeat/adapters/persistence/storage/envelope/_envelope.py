@@ -50,14 +50,12 @@ from ..errors import (
     EnvelopeVersionError,
     StorageValidationError,
 )
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
 from ..master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
-_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
-
-
-def _storage_validation_error(message: str) -> StorageValidationError:
-    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 def _read_envelope_text(path: Path) -> str:
