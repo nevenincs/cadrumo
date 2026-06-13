@@ -5,6 +5,9 @@ tags:
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
 related:
+  - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S01]]'
+  - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S02]]'
+  - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S03]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P02-S04]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P02-S05]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P02-S06]]'
@@ -34,6 +37,9 @@ Auto-generated index of all documents tagged with `#modelo-130-pagos-fraccionado
 
 ### exec
 
+- `2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S01` - check git status for peer WIP, then add a target-relative prior-quarter expanding-span selector mode to _PreviousModeloSelector that resolves to all same-ejercicio quarters strictly preceding the target (2T to {1T}, 3T to {1T,2T}, 4T to {1T,2T,3T}), bounded by max_year_delta 0, emitting a tuple of (year_delta, period) anchors into the existing required_period_anchors_for_target path
+- `2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S02` - extend _PreviousModeloSelector model validation so the new span mode is mutually exclusive with period, source_periods, and source_period_offset_from_target and stays a direct previous_filing binding under _is_direct_previous_filing_binding, then verify the relation-source collision gate validate_slot_source_hygiene accepts the new mode without a carve-out
+- `2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S03` - add a selector unit test asserting the expanding-span mode emits the correct anchor set per target (1T empty, 2T={1T}, 3T={1T,2T}, 4T={1T,2T,3T}) and that the collision gate plus _is_direct_previous_filing_binding classify it as a direct previous_filing binding, computing expected anchors by an independent enumeration not the selector method under test
 - `2026-06-13-modelo-130-pagos-fraccionados-carry-P02-S04` - check git status for peer WIP on the M130 registry, then flip casilla 05 from input_kind manual to bound and add the previous_filing span binding selecting source_modelo 130 with the new expanding-span mode, carrying raw prior casilla 07 and casilla 16 anchors with aggregation op sum
 - `2026-06-13-modelo-130-pagos-fraccionados-carry-P02-S05` - author the casilla 05 registry formula computing sum of per-quarter max(0, prior 07_q) minus sum of prior 16_q (positive-part per quarter before summing, minoracion subtracted), preserving the carried prior-filing values unmodified (shape 2a)
 - `2026-06-13-modelo-130-pagos-fraccionados-carry-P02-S06` - ground the casilla 05 binding and formula source_citations in the verbatim AEAT instrucciones casilla-05 definition with required_text drawn from the suma-de-las-cantidades-positivas-casilla-07-minorada-casilla-16 quote, per registry-calculation-legal-grounding

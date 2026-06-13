@@ -282,10 +282,15 @@ not remove the dead end; it relocates it.
 
 The chosen design keeps the sound axis (activity-start) but sources it from the
 field that is actually populated - the operator-declared `activity_start_date`,
-which the deadline engine already trusts for the identical pre-alta suppression
-decision. Reusing the exact field and the exact suppression semantics the deadline
-engine relies on makes this a consistent, already-precedented narrowing rather
-than a novel authority claim. The declared date is stamped operator-declared with
+which the deadline engine already trusts for the pre-alta suppression decision on
+the same activity-start axis. The suppression predicate compares the period-span
+boundary against the declared date (`period.end_date < activity_start_date`),
+rather than the deadline engine's `closes_on < activity_start_date`; because a
+period's `end_date` never falls after its `closes_on`, the predicate is strictly
+conservative relative to the deadline engine (it suppresses no later than, and
+typically earlier than, the deadline-engine comparison would). Reusing the exact
+field and a suppression rule on the same axis makes this a consistent,
+already-precedented narrowing rather than a novel authority claim. The declared date is stamped operator-declared with
 an advisory and is reconciled against - and upgradable to - the AEAT censo
 snapshot the moment the live surface is corrected and works. This is
 "operator-declared now, censo-corroborated when available", and it is the only

@@ -106,9 +106,9 @@ Extend _PreviousModeloSelector with a target-relative prior-quarter expanding-sp
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - check git status for peer WIP, then add a target-relative prior-quarter expanding-span selector mode to _PreviousModeloSelector that resolves to all same-ejercicio quarters strictly preceding the target (2T to {1T}, 3T to {1T,2T}, 4T to {1T,2T,3T}), bounded by max_year_delta 0, emitting a tuple of (year_delta, period) anchors into the existing required_period_anchors_for_target path; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.
-- [ ] `P01.S02` - extend _PreviousModeloSelector model validation so the new span mode is mutually exclusive with period, source_periods, and source_period_offset_from_target and stays a direct previous_filing binding under _is_direct_previous_filing_binding, then verify the relation-source collision gate validate_slot_source_hygiene accepts the new mode without a carve-out; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.
-- [ ] `P01.S03` - add a selector unit test asserting the expanding-span mode emits the correct anchor set per target (1T empty, 2T={1T}, 3T={1T,2T}, 4T={1T,2T,3T}) and that the collision gate plus _is_direct_previous_filing_binding classify it as a direct previous_filing binding, computing expected anchors by an independent enumeration not the selector method under test; `src/aeat/domain/calculations/registry/tests/test_bindings_previous_filing.py`.
+- [x] `P01.S01` - check git status for peer WIP, then add a target-relative prior-quarter expanding-span selector mode to _PreviousModeloSelector that resolves to all same-ejercicio quarters strictly preceding the target (2T to {1T}, 3T to {1T,2T}, 4T to {1T,2T,3T}), bounded by max_year_delta 0, emitting a tuple of (year_delta, period) anchors into the existing required_period_anchors_for_target path; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.
+- [x] `P01.S02` - extend _PreviousModeloSelector model validation so the new span mode is mutually exclusive with period, source_periods, and source_period_offset_from_target and stays a direct previous_filing binding under _is_direct_previous_filing_binding, then verify the relation-source collision gate validate_slot_source_hygiene accepts the new mode without a carve-out; `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`.
+- [x] `P01.S03` - add a selector unit test asserting the expanding-span mode emits the correct anchor set per target (1T empty, 2T={1T}, 3T={1T,2T}, 4T={1T,2T,3T}) and that the collision gate plus _is_direct_previous_filing_binding classify it as a direct previous_filing binding, computing expected anchors by an independent enumeration not the selector method under test; `src/aeat/domain/calculations/registry/tests/test_bindings_previous_filing.py`.
 
 ### Phase `P02` - Registry binding: flip casilla 05 manual to bound
 
@@ -183,57 +183,8 @@ a future ADR if needed.
 
 ## Steps
 
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
-
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
-
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
-
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
-
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
-
-     One sentence stating what this Phase delivers.
-
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
-
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
-
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
-
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorising documents back it.
-
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
-
-     The Wave intent paragraph is mandatory. -->
-
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
-
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
-
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
-
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
+The Step rows are authored under the `### Phase` blocks above (P01 through
+P04). This tier (L2) groups Steps beneath Phases.
 
 ## Parallelization
 
