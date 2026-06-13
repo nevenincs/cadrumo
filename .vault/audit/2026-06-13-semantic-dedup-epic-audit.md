@@ -270,13 +270,30 @@ clusters, earlier recorded as ruled-out or queued, were consolidated and landed:
   shared `resolve_active_bucket(active_bucket_id, *, family)`; the per-module
   wrappers delegate, leaving 24 call sites unchanged.
 
-Running total: six clusters consolidated and landed (F3, F4, F5, F6, F7 plus the
-F4 separator kernel), removing roughly twenty-seven duplicate definitions/idioms,
-all behavior-preserving and individually tested. Still genuinely not actionable
-without a behavior change: **F1** (the strict-vs-legacy-tolerant tax-id surfaces
-diverge on the CIF leader set and return type) and **F2** (the dormant fichero
-`_formats` stack — an owner/ADR decision because it is the AEAT submission
-wire-format encoder).
+- **F8 (landed)** — the two byte-identical `_require_transaction` guards in
+  `application/ledger/_review_projection.py` and `_actions_common.py` consolidated
+  onto the canonical in `_actions_common`; the domain-layer
+  `_service._require_transaction` (no application context) stays separate.
+
+Running total: **six clusters** consolidated and landed (F3, F4, F5, F6, F7, F8),
+removing roughly thirty duplicate definitions/idioms, all behavior-preserving and
+individually tested. Still genuinely not actionable without a behavior change:
+**F1** (the strict-vs-legacy-tolerant tax-id surfaces diverge on the CIF leader
+set and return type) and **F2** (the dormant fichero `_formats` stack — an
+owner/ADR decision because it is the AEAT submission wire-format encoder).
+
+**Structural sweep exhausted.** A whole-tree scan of production function/class
+names defined in three or more files was driven to completion. Every remaining
+same-named cluster resolves to one of: already-consolidated thin wrappers that
+delegate to a shared canonical (`_parse_date`, `_bucket_id` post-F7, the
+per-domain repository factories), divergent same-named implementations with
+distinct contracts (`_snapshot_from_record`, `_drive_service`, `_load`,
+`_enum_value`, the tax-id and decimal-parse wrappers), trivial one-line aliases of
+an already-canonical function (`_repository`), or test fixtures. No further clean,
+behavior-preserving, substantial duplication remains on the swept surface; the
+codebase is verifiably lean against both the semantic-concept and structural-name
+discovery instruments, with F1 and F2 the two documented, intentionally-retained
+exceptions.
 
 ## Recommendations
 
