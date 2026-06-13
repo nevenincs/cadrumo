@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#fichero-boe-export-layouts'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-21-fichero-boe-export-layouts-P01-S01]]'
   - '[[2026-05-21-fichero-boe-export-layouts-P01-S02]]'

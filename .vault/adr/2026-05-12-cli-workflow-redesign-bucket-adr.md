@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
+modified: '2026-05-12'
 related:
   - "[[2026-05-12-cli-design-research]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
@@ -49,10 +50,10 @@ must be recorded in separate ADRs as they are approved.
   bucket-level operations remain storage maintenance surfaces.
 - A bucket is the profile-scoped storage slice. It is not a backup archive and
   not a loose namespace bundle.
-- Bucket management is a `config` responsibility. The approved command surface
-  is `aeat config bucket`, not `aeat app bucket`.
-- `aeat config bucket` is a storage modification, recovery, and inspection
-  surface. It is not the normal operational UX for ledger or modelo work.
+- Bucket management is a backend/application storage responsibility. The older
+  `aeat config bucket` command surface is retired; future operator exposure
+  must use profile-named vocabulary rather than `aeat app bucket` or
+  `aeat config bucket`.
 - Normal UX should not require users to touch buckets directly; `app` domains
   drive the contents of the active bucket through backend services.
 - Profile data itself must live inside the profile's bucket.
@@ -76,16 +77,14 @@ must be recorded in separate ADRs as they are approved.
 ## Implementation
 
 The `archive` product surface is rejected for profile-scoped data management.
-Its replacement is:
-
-- `aeat config bucket`
-
-`aeat config bucket` owns profile-scoped storage management. These are
-storage-level operations for inspection, portability, recovery, and explicit
-maintenance, not day-to-day ledger or modelo workflow commands:
+The later operator-surface ADR also rejects the older `aeat config bucket`
+replacement. Profile-scoped storage management now lives behind the
+application-layer `BucketMaintenanceService`. These are storage-level
+operations for inspection, portability, recovery, and explicit maintenance,
+not day-to-day ledger or modelo workflow commands:
 
 - browse bucket contents
-- search bucket contents
+- search bucket contents, deferred to the accepted bucket-search ADR
 - export bucket data
 - import bucket data
 - rename bucket display metadata
@@ -117,7 +116,7 @@ Modelo semantics reflected by follow-up ADRs:
 `aeat app` and `aeat config` are the only top-level redesigned roots for
 operator use:
 
-- `aeat config`: profile lifecycle, bucket lifecycle (`aeat config bucket`),
+- `aeat config`: profile lifecycle, profile-named storage history,
   first-run/setup/init migration, and other durable environment/configuration
   state.
 - `aeat app`: operational tax workflows such as ledger financial transaction,
@@ -166,9 +165,9 @@ lands its own plan + exec record; this ADR fixes the scope.
 
 ## Consequences
 
-- root `aeat archive` is removed in favor of `aeat config bucket`.
-- archive bundle behavior moves under `aeat config bucket`; old archive
-  entrypoints do not remain executable.
+- root `aeat archive` is removed. Export/import/browse behavior remains behind
+  `BucketMaintenanceService` until a profile-named operator surface is
+  accepted; old archive entrypoints do not remain executable.
 - storage migrations are required for each persistence layer named in the
   bucket-link migration scope above; the redesigned operator tree must not
   consume a non-bucket-linked repository.
@@ -219,10 +218,11 @@ methods on the active profile bucket:
 - `delete(bucket_id, confirmed=False)` - destructive erase; refuses
   unless `confirmed=True`; emits `bucket.deleted` event before erase.
 
-Required CLI surface: `aeat config bucket {browse, search, export,
-import, rename, delete}` as thin handlers under the existing
-`bucket_app` Typer group. All handlers MUST delegate to the service,
-render via `_emit`, route errors through `command_error_boundary`.
+Superseded CLI surface: the earlier `aeat config bucket {browse, search,
+export, import, rename, delete}` requirement is retired by the 2026-06-10
+operator-surface ADR. A future operator surface must use profile-named
+vocabulary, delegate to the application service, render via `_emit`, and route
+errors through `command_error_boundary`.
 
 Required `BucketEventType` additions: `BUCKET_EXPORTED`,
 `BUCKET_IMPORTED`, `BUCKET_RENAMED`, `BUCKET_DELETED`. The maintenance
@@ -303,3 +303,26 @@ The composition discipline itself is codified as the project rule
 `composition-service-no-parallel-write-path` so future services
 that overlap an existing single-writer contract delegate rather
 than re-implement.
+
+## 2026-06-12 amendment - operator-facing `config bucket` retired
+
+The 2026-06-10 operator-surface ADR supersedes this ADR's operator-facing
+`aeat config bucket` command group. The storage noun remains valid inside
+backend, domain, persistence, event, and machine-contract terminology, but it is
+not an operator-facing CLI noun. Do not register or restore a `bucket_app`
+Typer group for operators.
+
+The accepted event-history surface is `aeat config profile history PROFILE`.
+It resolves the operator-supplied profile to the immutable bucket id before
+reading `BucketEventHistoryRepository`. The JSON envelope key remains
+`config.bucket.history` as a stable machine API; that token is not an operator
+alias and must not be used to justify a returned `config bucket` command.
+
+The `BucketMaintenanceService` composition pattern remains the backend owner
+for profile storage lifecycle operations. On 2026-06-12 the service ships
+`browse`, `export`, `import`, `rename`, and `delete` through the existing
+single-writer primitives and sealed-archive adapters. Search remains deferred
+to the accepted bucket-search ADR and must dispatch through domain repositories.
+Future CLI exposure for any of these operations must be designed in
+profile-named operator vocabulary and must continue to consume the application
+service rather than opening storage directly.

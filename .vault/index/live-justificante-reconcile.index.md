@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-justificante-reconcile'
-date: '2026-06-10'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-live-justificante-reconcile-P01-S01]]'
   - '[[2026-06-10-live-justificante-reconcile-P01-S02]]'

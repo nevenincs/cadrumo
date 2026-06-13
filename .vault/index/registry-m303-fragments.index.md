@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-m303-fragments'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-02-registry-m303-fragments-code-review-audit]]'
 ---

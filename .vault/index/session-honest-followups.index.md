@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#session-honest-followups'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-02-session-honest-followups-plan]]'
   - '[[2026-06-04-session-honest-followups-adr]]'

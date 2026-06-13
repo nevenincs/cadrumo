@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-disaster'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
   - '[[2026-05-19-profile-lifecycle-disaster-axis-a-session-activation-research]]'

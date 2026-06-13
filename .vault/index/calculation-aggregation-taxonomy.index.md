@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-aggregation-taxonomy'
-date: '2026-06-10'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-research]]'

@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-130-100-continuity'
-date: '2026-06-10'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-modelo-130-100-continuity-plan]]'
   - '[[2026-06-10-modelo-130-100-continuity-research]]'

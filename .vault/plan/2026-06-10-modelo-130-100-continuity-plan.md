@@ -3,12 +3,12 @@ tags:
   - '#plan'
   - '#modelo-130-100-continuity'
 date: '2026-06-10'
+modified: '2026-06-10'
 tier: L2
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
+  - '[[2026-06-10-modelo-130-100-continuity-research]]'
 ---
-
-
 # `modelo-130-100-continuity` `Annual M100 fold-in of quarterly M130 pagos fraccionados` plan
 
 ### Phase `P01` - Ground and decide

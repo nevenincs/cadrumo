@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#fichero-boe-golden-sha-contract-shape'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-fichero-boe-golden-sha-contract-shape-adr]]'
   - '[[2026-06-04-fichero-boe-golden-sha-contract-shape-research]]'

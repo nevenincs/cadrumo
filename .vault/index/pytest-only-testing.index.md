@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pytest-only-testing'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-04-17-pytest-only-testing-adr]]'
   - '[[2026-04-17-pytest-only-testing-plan]]'

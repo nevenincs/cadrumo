@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#inss-art7h-exempt'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-27-inss-art7h-exempt-S186]]'
   - '[[2026-06-04-inss-art7h-exempt-adr]]'

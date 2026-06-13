@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#synthetic-fixture-primitive-encoding-discipline'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]'
   - '[[2026-06-04-synthetic-fixture-primitive-encoding-discipline-research]]'

@@ -3,21 +3,13 @@ tags:
   - '#plan'
   - '#calculation-engine-foundations'
 date: '2026-06-10'
+modified: '2026-06-10'
 tier: L4
 related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `calculation-engine-foundations` `Calculation-engine foundations: aggregation taxonomy + period-revision resolution` plan
 

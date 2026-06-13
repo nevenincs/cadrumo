@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#calendar-filing-semantics'
 date: '2026-06-05'
+modified: '2026-06-05'
 tier: L3
 related:
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
@@ -12,15 +13,6 @@ related:
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `calendar-filing-semantics` `implementation` plan
 

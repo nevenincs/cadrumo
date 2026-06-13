@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#inventory-management'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-04-29-inventory-management-adr]]'
   - '[[2026-04-29-inventory-management-code-review-audit]]'

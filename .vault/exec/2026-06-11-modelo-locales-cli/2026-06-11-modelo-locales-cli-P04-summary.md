@@ -1,6 +1,7 @@
 ---
 tags: ['#exec', '#modelo-locales-cli']
 date: '2026-06-11'
+modified: '2026-06-11'
 related:
   - '[[2026-06-11-modelo-locales-cli-plan]]'
 ---
@@ -25,3 +26,5 @@ The seeded non-Spanish schema-local locale files for M100, M130, M200, and M303 
 P04 exposed and fixed a manager bug in all-revision inventory deduplication: revision-local keys now include `revision_id` in their identity, preventing translations from one revision from being treated as stale because the same casilla id appears in another revision. The M100 seeded leaves were restored through `python -m aeat.locales modelo set`.
 
 The plan now records campaign usage and seeded coverage, the project rule `modelo-locales-cli-authority` codifies the CLI-only TOML workflow, and the research handoff records the remaining translation backlog. Focused ruff, pytest, generic locale audit/scaffold checks, seeded coverage, and plan check passed.
+
+Follow-up closeout on 2026-06-12 added the three M100 2024 language-slice rows that were missing from the plan handoff. Catalan and English were verified complete for present keys through `1856`; Hungarian help placeholders `1838` through `1856` were filled through `python -m aeat.locales modelo set`. All three locales now report M100 2024 coverage of `etiquetas=1797/2068 ayuda=1797/2068`, with the next untranslated placeholders beginning at `1857`.

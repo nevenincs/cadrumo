@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#suite-redgreen-longtail-discovery'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-suite-redgreen-longtail-discovery-audit]]'
 ---

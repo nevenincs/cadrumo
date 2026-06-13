@@ -3,26 +3,13 @@ tags:
   - '#reference'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace m303-form-vs-semantic-casilla-dual-keying with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `m303-form-vs-semantic-casilla-dual-keying` reference: `M303 official box to semantic source projection map`
 

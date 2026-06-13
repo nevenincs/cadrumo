@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#multi-row-modelo-declaration'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-27-multi-row-modelo-declaration-adr]]'
   - '[[2026-06-04-multi-row-modelo-declaration-research]]'

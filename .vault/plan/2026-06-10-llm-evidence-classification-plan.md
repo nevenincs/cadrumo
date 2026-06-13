@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#llm-evidence-classification'
 date: '2026-06-10'
+modified: '2026-06-10'
 tier: L3
 related:
   - '[[2026-06-10-llm-evidence-classification-adr]]'
@@ -10,15 +11,6 @@ related:
   - '[[2026-06-04-llm-ledger-classification-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 <!-- RETIRED: W05 -->
 

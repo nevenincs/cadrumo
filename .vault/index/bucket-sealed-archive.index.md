@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bucket-sealed-archive'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-bucket-sealed-archive-adr]]'
   - '[[2026-06-04-bucket-sealed-archive-research]]'

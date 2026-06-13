@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pr28-storage-retro'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-04-12-pr28-storage-retro-audit]]'
   - '[[2026-04-12-pr28-storage-retro-research]]'

@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schema-hardening-coti'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-22-schema-hardening-coti-P01-S01]]'
   - '[[2026-05-22-schema-hardening-coti-P01-S02]]'

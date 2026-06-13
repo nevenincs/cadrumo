@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#module-test-coverage'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-01-module-test-coverage-plan]]'
   - '[[2026-06-04-module-test-coverage-adr]]'

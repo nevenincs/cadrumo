@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#secure-storage-legacy-path-audit'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-08-secure-storage-legacy-path-audit-reference]]'
 ---

@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
+modified: '2026-06-11'
 related:
   - '[[2026-06-11-period-grammar-standardisation-plan]]'
   - '[[2026-06-11-period-grammar-standardisation-adr]]'
@@ -10,7 +11,6 @@ related:
 
 # `period-grammar-standardisation` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 ## PERIOD-001 | INFO | No findings in IVA authority-source Period slice
 
@@ -658,3 +658,21 @@ Verification after the change: ruff passed for the touched review and ledger
 CLI files; review filter plus helper tests, ledger list filter tests, and ledger
 period grammar tests passed with `114 passed`; CLI import smoke printed `OK`;
 and the period plan check reported only the existing `PLAN022` ordering warning.
+
+## PERIOD-037 | INFO | Closeout audit reviewed
+
+Review of the closeout audit found no defects in the documented conclusion.
+The current canonical plan contains 35 Step rows, `vaultspec-core vault plan
+status` reports 35 of 35 complete, and a direct unchecked-row search finds no
+open Step rows. The handoff's 36th item is stale coordination state rather than
+a plan row in this worktree.
+
+The review also confirmed that the later ledger-filter guidance work is already
+evidenced by this audit's `PERIOD-036` entry and by the separate
+ledger-filter-period `S08` exec record, so duplicating it as a new
+period-grammar Step would create misleading traceability.
+
+Verification for the closeout note: plan status reported 35 of 35 complete;
+plan check reported only the existing `PLAN022` ordering warning; vault
+frontmatter, body-link, and wiki-link checks passed; targeted `rg` inspection
+found no unchecked period-grammar Step rows.

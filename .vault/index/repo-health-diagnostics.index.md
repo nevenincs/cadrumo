@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#repo-health-diagnostics'
-date: '2026-06-08'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
   - '[[2026-06-08-repo-health-diagnostics-audit]]'

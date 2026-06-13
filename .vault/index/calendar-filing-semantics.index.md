@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calendar-filing-semantics'
-date: '2026-06-11'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-05-calendar-filing-semantics-W01-P01-S01]]'
   - '[[2026-06-05-calendar-filing-semantics-W01-P01-S02]]'

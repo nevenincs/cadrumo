@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-topology-refactor'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-05-test-topology-refactor-W01-P01-S01]]'
   - '[[2026-06-05-test-topology-refactor-W01-P01-S02]]'

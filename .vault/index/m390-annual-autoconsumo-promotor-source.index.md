@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m390-annual-autoconsumo-promotor-source'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-02-m390-annual-autoconsumo-promotor-source-adr]]'
   - '[[2026-06-04-m390-annual-autoconsumo-promotor-source-research]]'

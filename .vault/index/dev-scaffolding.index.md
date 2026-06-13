@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dev-scaffolding'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-04-12-dev-scaffolding-adr]]'
   - '[[2026-04-12-dev-scaffolding-phase1-summary-exec]]'

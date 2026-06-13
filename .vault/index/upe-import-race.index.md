@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#upe-import-race'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-27-upe-import-race-S01]]'
   - '[[2026-06-04-upe-import-race-adr]]'

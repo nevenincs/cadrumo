@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
+modified: '2026-06-05'
 tier: L3
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
@@ -12,15 +13,6 @@ related:
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 <!-- RETIRED: S03, S04, S05, S07, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20 -->
 

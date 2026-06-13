@@ -3,95 +3,19 @@ tags:
   - '#plan'
   - '#modelo-locales-cli'
 date: '2026-06-11'
+modified: '2026-06-11'
 tier: L2
 related:
   - '[[2026-06-11-modelo-locales-cli-research]]'
   - '[[2026-06-11-modelo-locales-cli-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace modelo-locales-cli with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'. The related field
-     carries the AUTHORISING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
 
 
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution-log artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
 
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorising documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
 
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
 
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. See the
-     CLI ADR (2026-05-06-plan-hardening-adr) for the full
-     subcommand surface. -->
+
 
 # `modelo-locales-cli` `aeat.locales modelo schema localization CLI` plan
 
@@ -100,7 +24,6 @@ related:
 Define the registry-local locale manager as the only writer for modelo schema translation TOML while preserving the runtime registry loader contract.
 
 
-<!-- One-line headline summary plan. -->
 
 - [x] `P01.S01` - Define registry-local locale manager models; `src/aeat/locales/_modelo_manager.py`.
 - [x] `P01.S02` - Implement contained registry-root resolution; `src/aeat/locales/_modelo_manager.py`.
@@ -139,6 +62,9 @@ Move existing seeded schema translations under CLI control, document campaign us
 - [x] `P04.S20` - Codify modelo locale CLI authority candidate; `.vaultspec/rules/rules/project/modelo-locales-cli-authority.md`.
 - [x] `P04.S21` - Run locale and registry verification gates; `src/aeat/locales`.
 - [x] `P04.S22` - Hand off remaining modelo translation campaigns; `.vault/research/2026-06-11-registry-schema-localization-research.md`.
+- [x] `P04.S23` - Verify Catalan Modelo 100 2024 translation slice; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/locales/ca`.
+- [x] `P04.S24` - Verify English Modelo 100 2024 translation slice; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/locales/en`.
+- [x] `P04.S25` - Complete Hungarian Modelo 100 2024 help slice; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/locales/hu`.
 
 ## Description
 
@@ -148,57 +74,11 @@ The CLI becomes the only intended writer for registry-local schema locale files.
 
 ## Steps
 
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
 
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
 
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
 
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
 
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
 
-     One sentence stating what this Phase delivers.
-
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
-
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
-
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
-
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorising documents back it.
-
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
-
-     The Wave intent paragraph is mandatory. -->
-
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
-
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
-
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
-
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
 
 ## Parallelization
 

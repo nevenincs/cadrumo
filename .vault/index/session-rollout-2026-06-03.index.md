@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#session-rollout-2026-06-03'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-03-session-rollout-2026-06-03-audit]]'
 ---

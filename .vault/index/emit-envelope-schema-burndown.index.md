@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#emit-envelope-schema-burndown'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-05-31-emit-envelope-schema-burndown-W01-P01-S22]]'
   - '[[2026-05-31-emit-envelope-schema-burndown-W01-P02-S32]]'

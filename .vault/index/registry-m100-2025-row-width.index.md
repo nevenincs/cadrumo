@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-m100-2025-row-width'
-date: '2026-06-05'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-S01]]'
   - '[[2026-06-04-registry-m100-2025-row-width-S02]]'

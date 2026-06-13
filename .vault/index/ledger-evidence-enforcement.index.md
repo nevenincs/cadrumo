@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-evidence-enforcement'
-date: '2026-06-12'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-ledger-evidence-enforcement-adr]]'
   - '[[2026-06-10-ledger-evidence-enforcement-plan]]'

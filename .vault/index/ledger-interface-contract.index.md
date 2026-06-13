@@ -3,7 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-interface-contract'
-date: '2026-06-11'
+date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - '[[2026-06-10-ledger-interface-contract-W01-P01-S01]]'
   - '[[2026-06-10-ledger-interface-contract-W01-P01-S02]]'
@@ -27,6 +28,7 @@ related:
   - '[[2026-06-10-ledger-interface-contract-W03-P05-S20]]'
   - '[[2026-06-10-ledger-interface-contract-W03-P05-S21]]'
   - '[[2026-06-10-ledger-interface-contract-W03-P05-S22]]'
+  - '[[2026-06-10-ledger-interface-contract-W03-P05-summary]]'
   - '[[2026-06-10-ledger-interface-contract-W03-P06-S31]]'
   - '[[2026-06-10-ledger-interface-contract-W03-P06-S32]]'
   - '[[2026-06-10-ledger-interface-contract-adr]]'
@@ -91,6 +93,7 @@ Auto-generated index of all documents tagged with `#ledger-interface-contract`.
 - `2026-06-11-ledger-interface-contract-W03-P05-S28` - W03.P05.S28 Evidence List Rows Typed
 - `2026-06-11-ledger-interface-contract-W03-P05-S29` - W03.P05.S29 Ratios Validate Findings Typed
 - `2026-06-11-ledger-interface-contract-W03-P05-S30` - W03.P05.S30 Typed Boundary Gate
+- `2026-06-10-ledger-interface-contract-W03-P05-summary` - `ledger-interface-contract` `W03.P05` summary
 
 ### plan
 
