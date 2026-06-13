@@ -156,6 +156,34 @@ each, which of the three it is — exactly the dead-vs-intentional discipline th
 dedup campaign's substitutability pre-filter encodes. Bulk-deleting 59
 public/domain/private methods at once is explicitly rejected.
 
+A RAG-equipped classification swarm (one agent per file-cluster, instructed to
+exercise `vaultspec-rag` for the semantic concept and intent of each method) was
+dispatched to make the per-cluster call, but all 32 agents failed on a recurring
+org-wide API rate limit (not a usage limit), returning no verdicts. The
+classification is therefore parked until the rate limit clears (or a throttled
+re-run / fresh-context manual pass), with these conservative pre-judgements
+standing from the static evidence:
+
+- **Keep (intended-pending, regulated tax logic):** the entire
+  `domain/contribuyente/family.py` IRPF minimum/deduction/advisory cluster and the
+  `_renta_codes` eligibility predicates. A zero-caller tax computation is far more
+  likely awaiting a modelo binding than safe to delete; removing it could drop
+  intended regulated behaviour.
+- **Keep / fix (wiring-bug candidates):** `secure_objects._ensure_quarantine_table`,
+  `_authenticator._validate_storage_state_file` — setup/validate steps that an
+  existing path arguably *should* invoke; the remedy is wiring, not deletion.
+- **Likely dead-removed (still requires per-method surface confirmation before
+  deletion):** the repository/service CRUD methods whose feature has no CLI /
+  registry / workflow consumer (`delete_observation`, `load_decision_history`,
+  `iter_histories`, `list_submissions`, `load_submission`, `list_portals`,
+  `list_profiles`, `edit_section`, `get_by_identifier`, `list_for_period`,
+  `get_for_finca_period`, `exists_by_raw_key`, `save_with_raw_key`, `list_csvs`,
+  `list_digests`, `browse`, `import_`, …). These are the actionable deletion
+  candidates once each is confirmed to lack an intended consumer.
+
+No methods were deleted in this pass; the function/class sub-phase (21 symbols)
+remains the only landed removal, and it is complete and verified.
+
 ## Recommendations
 
 Delete each confirmed-dead symbol, grouped by domain, as explicit-path commits
