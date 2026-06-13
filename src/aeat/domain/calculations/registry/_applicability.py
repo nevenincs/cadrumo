@@ -91,8 +91,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ....core import Modelo
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import Modelo
 from ...deadlines.taxpayer_model import (
     EntityType,
     IrpfEstimationRegime,
@@ -214,10 +214,15 @@ class ModeloApplicabilityRule(BaseModel):
             modelo applies to. Empty means the modelo does not gate on
             the estimation regime. Non-empty means a natural person
             whose ``irpf_estimation_regime`` is outside the set gets
-            ``NOT_APPLICABLE``, and an *undeclared* regime yields
-            ``INCOMPLETE``. This is the axis that splits Modelo 130
-            (estimación directa) from Modelo 131 (estimación objetiva):
-            the two are mutually exclusive on the regime.
+            ``NOT_APPLICABLE``. An *undeclared* regime is resolved from
+            the always-definite ``uses_objective_estimation_irpf``
+            boolean (default ``False``): estimación directa is the
+            default IRPF method (LIRPF art. 16; RIRPF art. 32 makes
+            módulos opt-in), so an undeclared regime defaults to directa
+            and an actividad-económica autónomo who has not elected
+            módulos owes Modelo 130. This is the axis that splits Modelo
+            130 (estimación directa) from Modelo 131 (estimación
+            objetiva): the two are mutually exclusive on the regime.
         required_payer_fact: The :class:`PayerFact` the modelo's
             applicability depends on, or ``None`` when the modelo does
             not gate on a payer fact. When set, a profile that
@@ -303,14 +308,33 @@ class ModeloApplicabilityRule(BaseModel):
                 if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
                     return self._not_applicable()
             # The estimation-regime axis splits Modelo 130 (estimación
-            # directa) from Modelo 131 (estimación objetiva). An
-            # undeclared regime cannot be decided — the engine refuses to
-            # guess; a regime outside the rule's set is a positive
-            # exclusion.
+            # directa) from Modelo 131 (estimación objetiva). A regime
+            # outside the rule's set is a positive exclusion.
+            #
+            # When the structured ``irpf_estimation_regime`` is undeclared
+            # the engine still resolves the directa-vs-objetiva split from
+            # the always-definite ``uses_objective_estimation_irpf``
+            # boolean (default ``False``, kept in lockstep with the regime
+            # by ``TaxpayerProfile._derive_objective_estimation_flag`` /
+            # ``_check_objective_estimation_consistency``). Estimación
+            # directa is the default IRPF method for actividad-económica
+            # income (LIRPF art. 16; RIRPF RD 439/2007 art. 32 makes
+            # estimación objetiva an opt-in módulos regime that requires
+            # eligibility and non-renuncia): an autónomo who declares
+            # actividad económica but has not elected módulos files under
+            # estimación directa and owes Modelo 130. Reading the boolean
+            # rather than refusing to decide is grounded in that default —
+            # it does not invent profile data, and M130 / M131 stay
+            # mutually exclusive (``False`` ⇒ directa ⇒ M130, ``True`` ⇒
+            # objetiva ⇒ M131).
             if self.required_estimation_regimes:
                 regime = profile.irpf_estimation_regime
                 if regime is None:
-                    return _incomplete_applicability(self.modelo)
+                    regime = (
+                        IrpfEstimationRegime.OBJETIVA
+                        if profile.uses_objective_estimation_irpf
+                        else IrpfEstimationRegime.DIRECTA_NORMAL
+                    )
                 if regime not in self.required_estimation_regimes:
                     return self._not_applicable()
         # The payer-fact axis (Modelo 111 / 115 / 349 / 347) can only be

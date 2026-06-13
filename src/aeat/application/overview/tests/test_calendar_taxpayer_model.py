@@ -72,6 +72,89 @@ def test_calendar_autonomo_still_shows_modelo_130() -> None:
     assert "130" in modelos
 
 
+def _autonomo_without_declared_regime() -> TaxpayerProfile:
+    """Operator repro: actividad económica declared, no estimation regime.
+
+    Created with ``--irpf-income-categories actividad_economica`` and no
+    ``--irpf-estimation-regime`` (the wizard regime question is optional),
+    so ``irpf_estimation_regime`` is ``None``. Estimación directa is the
+    LIRPF default method, so this autónomo owes Modelo 130 — the calendar
+    must surface its quarterly pago-fraccionado deadlines, not drop the
+    one family the profile owes.
+    """
+
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        iva_regime=IVARegime.GENERAL,
+    )
+
+
+def test_calendar_autonomo_without_declared_regime_shows_all_four_m130_quarters() -> None:
+    """Operator repro fix: an actividad-económica profile with no declared
+    estimation regime owes the four Modelo 130 quarterly pago-fraccionado
+    deadlines.
+
+    The profile was created with ``--irpf-income-categories
+    actividad_economica`` but no ``--irpf-estimation-regime`` (the regime
+    question is optional in the setup wizard), leaving
+    ``irpf_estimation_regime`` ``None``. Before the fix the applicability
+    rule resolved Modelo 130 to ``INCOMPLETE`` for an undeclared regime
+    and the calendar dropped every M130 row — the one deadline family this
+    autónomo owes was absent. Estimación directa is the LIRPF default
+    method (art. 16; RIRPF art. 32 makes módulos opt-in), so the four
+    quarterly windows must now appear with the registry-grounded close
+    dates.
+    """
+
+    profile = _autonomo_without_declared_regime()
+    assert profile.irpf_estimation_regime is None
+    # A range wide enough to admit the 4T window, whose AEAT filing window
+    # opens 2027-01-01 (the prior fiscal year's Q4 pago fraccionado).
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
+    cal = build_overview_calendar(profile, rng, today=date(2026, 4, 1))
+
+    assert cal.taxpayer_model_declared is True
+    m130_entries = sorted(
+        (entry for entry in cal.entries if entry.modelo == "130"),
+        key=lambda entry: entry.closes_on,
+    )
+    # All four quarterly pago-fraccionado windows are present.
+    assert len(m130_entries) == 4, [(e.period.registry_token, e.closes_on) for e in m130_entries]
+    # The close dates are the registry deadline windows — never hand-invented.
+    # (M130 2019-y-siguientes deadline_windows: 1T/2T/3T/4T for filing year 2026.)
+    assert [entry.closes_on for entry in m130_entries] == [
+        date(2026, 4, 20),
+        date(2026, 7, 20),
+        date(2026, 10, 20),
+        date(2027, 1, 30),
+    ]
+    assert [entry.period.registry_token for entry in m130_entries] == ["1T", "2T", "3T", "4T"]
+    # The business-day-adjusted close is never earlier than the legal close.
+    for entry in m130_entries:
+        assert entry.adjusted_closes_on >= entry.closes_on
+    # Modelo 131 (estimación objetiva) must NOT appear — directa and
+    # objetiva are mutually exclusive on the regime, and the undeclared
+    # regime resolves to directa.
+    assert "131" not in {entry.modelo for entry in cal.entries}
+
+
+def test_calendar_pure_landlord_without_regime_owes_no_m130() -> None:
+    """The directa default must not over-include a non-owing profile.
+
+    A pure landlord (rendimientos del capital inmobiliario only, no
+    actividad económica) and likewise a salaried-only / pensioner profile
+    declare no economic activity, so the regime-default fallback never
+    fires for Modelo 130: it stays excluded from the calendar. The fix
+    adds M130 only for profiles that genuinely owe it.
+    """
+
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
+    cal = build_overview_calendar(_landlord_profile(), rng, today=date(2026, 4, 1))
+    assert "130" not in {entry.modelo for entry in cal.entries}
+
+
 def test_calendar_undeclared_profile_yields_incomplete_empty_calendar() -> None:
     """An undeclared taxpayer model yields an empty calendar flagged
     taxpayer_model_declared=False — never the autónomo guess."""

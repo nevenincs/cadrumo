@@ -20,4 +20,13 @@ import pytest
 
 @pytest.fixture(autouse=True, scope="session")
 def _register_wizard_catalogue() -> None:
-    """Ensure the wizard `SETUP_FLOW` catalogue is registered for the session."""
+    """Ensure the wizard `SETUP_FLOW` catalogue is registered for the session.
+
+    `taxpayer_profile_from_mapping` reads `get_setup_flow()`, which raises
+    `WizardCatalogueNotRegisteredError` until the application layer has
+    registered the catalogue. Importing `aeat.application.wizard._catalogue`
+    triggers that registration as an import-time side effect, so the
+    projection resolves for every test in this package regardless of run
+    selection.
+    """
+    import aeat.application.wizard._catalogue  # noqa: F401  (import for registration side effect)
