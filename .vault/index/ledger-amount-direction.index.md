@@ -4,7 +4,6 @@ tags:
   - '#index'
   - '#ledger-amount-direction'
 date: '2026-06-13'
-modified: '2026-06-13'
 related:
   - '[[2026-06-10-ledger-amount-direction-adr]]'
   - '[[2026-06-10-ledger-amount-direction-plan]]'
@@ -27,6 +26,7 @@ related:
   - '[[2026-06-12-ledger-amount-direction-P05-S16]]'
   - '[[2026-06-12-ledger-amount-direction-closeout-status]]'
   - '[[2026-06-12-ledger-amount-direction-code-review-audit]]'
+  - '[[2026-06-13-ledger-amount-direction-P05-S15]]'
   - '[[2026-06-13-ledger-amount-direction-audit]]'
 ---
 
@@ -64,6 +64,7 @@ Auto-generated index of all documents tagged with `#ledger-amount-direction`.
 - `2026-06-12-ledger-amount-direction-P05-S15-attempts` - Full Sequential Suite Attempts
 - `2026-06-12-ledger-amount-direction-P05-S16` - Amount Direction Rule Codified
 - `2026-06-12-ledger-amount-direction-closeout-status` - Ledger Amount Direction Closeout Status
+- `2026-06-13-ledger-amount-direction-P05-S15` - Full Sequential Suite Green-Pass
 
 ### plan
 
