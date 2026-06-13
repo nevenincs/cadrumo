@@ -169,6 +169,37 @@ weight the substitutability pre-filter heavily and expect a high ruled-out rate.
   `domain/attachments/_service.py` (domain service over the store protocol)
   and `application/ledger/_evidence.py` (composes the store for evidence) are a
   clean hexagonal/composition layering. Not duplication.
+- **Enum-to-string coercion family (Pass 3)** — `_enum_value` in
+  `aggregation/_ledger_filing_snapshot.py` (`str | None`, `None` → `None`) and in
+  `domain/submission/_preflight.py` (`str`, `None` → `""`) share a name but have
+  divergent return/null contracts; `review/_filter.py:_enum_value_or_raise`
+  raises, and `terminology/_schema.py:_coerce_str_enum` runs the reverse
+  direction (string → enum). A divergent family, not one substitutable helper.
+- **Per-package secure-objects factories (Pass 3)** —
+  `secure_objects_for_modelo_bucket`, `secure_objects_for_filing_bucket`,
+  `secure_objects_for_application_filing_bucket` are byte-identical deferred-import
+  delegations to the adapter `secure_object_repository_for_bucket`. They exist to
+  hold the deferred adapters import at each package boundary; the canonical lives
+  in the adapters layer, so no shared home exists that the `.importlinter` layer
+  contracts permit (core cannot import adapters). Legit per-package boundary
+  pattern, not actionable duplication.
+
+## Verification status (Passes 1–3)
+
+Three discovery passes have swept ~40 functional concepts via `vaultspec-rag`,
+each candidate confirmed at source under the substitutability pre-filter. Exactly
+one cluster (F3) was a cleanly-actionable, behaviour-preserving consolidation and
+is landed. Every other candidate is intentional divergence, a trivial shared
+idiom wrapped in non-shared logic, an architectural boundary shim, or a
+canonical-plus-consumers shape — none safely removable without changing
+behaviour or breaching layer contracts. This is the expected post-hardening
+profile (the prior `semantic-cluster-hardening` and `code-duplication-sweep`
+campaigns removed the bulk of true duplication). The codebase is, on the swept
+surface, verifiably lean: the remaining lexical/semantic clustering is
+documented here so future passes do not re-flag it. The campaign continues as a
+standing cadence over the still-unswept functional surface, not as open
+remediation debt — F2's owner-gated `_formats` deletion is the one tracked
+open decision.
 
 ## Recommendations
 
