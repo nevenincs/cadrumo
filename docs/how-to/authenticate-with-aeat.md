@@ -135,8 +135,10 @@ Show what is recorded for the active profile:
 aeat config auth apoderado status
 ```
 
-`aeat config auth apoderado check` re-reads the same stored configuration; it
-does not contact AEAT.
+`aeat config auth apoderado check` is the live-verification verb, but the live
+AEAT-read path is sealed, so it refuses with a "live verification unavailable"
+message and points you back to `status`. Use `aeat config auth apoderado status`
+for the offline configuration read.
 
 Remove the configuration when the representation ends:
 

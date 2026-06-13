@@ -39,11 +39,6 @@ from ...core import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ...domain.categories import (
-    SpendingCategory,
-)
-from ...domain.contribuyente._renta_codes import FiscalResidency
-from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
@@ -91,7 +86,9 @@ from ._ledger_support import (
     _parse_decimal,
     _parse_required_decimal,
     _prefix_error_bad,
+    _resolve_business_pct_with_censo,
     _resolve_id,
+    _resolve_source_jurisdiction,
     _TransactionRepo,
     _validate_business_pct_range,
     _validate_category_id,
@@ -443,7 +440,7 @@ def ledger_classify(
     ),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
-    if llm is not None:
+    if llm is not None or read_evidence:
         if saturate:
             _ledger_saturate_llm(
                 ctx,
@@ -588,7 +585,7 @@ def _ledger_classify_llm(
     classification: BusinessClassification | None,
     from_csv: str | None,
     business_pct: str | None,
-    provider: LLMProvider,
+    provider: LLMProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
@@ -620,7 +617,11 @@ def _ledger_classify_llm(
                 default="A transaction id is required when --from-csv is not provided.",
             ),
         )
-    if not is_llm_provider_available(provider):
+    # A provider is checked for PATH availability only when one is named. With
+    # --read-evidence and no --llm, a scanned/image invoice is read on-host by the
+    # local vision model, which needs no subprocess provider; a text-layer read with
+    # no provider is refused instructively downstream by the application.
+    if provider is not None and not is_llm_provider_available(provider):
         # Instructive refusal: name the provider and the CLI it needs on PATH,
         # never a crash. The subprocess backend shells to a local CLI binary.
         raise _bad(
@@ -663,7 +664,7 @@ def _ledger_classify_llm(
                 "llm": True,
                 "persisted": False,
                 "transaction_id": suggestion.transaction_id,
-                "provider": suggestion.provider.value,
+                "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
                 "classification": suggestion.classification.value,
                 "category": suggestion.category.value if suggestion.category is not None else None,
                 "confidence": format(suggestion.confidence, "f"),
@@ -723,7 +724,7 @@ def _ledger_saturate_llm(
     classification: BusinessClassification | None,
     from_csv: str | None,
     business_pct: str | None,
-    provider: LLMProvider,
+    provider: LLMProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
@@ -756,7 +757,7 @@ def _ledger_saturate_llm(
                 default="A transaction id is required when --from-csv is not provided.",
             ),
         )
-    if not is_llm_provider_available(provider):
+    if provider is not None and not is_llm_provider_available(provider):
         raise _bad(
             tr(
                 "cli.ledger.classify.llm_provider_unavailable",
@@ -809,7 +810,7 @@ def _ledger_saturate_llm(
                 "llm": True,
                 "persisted": False,
                 "transaction_id": suggestion.transaction_id,
-                "provider": suggestion.provider.value,
+                "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
                 "classification": suggestion.classification.value,
                 "category": suggestion.category.value if suggestion.category is not None else None,
                 "confidence": format(suggestion.confidence, "f"),
@@ -1185,82 +1186,6 @@ def ledger_link(
 
 
 register_read_commands(app, resolve_transaction_id=_resolve_read_id)
-
-
-def _resolve_source_jurisdiction(
-    operator_value: str | None,
-    *,
-    fiscal_residency: FiscalResidency | None,
-    irpf_special_regime: IrpfSpecialRegime | None,
-) -> str | None:
-    """Stamp the profile-conditional default for ``--source-jurisdiction``.
-
-    Future entrypoints (importer, bulk classify, etc.) must pre-validate
-    profile-conditional defaults via this helper. Resolution rules track
-    the regulatory branching anchored in LIRPF Art. 8 (universal-base
-    presumption for Spanish residents), TRLIRNR Art. 2 / Art. 10
-    (non-residents must declare jurisdiction explicitly), and Art. 93
-    LIRPF (impatriados must declare; the Beckham regime treats Spanish-
-    and foreign-source income distinctly so a silent ES default would
-    quietly include foreign-source amounts in the IRPF base).
-
-    Args:
-        operator_value: Operator-supplied jurisdiction string, or ``None``
-            when the flag was omitted.
-        fiscal_residency: Resolved fiscal-residency classification from
-            the active profile, or ``None`` when unavailable.
-        irpf_special_regime: Resolved IRPF special-regime classification
-            from the active profile, or ``None`` when unavailable.
-
-    Returns:
-        The operator-supplied value when present, or ``"ES"`` when the
-        profile is RESIDENT_IRPF / GENERAL and no operator value was given.
-
-    Raises:
-        _bad: When the profile is NON_RESIDENT_IRNR or RESIDENT_IRPF /
-            IMPATRIADO and no operator value was given.
-    """
-    if operator_value is not None:
-        return operator_value
-    if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
-        raise _bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
-    if irpf_special_regime is IrpfSpecialRegime.IMPATRIADO:
-        raise _bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
-    return "ES"
-
-
-def _resolve_business_pct_with_censo(
-    *,
-    bucket_id: str,
-    active_profile: str | None,
-    category_id: str | None,
-    operator_supplied,
-):
-    """Stamp the censo-derived business_pct when the operator omits one.
-
-    Operator-supplied values always win — the helper only fills the
-    gap when ``business_pct`` is not given AND the transaction targets
-    a HOME_OFFICE category that the censo actually governs. Returns
-    the operator-supplied value unchanged on every other path, so non-
-    HOME_OFFICE transactions and explicit-override flows are not
-    perturbed.
-    """
-    from ...application.ledger import censo_business_pct_for
-    from ...application.user_profile import CensoSyncService
-
-    if operator_supplied is not None:
-        return operator_supplied
-    if category_id is None or active_profile is None:
-        return operator_supplied
-    try:
-        category_enum = SpendingCategory(category_id.strip())
-    except ValueError:
-        return operator_supplied
-    sync_service = CensoSyncService(bucket_id=bucket_id)
-    raw_afectacion: Decimal | None = sync_service.bound_raw_afectacion_ratio(profile_id=active_profile)
-    if raw_afectacion is None:
-        return operator_supplied
-    return censo_business_pct_for(category_enum, raw_afectacion)
 
 
 register_ratios_commands(app)

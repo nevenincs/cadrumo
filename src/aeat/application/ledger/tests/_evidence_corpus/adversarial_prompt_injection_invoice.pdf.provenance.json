@@ -1,0 +1,8 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "adversarial_prompt_injection",
+  "source": "aeat-test-generator",
+  "notes": "invoice text carries prompt-injection + out-of-allow-list values; the allow-list parser must resist it",
+  "sha256": "71b0574b043babc22cb30255bf3f8396bc7e04e9306eb245c45a84e4f3186a1b",
+  "bytes": 1760
+}

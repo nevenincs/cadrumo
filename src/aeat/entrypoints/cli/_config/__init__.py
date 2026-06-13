@@ -56,7 +56,8 @@ _log = _get_logger(__name__)
 # typer._click.types.ParamType. They are the same object at runtime (the vendored
 # click), so the cast only bridges the static type duality — no Any escape.
 _CONFIG_RESET_SCOPE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType, click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
+    typer_click_types.ParamType,
+    click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
 )
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
@@ -238,6 +239,44 @@ def config_list(
     _emit_envelope(ctx, command="config.profile.list", result=result, lines=lines)
 
 
+def _locked_store_refusal(error: BaseException) -> _AeatError | None:
+    """Return the locked-store refusal wrapped in ``error``, if any.
+
+    A *locked* store — no passphrase supplied, the wrong passphrase, the
+    OS keychain locked, or no active bucket session bound — is recoverable
+    by supplying ``AEAT_SECRET_PASSPHRASE`` (or re-running interactively),
+    NOT by the destructive ``config repair profile`` verb. The
+    passphrase/session family is exactly :class:`SecretStoreError` (the
+    bare no-passphrase refusal) and its subclasses
+    (:class:`NoActiveBucketSessionError`,
+    :class:`MasterKeyUnavailableError` and its passphrase-mismatch /
+    keychain-locked / kdf-version variants). SQLAlchemy can re-raise such a
+    refusal wrapped inside a ``StatementError`` (a non-``AeatError``) when
+    an encrypted column decodes with no session bound, so the cause chain
+    and the ``orig`` attribute are both walked. A genuinely corrupt or
+    undecryptable *record* (a :class:`DecryptionError` on a row, stored-data
+    validation failure, or raw SQLite corruption) is NOT in this family and
+    stays routed at ``config repair profile``.
+    """
+    from ....adapters.persistence.storage.errors import SecretStoreError
+
+    seen: set[int] = set()
+    current: BaseException | None = error
+    depth = 0
+    while current is not None and depth < 16:
+        if isinstance(current, SecretStoreError):
+            return current
+        if id(current) in seen:
+            return None
+        seen.add(id(current))
+        depth += 1
+        nxt = getattr(current, "orig", None)
+        if not isinstance(nxt, BaseException):
+            nxt = current.__cause__ or current.__context__
+        current = nxt
+    return None
+
+
 def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -247,9 +286,20 @@ def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucke
         _emit_profile_record_missing(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label)
         raise typer.Exit(code=2) from None
     except _AeatError as exc:
+        locked = _locked_store_refusal(exc)
+        if locked is not None:
+            # The store is merely locked (missing/incorrect passphrase or no
+            # session) — surface the same instructive refusal every other verb
+            # gives (names AEAT_SECRET_PASSPHRASE / the interactive path) with
+            # its registered exit code, and never prescribe the destructive
+            # `config repair profile`. Re-raise into the shared error boundary.
+            raise locked from exc
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=exc)
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        locked = _locked_store_refusal(exc)
+        if locked is not None:
+            raise locked from exc
         _log.debug("config profile readiness wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=boundary)
@@ -387,19 +437,30 @@ def config_profile_show(
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
         _emit_profile_record_missing(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label,
+            ctx,
+            profile_id=pointer.bucket_id,
+            bucket_id=pointer.bucket_id,
+            label=pointer.label,
         )
         raise typer.Exit(code=2) from exc
     except _AeatError as exc:
         _emit_profile_record_unreadable(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=exc,
+            ctx,
+            profile_id=pointer.bucket_id,
+            bucket_id=pointer.bucket_id,
+            label=pointer.label,
+            error=exc,
         )
         raise typer.Exit(code=2) from exc
     except Exception as exc:
         _log.debug("config profile show wrapped unexpected profile-record exception", exc_info=True)
         boundary = _ConfigBoundaryError(exc)
         _emit_profile_record_unreadable(
-            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=boundary,
+            ctx,
+            profile_id=pointer.bucket_id,
+            bucket_id=pointer.bucket_id,
+            label=pointer.label,
+            error=boundary,
         )
         raise typer.Exit(code=2) from boundary
     from ....domain.user_profile import UserProfileStatus
@@ -520,7 +581,9 @@ def config_profile_preflight(
     filing_year: int = typer.Option(..., "--filing-year", help=tr("cli.config.profile.preflight_filing_year_help")),
     period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
     revision_id: str | None = typer.Option(
-        None, "--revision-id", help=tr("cli.config.profile.preflight_revision_id_help"),
+        None,
+        "--revision-id",
+        help=tr("cli.config.profile.preflight_revision_id_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -760,7 +823,9 @@ def config_profile_duplicate(
     source: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_source_help")),
     target: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_target_help")),
     display_name: str | None = typer.Option(
-        None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help"),
+        None,
+        "--display-name",
+        help=tr("cli.config.profile.duplicate_display_name_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -873,7 +938,8 @@ _config_profile_edit_callback = profile_app.command(
 def config_profile_rename(
     ctx: typer.Context,
     source: str = typer.Argument(
-        ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name."),
+        ...,
+        help=tr("cli.config.profile.rename_source_help", default="Existing profile name."),
     ),
     target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
     output_language: OutputLanguage | None = typer.Option(

@@ -143,7 +143,7 @@ class LLMClassificationSuggestion(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1)
-    provider: LLMProvider
+    provider: LLMProvider | None = None
     provenance: str = Field(min_length=1)
     classification: BusinessClassification
     category: SpendingCategory | None = None
@@ -281,11 +281,21 @@ def _resolve_evidence(
     return _ResolvedEvidence(reference=reference, text=None, images=images)
 
 
+# Raised when a transaction must be read by a cloud subprocess provider (text-layer
+# evidence, or no readable image evidence) but no ``--llm`` provider was supplied.
+# The on-host vision path needs no provider, so this names that distinction.
+_TEXT_PATH_NEEDS_PROVIDER = (
+    "classifying this transaction needs a cloud provider: pass --llm with claude, antigravity, or codex. "
+    "(--read-evidence reads a scanned or image invoice on-host with no provider, but this transaction has "
+    "no readable image evidence to route there.)"
+)
+
+
 def _classify_with_evidence(
     transaction: Transaction,
     evidence: _ResolvedEvidence | None,
     *,
-    text_classifier: LLMClassifier,
+    text_classifier: LLMClassifier | None,
     spec: PromptSpec,
     vision_classifier: LocalVisionLLMClassifier | None,
     settings: Settings,
@@ -293,12 +303,22 @@ def _classify_with_evidence(
     """Classify, routing scan/image evidence to the on-host vision classifier.
 
     Returns ``(response, provenance)``. Image evidence is read by the local vision
-    model (``llm:local-vision:<model>`` provenance); text or no evidence runs the
-    cloud subprocess ``text_classifier`` (``llm:<provider>:<model>`` provenance).
+    model (``llm:local-vision:<model>`` provenance) and needs no ``text_classifier``;
+    text or no evidence runs the cloud subprocess ``text_classifier``
+    (``llm:<provider>:<model>`` provenance), which must be present.
+
+    Raises:
+        TransactionValidationError: When the text path is taken but no
+            ``text_classifier`` was resolved (no ``--llm`` provider supplied).
     """
     if evidence is not None and evidence.is_images:
         vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings)
         return vision.classify(transaction, evidence_images=evidence.images), vision.decided_by
+    if text_classifier is None:
+        raise TransactionValidationError(
+            _TEXT_PATH_NEEDS_PROVIDER,
+            context={"transaction_id": transaction.transaction_id},
+        )
     text = evidence.text if evidence is not None else None
     return text_classifier.classify(transaction, evidence_text=text), text_classifier.decided_by
 
@@ -307,15 +327,25 @@ def _split_with_evidence(
     transaction: Transaction,
     evidence: _ResolvedEvidence | None,
     *,
-    proposer: LLMSplitProposer,
+    proposer: LLMSplitProposer | None,
     spec: PromptSpec,
     vision_classifier: LocalVisionLLMClassifier | None,
     settings: Settings,
 ) -> tuple[LLMSplitResponse, str]:
-    """Propose a split, routing scan/image evidence to the on-host vision classifier."""
+    """Propose a split, routing scan/image evidence to the on-host vision classifier.
+
+    Raises:
+        TransactionValidationError: When the text path is taken but no ``proposer``
+            was resolved (no ``--llm`` provider supplied).
+    """
     if evidence is not None and evidence.is_images:
         vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings)
         return vision.propose_split(transaction, evidence_images=evidence.images), vision.decided_by
+    if proposer is None:
+        raise TransactionValidationError(
+            _TEXT_PATH_NEEDS_PROVIDER,
+            context={"transaction_id": transaction.transaction_id},
+        )
     text = evidence.text if evidence is not None else None
     return proposer.propose_split(transaction, evidence_text=text), proposer.decided_by
 
@@ -324,7 +354,7 @@ def suggest_llm_classification(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: LLMProvider,
+    provider: LLMProvider | None,
     classifier: LLMClassifier | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
@@ -370,7 +400,11 @@ def suggest_llm_classification(
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
     resolved_settings = settings if settings is not None else load_settings()
-    resolved_classifier = classifier if classifier is not None else _resolve_default_classifier(provider)
+    resolved_classifier = (
+        classifier
+        if classifier is not None
+        else (_resolve_default_classifier(provider) if provider is not None else None)
+    )
     evidence = (
         _resolve_evidence(
             transaction,
@@ -392,7 +426,7 @@ def suggest_llm_classification(
     _logger.info(
         "llm suggest: transaction=%s provider=%s classification=%s confidence=%s",
         transaction_id,
-        provider.value,
+        provider.value if provider is not None else "local-vision",
         response.classification.value,
         response.confidence,
     )
@@ -512,7 +546,7 @@ def apply_llm_classification(
             "classification": classification.value,
             "category_id": category_id or "",
             "classified_by": suggestion.provenance,
-            "provider": suggestion.provider.value,
+            "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
             "confidence": format(suggestion.confidence, "f"),
             "mutation_kind": "llm_classification",
         },
@@ -558,7 +592,7 @@ class LLMSaturatedSuggestion(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1)
-    provider: LLMProvider
+    provider: LLMProvider | None = None
     provenance: str = Field(min_length=1)
     classification: BusinessClassification
     category: SpendingCategory | None = None
@@ -617,7 +651,7 @@ def saturate_llm_classification(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: LLMProvider,
+    provider: LLMProvider | None,
     classifier: LLMClassifier | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
@@ -668,7 +702,11 @@ def saturate_llm_classification(
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
     resolved_settings = settings if settings is not None else load_settings()
-    resolved_classifier = classifier if classifier is not None else _resolve_saturation_classifier(provider)
+    resolved_classifier = (
+        classifier
+        if classifier is not None
+        else (_resolve_saturation_classifier(provider) if provider is not None else None)
+    )
     evidence = (
         _resolve_evidence(
             transaction,
@@ -705,7 +743,7 @@ def saturate_llm_classification(
     _logger.info(
         "llm saturate: transaction=%s provider=%s classification=%s iva_category=%s derivable=%s",
         transaction_id,
-        provider.value,
+        provider.value if provider is not None else "local-vision",
         response.classification.value,
         response.iva_category.value if response.iva_category is not None else "",
         rate_derivable,
@@ -992,7 +1030,7 @@ class LLMSplitSuggestion(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1)
-    provider: LLMProvider
+    provider: LLMProvider | None = None
     provenance: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     parent_amount: Decimal
@@ -1039,7 +1077,7 @@ def suggest_evidence_split(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: LLMProvider,
+    provider: LLMProvider | None,
     proposer: LLMSplitProposer | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
@@ -1089,7 +1127,11 @@ def suggest_evidence_split(
     if transaction is None:
         raise TransactionNotFoundError(f"transaction not found: {transaction_id}")
     resolved_settings = settings if settings is not None else load_settings()
-    resolved_proposer = proposer if proposer is not None else _resolve_default_split_proposer(provider)
+    resolved_proposer = (
+        proposer
+        if proposer is not None
+        else (_resolve_default_split_proposer(provider) if provider is not None else None)
+    )
     evidence = (
         _resolve_evidence(
             transaction,
@@ -1143,7 +1185,7 @@ def suggest_evidence_split(
     _logger.info(
         "llm split suggest: transaction=%s provider=%s children=%d",
         transaction_id,
-        provider.value,
+        provider.value if provider is not None else "local-vision",
         len(children),
     )
     return LLMSplitSuggestion(

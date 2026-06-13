@@ -96,6 +96,7 @@ def test_verify_declaracion_uses_modelo_130_registry_snapshot() -> None:
             "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
             "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+            "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
         },
     )
 

@@ -11,8 +11,8 @@ from ....core.config import Settings, override_settings
 from ....domain.auth.apoderamientos import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._apoderado import (
+    ApoderadoLiveCheckUnavailableError,
     ApoderadoService,
-    ApoderadoStatus,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -142,20 +142,32 @@ class TestClear:
 
 
 class TestCheck:
-    def test_check_returns_local_status_until_live_wired(
+    def test_check_refuses_because_live_path_is_unwired(
         self,
         isolated_settings: Settings,
     ) -> None:
+        """``check`` is live verification; the path is sealed, so it refuses.
+
+        It must never silently re-read stored configuration and present it
+        as a live result — that is the silent mislabelling this contract
+        forbids. ``status`` is the offline read.
+        """
         svc = ApoderadoService(settings=isolated_settings)
         svc.configure(
             bucket_id="bucket-001",
             represented_nif="B1",
             scope_tokens=("IVA",),
         )
-        report = svc.check(bucket_id="bucket-001")
-        assert isinstance(report, ApoderadoStatus)
-        assert report.configured is True
-        assert report.represented_nif == "B1"
+        with pytest.raises(ApoderadoLiveCheckUnavailableError):
+            svc.check(bucket_id="bucket-001")
+
+    def test_check_refuses_even_when_unconfigured(
+        self,
+        isolated_settings: Settings,
+    ) -> None:
+        svc = ApoderadoService(settings=isolated_settings)
+        with pytest.raises(ApoderadoLiveCheckUnavailableError):
+            svc.check(bucket_id="bucket-001")
 
 
 class TestBucketIsolation:

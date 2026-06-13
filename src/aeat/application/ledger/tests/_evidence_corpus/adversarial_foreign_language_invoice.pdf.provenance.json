@@ -1,0 +1,8 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "adversarial_foreign_language",
+  "source": "aeat-test-generator",
+  "notes": "Hungarian-language invoice; text extraction must still yield content",
+  "sha256": "e820e2a3066b18218fbe2bd26c50bf657bf760c5622a4fb1af203da3ef315092",
+  "bytes": 1472
+}

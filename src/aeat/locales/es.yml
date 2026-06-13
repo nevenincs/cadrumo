@@ -1999,7 +1999,7 @@ cli:
     app_help: Gestionar configuración local y diagnósticos
     auth:
       apoderado:
-        check_help: Verificación en vivo de solo lectura
+        check_help: 'Verificar contra la AEAT (no disponible; las lecturas en vivo están selladas). Use ''status'' para la lectura sin conexión.'
         clear_help: Retirar la configuración de apoderado
         configure:
           represented_nif_help: NIF de la parte representada
@@ -2328,6 +2328,8 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros sensibles: el NIF en claro (sin ocultar), el libro de movimientos completo, las revisiones de cálculo y los registros de presentación. Se escribió en {out}. Bórralo tras la transferencia; no lo envíes por correo, no lo sincronices ni lo dejes en disco.'
+      import_active_switch_info: 'El perfil importado {name} es ahora el perfil ACTIVO; las órdenes siguientes operan sobre él. Ejecuta ''aeat config switch <name>'' para cambiar el perfil activo.'
     recover:
       help: Recuperar el almacen secreto de archivo con una clave de recuperacion
         y vincularlo a una nueva contrasena.
@@ -2666,8 +2668,7 @@ cli:
         el 50 por ciento.
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
       command_input_invalid_fallback: uno o más campos no superaron la validación
-      confirm_required: Pasa --yes para confirmar esta operación destructiva del libro,
-        o usa --dry-run primero
+      confirm_required: 'Pasa --yes para confirmar esta operación destructiva del libro.'
       filter_parse_error: 'Fallo al analizar el filtro del libro cerca de %{token}:
         %{reason}.'
       id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
@@ -2893,6 +2894,7 @@ cli:
         al proponente de division --llm.
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la división de la transacción
+      classification_dropped: 'La clasificación del padre %{classification} no se copió a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita reclasificarse con ''aeat app ledger classify''.'
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el perfil activo

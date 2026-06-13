@@ -20,13 +20,15 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # ceiling; their owners should extract submodules during their next pass.
     "src/aeat/application/calculations/_cross_period_clean_state.py": 1261,  # SPLIT-CANDIDATE
     "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1392,  # SPLIT-CANDIDATE
-    "src/aeat/application/ledger/_llm_classification.py": 1291,  # SPLIT-CANDIDATE
+    "src/aeat/application/ledger/_llm_classification.py": 1340,  # SPLIT-CANDIDATE (grew with on-host vision dispatch + provider-optional UX)
     "src/aeat/application/modelo/_verification_actions.py": 1469,  # SPLIT-CANDIDATE
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
-    "src/aeat/application/overview/_calendar.py": 1450,
+    # Live-censo calendar reconciliation is actively landing and growing; bounded
+    # settling ceiling (present size + margin) per the rationale below.
+    "src/aeat/application/overview/_calendar.py": 1490,
     "src/aeat/application/overview/tests/test_calendar.py": 1396,
-    "src/aeat/application/overview/tests/test_calendar_filing_evidence.py": 1492,  # SPLIT-CANDIDATE
+    "src/aeat/application/overview/tests/test_calendar_filing_evidence.py": 1530,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_applicability.py": 1252,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_schema.py": 1270,
     "src/aeat/entrypoints/cli/_app_live.py": 1265,

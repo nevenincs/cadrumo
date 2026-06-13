@@ -406,6 +406,61 @@ def filing_record_lines(record) -> list[str]:
     return lines
 
 
+def verification_report_notices(report) -> list[Notice]:
+    """Project every verification finding onto the envelope notices channel.
+
+    A verify run that is NOT granted ``verificado_completo`` carries
+    blocking and/or warning findings; without this projection the JSON
+    envelope reported ``status: "success"`` with an empty ``notices`` list
+    while the exit code was 1 and ``result.findings`` held blocking findings
+    — a contract break against
+    :func:`aeat.core.json_contract.derive_status`, which derives the
+    envelope ``status`` from notice severity in lock-step with the
+    ``ExitCode`` table. Each :class:`ModeloVerificationFinding` becomes one
+    :class:`Notice`.
+
+    Severity mapping: both ``BLOCKING`` and ``WARNING`` finding severities
+    map to :attr:`NoticeSeverity.WARNING`. ``NoticeSeverity`` carries no
+    ``ERROR`` member (success/warning ride the stdout spine; ``error`` is
+    reserved for the stderr error envelope), and a single warning notice is
+    sufficient to resolve the envelope to :attr:`EnvelopeStatus.WARNING` — a
+    non-``success`` status that matches the exit-1 a not-granted verify
+    raises. The finding's actual ``severity`` and ``kind`` are preserved on
+    :attr:`Notice.context` so a machine consumer can still distinguish a
+    blocking finding from an advisory one. ``legal_refs`` / ``source_refs``
+    ride on the context too, mirroring the regulatory grounding the
+    text-mode ``finding_legal_refs`` lines render. The finding's
+    ``next_action`` becomes the notice ``suggestion``.
+
+    A granted (clean) verify carries no findings, so this returns an empty
+    list and the envelope stays :attr:`EnvelopeStatus.SUCCESS`.
+    """
+    notices: list[Notice] = []
+    for finding in report.findings:
+        context: dict[str, str] = {
+            "severity": finding.severity.value,
+            "kind": finding.kind.value,
+        }
+        if finding.casilla_id is not None:
+            context["casilla_id"] = finding.casilla_id
+        if finding.expectation_id is not None:
+            context["expectation_id"] = finding.expectation_id
+        if finding.legal_refs:
+            context["legal_refs"] = ", ".join(finding.legal_refs)
+        if finding.source_refs:
+            context["source_refs"] = ", ".join(finding.source_refs)
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=f"modelo.work.verify.finding.{finding.kind.value}",
+                message=finding.message,
+                suggestion=finding.next_action,
+                context=context,
+            ),
+        )
+    return notices
+
+
 def verification_report_payload(report) -> VerificationReportPayload:
     return VerificationReportPayload(
         verification_report_id=report.verification_report_id,

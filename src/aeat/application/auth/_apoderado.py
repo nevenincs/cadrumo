@@ -9,8 +9,10 @@ Operator verbs:
 ``clear``
     Retire the apoderado configuration for the active bucket.
 ``check``
-    Read-only live verification (calls
-    :func:`AeatAccessGate.require_live_read`).
+    Live verification of the stored apoderamiento against the AEAT
+    sede. The live-read path is not wired, so this verb refuses with
+    :class:`ApoderadoLiveCheckUnavailableError`; use ``status`` for the
+    offline configuration read.
 
 Configuration is persisted per-bucket as an encrypted envelope row in
 the :class:`SecureObjectRepository` under the
@@ -196,15 +198,18 @@ class ApoderadoService:
     def check(self, *, bucket_id: str) -> ApoderadoStatus:
         """Read-only live verification (sealed pending live-read wiring).
 
-        ``check`` calls :func:`AeatAccessGate.require_live_read` before
-        remote contact. The current implementation reports the local
-        configuration only; the live verification extension point raises
-        :class:`ApoderadoLiveCheckUnavailableError` until wired.
+        ``check`` is the live-verification verb: it would contact the
+        AEAT sede to confirm the stored apoderamiento is still granted.
+        That live-read path is not wired (live AEAT reads are refused at
+        this boundary per the safety gate), so ``check`` raises
+        :class:`ApoderadoLiveCheckUnavailableError` unconditionally rather
+        than silently re-reading stored configuration and presenting it as
+        a live result. Use ``status`` for the offline configuration read.
 
-        Returns an :class:`ApoderadoStatus` summarising the current
-        apoderado configuration for ``bucket_id``.
+        :raises ApoderadoLiveCheckUnavailableError: always, until the
+            live-read path is wired.
         """
-        return self.status(bucket_id=bucket_id)
+        raise ApoderadoLiveCheckUnavailableError
 
 
 __all__ = [

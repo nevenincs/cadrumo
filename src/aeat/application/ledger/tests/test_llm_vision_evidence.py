@@ -26,7 +26,7 @@ from typing import ClassVar, override
 import pytest
 from PIL import Image
 
-from ....core.config import Settings, override_settings
+from ....core.config import Settings, load_settings, override_settings
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
@@ -38,11 +38,12 @@ from ....domain.transactions import (
     SourceFormat,
     Transaction,
     TransactionDirection,
+    TransactionValidationError,
     prompt_spec_with_saturation_fields,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._evidence import PurchaseInvoiceEvidenceService
-from .._llm_classification import _resolve_evidence
+from .._llm_classification import _classify_with_evidence, _resolve_evidence, _ResolvedEvidence
 from .._vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -212,3 +213,48 @@ def test_vision_classifier_classifies_from_images(profile: TestRuntimeProfile) -
     user_message = messages[-1]
     assert isinstance(user_message, dict)
     assert user_message["images"] == list(images)  # ty: ignore[invalid-argument-type]  # narrowed above
+
+
+def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile) -> None:
+    """The UX fix: image evidence routes to the vision model even with no --llm provider."""
+    _ = profile  # active bucket session backs the LLM cache
+    classification_json = json.dumps(
+        {
+            "classification": "BUSINESS",
+            "confidence": 0.88,
+            "reason": "scanned office-supplies invoice read on-host",
+            "category": SpendingCategory.HARDWARE_AMORTIZABLE.value,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL_21.value,
+            "business_pct": None,
+        },
+    )
+    evidence = _ResolvedEvidence(
+        reference="ev-1", text=None, images=(base64.b64encode(_png_image()).decode("ascii"),),
+    )
+
+    def _call() -> tuple[LLMClassificationResponse, str]:
+        return _classify_with_evidence(
+            _transaction("ev-1"),
+            evidence,
+            text_classifier=None,  # no --llm provider resolved
+            spec=prompt_spec_with_saturation_fields(),
+            vision_classifier=None,
+            settings=load_settings(),
+        )
+
+    _observed, (response, provenance) = _run_against_loopback_ollama(classification_json, _call)
+    assert response.classification is BusinessClassification.BUSINESS
+    assert provenance.startswith("llm:local-vision:")
+
+
+def test_text_or_no_evidence_without_provider_refuses_instructively() -> None:
+    """Without a provider and without readable image evidence, the text path refuses."""
+    with pytest.raises(TransactionValidationError, match="needs a cloud provider"):
+        _classify_with_evidence(
+            _transaction("ev-1"),
+            None,  # no linked evidence -> text path -> needs a provider
+            text_classifier=None,
+            spec=prompt_spec_with_saturation_fields(),
+            vision_classifier=None,
+            settings=load_settings(),
+        )

@@ -33,6 +33,7 @@ from pydantic import ValidationError
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .envelope_helpers import unwrap_envelope_notices
 from .privacy_helpers import (
     assert_public_profile_id_not_leaked,
     assert_public_profile_id_redacted,
@@ -63,7 +64,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
 
     from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ....application.modelo import create_work_unit
-    from ....core import resolve_active_bucket_id
+    from ....core import Period, resolve_active_bucket_id
     from ....core.config import override_settings
     from ....domain.calculations.registry import CasillaObservation
     from ....domain.modelos._calculation_repository import (
@@ -131,7 +132,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             revision_id="2009-y-siguientes",
             repository=wu_repo,
             clock=_T0,
@@ -198,7 +199,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
             bucket_id=bucket_id,
             modelo=ModeloCode("303"),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
             filed_at=filed_at,
             filed_by="operator",
             status=ModeloRecordStatus.VIGENTE,
@@ -412,3 +413,80 @@ def test_import_label_collision_different_uuid_is_refused(tmp_path: Path) -> Non
         assert r_import.exit_code != 0, r_import.output
         assert_public_profile_id_not_leaked(r_import.output, source_bucket_id)
         assert "Traceback" not in r_import.output
+
+
+# ---------------------------------------------------------------------------
+# Data-safety surfacing: cleartext-bundle warning + active-switch info notice
+# ---------------------------------------------------------------------------
+
+
+def test_export_emits_cleartext_sensitivity_warning_notice(tmp_path: Path) -> None:
+    """``export`` surfaces a WARNING notice naming the path and the sensitive contents.
+
+    The portable bundle is a deliberate cleartext-on-disk portability
+    surface that, unlike every other persistence path, contains the raw tax
+    id verbatim plus the full ledger and filing history. The operator's only
+    signal that the file is sensitive is the typed :class:`Notice`; this test
+    proves it fires, carries the exact written path, names the contents, and
+    instructs deletion — and that the warning is justified because the raw
+    tax id really does land in the cleartext bundle.
+    """
+    bundle_path = tmp_path / "warn-bundle.json"
+    _seed_and_export(tmp_path, bundle_path)
+
+    # The warning is justified: the raw tax id is in the cleartext bundle,
+    # not the sha256: redaction that ``config profile show`` applies.
+    bundle_text = bundle_path.read_text(encoding="utf-8")
+    assert "12345678Z" in bundle_text
+
+    json_bundle_path = tmp_path / "warn-bundle-json.json"
+    r = _invoke(
+        ["--format", "json", "config", "profile", "export", "source", "--to", str(json_bundle_path)],
+    )
+    assert r.exit_code == 0, r.output
+
+    notices = unwrap_envelope_notices(r.output)
+    warning = next(
+        (n for n in notices if n["code"] == "config.profile.export.cleartext_sensitive_bundle"),
+        None,
+    )
+    assert warning is not None, f"export must surface the cleartext-sensitivity warning; got {notices}"
+    assert warning["severity"] == "warning"
+    message = warning["message"]
+    # Names the exact written path.
+    assert str(json_bundle_path) in message
+    assert warning["context"]["out"] == str(json_bundle_path)
+    # Names the sensitive contents.
+    assert "tax id" in message.lower()
+    # Instructs deletion after transfer.
+    assert "delete" in message.lower()
+
+
+def test_import_surfaces_active_profile_switch_info_notice(tmp_path: Path) -> None:
+    """``import`` surfaces an INFO notice making the active-profile switch explicit.
+
+    Importing a bundle silently makes the imported profile the active one.
+    A gestor importing a client mid-session would otherwise be switched
+    without any signal. This test proves the switch is surfaced as a typed
+    info :class:`Notice` that names the now-active profile and the recovery
+    command.
+    """
+    bundle_path = tmp_path / "switch-bundle.json"
+    source_bucket_id = _seed_and_export(tmp_path, bundle_path)
+
+    import_tmp = tmp_path / "switch-import-root"
+    with isolated_profile_storage_root(tmp_path=import_tmp):
+        r_import = _invoke(["--format", "json", "config", "profile", "import", str(bundle_path)])
+        assert r_import.exit_code == 0, r_import.output
+        assert_public_profile_payload_redacted(r_import.output, source_bucket_id)
+
+        notices = unwrap_envelope_notices(r_import.output)
+        switch = next(
+            (n for n in notices if n["code"] == "config.profile.import.active_profile_switched"),
+            None,
+        )
+        assert switch is not None, f"import must surface the active-profile-switch notice; got {notices}"
+        assert switch["severity"] == "info"
+        assert "source" in switch["message"]
+        assert "active" in switch["message"].lower()
+        assert switch["suggestion"] == "aeat config switch source"

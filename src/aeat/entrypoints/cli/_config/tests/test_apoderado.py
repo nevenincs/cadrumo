@@ -28,22 +28,26 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
         yield storage_root
 
 
-def test_apoderado_status_fails_without_profile(runner: CliRunner) -> None:
-    result = runner.invoke(app, ["auth", "apoderado", "status"])
-    # Must refuse — any non-zero exit code is acceptable (boundary maps
-    # refusals to its own exit category).
-    assert result.exit_code != 0
-    # The _config sub-app is invoked directly so the error boundary
-    # (applied only to the root CLI app) is absent. CliRefusedBoundaryError
-    # leaks as result.exception. Pin the exception type so an unrelated
-    # leaked exception cannot satisfy the check vacuously.
-    assert isinstance(result.exception, CliRefusedBoundaryError), (
-        f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
-    )
-    # CliRefusedBoundaryError carries the operator-facing copy via its
-    # translated_message key; str(exception) is intentionally empty
-    # because the rendering happens in the boundary, not on the exception.
-    assert result.exception.translated_message == "cli.config.profile.no_active_profile"
+def test_apoderado_status_fails_without_profile(runner: CliRunner, tmp_path: Path) -> None:
+    # Pin an isolated storage root with no active profile so an ambient
+    # active-profile pointer left by a peer test cannot mask the
+    # no-active-profile refusal this test asserts.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        result = runner.invoke(app, ["auth", "apoderado", "status"])
+        # Must refuse — any non-zero exit code is acceptable (boundary maps
+        # refusals to its own exit category).
+        assert result.exit_code != 0
+        # The _config sub-app is invoked directly so the error boundary
+        # (applied only to the root CLI app) is absent. CliRefusedBoundaryError
+        # leaks as result.exception. Pin the exception type so an unrelated
+        # leaked exception cannot satisfy the check vacuously.
+        assert isinstance(result.exception, CliRefusedBoundaryError), (
+            f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
+        )
+        # CliRefusedBoundaryError carries the operator-facing copy via its
+        # translated_message key; str(exception) is intentionally empty
+        # because the rendering happens in the boundary, not on the exception.
+        assert result.exception.translated_message == "cli.config.profile.no_active_profile"
 
 
 def test_apoderado_scopes_list(runner: CliRunner) -> None:
@@ -119,6 +123,18 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     status_after = runner.invoke(root_app, ["config", "auth", "apoderado", "status"])
     assert status_after.exit_code == 0, status_after.output
     assert "configured\tTrue" in status_after.output
+
+    # check: refuses. It is the live-verification verb and the live AEAT-read
+    # path is sealed, so it must NOT silently re-read the stored config and
+    # present it as a live result — it refuses with the registered REFUSED
+    # copy instead. Any non-zero exit is acceptable; the refusal carries the
+    # operator-facing message.
+    dispose_engine()
+    check = runner.invoke(root_app, ["config", "auth", "apoderado", "check"])
+    assert check.exit_code != 0, f"apoderado check should refuse, got: {check.output}"
+    assert "configured\tTrue" not in check.output, (
+        f"check leaked a stored-config status as a live result: {check.output!r}"
+    )
 
     # clear: exit 0, retires the apoderado config.
     dispose_engine()
