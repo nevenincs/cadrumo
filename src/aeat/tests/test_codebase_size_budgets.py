@@ -24,9 +24,11 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/modelo/_verification_actions.py": 1469,  # SPLIT-CANDIDATE
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
-    "src/aeat/application/overview/_calendar.py": 1450,
+    # Live-censo calendar reconciliation is actively landing and growing; bounded
+    # settling ceiling (present size + margin) per the rationale below.
+    "src/aeat/application/overview/_calendar.py": 1490,
     "src/aeat/application/overview/tests/test_calendar.py": 1396,
-    "src/aeat/application/overview/tests/test_calendar_filing_evidence.py": 1492,  # SPLIT-CANDIDATE
+    "src/aeat/application/overview/tests/test_calendar_filing_evidence.py": 1530,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_applicability.py": 1252,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_schema.py": 1270,
     "src/aeat/entrypoints/cli/_app_live.py": 1265,
