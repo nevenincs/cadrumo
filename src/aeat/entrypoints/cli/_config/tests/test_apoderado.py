@@ -120,6 +120,18 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     assert status_after.exit_code == 0, status_after.output
     assert "configured\tTrue" in status_after.output
 
+    # check: refuses. It is the live-verification verb and the live AEAT-read
+    # path is sealed, so it must NOT silently re-read the stored config and
+    # present it as a live result — it refuses with the registered REFUSED
+    # copy instead. Any non-zero exit is acceptable; the refusal carries the
+    # operator-facing message.
+    dispose_engine()
+    check = runner.invoke(root_app, ["config", "auth", "apoderado", "check"])
+    assert check.exit_code != 0, f"apoderado check should refuse, got: {check.output}"
+    assert "configured\tTrue" not in check.output, (
+        f"check leaked a stored-config status as a live result: {check.output!r}"
+    )
+
     # clear: exit 0, retires the apoderado config.
     dispose_engine()
     clear = runner.invoke(root_app, ["config", "auth", "apoderado", "clear"])

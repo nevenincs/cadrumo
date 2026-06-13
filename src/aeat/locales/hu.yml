@@ -1914,7 +1914,7 @@ cli:
     app_help: Helyi konfiguráció és diagnosztika kezelése.
     auth:
       apoderado:
-        check_help: Csak olvasható élő ellenőrzés.
+        check_help: 'Ellenőrzés az AEAT-nál (nem érhető el; az élő lekérdezés le van zárva). Használja a ''status'' parancsot az offline olvasáshoz.'
         clear_help: Az apoderado-konfiguráció megszüntetése.
         configure:
           represented_nif_help: A képviselt fél NIF-je.
@@ -2254,6 +2254,8 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
+      export_sensitivity_warning: 'Ez a csomag NEM titkosított, és érzékeny pénzügyi adatokat tartalmaz: a nyers adóazonosítót (nem kitakarva), a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. A következő helyre íródott: {out}. Az átvitel után törölje; ne küldje e-mailben, ne szinkronizálja, és ne hagyja a lemezen.'
+      import_active_switch_info: 'Az importált {name} profil mostantól az AKTÍV profil; a további parancsok ezen működnek. Az aktív profil módosításához futtassa: ''aeat config switch <name>''.'
     recover:
       help: A fajlalapu titkos tar helyreallitasa helyreallitasi kulccsal es uj passphrase
         ertekhez kotese.

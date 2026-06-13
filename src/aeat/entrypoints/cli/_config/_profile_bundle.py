@@ -14,6 +14,7 @@ import typer
 from ....core.errors import AeatError as _AeatError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
+from ....core.json_contract import Notice, NoticeSeverity
 from ....core.time import now as _now
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -129,6 +130,7 @@ def _register_profile_export_command(
             out=str(out),
             schema_version=bundle.bundle_schema_version,
         )
+        sensitivity_notice = _build_export_sensitivity_notice(out)
         _emit_envelope(
             ctx,
             command="config.profile.export",
@@ -138,8 +140,42 @@ def _register_profile_export_command(
                 f"display_name\t{pointer.label}",
                 f"out\t{out}",
                 f"schema_version\t{bundle.bundle_schema_version}",
+                f"WARNING\t{sensitivity_notice.message}",
             ),
+            notices=(sensitivity_notice,),
         )
+
+
+def _build_export_sensitivity_notice(out: Path) -> Notice:
+    """Build the loud sensitivity warning for a written cleartext profile bundle.
+
+    The portable bundle is a deliberate :class:`UserProfilePortableExport`
+    portability surface, so unlike every other persistence path it lands
+    cleartext on operator disk. The bundle carries the raw tax id (verbatim,
+    not the ``sha256:`` redaction ``config profile show`` applies) plus the
+    full ledger, calculation revisions, and filing records. This warning is
+    the operator's only signal that the file is sensitive financial data: it
+    names the contents, the exact path written, and instructs deletion after
+    transfer. Routed through the typed :class:`Notice` channel per
+    ``cli-notices-are-the-only-diagnostic-channel``; the ``sensitive-financial
+    -data-secure-storage-only`` rule's portability carve-out is what makes the
+    cleartext write permissible, and this warning is its floor.
+    """
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="config.profile.export.cleartext_sensitive_bundle",
+        message=tr(
+            "cli.config.profile.export_sensitivity_warning",
+            default=(
+                "This bundle is UNENCRYPTED and contains sensitive financial data: "
+                "the raw tax id (not redacted), the full ledger, calculation revisions, "
+                "and filing records. It was written to {out}. Delete it after transfer; "
+                "do not email, sync, or leave it on disk."
+            ),
+            out=str(out),
+        ),
+        context={"out": str(out)},
+    )
 
 
 def _register_profile_import_command(
@@ -256,6 +292,7 @@ def _register_profile_import_command(
             display_name=target_label,
             schema_version=bundle.bundle_schema_version,
         )
+        switch_notice = _build_import_active_switch_notice(target_label)
         _emit_envelope(
             ctx,
             command="config.profile.import",
@@ -264,8 +301,38 @@ def _register_profile_import_command(
                 f"profile_id\t{target_id}",
                 f"display_name\t{target_label}",
                 f"schema_version\t{bundle.bundle_schema_version}",
+                f"INFO\t{switch_notice.message}",
             ),
+            notices=(switch_notice,),
         )
+
+
+def _build_import_active_switch_notice(target_label: str) -> Notice:
+    """Build the info notice that names the active-profile switch on import.
+
+    Importing a bundle provisions the new profile through
+    ``register_active_profile``, which atomically makes the imported profile
+    the ACTIVE one — every subsequent command in the session operates on it.
+    A gestor importing a client mid-session would otherwise be silently
+    switched onto that client. This non-blocking ``info`` :class:`Notice`
+    makes the switch explicit and tells the operator how to switch back,
+    per ``cli-notices-are-the-only-diagnostic-channel``.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="config.profile.import.active_profile_switched",
+        message=tr(
+            "cli.config.profile.import_active_switch_info",
+            default=(
+                "The imported profile {name} is now the ACTIVE profile; subsequent "
+                "commands operate on it. Run 'aeat config switch <name>' to change "
+                "the active profile."
+            ),
+            name=target_label,
+        ),
+        suggestion=f"aeat config switch {target_label}",
+        context={"active_profile": target_label},
+    )
 
 
 def _validate_bundle_schema_version(bundle: object) -> None:

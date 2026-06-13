@@ -1969,7 +1969,7 @@ cli:
     app_help: Gestionar configuració local i diagnòstics
     auth:
       apoderado:
-        check_help: Verificació en viu de només lectura
+        check_help: 'Verificar contra l''AEAT (no disponible; les lectures en viu estan segellades). Feu servir ''status'' per a la lectura sense connexió.'
         clear_help: Retirar la configuració d'apoderat
         configure:
           represented_nif_help: NIF de la part representada
@@ -2295,6 +2295,8 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      export_sensitivity_warning: 'Aquest paquet NO està xifrat i conté dades financeres sensibles: el NIF en clar (sense ocultar), el llibre de moviments complet, les revisions de càlcul i els registres de presentació. S''ha escrit a {out}. Esborra''l després de la transferència; no l''enviïs per correu, no el sincronitzis ni el deixis al disc.'
+      import_active_switch_info: 'El perfil importat {name} ara és el perfil ACTIU; les ordres següents operen sobre ell. Executa ''aeat config switch <name>'' per canviar el perfil actiu.'
     recover:
       help: Recuperar el magatzem secret de fitxer amb una clau de recuperacio i vincular-lo
         a una nova contrasenya.
