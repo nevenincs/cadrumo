@@ -24,7 +24,6 @@ from ....application.ledger import (
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
 )
-
 from .._ledger_payloads import LedgerRemoveResult, LedgerResetResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

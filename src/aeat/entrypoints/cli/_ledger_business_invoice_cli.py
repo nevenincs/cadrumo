@@ -140,7 +140,8 @@ invoice_app = typer.Typer(
 
 
 @invoice_app.command(
-    "add", help=tr("cli.app.ledger.invoice.add_help", default="Register a new business invoice."),
+    "add",
+    help=tr("cli.app.ledger.invoice.add_help", default="Register a new business invoice."),
 )
 def invoice_add(
     ctx: typer.Context,
@@ -228,12 +229,14 @@ def invoice_add(
 
 
 @invoice_app.command(
-    "view", help=tr("cli.app.ledger.invoice.view_help", default="Show one business invoice."),
+    "view",
+    help=tr("cli.app.ledger.invoice.view_help", default="Show one business invoice."),
 )
 def invoice_view(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+        ...,
+        help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
     kind: InvoiceKindOption = typer.Option(
         ...,
@@ -309,13 +312,15 @@ def invoice_list(
 @invoice_app.command(
     "update",
     help=tr(
-        "cli.app.ledger.invoice.update_help", default="Update mutable fields on one business invoice.",
+        "cli.app.ledger.invoice.update_help",
+        default="Update mutable fields on one business invoice.",
     ),
 )
 def invoice_update(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+        ...,
+        help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
     kind: InvoiceKindOption = typer.Option(
         ...,
@@ -364,12 +369,14 @@ def invoice_update(
 
 
 @invoice_app.command(
-    "remove", help=tr("cli.app.ledger.invoice.remove_help", default="Delete one business invoice."),
+    "remove",
+    help=tr("cli.app.ledger.invoice.remove_help", default="Delete one business invoice."),
 )
 def invoice_remove(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
-        ..., help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+        ...,
+        help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
     kind: InvoiceKindOption = typer.Option(
         ...,
@@ -380,7 +387,9 @@ def invoice_remove(
         ),
     ),
     yes: bool = typer.Option(
-        False, "--yes", help=tr("cli.app.ledger.invoice.yes_help", default="Confirm removal."),
+        False,
+        "--yes",
+        help=tr("cli.app.ledger.invoice.yes_help", default="Confirm removal."),
     ),
 ) -> None:
     """Delete one business invoice record."""

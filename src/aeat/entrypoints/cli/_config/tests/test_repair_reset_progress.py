@@ -72,6 +72,41 @@ def _row_exists() -> bool:
         return secure_object_repository_for_active_bucket().exists("aeat.workflow", "state")
 
 
+def _assert_operator_text_avoids_storage_terms(output: str) -> None:
+    lowered = output.lower()
+    forbidden_terms = ("workflow state", "workflow-state", "envelope", "fingerprint", "bucket")
+    for term in forbidden_terms:
+        assert term not in lowered
+
+
+def _normalise_help_text(output: str) -> str:
+    return " ".join(output.split())
+
+
+def test_reset_progress_help_uses_operator_progress_wording() -> None:
+    result = invoke_cached_cli(["config", "repair", "reset-progress", "--help"])
+
+    assert result.exit_code == 0, result.output
+    normalised = _normalise_help_text(result.output)
+    assert (
+        "saved interrupted-command progress" in normalised
+        or "progreso guardado de un comando interrumpido" in normalised
+    )
+    _assert_operator_text_avoids_storage_terms(result.output)
+
+
+def test_reset_progress_text_output_uses_operator_labels_not_storage_labels() -> None:
+    _seed_workflow_state()
+
+    result = invoke_cached_cli(["config", "repair", "reset-progress", "--dry-run"])
+
+    assert result.exit_code == 0, result.output
+    assert "progress_schema_version\t1" in result.output
+    assert "stored_bytes\t" in result.output
+    assert "read_status\treadable" in result.output
+    _assert_operator_text_avoids_storage_terms(result.output)
+
+
 def test_reset_progress_dry_run_returns_fingerprint_without_deleting_row() -> None:
     _seed_workflow_state()
 

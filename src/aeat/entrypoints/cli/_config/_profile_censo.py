@@ -99,11 +99,7 @@ def _live_censo_verified_profile_keys(record: UserProfileRecord) -> tuple[str, .
     stamped_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
     return tuple(
         sorted(
-            {
-                fact.path
-                for fact in record.facts
-                if fact.path.strip() and fact.source in stamped_sources
-            },
+            {fact.path for fact in record.facts if fact.path.strip() and fact.source in stamped_sources},
         ),
     )
 
@@ -358,8 +354,7 @@ def _register_censo_apply(censo_app: typer.Typer) -> None:
             lines.append(f"calendar_modelos\t{','.join(typed_apply.calendar_obligation_modelos)}")
         if typed_apply.calendar_enrolment_source_paths:
             lines.append(
-                "calendar_enrolment_sources\t"
-                f"{','.join(typed_apply.calendar_enrolment_source_paths)}",
+                f"calendar_enrolment_sources\t{','.join(typed_apply.calendar_enrolment_source_paths)}",
             )
         for row in typed_apply.calendar_obligation_rows:
             lines.append(

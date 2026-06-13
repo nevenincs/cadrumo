@@ -406,7 +406,8 @@ def bad_parameter_from_localized_context(exc: BaseException) -> typer.BadParamet
 
 
 def calculation_revision_not_found_bad_parameter(
-    calculation_revision_id: str, exc: CalculationRevisionNotFoundError,
+    calculation_revision_id: str,
+    exc: CalculationRevisionNotFoundError,
 ) -> typer.BadParameter:
     """Render a not-found calc-revision id, hinting when it is really a work-unit id."""
     stripped = calculation_revision_id.strip()

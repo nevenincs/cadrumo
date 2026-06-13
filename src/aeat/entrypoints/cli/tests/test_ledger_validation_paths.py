@@ -209,6 +209,29 @@ def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
     assert "at least one field" in combined or "patch" in combined, combined
 
 
+def test_ledger_update_rejects_negative_amount_with_instructive_error(tmp_path: Path) -> None:
+    """``ledger update --amount=-49.99`` is refused at the CLI magnitude boundary."""
+
+    txn_id = _create_profile_and_import(tmp_path)
+
+    result = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "update",
+            txn_id,
+            "--amount",
+            "-49.99",
+        ],
+    )
+
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    assert "non-negative magnitude" in combined, combined
+    assert "--direction" in combined, combined
+
+
 # ---------------------------------------------------------------------------
 # contract.3  ledger allocate — business_pct out of range for MIXED
 # ---------------------------------------------------------------------------

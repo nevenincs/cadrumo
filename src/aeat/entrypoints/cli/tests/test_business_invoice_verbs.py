@@ -194,13 +194,31 @@ def test_invoice_kind_rejects_unknown_value(cli_runner: CliRunner) -> None:
 def test_invoice_list_filters_by_kind(cli_runner: CliRunner) -> None:
     cli_runner.invoke(
         invoice_app,
-        ["add", "--kind", "received", "--counterparty-nif", "12345678Z",
-         "--invoice-number", "PAY-001", "--invoice-date", "2026-03-15"],
+        [
+            "add",
+            "--kind",
+            "received",
+            "--counterparty-nif",
+            "12345678Z",
+            "--invoice-number",
+            "PAY-001",
+            "--invoice-date",
+            "2026-03-15",
+        ],
     )
     cli_runner.invoke(
         invoice_app,
-        ["add", "--kind", "issued", "--counterparty-nif", "87654321X",
-         "--invoice-number", "COL-001", "--invoice-date", "2026-03-15"],
+        [
+            "add",
+            "--kind",
+            "issued",
+            "--counterparty-nif",
+            "87654321X",
+            "--invoice-number",
+            "COL-001",
+            "--invoice-date",
+            "2026-03-15",
+        ],
     )
     received_list = cli_runner.invoke(invoice_app, ["list", "--kind", "received"])
     issued_list = cli_runner.invoke(invoice_app, ["list", "--kind", "issued"])
@@ -215,13 +233,31 @@ def test_invoice_list_without_kind_returns_both_kinds(cli_runner: CliRunner) -> 
     # kinds so an operator never silently loses half their records.
     cli_runner.invoke(
         invoice_app,
-        ["add", "--kind", "received", "--counterparty-nif", "12345678Z",
-         "--invoice-number", "PAY-001", "--invoice-date", "2026-03-15"],
+        [
+            "add",
+            "--kind",
+            "received",
+            "--counterparty-nif",
+            "12345678Z",
+            "--invoice-number",
+            "PAY-001",
+            "--invoice-date",
+            "2026-03-15",
+        ],
     )
     cli_runner.invoke(
         invoice_app,
-        ["add", "--kind", "issued", "--counterparty-nif", "87654321X",
-         "--invoice-number", "COL-001", "--invoice-date", "2026-03-15"],
+        [
+            "add",
+            "--kind",
+            "issued",
+            "--counterparty-nif",
+            "87654321X",
+            "--invoice-number",
+            "COL-001",
+            "--invoice-date",
+            "2026-03-15",
+        ],
     )
     both = cli_runner.invoke(invoice_app, ["list"])
     assert both.exit_code == 0, both.output

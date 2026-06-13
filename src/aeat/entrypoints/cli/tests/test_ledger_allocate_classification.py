@@ -10,17 +10,25 @@ finding, persona Nuria).
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
 from typer.testing import CliRunner
 
+from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _RUNNER = CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def _isolated_storage(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _imported_transaction_id(tmp_path: Path) -> str:
