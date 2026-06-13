@@ -2688,6 +2688,8 @@ cli:
       warning: Figyelmeztetés
       warnings: Figyelmeztetések
       'yes': Igen
+      purchase_invoice_evidence_id: 'Beszerzési számla bizonylat'
+      attachment_ids: 'Mellékletek'
     link:
       actor_help: A bucket esemenyekhez rogzitett operatori cimke.
       errors:

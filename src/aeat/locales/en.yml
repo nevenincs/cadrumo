@@ -2582,6 +2582,8 @@ cli:
       warning: Warning
       warnings: Warnings
       'yes': 'Yes'
+      purchase_invoice_evidence_id: 'Purchase invoice evidence'
+      attachment_ids: 'Attachments'
     link:
       actor_help: Operator label recorded on bucket events.
       errors:

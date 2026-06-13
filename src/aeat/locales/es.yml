@@ -2767,6 +2767,8 @@ cli:
       warning: Aviso
       warnings: Avisos
       'yes': Sí
+      purchase_invoice_evidence_id: 'Evidencia de factura de compra'
+      attachment_ids: 'Adjuntos'
     link:
       actor_help: Etiqueta del operador registrada en los eventos del bucket.
       errors:
