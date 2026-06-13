@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Final
 
 from ._schema import (
     ExtractionStatus,
@@ -30,6 +31,7 @@ EXAMPLE_EXTRACTOR_ID = "normatives-html-example"
 
 #: Version of the worked-example extractor.
 EXAMPLE_EXTRACTOR_VERSION = "0.1"
+_UTF_8: Final[str] = "utf-8"
 
 #: AEAT/BOE corpus reuse requires attribution. The production normatives
 #: preprocessor resolves the precise BOE permalink from the sibling
@@ -68,7 +70,7 @@ def extract_normatives_html(source: Path, *, repo_root: Path) -> PreprocessOutpu
         the articulo heading, text = the parrafo body) or an ``empty``
         record when no recognisable article markup is present.
     """
-    markup = source.read_text(encoding="utf-8")
+    markup = source.read_text(encoding=_UTF_8)
     title_match = _ARTICULO.search(markup)
     body_parts = [_strip(m.group("body")) for m in _PARRAFO.finditer(markup)]
     body = "\n\n".join(part for part in body_parts if part)

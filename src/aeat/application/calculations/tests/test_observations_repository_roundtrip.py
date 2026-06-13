@@ -79,6 +79,10 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             original,
             source_kind="aeat_sede_justificante",
             captured_at=captured_at,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "202530300000001Z",
+            },
         )
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
@@ -86,6 +90,10 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
         assert loaded.observation == original
         assert loaded.source_kind == "aeat_sede_justificante"
         assert loaded.captured_at == captured_at
+        assert loaded.source_metadata == {
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": "202530300000001Z",
+        }
         assert len(loaded.observation.observations) == 2
         loaded_computed = loaded.observation.observations[1]
         assert loaded_computed.formula_id == "iva.formula.resultado"

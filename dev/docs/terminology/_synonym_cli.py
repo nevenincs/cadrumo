@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Final
 
 import typer
 
@@ -19,6 +19,7 @@ from ._synonym_mining import (
 )
 
 _DEFAULT_QUEUE_PATH = synonym_ratification_queue_path()
+_UTF_8: Final[str] = "utf-8"
 
 app = typer.Typer(
     name="synonyms",
@@ -62,13 +63,13 @@ def mine(
 ) -> None:
     """Filter raw embedding observations into a proposed ratification queue."""
     try:
-        payload = json.loads(observations.read_text(encoding="utf-8"))
+        payload = json.loads(observations.read_text(encoding=_UTF_8))
         rows = tuple(SynonymCandidateObservation.model_validate(row) for row in payload)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         raise typer.BadParameter(f"{observations}: cannot load observations: {exc}") from exc
     queue = mine_synonym_candidates(rows)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(queue.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="")
+    out.write_text(queue.model_dump_json(indent=2) + "\n", encoding=_UTF_8, newline="")
     typer.echo(f"synonyms: wrote {len(queue.entries)} proposed candidate(s) -> {out}")
 
 

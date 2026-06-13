@@ -99,6 +99,13 @@ Store invoices and receipts and link them to the transactions they support.
 Update, remove, split, merge, stash, or archive transactions safely.
 :::
 
+:::{grid-item-card} Review Queue
+:link: review-queue
+:link-type: doc
+
+Work through everything that still wants attention before a filing.
+:::
+
 :::{grid-item-card} Record Modelo 036
 :link: modelo-036
 :link-type: doc
@@ -127,6 +134,13 @@ Export, edit, and pull back model calculations using a Google Sheets spreadsheet
 Run verification, read the report findings, and fix what blocks export.
 :::
 
+:::{grid-item-card} Filing Readiness
+:link: filing-readiness
+:link-type: doc
+
+Check readiness, dependencies, lifecycle history, and year-over-year deltas.
+:::
+
 :::{grid-item-card} File at AEAT
 :link: file-at-aeat
 :link-type: doc
@@ -139,6 +153,13 @@ Export the file, upload it at the AEAT portal yourself, record, and reconcile.
 :link-type: doc
 
 Compare local filing data with the AEAT justificante.
+:::
+
+:::{grid-item-card} Filing Receipts
+:link: justificante-receipts
+:link-type: doc
+
+Pull, store, and inspect the AEAT justificante for each filed period.
 :::
 
 ::::
@@ -183,6 +204,13 @@ Preview, apply, reject, or override local LLM suggestions.
 Install and authenticate a provider CLI so LLM suggestions work.
 :::
 
+:::{grid-item-card} Protect Data Access
+:link: protect-data-access
+:link-type: doc
+
+Set up a recovery key, change or recover your passphrase, lock, or reset.
+:::
+
 :::{grid-item-card} Troubleshooting
 :link: troubleshooting
 :link-type: doc
@@ -210,6 +238,7 @@ import-bank-statements
 classify-transactions
 ledger-evidence
 correct-ledger-entries
+review-queue
 modelo-036
 classify-with-llm
 setup-llm-classification
@@ -219,8 +248,11 @@ filing-spine
 modelo-303
 modelo-390
 verification-reports
+filing-readiness
 file-at-aeat
 reconcile
+justificante-receipts
+protect-data-access
 troubleshooting
 authenticate-with-aeat
 ```

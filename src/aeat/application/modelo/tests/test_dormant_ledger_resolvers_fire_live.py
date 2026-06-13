@@ -19,7 +19,9 @@ Chains:
   :class:`LedgerRentaIncomeAggregationSourceResolver`): seed real INCOMING
   business EUR transactions, calculate M130/1T live, assert casilla ``01``
   (Ingresos, bound to ``modelo-130-actividad-economica-ingresos-cumulative``,
-  ``gross_income_sum``) equals the seeded income sum. PROVEN LIVE.
+  ``ingresos_integros_sum``) equals the seeded income sum — the seeds carry
+  no ``taxable_base`` tagging, so the per-observation fallback yields the
+  gross transfer amounts. PROVEN LIVE.
 
 * M349 intracomunitaria operations (``collectible_invoice``,
   :class:`InvoiceCatalogueSourceResolver`): seed real ISSUED

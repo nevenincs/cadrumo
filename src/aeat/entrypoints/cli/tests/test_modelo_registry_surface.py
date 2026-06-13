@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import UTC, datetime
 
 import pytest
 import typer
@@ -318,6 +319,45 @@ def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
     assert "--binding KEY=VALUE" in guidance
     assert "bindings list --missing" in guidance
     assert "irpf.previous_year_economic_activity_net_income" in guidance
+
+
+def test_bindings_discovery_command_renders_runnable_period_token() -> None:
+    """The work-unit-scoped discovery command must place only the bare AEAT
+    period token after ``--period`` — never the combined ``"<year> <token>"``
+    display form of ``Period.__str__`` — so the suggested command is runnable
+    verbatim (``--period 1T``, with the year on its own ``--year`` axis)."""
+
+    from ....core import Period
+    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+    from .._modelo import _bindings_discovery_command
+
+    typed_period = Period.from_year_and_code(2026, "1T")
+    unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id="test-bucket",
+            modelo="130",
+            filing_year=2026,
+            period=typed_period,
+            revision_id="r" + "0" * 63,
+        ),
+        bucket_id="test-bucket",
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period=typed_period,
+        revision_id="r" + "0" * 63,
+        name="130-2026-1T",
+        created_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
+    )
+
+    command = _bindings_discovery_command(unit)
+
+    assert "--period 1T --missing" in command
+    assert "--year 2026 --period 1T" in command
+    # The combined display form must never appear inside the --period value.
+    assert "--period 2026" not in command
+    assert str(typed_period) not in command
+    assert command == "aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing"
 
 
 def test_missing_binding_guidance_passes_non_input_errors_through() -> None:

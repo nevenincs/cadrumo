@@ -55,6 +55,7 @@ def persist_filed_calculation_observation(
         source_kind="aeat_sede_justificante",
         captured_at=observation.presented_at,
         stamped_revision_id=stamped_revision_id,
+        source_metadata=_filed_observation_source_metadata(observation),
     )
     if observation.modelo == Modelo.M303:
         IvaCompensationHistoryRepository().save_period(
@@ -108,6 +109,8 @@ def persist_iva_compensation_history_observations_strict(
         latest.items(),
         key=lambda item: (item[0][0], item[0][1].registry_token),
     ):
+        if not _is_active_filed_observation(observation):
+            continue
         try:
             key = persist_filed_calculation_observation(observation)
         except SedeParseError as exc:
@@ -163,6 +166,14 @@ def _is_active_filed_observation(observation: FiledDeclaracionObservation) -> bo
 
 def _filed_observation_rank(observation: FiledDeclaracionObservation) -> tuple[bool, datetime, str]:
     return (_is_active_filed_observation(observation), observation.presented_at, observation.expediente_id)
+
+
+def _filed_observation_source_metadata(observation: FiledDeclaracionObservation) -> dict[str, str]:
+    return {
+        "aeat_register_status": observation.status.strip().upper(),
+        "aeat_expediente_id": observation.expediente_id,
+        "authenticated_identity": observation.authenticated_identity.strip().upper(),
+    }
 
 
 @dataclass(frozen=True)

@@ -24,7 +24,7 @@ from ...domain.portals import (
 
 
 class PortalNotFoundError(AeatError):
-    """Raised when ``aeat app live portals show`` targets an unknown portal."""
+    """Raised when ``aeat app live portals view`` targets an unknown portal."""
 
 
 class PortalRow(BaseModel):

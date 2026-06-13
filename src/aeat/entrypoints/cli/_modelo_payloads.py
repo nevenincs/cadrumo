@@ -29,6 +29,11 @@ from ...domain.modelos._ids import (
     VerificationReportId,
     WorkUnitId,
 )
+from ._payloads_modelo_reconcile import (
+    ModeloReconcileResult,
+    ModeloReconciliationDiffPayload,
+    WorkCompareTaxationResult,
+)
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
@@ -74,6 +79,37 @@ class ObservationPayload(OutputSchema):
     operand_values: tuple[str, ...] = ()
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
+
+
+class WorkRecargoPayload(OutputSchema):
+    """Recargo band provenance for an overdue work-unit filing deadline.
+
+    Surfaces the Art. 27 LGT surcharge band the engine resolved for a
+    late filing so a JSON consumer reads the same band id, percentage,
+    interest applicability, and binding legal reference the text-mode
+    plazo lines render.
+    """
+
+    band_id: str
+    surcharge_pct: str  # serialised Decimal
+    interest_applies: bool
+    legal_ref: str
+
+
+class WorkPlazoDeadlinePayload(OutputSchema):
+    """Filing-deadline (plazo voluntario) state for the work unit.
+
+    Structured result data the calculate verb exists to surface: the
+    voluntary-filing close date, the in-time / overdue posture, and — when
+    overdue — the resolved Art. 27 LGT recargo band. Distinct from the
+    non-blocking advisory prose, which rides the envelope ``notices``
+    channel.
+    """
+
+    closes_on: str  # ISO date
+    days_remaining: int | None = None
+    days_overdue: int | None = None
+    recargo: WorkRecargoPayload | None = None
 
 
 class ResultSummaryRowPayload(OutputSchema):
@@ -404,6 +440,12 @@ class WorkCalculateResult(OutputSchema):
     # calculation still ran. The accompanying advisory prose is surfaced on
     # the envelope ``notices`` channel, not as a bespoke payload field.
     authorization_state: str | None = None
+    # Filing-deadline (plazo voluntario) state for the work unit. Structured
+    # result data — the voluntary-filing close date, in-time / overdue
+    # posture, and the resolved Art. 27 LGT recargo band when overdue.
+    # Populated when the deadline is resolvable; ``None`` otherwise. The
+    # overdue-warning prose rides the envelope ``notices`` channel.
+    deadline: WorkPlazoDeadlinePayload | None = None
 
 
 @register_schema("modelo.work.revisions")
@@ -1168,58 +1210,6 @@ class WorkPreviewMaritimeExemptionResult(OutputSchema):
     retmar_warning: str | None = None
     casilla_values: dict[str, str] = Field(default_factory=dict)
     observations: list[CasillaObservationPayload] = Field(default_factory=list)
-
-
-class ModeloReconciliationDiffPayload(OutputSchema):
-    """One per-casilla disagreement surfaced in a reconciliation report."""
-
-    field_name: str
-    work_unit_value: str = ""
-    evidence_value: str = ""
-    kind: str
-
-
-@register_schema("modelo.reconcile.pull")
-@register_schema("modelo.reconcile.file")
-class ModeloReconcileResult(OutputSchema):
-    """Result payload for ``modelo reconcile file`` and ``modelo reconcile pull``.
-
-    Both verbs share the :class:`ModeloReconciliationReport` shape from
-    the application service: a work-unit-level verdict, the bucket
-    scope, the external-evidence source kind and path, the per-casilla
-    diff list, the reconciliation timestamp, and an optional narrative.
-    """
-
-    work_unit_id: WorkUnitId
-    bucket_id: BucketId
-    source_kind: str
-    source_path: str
-    verdict: str
-    diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
-    reconciled_at: str
-    narrative: str = ""
-
-
-@register_schema("modelo.work.compare_taxation")
-class WorkCompareTaxationResult(OutputSchema):
-    """Result payload for ``aeat app modelo work compare-taxation``.
-
-    Surfaces cuota resultante autoliquidación (0595) and cuota
-    diferencial / resultado (0610) for both conjunta and individual
-    filing modes, plus the delta and recommendation.
-    """
-
-    operation: str = "modelo.work.compare_taxation"
-    filing_year: int
-    modelo: str
-    revision: str
-    conjunta_cuota_resultante: str
-    individual_cuota_resultante: str
-    conjunta_resultado: str
-    individual_resultado: str
-    delta_resultado: str
-    recommendation: str
-    recommendation_reason: str
 
 
 __all__ = [

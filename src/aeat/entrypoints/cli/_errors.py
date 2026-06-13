@@ -131,9 +131,9 @@ class CliUnexpectedBoundaryError(AeatError):
         super().__init__(
             translated_message="errors.internal.internal_cli_unexpected_boundary",
             context={
-                "recovery": "aeat config repair integrity",
+                "recovery": "aeat config repair integrity --help",
             },
-            suggestion="aeat config repair integrity",
+            suggestion="aeat config repair integrity --help",
         )
         self.original_exception: Exception = error
 
@@ -165,9 +165,9 @@ class CliStoredDataValidationBoundaryError(AeatError):
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
             context={
-                "recovery": "aeat config repair",
+                "recovery": "aeat config repair --help",
             },
-            suggestion="aeat config repair",
+            suggestion="aeat config repair --help",
         )
         self.original_exception: ValidationError = error
 

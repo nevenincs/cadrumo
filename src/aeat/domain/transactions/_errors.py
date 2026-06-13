@@ -29,7 +29,7 @@ class StoredTransactionDriftError(TransactionPersistenceError):
     out-of-band edit caused the on-disk envelope payload to drift from
     the current :class:`~aeat.domain.transactions.TransactionCatalogue`
     schema. The original :exc:`pydantic.ValidationError` is preserved
-    on :attr:`original_exception` so callers can inspect the typed
+    on ``original_exception`` so callers can inspect the typed
     field errors without losing the deserialization detail.
 
     Attributes:
@@ -46,8 +46,8 @@ class StoredTransactionDriftError(TransactionPersistenceError):
         """
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
-            context={"bucket_id": bucket_id, "recovery": "aeat config repair"},
-            suggestion="aeat config repair",
+            context={"bucket_id": bucket_id, "recovery": "aeat config repair --help"},
+            suggestion="aeat config repair --help",
         )
         self.bucket_id = bucket_id
         self.original_exception = error

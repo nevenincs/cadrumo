@@ -17,9 +17,12 @@ downstream resolver can trace a hit back to its part.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 from ._schema import PreprocessOutput, PreprocessUnit
 from ._sidecar import write_sidecar
+
+_UTF_8: Final[str] = "utf-8"
 
 #: Indexable text sidecars must stay under the walker's 10 MB file cap. A
 #: source whose full rendering would exceed this budget is split across
@@ -52,7 +55,7 @@ def split_units_by_budget(
     current: list[PreprocessUnit] = []
     current_bytes = 0
     for unit in units:
-        unit_bytes = len(unit.text.encode("utf-8"))
+        unit_bytes = len(unit.text.encode(_UTF_8))
         if current and current_bytes + unit_bytes > budget_bytes:
             groups.append(current)
             current = []

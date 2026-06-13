@@ -99,6 +99,37 @@ aeat config google sync calc verify --modelo 303 --year 2026 --period 1T --scena
 Verification compares the calculation surfaces implemented by the app. It does
 not submit a filing to AEAT.
 
+## Mirror encrypted records to Drive
+
+Keep an off-machine copy of your encrypted records by mirroring them to the
+configured Drive folder:
+
+```bash
+aeat config google sync push --dry-run
+aeat config google sync push
+```
+
+Preview with `--dry-run` first; it reports what would upload per storage
+area without changing anything. Narrow a large push with `--namespace` or
+`--limit`.
+
+Only ciphertext is uploaded — your records leave the machine exactly as they
+sit encrypted on disk, and the master key never leaves your computer, so the
+Drive copy is unreadable without it. The mirror is one-way: aeat writes the
+copy and never reads Drive back as a source of truth for your records.
+
+## Sign out of Google
+
+Clear the Google session for the active profile:
+
+```bash
+aeat config google logout
+```
+
+Logout removes the saved session token and its metadata. The registered
+OAuth client is kept on purpose, so a later `aeat config google login` can
+sign in again without re-importing the Cloud Console JSON.
+
 ## Where this fits
 
 Use this after transaction review and classification:

@@ -314,13 +314,6 @@ aggregation:
   modelo_bindings:
     errors:
       unsupported_period: Període de model no admès per a l'agregació del llibre.
-  models:
-    errors:
-      annual_period_mixed: El període no pot barrejar valors anuals i subannuals (trimestre/mes).
-      month_required: El tipus de període mensual requereix un valor de mes.
-      period_type_ambiguous: El tipus de període és ambigu; especifiqueu trimestre
-        o mes explícitament.
-      quarter_required: El tipus de període trimestral requereix un valor de trimestre.
   per_modelo:
     errors:
       unsupported_modelo: Model no admès per a l'agregació per model
@@ -330,8 +323,6 @@ aggregation:
           %{accrued_on}'
         unsupported_provider: 'Proveïdor d''agregació no admès per al model %{modelo}:
           %{provider}'
-  period:
-    parse_error: Format de període no reconegut
   prorrata:
     errors:
       current_year_not_after_prior: L'any actual ha de ser estrictament major que
@@ -383,6 +374,8 @@ aggregation:
         fonts no poden contenir blancs.
       source_transaction_ids_duplicate: Els identificadors de transacció de la malla
         de fonts han de ser únics.
+      unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
+      unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
 application:
   auth:
     acquisition_lock:
@@ -577,10 +570,12 @@ application:
           %{reason}.'
         blank_modelo_selection: La seleccio de models sol.licitada no pot contenir
           identificadors buits.
+        filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
         filing_year_period_pair: filing_year i period s han d indicar junts.
         modelo_not_in_registry: El model %{modelo} no esta present al registre de
           calcul.
         modelo_revision_missing: El model %{modelo} no te revisions.
+        period_type: application.filing.runtime.errors.period_type
         provider_year_missing: El model %{modelo} revisio %{revision} no te exercici
           de proveidor.
         registry_empty: L arrel del registre %{registry_root_name} no te definicions
@@ -771,7 +766,9 @@ application:
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.
-      external_import_tax_id_missing: 'L''evidencia d''importacio externa %{evidence_reference_id} (%{evidence_kind}) requereix el NIF del contribuent abans de vincular-se a un artefacte de justificant.'
+      external_import_tax_id_missing: L'evidencia d'importacio externa %{evidence_reference_id}
+        (%{evidence_kind}) requereix el NIF del contribuent abans de vincular-se a
+        un artefacte de justificant.
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
@@ -1286,16 +1283,16 @@ cli:
         list_help: Llista els snapshots d'expedients desats
         pull_help: Descarrega el registre de declaracions d'AEAT i desa una instantania
           del bucket.
+        pull_modelo_help: Limita aquesta descarrega a aquest model.
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
-        pull_modelo_help: 'Limita aquesta descarrega a aquest model.'
       filed:
         list_help: Llistar declaracions presentades sense descarregar artefactes
         pull_help: Descarrega dades de declaracions presentades del registre autenticat
           d'AEAT.
+        pull_modelo_help: Limita aquesta descarrega a aquest model.
         pull_sources_help: Descarrega les observacions presentades que requereixen
           les dependencies d'una declaracio objectiu.
-        pull_modelo_help: 'Limita aquesta descarrega a aquest model.'
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
@@ -1747,7 +1744,8 @@ cli:
           de treball en aquest CLI. Autoritat legal: Ordre HFP/887/2023 i RD 1065/2007
           art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre.
           Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
-        dependencies_help: 'Mostra dependencies d''historial de presentacions entre models i els bloquejos clean-state actuals per a una presentacio objectiu'
+        dependencies_help: Mostra dependencies d'historial de presentacions entre
+          models i els bloquejos clean-state actuals per a una presentacio objectiu
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -3846,6 +3844,7 @@ errors:
       catàleg de revisions de càlcul.
     fail_modelo_filing_record_persistence: No s'ha pogut desar o llegir el catàleg
       de declaracions registrades.
+    fail_modelo_locale_manager: errors.fail.fail_modelo_locale_manager
     fail_modelo_verification_report_persistence: No s'ha pogut desar o llegir el catàleg
       d'informes de verificació.
     fail_modelo_work_unit_persistence: No s'ha pogut desar o llegir el catàleg d'unitats
@@ -3970,6 +3969,7 @@ errors:
       d'integritat (resum, mida o etiqueta).
     integrity_outbound_storage_corruption: S'ha detectat corrupcio a l'emmagatzematge
       de sortida.
+    integrity_period: errors.integrity.integrity_period
     integrity_portals_portal_integrity: El registre de portals de l'AEAT infringeix
       una invariant estructural.
     integrity_profile_answer_type: Un camp de resposta de perfil ha rebut un tipus
@@ -4435,6 +4435,7 @@ live:
     expediente_not_found: No s'ha trobat l'expedient sol.licitat a l'AEAT.
     iva_history_modelo_303_only: L'historial d'IVA nomes esta disponible per al Model
       303.
+    target_period_year_mismatch: live.errors.target_period_year_mismatch
     year_range_invalid: El rang d'exercicis indicat no es valid.
 locales:
   cli:

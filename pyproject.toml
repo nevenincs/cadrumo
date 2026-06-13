@@ -180,7 +180,7 @@ dev = [
   "vaultspec-rag>=0.2.14",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
-  "sphinx>=8.1,<10",  # upper bound keeps -W / nitpicky flag semantics stable
+  "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
   "sphinx-autodoc-typehints>=2.5",
   "sphinx-markdown-builder>=0.6",
   "furo>=2024.8",
@@ -510,6 +510,8 @@ convention = "google"
 "dev/docs/terminology/_cli_projection.py" = ["S603"]
 "dev/docs/tests/test_cli_reference_conformance.py" = ["F401"]
 "src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_help_without_secrets.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_json_error_contract.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
 "src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]

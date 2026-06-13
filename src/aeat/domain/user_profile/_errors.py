@@ -85,7 +85,7 @@ class StoredProfileDriftError(UserProfileError):
     out-of-band edit caused the on-disk representation to drift from the
     current :class:`~aeat.domain.user_profile.UserProfileRecord` schema.
     The original :exc:`pydantic.ValidationError` is preserved on
-    :attr:`original_exception` so callers can inspect the typed field
+    ``original_exception`` so callers can inspect the typed field
     errors without losing the deserialization detail.
 
     The CLI boundary catches this typed error and routes it to
@@ -108,8 +108,8 @@ class StoredProfileDriftError(UserProfileError):
         """
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
-            context={"profile_id": profile_id, "recovery": "aeat config repair"},
-            suggestion="aeat config repair",
+            context={"profile_id": profile_id, "recovery": "aeat config repair --help"},
+            suggestion="aeat config repair --help",
         )
         self.profile_id: str = profile_id
         self.original_exception: ValidationError = error

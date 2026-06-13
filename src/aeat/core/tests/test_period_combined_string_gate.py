@@ -191,6 +191,12 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="calculation tests preserve operator evidence/source locator labels and redaction assertions",
     ),
     AllowlistRule(
+        path=_path(r"^src/aeat/application/calculations/tests/test_cross_period_clean_state\.py$"),
+        reason="calculation clean-state tests preserve AEAT expediente source labels, not period inputs",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text("2025" + "-1T"),
+    ),
+    AllowlistRule(
         path=_path(r"^src/aeat/application/(?:verification/tests/test_verify_helpers|calculations/tests/test_modelo_720_fichero_boe_roundtrip)\.py$"),
         reason="annual legacy-label tests cover non-core external periodo values",
     ),

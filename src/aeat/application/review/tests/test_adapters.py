@@ -513,7 +513,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     assert items[0].draft_id == "d_stale"
     summary_key = items[0].summary
     assert summary_key == "review.filing.stale_approval_summary"
-    assert items[0].drill_command.startswith("aeat app review show ")
+    assert items[0].drill_command.startswith("aeat app review view ")
 
 
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:

@@ -113,7 +113,7 @@ def derive_import_fingerprint(raw: RawTransaction) -> str:
     identifier and the verbatim narrative and therefore changes when a
     transaction is edited or re-exported in a different file format —
     this fingerprint keys only on the *movement identity* an operator
-    would recognise: the effective date, the signed amount, and the
+    would recognise: the effective date, the amount magnitude, and the
     normalised narrative (see :func:`normalise_movement_reference`).
 
     The fingerprint is stamped onto :class:`Transaction` at import time
@@ -176,19 +176,26 @@ def _require_aware_datetime(value: datetime) -> datetime:
 
 
 def _validate_classified_by_shape(value: str) -> str:
-    """Restrict ``classified_by`` to ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>``.
+    """Restrict ``classified_by`` to ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` / ``derived:<basis>``.
 
     The ``llm:<model>`` shape lets an LLM classifier emit confidence
     scores alongside its predictions; the pipeline distinguishes its
-    output from manual and rule-based decisions via this prefix.
+    output from manual and rule-based decisions via this prefix. The
+    ``derived:<basis>`` shape marks a value the system computed from a
+    grounded authority on an operator's instruction — e.g.
+    ``derived:iva-category``, where the operator picks the IVA category
+    and the registry rate plus the gross determine the base and amount —
+    distinct from a ``manual`` value the operator typed by hand.
     """
     normalized = value.strip()
     if normalized in {CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL}:
         return normalized
-    for prefix in ("rule:", "llm:"):
+    for prefix in ("rule:", "llm:", "derived:"):
         if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
             return normalized
-    raise TransactionValidationError("classified_by must be 'auto', 'manual', 'rule:<rule-id>', or 'llm:<model>'")
+    raise TransactionValidationError(
+        "classified_by must be 'auto', 'manual', 'rule:<rule-id>', 'llm:<model>', or 'derived:<basis>'",
+    )
 
 
 _CONFIDENCE_MIN = Decimal("0")
@@ -360,8 +367,8 @@ class ClassificationHistoryEntry(BaseModel):
             :func:`_validate_business_pct_coupling`.
         classified_at: Timezone-aware UTC timestamp of the decision.
         classified_by: Classifier source string in the
-            ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>``
-            shape.
+            ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>`` /
+            ``derived:<basis>`` shape.
         reason: Free-text justification (may be empty).
         category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
             foreign key.

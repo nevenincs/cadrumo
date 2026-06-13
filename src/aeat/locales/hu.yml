@@ -296,14 +296,6 @@ aggregation:
   modelo_bindings:
     errors:
       unsupported_period: Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.
-  models:
-    errors:
-      annual_period_mixed: Az időszak nem vegyítheti az éves és az alévenkénti (negyed/hónap)
-        értékeket.
-      month_required: A havi időszaktípushoz hónap értéke szükséges.
-      period_type_ambiguous: 'Az időszaktípus kétértelmű; adja meg egyértelműen: negyedév
-        vagy hónap.'
-      quarter_required: A negyedéves időszaktípushoz negyedév értéke szükséges.
   per_modelo:
     errors:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.
@@ -313,8 +305,6 @@ aggregation:
           megfigyelésnél: %{accrued_on}'
         unsupported_provider: 'Nem támogatott aggregálási szolgáltató a(z) %{modelo}
           nyomtatványhoz: %{provider}'
-  period:
-    parse_error: Az időszak formátuma nem ismerhető fel.
   prorrata:
     errors:
       current_year_not_after_prior: A jelenlegi évnek szigorúan nagyobbnak kell lennie
@@ -356,6 +346,8 @@ aggregation:
         üres értékeket.
       source_transaction_ids_duplicate: A forrásháló tranzakcióazonosítóinak egyedinek
         kell lenniük.
+      unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
+      unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
 application:
   auth:
     acquisition_lock:
@@ -536,9 +528,11 @@ application:
       errors:
         active_profile_load_failed: 'Az aktiv bevallasi profil nem toltheto be: %{reason}.'
         blank_modelo_selection: A kert modellvalasztas nem tartalmazhat ures modellazonositokat.
+        filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
         filing_year_period_pair: A filing_year es a period ertekeket egyutt kell megadni.
         modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a szamitasi nyilvantartasban.
         modelo_revision_missing: A(z) %{modelo} modellnek nincsenek revizioi.
+        period_type: application.filing.runtime.errors.period_type
         provider_year_missing: A(z) %{modelo} modell %{revision} reviziojahoz nincs
           szolgaltatoi ev.
         registry_empty: A(z) %{registry_root_name} registry gyokerben nincsenek modell
@@ -716,7 +710,9 @@ application:
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.
-      external_import_tax_id_missing: 'A kulso bevallasimport bizonyiteka %{evidence_reference_id} (%{evidence_kind}) megkoveteli a bevallo adoazonositojat, mielott igazolo artefakthoz kotheto.'
+      external_import_tax_id_missing: A kulso bevallasimport bizonyiteka %{evidence_reference_id}
+        (%{evidence_kind}) megkoveteli a bevallo adoazonositojat, mielott igazolo
+        artefakthoz kotheto.
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
@@ -1225,16 +1221,16 @@ cli:
         list_help: Mentett expediente pillanatképek listázása.
         pull_help: Letolti az AEAT nyilatkozat-nyilvantartast es bucket-szintu pillanatkepet
           ment.
+        pull_modelo_help: Korlatozza ezt a letoltest erre a modellora.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
-        pull_modelo_help: 'Korlatozza ezt a letoltest erre a modellora.'
       filed:
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_help: Letolti a benyujtott nyilatkozatok adatait a hitelesitett AEAT
           nyilvantartasbol.
+        pull_modelo_help: Korlatozza ezt a letoltest erre a modellora.
         pull_sources_help: Letolti egy cel-nyilatkozat fuggosegeihez szukseges benyujtott
           megfigyeleseket.
-        pull_modelo_help: 'Korlatozza ezt a letoltest erre a modellora.'
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:
@@ -1689,7 +1685,8 @@ cli:
           a CLI-ben nem támogatott. Jogi alap: Orden HFP/887/2023 és RD 1065/2007
           Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi
           kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
-        dependencies_help: 'Keresztidoszaki bevallastorteneti fuggosegek es az aktualis clean-state blokkolok megjelenitese a celbevallashoz'
+        dependencies_help: Keresztidoszaki bevallastorteneti fuggosegek es az aktualis
+          clean-state blokkolok megjelenitese a celbevallashoz
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
@@ -3772,6 +3769,7 @@ errors:
       sikerült menteni vagy betölteni.
     fail_modelo_filing_record_persistence: A benyújtás-rekord katalógust nem sikerült
       menteni vagy betölteni.
+    fail_modelo_locale_manager: errors.fail.fail_modelo_locale_manager
     fail_modelo_verification_report_persistence: Az ellenőrzési jelentés katalógust
       nem sikerült menteni vagy betölteni.
     fail_modelo_work_unit_persistence: A munkajegység-katalógust nem sikerült menteni
@@ -3884,6 +3882,7 @@ errors:
       (hash, méret vagy etag).
     integrity_outbound_storage_corruption: Egy mellékadatok fájl váratlan típusú mezőt
       tartalmaz; a tárolási objektum sérült.
+    integrity_period: errors.integrity.integrity_period
     integrity_portals_portal_integrity: Az AEAT portál-nyilvántartás sérti a strukturális
       invariánst.
     integrity_profile_answer_type: Egy profilválasz-mező váratlan típust kapott.
@@ -4318,6 +4317,7 @@ live:
   errors:
     expediente_not_found: live.errors.expediente_not_found
     iva_history_modelo_303_only: live.errors.iva_history_modelo_303_only
+    target_period_year_mismatch: live.errors.target_period_year_mismatch
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
 locales:

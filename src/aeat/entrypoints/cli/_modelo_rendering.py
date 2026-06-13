@@ -13,6 +13,8 @@ from ._modelo_payloads import (
     ObservationPayload,
     ResultSummaryRowPayload,
     VerificationReportPayload,
+    WorkPlazoDeadlinePayload,
+    WorkRecargoPayload,
     WorkUnitPayload,
 )
 
@@ -183,6 +185,70 @@ def work_unit_plazo_lines(unit) -> list[str]:
         ],
     )
     return out
+
+
+def work_unit_deadline_output(unit) -> tuple[WorkPlazoDeadlinePayload | None, list[Notice]]:
+    """Project the work-unit filing-deadline summary onto a payload + notices.
+
+    Returns the typed :class:`WorkPlazoDeadlinePayload` (structured result
+    data — the voluntary-filing close date and overdue posture) and a
+    warning-severity :class:`Notice` list. An overdue deadline raises one
+    Art. 27 LGT recargo notice whose ``context`` carries the binding legal
+    reference (``legal_refs``) plus the resolved recargo band so the JSON
+    surface preserves the regulatory grounding the text-mode plazo lines
+    render. An in-time (or unknown) deadline raises no notice.
+    """
+    summary = modelo_work_plazo_summary(unit)
+    if summary is None:
+        return None, []
+
+    recargo_payload = None
+    if summary.recargo is not None:
+        recargo_payload = WorkRecargoPayload(
+            band_id=summary.recargo.band_id,
+            surcharge_pct=str(summary.recargo.surcharge_pct),
+            interest_applies=summary.recargo.interest_applies,
+            legal_ref=summary.recargo.legal_ref,
+        )
+    deadline_payload = WorkPlazoDeadlinePayload(
+        closes_on=summary.closes_on.isoformat(),
+        days_remaining=summary.days_remaining,
+        days_overdue=summary.days_overdue,
+        recargo=recargo_payload,
+    )
+
+    if summary.days_overdue is None or summary.days_overdue < 1:
+        return deadline_payload, []
+
+    warning_text = tr(
+        "cli.app.modelo.work.plazo_vencido_warning",
+        default=(
+            "AVISO: plazo voluntario vencido. Presenta con recargo "
+            "Art. 27 LGT antes de recibir requerimiento de la AEAT."
+        ),
+    )
+    context: dict[str, str] = {
+        "closes_on": summary.closes_on.isoformat(),
+        "days_overdue": str(summary.days_overdue),
+    }
+    if summary.recargo is not None:
+        context["legal_refs"] = summary.recargo.legal_ref
+        context["recargo_band"] = summary.recargo.band_id
+        context["surcharge_pct"] = str(summary.recargo.surcharge_pct)
+        context["interest_applies"] = str(summary.recargo.interest_applies)
+    else:
+        # No recargo band resolved (e.g. deadline-validation failure), but the
+        # filing is still extemporáneo under Art. 27 LGT; carry the binding
+        # article so the JSON grounding survives even without a band.
+        context["legal_refs"] = "lgt:art-27"
+    return deadline_payload, [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="modelo.work.calculate.plazo_vencido_recargo",
+            message=warning_text,
+            context=context,
+        ),
+    ]
 
 
 def calculation_revision_payload(rev) -> CalculationRevisionPayload:

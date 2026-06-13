@@ -31,6 +31,7 @@ from ._modelo_rendering import (
     advisory_notice,
     calculation_revision_lines,
     calculation_revision_payload,
+    work_unit_deadline_output,
     work_unit_plazo_lines,
 )
 
@@ -386,6 +387,7 @@ def _run_work_calculate(
         work_unit=unit_for_modality,
     )
     source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(calculation_result)
+    deadline_payload, deadline_notices = work_unit_deadline_output(unit_for_modality)
     result = WorkCalculateResult.model_validate(
         {
             "saved": True,
@@ -393,6 +395,7 @@ def _run_work_calculate(
             **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
             **modality_payload,
             **authorization_payload,
+            "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
         },
     )
     lines = [
@@ -409,7 +412,7 @@ def _run_work_calculate(
         command="modelo.work.calculate",
         result=result,
         lines=lines,
-        notices=[*authorization_notices, *source_advisory_notices],
+        notices=[*authorization_notices, *source_advisory_notices, *deadline_notices],
     )
 
 

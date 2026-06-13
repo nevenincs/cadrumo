@@ -133,8 +133,8 @@ def test_annual_review_filter_renders_full_year() -> None:
 def test_all_four_quarters_reviewable() -> None:
     """Each 2025 quarter is independently reviewable (per-period is the only roll-up)."""
     _import_corpus()
-    for q in ("2025-1T", "2025-2T", "2025-3T", "2025-4T"):
-        result = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", f"period={q}"])
+    for q in ("1T", "2T", "3T", "4T"):
+        result = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", f"period={q}", "--filter", "year=2025"])
         assert result.exit_code == 0, f"{q}: {result.output}"
 
 
@@ -299,7 +299,7 @@ def test_no_annual_money_rollup_surface_exists() -> None:
     result = json.loads(status.output)["result"]
     # Counts and readiness exist ...
     assert "total_count" in result and "ready" in result, result
-    assert result["period"] == "2025", result
+    assert result["period"] == {"filing_year": 2025, "code": "0A"}, result
     # ... but no monetary roll-up field is present on the status surface.
     money_fields = {"income", "expense", "net", "total_amount", "ingresos", "gastos"}
     assert not (money_fields & set(result)), f"unexpected money rollup field: {result}"

@@ -25,7 +25,7 @@ class AggregationConfigError(CoreError, ValueError):
 class AggregationError(AeatError):
     """Base class for financial transaction aggregation failures.
 
-    The :attr:`translated_message` field is a translation key resolved by
+    The ``translated_message`` field is a translation key resolved by
     the internationalization system at runtime. The same key is also
     routed through the positional ``message=`` arg so ``str(exc)``
     returns the key (rather than the empty string) for diagnostic

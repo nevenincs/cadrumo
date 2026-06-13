@@ -265,6 +265,11 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             observation,
             source_kind="aeat_sede_justificante",
             captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "12345678901234567890",
+                "authenticated_identity": "X1234567L",
+            },
         )
         artefact_body = b"modelo-303-2025-1T-justificante"
         store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))

@@ -8,8 +8,6 @@ layer and canonical operator verbs:
     aeat app ledger inventory create
     aeat app ledger inventory movement add
     aeat app ledger inventory valuation preview
-    aeat app ledger inventory show
-    aeat app ledger inventory remove
 
 Adapts the mutating-noun-group CRUD contract to the inventory domain's
 natural sub-noun grammar (actividad + movement + valuation); this

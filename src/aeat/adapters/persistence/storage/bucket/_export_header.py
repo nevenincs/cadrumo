@@ -1,7 +1,7 @@
 """Strict pydantic v2 record for the sealed-export archive header.
 
 The export archive header is the plaintext frontmatter of every sealed
-export bundle produced by ``aeat config export-bucket``. The wrapped DEK
+export bundle produced by ``aeat config profile export``. The wrapped DEK
 and the recovery wrap travel as separate archive members; the header
 itself carries only the bucket identifier, the manifest digest, the
 recovery-presence flag, the archive schema version, and the export

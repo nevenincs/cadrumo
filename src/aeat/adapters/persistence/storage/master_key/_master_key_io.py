@@ -93,8 +93,9 @@ def _default_passphrase_callback(getpass_fn: Callable[[str], str] | None = None)
     if getpass_fn is None and (not sys.stdin.isatty() or not sys.stderr.isatty()):
         raise SecretStoreError(
             f"{PASSPHRASE_ENV_VAR} is not set and stdin is not interactive; "
-            "run `aeat config unlock NAME` from an interactive terminal or "
-            f"provide {PASSPHRASE_ENV_VAR} through the Settings environment.",
+            "re-run the command from an interactive terminal (the CLI prompts "
+            f"for the passphrase) or provide {PASSPHRASE_ENV_VAR} through the "
+            "Settings environment.",
         )
     resolver = getpass_fn if getpass_fn is not None else getpass.getpass
     return resolver("AEAT secret-store passphrase: ")

@@ -53,8 +53,8 @@ For money you received (income), aeat does not usually need a category — it ca
 Use `OUTGOING` plus an expense category for supplier purchases and other
 deductible expenses. Use `INCOMING` for issued invoices, client payments, or
 services rendered to customers. If you also track invoice records separately,
-use `aeat app ledger payable-invoice --help` for supplier invoices and
-`aeat app ledger collectible-invoice --help` for customer invoices.
+use `aeat app ledger invoice` with `--kind received` for supplier invoices and
+`--kind issued` for customer invoices.
 
 ## Add tax fields when needed
 
@@ -110,6 +110,9 @@ supports it:
 aeat app ledger ratios set <category-id> 0.5
 aeat app ledger ratios validate
 ```
+
+Remove a category ratio you no longer want with
+`aeat app ledger ratios unset <category-id>`.
 
 For home-office expenses, you normally either classify the row as `MIXED` with
 an explicit `--business-pct`, or use a supported category ratio when your

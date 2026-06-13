@@ -287,13 +287,6 @@ aggregation:
   modelo_bindings:
     errors:
       unsupported_period: Unsupported modelo period for ledger aggregation.
-  models:
-    errors:
-      annual_period_mixed: Period cannot mix annual and sub-annual (quarter/month)
-        values.
-      month_required: Monthly period type requires a month value.
-      period_type_ambiguous: Period type is ambiguous; specify quarter or month explicitly.
-      quarter_required: Quarterly period type requires a quarter value.
   per_modelo:
     errors:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
@@ -303,8 +296,6 @@ aggregation:
           %{accrued_on}'
         unsupported_provider: 'Unsupported aggregation provider for modelo %{modelo}:
           %{provider}'
-  period:
-    parse_error: Period format not recognised
   prorrata:
     errors:
       current_year_not_after_prior: current_year must be strictly greater than prior_year.
@@ -349,6 +340,8 @@ aggregation:
       owned_sources_duplicate: Source mesh owned sources must be unique.
       source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
+      unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
+      unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
 application:
   auth:
     acquisition_lock:
@@ -524,10 +517,12 @@ application:
           %{reason}.'
         blank_modelo_selection: Requested modelo selection must not contain blank
           modelo ids.
+        filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
         filing_year_period_pair: filing_year and period must be supplied together.
         modelo_not_in_registry: Modelo %{modelo} is not present in the calculation
           registry.
         modelo_revision_missing: Modelo %{modelo} has no revisions.
+        period_type: application.filing.runtime.errors.period_type
         provider_year_missing: Modelo %{modelo} revision %{revision} has no provider
           year.
         registry_empty: The registry root %{registry_root_name} has no modelo definitions.
@@ -1203,15 +1198,15 @@ cli:
         list_help: List saved expediente snapshots
         pull_help: Pull the AEAT declaration register and persist a bucket-scoped
           snapshot.
+        pull_modelo_help: Limit this pull to this modelo.
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
-        pull_modelo_help: 'Limit this pull to this modelo.'
       filed:
         list_help: List filed declaration rows without downloading artefacts
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
+        pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's
           dependencies.
-        pull_modelo_help: 'Limit this pull to this modelo.'
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
@@ -3647,6 +3642,7 @@ errors:
       could not be saved or loaded.
     fail_modelo_filing_record_persistence: The filing-record catalogue could not be
       saved or loaded.
+    fail_modelo_locale_manager: errors.fail.fail_modelo_locale_manager
     fail_modelo_verification_report_persistence: The verification-report catalogue
       could not be saved or loaded.
     fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
@@ -3759,6 +3755,7 @@ errors:
       size or etag).
     integrity_outbound_storage_corruption: A sidecar metadata file contains a field
       with an unexpected type; the storage object is corrupted.
+    integrity_period: errors.integrity.integrity_period
     integrity_portals_portal_integrity: The AEAT portal registry violates a structural
       invariant.
     integrity_profile_answer_type: A profile-answer field received an unexpected type.
@@ -4198,6 +4195,7 @@ live:
     expediente_not_found: AEAT declaration register did not return the requested expediente.
     iva_history_modelo_303_only: IVA compensation history pull only accepts Modelo
       303 observations.
+    target_period_year_mismatch: live.errors.target_period_year_mismatch
     year_range_invalid: From-year must be less than or equal to to-year.
 locales:
   cli:

@@ -1018,6 +1018,7 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "all_nonzero",
         "any_nonzero",
         "cap_le_when_positive",
+        "implies_any_nonzero",
         "implies_nonzero",
         "profile_field_required",
     },
@@ -1058,6 +1059,21 @@ class VerificationPredicateDefinition(RegistryModel):
       consequent value evaluates to ``Decimal(0)`` and therefore
       violates the predicate when the antecedent is positive. Added by
       the dsl-conditional-predicate ADR.
+    - ``implies_any_nonzero(["antecedent_id", "c1_id", "c2_id", ...])`` —
+      the N-consequent generalisation of ``implies_nonzero``: predicate
+      holds iff ``casilla_values[antecedent] <= 0`` OR **at least one**
+      listed consequent is non-zero. Authored for the Modelo 303
+      official-Diseño contradiction where a computed total
+      (``iva.cuota-devengada-total``, ``iva.cuota-deducible-total``) is
+      strictly positive but **every** constituent official numbered box
+      (the dr303 base/cuota tranche cells the operator transcribes to the
+      AEAT sede) is still zero — a silent under-declaration the verify
+      gate would otherwise grant with zero findings. ADVISORY (the
+      official numbered boxes are an operator-entered layer the calculate
+      path does not auto-populate, so the contradiction is surfaced as a
+      non-blocking alert rather than a refusal). The first consequent
+      slot onward is the constituent set; a single consequent reduces to
+      ``implies_nonzero``.
     - ``profile_field_required("profile_field_name", "applicability_filter")``
       — profile-state-aware conditional non-zero requirement. Returns
       ``True`` (predicate holds) when the named ``applicability_filter``

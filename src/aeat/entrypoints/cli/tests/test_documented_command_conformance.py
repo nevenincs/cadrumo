@@ -397,10 +397,23 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
                 f"`aeat {' '.join(resolved.resolved_path)}` (nor a global option)",
             )
 
+    # (c) Dead subcommand of a live group: longest-prefix resolution stops at
+    # the deepest reachable command and treats the rest as "arguments", but a
+    # GROUP takes no positional arguments — a leftover verb token under a
+    # group can only be a subcommand name that does not exist (the shape that
+    # let `aeat app ledger payable-invoice` pass while uninvokable after the
+    # invoice unification rename).
+    if hasattr(cmd, "list_commands") and leftover:
+        violations.append(
+            f"`{cited.raw}` cites `{leftover[0]}`, which is not a subcommand of "
+            f"the group `aeat {' '.join(resolved.resolved_path)}`",
+        )
+        return violations
+
     # Missing-required-positional (the ``profile create`` shape) is
     # deliberately NOT enforced here: see the module docstring's limitation
-    # note. ``leftover`` is computed only to keep verb-vs-positional resolution
-    # honest for the option-validity check above.
+    # note. ``leftover`` is otherwise computed only to keep verb-vs-positional
+    # resolution honest for the option-validity check above.
     _ = leftover
     return violations
 
@@ -444,6 +457,26 @@ def test_live_introspection_matches_reality() -> None:
         has_positional_token=True,
     )
     assert _validate_command(bad), "validator must flag a non-existent option"
+    # A dead subcommand of a LIVE group must be rejected, not absorbed as an
+    # "argument" by longest-prefix resolution (the `ledger payable-invoice`
+    # regression shape).
+    dead_subcommand = _CitedCommand(
+        raw="aeat app ledger payable-invoice",
+        verb_tokens=("app", "ledger", "payable-invoice"),
+        cited_options=(),
+        has_positional_token=False,
+    )
+    flagged = _validate_command(dead_subcommand)
+    assert flagged, "validator must flag a dead subcommand under a live group"
+    assert "payable-invoice" in flagged[0]
+    # ...while a live leaf with a genuine positional argument stays accepted.
+    live_with_positional = _CitedCommand(
+        raw="aeat config switch myprofile",
+        verb_tokens=("config", "switch", "myprofile"),
+        cited_options=(),
+        has_positional_token=True,
+    )
+    assert not _validate_command(live_with_positional)
 
 
 @pytest.mark.parametrize("doc", _flat_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))

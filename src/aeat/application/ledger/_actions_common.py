@@ -74,6 +74,17 @@ _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
         CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
     },
 )
+# Draft revisions do not block removal (the operator may legitimately prune a row
+# before finalising), but a draft that still cites the removed row will assert an
+# income/expense no longer in the books on the next verify/file. Surfacing a
+# non-blocking advisory keeps that under-declaration non-silent
+# (no-silent-under-declaration). DESCARTADO (discarded) drafts are excluded: they
+# are not live filings.
+_REMOVAL_ADVISORY_REVISION_STATES = frozenset(
+    {
+        CalculationRevisionState.BORRADOR,
+    },
+)
 
 
 def _transaction_repository(
@@ -237,6 +248,59 @@ def _blocking_modelo_references(
     )
 
 
+def _draft_revision_advisories(
+    *,
+    bucket_id: str,
+    transaction_ids: tuple[str, ...],
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> tuple[LedgerRemovalBlocker, ...]:
+    """Collect DRAFT (BORRADOR) revisions still citing the wanted transaction ids.
+
+    Removal proceeds for draft-cited rows, but the draft's
+    ``source_transaction_ids`` will still assert the removed row's income/expense
+    on the next verify/file. These advisory rows name each affected draft so the
+    operator can recalculate it (no-silent-under-declaration). Correctness rides
+    on the live revision-catalogue scan, never the derived participation index
+    (ledger-participation-index-is-derived-rebuildable).
+    """
+    if not transaction_ids:
+        return ()
+    wanted = set(transaction_ids)
+    work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
+    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    advisories: list[LedgerRemovalBlocker] = []
+    for revision in revisions.values():
+        if revision.state not in _REMOVAL_ADVISORY_REVISION_STATES:
+            continue
+        if not wanted.intersection(revision.source_transaction_ids):
+            continue
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != bucket_id:
+            continue
+        advisories.append(
+            LedgerRemovalBlocker(
+                work_unit_id=work_unit.work_unit_id,
+                calculation_revision_id=revision.calculation_revision_id,
+                revision_state=revision.state.value,
+                modelo=work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            ),
+        )
+    return tuple(
+        sorted(
+            advisories,
+            key=lambda advisory: (
+                advisory.modelo,
+                advisory.filing_year,
+                advisory.period,
+                advisory.calculation_revision_id,
+            ),
+        ),
+    )
+
+
 def _blockers_by_source_transaction_id(
     *,
     bucket_id: str,
@@ -327,20 +391,65 @@ def _verify_evidence_references(
         _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
 
 
+def _purchase_invoice_evidence_record_exists(bucket_id: str, evidence_id: str) -> bool:
+    """Return True when a ``PurchaseInvoiceEvidence`` record with ``evidence_id`` exists in the bucket.
+
+    Resolves the bucket-scoped encrypted purchase-invoice evidence store written by
+    ``aeat app ledger evidence add`` (the :class:`PurchaseInvoiceEvidence` namespace),
+    distinct from the rich :class:`InvoiceCatalogue` written by invoice-import flows.
+    Local imports mirror this module's existing deferred-import style.
+    """
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...core.config import load_settings
+    from ._evidence import PurchaseInvoiceEvidenceRepository
+
+    repository = PurchaseInvoiceEvidenceRepository(
+        objects=secure_object_repository_for_bucket(bucket_id, load_settings()),
+    )
+    document = repository.load(bucket_id)
+    if document is None:
+        return False
+    return any(record.evidence_id == evidence_id for record in document.records)
+
+
 def _verify_purchase_invoice_evidence(
     command: ManualLedgerTransactionCommand,
     *,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> None:
-    """Verify the purchase-invoice evidence reference exists, matches the bucket, and is RECEIVED."""
+    """Verify a purchase-invoice evidence reference resolves to one of two distinct id spaces.
+
+    The ``purchase_invoice_evidence_id`` may name either of two bucket-scoped id
+    spaces, checked in order:
+
+    1. A :class:`PurchaseInvoiceEvidence` record minted by ``aeat app ledger
+       evidence add`` (PDF/image evidence registered into the dedicated evidence
+       store). This is the path the receipt-OCR/PDF-evidence ADR's acceptance
+       criterion requires — an id produced by ``evidence add`` must be accepted by
+       ``aeat app ledger attach`` in the same shell session (ADR
+       ``2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence``, 2026-05-14
+       amendment).
+    2. An imported received-invoice id in the rich :class:`InvoiceCatalogue`
+       (bucket match plus :attr:`InvoiceKind.RECEIVED`), written only by the
+       invoice-import flows.
+
+    Ids minted by ``aeat app ledger invoice add`` (slim operator invoice records)
+    are deliberately NOT a valid evidence reference per the ledger-invoice
+    unification ADR's store split; they are refused with an instructive message.
+    """
     evidence_id = command.purchase_invoice_evidence_id
     if evidence_id is None:
+        return
+    if _purchase_invoice_evidence_record_exists(command.bucket_id, evidence_id):
         return
     invoices = _invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load()
     invoice = invoices.get(evidence_id)
     if invoice is None:
         raise TransactionValidationError(
-            "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record",
+            "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record "
+            "(register one from a PDF/image with `aeat app ledger evidence add`) or an imported "
+            "received-invoice id from the invoice catalogue; ids minted by `aeat app ledger invoice add` "
+            "are operator invoice records, not evidence references",
             context={"purchase_invoice_evidence_id": command.purchase_invoice_evidence_id},
         )
     if invoice.bucket_id != command.bucket_id:

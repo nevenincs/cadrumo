@@ -148,8 +148,8 @@ def add_attachment_bytes(
     ``put_bytes`` / ``write_manifest`` path, and records the *real* SHA-256
     and supplied ``mime_type``. The stored bytes' SHA-256 is the attachment id,
     so equal documents deduplicate naturally. There is deliberately no
-    link-only / ``text/uri-list`` path: an evidence record always carries the
-    document's encrypted bytes.
+    link-only path: an evidence record always carries the document's encrypted
+    bytes.
 
     Args:
         store: Backing :class:`AttachmentStoreProtocol`.

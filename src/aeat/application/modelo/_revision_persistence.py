@@ -9,6 +9,7 @@ import hashlib
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...domain.buckets import (
     BucketEvent,
@@ -42,6 +43,9 @@ from ...domain.modelos._row_models import ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue
 from ..calculations import CalculationObservationRepository
 from ._filed_revision_observation import persist_filed_revision_observation
+
+if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
+    from ...adapters.persistence.storage import SecureObjectWrite
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by modelo actions."""
@@ -202,7 +206,7 @@ def _build_filed_participation_writes(
     work_unit: WorkUnit,
     filing_record_id: str,
     participation_index_repository: TransactionParticipationIndexRepository,
-) -> tuple[object, ...]:
+) -> tuple[SecureObjectWrite, ...]:
     """Build the per-transaction participation writes for a filed revision.
 
     For each ``source_transaction_id`` of the filed revision, load that
@@ -211,7 +215,7 @@ def _build_filed_participation_writes(
     same revision in place), and return the resulting ``SecureObjectWrite`` so
     the caller co-emits them in the same atomic unit of work as the filing save.
     """
-    writes: list[object] = []
+    writes: list[SecureObjectWrite] = []
     for transaction_id in filed_target.source_transaction_ids:
         index = participation_index_repository.load(transaction_id)
         participation = TransactionRevisionParticipation(
@@ -332,12 +336,15 @@ def persist_filed_revision(
         filing_record_id=new_filing_id,
         participation_index_repository=participation_repo,
     )
-    # Co-emit the per-transaction participation index (now carrying the
-    # filing_record_id) atomically with the filed-revision catalogue save, per
-    # the composition-service single-writer discipline. A non-ledger filing
-    # produces no extra writes and degenerates to the plain save.
-    calculation_repository.save_with_secure_object_writes(revisions, participation_writes)
-    filing_repository.save(updated_filing_catalogue)
+    # Co-emit the filed revision, filing catalogue, and per-transaction
+    # participation index in the filing repository's save_many call. The
+    # participation rows gain filing_record_id in the same SQL unit of work as
+    # the filing catalogue, so transaction->filing cross-reference cannot drift
+    # from the receipt it names.
+    filing_repository.save_with_secure_object_writes(
+        updated_filing_catalogue,
+        (calculation_repository.to_secure_object_write(revisions), *participation_writes),
+    )
     work_unit_repository.save(
         upsert_work_unit(
             work_units,

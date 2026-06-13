@@ -288,6 +288,11 @@ def _seed_clean_cross_period_sources(
     filing_catalogue = filing_repository.load()
     for (source_modelo, filing_year, period), source_casillas in sorted(groups.items()):
         source_period = Period.from_year_and_code(filing_year, period)
+        source_snapshot = resources().modelos.authority.snapshot(
+            source_modelo,
+            filing_year=filing_year,
+            period=period,
+        )
         values = _source_casilla_values(source_casillas)
         current = filing_catalogue.current_for(
             bucket_id=work_unit.bucket_id,
@@ -296,11 +301,6 @@ def _seed_clean_cross_period_sources(
             period=source_period,
         )
         if current is None:
-            source_snapshot = resources().modelos.authority.snapshot(
-                source_modelo,
-                filing_year=filing_year,
-                period=period,
-            )
             evidence_reference_id = f"JUST-{source_modelo}-{filing_year}-{period}"
             persist_justificante_metadata(
                 evidence_reference_id,
@@ -343,6 +343,11 @@ def _seed_clean_cross_period_sources(
             ),
             source_kind="aeat_sede_justificante",
             captured_at=_T0,
+            stamped_revision_id=source_snapshot.revision.id,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "authenticated_identity": "X1234567L",
+            },
         )
 
 

@@ -9,7 +9,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_CONFIG_BOUNDARY",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_config_boundary",
-            default_suggestion="aeat config repair",
+            default_suggestion="aeat config repair --help",
             retryable=False,
             runbook_id=None,
         ),

@@ -29,11 +29,13 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
+from typing import Final
 
 #: Default port of the resident vaultspec-rag service (the single-writer
 #: store). Every reindex/search routes here so jobs serialise through the
 #: service rather than competing for the Qdrant lock.
 RAG_SERVICE_PORT = 8766
+_UTF_8: Final[str] = "utf-8"
 
 #: Path, relative to the repo root, of the code index content-hash metadata
 #: the walker writes after each index run.
@@ -114,7 +116,7 @@ def load_index_meta(repo_root: Path) -> dict[str, str]:
     if not meta_path.is_file():
         return {}
     try:
-        data = json.loads(meta_path.read_text(encoding="utf-8"))
+        data = json.loads(meta_path.read_text(encoding=_UTF_8))
     except (OSError, json.JSONDecodeError):
         return {}
     if not isinstance(data, dict):

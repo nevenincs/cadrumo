@@ -136,10 +136,18 @@ def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
     _LAZY_REGISTRY.setdefault(group_name, {})[lazy.name] = lazy
 
 
+#: ``Context.meta`` key carrying the unparsed invocation remainder
+#: (subcommand chain + options) captured before click clears
+#: ``ctx.args`` / the protected list ahead of the group-callback run.
+#: The root callback's introspection-only gate reads it to decide
+#: whether the invocation can only render help or a usage error.
+INVOCATION_REMAINDER_META_KEY = "aeat.invocation_remainder"
+
+
 class AeatTyperGroup(TyperGroup):
     """:class:`TyperGroup` with synonym hints and lazy subcommand loading.
 
-    Two behaviours layer on top of the base Typer group:
+    Three behaviours layer on top of the base Typer group:
 
     * **Synonym suggestions.** Typo-distance suggestions from the base
       class are preserved; the synonym table only adds a hint when the
@@ -148,11 +156,56 @@ class AeatTyperGroup(TyperGroup):
       :func:`register_lazy_subcommand` import their command module only
       when first resolved, keeping the construction of the ``aeat`` app
       object free of the registry parse.
+    * **Remainder capture.** Click empties ``ctx.args`` and the
+      protected list before running the group callback, so the callback
+      cannot see the tokens that follow the group name. :meth:`invoke`
+      stashes them in ``ctx.meta`` first (``setdefault`` — the outermost
+      group's full remainder wins) so the root callback can recognise
+      help-only and unknown-command invocations without re-reading
+      ``sys.argv`` (which is meaningless for in-process invocations).
     """
 
     def _lazy_table(self) -> dict[str, LazySubcommand]:
         """Return the lazy-subcommand table for this group, if any."""
         return _LAZY_REGISTRY.get(self.name or "", {})
+
+    @override
+    # KWARGS-ANY-RATIONALE-CLICK-MAIN: click's ``BaseCommand.main`` contract is
+    # ``*args: Any, **kwargs: Any`` passthrough; the override forwards verbatim.
+    def main(self, *args: object, standalone_mode: bool = True, **kwargs: object) -> object:
+        """Terminal exception funnel honouring the JSON error contract.
+
+        Typer's standalone ``main`` renders every :class:`ClickException`
+        (usage errors, bad parameters) as Rich text and lets unexpected
+        exceptions escape as raw tracebacks — so under ``--format json``
+        the shared-spine error document never appeared on any parse-time
+        or crash failure. Run the underlying dispatch non-standalone and
+        re-implement the terminal handling with a JSON-aware branch (see
+        :mod:`._terminal_errors`): usage errors keep their Click exit
+        codes but emit the shared-spine error document when JSON is
+        requested; unexpected exceptions become the structured crash
+        boundary instead of a raw traceback.
+        """
+        if not standalone_mode:
+            return super().main(*args, standalone_mode=False, **kwargs)
+        from ._terminal_errors import run_standalone_with_error_contract
+
+        return run_standalone_with_error_contract(
+            lambda: super(AeatTyperGroup, self).main(*args, standalone_mode=False, **kwargs),
+        )
+
+    @override
+    def invoke(self, ctx: TyContext) -> object:
+        """Stash the unparsed remainder in ``ctx.meta``, then dispatch.
+
+        Captured before the base implementation clears ``ctx.args`` /
+        the protected list ahead of the group-callback run, so the root
+        callback's introspection-only gate can inspect the full token
+        stream the operator typed after the group name.
+        """
+        remainder = [*getattr(ctx, "_protected_args", ()), *ctx.args]
+        ctx.meta.setdefault(INVOCATION_REMAINDER_META_KEY, remainder)
+        return super().invoke(ctx)
 
     @override
     def list_commands(self, ctx: TyContext) -> list[str]:
@@ -220,4 +273,9 @@ def _synonym_hint(group_name: str | None, token: str) -> str | None:
     return tr("cli.root.errors.did_you_mean_command", command=canonical)
 
 
-__all__ = ["AeatTyperGroup", "LazySubcommand", "register_lazy_subcommand"]
+__all__ = [
+    "INVOCATION_REMAINDER_META_KEY",
+    "AeatTyperGroup",
+    "LazySubcommand",
+    "register_lazy_subcommand",
+]

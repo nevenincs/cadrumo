@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.external_constants import OutputLanguage
-from aeat.core.resources import bundled_path
-from aeat.locales import (
+from ...core.external_constants import OutputLanguage
+from ...core.resources import bundled_path
+from .. import (
     ModeloLocaleError,
     ModeloLocaleFieldKind,
     ModeloLocaleFileTarget,

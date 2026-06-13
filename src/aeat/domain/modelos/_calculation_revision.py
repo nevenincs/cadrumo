@@ -251,8 +251,12 @@ class CalculationRevision(BaseModel):
         superseded_at: UTC timestamp at which a later filed revision
             superseded this one. ``None`` unless ``state is
             PRESENTADO_SUPERSEDIDO``.
-        discarded_at, discarded_by, discard_reason: audit metadata
-            captured when the revision is moved to ``DESCARTADO``.
+        discarded_at: UTC timestamp captured when the revision is moved
+            to ``DESCARTADO``. ``None`` otherwise.
+        discarded_by: Actor label captured when the revision is moved to
+            ``DESCARTADO``. ``None`` otherwise.
+        discard_reason: Audit reason captured when the revision is moved
+            to ``DESCARTADO``. ``None`` otherwise.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")

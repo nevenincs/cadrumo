@@ -25,6 +25,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -42,7 +43,9 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     LLMProvider,
     LLMSaturatedSuggestion,
+    OperatorIvaDerivationResult,
     apply_saturated_llm_classification,
+    derive_operator_iva_substrate,
     saturate_llm_classification,
 )
 
@@ -121,6 +124,161 @@ def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: De
     tx = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
     repository.save(TransactionCatalogue.from_transactions([tx]))
     return tx.transaction_id
+
+
+def _seed_business(
+    repository: TransactionCatalogueRepository,
+    *,
+    amount: Decimal = Decimal("121.00"),
+    category: SpendingCategory = SpendingCategory.ARRENDAMIENTO_LOCAL,
+) -> str:
+    """Persist one ACTIVE BUSINESS transaction (no IVA substrate yet) and return its id."""
+    raw = RawTransaction(
+        transaction_id="row-derive-1",
+        booked_date=date(2026, 5, 1),
+        value_date=date(2026, 5, 1),
+        amount=amount,
+        currency="EUR",
+        counterparty="Arrendador SL",
+        description="office rent",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="b" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.CSV,
+            ingested_at=_NOW,
+            provider_name="csv",
+        ),
+        raw_fields={"Concepto": "office rent"},
+    )
+    tx = Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "category_id": category.value,
+        },
+    )
+    repository.save(TransactionCatalogue.from_transactions([tx]))
+    return tx.transaction_id
+
+
+# ---------------------------------------------------------------------------
+# operator-initiated derivation: operator selects category, system derives
+# ---------------------------------------------------------------------------
+
+
+def test_operator_derive_persists_substrate_with_derived_provenance(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+) -> None:
+    repository, events = repositories
+    # The gross is the seeded BUSINESS input the derived substrate must reconstitute;
+    # assert base + iva against this seeded input, not a hand-summed literal.
+    gross = Decimal("121.00")
+    tx_id = _seed_business(repository, amount=gross)
+
+    derivation = derive_operator_iva_substrate(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        actor="operator-A",
+        transaction_repository=repository,
+        bucket_event_repository=events,
+        occurred_at=_NOW,
+    )
+
+    assert isinstance(derivation, OperatorIvaDerivationResult)
+    assert derivation.derivable is True
+    assert derivation.iva_rate == Decimal("0.21")
+    assert derivation.taxable_base == Decimal("100.00")
+    assert derivation.iva_amount == Decimal("21.00")
+    assert derivation.result is not None
+
+    # Reloaded from storage: substrate persisted with derived: provenance, the
+    # business classification + category are untouched, and base + iva reconstitute
+    # the gross to the cent.
+    reloaded = repository.load().get(tx_id)
+    assert reloaded is not None
+    assert reloaded.classified_by == "derived:iva-category"
+    assert reloaded.business_classification is BusinessClassification.BUSINESS
+    assert reloaded.category_id == SpendingCategory.ARRENDAMIENTO_LOCAL.value
+    assert reloaded.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert reloaded.taxable_base is not None and reloaded.iva_amount is not None
+    assert reloaded.taxable_base + reloaded.iva_amount == gross
+
+
+def test_operator_derive_non_derivable_returns_reason_and_leaves_row_unmutated(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+) -> None:
+    repository, events = repositories
+    tx_id = _seed_business(repository)
+
+    derivation = derive_operator_iva_substrate(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        actor="operator-A",
+        transaction_repository=repository,
+        bucket_event_repository=events,
+        occurred_at=_NOW,
+    )
+
+    assert derivation.derivable is False
+    assert derivation.result is None
+    assert derivation.iva_rate is None
+    assert derivation.taxable_base is None
+    assert derivation.note  # operator-facing explanation present
+
+    # A non-derivable category writes nothing: the row keeps no IVA substrate and
+    # is not stamped with derived: provenance.
+    reloaded = repository.load().get(tx_id)
+    assert reloaded is not None
+    assert reloaded.iva_category is None
+    assert reloaded.taxable_base is None
+    assert reloaded.iva_amount is None
+    assert reloaded.classified_by != "derived:iva-category"
+
+
+def test_operator_derive_refuses_non_business_row(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+) -> None:
+    repository, events = repositories
+    # An unclassified row (NOT_YET_PROCESSED) is neither BUSINESS nor MIXED.
+    tx_id = _seed_unclassified(repository)
+
+    with pytest.raises(TransactionValidationError, match="business transaction"):
+        derive_operator_iva_substrate(
+            bucket_id=_BUCKET,
+            transaction_id=tx_id,
+            iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+            actor="operator-A",
+            transaction_repository=repository,
+            bucket_event_repository=events,
+            occurred_at=_NOW,
+        )
+
+
+def test_operator_derive_zero_rated_category_derives_zero_iva(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+) -> None:
+    repository, events = repositories
+    gross = Decimal("121.00")
+    tx_id = _seed_business(repository, amount=gross)
+
+    derivation = derive_operator_iva_substrate(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        iva_category=IvaCategory.DOMESTIC_ZERO,
+        actor="operator-A",
+        transaction_repository=repository,
+        bucket_event_repository=events,
+        occurred_at=_NOW,
+    )
+
+    assert derivation.derivable is True
+    assert derivation.iva_rate == Decimal("0")
+    assert derivation.taxable_base == gross
+    assert derivation.iva_amount == Decimal("0.00")
 
 
 # ---------------------------------------------------------------------------

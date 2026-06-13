@@ -40,6 +40,7 @@ import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import PurePosixPath
+from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -63,6 +64,7 @@ __all__ = [
 ]
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_UTF_8: Final[str] = "utf-8"
 
 
 class GroundingSurface(StrEnum):
@@ -497,7 +499,7 @@ def _declared_legal_ids(project_relpath: str, known_ids: frozenset[str]) -> tupl
 
     absolute = PROJECT_ROOT / PurePosixPath(project_relpath.replace("\\", "/"))
     try:
-        text = absolute.read_text(encoding="utf-8")
+        text = absolute.read_text(encoding=_UTF_8)
     except OSError:
         return ()
     found = [match.group("id") for match in _LEGAL_HEADER_RE.finditer(text)]

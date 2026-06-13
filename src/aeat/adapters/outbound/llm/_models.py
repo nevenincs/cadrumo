@@ -23,6 +23,31 @@ class LLMProvider(StrEnum):
     LOCAL = "LOCAL"
 
 
+class MultimodalImageInput(BaseModel):
+    """One on-host-prepared image attached to a multimodal LLM request.
+
+    Transient and in-memory only. Carries the base64-encoded image bytes the
+    provider adapter forwards to a local vision model and the content address
+    (an attachment-store SHA-256) the cache key folds in so two distinct
+    evidence documents under the same prompt never collide. The base64 payload
+    is never persisted -- only its content address enters the cache key
+    (``sensitive-financial-data-secure-storage-only``).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True)
+
+    content_sha256: str = Field(
+        min_length=64,
+        max_length=64,
+        description="Lowercase hex SHA-256 content address of the source evidence bytes.",
+    )
+    base64_data: str = Field(
+        min_length=1,
+        repr=False,
+        description="Base64-encoded image bytes forwarded to the provider; never persisted.",
+    )
+
+
 class LLMRequest(BaseModel):
     """User-facing completion request."""
 
@@ -36,6 +61,10 @@ class LLMRequest(BaseModel):
     cache_key: str | None = Field(default=None, description="Optional cache grouping key.")
     provider_override: LLMProvider | None = Field(default=None, description="Override the configured provider.")
     model_override: str | None = Field(default=None, min_length=1, description="Override the configured model.")
+    images: tuple[MultimodalImageInput, ...] = Field(
+        default=(),
+        description="On-host-prepared multimodal image inputs (empty for a text-only request).",
+    )
 
     @field_validator("prompt")
     @classmethod

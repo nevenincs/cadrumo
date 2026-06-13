@@ -56,7 +56,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, StringConstraints, model_validator
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core.external_constants import OutputLanguage
+from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ._enums import TermStatus
 from ._errors import TerminologyError, TerminologyValidationError
 from ._loader import TerminologyHandbook, load_terminology_handbook, terminology_concepts_dir
@@ -393,7 +393,7 @@ def parse_ubterm_csv(path: Path) -> tuple[SeedEntry, ...]:
     if not path.is_file():
         raise SeedImportError(f"{path}: UBTERM export not found")
     entries: list[SeedEntry] = []
-    with path.open("r", encoding="utf-8", newline="") as handle:
+    with path.open("r", encoding=UTF_8_ENCODING, newline="") as handle:
         reader = csv.DictReader(handle)
         if reader.fieldnames is None or "es" not in {name.strip() for name in reader.fieldnames}:
             raise SeedImportError(f"{path}: UBTERM CSV missing required 'es' column")
@@ -694,7 +694,7 @@ def _commit_seeded_concept(
     candidate = TerminologyHandbook(concepts=tuple(by_id.values()))
     _validate_or_refuse(candidate)
     path = concepts_dir / f"{revalidated.concept_id}.toml"
-    path.write_text(serialise_concept(revalidated), encoding="utf-8")
+    path.write_text(serialise_concept(revalidated), encoding=UTF_8_ENCODING)
     return path
 
 

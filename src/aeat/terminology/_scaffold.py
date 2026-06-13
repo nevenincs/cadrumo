@@ -39,7 +39,7 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
-from ..core.external_constants import OutputLanguage
+from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ._enrolment import EnrolmentCandidate
 from ._enums import ConceptLifecycle, TermStatus
 from ._loader import load_terminology_handbook, terminology_concepts_dir
@@ -252,7 +252,7 @@ def apply_scaffold_plan(plan: ScaffoldPlan, concepts_dir: Path) -> tuple[Path, .
         if entry.action is ScaffoldAction.UNCHANGED:
             continue
         path = concepts_dir / f"{entry.concept_id}.toml"
-        path.write_text(serialise_concept(entry.record), encoding="utf-8")
+        path.write_text(serialise_concept(entry.record), encoding=UTF_8_ENCODING)
         written.append(path)
     return tuple(sorted(written))
 

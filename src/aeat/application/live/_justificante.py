@@ -53,6 +53,7 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -240,7 +241,7 @@ def _snapshot_from_record(
     record: SecureObjectRecord,
     requested_snapshot_id: str | None = None,
 ) -> JustificanteCaptureSnapshot:
-    envelope = Envelope[JustificanteCaptureSnapshot].model_validate_json(record.payload.decode("utf-8"))
+    envelope = Envelope[JustificanteCaptureSnapshot].model_validate_json(record.payload.decode(UTF_8_ENCODING))
     if envelope.classification is not _JUSTIFICANTE_CAPTURE_SNAPSHOT_SENSITIVITY:
         snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
         raise ClassificationError(
@@ -352,7 +353,7 @@ class JustificanteCaptureSnapshotRepository:
             classification=_JUSTIFICANTE_CAPTURE_SNAPSHOT_SENSITIVITY,
             schema_version=_JUSTIFICANTE_CAPTURE_SNAPSHOT_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
 

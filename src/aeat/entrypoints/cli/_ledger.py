@@ -25,6 +25,7 @@ from ...application.ledger import (
     apply_llm_classification,
     apply_saturated_llm_classification,
     create_manual_transaction,
+    derive_operator_iva_substrate,
     is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_result_payload,
@@ -352,7 +353,7 @@ def ledger_update(
             patch=_patch_from_options(
                 booked_date=_parse_iso_date(booked_date, label="date") if booked_date is not None else None,
                 value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
-                amount=_parse_decimal(amount, label="amount"),
+                amount=_parse_amount_magnitude(amount) if amount is not None else None,
                 direction=direction,
                 currency=currency,
                 counterparty=counterparty,
@@ -471,12 +472,15 @@ def ledger_classify(
         )
         return
     if saturate:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.saturate_requires_llm",
-                default="--saturate only applies to the --llm path; supply --llm <provider>.",
-            ),
+        _ledger_operator_iva_derive(
+            ctx,
+            transaction_id=transaction_id,
+            classification=classification,
+            from_csv=from_csv,
+            iva_category=iva_category,
+            actor=actor,
         )
+        return
     state = _state()
     transaction_repository = _tx_repo(state)
 
@@ -866,6 +870,107 @@ def _ledger_saturate_llm(
         f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
         f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
         f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+
+
+def _ledger_operator_iva_derive(
+    ctx: typer.Context,
+    *,
+    transaction_id: str | None,
+    classification: str | None,
+    from_csv: str | None,
+    iva_category: IvaCategory | None,
+    actor: str | None,
+) -> None:
+    """Derive the IVA substrate from an OPERATOR-chosen category (no LLM).
+
+    The fallback for ``classify --saturate`` without ``--llm``: when the model
+    declines (returns ``unknown``) or the operator already knows the category,
+    pick it with ``--iva-category`` and the system derives the base, rate, and
+    amount from the registry — the same grounded
+    :func:`derive_operator_iva_substrate` path the LLM saturate uses, but
+    operator-initiated and stamped with ``derived:`` provenance. Only the IVA
+    substrate is touched; the business classification and its provenance are
+    left intact.
+    """
+    from ._ledger_payloads import LedgerClassifySingleResult
+
+    if from_csv is not None or classification is not None:
+        raise _bad(
+            "--saturate without --llm derives the IVA substrate from --iva-category alone; "
+            "it cannot be combined with --classification or --from-csv. Classify the row "
+            "first, then run 'classify <id> --iva-category <category> --saturate'.",
+        )
+    if transaction_id is None:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.id_required",
+                default="A transaction id is required when --from-csv is not provided.",
+            ),
+        )
+    if iva_category is None:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.saturate_requires_llm",
+                default=(
+                    "--saturate needs an IVA category: supply --iva-category to derive the "
+                    "base, rate, and amount, or --llm <provider> to have the model select one."
+                ),
+            ),
+        )
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    try:
+        derivation = derive_operator_iva_substrate(
+            bucket_id=transaction_repository.bucket_id,
+            transaction_id=resolved_id,
+            iva_category=iva_category,
+            actor=actor or resolve_active_bucket_id() or "operator",
+            transaction_repository=transaction_repository,
+        )
+    except TransactionValidationError as exc:
+        raise _bad(str(exc)) from exc
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
+
+    if not derivation.derivable:
+        raise _bad(
+            f"{iva_category.value} has no simple Spanish rate to derive: {derivation.note} "
+            "Supply --taxable-base, --iva-rate, and --iva-amount by hand for this category.",
+        )
+
+    result = derivation.result
+    taxable_base = derivation.taxable_base
+    iva_rate = derivation.iva_rate
+    iva_amount = derivation.iva_amount
+    if result is None or taxable_base is None or iva_rate is None or iva_amount is None:
+        raise _bad(
+            f"{iva_category.value} was reported derivable but produced no IVA substrate; "
+            "supply --taxable-base, --iva-rate, and --iva-amount by hand for this category.",
+        )
+
+    transaction_payload = ledger_transaction_payload(result.transaction)
+    review_status = ledger_transaction_review_status(result.transaction)
+    classify_result = LedgerClassifySingleResult.model_validate(
+        {
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
+        f"{tr('cli.ledger.labels.iva_category')}\t{derivation.iva_category.value}",
+        f"{tr('cli.ledger.labels.taxable_base')}\t{format(taxable_base, 'f')}",
+        f"{tr('cli.ledger.labels.iva_rate')}\t{format(iva_rate, 'f')}",
+        f"{tr('cli.ledger.labels.iva_amount')}\t{format(iva_amount, 'f')}",
+        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)

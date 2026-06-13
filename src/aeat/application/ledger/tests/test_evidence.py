@@ -160,8 +160,12 @@ class TestEvidenceErrorPaths:
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository, tmp_path: Path,
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="not a readable file"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="does not resolve to a readable file") as exc_info:
             svc.add(bucket_id="b1", source_path=tmp_path / "ghost.pdf")
+        # The refusal addresses the path, not the irrelevant 'evidence list' verb.
+        assert exc_info.value.suggestion is not None
+        assert "evidence list" not in exc_info.value.suggestion
+        assert "path" in exc_info.value.suggestion.lower()
 
     def test_add_rejects_unsupported_extension(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository, tmp_path: Path,

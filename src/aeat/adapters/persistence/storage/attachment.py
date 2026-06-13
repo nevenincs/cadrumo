@@ -35,7 +35,7 @@ from ....domain.attachments._errors import (
     AttachmentPersistenceError,
     AttachmentValidationError,
 )
-from ....domain.attachments._models import Attachment
+from ....domain.attachments._models import Attachment, is_link_only_mime_type
 from ._namespace_registry import (
     ATTACHMENT_BLOB_NAMESPACE as ATTACHMENT_BLOB_STORAGE_NAMESPACE,
 )
@@ -282,6 +282,11 @@ class AttachmentStore(BaseModel):
 
     def write_manifest(self, attachment: Attachment) -> None:
         """Persist ``attachment`` as an encrypted database object."""
+        if is_link_only_mime_type(attachment.mime_type):
+            raise _attachment_validation_error(
+                "attachment manifest must carry document bytes, not a link-only URI list",
+                violation="manifest_link_only_mime_type",
+            )
         # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
