@@ -173,6 +173,7 @@ def file_modelo_revision(
             cross_period_expected_member_sets,
         ),
         taxpayer_tax_id=workflow_profile.tax_id,
+        activity_start_date=workflow_profile.activity_start_date,
     )
 
     now = clock or _utc_now()
