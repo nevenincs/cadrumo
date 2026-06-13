@@ -102,23 +102,44 @@ return trimmed; ... fall back to active bucket`), differing only by the typed
 runtime-repository modules; it can be expressed once as a shared helper
 parameterised by `error_type` (the modelo resolver already takes `error_type`).
 
-### F4 (MEDIUM) — Spanish/European decimal-format parsing is reimplemented inline across six files (Pass 2)
+### F4 (LOW — reclassified after source confirmation) — scattered European-decimal idiom, but the parsers are not substitutable
 
-The European number-format normalisation that maps a Spanish-formatted numeric
-string (thousands dot, decimal comma) to a `Decimal` is open-coded inline in six
-production files, with no canonical helper: `sede/_iva_compensation_wallet_parsing.py`,
-`sede/_censo.py`, `ledger/_evidence_advisory.py` (`_parse_amount`),
-`registry/_export_parse.py` (two sites), `registry/_renta_web_open_oracle.py`,
-and `inbound/pdf/_label_regex.py` (two sites). Two variants exist and are NOT
-interchangeable: the full form `.replace(".", "").replace(",", ".")` (strips
-thousands dots) and the comma-only form `.replace(",", ".")` (assumes no
-thousands separators). A value like `"1.234"` parses to `1234` under the full
-form and `1.234` under the comma-only form, so a naive merge would change
-behaviour. The actionable consolidation is one canonical helper with an explicit
-thousands-separator mode, plus a per-site substitutability check before each
-redirect (some sites also strip currency symbols or signs and must keep that).
-This is a clean cluster (a true shared primitive is missing) but a careful one;
-it is tracked as plan Wave W02 with one step per site.
+Initial Pass-2 framing flagged the European number-format idiom
+(`.replace(".", "").replace(",", ".")` → `Decimal`) across six production files
+as a clean cluster missing a shared primitive. Source-level confirmation (the
+per-site substitutability check the plan steps mandated) reverses that: the six
+sites share only a trivial one-to-two-line separator-replacement kernel, each
+wrapped in genuinely different, non-shared logic that the substitutability
+pre-filter forbids merging:
+
+- `sede/_iva_compensation_wallet_parsing._parse_spanish_decimal` — NBSP
+  normalisation + full-Spanish + `re.sub(r"[^0-9.\\-]", "")` currency/symbol
+  stripping + raises `SedeParseError` with a translated message on empty.
+- `sede/_censo._parse_m2` / `_parse_withholding` — regex-`match`-gated on a
+  pre-validated capture group, comma-only, one returns `str` not `Decimal`,
+  raises `CensoParseError`.
+- `registry/_export_parse._parse_xml_decimal` / `_parse_decimal` — comma-only,
+  empty defaults to `Decimal("0")`, raises `RegistryValidationError`.
+- `registry/_renta_web_open_oracle._parse_decimal_text` — conditional Spanish
+  (only when a comma is present), returns `None` on failure.
+- `inbound/pdf/_label_regex` — the most sophisticated: detects which separator
+  is decimal via `rfind(",") > rfind(".")`, strips all whitespace, handles `-`,
+  returns `None` on failure.
+
+The shared kernel is trivial; the defaults (raise / `None` / `Decimal("0")`),
+pre-validation, symbol stripping, locale detection, and error types are all
+site-specific and load-bearing. Extracting only the kernel would dedupe one or
+two lines per site at real risk of subtly changing AEAT-data parsing — a poor
+trade. F4 is reclassified LOW and not actioned; like F1 it is intentional
+site-specific divergence around a trivial common idiom, recorded so a later pass
+does not re-flag it. The originating Pass-2 framing is left visible above as the
+worked example of the lexical-idiom false positive the pre-filter catches.
+
+**Meta-finding:** after the prior `semantic-cluster-hardening` and
+`code-duplication-sweep` campaigns, the codebase's residual "duplication" is
+overwhelmingly intentional divergence or trivial-idiom sharing; genuinely clean,
+substitutable competing implementations (F3) are now rare. Future passes should
+weight the substitutability pre-filter heavily and expect a high ruled-out rate.
 
 ### Ruled out under the substitutability pre-filter (no action)
 

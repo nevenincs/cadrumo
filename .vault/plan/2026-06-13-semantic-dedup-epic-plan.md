@@ -20,6 +20,8 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
+<!-- RETIRED: W02, P04, S08, S09, S10, S11, S12, S13, S14 -->
+
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #plan) and one feature tag.
      Replace semantic-dedup-epic with a kebab-case feature tag, e.g. #foo-bar.
@@ -127,22 +129,6 @@ Replace the per-domain copy-pasted explicit-or-active-bucket resolver bodies wit
 
 - [x] `W01.P03.S06` - Add one shared resolve_repository_bucket_id helper parameterised by error_type as the single explicit-or-active-bucket resolver; `src/aeat/core/identity/_bucket.py`.
 - [x] `W01.P03.S07` - Redirect every per-domain resolve_*_repository_bucket_id function to the shared helper and remove the copied bodies; `src/aeat/domain/filing/_runtime_repository.py`.
-
-## Wave `W02` - Pass 2 — Confirmed Duplication Removal
-
-Confirmed duplication clusters from discovery Pass 2. F4: consolidate the inline Spanish/European decimal-format parsing scattered across six production files onto one canonical mode-parameterised helper, with a per-site substitutability check before each redirect.
-
-### Phase `W02.P04` - F4 — Consolidate Spanish/European decimal-format parsing
-
-Add one canonical European-decimal parse helper (explicit thousands-separator mode) and redirect the six inline sites, verifying each site's full normalisation (currency/sign stripping, thousands handling) is preserved.
-
-- [ ] `W02.P04.S08` - Add a canonical parse_european_decimal helper with an explicit thousands-separator mode (full Spanish vs comma-only) returning Decimal or None; `src/aeat/core/decimal/_coerce.py`.
-- [ ] `W02.P04.S09` - Verify substitutability then redirect the full-form site to the canonical helper; `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet_parsing.py`.
-- [ ] `W02.P04.S10` - Verify substitutability then redirect the comma-only sites to the canonical helper; `src/aeat/adapters/outbound/aeat/sede/_censo.py`.
-- [ ] `W02.P04.S11` - Verify substitutability then redirect the best-effort full-form parser to the canonical helper; `src/aeat/application/ledger/_evidence_advisory.py`.
-- [ ] `W02.P04.S12` - Verify substitutability then redirect the two comma-only sites to the canonical helper; `src/aeat/domain/calculations/registry/_export_parse.py`.
-- [ ] `W02.P04.S13` - Verify substitutability then redirect the full-form site to the canonical helper; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
-- [ ] `W02.P04.S14` - Verify substitutability then redirect the two label-regex sites to the canonical helper; `src/aeat/adapters/inbound/pdf/_label_regex.py`.
 
 ## Description
 
