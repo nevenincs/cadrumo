@@ -10,6 +10,9 @@ related:
   - '[[2026-06-13-semantic-dedup-epic-W01-P03-S06]]'
   - '[[2026-06-13-semantic-dedup-epic-W01-P03-S07]]'
   - '[[2026-06-13-semantic-dedup-epic-W03-P05-S15]]'
+  - '[[2026-06-13-semantic-dedup-epic-W04-P06-S16]]'
+  - '[[2026-06-13-semantic-dedup-epic-W04-P07-S17]]'
+  - '[[2026-06-13-semantic-dedup-epic-W04-P08-S18]]'
   - '[[2026-06-13-semantic-dedup-epic-adr]]'
   - '[[2026-06-13-semantic-dedup-epic-audit]]'
   - '[[2026-06-13-semantic-dedup-epic-plan]]'
@@ -35,6 +38,9 @@ Auto-generated index of all documents tagged with `#semantic-dedup-epic`.
 - `2026-06-13-semantic-dedup-epic-W01-P03-S06` - Add one shared resolve_repository_bucket_id helper parameterised by error_type as the single explicit-or-active-bucket resolver
 - `2026-06-13-semantic-dedup-epic-W01-P03-S07` - Redirect every per-domain resolve_*_repository_bucket_id function to the shared helper and remove the copied bodies
 - `2026-06-13-semantic-dedup-epic-W03-P05-S15` - Promote one canonical storage_validation_error to storage/errors.py and redirect the seven duplicate storage-module copies, removing the duplicate defs and message-key constants
+- `2026-06-13-semantic-dedup-epic-W04-P06-S16` - Consolidate the live-CLI _metric_line and auth-preflight guard onto shared helpers in _app_live_auth_preflight and redirect rendering, expedientes, justificante, notifications
+- `2026-06-13-semantic-dedup-epic-W04-P07-S17` - Consolidate the four identical _bucket_id active-bucket guards onto a shared resolve_active_bucket helper
+- `2026-06-13-semantic-dedup-epic-W04-P08-S18` - Promote canonical normalize_decimal_separators and redirect the eight inline European-decimal separator sites
 
 ### plan
 

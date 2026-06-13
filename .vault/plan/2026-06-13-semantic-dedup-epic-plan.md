@@ -140,6 +140,28 @@ Promote one canonical storage_validation_error to storage/errors.py and remove t
 
 - [x] `W03.P05.S15` - Promote one canonical storage_validation_error to storage/errors.py and redirect the seven duplicate storage-module copies, removing the duplicate defs and message-key constants; `src/aeat/adapters/persistence/storage/errors.py`.
 
+## Wave `W04` - Pass 4 — Behavior-Preserving Removal Sweep
+
+Land every behavior-preserving consolidation surfaced by the structural sweep and the F4 re-examination, per the corrected directive that only behavior-changing merges are blocked.
+
+### Phase `W04.P06` - F6 — Dedupe live-CLI metric-line and auth-preflight guard
+
+Consolidate the identical _metric_line formatter and auth-preflight registration guard onto shared helpers.
+
+- [x] `W04.P06.S16` - Consolidate the live-CLI _metric_line and auth-preflight guard onto shared helpers in _app_live_auth_preflight and redirect rendering, expedientes, justificante, notifications; `src/aeat/entrypoints/cli/_app_live_auth_preflight.py`.
+
+### Phase `W04.P07` - F7 — Dedupe live-CLI active-bucket guard
+
+Consolidate the four identical _bucket_id guards onto a shared resolve_active_bucket helper.
+
+- [x] `W04.P07.S17` - Consolidate the four identical _bucket_id active-bucket guards onto a shared resolve_active_bucket helper; `src/aeat/entrypoints/cli/_app_live_verify_cli.py`.
+
+### Phase `W04.P08` - F4 — Consolidate European-decimal separator parsing
+
+Promote a canonical normalize_decimal_separators and redirect the eight inline separator sites.
+
+- [x] `W04.P08.S18` - Promote canonical normalize_decimal_separators and redirect the eight inline European-decimal separator sites; `src/aeat/core/decimal/_coerce.py`.
+
 ## Description
 
 <!-- Briefly describe the proposed work. Reference `{adr}`s,
