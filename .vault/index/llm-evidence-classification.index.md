@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#llm-evidence-classification'
-date: '2026-06-12'
+date: '2026-06-13'
 related:
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S01]]'
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S02]]'

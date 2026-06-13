@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#llm-evidence-classification'
 date: '2026-06-13'
+modified: '2026-06-13'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
   - "[[2026-06-12-llm-evidence-classification-audit]]"
@@ -133,3 +134,54 @@ signal, not a failure. -->
 None. This roll validated existing behaviour against the real cloud CLI and
 surfaced one minor UX gap (F5); it produced no new cross-session,
 constraint-shaped, project-bound lesson warranting a rule.
+
+## Campaign-close honesty review
+
+A mandatory fresh-context honesty review (per `aeat-campaign-close-honesty-review`)
+ran against the closure summary before declaring the campaign structurally
+complete. The legally load-bearing constraints all hold: the LLM never emits a
+persisted regulated number (rate/base/amount are registry-derived via
+`split_gross_at_rate` / `_derive_iva_substrate`), the cache folds only the
+sha256 content address (never the base64 bytes), the secure-storage invariant is
+respected, and the new tests are real-behaviour (no mocks). Findings and
+dispositions:
+
+- **H1/H2 (deferred to follow-up) — on-host vision READ is built but unwired.**
+  W02.P05 (S17–S20) shipped the LocalAdapter Ollama-images path, the in-memory
+  PDF rasteriser, and the multimodal cache key — exactly as those four Steps
+  scoped them, and they are complete and tested. But the shipped
+  classify/saturate/split path uses `SubprocessLLMClassifier`
+  (`domain/transactions/_llm.py`), whose `classify`/`propose_split` accept only
+  `evidence_text: str`; `aeat.adapters.outbound.llm` (LLMClient/LocalAdapter) is
+  imported by zero application/CLI modules. So the ADR's headline on-host
+  vision read of scanned/image evidence is not reachable by any operator command,
+  and `_resolve_evidence_text` still raises on image evidence. This is a
+  plan-vs-ADR scope gap: no Step ever covered wiring a local-vision *consumer*.
+  The plan's S17–S20 are honestly complete; the operator-facing on-host vision
+  capability is **not shipped** and is deferred to a follow-up campaign
+  (`llm-evidence-vision-consumer`: add a local-vision classifier that rasterises
+  scan-only/image evidence and feeds a local model via the LocalAdapter, dispatch
+  it from `_resolve_evidence_text`, and validate against a local Ollama vision
+  model). Until then the only working evidence read is the consent-gated cloud
+  text path — which the ADR bars for gestors, so gestors have no evidence-read
+  path yet; this must be stated plainly rather than implied closed.
+- **M1 (accepted) — S18/S19 multimodal cache key is pre-wired for a consumer
+  that does not yet exist.** Correct defensive code; it becomes load-bearing once
+  the H1 follow-up lands. Kept.
+- **M2 (fixed) — F5 view-display.** `ledger view` now renders the linked
+  `purchase_invoice_evidence_id` and attachment ids; locale keys added to all
+  four catalogues; gated by a real `evidence add -> attach -> view` test.
+- **L1 (deferred with H1) — process-state comments** ("until the on-host vision
+  reader lands" in `_llm_classification.py` / `_evidence_textlayer.py`) violate
+  `aeat-source-hygiene`. They honestly document the H1 gap; rewording them now
+  would falsely imply a working route, so they are corrected when the H1 follow-up
+  wires the path.
+- **L2 (verified) — S32 / persona Steps exec records.** S32's nitpicky
+  docs-build gate is green at HEAD (`8 passed`) and carries an exec record; the
+  S34–S37 persona Steps each carry exec records.
+
+**Verdict:** the plan is complete *as scoped* (every Step delivered what it
+specified, with exec records); the ADR's broader operator-facing on-host vision
+read is honestly recorded here as **not shipped** and deferred to the
+`llm-evidence-vision-consumer` follow-up, rather than implied complete by the
+38/38 count.
