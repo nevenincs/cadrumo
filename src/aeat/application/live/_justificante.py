@@ -508,6 +508,41 @@ def parse_capture_to_justificante(snapshot: JustificanteCaptureSnapshot) -> Just
     return parse_justificante_bytes(snapshot.decoded_pdf_bytes())
 
 
+def register_capture_justificante_metadata(
+    *,
+    snapshot: JustificanteCaptureSnapshot,
+) -> Justificante | None:
+    """Persist parsed justificante metadata for a live capture.
+
+    This records the official AEAT receipt metadata even when the local app has
+    no current ``ModeloRecord`` for the period. It does not stamp or create a
+    local filing row; that remains owned by
+    :func:`register_capture_as_filing_evidence`.
+    """
+    from ...domain.justificante import JustificanteParseError, JustificanteRepository
+
+    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
+        raise LiveApplicationInputError(
+            f"cannot register justificante metadata from {snapshot.state.value} "
+            f"live-capture snapshot {snapshot.snapshot_id!r}",
+        )
+    try:
+        justificante = parse_capture_to_justificante(snapshot)
+    except JustificanteParseError:
+        return None
+    if justificante.csv.strip().upper() != snapshot.csv.strip().upper():
+        raise LiveApplicationInputError(
+            f"captured justificante csv {justificante.csv!r} does not match live snapshot csv {snapshot.csv!r}",
+        )
+    if not _justificante_matches_capture_axis(justificante, snapshot):
+        raise LiveApplicationInputError(
+            f"captured justificante {snapshot.csv!r} does not match live snapshot axis "
+            f"for modelo={snapshot.modelo!r} period={snapshot.period!s}",
+        )
+    JustificanteRepository().save(justificante)
+    return justificante
+
+
 def reconcile_capture(
     *,
     work_unit_id: str,
@@ -536,6 +571,17 @@ def reconcile_capture(
             source_ref=_capture_secure_reference(snapshot),
             actor=actor,
         ),
+    )
+
+
+def _justificante_matches_capture_axis(
+    justificante: Justificante,
+    snapshot: JustificanteCaptureSnapshot,
+) -> bool:
+    return (
+        justificante.modelo.strip() == snapshot.modelo
+        and str(justificante.ejercicio or "").strip() == str(snapshot.filing_year)
+        and justificante.period == snapshot.period
     )
 
 
@@ -762,6 +808,7 @@ __all__ = [
     "parse_capture_to_justificante",
     "reconcile_capture",
     "register_capture_as_filing_evidence",
+    "register_capture_justificante_metadata",
     "resolve_period_expediente",
     "stamp_capture_evidence_if_filed",
 ]

@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict
 from ...adapters.outbound.aeat.sede import Declaracion
 from ...core import Period
 from ._errors import LiveApplicationInputError
+from ._remote_state_models import FiledDataCaptureFailureRow
 
 
 class FiledDataListingRow(BaseModel):
@@ -40,6 +41,20 @@ class FiledDataListingReport(BaseModel):
     year_to: int
     row_count: int
     rows: tuple[FiledDataListingRow, ...]
+
+
+class BulkFiledDataListingReport(BaseModel):
+    """Read-only filed-declaration listing report across multiple modelos."""
+
+    model_config = ConfigDict(frozen=True)
+
+    modelos: tuple[str, ...]
+    year_from: int
+    year_to: int
+    row_count: int
+    failed_count: int
+    rows: tuple[FiledDataListingRow, ...]
+    failures: tuple[FiledDataCaptureFailureRow, ...]
 
 
 def select_declarations_for_capture(
@@ -84,6 +99,7 @@ def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
 
 
 __all__ = [
+    "BulkFiledDataListingReport",
     "FiledDataListingReport",
     "FiledDataListingRow",
     "filed_data_listing_row",

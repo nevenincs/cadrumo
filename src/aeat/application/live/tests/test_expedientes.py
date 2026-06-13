@@ -58,11 +58,13 @@ def _capture(
     *,
     declarations: tuple[Declaracion, ...] = (),
     captured_at: datetime | None = None,
+    authenticated_identity: str | None = "12345678Z",
 ) -> ExpedientesCapture:
     return ExpedientesCapture(
         declarations=declarations,
         captured_at=captured_at or datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
         source_url=_DECLARACION_CONSULT_URL,
+        authenticated_identity=authenticated_identity,
     )
 
 
@@ -78,6 +80,7 @@ class TestCapture:
         )
         assert len(persisted.snapshot_id) == 64
         assert persisted.bucket_id == secure_engine.bucket_id
+        assert persisted.authenticated_identity == "12345678Z"
         assert persisted.declarations[0].expediente_id == "12345678901234567890"
 
     def test_capture_deduplicates_identical_captures(
