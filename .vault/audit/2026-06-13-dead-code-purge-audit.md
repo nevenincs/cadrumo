@@ -157,12 +157,47 @@ dedup campaign's substitutability pre-filter encodes. Bulk-deleting 59
 public/domain/private methods at once is explicitly rejected.
 
 A RAG-equipped classification swarm (one agent per file-cluster, instructed to
-exercise `vaultspec-rag` for the semantic concept and intent of each method) was
-dispatched to make the per-cluster call, but all 32 agents failed on a recurring
-org-wide API rate limit (not a usage limit), returning no verdicts. The
-classification is therefore parked until the rate limit clears (or a throttled
-re-run / fresh-context manual pass), with these conservative pre-judgements
-standing from the static evidence:
+exercise `vaultspec-rag` for the semantic concept and intent of each method) made
+the per-cluster call. The first 32-at-once burst failed on an org-wide API rate
+limit; a throttled re-run (3 agents at a time) succeeded and classified all 59:
+
+- **20 dead_removed**, **20 intended_pending**, **5 wiring_bug**, **14
+  live_false_positive**.
+
+The 14 false positives are load-bearing: the agents (reading code) found callers
+that the static `\.method` cross-reference had missed (a regex-escape defect that
+under-counted references), so the agent verdicts are MORE reliable than the static
+pass. The 20 intended_pending are nearly all ADR-grounded — accepted-ADR public
+surfaces awaiting their consumer (`capture_storage_state` / `resume_from_storage_state`
+per the session-persistence ADR; `open_bytes` per attachment-audit M14; the
+secure-storage mirror `exists_by_raw_key` / `save_with_raw_key`; the bucket-ADR
+`browse` / `import_`; `iter_histories`); deleting any would have removed real
+wired-but-pending capability. They are KEPT.
+
+**Batch 4 landed** (`c6cd0d327`): of the 20 dead_removed, the four with neither a
+production NOR a test caller were deleted — `attachment._manifest_lock_target`
+(superseded by SQL-transaction locking), `_observations_repository.delete_observation`,
+`user_profile._lifecycle.edit_section`,
+`registry._bindings_previous_filing.required_periods_for_target`. The swarm's
+`_ensure_quarantine_table` = dead_removed verdict was OVERRIDDEN at confirmation:
+the quarantine feature is still live (`quarantine_unreadable_rows`,
+`preview_quarantine_unreadable_secure_objects`), so it is a wiring concern, not
+dead — KEPT.
+
+**Remaining dead_removed (classified, coupled-deletion follow-on):** the rest are
+production-dead but **test-covered**, so each deletion must remove the method AND
+its test(s) together — `attachment.blob_path`, `_secret_store.list_digests`,
+`access_gate.as_audit_dict`, `invoices._models.iva_classification_for_line` (the
+unused delegating consumer the dedup CL07 pass already noted),
+`submission._engine.load_submission` / `list_submissions`, `_lifecycle.list_profiles`;
+the docstring-only `google._calc_sheets_pull.to_operator_input` /
+`to_sheet_export_metadata` (delete + repair the `:meth:` cross-refs); and the
+common-name ones needing call-site disambiguation before deletion
+(`llm._cache.prune` / `_path_for`, `core.topics.slugs`, `normatives.reload`,
+`justificante._repository.list_csvs`, `access_gate.snapshot_env`). These are the
+actionable remaining deletions.
+
+Conservative pre-judgements that the swarm confirmed:
 
 - **Keep (intended-pending, regulated tax logic):** the entire
   `domain/contribuyente/family.py` IRPF minimum/deduction/advisory cluster and the
