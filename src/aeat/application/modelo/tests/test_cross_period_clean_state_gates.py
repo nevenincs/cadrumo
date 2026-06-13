@@ -207,6 +207,8 @@ def _seed_303_cross_period_sources(
             stamped_revision_id=source_snapshot.revision.id,
             source_metadata={
                 "aeat_register_status": "ALTA",
+                "aeat_expediente_id": f"EXP-303-2025-{period}",
+                "aeat_justificante_csv": evidence_reference_id,
                 "authenticated_identity": "X1234567L",
             },
         )
@@ -488,7 +490,7 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
 
 
 def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_path: Path) -> None:
-    """ADR 2026-06-13: with no activity-start date and missing priors, the gate fails closed.
+    """With no activity-start date and missing priors, the gate fails closed.
 
     A profile that records no ``activity_start_date`` cannot decide whether a
     missing prior filing is pre-activity (no obligation) or a genuinely missing
@@ -539,7 +541,7 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
 
 
 def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking(tmp_path: Path) -> None:
-    """ADR 2026-06-13: a declared date scopes pre-activity priors out as a NON-BLOCKING advisory.
+    """A declared date scopes pre-activity priors out as a NON-BLOCKING advisory.
 
     With an operator-declared activity-start date of 2025-10-01 (the first day of
     4T), the three earlier 2025 M303 quarters the M390/2025 target depends on are
