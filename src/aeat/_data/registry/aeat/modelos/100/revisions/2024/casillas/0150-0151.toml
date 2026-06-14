@@ -5,5 +5,5 @@ label = "Reducción por rendimientos generados en más de 2 años u obtenidos de
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_inmobiliario_reduccion_rendimientos_irregulares"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
