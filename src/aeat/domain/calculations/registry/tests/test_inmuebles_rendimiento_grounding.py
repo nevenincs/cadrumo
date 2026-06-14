@@ -24,9 +24,7 @@ from .._temporal import select_revision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
-_ACTIVIDADES_CHAPTER = frozenset(
-    {f"ley-35-2006:art-{n}" for n in (27, 28, 30, 31, 32)}
-)
+_ACTIVIDADES_CHAPTER = frozenset({f"ley-35-2006:art-{n}" for n in (27, 28, 30, 31, 32)})
 
 # box id -> the exact capital-inmobiliario articles that govern it (verified
 # against the canonical 2025 grounding and the box's own AEAT label).
@@ -68,9 +66,7 @@ def _m100_casillas_by_id(filing_year: int):
 
 @pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
 @pytest.mark.parametrize(("cid", "expected"), sorted(_CHAIN_GROUNDING.items()))
-def test_inmueble_chain_box_grounds_in_its_own_provision(
-    year: int, cid: str, expected: frozenset[str]
-) -> None:
+def test_inmueble_chain_box_grounds_in_its_own_provision(year: int, cid: str, expected: frozenset[str]) -> None:
     """Each rendimiento-chain box cites its capital-inmobiliario article(s) and
     never the actividades chapter."""
     casilla = _m100_casillas_by_id(year).get(cid)
@@ -79,6 +75,4 @@ def test_inmueble_chain_box_grounds_in_its_own_provision(
     assert not (_ACTIVIDADES_CHAPTER & refs), (
         f"casilla {cid} ({year}) must not cite the actividades chapter: {sorted(refs)}"
     )
-    assert expected <= refs, (
-        f"casilla {cid} ({year}) must ground in {sorted(expected)}; found {sorted(refs)}"
-    )
+    assert expected <= refs, f"casilla {cid} ({year}) must ground in {sorted(expected)}; found {sorted(refs)}"

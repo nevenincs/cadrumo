@@ -67,10 +67,7 @@ def test_capital_mobiliario_cites_its_own_chapter(year: int) -> None:
         lirpf = {r for r in c.legal_refs if r.startswith("ley-35-2006:art-")}
         if lirpf and not (lirpf & _CAPITAL_MOBILIARIO_CHAPTER):
             bad.append((c.id, sorted(c.legal_refs)))
-    assert not bad, (
-        f"M100 {year}: capital-mobiliario casillas with an LIRPF article that is "
-        f"not art. 25/26: {bad}"
-    )
+    assert not bad, f"M100 {year}: capital-mobiliario casillas with an LIRPF article that is not art. 25/26: {bad}"
 
 
 # The retenciones / pagos a cuenta boxes were part of the same cross-section
