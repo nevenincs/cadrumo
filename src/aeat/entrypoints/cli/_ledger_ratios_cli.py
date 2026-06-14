@@ -12,8 +12,9 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.buckets import BucketEventType
-from ._common import _bad, _emit_envelope, _no_active_profile_refusal, parse_decimal_amount
+from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
 
 _log = get_logger(__name__)
 
@@ -29,27 +30,11 @@ def register_ratios_commands(app: typer.Typer) -> None:
     app.add_typer(ratios_app, name="ratios")
 
 
-def _ratios_bucket_id() -> str:
-    """Return the active workflow bucket id or raise the standard CLI refusal."""
-    from ...core import require_active_bucket_id
-    from ...core.errors import NoActiveProfileError
-
-    try:
-        return require_active_bucket_id()
-    except NoActiveProfileError as exc:
-        raise _no_active_profile_refusal() from exc
-
-
 def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     """Return ``(bucket_id, active_profile_id)`` from workflow state."""
-    from ...core import require_active_bucket_id, resolve_active_bucket_id
-    from ...core.errors import NoActiveProfileError
+    from ...core import resolve_active_bucket_id
 
-    try:
-        bucket_id = require_active_bucket_id()
-    except NoActiveProfileError as exc:
-        raise _no_active_profile_refusal() from exc
-    return bucket_id, resolve_active_bucket_id()
+    return _ratios_bucket_id(), resolve_active_bucket_id()
 
 
 def _emit_ratios_event(

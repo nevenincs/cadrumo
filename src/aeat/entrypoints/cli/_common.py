@@ -385,8 +385,12 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
 # ---------------------------------------------------------------------
 
 
-def _active_bucket_id_or_bad(state: WorkflowState) -> str:
-    """Return the active profile bucket id or raise the CLI 'bad' error."""
+def active_bucket_id_or_refuse() -> str:
+    """Return the active profile bucket id or raise the canonical no-active-profile refusal.
+
+    Stateless single source for the cold-start bucket-id guard shared across
+    the ledger command family; :func:`_active_bucket_id_or_bad` delegates here.
+    """
     from ...core import require_active_bucket_id
     from ...core.errors import NoActiveProfileError
 
@@ -394,6 +398,11 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
         return require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
+
+
+def _active_bucket_id_or_bad(state: WorkflowState) -> str:
+    """Return the active profile bucket id or raise the CLI 'bad' error."""
+    return active_bucket_id_or_refuse()
 
 
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
