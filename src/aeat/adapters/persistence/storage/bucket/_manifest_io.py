@@ -16,6 +16,7 @@ from pathlib import Path
 
 from .....core import parse_toml_text
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .._namespace_registry import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
@@ -101,16 +102,24 @@ def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
     """Atomically write the manifest under ``<bucket-dir>/manifest.toml``.
 
     Uses a write-then-rename pattern: the payload is staged under a
-    ``.tmp`` sibling and renamed in place via :func:`os.replace`, so a
-    crash mid-write leaves either the previous good manifest or the new
-    good manifest, never a torn intermediate.
+    ``.tmp`` sibling, ``fsync``-ed, and renamed in place via
+    :func:`os.replace`, after which the parent directory is ``fsync``-ed too.
+    A crash mid-write leaves either the previous good manifest or the new good
+    manifest, never a torn intermediate; the ``fsync`` pair makes that
+    guarantee survive a hard power loss (matching the rotation atomic-write
+    path), so a half-flushed tmp file can no longer become a zero-length
+    manifest on reboot.
     """
     target = manifest_path(paths)
     tmp = target.with_suffix(target.suffix + ".tmp")
     payload = _serialise_manifest(manifest)
     try:
-        tmp.write_text(payload, encoding=_UTF_8_ENCODING)
+        with open(tmp, "w", encoding=_UTF_8_ENCODING) as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
         os.replace(tmp, target)
+        fsync_parent_dir(target)
     except OSError as exc:
         _unlink_tmp_manifest(tmp)
         raise manifest_validation_error("bucket manifest cannot be written") from exc
