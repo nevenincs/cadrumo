@@ -268,6 +268,7 @@ from .runtime import (
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
+from .runtime_repository import secure_object_repository_for_bucket
 from .secret_store._secret_store import SecretRecord, SecretStore
 from .sql import SecureObjectNamespaceIntegrity, SecureObjectRepository, SecureObjectWrite
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
@@ -484,6 +485,7 @@ __all__ = [
     "save_wrapped_master_key",
     "secure_object_logical_path",
     "secure_object_namespace_logical_path",
+    "secure_object_repository_for_bucket",
     "session_scope",
     "unwrap_master_key",
     "unwrap_recovery_envelope",
