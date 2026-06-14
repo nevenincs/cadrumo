@@ -82,7 +82,7 @@ Help a user create a complete profile without turning profile setup into a flag 
 
 Separate AEAT census facts from ordinary local profile editing.
 
-- [ ] `W03.P06.S18` - Create a standalone censo/enrolment how-to for config profile censo refresh, show, compare, and apply, including authenticated read-only AEAT access, local snapshot review, apply-only-after-review guidance, post-apply profile validation, and handoff to calendar or ledger setup; `censo how-to docs`.
+- [x] `W03.P06.S18` - Create a standalone censo/enrolment how-to for config profile censo refresh, show, compare, and apply, including authenticated read-only AEAT access, local snapshot review, apply-only-after-review guidance, post-apply profile validation, and handoff to calendar or ledger setup; `censo how-to docs`.
 - [x] `W03.P06.S19` - Create a standalone Modelo 036 lifecycle how-to for `app modelo m036 alta`, `modificacion`, and `baja`, clearly stating these record declarations filed at sede and do not file remotely; `M036 how-to docs`.
 - [ ] `W03.P06.S20` - Backlog any missing "what enrolments do I need?" product surface if the CLI cannot answer it from the active profile in plain language; `product backlog`.
 
