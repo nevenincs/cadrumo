@@ -76,3 +76,23 @@ def test_inmueble_chain_box_grounds_in_its_own_provision(year: int, cid: str, ex
         f"casilla {cid} ({year}) must not cite the actividades chapter: {sorted(refs)}"
     )
     assert expected <= refs, f"casilla {cid} ({year}) must ground in {sorted(expected)}; found {sorted(refs)}"
+
+
+@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
+def test_capital_inmobiliario_range_never_cites_actividades(year: int) -> None:
+    """No capital-inmobiliario casilla (the inmueble-section computation block, ids
+    100-156 — capital inmobiliario; ganancia boxes are >=1226) may cite the
+    actividades económicas chapter. Covers the rental-property gastos/amortización-base
+    sub-block (art. 23) and the retención box 0153 (art. 99) regrounded from the
+    cross-section copy-paste defect."""
+    offenders = []
+    for c in _m100_casillas_by_id(year).values():
+        if not c.id.isdigit() or not (100 <= int(c.id) <= 156):
+            continue
+        if "inmueble" not in tuple(c.section):
+            continue
+        if _ACTIVIDADES_CHAPTER & set(c.legal_refs):
+            offenders.append((c.id, sorted(c.legal_refs)))
+    assert not offenders, (
+        f"M100 {year}: capital-inmobiliario casillas still cite the actividades chapter: {offenders}"
+    )
