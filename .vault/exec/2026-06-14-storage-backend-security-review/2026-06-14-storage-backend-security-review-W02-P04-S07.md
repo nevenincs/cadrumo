@@ -140,3 +140,36 @@ ciphertext as plaintext or loses all data. This is the one change in the campaig
 whose failure mode is a worse security hole than the gap it closes, so it must run
 on a fresh, focused branch slice with the FULL storage suite (not a subset) gating
 every step. The read-site list above is now exhaustive, de-risking that session.
+
+## Approach decision (concluded 2026-06-15) — only approach A closes the threat
+
+Evaluated the lower-risk keyed-MAC column (approach B): add `row_integrity_tag =
+HMAC(dek_subkey, namespace||object_key||schema_version||payload_hash||revision_id)`,
+verified on read. It keeps the `EncryptedBytes` column (no plaintext-at-rest risk)
+and its failure mode is a LOUD read failure (caught by roundtrip tests), so it is
+non-catastrophic. BUT it does NOT close the core threat: a payload-ciphertext
+swapped into another row (the exact attack the audit described) leaves the target
+row's identity and metadata unchanged, so the MAC over those fields still matches —
+the swap passes. The MAC binds metadata, not the payload bytes.
+
+To catch a payload-ciphertext swap on read, the read path must either (a) decrypt
+under a row-identity-bound AEAD AAD so the moved ciphertext fails the auth tag
+(approach A — which requires moving encryption off the column decorator, carrying
+the catastrophic plaintext-at-rest write-site risk), or (b) recompute a content
+hash from the actual stored bytes and compare to the stored hash — which is exactly
+the read-time check that intercepts the ~7 attachment/contract corruption tests
+(they corrupt payloads to exercise downstream failure modes).
+
+CONCLUSION: there is no non-catastrophic, non-test-breaking shortcut. The correct
+execution is approach A (AAD binding) with the airtight test net it requires:
+- ADD an explicit "payload is ciphertext at rest" test using a UNIQUE non-sentinel
+  marker, asserting the marker is absent from the raw db bytes -- this closes the
+  one gap in the existing at-rest sentinel tests and makes a missed write-site
+  encryption a HARD failure rather than a silent one.
+- Existing strict save->load->equality roundtrips catch any missed read-site
+  decryption (load != save) and any write/read AAD mismatch (load fails).
+- Reconcile the ~7 corruption tests to expect the AAD/decryption failure.
+With those three nets the catastrophic modes are excluded and the change is safe to
+land on a fresh, focused branch with the FULL storage suite gating each step. This
+record now carries the exhaustive read-site list, the approach decision, and the
+test-net design -- the session can execute without rediscovery.
