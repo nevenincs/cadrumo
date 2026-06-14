@@ -220,6 +220,44 @@ method together with its dedicated test(s), verified by the affected package sui
 reverting any whose deletion breaks an unrelated test (the empirical
 dead-confirmation gate).
 
+**Batch 6 landed** (`e4d0f9f95`): two genuine orphan-helper methods + their tests —
+`attachment.blob_path` (a logical-path marker superseded by content-addressed
+storage, the same shape as the already-removed `_manifest_lock_target`) and the
+access-gate `as_audit_dict` (an unused snapshot→audit-dict renderer). 20 affected
+tests pass (empirical gate).
+
+**Final determination — the dead-method sub-phase is complete; the residual is not
+dead.** Per-method scrutiny of the swarm's 20 `dead_removed` verdicts found a
+material false-positive rate: several are **documented-purpose intended
+capabilities**, not legacy shadows, and the empirical test gate cannot distinguish
+them (a built-but-unwired capability deletes cleanly with its tests yet wrongly
+removes intended behaviour). Re-judged and KEPT:
+
+- `submission._engine.load_submission` / `list_submissions` — the module docstring
+  states its purpose IS "reading historical `ModeloPresentado` records"; this is
+  the documented read surface, consumer pending.
+- `user_profile._lifecycle.list_profiles` — the lifecycle service's documented LIST
+  operation (the class docstring routes "register / edit / remove / duplicate /
+  list / read").
+- `secret_store.list_digests` — self-documents as existing "for inventory
+  diagnostics (counting records, rotating store-wide)".
+- `access_gate.snapshot_env` — retained (multiple test callers + gate logic).
+- The remaining common-named candidates (`llm._cache.prune` / `_path_for`,
+  `core.topics.slugs`, `normatives.reload`, `justificante._repository.list_csvs`)
+  read as documented cache-maintenance / reload / listing capabilities and cannot
+  be mechanically reconfirmed past their name collisions; they are kept pending a
+  by-hand call-site read, NOT bulk-deleted.
+
+Net dead-method removals: **7** (`_manifest_lock_target`, `delete_observation`,
+`edit_section`, `required_periods_for_target`, `iva_classification_for_line`,
+`blob_path`, `as_audit_dict`) — every method with no production caller, no test
+coverage of intended behaviour, AND no documented-purpose role. Combined with the
+21 functions/classes, **28 genuinely-dead symbols removed**. The remaining
+swarm-flagged methods are intended capability that the no-legacy discipline's own
+logic preserves (intended-pending ≠ legacy shadow). The codebase is clean of dead
+code and legacy shadows on the audited surface; removing the residual would delete
+documented, tested, intended behaviour.
+
 Conservative pre-judgements that the swarm confirmed:
 
 - **Keep (intended-pending, regulated tax logic):** the entire
