@@ -15,12 +15,13 @@ from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
+from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
 from ._errors import LLMCacheError
 from ._models import LLMResponse, UsageRecord, UsageSummary
 
-_USAGE_NAMESPACE = "aeat.outbound.llm.usage"
+_USAGE_NAMESPACE = LLM_USAGE_NAMESPACE.namespace
 _USAGE_VERSION = 1
 
 

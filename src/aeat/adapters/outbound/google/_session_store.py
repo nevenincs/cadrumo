@@ -18,6 +18,12 @@ Each function is keyed on the resolved AEAT profile name (per
 
 from __future__ import annotations
 
+from ....adapters.persistence.storage import (
+    GOOGLE_DRIVE_CONFIG_NAMESPACE,
+    GOOGLE_OAUTH_CLIENT_NAMESPACE,
+    GOOGLE_OAUTH_METADATA_NAMESPACE,
+    GOOGLE_OAUTH_TOKEN_NAMESPACE,
+)
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.classification import SensitivityClass
@@ -25,10 +31,10 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
 from ._records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
-_NAMESPACE_CLIENT = "aeat.google.oauth.client"
-_NAMESPACE_TOKEN = "aeat.google.oauth.token"
-_NAMESPACE_METADATA = "aeat.google.oauth.metadata"
-_NAMESPACE_DRIVE_CONFIG = "aeat.google.drive.config"
+_NAMESPACE_CLIENT = GOOGLE_OAUTH_CLIENT_NAMESPACE.namespace
+_NAMESPACE_TOKEN = GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace
+_NAMESPACE_METADATA = GOOGLE_OAUTH_METADATA_NAMESPACE.namespace
+_NAMESPACE_DRIVE_CONFIG = GOOGLE_DRIVE_CONFIG_NAMESPACE.namespace
 _RECORD_VERSION = 1
 
 
