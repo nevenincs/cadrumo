@@ -379,10 +379,21 @@ inmobiliario computation chain (the ~25 boxes with known-2025 grounding: 0089, 0
 ganancias-patrimoniales grounding pass. Do NOT run the bulk classifier over the whole `inmueble`
 section.
 
-**Open — retenciones / pagos a cuenta** boxes (0591/0604/0609 → art. 99) remain a small clean
-subset, safe to fix. Plus a separate **2025 over-grounding** artifact: casillas 0043/0044/0049 in
-2025 carry a 17-article kitchen-sink set (incl. actividades + `orden-hac-277-2026` + `rd-439-2007`)
-— a 2025-authoring imprecision to narrow, tracked distinctly from the 2021-2024 copy-paste defect.
+**FIXED — inmuebles rendimiento chain (25 boxes × 4 years = 100 casillas, commit `1b0e0127f`):**
+exactly that verified subset was re-grounded (ingresos→art.22, gastos/amortización/reducciones→
+art.23, mínimo parentesco→art.24, renta imputada→art.22+85, neto/reducido/suma→combined), each box
+matched by its OWN mojibake-tolerant label (renumbering-safe) and rewritten only when it cited the
+actividades chapter — all 100 matched their expected concept (0 skips), reproducing the canonical
+2025 per-box grounding. Pinned by `test_inmuebles_rendimiento_grounding` (100 cases). **Retenciones
+/ pagos** (0591/0604/0609 → art.99) also fixed (commit `580996288`).
+
+**Still open (inmuebles remainder — separate ganancias pass):** the ganancias-patrimoniales-por-
+transmisión boxes (1816-1915, 1226-1230, 1641 → arts. 33-39), the deducción-obras desglose
+(1393-1440), and the structural/identity data-entry fields (0063-0088) still carry the actividades
+chapter; these need a ganancias-grounding pass with its own per-box article map, NOT the capital-
+inmobiliario chain articles. Plus a separate **2025 over-grounding** artifact: casillas 0043/0044/
+0049 in 2025 carry a 17-article kitchen-sink set (incl. actividades + `orden-hac-277-2026` +
+`rd-439-2007`) — a 2025-authoring imprecision to narrow, tracked distinctly from this defect.
 
 ## Recommendations
 
