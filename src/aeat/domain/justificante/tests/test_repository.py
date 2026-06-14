@@ -36,7 +36,7 @@ def _make_justificante(
     return Justificante(
         csv=csv,
         modelo="130",
-        period=period,
+        period=period,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: before-validator coerces raw token; bare-year negative test exercises rejection
         ejercicio="2026",
         presentation_id=None,
         presented_at=datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC),

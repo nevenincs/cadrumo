@@ -735,7 +735,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         artefact_body = b"modelo-303-2025-1T-justificante"
         store = FiledDeclaracionObservationStore(Path("var/aeat/filed-declarations"))
         artefact = store.persist_artefact(
-            ("303", 2025, "1T", "12345678901234567890"),
+            ("303", 2025, Period.from_year_and_code(2025, "1T"), "12345678901234567890"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
                 source_url=_SOURCE_URL,
@@ -782,7 +782,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         )
         wrong_identity_body = b"modelo-303-2025-3T-justificante"
         wrong_identity_artefact = store.persist_artefact(
-            ("303", 2025, "3T", "12345678901234567892"),
+            ("303", 2025, Period.from_year_and_code(2025, "3T"), "12345678901234567892"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
                 source_url=_SOURCE_URL,
@@ -807,7 +807,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         )
         non_active_body = b"modelo-303-2025-4T-non-active-justificante"
         non_active_artefact = store.persist_artefact(
-            ("303", 2025, "4T", "12345678901234567893"),
+            ("303", 2025, Period.from_year_and_code(2025, "4T"), "12345678901234567893"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
                 source_url=_SOURCE_URL,
@@ -848,7 +848,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
 
     assert second_evidence == ()
     by_period = {row.period: row for row in operator_evidence}
-    assert sorted((row.modelo, row.filing_year, row.period.registry_token) for row in operator_evidence) == [
+    assert sorted(
+        (row.modelo, row.filing_year, row.period.registry_token) for row in operator_evidence if row.period is not None
+    ) == [
         ("303", 2025, "1T"),
         ("303", 2025, "2T"),
     ]

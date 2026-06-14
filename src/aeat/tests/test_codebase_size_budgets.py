@@ -18,8 +18,8 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # before growing them further. Entries marked SPLIT-CANDIDATE grew past a
     # prior pin under concurrent feature work and are re-pinned to hold the new
     # ceiling; their owners should extract submodules during their next pass.
-    "src/aeat/application/calculations/_cross_period_clean_state.py": 1261,  # SPLIT-CANDIDATE
-    "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1392,  # SPLIT-CANDIDATE
+    "src/aeat/application/calculations/_cross_period_clean_state.py": 1265,  # SPLIT-CANDIDATE
+    "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1440,  # SPLIT-CANDIDATE
     "src/aeat/application/ledger/_llm_classification.py": 1340,  # SPLIT-CANDIDATE (on-host vision + provider UX)
     "src/aeat/application/modelo/_verification_actions.py": 1469,  # SPLIT-CANDIDATE
     # Active live-censo calendar reconciliation is landing in this shared tree;
@@ -30,7 +30,8 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/overview/tests/test_calendar.py": 1396,
     "src/aeat/application/overview/tests/test_calendar_filing_evidence.py": 1530,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_applicability.py": 1252,  # SPLIT-CANDIDATE
-    "src/aeat/domain/calculations/registry/_schema.py": 1270,
+    "src/aeat/domain/calculations/registry/_schema.py": 1274,
+    "src/aeat/entrypoints/cli/tests/test_registry_cli.py": 1300,  # SPLIT-CANDIDATE (Period construction verbosity)
     "src/aeat/entrypoints/cli/_app_live.py": 1265,
     "src/aeat/entrypoints/cli/_ledger_payloads.py": 1303,
     "src/aeat/entrypoints/cli/_modelo_payloads.py": 1295,
@@ -45,6 +46,7 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
         "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     ): 226,  # SPLIT-CANDIDATE
     ("src/aeat/domain/calculations/registry/_formula_runtime.py", "calculate_registry_snapshot"): 192,
+    ("src/aeat/entrypoints/cli/_ledger.py", "ledger_classify"): 184,  # SPLIT-CANDIDATE
 }
 
 

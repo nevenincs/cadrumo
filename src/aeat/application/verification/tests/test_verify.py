@@ -48,7 +48,7 @@ def _build_filing(
     )
     return DeclaracionObservation(
         modelo=modelo,
-        period=period,
+        period=Period.from_year_and_code(int(ejercicio), period),
         ejercicio=ejercicio,
         tax_id="00000000T",
         template_revision=TemplateRevision(

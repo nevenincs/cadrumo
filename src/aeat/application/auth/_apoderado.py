@@ -206,6 +206,9 @@ class ApoderadoService:
         than silently re-reading stored configuration and presenting it as
         a live result. Use ``status`` for the offline configuration read.
 
+        Returns the live :class:`ApoderadoStatus` once the live-read path is
+        wired; until then it raises.
+
         :raises ApoderadoLiveCheckUnavailableError: always, until the
             live-read path is wired.
         """

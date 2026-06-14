@@ -47,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 class _ModeloDraftCommonKwargs(TypedDict):
     draft_id: str
     modelo: str
-    period: str
+    period: Period
     profile_tax_id: str
     status: ModeloDraftStatus
     values: tuple[ModeloValue, ...]

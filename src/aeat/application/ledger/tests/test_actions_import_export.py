@@ -147,7 +147,7 @@ def test_import_rejects_zero_amount_row_at_parse_boundary(tmp_path: Path) -> Non
             LedgerSourceImportCommand(path=statement, provider="csv", dry_run=True),
         )
     assert exc_info.value.translated_message == "errors.transaction.ledger_import_failed"
-    assert "zero amount" in (exc_info.value.context or {}).get("reason", "")
+    assert "zero amount" in str((exc_info.value.context or {}).get("reason", ""))
 
 
 def test_import_outgoing_magnitude_row_stores_positive_with_outgoing_direction(

@@ -148,7 +148,6 @@ def test_cache_default_root_uses_central_settings(tmp_path: Path) -> None:
         ".hidden",
         "anthropic/../escape",
         "C:\\Windows\\System32",
-        "model:with-colon",
         "model\x00with-null",
         "",
     ],
@@ -176,6 +175,19 @@ def test_cache_path_normalises_namespaced_model(tmp_path: Path) -> None:
     composed = cache._path_for(key)
     assert composed.is_relative_to(tmp_path)
     assert composed.parent.name == "anthropic__claude-3-7-sonnet"
+
+
+def test_cache_path_normalises_ollama_tag_model(tmp_path: Path) -> None:
+    # The Ollama ``name:tag`` separator (``qwen2.5vl:3b``) is folded to
+    # ``_`` so the tagged model becomes a single, traversal-free path
+    # segment under the provider directory rather than being rejected.
+    cache = LLMCache(root_dir=tmp_path)
+    request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
+    key = cache.build_key(request, LLMProvider.LOCAL, "qwen2.5vl:3b")
+    composed = cache._path_for(key)
+    assert composed.is_relative_to(tmp_path)
+    assert composed.parent.name == "qwen2.5vl_3b"
+    assert ":" not in composed.parent.name
 
 
 def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:

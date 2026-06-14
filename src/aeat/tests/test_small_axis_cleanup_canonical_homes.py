@@ -154,9 +154,9 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
     from ..adapters.inbound.financial.providers._base import (
         FinancialProvider,
         FinancialProviderConfigError,
+        ParsedLedgerRow,
         ProviderValidation,
     )
-    from ..domain.transactions import RawTransaction
 
     with pytest.raises(FinancialProviderConfigError, match="verification_source"):
 
@@ -167,7 +167,7 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
             provisional_pending_specimen = False
 
             @override
-            def ingest(self, path: Path) -> Iterator[RawTransaction]:  # pragma: no cover
+            def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:  # pragma: no cover
                 return iter([])
 
             @override
@@ -182,9 +182,9 @@ def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional(
     from ..adapters.inbound.financial.providers._base import (
         FinancialProvider,
         FinancialProviderConfigError,
+        ParsedLedgerRow,
         ProviderValidation,
     )
-    from ..domain.transactions import RawTransaction
 
     with pytest.raises(FinancialProviderConfigError, match="no_corpus"):
 
@@ -196,7 +196,7 @@ def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional(
             provisional_pending_specimen = False  # wrong: must be True
 
             @override
-            def ingest(self, path: Path) -> Iterator[RawTransaction]:  # pragma: no cover
+            def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:  # pragma: no cover
                 return iter([])
 
             @override
@@ -210,9 +210,10 @@ def test_financial_provider_init_subclass_accepts_valid_provider() -> None:
 
     from ..adapters.inbound.financial.providers._base import (
         FinancialProvider,
+        ParsedLedgerRow,
         ProviderValidation,
     )
-    from ..domain.transactions import RawTransaction, SourceFormat
+    from ..domain.transactions import SourceFormat
 
     class _GoodProvider(FinancialProvider):
         name = "good-provider"
@@ -222,7 +223,7 @@ def test_financial_provider_init_subclass_accepts_valid_provider() -> None:
         provisional_pending_specimen = True
 
         @override
-        def ingest(self, path: Path) -> Iterator[RawTransaction]:  # pragma: no cover
+        def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:  # pragma: no cover
             return iter([])
 
         @override

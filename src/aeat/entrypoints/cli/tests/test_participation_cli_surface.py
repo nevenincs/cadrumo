@@ -13,9 +13,11 @@ from pathlib import Path
 
 import pytest
 import typer
+from typer.core import TyperGroup
 
 from ....application.ledger import get_transaction_participation
 from ....core import Period
+from ....domain.modelos import ModeloCode
 from ....domain.modelos._participation_index import (
     TransactionParticipationIndexRepository,
     TransactionRevisionParticipation,
@@ -28,14 +30,17 @@ from .._participation_cli import register_participation_commands
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _participation_group() -> typer.models.TyperInfo:
+def _participation_group() -> TyperGroup:
     def _resolve(_repo: object, transaction_id: str) -> str:
         return transaction_id
 
     app = typer.Typer()
     register_participation_commands(app, resolve_transaction_id=_resolve)
     command = typer.main.get_command(app)
-    return command.commands["participation"]
+    assert isinstance(command, TyperGroup)
+    participation = command.commands["participation"]
+    assert isinstance(participation, TyperGroup)
+    return participation
 
 
 def test_participation_verb_declares_subject_argument() -> None:
@@ -47,7 +52,7 @@ def test_participation_verb_declares_subject_argument() -> None:
 
 
 def test_participation_verb_carries_no_dead_borradores_flag() -> None:
-    """The deferred ``--include-borradores`` flag is removed, not shipped dead.
+    """The unbuilt ``--include-borradores`` flag is removed, not shipped dead.
 
     The participation index records only finalized-revision participations;
     borrador (draft) participation tracking is unbuilt. A dead operator-facing
@@ -93,7 +98,7 @@ def test_get_transaction_participation_reads_real_index(tmp_path: Path) -> None:
                 TransactionRevisionParticipation(
                     calculation_revision_id="b" * 64,
                     work_unit_id="c" * 64,
-                    modelo="303",
+                    modelo=ModeloCode("303"),
                     filing_year=2024,
                     period=Period.from_year_and_code(2024, "2T"),
                     revision_state="presentado",

@@ -28,6 +28,7 @@ from ....domain.modelos import (
     ModeloRecordCatalogueRepository,
     ModeloRecordStatus,
     VerificationReportCatalogueRepository,
+    WorkUnit,
     derive_calculation_revision_id,
     derive_filing_record_id,
 )
@@ -267,7 +268,7 @@ def _persist_justificante_metadata(
         Justificante(
             csv=csv,
             modelo=modelo,
-            period=period,
+            period=Period.from_year_and_code(filing_year, period),
             ejercicio=str(filing_year),
             presentation_id=presentation_id,
             presented_at=_CLOCK,
@@ -698,7 +699,7 @@ def _seed_official_303_source_filings(
 
 def _seed_legacy_source_filing_record(
     *,
-    work_unit: object,
+    work_unit: WorkUnit,
     casilla_values: dict[str, Decimal],
     evidence_kind: ExternalEvidenceKind,
     evidence_reference_id: str,

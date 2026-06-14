@@ -448,7 +448,7 @@ def work_candidate_lines(candidates: tuple[ModeloWorkUnitCandidate, ...]) -> str
                     candidate.short_work_unit_id,
                     str(candidate.modelo),
                     str(candidate.filing_year),
-                    candidate.period,
+                    candidate.period.registry_token,
                     candidate.revision_id,
                     candidate.state.value,
                     short_id(candidate.current_calculation_revision_id) or "",

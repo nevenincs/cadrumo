@@ -29,6 +29,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 
+# The committed justificante fixtures all print the canonical AEAT demo NIF
+# ``00000000T``. The active profile's ``identity.tax_id`` is what the reconciler
+# compares against the parsed evidence ``tax_id``; aligning the seeded operator
+# profile to the fixture's printed NIF lets the happy-path reconcile genuinely
+# resolve to ``matches`` (instead of a tax_id mismatch against the auto-derived
+# per-profile NIF ``register_minimal_profile`` would otherwise assign).
+_FIXTURE_PROFILE_TAX_ID = "00000000T"
+
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
@@ -36,7 +44,13 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
     ):
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="operator",
+                overrides={"identity.tax_id": _FIXTURE_PROFILE_TAX_ID},
+            )
+        )
         yield
 
 

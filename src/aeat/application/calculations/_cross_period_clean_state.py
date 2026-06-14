@@ -83,7 +83,7 @@ class _ObservationPayload(Protocol):
     source_kind: str
     member_nif: str | None
     stamped_revision_id: str | None
-    source_metadata: Mapping[str, str]
+    source_metadata: dict[str, str]
 
 
 class CrossPeriodDependencyOrigin(StrEnum):

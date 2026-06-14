@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
+from ....core import Period
 from ....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from ....tests.secure_sql import isolated_runtime_profile
 from .._repository import JustificanteRepository
@@ -36,7 +37,7 @@ def _populated_justificante() -> Justificante:
     return Justificante(
         csv="ABCD12345678EFGH",
         modelo="303",
-        period="1T",
+        period=Period.from_year_and_code(2025, "1T"),
         ejercicio="2025",
         presentation_id="PRES-2025-001-XYZ",
         presented_at=now,

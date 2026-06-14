@@ -37,6 +37,7 @@ import sys
 import textwrap
 from collections.abc import Iterator
 from pathlib import Path
+from typing import cast
 
 import pytest
 from typer.testing import CliRunner
@@ -81,7 +82,7 @@ def _assert_shared_spine(document: dict[str, object]) -> dict[str, object]:
     assert isinstance(error, dict)
     for field in ("code", "category", "message", "suggestion", "retryable", "context"):
         assert field in error, f"error member missing {field!r}"
-    return error
+    return cast("dict[str, object]", error)
 
 
 def test_json_usage_error_emits_shared_spine_document(cli_runner: CliRunner) -> None:

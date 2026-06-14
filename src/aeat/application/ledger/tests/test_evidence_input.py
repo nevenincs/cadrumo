@@ -84,6 +84,7 @@ def test_add_stores_bytes_in_secure_storage_under_attachment_id(
     # The bytes now live in the encrypted attachment store, content-addressed.
     assert record.attachment_id == hashlib.sha256(_PDF_BYTES).hexdigest()
     assert record.source_sha256 == record.attachment_id
+    assert record.attachment_id is not None
     store = AttachmentStore(objects=secure_objects)
     assert store.read_bytes(record.attachment_id) == _PDF_BYTES
 
@@ -146,6 +147,7 @@ def test_resolve_attachment_evidence_input_round_trips_bytes(
     pdf_file: Path,
 ) -> None:
     record = _added_record(isolated_settings, secure_objects, pdf_file)
+    assert record.attachment_id is not None
     store = AttachmentStore(objects=secure_objects)
 
     resolved = resolve_attachment_evidence_input(record.attachment_id, store=store)

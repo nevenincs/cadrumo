@@ -187,6 +187,8 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> dict[st
             period=period,
         )
         transactions.extend((issued, received))
+        assert issued.iva_amount is not None
+        assert received.iva_amount is not None
         stored[period] = {"devengada": issued.iva_amount, "deducible": received.iva_amount}
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(tuple(transactions)))

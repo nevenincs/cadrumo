@@ -83,7 +83,7 @@ def test_observation_key_rejects_untyped_combined_period() -> None:
     combined_period: object = "2026 1T"
 
     with pytest.raises(ObservationKeyError, match=r"aeat\.core\.Period"):
-        observation_key("303", combined_period)
+        observation_key("303", combined_period)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
 
 
 # ---------------------------------------------------------------------------

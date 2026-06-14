@@ -144,6 +144,8 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
     # The projected gross mirrors the seeded transaction's base + IVA; asserting the
     # relationship (not a standalone literal) keeps this a fidelity check, not a
     # hand-summed aggregation.
+    assert row.taxable_base is not None
+    assert row.iva_amount is not None
     assert row.amount == row.taxable_base + row.iva_amount
     assert row.category_id == "material_oficina"
     assert row.purchase_invoice_evidence_id == "purchase-evidence-1"

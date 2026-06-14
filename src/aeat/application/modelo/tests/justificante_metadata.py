@@ -8,6 +8,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....core import Period
 from ....domain.justificante import Justificante, JustificanteRepository
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 
@@ -27,7 +28,7 @@ def persist_justificante_metadata(
         Justificante(
             csv=csv,
             modelo=modelo,
-            period=period,
+            period=Period.from_year_and_code(filing_year, period),
             ejercicio=str(filing_year),
             presentation_id=None,
             presented_at=captured_at,

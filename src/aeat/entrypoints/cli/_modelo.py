@@ -463,6 +463,7 @@ def _parse_typed_cli_observations[ObservationT: BaseModel](
 def aggregate_modelo(
     ctx: typer.Context,
     modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.aggregate.modelo_help"))],
+    year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))],
     period: Annotated[str, typer.Option("--period", help=tr("cli.app.modelo.aggregate.period_help"))],
     retencion_observation: Annotated[
         list[str] | None,
@@ -489,7 +490,7 @@ def aggregate_modelo(
     """Delegate per-modelo aggregation execution to the backend service."""
     command = PerModeloAggregationCommand(
         modelo=modelo,
-        period=period,
+        period=_resolve_year_period(year, period, modelo=modelo),
         retencion_observations=_parse_typed_cli_observations(
             retencion_observation,
             model=RetencionObservation,
