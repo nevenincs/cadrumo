@@ -35,6 +35,11 @@ def register_rule_commands(app: typer.Typer) -> None:
     app.add_typer(rule_app, name="rule")
 
 
+def _short_display_id(value: str) -> str:
+    """Return the 16-char prefix of an id with an ellipsis, for table display."""
+    return f"{value[:16]}..."
+
+
 def _validate_category_id(category_id: str | None) -> str | None:
     if category_id is None:
         return None
@@ -124,7 +129,7 @@ def rule_add(
         "created_at": rule.created_at.isoformat(),
     }
     lines = [
-        f"rule_id\t{rule.rule_id[:16]}...",
+        f"rule_id\t{_short_display_id(rule.rule_id)}",
         f"pattern\t{rule.description_pattern}",
         f"classification\t{rule.classification.value}",
         f"priority\t{rule.priority}",
@@ -198,7 +203,9 @@ def _rule_apply_dry_run_lines(would_match: list[dict[str, object]]) -> list[str]
             default=f"dry-run: {len(would_match)} transaction(s) would be classified",
         ),
     ]
-    lines.extend(f"  match\t{str(row['transaction_id'])[:16]}...\t{row['classification']}" for row in would_match)
+    lines.extend(
+        f"  match\t{_short_display_id(str(row['transaction_id']))}\t{row['classification']}" for row in would_match
+    )
     return lines
 
 
@@ -241,7 +248,9 @@ def _rule_apply_lines(result: ApplyRulesResult) -> list[str]:
             ),
         ),
     ]
-    lines.extend(f"  applied\t{row.transaction_id[:16]}...\t{row.classification.value}" for row in result.applied)
+    lines.extend(
+        f"  applied\t{_short_display_id(row.transaction_id)}\t{row.classification.value}" for row in result.applied
+    )
     return lines
 
 
@@ -339,7 +348,7 @@ def rule_list(ctx: typer.Context) -> None:
         lines.append(tr("cli.app.ledger.rule.list_empty", default="(no rules stored)"))
     for rule in rules:
         lines.append(
-            f"{rule.priority}\t{rule.classification.value}\t{rule.description_pattern}\t{rule.rule_id[:16]}...",
+            f"{rule.priority}\t{rule.classification.value}\t{rule.description_pattern}\t{_short_display_id(rule.rule_id)}",
         )
     from ._ledger_payloads import RuleListResult
 
