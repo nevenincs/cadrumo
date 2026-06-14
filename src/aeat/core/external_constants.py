@@ -412,11 +412,15 @@ DEFAULT_OUTPUT_LANGUAGE: Final[OutputLanguage] = OutputLanguage.ES
 #: boundary.
 SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang in OutputLanguage)
 
-#: Modelo 347 declaration floor per counterparty per RD 1065/2007 art. 31.1.
+#: Modelo 347 declaration floor per counterparty. Binding provision: RD 1065/2007
+#: art. 33.1 ("operaciones que en su conjunto … hayan superado la cifra de 3.005,06
+#: euros"), which fixes the figure; art. 31.1 only defines the general obligation.
 #: Counterparties whose annual operations total at most this amount are NOT declarable.
 M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 
-#: Modelo 720 declaration floor per asset class per AEAT instrucciones.
+#: Modelo 720 declaration floor per asset class (bloque). Binding provision: RD 1065/2007
+#: arts. 42 bis/ter/quater (added by RD 1558/2012) under LGT DA 18ª — each block
+#: (cuentas / valores-seguros / inmuebles) carries an independent 50.000 € umbral.
 #: An asset class is declarable iff its total valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
