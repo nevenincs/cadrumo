@@ -108,6 +108,30 @@ aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding ir
 ```
 
 
+### Where a field's value comes from
+
+The `bindings list` output shows, for each field, a `source` and a plain-language
+`readiness`. The `source` tells you who supplies the value; `readiness` says
+whether it is resolved yet. The `source` is one of:
+
+- **Profile fact** - `aeat` fills it from your taxpayer profile, such as
+  residence, declaration type, or family composition. Update your profile instead
+  of entering the value manually.
+- **Ledger source** - `aeat` computes it by summing your classified transactions
+  and invoices. You cannot override these; fix the ledger instead.
+- **Prior filed revision** - carried forward from an earlier period you already
+  filed in `aeat`.
+- **Relation** - folded in from another modelo's earlier figures. Supply it with
+  `--relation KEY=VALUE` only when the modelo's help names the relation.
+- **Manual** - only this kind needs you to type a value, with `--binding
+  KEY=VALUE`, or `--casilla` for a box.
+
+Only the manual source needs a value you enter by hand.
+
+If you are filing for the first time and a field asks for a prior-period figure
+you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
+real prior figure only when you have one prepared outside `aeat`.
+
 ## Handle offsets and carry-forwards
 
 Some modelos need prior-period values, credits, or compensation amounts. Do not
@@ -146,6 +170,39 @@ registry/help text identifies the relation you need:
 ```bash
 aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
 ```
+
+## Supply rows for multi-record informativa modelos
+
+Some informational modelos report a list of records rather than one set of boxes:
+attribution members (Modelo 184), related-party operations (Modelo 232),
+declared counterparties (Modelo 347), and intra-community operators (Modelo 349).
+Supply each record with a repeatable `--row` input.
+
+Each `--row` starts with the record type, followed by its fields:
+
+```bash
+aeat app modelo work create --modelo 184 --year 2024 --period 0A --revision 2015-y-siguientes
+aeat app modelo work calculate <work-unit-id> \
+  --row 'miembro nif=45678912S porcentaje=60 importe=10000' \
+  --row 'miembro nif=00000001R porcentaje=40 importe=5000'
+```
+
+Use one of these record types:
+
+- `miembro` - an attribution member (Modelo 184).
+- `vinculada` - a related-party operation (Modelo 232).
+- `contraparte` - a declared counterparty (Modelo 347).
+- `operador` - an intra-community operator (Modelo 349).
+
+`aeat` validates each row against the modelo's rules and refuses an incomplete
+set:
+
+- Modelo 184 - the members' `porcentaje` values must sum to 100.
+- Modelo 347 - a counterparty's annual total must exceed 3,005.06 euros.
+- Modelo 349 - the operator's intra-community NIF must match its country format.
+
+The saved rows appear in the calculation output as `detail_row` lines. Check
+them to confirm what was recorded.
 
 ## Special calculation tools (IRPF comparison and exemptions)
 
