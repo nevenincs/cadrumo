@@ -96,14 +96,14 @@ _TRABAJO_SECTION_GROUNDING: dict[str, str] = {
     "0015": "ley-35-2006:art-19",
     "0016": "ley-35-2006:art-19",
     "0017": "ley-35-2006:art-19",
+    "0018": "ley-35-2006:art-19",  # suma rendimientos netos previos
+    "0022": "ley-35-2006:art-19",  # rendimiento neto
 }
 
 
 @pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
 @pytest.mark.parametrize(("casilla_id", "expected_ref"), sorted(_TRABAJO_SECTION_GROUNDING.items()))
-def test_trabajo_section_casillas_cite_binding_article(
-    year: int, casilla_id: str, expected_ref: str
-) -> None:
+def test_trabajo_section_casillas_cite_binding_article(year: int, casilla_id: str, expected_ref: str) -> None:
     """Each trabajo-section casilla cites its binding article (art. 18 / art. 19),
     not the art. 17 rendimientos-íntegros chapter it had drifted to."""
     rev = _m100_revision(year)
@@ -111,6 +111,17 @@ def test_trabajo_section_casillas_cite_binding_article(
     casilla = casillas_by_id.get(casilla_id)
     assert casilla is not None, f"M100 {year} must declare casilla {casilla_id}"
     assert expected_ref in casilla.legal_refs, (
-        f"casilla {casilla_id} ({year}) must cite {expected_ref}; found "
-        f"{list(casilla.legal_refs)}"
+        f"casilla {casilla_id} ({year}) must cite {expected_ref}; found {list(casilla.legal_refs)}"
     )
+
+
+@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024, 2025])
+def test_casilla_0025_neto_reducido_cites_full_reduction_chain(year: int) -> None:
+    """Casilla 0025 (rendimiento neto reducido) is governed by the reduction chain
+    arts. 18 (irregularidad), 19 (gastos) and 20 (reducción trabajo) — not art-17."""
+    rev = _m100_revision(year)
+    casillas_by_id = {c.id: c for c in rev.casillas}
+    casilla = casillas_by_id.get("0025")
+    assert casilla is not None, f"M100 {year} must declare casilla 0025"
+    for ref in ("ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"):
+        assert ref in casilla.legal_refs, f"casilla 0025 ({year}) must cite {ref}; found {list(casilla.legal_refs)}"
