@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#llm-evidence-classification'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-14'
+modified: '2026-06-14'
 related:
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S01]]'
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S02]]'
@@ -44,6 +44,7 @@ related:
   - '[[2026-06-13-llm-evidence-classification-audit]]'
   - '[[2026-06-13-llm-evidence-classification-plan]]'
   - '[[2026-06-13-llm-evidence-classification-research]]'
+  - '[[2026-06-14-llm-evidence-classification-audit]]'
 ---
 
 # `llm-evidence-classification` feature index
@@ -63,6 +64,7 @@ Auto-generated index of all documents tagged with `#llm-evidence-classification`
 - `2026-06-11-llm-evidence-classification-audit` - `llm-evidence-classification` audit: `Persona roll round 1: evidence-aware LLM classification pipeline`
 - `2026-06-12-llm-evidence-classification-audit` - `llm-evidence-classification` audit: `Plan closeout: 9 remaining-item disposition`
 - `2026-06-13-llm-evidence-classification-audit` - `llm-evidence-classification` audit: `Persona roll round 2: full evidence-aware pipeline against real codex CLI`
+- `2026-06-14-llm-evidence-classification-audit` - `llm-evidence-classification` audit: `Live local-vision classification verified end to end (qwen2.5vl)`
 
 ### exec
 
