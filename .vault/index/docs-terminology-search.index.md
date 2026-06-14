@@ -48,6 +48,7 @@ related:
   - '[[2026-06-12-docs-terminology-search-live-verification-audit]]'
   - '[[2026-06-12-docs-terminology-search-rung2-adjudication-audit]]'
   - '[[2026-06-14-docs-terminology-search-audit]]'
+  - '[[2026-06-15-docs-terminology-search-audit]]'
 ---
 
 # `docs-terminology-search` feature index
@@ -69,6 +70,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-12-docs-terminology-search-live-verification-audit` - `docs-terminology-search` audit: `live verification sweep`
 - `2026-06-12-docs-terminology-search-rung2-adjudication-audit` - `docs-terminology-search` audit: `rung-2 adjudication`
 - `2026-06-14-docs-terminology-search-audit` - `docs-terminology-search` audit: `RAG corpus completion and Ctrl-K backend wiring`
+- `2026-06-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `search corpus performance and result-quality drive`
 
 ### exec
 
