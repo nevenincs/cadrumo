@@ -13,6 +13,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core.aggregation import RowSetGroupingKind
+from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -111,12 +112,6 @@ class _WithholdingSelector(BaseModel):
     grouping: _WithholdingGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
 
-
-def _selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
-    selector = binding.selector
-    if isinstance(selector, BaseModel):
-        return selector.model_dump(exclude={"source"}, exclude_none=True)
-    return {k: v for k, v in selector.items() if k != "source"}
 
 
 def _withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
