@@ -165,6 +165,11 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
     from pydantic import ValidationError
     from sqlalchemy import select
 
+    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
     from .._justificante import (
@@ -196,12 +201,14 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
                 SecureObjectRow.object_key == object_key,
             )
             row = session.execute(stmt).scalar_one()
-            decoded = _json.loads(row.payload.decode("utf-8"))
+            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+            decoded = _json.loads(_h3_plain.decode("utf-8"))
             assert "superseded_by_snapshot_id" in decoded["payload"], (
                 "fixture must serialise superseded_by_snapshot_id for this test to be meaningful"
             )
             del decoded["payload"]["superseded_by_snapshot_id"]
-            row.payload = _json.dumps(decoded).encode("utf-8")
+            row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad)
 
         with pytest.raises((ValidationError, LiveApplicationInputError), match="superseded"):
             repo.load(predecessor.snapshot_id)

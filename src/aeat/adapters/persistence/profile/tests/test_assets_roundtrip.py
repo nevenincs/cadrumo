@@ -132,6 +132,11 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
 
     from sqlalchemy import select
 
+    from ....persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....persistence.storage.sql._orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from ..assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
@@ -148,7 +153,9 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
                 SecureObjectRow.object_key == _ASSETS_OBJECT_KEY,
             )
             row = session.execute(stmt).scalar_one()
-            document = _json.loads(row.payload.decode(UTF_8_ENCODING))
+            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+            document = _json.loads(_h3_plain.decode(UTF_8_ENCODING))
             asset_dict = document["assets"][0]
             assert asset_dict.get("cost_basis"), (
                 "fixture must serialise cost_basis onto the asset for this proof test to be meaningful"
@@ -157,7 +164,9 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
             # check fails ("cost_basis must equal taxable_base plus
             # non-deductible IVA").
             asset_dict["cost_basis"] = "5525.00"
-            row.payload = _json.dumps(document).encode(UTF_8_ENCODING)
+            row.payload = encrypt_secure_object_payload(
+                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=_h3_aad
+            )
 
         with pytest.raises(
             pydantic.ValidationError,
@@ -184,6 +193,11 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
 
     from sqlalchemy import select
 
+    from ....persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....persistence.storage.sql._orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from ..assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
@@ -199,11 +213,15 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
                 SecureObjectRow.object_key == _ASSETS_OBJECT_KEY,
             )
             row = session.execute(stmt).scalar_one()
-            document = _json.loads(row.payload.decode(UTF_8_ENCODING))
+            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+            document = _json.loads(_h3_plain.decode(UTF_8_ENCODING))
             asset_dict = document["assets"][0]
             assert "cost_basis" in asset_dict
             del asset_dict["cost_basis"]
-            row.payload = _json.dumps(document).encode(UTF_8_ENCODING)
+            row.payload = encrypt_secure_object_payload(
+                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=_h3_aad
+            )
 
         with pytest.raises(pydantic.ValidationError, match="cost_basis"):
             assets_repo.load()
