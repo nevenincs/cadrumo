@@ -520,6 +520,41 @@ art-64 MISSING), energy-efficiency deduction (→ its DA), the autonomic-deducti
 by income nature — actividades partly correct, per-box pass). The actividades/módulos sections
 (`reg_estima_obj*`, `actividad_*`) are correctly grounded and untouched.
 
+### V15 (remaining-surface census + running total ~2143 casillas, 9 legal entries)
+
+Added (commit `5bc926191`) patrimonio-protegido (→ art. 54), deportistas (→ DA-11ª), and
+anualidades-alimentos (→ arts. 64/75) — 211 casillas — authoring the art-54/64 + DA-11ª entries.
+**Running total: ~2143 M100 casillas re-grounded across ~16 concept-sections; 9 LIRPF legal entries
+authored** (arts. 35/36/38/39/51/54/64 + DT-9ª + DA-11ª), all corpus-verified; 10 grounding gates.
+
+A by-section census of what STILL carries the actividades default (excluding the genuinely-correct
+`reg_estima_*`/`actividad_*` módulos sections) finds **1338 boxes across 122 sections**, whose
+composition defines the honest remaining boundary:
+
+1. **Autonomic deductions (~400+ boxes, the single largest chunk) need a DIFFERENT CORPUS.** The
+   `deduccion_autonomica_res/*` sections — `c_valenciana_res`, `canarias_res`, `asturias_res`,
+   `la_rioja_res`, `i_baleares_res`, `madrid_res`, `castilla_la_mancha_res`, `castilla_y_leon_res`,
+   `galicia_res`, `murcia_res`, `cantabria_res`, `aragon_res`, `andalucia_res`, `catalunya_res`,
+   `extremadura_res`, … (17+ comunidades) — bind to each comunidad autónoma's own deduction law, NOT
+   to LIRPF. No LIRPF article is correct for them, and the autonomic legal entries do not exist. This
+   is a separate, large corpus-authoring effort (one legal source per comunidad), explicitly NOT
+   LIRPF-groundable and out of scope for the ley-35-2006 grounding lane.
+2. **Smaller LIRPF concept-sections** still groundable via the same method, each needing its article
+   verified (some with entry authoring): `minimo_per_fam_res` (→ arts. 56-61), the base-computation
+   results (`gravamenes_res`/`base_imponible_res`/`base_liquidable_res`/`base_liq_neg_res` → arts.
+   15/50/56), `mejoras_energeticas_viv` (→ its DA), `deduccion_vivienda_habitual_res` (→ DT-18ª),
+   `reserva_inversiones_canarias_res`/`_baleares_res` (→ REF Canarias / RD-l Baleares), `feac`,
+   `rdtos_cm_negativos_res` (→ art. 49), the `entidad_*`/`fondo` ganancia-element sub-blocks (→ arts.
+   33/34), the `an_b_inf_adc_*` anexo-B información-adicional blocks.
+3. **Heterogeneous / partly-correct:** `re_at_rentas` (atribución, per-box income nature) and the
+   ganancia-transmisión-de-inmueble boxes still under the `inmueble` leaf (1816-1846 — the renumbering
+   grab-bag, per-year/per-box).
+
+The ley-35-2006 grounding lane has corrected every cleanly-disambiguable LIRPF concept-section
+(~2143 casillas). The dominant remainder (autonomic deductions) is a categorically different effort
+(autonomic-law corpus); the smaller LIRPF concepts are the same proven method, each gated on its
+legal entry.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
