@@ -11,11 +11,18 @@
 # - ganancia_patrimonial    → 19% (TRLIRNR Art 25.1.f, savings-base rate)
 # - inmobiliaria            → 24% (TRLIRNR Art 25.1.a; deduction routing
 #                                  via Art 24.5 deferred to Phase 2)
-# - interest                → 24% (TRLIRNR Art 25.1.a non-EU third-country
-#                                  fallback; UE/EEE residents already
-#                                  match the 19% ue_residente row. Added
-#                                  per architect-2 task #65 coherence
-#                                  verdict on 2026-05-28.)
+# - interest                → 19% (TRLIRNR Art 25.1.f.2º: "intereses y otros
+#                                  rendimientos obtenidos por la cesión a
+#                                  terceros de capitales propios" tributan al
+#                                  19% para TODO no residente sin EP, SIN
+#                                  condición de residencia UE/EEE — la letra f)
+#                                  fija el 19% por tipo de renta, igual que
+#                                  ganancia_patrimonial (25.1.f.3º). El previo
+#                                  24% "fallback no-UE" era incorrecto: confundía
+#                                  la reducción UE/EEE del tipo general (25.1.a)
+#                                  con el 25.1.f incondicional. Verified vs BOE
+#                                  RDLeg 5/2004 art.25.1.f + AEAT manual no
+#                                  residentes (2026-06-14 grounding pass).)
 #
 # Phase 2 tipos deferred (pension via Art 25.1.b — corpus-blocked under
 # task #229 — and any further branches) are intentionally absent from
@@ -68,6 +75,6 @@ valid_from = 2025-01-01
 
 [[revisions."2025".parameters.keyed_brackets]]
 key = "interest"
-value = "0.24"
+value = "0.19"
 valid_from = 2025-01-01
 # valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
