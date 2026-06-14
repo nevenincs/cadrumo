@@ -27,14 +27,13 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterator
-from datetime import datetime
 from typing import Any
 
 from ....core.config import load_settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
-from ....core.time import now
+from ....core.time import now, parse_iso_datetime
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -900,7 +899,7 @@ def _metadata_from_drive_entry(
         byte_length = 0
     modified = entry.get("modifiedTime", "")
     try:
-        written_at = datetime.fromisoformat(str(modified).replace("Z", "+00:00")) if modified else now()
+        written_at = parse_iso_datetime(str(modified)) if modified else now()
     except ValueError:
         written_at = now()
 
