@@ -16,6 +16,7 @@ Submodules
    aeat.adapters.outbound.storage._errors
    aeat.adapters.outbound.storage._factory
    aeat.adapters.outbound.storage._google_drive
+   aeat.adapters.outbound.storage._integrity
    aeat.adapters.outbound.storage._local
    aeat.adapters.outbound.storage._mirror_manifest
    aeat.adapters.outbound.storage._protocol
