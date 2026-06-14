@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from ...core.external_constants import DT12_RESCATE_REDUCCION_RATE
 from ...core.money import round_to_cents
 from ._errors import PensionReduccionError
 
@@ -43,5 +44,5 @@ def compute_dt12_reduccion_plan_pensiones(
             context={"field": "aportaciones_pre_2007", "value": str(aportaciones_pre_2007)},
         )
 
-    reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * Decimal("0.40")
+    reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * DT12_RESCATE_REDUCCION_RATE
     return round_to_cents(reduccion)

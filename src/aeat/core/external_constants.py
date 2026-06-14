@@ -508,6 +508,21 @@ MINIMO_MENOR_TRES_MAX_AGE: Final[int] = 3
 #: parents.
 CUSTODIA_COMPARTIDA_PRORRATA_FACTOR: Final[Decimal] = Decimal("0.5")
 
+#: LIRPF Disposición Transitoria 12ª (Ley 35/2006, BOE-A-2006-20764) reducción rate:
+#: 40 % reducción on the part of a plan-de-pensiones capital rescate attributable to
+#: contributions made on or before 31-12-2006.
+DT12_RESCATE_REDUCCION_RATE: Final[Decimal] = Decimal("0.40")
+
+#: Ley 44/2015 art. 14.1 (BOE-A-2015-11071) SAL/SLL reserva especial dotación rate:
+#: 10 % of net profit endowed each year ("se dotará con el diez por ciento del
+#: beneficio líquido de cada ejercicio").
+SAL_RESERVA_DOTACION_RATE: Final[Decimal] = Decimal("0.10")
+
+#: Ley 44/2015 art. 14.1 (BOE-A-2015-11071) SAL/SLL reserva especial accumulation cap
+#: multiple: the reserve accrues until it exceeds twice the share capital ("hasta que
+#: alcance al menos una cifra superior al doble del capital social").
+SAL_RESERVA_CAPITAL_MULTIPLE: Final[Decimal] = Decimal("2")
+
 
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:
