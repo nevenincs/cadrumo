@@ -578,6 +578,25 @@ legal_ref added to every owning construct in the SAME change, or be left to a co
 The cleanly-grounded sections so far were all NON-construct-bound (the validator confirms this by
 passing).
 
+### V17 (construct-guard integrated; more clean sections grounded — running total ~2623 casillas)
+
+The V16 construct-membership check was integrated into the grounding pass as a guard (skip any casilla
+whose id appears in an owning construct file), making the method construct-safe by construction. With
+it, grounded: the ganancias-acciones/participaciones/fondos sections (`entidad_accion`/`entidad_derecho`/
+`fondo` → arts. 33/34, 144 casillas, commit `3592120c5`); `gp_patrimoniales_res` (sumas g/p → arts.
+33/34); and the deducciones por familia numerosa y personas con discapacidad a cargo
+(`deduc_familia_numerosa_res`/`deduc_ascendiente_disc_res`/`deduc_descendiente_disc_res`/
+`deduc_conyuge_disc_res` → art. 81 bis, 228 casillas total, commit `da3681ff9`) — all 0 construct-bound,
+referential validation green. **Running total ~2623 M100 casillas re-grounded across ~23 concept-sections,
+behind 11 gates; 9 LIRPF legal entries authored.**
+
+The remaining clean LIRPF sections need NEW entry authoring (vivienda DT-18ª, energy-efficiency DA-50ª,
+electric-vehicles DA-58ª) — same method once the entry is authored. The structural remainder is unchanged:
+autonomic deductions (different corpus), the construct-bound base-computation chain (construct-aware pass),
+and the heterogeneous `re_at_rentas` / ganancia-inmueble grab-bag (per-box). The `an_b_inf_adc_*` anexo-B
+information blocks are actividad-económica informativa fields where the actividades chapter may be partly
+correct — needs per-block inspection, not bulk grounding.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
