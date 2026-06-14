@@ -72,6 +72,10 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.external_constants import (
+    PRORRATA_ESPECIAL_MANDATORY_MULTIPLE,
+    PRORRATA_SECTORAL_SEPARATION_SPREAD_PP,
+)
 from ...core.money import round_to_cents as _round_to_cents
 from ._errors import ProrrataInputError, ProrrataSectorError
 
@@ -452,7 +456,7 @@ def is_especial_mandatory(
         raise ProrrataInputError("deduction amounts must be non-negative")
     if deduction_under_especial == 0:
         return deduction_under_general > 0
-    threshold = deduction_under_especial * Decimal("1.10")
+    threshold = deduction_under_especial * PRORRATA_ESPECIAL_MANDATORY_MULTIPLE
     return deduction_under_general > threshold
 
 
@@ -461,7 +465,7 @@ def is_especial_mandatory(
 # ---------------------------------------------------------------------------
 
 
-_SECTORAL_SEPARATION_THRESHOLD_PERCENTAGE_POINTS = Decimal("50")
+_SECTORAL_SEPARATION_THRESHOLD_PERCENTAGE_POINTS = PRORRATA_SECTORAL_SEPARATION_SPREAD_PP
 
 
 def _ensure_unique_sectors(sectors: Sequence[ProrrataSector]) -> None:
