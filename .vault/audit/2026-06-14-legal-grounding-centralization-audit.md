@@ -416,6 +416,25 @@ build and apply the per-box ganancia article map (valor transmisión/adquisició
 ganancia/pérdida obtenida→art-33/34, lucrativa→art-36, reinversión→art-38, abatimiento→DT-9ª),
 separate the structural data-entry fields, and pin the section.
 
+**UPDATE — DT-9ª authored (commit `eec9cd772`); ALL ganancias legal entries now present**
+(art-33/34/35/36/37/38/39 + DT-9ª, each corpus-verified). The legal-authority infrastructure for
+the ganancias box-grounding is therefore COMPLETE — every binding provision the per-box map needs
+now exists in the catalogue.
+
+**CRITICAL HAZARD discovered — the M100 1816-1915 id range is a severe cross-year renumbering
+minefield.** A dry-run of an id-keyed, label-guarded ganancia classifier proved the SAME casilla id
+maps to entirely different economic concepts across filing years: e.g. id `1911` is "Importe real de
+la transmisión" (ganancia, →art-35) in 2024 but "Número de hijos que dan derecho a la deducción"
+(deducción por maternidad, a completely different article) in 2022; ids `1826/1830/1831/...` do not
+exist at all in 2021. The label guard correctly REFUSED every mismatched application (the 2022
+maternidad boxes were skipped, not mis-grounded), confirming the guard is sound — but also that this
+range CANNOT be grounded by any cross-year id map, by section, or by number range. Additionally the
+range interleaves true ganancias (1816-1846) with autonomic deducciones (1847-1857, 1905-1910) and
+imputación-temporal boxes (1858-1904) under one section tag. The dedicated pass MUST work
+strictly per-year, per-box, label-confirmed (the proven-safe pattern), classifying each box's
+economic concept (ganancia vs deducción vs imputación) before assigning an article — never a bulk or
+cross-year operation. This is the single most renumbering-hostile surface found in the campaign.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
