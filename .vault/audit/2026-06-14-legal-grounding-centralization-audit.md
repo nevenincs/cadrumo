@@ -446,6 +446,39 @@ boxes/year, no 1xxx-style renumbering). Pinned by `test_capital_inmobiliario_ran
 With this, the WHOLE capital-inmobiliario section (rendimiento chain + amortización base + retención)
 is grounded; only the heterogeneous ganancia (1226-1915) minefield remains for the documented per-year pass.
 
+### V12 (SCOPE — the actividades grounding is a form-wide GENERIC-DEFAULT artifact, not a localized copy-paste)
+
+A by-section census of every 2021-2024 casilla citing the actividades chapter `{27,28,30,31,32}`
+overturns the "copy-paste from actividades" framing: the chapter is a **generic default** smeared
+across DOZENS of unrelated data-entry sections. The 2024 census of actividades-citing boxes spans
+(non-exhaustive): `reg_estima_obj_agricola`/`actividad_agr` (69), `gp_otros_inmuebles`/
+`elemento_inmueble` (64, ganancias otros inmuebles), `inmuebles`/`inmueble` (48, now fixed),
+`regimenes_especiales`/`re_at_rentas` (46, atribución de rentas), `reg_estima_obj`/`actividad_est_obj`
+(39, módulos), `gp_otros_criptomonedas` (34, ganancias cripto), `mejoras_energeticas_viv` (32,
+deducción), `gp_otros_elementos`/`elemento_patrimonial` (25, ganancias), the `anexo_c_res` previsión-
+social / saldos-negativos blocks (~200 boxes), and `deduccion_autonomica_res/*` (the autonomic
+deductions). Two decisive consequences:
+
+1. **Actividades is CORRECT in the genuine actividades/módulos sections.** `reg_estima_obj`,
+   `reg_estima_obj_agricola`, `actividad_est_obj`, `actividad_agr` ARE estimación objetiva
+   (arts. 27/28/31) — the chapter grounding there is right or near-right and MUST NOT be removed.
+   So no blanket actividades-strip is valid; the fix is per-section, by economic concept.
+2. **The clean discriminator is the SECTION TAG, never the id range.** Section names
+   (`gp_otros_criptomonedas`, `re_at_rentas`, `anexo_c_res/...`) are concept-specific and stable
+   across years, whereas the id ranges renumber catastrophically (the 1816-1915 grab-bag). A safe
+   pass scopes by section tag and grounds each section to its concept's articles (ganancias by asset
+   → arts. 33-37/DT-9ª; atribución de rentas → arts. 86-90; previsión-social excesos → arts. 51/52;
+   autonomic deductions → the autonomic law; energy-efficiency deduction → its DA). Within a single
+   concept-section a uniform foundation grounding (e.g. ganancia sections → {art-33, art-34}) is
+   foundation-correct and never injects a wrong article, with per-box precision (35/36/38) as a refinement.
+
+This is the true remaining grounding surface: a form-wide, multi-section expert pass (dozens of
+distinct economic concepts), of which the four cleanly-disambiguable sections (trabajo, capital
+mobiliario, capital inmobiliario, retenciones — ~436 casillas) are now done and gated. The ganancia
+legal-entry infrastructure (arts. 33-39 + DT-9ª) is in place for the ganancias subset. The remainder
+is a large, deliberately-scoped, per-section effort — NOT an autonomous bulk operation, and explicitly
+not blanket-strippable because actividades is the correct grounding in the actividades sections.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
