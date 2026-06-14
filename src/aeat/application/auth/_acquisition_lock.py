@@ -16,8 +16,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
@@ -44,7 +45,7 @@ class AuthAcquisitionLockState(StrEnum):
 class AuthAcquisitionLockRecord(BaseModel):
     """Metadata written into an auth acquisition lock file."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     provider_kind: AuthProviderKind
     profile_name: str = Field(min_length=1)
@@ -58,7 +59,7 @@ class AuthAcquisitionLockRecord(BaseModel):
 class AuthAcquisitionLockStatus(BaseModel):
     """Safe health/status view of an auth acquisition lock."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     state: AuthAcquisitionLockState
     path: Path

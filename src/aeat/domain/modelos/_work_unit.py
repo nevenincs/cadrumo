@@ -24,9 +24,9 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ..contribuyente._ccaa import CCAA
@@ -165,7 +165,7 @@ class WorkUnit(BaseModel):
             stale, both ``None`` otherwise.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     bucket_id: BucketId
@@ -292,7 +292,7 @@ class WorkUnitCatalogue(BaseModel):
     not index secondary keys.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     work_units: Mapping[str, WorkUnit] = Field(default_factory=dict)
 

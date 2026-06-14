@@ -23,8 +23,9 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.resources import bundled_path
 from ._errors import FincaValidationError
 
@@ -46,7 +47,7 @@ class LirpfArt85ImputacionParameters(BaseModel):
             art. 85.1.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     recent_revision_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
     old_or_no_revision_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))

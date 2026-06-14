@@ -21,8 +21,9 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ......core import STRICT_FROZEN_CONFIG
 from ......core.hashing import sha256_hex as _sha256_hex
 from ......core.money import round_to_cents as _round_to_cents
 from .._errors import AeatExportFormatError
@@ -55,7 +56,7 @@ class ParsedRecord(BaseModel):
             optional CRLF terminator.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     field_values: Mapping[str, str | Decimal | date]
     """Every field_id mapped to its parsed value."""
@@ -332,7 +333,7 @@ class ParsedEnvelope(BaseModel):
             mirroring the casilla-level contract.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     segments: Mapping[str, ParsedRecord]
     """Per-segment parsed records keyed by ``segment_id``."""

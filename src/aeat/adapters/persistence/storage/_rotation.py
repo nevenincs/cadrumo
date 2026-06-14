@@ -34,8 +34,9 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ....core.logging import get_logger
@@ -106,7 +107,7 @@ class RotationPlanEntry(BaseModel):
             every other file in the directory.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     store_dir: Path
     hkdf_context: bytes
@@ -154,7 +155,7 @@ class RotationSummary(BaseModel):
             decrypted under either key, or re-encrypted.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     rotated: int = Field(ge=0)
     skipped: int = Field(ge=0)

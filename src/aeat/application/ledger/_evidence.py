@@ -27,12 +27,13 @@ from enum import StrEnum
 from pathlib import Path
 from typing import override
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 
 from ...adapters.persistence.storage import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE
@@ -92,7 +93,7 @@ class PurchaseInvoiceEvidenceNotFoundError(AeatError):
 class PurchaseInvoiceEvidence(BaseModel):
     """One persisted purchase invoice evidence record."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     evidence_id: str = Field(min_length=1, max_length=64)
     bucket_id: BucketId
@@ -121,7 +122,7 @@ class PurchaseInvoiceEvidence(BaseModel):
 class PurchaseInvoiceEvidenceDocument(BaseModel):
     """Encrypted bucket-local purchase invoice evidence catalogue."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     records: tuple[PurchaseInvoiceEvidence, ...] = ()
@@ -137,7 +138,7 @@ class PurchaseInvoiceEvidencePatch(BaseModel):
     service ignores ``None`` entries when applying the patch.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     supplier: str | None = None
     invoice_number: str | None = None
@@ -164,7 +165,7 @@ def _resolve_media_kind(source_path: Path) -> MediaKind:
 class PurchaseInvoiceEvidenceResult(BaseModel):
     """Return record from a mutating evidence verb — record plus emitted event id."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     record: PurchaseInvoiceEvidence
     bucket_event_ids: tuple[str, ...] = ()

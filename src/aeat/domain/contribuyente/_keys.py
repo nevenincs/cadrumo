@@ -22,8 +22,9 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
 from ._errors import ProfileKeysRegistrationError, ProfileValidationError
 from ._normalise import normalise_key
@@ -42,7 +43,7 @@ class ProfileKeyRequirement(StrEnum):
 class ProfileKey(BaseModel):
     """Strict frozen record describing one editable profile key."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1, max_length=128)
     requirement: ProfileKeyRequirement

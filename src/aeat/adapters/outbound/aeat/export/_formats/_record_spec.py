@@ -28,8 +28,9 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ......core import STRICT_FROZEN_CONFIG
 from ......core.money import round_to_cents as _round_to_cents
 from .._errors import AeatExportFormatError
 
@@ -150,7 +151,7 @@ class RecordFieldSpec(BaseModel):
             non-CURRENCY kinds.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     offset: Annotated[int, Field(ge=1)]
     """1-based byte offset per BOE convention."""
@@ -429,7 +430,7 @@ class SegmentSpec(BaseModel):
             any CRLF terminator.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     segment_id: Annotated[str, Field(min_length=1, max_length=32)]
     specs: tuple[RecordFieldSpec, ...]

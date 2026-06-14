@@ -26,11 +26,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, override
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.outbound.aeat.sede import Declaracion
 from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId
@@ -55,7 +56,7 @@ class ExpedientesCapture(BaseModel):
     assertion that this capture cannot drive an AEAT-side mutation.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     declarations: tuple[Declaracion, ...]
     captured_at: datetime
@@ -67,7 +68,7 @@ class ExpedientesCapture(BaseModel):
 class PersistedExpedientesSnapshot(BaseModel):
     """Captured expedientes snapshot persisted to the active bucket."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_id: SnapshotId
     bucket_id: BucketId

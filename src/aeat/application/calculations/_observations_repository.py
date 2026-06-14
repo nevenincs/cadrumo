@@ -27,7 +27,7 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -38,7 +38,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.time import now
@@ -69,7 +69,7 @@ class _ObservationEnvelopePayload(BaseModel):
     time.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     observation: RegistryModeloObservation
     captured_at: datetime
@@ -115,7 +115,7 @@ class _ObservationEnvelopePayload(BaseModel):
 class _IvaWalletDecisionEnvelopePayload(BaseModel):
     """Serialisable wrapper for an IVA wallet reconciliation decision."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     decision: IvaCompensationReconciliationDecision
 

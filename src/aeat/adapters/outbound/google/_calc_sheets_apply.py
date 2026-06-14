@@ -38,7 +38,7 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import Any, Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ....application.storage.calc_sheets import (
     ROLE_STYLES,
@@ -53,6 +53,7 @@ from ....application.storage.calc_sheets import (
     TabName,
     hex_to_rgb_floats,
 )
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings as _Settings
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
@@ -100,7 +101,7 @@ class CalcSheetsApplyResult(BaseModel):
     / protected ranges actually written.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     spreadsheet_id: str = Field(min_length=1)
     spreadsheet_url: str = Field(min_length=1)

@@ -5,8 +5,9 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 
+from ..core import STRICT_FROZEN_CONFIG
 from .external_constants import OutputLanguage
 
 
@@ -58,7 +59,7 @@ class StorageRouteKind(StrEnum):
 class StorageRouteClassification(BaseModel):
     """Strict classification of the effective primary database route."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: StorageRouteKind
     database_url: str = Field(min_length=1)

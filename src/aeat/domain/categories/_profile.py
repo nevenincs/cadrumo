@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
 from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory
@@ -14,7 +15,7 @@ from ._spending_category import SpendingCategory
 class _CategoryProfileStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class IvaDeductibilityHint(StrEnum):

@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...core.time import now
@@ -98,7 +99,7 @@ def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:
 class StorageStatePaths(BaseModel):
     """Logical storage-state identifier for one provider's persisted AEAT session."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     storage_state: Path
 
@@ -144,7 +145,7 @@ class AuthenticatedAeatSessionResult(BaseModel):
 class PersistedAuthSession(BaseModel):
     """Provider-neutral view of encrypted AEAT session metadata."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     provider_kind: AuthProviderKind = Field(
         description="Provider that produced the session metadata.",

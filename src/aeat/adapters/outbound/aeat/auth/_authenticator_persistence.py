@@ -6,8 +6,9 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from .....core import STRICT_FROZEN_CONFIG
 from ._errors import AeatLoginAssertionError
 from .certificate import HandshakeResult
 
@@ -18,7 +19,7 @@ AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 1
 class PersistedSessionMetadata(BaseModel):
     """AEAT-specific metadata stored beside a Playwright storage-state file."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(default=AEAT_STORAGE_STATE_SCHEMA_VERSION, ge=1)
     certificate_thumbprint: str = Field(min_length=1)

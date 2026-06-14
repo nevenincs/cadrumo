@@ -12,10 +12,10 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
 from .. import __version__
-from ..core import Modelo
+from ..core import STRICT_FROZEN_CONFIG, Modelo
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
@@ -51,7 +51,7 @@ DiagnosticStatus = Literal["ok", "warn", "fail"]
 class RegistryVersionSummary(BaseModel):
     """Stable registry summary suitable for version and repair surfaces."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     available: bool
     registry_root: str
@@ -66,7 +66,7 @@ class RegistryVersionSummary(BaseModel):
 class CliVersionReport(BaseModel):
     """Version payload rendered by root CLI version surfaces."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     package_name: str
     package_version: str
@@ -96,7 +96,7 @@ class DiagnosticFinding(BaseModel):
     failing check emits one finding per concrete cause.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     summary: str
     detail: str | None = None
@@ -119,7 +119,7 @@ class DiagnosticCheck(BaseModel):
     internal application defect.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     status: DiagnosticStatus
@@ -158,7 +158,7 @@ class SecureObjectIntegrityReport(BaseModel):
     cryptographically unrecoverable from this process.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespaces: tuple[SecureObjectNamespaceIntegrity, ...] = ()
     readable_total: int = 0
@@ -168,7 +168,7 @@ class SecureObjectIntegrityReport(BaseModel):
 class ConfigRepairReport(BaseModel):
     """Local environment and configuration diagnostics for ``aeat config repair``."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     overall: DiagnosticStatus
     package_name: str
@@ -220,7 +220,7 @@ class RegistryIntegrityReport(BaseModel):
     report is what that verb renders.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     registry: RegistryVersionSummary
     check: DiagnosticCheck

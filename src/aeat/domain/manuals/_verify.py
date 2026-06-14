@@ -9,8 +9,9 @@ and so tests can assert on its shape.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -30,7 +31,7 @@ class ManualVerificationIssue(BaseModel):
         message: Human-readable description, including the offending path.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     level: str = Field(description="Either 'error' or 'warning'.")
     code: str = Field(description="Stable identifier for the issue category.")
@@ -48,7 +49,7 @@ class ManualVerificationReport(BaseModel):
             the walk.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     manual_id: ManualId
     year: int

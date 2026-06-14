@@ -16,8 +16,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.setup_answers import SetupAnswers
 
 
@@ -32,7 +33,7 @@ class WizardCheckSeverity(StrEnum):
 class WizardCheckFinding(BaseModel):
     """One verdict produced by a single :class:`WizardCheck`."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str = Field(min_length=1)
     severity: WizardCheckSeverity
@@ -42,7 +43,7 @@ class WizardCheckFinding(BaseModel):
 class WizardCheckReport(BaseModel):
     """The closed verifier outcome for one flow."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     findings: tuple[WizardCheckFinding, ...]
 
@@ -55,7 +56,7 @@ class WizardCheckReport(BaseModel):
 class WizardCheck(BaseModel):
     """One declarative check the verifier runs against the typed projection."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str = Field(min_length=1)
     message_key: str = Field(min_length=1)

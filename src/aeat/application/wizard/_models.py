@@ -16,8 +16,9 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
 
 
@@ -48,7 +49,7 @@ class WizardCondition(BaseModel):
       (``irpf-income-categories`` includes ``actividad_economica``).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     question_id: str = Field(min_length=1)
     equals: str | None = None
@@ -76,7 +77,7 @@ class WizardVisibility(BaseModel):
     activity).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     any_of: tuple[WizardCondition, ...] = Field(min_length=1)
 
@@ -84,7 +85,7 @@ class WizardVisibility(BaseModel):
 class WizardChoice(BaseModel):
     """One entry in a SELECT or CHECKBOX widget's closed-set choices."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     value: str = Field(min_length=1)
     label: tr
@@ -94,7 +95,7 @@ class WizardChoice(BaseModel):
 class WizardQuestion(BaseModel):
     """One operator-facing question in a wizard flow."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str = Field(min_length=1)
     profile_key: str | None = None
@@ -111,7 +112,7 @@ class WizardQuestion(BaseModel):
 class WizardSection(BaseModel):
     """One grouped sequence of questions inside a flow."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str = Field(min_length=1)
     title: tr
@@ -121,7 +122,7 @@ class WizardSection(BaseModel):
 class WizardFlow(BaseModel):
     """The top-level descriptor for a single wizard surface."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str = Field(min_length=1)
     title: tr

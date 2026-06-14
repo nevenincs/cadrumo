@@ -14,8 +14,9 @@ import json
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -79,7 +80,7 @@ class ImportSummary(BaseModel):
         catalogue_path: Logical URI of the encrypted database object.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     imported: int = Field(ge=0)
     skipped: int = Field(ge=0)

@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.errors import FixtureProvisioningError
 from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
@@ -20,7 +20,7 @@ from ._testing_registry import build_registry_filing_draft, build_registry_filin
 class ModeloTestProfile(BaseModel):
     """A frozen :class:`aeat.application.filing.ModeloProfile`-conforming record."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     tax_id: str
     display_name: str
@@ -29,7 +29,7 @@ class ModeloTestProfile(BaseModel):
 class ModeloTestDeadlineStatus(BaseModel):
     """A frozen :class:`aeat.application.filing.DeadlineStatus`-conforming record."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     due_date: date
     is_overdue: bool
@@ -43,7 +43,7 @@ class ModeloTestDeadlineChecker(BaseModel):
     deterministic.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     status: ModeloTestDeadlineStatus
 

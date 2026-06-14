@@ -11,9 +11,9 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.errors import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
@@ -59,7 +59,7 @@ class ModeloValue(BaseModel):
             kinds.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: ModeloScalar
@@ -71,7 +71,7 @@ class ModeloValue(BaseModel):
 class ModeloBindingValue(BaseModel):
     """The typed value of one registry binding on a :class:`ModeloDraft`."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     value: ModeloScalar
@@ -90,7 +90,7 @@ class ModeloCasillaProvenance(BaseModel):
     created.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     formula_id: str | None = None
@@ -112,7 +112,7 @@ class ModeloValidationFinding(BaseModel):
             justify the finding (see :class:`aeat.domain.manuals.Rule`).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId | None
     severity: BaseSeverity
@@ -124,7 +124,7 @@ class ModeloValidationFinding(BaseModel):
 class ModeloApprovalBasis(BaseModel):
     """Persisted approval-basis digests for deterministic stale detection."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     version: str = APPROVAL_BASIS_VERSION
     draft_payload_fingerprint: str
@@ -144,7 +144,7 @@ class ModeloDraft(BaseModel):
     from the hash.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     draft_id: str
     modelo: str

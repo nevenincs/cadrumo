@@ -9,7 +9,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ....core import Modelo
+from ....core import STRICT_FROZEN_CONFIG, Modelo
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
@@ -88,7 +88,7 @@ class OssIossLedgerObservation(BaseModel):
             destination MS rate per OSS / IOSS rules).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     ledger_id: str = Field(min_length=1, max_length=128)
     transaction_date: date
@@ -251,7 +251,7 @@ class IvaLedgerObservation(BaseModel):
             depending on flow direction).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     ledger_id: str = Field(min_length=1, max_length=128)
     transaction_date: date

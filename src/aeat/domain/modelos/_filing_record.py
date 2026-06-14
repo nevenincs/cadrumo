@@ -29,9 +29,9 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Self, override
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ._codes import ModeloCode
@@ -102,7 +102,7 @@ class ExternalEvidence(BaseModel):
     AEAT-attested and not a fabricated local draft.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: ExternalEvidenceKind
     reference_id: _EvidenceReference
@@ -153,7 +153,7 @@ class ModeloRecord(BaseModel):
     that the application submitted anything.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_record_id: FilingRecordId
     work_unit_id: WorkUnitId
@@ -243,7 +243,7 @@ class ModeloRecordCatalogue(BaseModel):
     annotated with a suppression comment on ``__iter__``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     records: Mapping[str, ModeloRecord] = Field(default_factory=dict)
 

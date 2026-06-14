@@ -15,8 +15,9 @@ from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ..categories import (
     ProportionalityKind,
     SpendingCategory,
@@ -77,7 +78,7 @@ class UsageRatioProfile(BaseModel):
             to a :class:`~decimal.Decimal` in ``[0, 1]``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     ratios: Mapping[SpendingCategory, Decimal] = Field(default_factory=dict)
 
@@ -158,7 +159,7 @@ def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -
 class UsageRatioReference(BaseModel):
     """Validated reference from one ledger transaction to a usage-ratio profile entry."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     usage_ratio_id: str = Field(min_length=1, max_length=128)
     category: SpendingCategory
