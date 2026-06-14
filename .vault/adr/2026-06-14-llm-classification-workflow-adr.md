@@ -163,29 +163,10 @@ surface that would duplicate the existing classification write.
   surfaced as a typed `info` `Notice` whose `suggestion` is the runnable split
   command, never as a bespoke result field or a free-text line, and an auto-split
   MUST add no model-emitted euro amount or regulated number (the registry derives
-  every child's base and IVA). Deferred until the surface has shipped and a review
-  pass confirms it; recorded here so it is not lost.
-
-## Codification candidates
-
-<!-- If this decision introduces a durable cross-session constraint
-that should bind future agents (an obligation, a prohibition, a
-discipline that survives this feature's lifecycle), name it here as
-a candidate for promotion into a project rule under
-`.vaultspec/rules/rules/` via the codify pipeline phase.
-
-Each candidate names the proposed rule slug (kebab-case, naming the
-constraint's subject) and a one-sentence statement of the rule.
-
-Not every ADR produces a codification candidate. Decisions that are
-local to one feature, or that describe rather than constrain, leave
-this section empty. An empty Codification candidates section is a
-positive signal, not a failure. -->
-
-<!-- Example:
-
-- **Rule slug:** `destructive-verbs-need-dry-run`.
-  **Rule:** Every CLI verb that writes or removes state must
-  accept `--dry-run` and emit a usable preview before applying.
-
--->
+  every child's base and IVA). The `2026-06-14-llm-classification-workflow-audit`
+  honesty review confirmed the surface shipped and the constraint holds, and
+  resolved NOT to author a new rule: the recommendation-rides-the-`Notice`-channel
+  half is already bound by `cli-notices-are-the-only-diagnostic-channel` and the
+  no-model-emitted-number half by `aeat-calculation-grounding` /
+  `llm-selects-system-derives-tax-numbers`. The auto-split surface is a worked
+  example under those rules, not a third overlapping rule.
