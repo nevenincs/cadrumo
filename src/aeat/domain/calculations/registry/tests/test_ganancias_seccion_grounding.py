@@ -26,6 +26,8 @@ _GANANCIA_FOUNDATION = frozenset({"ley-35-2006:art-33", "ley-35-2006:art-34"})
 # concept-section tag -> the years in which that section exists and was grounded.
 _GROUNDED_GANANCIA_SECTIONS: dict[str, tuple[int, ...]] = {
     "elemento_criptomoneda": (2022, 2023, 2024),
+    "elemento_inmueble": (2022, 2023, 2024),  # gp_otros_inmuebles (ganancias otros inmuebles)
+    "elemento_patrimonial": (2021, 2022, 2023, 2024),  # gp_otros_elementos
 }
 
 
