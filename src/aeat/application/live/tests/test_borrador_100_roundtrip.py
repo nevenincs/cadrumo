@@ -186,6 +186,11 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
 
     from sqlalchemy import select
 
+    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
@@ -238,13 +243,15 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
                 SecureObjectRow.object_key == object_key,
             )
             row = session.execute(stmt).scalar_one()
-            decoded = _json.loads(row.payload.decode("utf-8"))
+            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+            decoded = _json.loads(_h3_plain.decode("utf-8"))
             assert "superseded_by_snapshot_id" in decoded["payload"], (
                 "fixture must serialise superseded_by_snapshot_id into the "
                 "envelope payload for this test to be meaningful"
             )
             del decoded["payload"]["superseded_by_snapshot_id"]
-            row.payload = _json.dumps(decoded).encode("utf-8")
+            row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad)
 
         # With the field absent, the model_validator on
         # Borrador100Snapshot must reject the rehydrated record (the

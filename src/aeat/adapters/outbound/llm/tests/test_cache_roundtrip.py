@@ -112,6 +112,11 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
+    from ....persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....persistence.storage.sql._orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from .._cache import _CACHE_NAMESPACE
@@ -132,14 +137,16 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
             SecureObjectRow.namespace == _CACHE_NAMESPACE,
         )
         row = session.execute(stmt).scalar_one()
-        decoded = _json.loads(row.payload.decode("utf-8"))
+        _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+        _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+        decoded = _json.loads(_h3_plain.decode("utf-8"))
         entry_payload = decoded["entry"]
         assert "text" in entry_payload["response"], (
             "fixture must serialise response.text into the redacted entry for this proof test to be meaningful"
         )
         del entry_payload["response"]["text"]
         decoded["entry"] = entry_payload
-        row.payload = _json.dumps(decoded).encode("utf-8")
+        row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad)
 
     # Now read() must reject the mutated entry. LLMResponse.text
     # is required (no default), so the strict pydantic re-parse
