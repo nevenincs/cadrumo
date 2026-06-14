@@ -29,6 +29,8 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str, tuple[int, ...]]] = {
     # saldos negativos de ganancias y pérdidas — integración y compensación
     "saldos_neg_gy_p_general_res": ("ley-35-2006:art-48", (2021, 2022, 2023, 2024)),
     "saldos_neg_gy_p_ahorro_res": ("ley-35-2006:art-49", (2021, 2022, 2023, 2024)),
+    # deducciones en cuota acogidas al régimen del IS (I+D, cine, etc.) — art. 68.2 LIRPF
+    "deducciones_inversion_empresarial_res": ("ley-35-2006:art-68", (2021, 2022, 2023, 2024)),
 }
 
 
