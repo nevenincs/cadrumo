@@ -197,6 +197,29 @@ common-name ones needing call-site disambiguation before deletion
 `justificante._repository.list_csvs`, `access_gate.snapshot_env`). These are the
 actionable remaining deletions.
 
+**Batch 5 landed** (`9904cdb70`): `invoices._models.Invoice.iva_classification_for_line`
+plus its two tests — the cleanest test-covered dead_removed (distinctive name,
+zero production callers, the dedup CL07 pass had already flagged it as an unused
+delegating consumer). The coupled method+test deletion verified clean (30 invoices
+tests pass).
+
+**Destructive deletions paused after batch 5 — deliberate stop.** Attempting the
+`submission._engine` `load_submission` / `list_submissions` pair next produced an
+inconsistent half-edit (one method removed, its sibling and that sibling's test
+left dangling) before it was caught and fully reverted (the engine file is back to
+a zero diff). That slip is the signal: at this session depth, edit precision on
+large multi-method bodies is degrading, and the remaining dead_removed candidates
+are the high-consequence ones — tested tax-data read methods, a cascade-bearing
+subsystem (`SubmissionRepository` would orphan with `load_submission` /
+`list_submissions`), and collision-prone common names (`prune`, `reload`, `slugs`,
+`list_csvs`, `snapshot_env`, `_path_for`) whose call sites need the careful reading
+the swarm did but a mechanical `rg` cannot reconfirm. Forcing these now risks
+deleting tested or actually-used behaviour. They are left precisely classified
+above for a fresh-context coupled method+test deletion pass: each removes the
+method together with its dedicated test(s), verified by the affected package suite,
+reverting any whose deletion breaks an unrelated test (the empirical
+dead-confirmation gate).
+
 Conservative pre-judgements that the swarm confirmed:
 
 - **Keep (intended-pending, regulated tax logic):** the entire
