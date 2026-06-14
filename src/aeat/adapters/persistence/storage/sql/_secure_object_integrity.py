@@ -8,7 +8,7 @@ from logging import Logger
 from sqlalchemy import Engine, bindparam, text
 
 from .....core.external_constants import UTF_8_ENCODING
-from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
+from ..crypto._encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import DecryptionError
 from . import _orm
 from ._secure_object_records import SecureObjectDecryptabilityRow, SecureObjectNamespaceIntegrity
@@ -54,7 +54,14 @@ def quarantine_unreadable_rows(
                 )
                 object_key_bytes = bytes(object_key_value)
                 try:
-                    decrypt_encrypted_bytes_column(payload_bytes)
+                    decrypt_secure_object_payload(
+                        payload_bytes,
+                        associated_data=secure_object_payload_aad(
+                            namespace,
+                            object_key_bytes,
+                            int(raw.schema_version),
+                        ),
+                    )
                 except DecryptionError as exc:
                     logger.debug(
                         "secure_objects: quarantining unreadable row id=%s namespace=%s (%s)",
@@ -128,13 +135,22 @@ def probe_namespace_integrity(
     readable = 0
     unreadable = 0
     with session_scope(engine) as session:
-        stmt = text("SELECT payload FROM secure_objects WHERE namespace = :namespace").bindparams(
+        stmt = text(
+            "SELECT object_key, schema_version, payload FROM secure_objects WHERE namespace = :namespace",
+        ).bindparams(
             bindparam("namespace", value=namespace),
         )
         rows = session.execute(stmt).all()
     for raw in rows:
         try:
-            decrypt_encrypted_bytes_column(bytes(raw.payload))
+            decrypt_secure_object_payload(
+                bytes(raw.payload),
+                associated_data=secure_object_payload_aad(
+                    namespace,
+                    bytes(raw.object_key),
+                    int(raw.schema_version),
+                ),
+            )
         except DecryptionError as exc:
             logger.debug(
                 "secure_objects probe: unreadable row in namespace=%s (%s)",
@@ -177,7 +193,14 @@ def iter_namespace_decryptability(
         object_key_value = database_bytes(raw.object_key)
         payload_value = database_bytes(raw.payload)
         try:
-            decrypt_encrypted_bytes_column(payload_value)
+            decrypt_secure_object_payload(
+                payload_value,
+                associated_data=secure_object_payload_aad(
+                    namespace,
+                    object_key_value,
+                    int(raw.schema_version),
+                ),
+            )
         except DecryptionError as exc:
             yield SecureObjectDecryptabilityRow(
                 namespace=namespace,

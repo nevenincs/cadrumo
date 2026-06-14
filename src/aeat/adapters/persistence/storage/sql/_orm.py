@@ -20,6 +20,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -27,7 +28,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from ..crypto._encrypted_columns import EncryptedBytes, EncryptedString, HashedLookup
+from ..crypto._encrypted_columns import EncryptedString, HashedLookup
 
 _HASH_HEX_LENGTH = 64
 
@@ -133,9 +134,12 @@ class SecureObjectRow(Base):
 
     Domain repositories use this table for financial catalogues and
     workflow state that must not land as standalone JSON files. The
-    ``payload`` column is a SQL BLOB encrypted by
-    :class:`aeat.adapters.persistence.storage.crypto.EncryptedBytes`;
-    the remaining fields are routing, revision-lineage, and integrity
+    ``payload`` column is a SQL BLOB holding the AEAD wire bytes; the
+    repository encrypts and decrypts it explicitly (rather than through a
+    column ``TypeDecorator``) so the row identity (``namespace`` +
+    ``object_key`` digest + ``schema_version``) can be bound into the AEAD
+    associated data, making a ciphertext refuse to decrypt under any other
+    row. The remaining fields are routing, revision-lineage, and integrity
     metadata.
     """
 
@@ -173,7 +177,7 @@ class SecureObjectRow(Base):
     write_provenance: Mapped[str | None] = mapped_column(String(255), nullable=True)
     source_event_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     conflict_policy: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    payload: Mapped[bytes] = mapped_column(EncryptedBytes(), nullable=False)
+    payload: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
 
 
 _RENTAL_USE_TYPE_VALUES = (

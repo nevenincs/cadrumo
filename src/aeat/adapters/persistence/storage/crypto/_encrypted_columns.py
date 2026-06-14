@@ -73,6 +73,56 @@ _AAD_JSON = b"aeat.column.encrypted_json.v1"
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"aeat.column.hashed_lookup.v1"
 
 
+_AAD_SECURE_OBJECT_PAYLOAD = b"aeat.secure-object.payload.v2"
+
+
+def secure_object_payload_aad(namespace: str, object_key_digest: bytes, schema_version: int) -> bytes:
+    """Bind a secure-object row's identity into its payload AEAD associated data.
+
+    The associated data length-prefixes the namespace, the ``object_key`` HMAC
+    digest, and the schema version so the AEAD authentication tag is valid only
+    for the exact row that produced the ciphertext. A ciphertext copied into a
+    different ``(namespace, object_key)`` row fails the tag and refuses to
+    decrypt, closing the at-rest row-substitution gap.
+    """
+    namespace_bytes = namespace.encode("utf-8")
+    return b"".join(
+        (
+            _AAD_SECURE_OBJECT_PAYLOAD,
+            len(namespace_bytes).to_bytes(4, "big"),
+            namespace_bytes,
+            len(object_key_digest).to_bytes(4, "big"),
+            bytes(object_key_digest),
+            schema_version.to_bytes(4, "big"),
+        ),
+    )
+
+
+def secure_object_key_digest(object_key: str | bytes) -> bytes:
+    """Return the stored ``object_key`` digest for a natural or pre-digested key.
+
+    Mirrors the :class:`HashedLookup` column's bind behaviour so the digest used
+    to build the payload AAD at write time matches the digest persisted in the
+    ``object_key`` column (and therefore the value reconstructed on read).
+    """
+    if isinstance(object_key, bytes | bytearray | memoryview):
+        return bytes(object_key)
+    return HashedLookup.compute(object_key)
+
+
+def encrypt_secure_object_payload(plaintext: bytes, *, associated_data: bytes) -> bytes:
+    """Encrypt a secure-object payload under the active DEK, bound to ``associated_data``."""
+    key = _resolve_master_key()
+    return encrypt_record(plaintext, key=key, associated_data=associated_data).to_wire()
+
+
+def decrypt_secure_object_payload(wire: bytes, *, associated_data: bytes) -> bytes:
+    """Decrypt a row-AAD-bound secure-object payload; raises on a tag mismatch."""
+    blob = EncryptedBlob.from_wire(wire)
+    key = _resolve_master_key()
+    return decrypt_record(blob, key=key, associated_data=associated_data)
+
+
 def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
     """Decrypt one ``EncryptedBytes`` on-wire payload under the active master key.
 
