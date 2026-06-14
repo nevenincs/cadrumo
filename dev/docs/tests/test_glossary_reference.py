@@ -90,6 +90,42 @@ def test_legal_grounding_links_resolve_to_permalinks() -> None:
 
 @pytest.mark.integration
 @pytest.mark.hex_core
+def test_broader_related_relations_render_as_term_cross_references() -> None:
+    """Concept relations render as ``:term:`` cross-references to approved targets.
+
+    The Handbook's SKOS ``broader`` / ``related`` relations were invisible to
+    the reader; the glossary now renders them as ``:term:`` links, turning the
+    page into a navigable concept graph. A relation to a draft (non-rendered)
+    concept is skipped so no unresolvable reference reaches the ``-n -W`` build.
+    """
+    from aeat.terminology._enums import ConceptLifecycle
+
+    handbook = _load_handbook()
+    rst, _ = render_glossary(_REPO_ROOT, handbook)
+
+    # The modelo-303 concept declares related = iva/casilla/autoliquidacion/...,
+    # which must surface as a Related cross-reference line of :term: links.
+    assert "* Related: :term:`IVA`" in rst or "* Related: :term:`casilla`" in rst
+    assert ":term:`prorrata`" in rst
+
+    # Every :term: target rendered in a relation line is an approved concept's
+    # headword (drafts never become a :term: target -- they have no anchor).
+    approved_headwords = set()
+    for concept in handbook.concepts:
+        if concept.lifecycle is ConceptLifecycle.APPROVED:
+            for section in concept.languages:
+                for term in section.terms:
+                    approved_headwords.add(term.label)
+    import re
+
+    for line in rst.splitlines():
+        if "Related:" in line or "Broader:" in line:
+            for ref in re.findall(r":term:`([^`]+)`", line):
+                assert ref in approved_headwords, f"relation links to non-approved/unknown term: {ref!r}"
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
 def test_generated_glossary_parses_without_duplicate_term_warning() -> None:
     """A throwaway Sphinx build over the page emits no warnings and registers terms.
 

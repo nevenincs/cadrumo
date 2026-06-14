@@ -346,6 +346,34 @@ def test_compile_search_index_wires_the_real_injector_over_built_html(
     assert "term/casilla/CLI records" in summary
 
 
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_materialise_injects_approved_concepts_only_no_drafts() -> None:
+    """The production injector ships only approved concept cards, never drafts.
+
+    A draft concept is scaffold-empty (placeholder short_description) and absent
+    from the approved-only generated glossary, so its ``#term-<id>`` deep link
+    is dead -- injecting it would ship a placeholder card that 404s. The
+    materialised concept records must therefore all carry ``lifecycle ==
+    'approved'`` and match the approved-concept count.
+    """
+    from aeat.terminology._enums import ConceptLifecycle
+
+    from ..terminology._concept_cards import project_concept_cards
+
+    cards, _ = project_concept_cards()
+    approved = sum(1 for c in cards if c.lifecycle is ConceptLifecycle.APPROVED)
+    drafts = sum(1 for c in cards if c.lifecycle is not ConceptLifecycle.APPROVED)
+    assert drafts > 0  # the Handbook carries a draft backlog that must be excluded
+
+    materialised = _materialise_records()
+    concept_records = [r for r in materialised.records if r.kind.value == "concept"]
+
+    assert materialised.concepts == approved
+    assert len(concept_records) == approved
+    assert all(r.metadata.lifecycle == "approved" for r in concept_records)
+
+
 @pytest.mark.unit
 @pytest.mark.hex_core
 def test_build_record_injector_returns_a_callable(tmp_path: Path) -> None:

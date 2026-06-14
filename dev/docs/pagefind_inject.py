@@ -138,9 +138,15 @@ def _materialise_records() -> _Materialised:
 
     out = _Materialised()
 
+    # Inject APPROVED concept cards only. A draft concept is scaffold-empty
+    # (placeholder short_description) and absent from the approved-only
+    # generated glossary (ADR D7), so its ``#term-<id>`` deep link is dead --
+    # surfacing it as a first-class palette result ships a placeholder card that
+    # 404s. Drafts re-enter the corpus automatically once curated to approved.
     concept_cards, _ = project_concept_cards()
-    out.concepts = len(concept_cards)
-    out.records.extend(to_search_record(card) for card in concept_cards)
+    approved_cards = [card for card in concept_cards if card.is_approved]
+    out.concepts = len(approved_cards)
+    out.records.extend(to_search_record(card) for card in approved_cards)
 
     casilla_records, _ = project_casilla_search_records()
     out.casillas = len(casilla_records)

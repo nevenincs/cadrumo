@@ -359,13 +359,6 @@
           "ranking_weight": 0.466298
         },
         {
-          "record_id": "code:aeat.application.live._borrador_100",
-          "target": "api/aeat.application.live._borrador_100.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.449134
-        },
-        {
           "record_id": "legal:ley-35-2006:dt-32",
           "target": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dttrigesimasegunda",
           "kind": "page",
@@ -378,6 +371,13 @@
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.444674
+        },
+        {
+          "record_id": "code:aeat.application.live._borrador_100",
+          "target": "api/aeat.application.live._borrador_100.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.441372
         },
         {
           "record_id": "code:aeat.entrypoints.cli._app_live_borrador_cli",
@@ -394,8 +394,8 @@
           "ranking_weight": 0.416196
         }
       ],
-      "dropped_count": 10,
-      "collapsed_count": 1,
+      "dropped_count": 9,
+      "collapsed_count": 2,
       "dominant_cluster": "codebase:src/aeat"
     },
     {
@@ -653,7 +653,7 @@
           "target": "api/aeat.application.ledger._ratios.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.460818
+          "ranking_weight": 0.463844
         },
         {
           "record_id": "code:aeat.application.live._censo",
@@ -661,6 +661,13 @@
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.452807
+        },
+        {
+          "record_id": "code:aeat.entrypoints.cli._config._profile_censo",
+          "target": "api/aeat.entrypoints.cli._config._profile_censo.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.432748
         },
         {
           "record_id": "code:aeat.application.user_profile._censo_sync",
@@ -677,15 +684,15 @@
           "ranking_weight": 0.402485
         },
         {
-          "record_id": "code:aeat.entrypoints.cli._config._profile_censo",
-          "target": "api/aeat.entrypoints.cli._config._profile_censo.html",
+          "record_id": "page:how-to/choose-modelo",
+          "target": "how-to/choose-modelo.html",
           "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.393636
+          "surface": "docs",
+          "ranking_weight": 0.381703
         }
       ],
       "dropped_count": 4,
-      "collapsed_count": 9,
+      "collapsed_count": 8,
       "dominant_cluster": "codebase:src/aeat"
     },
     {
@@ -820,16 +827,9 @@
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.416151
-        },
-        {
-          "record_id": "code:aeat.adapters.outbound.aeat.export._formats._record_spec",
-          "target": "api/aeat.adapters.outbound.aeat.export._formats._record_spec.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.376638
         }
       ],
-      "dropped_count": 12,
+      "dropped_count": 13,
       "collapsed_count": 2,
       "dominant_cluster": "codebase:src/aeat"
     },
@@ -877,6 +877,13 @@
           "ranking_weight": 0.412336
         },
         {
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations_schema",
+          "target": "api/aeat.adapters.outbound.aeat.sede._declarations_schema.html",
+          "kind": "page",
+          "surface": "codebase",
+          "ranking_weight": 0.405058
+        },
+        {
           "record_id": "legal:orden-hac-248-2021:art-8",
           "target": "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238",
           "kind": "page",
@@ -898,9 +905,9 @@
           "ranking_weight": 0.376591
         }
       ],
-      "dropped_count": 12,
+      "dropped_count": 11,
       "collapsed_count": 2,
-      "dominant_cluster": "legal:src/aeat"
+      "dominant_cluster": "codebase:src/aeat"
     },
     {
       "query": "declaracion tributaria",
@@ -981,11 +988,11 @@
           "ranking_weight": 0.413577
         },
         {
-          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations_observations",
-          "target": "api/aeat.adapters.outbound.aeat.sede._declarations_observations.html",
+          "record_id": "code:aeat.adapters.outbound.aeat.sede._declarations_schema",
+          "target": "api/aeat.adapters.outbound.aeat.sede._declarations_schema.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.397909
+          "ranking_weight": 0.394439
         },
         {
           "record_id": "code:aeat.entrypoints.cli._app_live_expedientes_cli",
@@ -1191,7 +1198,7 @@
           "target": "_generated/glossary.html#term-gancho-preprocesado",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.863447
+          "ranking_weight": 0.863446
         },
         {
           "record_id": "concept:barrido-rag",
@@ -1550,16 +1557,9 @@
           "kind": "page",
           "surface": "legal",
           "ranking_weight": 0.490763
-        },
-        {
-          "record_id": "code:aeat.domain.iva._recargo_equivalencia",
-          "target": "api/aeat.domain.iva._recargo_equivalencia.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.490307
         }
       ],
-      "dropped_count": 14,
+      "dropped_count": 15,
       "collapsed_count": 1,
       "dominant_cluster": "legal:src/aeat"
     },
@@ -1684,7 +1684,7 @@
           "target": "api/aeat.domain.modelos._filing_record.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.439328
+          "ranking_weight": 0.43376
         },
         {
           "record_id": "page:explanation/recording-a-filing-and-the-boundary",
@@ -1857,13 +1857,6 @@
           "ranking_weight": 0.882471
         },
         {
-          "record_id": "code:aeat.entrypoints.cli._ledger",
-          "target": "api/aeat.entrypoints.cli._ledger.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.395114
-        },
-        {
           "record_id": "code:aeat.entrypoints.cli._ledger_read_cli",
           "target": "api/aeat.entrypoints.cli._ledger_read_cli.html",
           "kind": "page",
@@ -1872,7 +1865,7 @@
         }
       ],
       "dropped_count": 16,
-      "collapsed_count": 0,
+      "collapsed_count": 1,
       "dominant_cluster": "concept:domain:concepto"
     },
     {
@@ -1968,13 +1961,6 @@
           "ranking_weight": 0.950831
         },
         {
-          "record_id": "concept:iva-operacion-no-sujeta",
-          "target": "_generated/glossary.html#term-iva-operacion-no-sujeta",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.950831
-        },
-        {
           "record_id": "concept:iva-recargo-equivalencia",
           "target": "_generated/glossary.html#term-iva-recargo-equivalencia",
           "kind": "concept",
@@ -1984,55 +1970,6 @@
         {
           "record_id": "concept:recargo-equivalencia",
           "target": "_generated/glossary.html#term-recargo-equivalencia",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.950831
-        },
-        {
-          "record_id": "concept:tema-calendar",
-          "target": "_generated/glossary.html#term-tema-calendar",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.950831
-        },
-        {
-          "record_id": "concept:tema-casilla",
-          "target": "_generated/glossary.html#term-tema-casilla",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.950831
-        },
-        {
-          "record_id": "concept:tema-modelos",
-          "target": "_generated/glossary.html#term-tema-modelos",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.950831
-        },
-        {
-          "record_id": "concept:tema-pago-fraccionado",
-          "target": "_generated/glossary.html#term-tema-pago-fraccionado",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.950831
-        },
-        {
-          "record_id": "concept:tema-recargo-extemporaneo",
-          "target": "_generated/glossary.html#term-tema-recargo-extemporaneo",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.950831
-        },
-        {
-          "record_id": "concept:tema-regimens",
-          "target": "_generated/glossary.html#term-tema-regimens",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.950831
-        },
-        {
-          "record_id": "concept:tema-sii-verifactu",
-          "target": "_generated/glossary.html#term-tema-sii-verifactu",
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.950831
@@ -2059,7 +1996,7 @@
           "ranking_weight": 0.484973
         }
       ],
-      "dropped_count": 2,
+      "dropped_count": 10,
       "collapsed_count": 1,
       "dominant_cluster": "concept:domain:concepto"
     },
@@ -2986,13 +2923,6 @@
           "ranking_weight": 0.968093
         },
         {
-          "record_id": "casilla:390:662",
-          "target": "search.html?q=390+662",
-          "kind": "casilla",
-          "surface": "casilla",
-          "ranking_weight": 0.605162
-        },
-        {
           "record_id": "code:aeat.domain.iva._prorrata",
           "target": "api/aeat.domain.iva._prorrata.html",
           "kind": "page",
@@ -3021,7 +2951,7 @@
           "ranking_weight": 0.440079
         }
       ],
-      "dropped_count": 8,
+      "dropped_count": 9,
       "collapsed_count": 6,
       "dominant_cluster": "codebase:src/aeat"
     },
@@ -3442,8 +3372,8 @@
           "ranking_weight": 0.380723
         }
       ],
-      "dropped_count": 13,
-      "collapsed_count": 0,
+      "dropped_count": 11,
+      "collapsed_count": 2,
       "dominant_cluster": "codebase:src/aeat"
     },
     {
@@ -3639,7 +3569,7 @@
           "target": "api/aeat.application.live._verify.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.420081
+          "ranking_weight": 0.422761
         },
         {
           "record_id": "code:aeat.domain.modelos._row_models",
@@ -3691,7 +3621,7 @@
           "target": "api/aeat.domain.modelos._work_unit.html",
           "kind": "page",
           "surface": "codebase",
-          "ranking_weight": 0.492185
+          "ranking_weight": 0.491916
         },
         {
           "record_id": "code:aeat.application.modelo._work_lifecycle",

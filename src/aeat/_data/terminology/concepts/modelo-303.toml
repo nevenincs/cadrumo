@@ -10,6 +10,7 @@ concept_id = "modelo-303"
 domain = "modelo"
 lifecycle = "approved"
 domain_refs = ["modelo:303"]
+related = ["iva", "casilla", "autoliquidacion", "prorrata", "modelo-390"]
 created_at = 2026-06-10
 updated_at = 2026-06-11
 

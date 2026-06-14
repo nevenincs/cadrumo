@@ -11,6 +11,7 @@ domain = "modelo"
 lifecycle = "approved"
 domain_refs = ["modelo:130"]
 legal_refs = ["ley-35-2006:art-99"]
+related = ["irpf", "renta", "casilla", "autoliquidacion"]
 created_at = 2026-06-10
 updated_at = 2026-06-11
 
