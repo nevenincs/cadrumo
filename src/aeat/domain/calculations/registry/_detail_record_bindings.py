@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core.aggregation import RowSetGroupingKind
 from ....core.external_constants import DEFAULT_CURRENCY
+from ._binding_selector_utils import uppercase_alpha_code
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -57,12 +58,7 @@ class RelatedPartyOperationObservation(BaseModel):
     transfer_pricing_method_code: str = Field(default="", max_length=4)
     amount: Decimal
 
-    @field_validator("country_code")
-    @classmethod
-    def _country_code_uppercase(cls, value: str) -> str:
-        if value != value.upper() or not value.isalpha():
-            raise RegistryValidationError("country_code must be uppercase alphabetic")
-        return value
+    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
 
     @field_validator("amount")
     @classmethod
@@ -192,12 +188,7 @@ class Modelo720RowObservation(BaseModel):
     acquisition_date: date
     valuation_amount: Decimal
 
-    @field_validator("country_code", "currency_code")
-    @classmethod
-    def _iso_code_uppercase(cls, value: str) -> str:
-        if value != value.upper() or not value.isalpha():
-            raise RegistryValidationError("ISO code must be uppercase alphabetic")
-        return value
+    _iso_code_uppercase = field_validator("country_code", "currency_code")(uppercase_alpha_code("ISO code"))
 
     @field_validator("valuation_amount")
     @classmethod
@@ -326,12 +317,7 @@ class AtributionMemberObservation(BaseModel):
     share_percentage: Decimal
     base_imponible_assigned: Decimal
 
-    @field_validator("country_code")
-    @classmethod
-    def _country_code_uppercase(cls, value: str) -> str:
-        if value != value.upper() or not value.isalpha():
-            raise RegistryValidationError("country_code must be uppercase alphabetic")
-        return value
+    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
 
     @field_validator("share_percentage")
     @classmethod
@@ -445,12 +431,7 @@ class RefundOperationObservation(BaseModel):
     supplier_tax_id: str = Field(min_length=1, max_length=64)
     refund_amount: Decimal
 
-    @field_validator("member_state_code")
-    @classmethod
-    def _iso_code_uppercase(cls, value: str) -> str:
-        if value != value.upper() or not value.isalpha():
-            raise RegistryValidationError("member_state_code must be uppercase alphabetic")
-        return value
+    _iso_code_uppercase = field_validator("member_state_code")(uppercase_alpha_code("member_state_code"))
 
     @field_validator("refund_amount")
     @classmethod
