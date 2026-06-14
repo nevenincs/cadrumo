@@ -1,0 +1,20 @@
+# Modelo 714 calculation-completeness manifest.
+#
+# Enumerates the casillas in this revision's calculation closure. Phase-B
+# implements the cuota íntegra (casilla 29) as the Ley 19/1991 art. 30 escala
+# applied to the base liquidable, so the closure is exactly those two casillas:
+# the escala formula target (29) and its single operand (base liquidable).
+# Re-derived off-load-path by the record-design gate (test_record_design) and
+# asserted to match this manifest. The remaining downstream chain stays a manual
+# foundation (not part of the closure) until its own formula evidence lands.
+
+[revisions."2021-y-siguientes".completeness_manifest]
+source_ref = "aeat-modelo-714-procedure"
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".completeness_manifest.casillas]]
+number = "patrimonio.base-liquidable"
+
+[[revisions."2021-y-siguientes".completeness_manifest.casillas]]
+number = "29"
