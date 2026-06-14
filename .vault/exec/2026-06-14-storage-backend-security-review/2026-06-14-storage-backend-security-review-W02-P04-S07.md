@@ -173,3 +173,24 @@ With those three nets the catastrophic modes are excluded and the change is safe
 land on a fresh, focused branch with the FULL storage suite gating each step. This
 record now carries the exhaustive read-site list, the approach decision, and the
 test-net design -- the session can execute without rediscovery.
+
+## LANDED 2026-06-15 (approach A, AAD binding)
+
+Implemented and committed (`19d1ac86e`): the secure-object `payload` column moved
+from the `EncryptedBytes` TypeDecorator to a plain `LargeBinary` BLOB; the
+repository now encrypts (single write site `_save_internal_in_session`) and
+decrypts (read sites `iter_records_with_failures`, `_record_from_row`, and the two
+`_secure_object_integrity` probes) explicitly, binding
+`namespace || object_key_digest || schema_version` (length-prefixed) into the AEAD
+associated data via `secure_object_payload_aad`. `iter_all_records_raw` still
+returns ciphertext for the mirror. A moved ciphertext fails the auth tag under the
+target row's identity and refuses to decrypt.
+
+Test net (all green): full storage suite 846 passed (catches missed encryption via
+the existing CANARY at-rest test and missed decryption / AAD mismatch via the
+strict roundtrips); the contract anti-tautology and 13 attachment/calculations/
+profile/submission/sede/live/buckets/filing/invoices corruption suites reconciled
+to corrupt the decrypted content and re-encrypt under the row AAD (commits
+`19d1ac86e`, `32f382a5a`, `05e2a3abd`). The S08 same-row revision-replay read
+check (verify payload_hash/revision_id on read) remains a smaller follow-up;
+AAD-alone closes the primary cross-row substitution threat the audit named.

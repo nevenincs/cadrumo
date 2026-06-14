@@ -13,6 +13,7 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W01-P03-S05]]'
   - '[[2026-06-14-storage-backend-security-review-W01-P03-S06]]'
   - '[[2026-06-14-storage-backend-security-review-W02-P04-S07]]'
+  - '[[2026-06-14-storage-backend-security-review-W02-P04-S09]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S10]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S11]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S12]]'
@@ -56,6 +57,7 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W01-P03-S05` - Apply the manifest KDF validation window to the file-fallback parameters on read and reject below-floor Argon2 cost
 - `2026-06-14-storage-backend-security-review-W01-P03-S06` - Delete the dead non-atomic _write_bytes_secure method and its sensitive-persistence-policy allowlist entries
 - `2026-06-14-storage-backend-security-review-W02-P04-S07` - Bind namespace and object-key digest and schema version into the secure-object payload AEAD associated data
+- `2026-06-14-storage-backend-security-review-W02-P04-S09` - Add a row-substitution and corrupted-hash anti-tautology test proving read-time refusal
 - `2026-06-14-storage-backend-security-review-W03-P05-S10` - Set SQLite busy_timeout in the bucket engine connect listener so a concurrent invocation waits rather than failing immediately with database-locked
 - `2026-06-14-storage-backend-security-review-W03-P05-S11` - Add a concurrent-writer regression proving two sessions on one bucket do not raise an immediate database-locked error
 - `2026-06-14-storage-backend-security-review-W03-P06-S12` - fsync the staged tmp file and the parent directory before and after os.replace on the manifest write
