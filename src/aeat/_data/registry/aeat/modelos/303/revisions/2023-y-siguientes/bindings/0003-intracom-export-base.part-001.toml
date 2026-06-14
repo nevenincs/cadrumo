@@ -1,0 +1,49 @@
+# M303 informativa base-imponible boxes for exempt entregas intracomunitarias
+# (casilla 59, LIVA art. 25 — entregas de bienes destinados a otro Estado miembro)
+# and exportaciones (casilla 60, LIVA art. 21 — exenciones en las exportaciones de
+# bienes). Both are base-only, zero-cuota informativa boxes: the
+# ledger_iva_aggregation resolver sums the base_amount of the matching exempt
+# observations (category + repercutido flow + zero rate_kind + base_amount_sum
+# fact). These bindings supersede the dormant application-tier
+# casilla_59_base_imponible / casilla_60_base_imponible helpers (zero production
+# callers), moving the category->casilla routing from feature code into the
+# registry per aeat-schema-central-config. The art. 22 "operaciones asimiladas a
+# las exportaciones" leg of casilla 60 is not yet captured (no IvaCategory member
+# exists for it), matching the prior helper's scope.
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["intra_community_supply"]
+rate_kinds = ["zero"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-casilla-60-exportaciones-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["export_third_country_zero_rated"]
+rate_kinds = ["zero"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
