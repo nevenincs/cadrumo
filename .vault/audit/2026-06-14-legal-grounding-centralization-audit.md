@@ -144,6 +144,69 @@ registry/`external_constants`. No SUSPECTED-WRONG value found in this pass. The
 unimplemented LGT art. 27.5 prompt-payment 25 % reducción is noted for future
 registry authoring if built.
 
+## Verification pass — concept inventory vs BOE (4-agent web-verification swarm)
+
+A second swarm verified the codified regulatory FIGURES (not just centralization) of
+the broader concept inventory against authoritative BOE/AEAT sources online. Result:
+the codebase is overwhelmingly correct and well-grounded; the swarp found one genuine
+wrong figure, four citation-imprecisions (all fixed), and two non-value gaps.
+
+### V0 (broad confirmation — verified CORRECT vs BOE)
+
+Confirmed against the live BOE/AEAT source: the full IS rate set (general 25%,
+micro-empresa DT 44ª 21/22-2025 & 19/21-2026, new-entity 15%, cooperative 20%,
+non-profit 10%), the IRPF escala estatal general half-scale and the escala del ahorro
+INCLUDING the Ley 7/2024 jump of the >300.000 € top tranche to 30% for 2025 (the
+registry already carries 28% for 2024, 30% for 2025 — correct), the M130/M210
+retención/fraccionamiento rates, the informativa thresholds (M347 3.005,06 €, M720
+50.000 €/bloque, M349 50.000 € cadence), gastos difícil justificación 5%/2.000 €, the
+recargo ladders, and 14 of the `external_constants` regulatory constants. No
+wrong-value defect in any of these.
+
+### V1 (WRONG-vs-LAW — tracked, cuota is correct) — M200 tipo-gravamen-erd scalar echo
+
+`_data/registry/.../200/.../parameters.toml` `is.modelo-200.tipo-gravamen-erd` is a
+flat-23% scalar (`value = "23"`, `valid_from 2023`, grounded on the superseded Ley
+31/2022 art. 39) feeding the casilla 00558 rate ECHO. For 2025/2026 micro-empresa
+(INCN < 1M) entities the law (DT 44ª) is the two-tranche 21/22 (2025) and 19/21
+(2026), so the displayed rate echoes a stale 23%. CRITICAL NUANCE verified against
+code: the sibling `cuota-integra-bracket-erd` IS correctly year-stepped, so the actual
+**cuota (tax owed) is correct** — only the scalar display in 00558 is stale. This is
+the documented-deferred `lookup_bracket_by_entity_type` limitation (a scalar cannot
+express a two-tranche rate). NOT fixed in this pass: changing the scalar without
+AEAT-form-level knowledge of how 00558 represents a two-tranche micro-empresa rate
+could make the echo more wrong, and the tax is already correct. Tracked for a focused
+fix that lands the deferred bracket-based rate echo. A related latent gap: the true
+ERD (INCN < 10M, LIS art. 101) DT 44ª schedule 24/23/22/21 is absent from the registry
+and the "erd" parameter name misleadingly covers the INCN<1M micro-empresa category.
+
+### V2 (citation-imprecision — ALL FIXED this pass)
+
+Four values were correct but cited a framework/wrong article rather than the binding
+provision that sets them (`registry-calculation-legal-grounding`). All corrected:
+- `MINIMO_MENOR_TRES_MAX_AGE` cited art. 58.3 → **art. 58.2** (corpus confirms art. 58
+  has only two apartados; '58.3' does not exist). Fixed in `external_constants` +
+  `family.py`.
+- `CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` cited art. 59 (mínimo por *ascendientes*) →
+  **art. 61** normas comunes ("se prorrateará entre ellos por partes iguales"). Fixed
+  in `external_constants` + `family.py` + the operator-facing advisory across all four
+  locale catalogues (via the locale CLI). NOTE: these two were introduced THIS session
+  in F6, carried from pre-existing `family.py` errors — the verification swarm caught
+  the campaign's own imprecision.
+- `M347_THRESHOLD_EUR` cited RD 1065/2007 art. 31.1 (general obligation) → **art. 33.1**
+  (the provision fixing 3.005,06 €). Fixed across `external_constants` +
+  `_calculate_input` + `_row_models` (7 sites).
+- `MODELO_720_REPORTING_THRESHOLD_EUR` cited bare "AEAT instrucciones" → **RD 1065/2007
+  arts. 42 bis/ter/quater (RD 1558/2012) under LGT DA 18ª**. Fixed in `external_constants`.
+
+### V3 (non-value gap — tracked) — estimación objetiva magnitude-exclusion limits not codified
+
+The módulos volume-exclusion limits (250.000 / 125.000 / 150.000 €, LIRPF art. 31 +
+DT 32ª, extended through 2026 by RDL 9/2024) exist only in corpus reference text, never
+as an enforceable registry parameter or constant — the regime is gated by self-declared
+booleans with no numeric safety net. Not a wrong value; a silent gating gap. Tracked as
+a future grounding feature (author the limits as registry parameters with legal_refs).
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
