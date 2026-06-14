@@ -14,6 +14,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage import LLM_CACHE_NAMESPACE
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
@@ -30,7 +31,7 @@ from ._models import (
 
 _log = get_logger(__name__)
 
-_CACHE_NAMESPACE = "aeat.outbound.llm.cache"
+_CACHE_NAMESPACE = LLM_CACHE_NAMESPACE.namespace
 _CACHE_VERSION = 1
 
 

@@ -17,7 +17,14 @@ from .....core import Period
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.time import now
-from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
+from ....persistence.storage import (
+    AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
+    AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
+    AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+    Envelope,
+    MasterKeyProvider,
+    SensitivityClass,
+)
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.sql import SecureObjectRepository
@@ -28,9 +35,9 @@ _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
 _ARTEFACT_CLASSIFICATION = SensitivityClass.FINANCIAL
 _OBSERVATION_CLASSIFICATION = SensitivityClass.FINANCIAL
 _OBSERVATION_ENVELOPE_VERSION = 1
-_ARTEFACT_NAMESPACE = "aeat.outbound.aeat.sede.filed_declaration.artefacts"
-_OBSERVATION_NAMESPACE = "aeat.outbound.aeat.sede.filed_declaration.observations"
-_IVA_WALLET_OBSERVATION_NAMESPACE = "aeat.outbound.aeat.sede.iva_compensation_wallet.observations"
+_ARTEFACT_NAMESPACE = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace
+_OBSERVATION_NAMESPACE = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace
+_IVA_WALLET_OBSERVATION_NAMESPACE = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.namespace
 _STORAGE_REF_PREFIX = "secure-object:financial:"
 
 
