@@ -96,3 +96,40 @@ def test_prevision_social_grounds_in_arts_51_52_not_actividades(year: int) -> No
     assert not missing, (
         f"M100 {year}: previsión-social boxes not grounded in art. 51: {missing}"
     )
+
+
+def _casillas_with_section_substr(filing_year: int, needle: str):
+    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
+    modelos_by_id = {m.id: m for m in modelos}
+    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    return [c for c in rev.casillas if needle in "/".join(tuple(c.section))]
+
+
+# section-substring -> (article every box must carry, years the section exists).
+_SUBSTRING_CONCEPTS: dict[str, tuple[str, tuple[int, ...]]] = {
+    "patrim_protegid": ("ley-35-2006:art-54", (2021, 2022, 2023, 2024)),  # patrimonio protegido
+    "deportista": ("ley-35-2006:da-11", (2021, 2022, 2023, 2024)),  # mutualidad deportistas
+    "anualidades_alimentos": ("ley-35-2006:art-64", (2022, 2023, 2024)),  # anualidades por alimentos
+}
+
+
+def _substring_params():
+    for needle, (article, years) in _SUBSTRING_CONCEPTS.items():
+        for y in years:
+            yield pytest.param(needle, article, y, id=f"{needle}-{y}")
+
+
+@pytest.mark.parametrize(("needle", "article", "year"), list(_substring_params()))
+def test_substring_concept_section_grounding(needle: str, article: str, year: int) -> None:
+    """Boxes in a concept-section (matched by section substring) carry the concept's
+    article and never the actividades chapter."""
+    casillas = _casillas_with_section_substr(year, needle)
+    assert casillas, f"M100 {year}: section substring '{needle}' must have casillas"
+    actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
+    assert not actividades, (
+        f"M100 {year} '{needle}': boxes still cite the actividades chapter: {actividades}"
+    )
+    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if article not in set(c.legal_refs)]
+    assert not missing, (
+        f"M100 {year} '{needle}': boxes not grounded in {article}: {missing}"
+    )

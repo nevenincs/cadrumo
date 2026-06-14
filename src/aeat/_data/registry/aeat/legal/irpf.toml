@@ -2303,6 +2303,60 @@ required_text = [
     "límite",
 ]
 
+[legal."ley-35-2006:art-54"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a54"
+document_id = "BOE-A-2006-20764"
+article = "54"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a54"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a54; operator to re-stamp)"
+notes = "LIRPF art 54: reducciones de la base imponible general por aportaciones a patrimonios protegidos de las personas con discapacidad (límite 10.000 € por aportante, 24.250 € conjunto). Base legal de las casillas de reducción/exceso por patrimonio protegido en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a54; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por aportaciones a patrimonios protegidos de las personas con discapacidad",
+]
+
+[legal."ley-35-2006:art-64"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a64"
+document_id = "BOE-A-2006-20764"
+article = "64"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a64"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a64; operator to re-stamp)"
+notes = "LIRPF art 64: especialidades aplicables en los supuestos de anualidades por alimentos a favor de los hijos satisfechas por decisión judicial — la escala se aplica separadamente al importe de las anualidades y al resto de la base liquidable general. Base legal de las casillas de anualidades por alimentos en Modelo 100 (junto con el art. 75 para la parte autonómica). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a64; operator to confirm and re-stamp."
+required_text = [
+    "anualidades por alimentos a favor de los hijos",
+]
+
+[legal."ley-35-2006:da-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#daundecima"
+document_id = "BOE-A-2006-20764"
+article = "DA-11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#daundecima"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#daundecima; operator to re-stamp)"
+notes = "LIRPF disposición adicional 11ª: mutualidad de previsión social de deportistas profesionales y de alto nivel — aportaciones reducibles de la base imponible general con su propio límite (la menor de 24.250 € o la suma de rendimientos netos de trabajo y actividades económicas). Base legal de las casillas de reducción/exceso por mutualidad de deportistas en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#daundecima; operator to confirm and re-stamp."
+required_text = [
+    "Mutualidad de previsión social de deportistas profesionales",
+]
+
 [legal."ley-35-2006:art-79"]
 evidence_tier = "legal_authority"
 authority = "boe"
