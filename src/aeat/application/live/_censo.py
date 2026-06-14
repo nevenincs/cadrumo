@@ -28,17 +28,13 @@ from pydantic import BaseModel, Field, model_validator
 from ...adapters.persistence.storage import (
     LIVE_CENSO_SNAPSHOT_NAMESPACE as CENSO_SNAPSHOT_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage import (
-    Envelope,
-)
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ...core.time import now
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
+    SecureSnapshotRepository,
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotService,
@@ -57,8 +53,6 @@ class CensoSnapshotNotFoundError(SnapshotNotFoundError):
 
 
 CENSO_SNAPSHOT_NAMESPACE = CENSO_SNAPSHOT_STORAGE_NAMESPACE.namespace
-_CENSO_SNAPSHOT_VERSION = CENSO_SNAPSHOT_STORAGE_NAMESPACE.schema_version
-_CENSO_SNAPSHOT_SENSITIVITY = CENSO_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
 
 # censo_facts values are always strings: enum values, ISO date strings,
 # NIF strings, and decimal-as-string for the vivienda_office m2 inputs.
@@ -170,216 +164,73 @@ def derive_censo_snapshot_id(
     )
 
 
-def _snapshot_from_record(
-    record: SecureObjectRecord,
-    requested_snapshot_id: str | None = None,
-) -> CensoSnapshot:
-    envelope = Envelope[CensoSnapshot].model_validate_json(record.payload.decode("utf-8"))
-    if envelope.classification is not _CENSO_SNAPSHOT_SENSITIVITY:
-        snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
-        raise ClassificationError(
-            f"censo snapshot {snapshot_label!r} has classification {envelope.classification}; "
-            f"consumer expected {_CENSO_SNAPSHOT_SENSITIVITY}",
-        )
-    if envelope.schema_version > _CENSO_SNAPSHOT_VERSION:
-        snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
-        raise EnvelopeVersionError(
-            f"censo snapshot {snapshot_label!r} is at version {envelope.schema_version}; "
-            f"consumer supports up to {_CENSO_SNAPSHOT_VERSION}",
-        )
-    return envelope.payload
-
-
 class CensoSnapshotRepository:
-    """Secure-DB repository for captured 036 censo snapshots."""
+    """Secure-DB repository for captured 036 censo snapshots.
+
+    Composes the shared :class:`SecureSnapshotRepository` (one canonical
+    encrypted secure-object snapshot store) instead of re-implementing the
+    load / resolve / list / save / exists boilerplate. The public class
+    identity, method signatures, ``CensoSnapshotNotFoundError`` messages, and
+    ``captured_at`` list ordering are preserved; the backing secure-object
+    store is constructed lazily on first use so the repository can be
+    instantiated before a runtime bucket is active.
+    """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
-        self._bucket_id = bucket_id.strip()
-        if not self._bucket_id:
+        trimmed = bucket_id.strip()
+        if not trimmed:
             raise LiveApplicationInputError("bucket_id must not be blank")
+        self._bucket_id = trimmed
         self._objects = objects
+        self._delegate: SecureSnapshotRepository[CensoSnapshot] | None = None
 
     @property
-    def _repository(self) -> SecureObjectRepository:
-        if self._objects is None:
-            self._objects = secure_object_repository_for_bucket(self._bucket_id)
-        return self._objects
+    def _repo(self) -> SecureSnapshotRepository[CensoSnapshot]:
+        if self._delegate is None:
+            self._delegate = SecureSnapshotRepository(
+                bucket_id=self._bucket_id,
+                payload_model=CensoSnapshot,
+                namespace_definition=CENSO_SNAPSHOT_STORAGE_NAMESPACE,
+                object_key=censo_snapshot_object_key,
+                not_found_factory=lambda snapshot_id: CensoSnapshotNotFoundError(
+                    f"censo snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
+                    suggestion="aeat config profile censo pull",
+                ),
+                ambiguous_prefix_factory=lambda snapshot_id, _full_ids: CensoSnapshotNotFoundError(
+                    f"censo snapshot prefix {snapshot_id!r} is ambiguous",
+                    suggestion="provide a longer snapshot id",
+                ),
+                domain_label="censo",
+                objects=self._objects,
+            )
+        return self._delegate
 
     @property
     def bucket_id(self) -> str:
-        """Return the profile bucket this repository is scoped to.
-
-        The value is the trimmed ``bucket_id`` the repository was constructed
-        with. Every secure-object key this repository reads or writes is
-        namespaced under it, so the bucket id is the isolation boundary that
-        keeps one operator profile's censo snapshots from leaking into
-        another's.
-
-        Returns:
-            The non-blank bucket identifier.
-        """
+        """Return the profile bucket this repository is scoped to."""
         return self._bucket_id
 
     def exists(self, snapshot_id: str) -> bool:
-        """Report whether a censo snapshot is persisted under the given id.
-
-        Probes the secure-object store for this repository's bucket without
-        decrypting or validating the payload. A censo snapshot is the captured
-        state of an operator's Modelo 036 census facts (the AEAT tax form that
-        registers a taxpayer's activities and obligations).
-
-        Args:
-            snapshot_id: Content-addressed id of the snapshot to probe.
-
-        Returns:
-            ``True`` if an object exists at the derived key, ``False``
-            otherwise.
-        """
-        return self._repository.exists(
-            CENSO_SNAPSHOT_NAMESPACE,
-            censo_snapshot_object_key(self._bucket_id, snapshot_id),
-        )
+        """Report whether a censo snapshot is persisted under the given id."""
+        return self._repo.exists(snapshot_id)
 
     def load(self, snapshot_id: str) -> CensoSnapshot:
-        """Load and return the censo snapshot stored under ``snapshot_id``.
-
-        Decrypts the stored secure object, validates that the wrapper's
-        sensitivity classification and schema version are the ones this
-        repository expects, and returns the ``CensoSnapshot`` it contains. The
-        loaded payload's ``bucket_id`` and ``snapshot_id`` are checked against
-        this repository's bucket and the requested id, so a mislabelled or
-        cross-bucket record fails loudly rather than leaking.
-
-        Args:
-            snapshot_id: Exact content-addressed id of the snapshot to load.
-
-        Returns:
-            :class:`CensoSnapshot`: The validated snapshot.
-
-        Raises:
-            CensoSnapshotNotFoundError: No object exists at the derived key.
-            LiveApplicationInputError: The payload's bucket or id does not
-                match what was requested.
-        """
-        record = self._repository.load(
-            CENSO_SNAPSHOT_NAMESPACE,
-            censo_snapshot_object_key(self._bucket_id, snapshot_id),
-            expected_class=_CENSO_SNAPSHOT_SENSITIVITY,
-            max_supported_version=_CENSO_SNAPSHOT_VERSION,
-        )
-        if record is None:
-            raise CensoSnapshotNotFoundError(
-                f"censo snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
-                suggestion="aeat config profile censo pull",
-            )
-        snapshot = _snapshot_from_record(record, requested_snapshot_id=snapshot_id)
-        if snapshot.bucket_id != self._bucket_id:
-            raise LiveApplicationInputError(
-                f"censo snapshot payload bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}",
-            )
-        if snapshot.snapshot_id != snapshot_id:
-            raise LiveApplicationInputError(
-                f"censo snapshot payload id={snapshot.snapshot_id!r} does not match requested snapshot {snapshot_id!r}",
-            )
-        return snapshot
+        """Load and return the censo snapshot stored under ``snapshot_id``."""
+        return self._repo.load(snapshot_id)
 
     def list_snapshots(self) -> tuple[CensoSnapshot, ...]:
-        """Return every censo snapshot belonging to this repository's bucket.
-
-        Reads all records in the censo namespace, validates each stored
-        wrapper, and keeps only those whose payload ``bucket_id`` matches this
-        repository's bucket. The result is sorted by capture time and then
-        snapshot id, so the ordering is stable across calls.
-
-        Returns:
-            tuple[:class:`CensoSnapshot`, ...]: Oldest capture first.
-        """
-        snapshots = [
-            snapshot
-            for record in self._repository.list_records(
-                CENSO_SNAPSHOT_NAMESPACE,
-                expected_class=_CENSO_SNAPSHOT_SENSITIVITY,
-                max_supported_version=_CENSO_SNAPSHOT_VERSION,
-            )
-            for snapshot in (_snapshot_from_record(record),)
-            if snapshot.bucket_id == self._bucket_id
-        ]
-        return tuple(sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id)))
+        """Return every censo snapshot for this bucket, oldest capture first."""
+        return tuple(
+            sorted(self._repo.list_snapshots(), key=lambda item: (item.captured_at, item.snapshot_id)),
+        )
 
     def resolve(self, snapshot_id: str) -> CensoSnapshot:
-        """Resolve an exact or prefix snapshot id to a single snapshot.
-
-        Serves operator-facing lookups where typing a full content-addressed
-        id is impractical: a unique leading prefix of the SHA-256 id is
-        accepted. Scans this bucket's snapshots for an exact id or any id that
-        starts with the trimmed input.
-
-        Args:
-            snapshot_id: Full id or a leading prefix of one.
-
-        Returns:
-            :class:`CensoSnapshot`: The single matching snapshot.
-
-        Raises:
-            LiveApplicationInputError: ``snapshot_id`` is blank.
-            CensoSnapshotNotFoundError: No snapshot matches, or the prefix
-                matches more than one snapshot.
-        """
-        trimmed_snapshot_id = snapshot_id.strip()
-        if not trimmed_snapshot_id:
-            raise LiveApplicationInputError("snapshot_id must not be blank")
-        matches = [
-            snapshot
-            for snapshot in self.list_snapshots()
-            if snapshot.snapshot_id == trimmed_snapshot_id or snapshot.snapshot_id.startswith(trimmed_snapshot_id)
-        ]
-        if not matches:
-            raise CensoSnapshotNotFoundError(
-                f"censo snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
-                suggestion="aeat config profile censo pull",
-            )
-        if len(matches) > 1:
-            raise CensoSnapshotNotFoundError(
-                f"censo snapshot prefix {snapshot_id!r} is ambiguous",
-                suggestion="provide a longer snapshot id",
-            )
-        return matches[0]
+        """Resolve an exact or unambiguous-prefix snapshot id to a single snapshot."""
+        return self._repo.resolve(snapshot_id)
 
     def save(self, snapshot: CensoSnapshot) -> None:
-        """Persist a censo snapshot into this bucket's secure-object store.
-
-        Wraps the snapshot in an ``Envelope`` stamped with the current censo
-        schema version, sensitivity classification, and write time, then
-        writes it at the derived secure-object key. The snapshot's
-        ``bucket_id`` must match this repository's bucket, so a payload is
-        never filed under the wrong profile.
-
-        Args:
-            snapshot: The ``CensoSnapshot`` to persist.
-
-        Raises:
-            LiveApplicationInputError: The snapshot's ``bucket_id`` differs
-                from this repository's bucket.
-        """
-        if snapshot.bucket_id != self._bucket_id:
-            raise LiveApplicationInputError(
-                f"censo snapshot bucket_id={snapshot.bucket_id!r} does not match repository bucket {self._bucket_id!r}",
-            )
-        envelope = Envelope[CensoSnapshot](
-            schema_version=_CENSO_SNAPSHOT_VERSION,
-            written_at=now(),
-            classification=_CENSO_SNAPSHOT_SENSITIVITY,
-            payload=snapshot,
-        )
-        self._repository.save(
-            namespace=CENSO_SNAPSHOT_NAMESPACE,
-            object_key=censo_snapshot_object_key(self._bucket_id, snapshot.snapshot_id),
-            classification=_CENSO_SNAPSHOT_SENSITIVITY,
-            schema_version=_CENSO_SNAPSHOT_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+        """Persist a censo snapshot into this bucket's secure-object store."""
+        self._repo.save(snapshot)
 
 
 class CensoSnapshotService(SnapshotService[CensoSnapshot]):
