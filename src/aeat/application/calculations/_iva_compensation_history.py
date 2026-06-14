@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 from typing import ClassVar, override
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -246,10 +247,11 @@ def iva_compensation_state_from_filed_observation(
             context={"modelo": observation.modelo},
         )
     values = _decimal_casilla_values(observation)
-    result = _casilla_value(values, "69", "iva.resultado")
-    posterior = _casilla_value(values, "87", "iva.compensacion-pendiente-periodos-posteriores")
+    m303 = Modelo.M303.value
+    result = _registry_casilla_value(values, m303, "iva.resultado")
+    posterior = _registry_casilla_value(values, m303, "iva.compensacion-pendiente-periodos-posteriores")
     generated = max(Decimal("0"), -result) if result is not None else Decimal("0")
-    available = _casilla_value(values, "iva.compensacion-disponible-fin-periodo")
+    available = _registry_casilla_value(values, m303, "iva.compensacion-disponible-fin-periodo")
     if available is None:
         available = (posterior or Decimal("0")) + generated
     source_artefact_sha256 = next(
@@ -263,11 +265,11 @@ def iva_compensation_state_from_filed_observation(
         expediente_id=observation.expediente_id,
         status=observation.status,
         presented_at=observation.presented_at,
-        prior_pending_amount=_casilla_value(values, "110", "iva.compensacion-pendiente-periodos-anteriores"),
-        applied_amount=_casilla_value(values, "78", "iva.compensacion-aplicada-periodo"),
+        prior_pending_amount=_registry_casilla_value(values, m303, "iva.compensacion-pendiente-periodos-anteriores"),
+        applied_amount=_registry_casilla_value(values, m303, "iva.compensacion-aplicada-periodo"),
         pending_for_later_amount=posterior,
         period_result_amount=result,
-        final_result_amount=_casilla_value(values, "71"),
+        final_result_amount=_registry_casilla_value(values, m303, "71"),
         generated_amount=generated,
         available_end_amount=available,
         source_observation_key=(
@@ -293,8 +295,11 @@ def iva_compensation_annual_summary_from_filed_observation(
             context={"modelo": observation.modelo},
         )
     values = _decimal_casilla_values(observation)
-    last_period = _casilla_value(values, "97", "iva.anual.compensacion-ultimo-periodo-97") or _ZERO
-    generated_not_in_last = _casilla_value(values, "662", "iva.anual.compensacion-generada-ejercicio-no-97") or _ZERO
+    m390 = Modelo.M390.value
+    last_period = _registry_casilla_value(values, m390, "iva.anual.compensacion-ultimo-periodo-97") or _ZERO
+    generated_not_in_last = (
+        _registry_casilla_value(values, m390, "iva.anual.compensacion-generada-ejercicio-no-97") or _ZERO
+    )
     source_artefact_sha256 = next(
         (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
         None,
@@ -378,6 +383,42 @@ def _casilla_value(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | N
         if value is not None:
             return value
     return None
+
+
+@lru_cache(maxsize=4)
+def _casilla_id_to_number(modelo: str) -> dict[str, str]:
+    """Map each registry casilla id to its official AEAT box number for ``modelo``.
+
+    The compensación casilla identities are registry-owned: feature code
+    references the stable semantic casilla id and the official box number is
+    resolved from the registry casilla definition, rather than hardcoded as an
+    inline routing literal (``aeat-schema-central-config``). The mapping is stable
+    across revisions for these informativa/result boxes; merged across revisions
+    with a later revision winning on the rare id collision.
+    """
+    from ...core.resources import bundled_path
+    from ...domain.calculations.registry import load_registry_tree
+
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    definition = next(m for m in modelos if m.id == modelo)
+    mapping: dict[str, str] = {}
+    for revision in definition.revisions.values():
+        for casilla in revision.casillas:
+            mapping[casilla.id] = casilla.number
+    return mapping
+
+
+def _registry_casilla_value(values: dict[str, Decimal], modelo: str, semantic_id: str) -> Decimal | None:
+    """Resolve a filed-observation casilla value by its registry identity.
+
+    Looks up the value under both the registry-resolved official box number and
+    the semantic casilla id, so a justificante keyed by either form resolves. The
+    box number comes from the registry (``_casilla_id_to_number``), never an
+    inline literal.
+    """
+    number = _casilla_id_to_number(modelo).get(semantic_id)
+    candidate_ids = (number, semantic_id) if number is not None and number != semantic_id else (semantic_id,)
+    return _casilla_value(values, *candidate_ids)
 
 
 __all__ = [
