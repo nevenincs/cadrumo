@@ -204,6 +204,13 @@ Prepare the annual IVA summary.
 Preview, apply, reject, or override local LLM suggestions.
 :::
 
+:::{grid-item-card} Classify from an Invoice
+:link: classify-with-llm-evidence
+:link-type: doc
+
+Read an attached invoice on-host to classify, with the consent and privacy rules.
+:::
+
 :::{grid-item-card} LLM Provider Setup
 :link: setup-llm-classification
 :link-type: doc
@@ -249,6 +256,7 @@ correct-ledger-entries
 review-queue
 modelo-036
 classify-with-llm
+classify-with-llm-evidence
 setup-llm-classification
 review-calculation-values
 review-with-google-sheets
