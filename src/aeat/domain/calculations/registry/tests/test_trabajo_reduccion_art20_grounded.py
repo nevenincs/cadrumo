@@ -60,3 +60,25 @@ def test_casilla_0023_does_not_misground_to_art17(year: int) -> None:
         f"casilla 0023 ({year}) must not cite art-17 (rendimientos íntegros) for the "
         f"art. 20 reduction; found {list(casilla.legal_refs)}"
     )
+
+
+# Sibling gasto casillas of the same drift cluster: 0019 (otros gastos deducibles),
+# 0020 (incremento por movilidad geográfica), 0021 (incremento trabajadores activos
+# con discapacidad) are all art. 19.2.f gastos deducibles — their binding provision
+# is art. 19, NOT art. 17 (rendimientos íntegros). 2021-2024 had drifted to art-17;
+# 2020 and 2025 already carried art-19.
+_GASTO_CASILLAS = ("0019", "0020", "0021")
+
+
+@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
+@pytest.mark.parametrize("casilla_id", _GASTO_CASILLAS)
+def test_gasto_casillas_cite_art19(year: int, casilla_id: str) -> None:
+    """The art. 19.2.f gasto casillas (0019/0020/0021) must cite ley-35-2006:art-19."""
+    rev = _m100_revision(year)
+    casillas_by_id = {c.id: c for c in rev.casillas}
+    casilla = casillas_by_id.get(casilla_id)
+    assert casilla is not None, f"M100 {year} must declare casilla {casilla_id}"
+    assert "ley-35-2006:art-19" in casilla.legal_refs, (
+        f"casilla {casilla_id} ({year}) is an art. 19.2.f gasto deducible; its legal_refs "
+        f"must cite ley-35-2006:art-19, not {list(casilla.legal_refs)}"
+    )
