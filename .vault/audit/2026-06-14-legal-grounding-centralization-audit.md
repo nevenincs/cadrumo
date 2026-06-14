@@ -597,6 +597,27 @@ and the heterogeneous `re_at_rentas` / ganancia-inmueble grab-bag (per-box). The
 information blocks are actividad-económica informativa fields where the actividades chapter may be partly
 correct — needs per-block inspection, not bulk grounding.
 
+### V18 (DT-18ª/DA-50ª/DA-58ª authored + sections grounded — running total ~2906 casillas, 12 entries)
+
+Authored three more LIRPF legal entries from the bundled corpus (commit `565c9bd71`): DT-18ª (deducción
+por inversión en vivienda habitual, régimen transitorio), DA-50ª (deducción por obras de mejora de la
+eficiencia energética de viviendas), DA-58ª (deducción por adquisición de vehículos eléctricos y puntos
+de recarga). Grounded their sections (`deduccion_vivienda_habitual`→DT-18ª, `mejoras_energeticas`/
+`eficiencia_energetica`→DA-50ª, `vehiculos_elec`→DA-58ª) — 283 casillas, construct-guarded, referential
+green. (Note: the corpus uses sequential `#da-N` anchors for reform-added DAs — `#da-4`=DA-50ª,
+`#da-11`=DA-58ª — independent of the entry keys.)
+
+**Running total ~2906 M100 casillas re-grounded across ~26 concept-sections, behind 11 gates; 12 LIRPF
+legal entries authored** (arts. 35/36/38/39/51/54/64 + DT-9ª/DT-18ª + DA-11ª/DA-50ª/DA-58ª), all
+corpus-verified.
+
+The clean LIRPF-groundable concept-sections with a single binding article are now essentially exhausted.
+What remains is the structurally-distinct work documented above: the autonomic-deduction corpus (~400+
+boxes, 17+ comunidades' laws), the construct-bound base-computation chain (construct-aware pass), the
+heterogeneous `re_at_rentas` / ganancia-inmueble / `gravamenes_res` surfaces (per-box), the `an_b_inf_adc_*`
+anexo-B informativa blocks (actividades may be partly correct — per-block), and the feature/human lanes
+(art. 20 ADR, M714, operator re-stamps of the 12 agent-authored entries).
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
