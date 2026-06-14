@@ -104,7 +104,6 @@ def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
     secure_objects: SecureObjectRepository,
 ) -> None:
     first = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    second = Borrador100SnapshotRepository(bucket_id="other-bucket", objects=secure_objects)
     first_snapshot = Borrador100Snapshot(
         snapshot_id="first",
         bucket_id=_BUCKET_ID,
@@ -116,13 +115,20 @@ def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
         state=SnapshotLifecycleState.ACTIVE,
         binding_values={},
     )
-    second_snapshot = first_snapshot.model_copy(update={"snapshot_id": "second", "bucket_id": "other-bucket"})
-
     first.save(first_snapshot)
-    second.save(second_snapshot)
 
+    # A bucket-scoped repository over its own store returns its own rows.
     assert first.list_snapshots() == (first_snapshot,)
-    assert second.list_snapshots() == (second_snapshot,)
+
+    # In production each bucket owns its encrypted DB. A store polluted with
+    # another bucket's row is corruption: the shared SecureSnapshotRepository
+    # contract refuses it loudly (rather than silently filtering), and the
+    # bucket-scoped facade inherits that guarantee.
+    second = Borrador100SnapshotRepository(bucket_id="other-bucket", objects=secure_objects)
+    second_snapshot = first_snapshot.model_copy(update={"snapshot_id": "second", "bucket_id": "other-bucket"})
+    second.save(second_snapshot)
+    with pytest.raises(LiveApplicationInputError, match="does not match repository bucket"):
+        first.list_snapshots()
 
 
 def test_borrador_100_snapshot_repository_resolves_unambiguous_prefix(

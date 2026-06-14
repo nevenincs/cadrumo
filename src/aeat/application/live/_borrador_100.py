@@ -26,18 +26,13 @@ from pydantic import BaseModel, Field, model_validator
 from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage import (
-    Envelope,
-)
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.identity import BucketId
-from ...core.time import now
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
+    SecureSnapshotRepository,
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotService,
@@ -46,8 +41,6 @@ from ._snapshot_base import (
 )
 
 BORRADOR_100_SNAPSHOT_NAMESPACE = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namespace
-_BORRADOR_100_SNAPSHOT_VERSION = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version
-_BORRADOR_100_SNAPSHOT_SENSITIVITY = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
 type _BorradorValue = Decimal | str
 
 
@@ -136,121 +129,58 @@ def derive_borrador_100_snapshot_id(
     )
 
 
-def _snapshot_from_record(record: SecureObjectRecord, requested_snapshot_id: str | None = None) -> Borrador100Snapshot:
-    envelope = Envelope[Borrador100Snapshot].model_validate_json(record.payload.decode("utf-8"))
-    if envelope.classification is not _BORRADOR_100_SNAPSHOT_SENSITIVITY:
-        snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
-        raise ClassificationError(
-            f"borrador snapshot {snapshot_label!r} has classification {envelope.classification}; "
-            f"consumer expected {_BORRADOR_100_SNAPSHOT_SENSITIVITY}",
-        )
-    if envelope.schema_version > _BORRADOR_100_SNAPSHOT_VERSION:
-        snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
-        raise EnvelopeVersionError(
-            f"borrador snapshot {snapshot_label!r} is at version {envelope.schema_version}; "
-            f"consumer supports up to {_BORRADOR_100_SNAPSHOT_VERSION}",
-        )
-    return envelope.payload
-
-
 class Borrador100SnapshotRepository:
-    """Secure-DB repository for captured Modelo 100 borrador snapshots."""
+    """Secure-DB repository for captured Modelo 100 borrador snapshots.
+
+    Composes the shared :class:`SecureSnapshotRepository` (one canonical
+    encrypted secure-object snapshot store) rather than re-implementing the
+    load / resolve / list / save boilerplate; the public class identity,
+    method signatures, and ``BorradorSnapshotNotFoundError`` messages are
+    preserved, and ``list_snapshots`` keeps the borrador ``captured_at``
+    ordering.
+    """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
-        self._bucket_id = bucket_id.strip()
-        if not self._bucket_id:
+        trimmed = bucket_id.strip()
+        if not trimmed:
             raise LiveApplicationInputError("bucket_id must not be blank")
-        self._objects = objects if objects is not None else secure_object_repository_for_bucket(self._bucket_id)
+        self._delegate: SecureSnapshotRepository[Borrador100Snapshot] = SecureSnapshotRepository(
+            bucket_id=trimmed,
+            payload_model=Borrador100Snapshot,
+            namespace_definition=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
+            object_key=borrador_100_snapshot_object_key,
+            not_found_factory=lambda snapshot_id: BorradorSnapshotNotFoundError(
+                f"borrador snapshot {snapshot_id!r} not found in bucket {trimmed!r}",
+                suggestion="aeat app live borrador 100 list",
+            ),
+            ambiguous_prefix_factory=lambda snapshot_id, _full_ids: BorradorSnapshotNotFoundError(
+                f"borrador snapshot prefix {snapshot_id!r} is ambiguous",
+                suggestion="provide a longer snapshot id",
+            ),
+            domain_label="borrador",
+            objects=objects,
+        )
 
     @property
     def bucket_id(self) -> str:
-        return self._bucket_id
+        return self._delegate.bucket_id
 
     def exists(self, snapshot_id: str) -> bool:
-        return self._objects.exists(
-            BORRADOR_100_SNAPSHOT_NAMESPACE,
-            borrador_100_snapshot_object_key(self._bucket_id, snapshot_id),
-        )
+        return self._delegate.exists(snapshot_id)
 
     def load(self, snapshot_id: str) -> Borrador100Snapshot:
-        record = self._objects.load(
-            BORRADOR_100_SNAPSHOT_NAMESPACE,
-            borrador_100_snapshot_object_key(self._bucket_id, snapshot_id),
-            expected_class=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
-            max_supported_version=_BORRADOR_100_SNAPSHOT_VERSION,
-        )
-        if record is None:
-            raise BorradorSnapshotNotFoundError(
-                f"borrador snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
-                suggestion="aeat app live borrador 100 list",
-            )
-        snapshot = _snapshot_from_record(record, requested_snapshot_id=snapshot_id)
-        if snapshot.bucket_id != self._bucket_id:
-            raise LiveApplicationInputError(
-                f"borrador snapshot payload bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}",
-            )
-        if snapshot.snapshot_id != snapshot_id:
-            raise LiveApplicationInputError(
-                f"borrador snapshot payload id={snapshot.snapshot_id!r} "
-                f"does not match requested snapshot {snapshot_id!r}",
-            )
-        return snapshot
+        return self._delegate.load(snapshot_id)
 
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
-        snapshots = [
-            snapshot
-            for record in self._objects.list_records(
-                BORRADOR_100_SNAPSHOT_NAMESPACE,
-                expected_class=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
-                max_supported_version=_BORRADOR_100_SNAPSHOT_VERSION,
-            )
-            for snapshot in (_snapshot_from_record(record),)
-            if snapshot.bucket_id == self._bucket_id
-        ]
-        return tuple(sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id)))
+        return tuple(
+            sorted(self._delegate.list_snapshots(), key=lambda item: (item.captured_at, item.snapshot_id)),
+        )
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
-        trimmed_snapshot_id = snapshot_id.strip()
-        if not trimmed_snapshot_id:
-            raise LiveApplicationInputError("snapshot_id must not be blank")
-        matches = [
-            snapshot
-            for snapshot in self.list_snapshots()
-            if snapshot.snapshot_id == trimmed_snapshot_id or snapshot.snapshot_id.startswith(trimmed_snapshot_id)
-        ]
-        if not matches:
-            raise BorradorSnapshotNotFoundError(
-                f"borrador snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}",
-                suggestion="aeat app live borrador 100 list",
-            )
-        if len(matches) > 1:
-            raise BorradorSnapshotNotFoundError(
-                f"borrador snapshot prefix {snapshot_id!r} is ambiguous",
-                suggestion="provide a longer snapshot id",
-            )
-        return matches[0]
+        return self._delegate.resolve(snapshot_id)
 
     def save(self, snapshot: Borrador100Snapshot) -> None:
-        if snapshot.bucket_id != self._bucket_id:
-            raise LiveApplicationInputError(
-                f"borrador snapshot bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}",
-            )
-        envelope = Envelope[Borrador100Snapshot](
-            schema_version=_BORRADOR_100_SNAPSHOT_VERSION,
-            written_at=now(),
-            classification=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
-            payload=snapshot,
-        )
-        self._objects.save(
-            namespace=BORRADOR_100_SNAPSHOT_NAMESPACE,
-            object_key=borrador_100_snapshot_object_key(self._bucket_id, snapshot.snapshot_id),
-            classification=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
-            schema_version=_BORRADOR_100_SNAPSHOT_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+        self._delegate.save(snapshot)
 
 
 class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
