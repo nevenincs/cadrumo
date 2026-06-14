@@ -1,0 +1,16 @@
+[[revisions."2021".parameters]]
+id = "renta-2021-minimo-descendientes-menor-tres-anos-2021"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+source_refs = ["aeat-renta-2021-manual-parte1"]
+
+[[revisions."2021".parameters.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["Mínimo por descendientes", "menor de tres"]
+
+[[revisions."2021".parameters.values]]
+value = "2800"
+date_axis = "filing_period"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
