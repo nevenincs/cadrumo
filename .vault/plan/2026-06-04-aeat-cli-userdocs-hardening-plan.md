@@ -51,7 +51,7 @@ Give readers a reliable place to start and choose their next page by task.
 - [x] `W02.P03.S09` - Add a short "where to ask for help" route covering the issue tracker, diagnostic outputs to include, and what not to paste publicly; `docs landing route`.
 - [x] `W02.P03.S10` - Replace glossary-dependent routes with inline first-use definitions and search/reference-backed lookup surfaces; `do not make the monolithic glossary the primary explanation path for general readers; `docs navigation and future search/reference backlog`.
 - [ ] `W02.P03.S11` - Decide whether curated root help should advertise handbook-critical surfaces omitted today: manual ledger add, evidence/doclink, verification reports, providers, and M036; `CLI root help backlog`.
-- [ ] `W02.P03.S50` - Revise the rejected documentation index through the VaultSpec documentation pipeline and present only built canonical HTML for human review; `docs/index.md`.
+- [x] `W02.P03.S50` - Revise the rejected documentation index through the VaultSpec documentation pipeline and present only built canonical HTML for human review; `docs/index.md`.
 - [x] `W02.P03.S51` - Normalize landing-page route labels, target document H1s, and document filenames so user-facing guide names do not diverge; `docs/index.md and linked user guides`.
 
 ### Phase `W02.P04` - Diataxis cleanup
