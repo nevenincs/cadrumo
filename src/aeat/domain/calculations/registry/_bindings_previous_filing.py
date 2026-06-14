@@ -12,6 +12,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core import Period
+from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._period_offset_math import apply_period_offset
 from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
@@ -220,12 +221,6 @@ def resolve_previous_filing_binding_values(
         )
     return resolved
 
-
-def _selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
-    selector = binding.selector
-    if isinstance(selector, BaseModel):
-        return selector.model_dump(exclude={"source"}, exclude_none=True)
-    return {k: v for k, v in selector.items() if k != "source"}
 
 
 class _PreviousModeloSelector(BaseModel):
