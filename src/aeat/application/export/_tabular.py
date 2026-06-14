@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
@@ -15,6 +14,7 @@ from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
 from ...core.external_constants import JSONL_MIME_TYPE as _JSONL_MIME_TYPE
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.external_constants import XLSX_MIME_TYPE as _XLSX_MIME_TYPE
+from ...core.hashing import sha256_hex
 from ._errors import ExportFieldError, ExportFormatError
 
 
@@ -104,7 +104,7 @@ def serialize_tabular_rows(
         filename_extension=extension,
         payload=payload,
         byte_size=len(payload),
-        sha256=hashlib.sha256(payload).hexdigest(),
+        sha256=sha256_hex(payload),
         row_count=len(normalized_rows),
         fieldnames=normalized_fields,
     )

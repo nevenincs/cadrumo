@@ -17,7 +17,6 @@ no bare ``dict[str, Any]`` at the boundary.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 import unicodedata
@@ -33,6 +32,7 @@ from pydantic_core import core_schema
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
 from ...core.time import now
@@ -80,7 +80,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
         separators=(",", ":"),
         sort_keys=True,
     )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return sha256_hex(payload.encode("utf-8"))
 
 
 _REFERENCE_NOISE = re.compile(r"[^0-9a-z]+")
@@ -132,7 +132,7 @@ def derive_import_fingerprint(raw: RawTransaction) -> str:
         separators=(",", ":"),
         sort_keys=True,
     )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return sha256_hex(payload.encode("utf-8"))
 
 
 def derive_movement_day_key(raw: RawTransaction) -> str:
@@ -693,7 +693,7 @@ def derive_split_group_id(
         sort_keys=True,
         separators=(",", ":"),
     )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return sha256_hex(payload.encode("utf-8"))
 
 
 class Transaction(BaseModel):

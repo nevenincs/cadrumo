@@ -23,7 +23,6 @@ separate concerns and live submit is permanently forbidden.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
@@ -35,7 +34,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.decimal import coerce_decimal
-from ...core.hashing import sha256_file
+from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
@@ -248,7 +247,7 @@ def export_draft(
     casilla_provenance = _exported_casilla_provenance(subview.export_layouts[0], draft=draft)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(payload)
-    digest = hashlib.sha256(payload).hexdigest()
+    digest = sha256_hex(payload)
     return DeclaracionExportResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
@@ -296,7 +295,7 @@ def verify_export(
             narrative="filing.export.missing_file",
         )
     payload = file_path.read_bytes()
-    digest = hashlib.sha256(payload).hexdigest()
+    digest = sha256_hex(payload)
     try:
         mismatched, checked = _mismatched_casillas(subview.export_layouts[0], draft=draft, payload=payload)
     except RegistryValidationError:

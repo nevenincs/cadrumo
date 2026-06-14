@@ -31,7 +31,6 @@ Design notes:
 
 from __future__ import annotations
 
-import hashlib
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -46,6 +45,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.errors import AeatError
+from ...core.hashing import sha256_hex
 from ...core.time import now
 from ._errors import LiveApplicationInputError
 
@@ -125,7 +125,7 @@ def derive_snapshot_id_from_json(parts: dict[str, _CanonicalValue]) -> str:
         sort_keys=True,
         separators=(",", ":"),
     )
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return sha256_hex(canonical.encode("utf-8"))
 
 
 def enforce_snapshot_state_invariants(

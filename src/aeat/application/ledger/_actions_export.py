@@ -9,10 +9,11 @@ or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import datetime
 from typing import TYPE_CHECKING
+
+from ...core.hashing import sha256_hex
 
 if TYPE_CHECKING:
     pass
@@ -230,9 +231,9 @@ def _ledger_export_id(
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
+    return sha256_hex(payload)
 
 
 def _transaction_ids_digest(transaction_ids: tuple[str, ...]) -> str:
     encoded = json.dumps(transaction_ids, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return sha256_hex(encoded)

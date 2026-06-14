@@ -6,7 +6,6 @@ and :class:`ValidatedRegistryAuthority` for compliance.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import tempfile
@@ -22,6 +21,7 @@ from pydantic import AnyHttpUrl
 from .....core import Modelo, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
+from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.resources import bundled_path
 from .....core.time import now
@@ -98,7 +98,7 @@ def _register_row_artefact(
             source_url=source_url,
             content_type=_JSON_MIME_TYPE,
             byte_count=len(payload),
-            sha256=hashlib.sha256(payload).hexdigest(),
+            sha256=sha256_hex(payload),
             captured_at=captured_at,
         ),
         payload,

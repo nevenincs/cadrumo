@@ -9,13 +9,13 @@ via the active :class:`MasterKeyProvider`.
 
 from __future__ import annotations
 
-import hashlib
 import re
 from contextlib import nullcontext
 from pathlib import Path
 
 from .....core import Period
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.hashing import sha256_hex
 from .....core.time import now
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -67,9 +67,9 @@ class FiledDeclaracionObservationStore:
             raise SedeValidationError("filed-declaration artefact byte count does not match its body")
 
         del observation_key
-        if body and hashlib.sha256(body).hexdigest() != artefact.sha256:
+        if body and sha256_hex(body) != artefact.sha256:
             raise SedeValidationError("filed-declaration artefact SHA-256 does not match its body")
-        digest = hashlib.sha256(body).hexdigest()
+        digest = sha256_hex(body)
         with self._crypto_scope():
             self._repository.save(
                 namespace=_ARTEFACT_NAMESPACE,
@@ -278,7 +278,7 @@ class FiledDeclaracionObservationStore:
                 _safe_segment(expediente_id),
             ),
         )
-        return hashlib.sha256(key.encode(_UTF_8_ENCODING)).hexdigest()
+        return sha256_hex(key.encode(_UTF_8_ENCODING))
 
     def _crypto_scope(self):
         return nullcontext()
@@ -298,7 +298,7 @@ class FiledDeclaracionObservationStore:
                 captured_at,
             ),
         )
-        return hashlib.sha256(key.encode(_UTF_8_ENCODING)).hexdigest()
+        return sha256_hex(key.encode(_UTF_8_ENCODING))
 
 
 def _safe_segment(value: str) -> str:

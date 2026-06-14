@@ -13,7 +13,6 @@ the navigation module re-imports them so there is a single definition.
 
 from __future__ import annotations
 
-import hashlib
 import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -27,6 +26,7 @@ from .....core import Period
 from .....core.config import Settings
 from .....core.decimal import normalize_decimal_separators
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from ._adapter_utils import normalize_response_text
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -98,7 +98,7 @@ def parse_iva_compensation_wallet_html(
         total_pending=total_pending,
         source_url=validated_source_url,
         captured_at=captured_at,
-        raw_sha256=hashlib.sha256(html.encode(UTF_8_ENCODING)).hexdigest(),
+        raw_sha256=sha256_hex(html.encode(UTF_8_ENCODING)),
     )
 
 
@@ -438,7 +438,7 @@ def _wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageSha
         wallet_entrypoint_paths=wallet_entrypoints[:8],
         forms=forms,
         inputs=inputs,
-        raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
+        raw_sha256=sha256_hex(html.encode("utf-8")),
     )
 
 

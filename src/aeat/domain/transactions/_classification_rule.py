@@ -10,13 +10,13 @@ entry rather than duplicating it.
 
 from __future__ import annotations
 
-import hashlib
 import re
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.time import now
 from ._enums import BusinessClassification
@@ -34,7 +34,7 @@ def _compute_rule_id(
 ) -> str:
     """Return the SHA-256 content-addressed rule id."""
     raw = f"{description_pattern}|{classification.value}|{category_id or ''}"
-    return hashlib.sha256(raw.encode()).hexdigest()
+    return sha256_hex(raw.encode())
 
 
 class LedgerClassificationRule(BaseModel):

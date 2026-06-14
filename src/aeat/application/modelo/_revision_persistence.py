@@ -5,12 +5,12 @@ Use of :class:`CalculationRevision`, :class:`CasillaObservation`, :class:`Modelo
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
     BucketEventObjectType,
@@ -191,9 +191,9 @@ def persist_calculation_revision(
             "borrador_snapshot_id": borrador_snapshot_id or "",
             "borrador_participated": "true" if bindings_sourced_from_borrador else "false",
             "borrador_binding_count": str(len(bindings_sourced_from_borrador)),
-            "borrador_bindings_trace_sha256": hashlib.sha256(
+            "borrador_bindings_trace_sha256": sha256_hex(
                 "\n".join(bindings_sourced_from_borrador).encode("utf-8"),
-            ).hexdigest(),
+            ),
             "has_provenance": "true" if observations else "false",
         },
     )

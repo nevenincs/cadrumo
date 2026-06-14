@@ -24,7 +24,6 @@ JSON envelope semantics.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -75,6 +74,7 @@ from ....adapters.outbound.storage import (
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....core.config import load_settings
+from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from .._common import _emit_envelope
 from ._google_errors import _google_refusal
@@ -603,7 +603,7 @@ def _push_mirror_objects(
         for raw_row in rows:
             hmac_hex = _object_key_hmac(raw_row.namespace, raw_row.object_key)
             label = _label_for(raw_row.namespace)
-            content_hash = f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}"
+            content_hash = f"sha256-{sha256_hex(raw_row.payload)}"
             try:
                 provider.put(
                     raw_row.namespace,

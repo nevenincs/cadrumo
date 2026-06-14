@@ -39,7 +39,6 @@ with the same data is naturally idempotent.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
@@ -49,6 +48,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ...core.hashing import sha256_hex
 from ..calculations.registry import CasillaObservation
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
@@ -170,7 +170,7 @@ def derive_calculation_revision_id(
     if canonical_rows:
         payload["detail_rows"] = canonical_rows
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return sha256_hex(encoded)
 
 
 def _outputs_for_hash_from_mapping(casilla_values: Mapping[str, Decimal]) -> dict[str, str]:

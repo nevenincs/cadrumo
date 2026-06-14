@@ -42,6 +42,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG
+from ....core.hashing import sha256_hex
 from ....core.time import now
 from ....domain.justificante import PdfModeloImportError
 from ._utils import sha256_file
@@ -138,7 +139,7 @@ def _scrub_amount(match: re.Match[str], rng: random.Random) -> str:
 
 def _scrub_csv(match: re.Match[str], filename: str) -> str:
     """Replace a CSV with a deterministic 16-char upper-alphanum synthetic."""
-    seed = hashlib.sha256(f"{filename}:{SCRUB_VERSION}:csv".encode()).hexdigest().upper()
+    seed = sha256_hex(f"{filename}:{SCRUB_VERSION}:csv".encode()).upper()
     alphanum = re.sub(r"[^A-Z0-9]", "", seed)
     return alphanum[:16]
 
@@ -146,7 +147,7 @@ def _scrub_csv(match: re.Match[str], filename: str) -> str:
 def _scrub_pid(match: re.Match[str], filename: str) -> str:
     """Replace a presentation ID with a deterministic synthetic of matching length."""
     original = match.group("pid")
-    seed = hashlib.sha256(f"{filename}:{SCRUB_VERSION}:pid:{original}".encode()).hexdigest().upper()
+    seed = sha256_hex(f"{filename}:{SCRUB_VERSION}:pid:{original}".encode()).upper()
     alphanum = re.sub(r"[^A-Z0-9]", "", seed)
     return alphanum[: len(original)]
 

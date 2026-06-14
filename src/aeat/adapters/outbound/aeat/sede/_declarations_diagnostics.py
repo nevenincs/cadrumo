@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
+from .....core.hashing import sha256_hex
 from .._playwright import PlaywrightError
 from ._adapter_utils import normalize_response_text
 from ._declarations_listbox import _NO_RESULTS_TEXT, _has_class
@@ -68,7 +68,7 @@ def declarations_page_shape_context(
         "form_count": len(soup.find_all("form")),
         "buttons": buttons,
         "list_headers": headers,
-        "raw_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest(),
+        "raw_sha256": sha256_hex(html.encode("utf-8")),
     }
 
 

@@ -12,7 +12,6 @@ Counterparty identity validation is delegated to
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date
@@ -24,6 +23,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.parsing._dates import _parse_iso8601_date
 from .._identifiers import canonical_decimal_string
@@ -84,7 +84,7 @@ def derive_invoice_id(
         separators=(",", ":"),
         sort_keys=True,
     )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return sha256_hex(payload.encode("utf-8"))
 
 
 def _is_hex_digest(value: str, *, length: int) -> bool:
@@ -495,6 +495,7 @@ class Invoice(BaseModel):
         applies.
         """
         return self.counterparty_eu_member_state is not None
+
 
 def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
