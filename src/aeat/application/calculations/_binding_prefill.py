@@ -21,8 +21,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
@@ -70,7 +71,6 @@ _IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_histo
 _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
 _MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
 
-_STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool, bool]:

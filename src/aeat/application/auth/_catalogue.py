@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Final
+from pydantic import BaseModel, Field
 
-from pydantic import BaseModel, ConfigDict, Field
-
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
 
-_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
 
 

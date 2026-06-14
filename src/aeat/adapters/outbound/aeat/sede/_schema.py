@@ -20,18 +20,12 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Final, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import Modelo, Period
 from .....domain.calculations.registry import CasillaId
 from ._errors import SedeValidationError
-
-_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
-    strict=True,
-    frozen=True,
-    extra="forbid",
-)
-
 
 # AEAT expediente identifiers are <year><sequence><checksum-letter>, e.g.
 # "202310013522456T" (length 16). Observed range: 14-20 characters in

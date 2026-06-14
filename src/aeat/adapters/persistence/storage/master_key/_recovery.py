@@ -39,8 +39,9 @@ import secrets
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..crypto._crypto import (
     KEY_SIZE,
@@ -52,8 +53,6 @@ from ..crypto._crypto import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-
-_STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _RECOVERY_KEY_SIZE: Final[int] = 32
 _MNEMONIC_WORD_COUNT: Final[int] = 24
