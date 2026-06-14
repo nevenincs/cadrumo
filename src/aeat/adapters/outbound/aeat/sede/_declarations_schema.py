@@ -13,7 +13,6 @@ from .....core import Period
 __all__ = ["Declaracion"]
 
 
-
 class Declaracion(BaseModel):
     """One row from *Consultar declaraciones presentadas*."""
 

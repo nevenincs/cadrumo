@@ -52,8 +52,7 @@ def split_recommendation_notice(transaction_id: str, *, provider: LLMProvider | 
     """
     provider_flag = f" --llm {provider.value}" if provider is not None else ""
     command = (
-        f"aeat app ledger classify {transaction_id} "
-        f"--read-evidence --saturate --auto-split --apply{provider_flag}"
+        f"aeat app ledger classify {transaction_id} --read-evidence --saturate --auto-split --apply{provider_flag}"
     )
     return Notice(
         severity=NoticeSeverity.INFO,

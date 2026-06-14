@@ -726,6 +726,5 @@ def test_compensation_casilla_numbers_match_registry() -> None:
 
     for semantic_id, number in _COMPENSATION_CASILLA_NUMBERS.items():
         assert id_to_number.get(semantic_id) == number, (
-            f"{semantic_id!r}: registry number {id_to_number.get(semantic_id)!r} "
-            f"!= centralised constant {number!r}"
+            f"{semantic_id!r}: registry number {id_to_number.get(semantic_id)!r} != centralised constant {number!r}"
         )

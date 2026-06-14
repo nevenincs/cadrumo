@@ -284,7 +284,9 @@ def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfi
         },
     )
     evidence = _ResolvedEvidence(
-        reference="ev-1", text=None, images=(base64.b64encode(_png_image()).decode("ascii"),),
+        reference="ev-1",
+        text=None,
+        images=(base64.b64encode(_png_image()).decode("ascii"),),
     )
 
     def _call() -> tuple[LLMClassificationResponse, str]:
