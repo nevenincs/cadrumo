@@ -1,6 +1,6 @@
 """Registry-grounding gate for the IRPF mínimo personal y familiar amounts.
 
-The Ley 35/2006 arts. 57-59 mínimo amounts live as Modelo-100 money parameters
+The Ley 35/2006 arts. 57-60 mínimo amounts live as Modelo-100 money parameters
 per ejercicio. This gate reads each via the registry (``read_parameter``) and
 asserts the AEAT-confirmed euro figure, so a parameter that drifts from the law
 fails loudly. It is the durable consumer that keeps the per-year mínimo
@@ -34,6 +34,10 @@ _MINIMO_AMOUNTS: tuple[tuple[str, str], ...] = (
     ("minimo-descendientes-menor-tres-anos", "2800"),
     ("minimo-ascendientes-mayor-65", "1150"),
     ("minimo-ascendientes-mayor-75", "1400"),
+    # Art. 60 mínimo por discapacidad (contribuyente, descendientes, ascendientes).
+    ("minimo-discapacidad-grado-33", "3000"),
+    ("minimo-discapacidad-grado-65", "9000"),
+    ("minimo-discapacidad-gastos-asistencia", "3000"),
 )
 
 
