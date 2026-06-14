@@ -219,7 +219,7 @@ Remove decrypt amplification on the ledger write path and the namespace enumerat
 
 Remove the attach_evidence double-decrypt and thread one catalogue per command.
 
-- [ ] `W06.P13.S29` - Remove the attach_evidence double full-catalogue decrypt by threading one decrypted catalogue through the command; `src/aeat/application/ledger/_actions_manual.py`.
+- [x] `W06.P13.S29` - Remove the attach_evidence double full-catalogue decrypt by threading one decrypted catalogue through the command; `src/aeat/application/ledger/_actions_manual.py`.
 
 ### Phase `W06.P14` - enumeration and row redesign
 
