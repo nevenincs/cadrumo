@@ -17,7 +17,8 @@ from ...domain.transactions import (
     TransactionCatalogueRepository,
     TransactionLifecycleState,
 )
-from ._common import _bad, _emit_envelope, _no_active_profile_refusal
+from ._common import _bad, _emit_envelope
+from ._common import active_bucket_id_or_refuse as _rule_bucket_id
 
 rule_app = typer.Typer(
     name="rule",
@@ -32,16 +33,6 @@ rule_app = typer.Typer(
 def register_rule_commands(app: typer.Typer) -> None:
     """Mount ledger classification rule commands on the ledger app."""
     app.add_typer(rule_app, name="rule")
-
-
-def _rule_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-    from ...core.errors import NoActiveProfileError
-
-    try:
-        return require_active_bucket_id()
-    except NoActiveProfileError as exc:
-        raise _no_active_profile_refusal() from exc
 
 
 def _validate_category_id(category_id: str | None) -> str | None:
