@@ -81,6 +81,19 @@ pre-Ley-12/2023 contracts. Values correct; grounded in code via `boe_citation_id
 LIS art. 40.3 confirms the figure: the modalidad of art. 40.3 is obligatoria when
 the importe neto de la cifra de negocios exceeds 6.000.000 €. Correct.
 
+### F2c (verified correct — flagged gap resolved) — maritime art. 7.p €60 100 cap and REBECA 50%
+
+The pass-1 recommendation flagged a *possible* missing art. 7.p ceiling in the
+maritime engine. Resolved: `domain/renta/_maritime_exemption.py:calculate_art_7p_exemption`
+applies `exempt_amount = min(raw_exempt, ART_7P_EXEMPTION_CAP_EUR)`, and
+`core/external_constants.py` defines `ART_7P_EXEMPTION_CAP_EUR = Decimal("60100")`
+and `REBECA_MARITIME_EXEMPTION_FRACTION = Decimal("0.50")`. Online verification
+against LIRPF art. 7.p (Ley 35/2006) confirms the €60.100 annual cap and that the
+excess above it is taxable; the REBECA 50% fraction (Ley 19/1994) is statutory.
+Both figures are correct AND already centralised in the curated `external_constants`
+re-export layer — the right pattern per `aeat-schema-central-config`. No gap; the
+earlier concern came from reading the service wrapper rather than the engine.
+
 ### F3 (centralisation-mechanism observation, not wrong values) — two parallel legal-grounding mechanisms
 
 The codebase carries legal grounding two ways: the registry
@@ -96,12 +109,17 @@ drift.
 
 ## Recommendations
 
-- Continue the RAG + online-verification pass across the remaining inline-grounded
-  regulatory figures (the DT12 40% reducción, the M202 art. 40.3 €6 000 000 INCN
-  threshold, the M202 micro-empresa tipos, the maritime art. 7.p €60 100 ceiling —
-  note the maritime engine currently applies no explicit ceiling constant), each
-  fetched against its BOE/AEAT source. F1 proves that an inline-grounded figure can
-  be wrong and silently under-declare; every such figure is a verification target.
+- Pass-1 outcome: of the audited inline/constant-grounded figures, one was wrong
+  (F1 reserva especial, fixed) and four verified correct against their BOE/AEAT
+  source (F2 fincas tiers, F2b M202 €6M INCN, F2c maritime €60 100 art. 7.p cap +
+  REBECA 50%). The maritime "missing ceiling" worry was a false alarm — the cap is
+  applied and centralised. F1 proves an inline-grounded figure can be wrong and
+  silently under-declare, so the method (RAG locate → BOE verify) is the durable gate.
+- Remaining pass-2 verification targets: the M202 micro-empresa tipos (LIS art. 29.1
+  + DT 44ª, Ley 7/2024 — already corrected in a prior campaign per
+  `registry-calculation-legal-grounding`, re-confirm), the DT12 40% reducción ceiling
+  conditions, and any further IS/IRPF bracket tranches carried inline rather than in
+  the registry. Each fetched against its BOE/AEAT source.
 - Where a figure is confirmed correct but inline-grounded, prefer migrating it to
   the registry `legal_refs`→`corpus_ref` mechanism so the corpus-text cross-check
   gate (`registry-calculation-legal-grounding`) guards it, rather than a
