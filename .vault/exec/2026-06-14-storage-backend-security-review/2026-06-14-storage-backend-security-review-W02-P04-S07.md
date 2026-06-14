@@ -100,3 +100,43 @@ HEAD with the 7 failing tests; commit `eece62072` restored the read path. Land H
 on a clean branch slice with the full storage suite (not just `bucket/tests/`) as
 the gate. Also fixed a latent W03.P06 regression in the same restore: the
 production-file-write inventory entry for `write_manifest` (now open()+fsync).
+
+
+## Read-site audit (completed 2026-06-15) — exhaustive `.payload` surface for the AAD refactor
+
+Confirmed: `SecureObjectRow.payload` (the `EncryptedBytes` column) is read ONLY
+inside `sql/secure_objects.py` and `sql/_secure_object_integrity.py` — no external
+consumer touches the raw ORM column (consumers receive a decrypted
+`SecureObjectRecord`). Switching the column to `LargeBinary` + explicit encryption
+must update exactly these sites:
+
+WRITE (must encrypt explicitly — a miss = PLAINTEXT AT REST, catastrophic):
+- `_save_internal_in_session`: `SecureObjectRow(payload=payload, ...)` (insert) and
+  the `update(...).values(payload=payload, ...)` branch. Encrypt with
+  `associated_data = _AAD_BYTES || namespace || object_key_digest || schema_version`.
+
+READ (must decrypt explicitly with the SAME row AAD — a miss = data loss or, worse,
+ciphertext returned as plaintext):
+- `_record_from_row`: `payload=row.payload` (ORM auto-decrypt today).
+- `_save_internal_in_session`: `previous_metadata.payload` used only for the
+  `payload_hash` fallback — switch to the stored `payload_hash` (no decrypt needed).
+- `iter_records_with_failures`: already explicit via `decrypt_encrypted_bytes_column`
+  (raw text() select) — thread the row AAD.
+- `iter_all_records_raw`: returns ciphertext for the mirror — UNCHANGED (no decrypt).
+- `_secure_object_integrity.py`: `decrypt_encrypted_bytes_column(bytes(raw.payload))`
+  — thread the row AAD.
+
+DECISION (revised): implement S07 (AAD row binding) ALONE; DO NOT add the separate
+read-time `payload_hash` check (S08) in the same change. AAD-alone closes the
+cross-row substitution gap (a moved ciphertext fails the auth tag under the target
+row's AAD) and — unlike the read-time hash check — does NOT intercept the ~7
+attachment/contract corruption tests (which corrupt-then-re-encrypt to exercise
+downstream failure modes; same-row re-encryption still decrypts under the same AAD).
+S08 (revision_id replay detection) is a separate, smaller follow-up.
+
+WHY NOT RUSHED HERE: a single missed write-site encryption writes operator financial
+data to disk in PLAINTEXT; a single missed read-site decryption silently returns
+ciphertext as plaintext or loses all data. This is the one change in the campaign
+whose failure mode is a worse security hole than the gap it closes, so it must run
+on a fresh, focused branch slice with the FULL storage suite (not a subset) gating
+every step. The read-site list above is now exhaustive, de-risking that session.
