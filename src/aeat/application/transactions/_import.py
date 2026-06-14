@@ -13,8 +13,9 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
@@ -32,7 +33,7 @@ _logger = get_logger(__name__)
 class LedgerImportResult(BaseModel):
     """Return value of an orchestrated ledger import with diagnostics."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     imported_count: int
     skipped_count: int

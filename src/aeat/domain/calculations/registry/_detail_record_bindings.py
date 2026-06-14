@@ -7,8 +7,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import RowSetGroupingKind
 from ....core.external_constants import DEFAULT_CURRENCY
 from ._binding_selector_utils import uppercase_alpha_code
@@ -47,7 +48,7 @@ _RelatedPartyRowField = Literal[
 class RelatedPartyOperationObservation(BaseModel):
     """One related-party operation for modelo 232."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
     counterparty_tax_id: str = Field(min_length=1, max_length=64)
@@ -69,7 +70,7 @@ class RelatedPartyOperationObservation(BaseModel):
 
 
 class _RelatedPartySelector(BaseModel):
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     # Only ``row_field`` is a legal fact for related-party-operation
     # bindings; every handler raises on anything else. Promoting to a
@@ -178,7 +179,7 @@ _ForeignAssetRowField = Literal[
 class Modelo720RowObservation(BaseModel):
     """One foreign asset for modelo 720."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
     asset_class_code: str = Field(min_length=1, max_length=4)
@@ -201,7 +202,7 @@ class Modelo720RowObservation(BaseModel):
 
 
 class _ForeignAssetSelector(BaseModel):
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     fact: Literal["row_field"]
     row_field: _ForeignAssetRowField | None = None
@@ -307,7 +308,7 @@ _AtributionRowField = Literal[
 class AtributionMemberObservation(BaseModel):
     """One atribución member for modelo 184."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
     member_tax_id: str = Field(min_length=1, max_length=64)
@@ -337,7 +338,7 @@ class AtributionMemberObservation(BaseModel):
 
 
 class _AtributionSelector(BaseModel):
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     fact: Literal["row_field"]
     row_field: _AtributionRowField | None = None
@@ -422,7 +423,7 @@ _RefundRowField = Literal[
 class RefundOperationObservation(BaseModel):
     """One foreign-MS refund operation for modelo 360."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
     member_state_code: str = Field(min_length=2, max_length=2)
@@ -444,7 +445,7 @@ class RefundOperationObservation(BaseModel):
 
 
 class _RefundSelector(BaseModel):
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     fact: Literal["row_field"]
     row_field: _RefundRowField | None = None

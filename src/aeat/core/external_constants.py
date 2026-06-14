@@ -19,8 +19,9 @@ from importlib.resources import files  # nosemgrep
 from pathlib import Path
 from typing import Any, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ..core import STRICT_FROZEN_CONFIG
 from . import Modelo
 from .errors import CoreValidationError
 
@@ -55,7 +56,7 @@ CLASSIFIED_BY_AUTO: Final[str] = "auto"
 class _Frozen(BaseModel):
     """Strict, frozen base for external-constant submodels."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class AeatDomains(_Frozen):

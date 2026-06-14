@@ -13,8 +13,9 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.errors import AeatError as _AeatError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.money import round_to_cents as _quantize
@@ -84,7 +85,7 @@ class LibertadAmortizacionElection(BaseModel):
             year. Must be strictly positive when set.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     enabled: bool = False
     legal_basis: str | None = None
@@ -128,7 +129,7 @@ class AssetRecord(BaseModel):
         schema_version: Forward-compatible schema version. ``"1"``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     identifier: str = Field(min_length=1)
     description: str = Field(min_length=1)
@@ -196,7 +197,7 @@ class AmortizacionEntry(BaseModel):
         amount: Amortizacion amount (non-negative Decimal).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     asset_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
@@ -211,7 +212,7 @@ class AmortizacionLedger(BaseModel):
         schema_version: Forward-compatible schema version. ``"1"``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: tuple[AmortizacionEntry, ...] = ()
     schema_version: str = ASSETS_SCHEMA_VERSION
@@ -233,7 +234,7 @@ class AssetsLedgerDocument(BaseModel):
         assets: Tuple of :class:`AssetRecord` rows.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: str = ASSETS_SCHEMA_VERSION
     assets: tuple[AssetRecord, ...] = ()

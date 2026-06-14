@@ -17,8 +17,9 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from ..contribuyente import ProfileName as _ProfileName
 from ._errors import BucketEventValidationError
@@ -252,7 +253,7 @@ class BucketEvent(BaseModel):
             short strings; secrets / credentials must not appear.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     event_id: _EventId
     bucket_id: _ProfileName
@@ -283,7 +284,7 @@ class BucketEvent(BaseModel):
 class BucketEventHistoryCatalogue(BaseModel):
     """Immutable catalogue of every bucket event in storage."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     events: Mapping[str, BucketEvent] = Field(default_factory=dict)
 

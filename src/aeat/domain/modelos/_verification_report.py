@@ -21,8 +21,9 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from ._errors import ModeloValidationError
 from ._ids import VerificationReportId
@@ -105,7 +106,7 @@ class ModeloVerificationFinding(BaseModel):
     do not block ``COMPLETE`` status on their own.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: ModeloVerificationFindingKind
     severity: ModeloVerificationFindingSeverity
@@ -145,7 +146,7 @@ class VerificationReport(BaseModel):
     The model validator enforces this invariant bidirectionally.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     verification_report_id: VerificationReportId
     calculation_revision_id: _CalculationRevisionId
@@ -199,7 +200,7 @@ class VerificationReportCatalogue(BaseModel):
     ``__iter__``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     reports: Mapping[str, VerificationReport] = Field(default_factory=dict)
 

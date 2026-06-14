@@ -6,9 +6,9 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import Period
+from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import AggregationSourceKind, CounterpartSourceKind, RowSetGroupingKind
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._bindings_previous_filing import (
@@ -172,7 +172,7 @@ class CasillaObservation(BaseModel):
     legacy ``values`` and ``entries`` views derive from it.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: Decimal
@@ -229,7 +229,7 @@ class RegistryModeloObservation(BaseModel):
     provides a read-only mapping view for downstream consumers.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=8)
     filing_period: Period | None = None
@@ -355,7 +355,7 @@ class _RelationPrefillSelector(BaseModel):
     ``previous_filing``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: str = Field(min_length=1, max_length=8)
     source_output: str | None = Field(default=None, min_length=1)
@@ -382,7 +382,7 @@ class _ProfileSelector(BaseModel):
       these.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     # Scalar shape
     profile_key: str | None = Field(default=None, min_length=1, max_length=128)
@@ -479,7 +479,7 @@ class _ManualInputSelector(BaseModel):
     The two shapes are exclusive at the validator level.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     # casilla shape
     casilla: str | None = Field(default=None, min_length=1, max_length=64)

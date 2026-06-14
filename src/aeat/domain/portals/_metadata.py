@@ -5,8 +5,9 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
 from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
@@ -58,7 +59,7 @@ class PortalMetadata(BaseModel):
         notes: Tuple of translation keys for notes.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     portal: Portal
     url: HttpUrl

@@ -9,6 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
@@ -62,7 +63,7 @@ class InvoiceObservation(BaseModel):
     domestic-IVA modelos can carry their regime classification alongside.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: str = Field(min_length=1, max_length=128)
     party_tax_id: str = Field(min_length=1, max_length=64)
@@ -123,7 +124,7 @@ class InvoiceObservationRequirement(BaseModel):
     minimal set of observations the bindings need.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_ids: tuple[str, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
@@ -136,7 +137,7 @@ class InvoiceObservationRequirement(BaseModel):
 class _InvoiceSelector(BaseModel):
     """Strict validator for the selector mapping of an invoice-source binding."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     fact: _InvoiceFact
     claves: tuple[str, ...] = ()

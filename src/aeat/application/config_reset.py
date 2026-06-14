@@ -23,8 +23,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ..core import STRICT_FROZEN_CONFIG
 from ..core.errors import AeatError
 from ..core.logging import get_logger
 
@@ -67,7 +68,7 @@ class ConfigResetReport(BaseModel):
             during the reset.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     scope: ConfigResetScope
     removed_profile_ids: tuple[str, ...] = Field(default=())

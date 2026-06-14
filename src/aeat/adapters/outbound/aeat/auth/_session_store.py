@@ -12,8 +12,9 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from .....core import STRICT_FROZEN_CONFIG
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.time import now
@@ -27,7 +28,7 @@ _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 class PersistedBrowserSession(BaseModel):
     """Encrypted browser session state plus provider-specific metadata."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(default=_SESSION_VERSION, ge=1)
     storage_state: Mapping[str, object]

@@ -8,8 +8,9 @@ from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from io import StringIO
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
 from ...core.external_constants import JSONL_MIME_TYPE as _JSONL_MIME_TYPE
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -38,7 +39,7 @@ _SHA256_INVALID_REASON = "sha256_invalid"
 class TabularExportResult(BaseModel):
     """Serialized tabular export payload and integrity metadata."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     format: ExportSerializationFormat
     media_type: str = Field(min_length=1)

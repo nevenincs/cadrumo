@@ -30,6 +30,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
 from ._errors import IvaValidationError
 
@@ -247,11 +248,7 @@ def _require_translatable(translatable: tr, field_name: str) -> None:
 class _IvaStrictFrozen(BaseModel):
     """Shared base config: strict validation, immutable, extras forbidden."""
 
-    model_config = ConfigDict(
-        strict=True,
-        frozen=True,
-        extra="forbid",
-    )
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class _IvaStrictMutable(BaseModel):

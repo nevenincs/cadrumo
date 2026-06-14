@@ -5,8 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Literal, override
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ._errors import RegistryValidationError
@@ -45,7 +46,7 @@ __all__ = [
 class WorkbookParityModel(BaseModel):
     """Strict frozen base for workbook parity records."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class WorkbookCellRef(WorkbookParityModel):

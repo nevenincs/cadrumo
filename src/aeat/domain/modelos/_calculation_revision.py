@@ -45,8 +45,9 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import CasillaObservation
@@ -251,7 +252,7 @@ class CalculationRevision(BaseModel):
             to ``DESCARTADO``. ``None`` otherwise.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
@@ -427,7 +428,7 @@ class CalculationRevision(BaseModel):
 class CalculationRevisionCatalogue(BaseModel):
     """Immutable catalogue of every calculation revision in storage."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     revisions: Mapping[str, CalculationRevision] = Field(default_factory=dict)
 

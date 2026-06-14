@@ -29,12 +29,13 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.hashing import sha256_hex
@@ -64,7 +65,7 @@ class VerifyObservation(BaseModel):
     timestamp deduplicate without separate id management.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     observation_id: str = Field(min_length=64, max_length=64)
     bucket_id: BucketId

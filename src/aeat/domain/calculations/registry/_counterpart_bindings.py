@@ -6,8 +6,9 @@ from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, AggregationSourceKind, CounterpartSourceKind
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
@@ -45,7 +46,7 @@ class CounterpartAggregationObservation(BaseModel):
     matched against the declared counterpart-source binding.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: CounterpartSourceKind = Field(
         default=AggregationSourceKind.LEDGER_TRANSACTION,
@@ -104,7 +105,7 @@ class CounterpartAggregationObservation(BaseModel):
 class CounterpartObservationRequirement(BaseModel):
     """Counterpart slice declared by one or more counterpart-source bindings."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_ids: tuple[str, ...] = Field(min_length=1)
     source_kinds: tuple[str, ...] = Field(min_length=1)

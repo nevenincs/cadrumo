@@ -23,8 +23,9 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.errors import AeatError as _AeatError
 from ....core.errors import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
@@ -125,7 +126,7 @@ class MovementRecord(BaseModel):
         schema_version: Forward-compatible schema version. ``"1"``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     movement_id: str = Field(min_length=1)
     movement_date: date
@@ -190,7 +191,7 @@ class StockLayer(BaseModel):
             stock and weighted-average pools).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     sku: str = Field(default="default", min_length=1)
     quantity: Decimal = Field(gt=Decimal("0"))
@@ -215,7 +216,7 @@ class InventoryLedger(BaseModel):
         schema_version: Forward-compatible schema version. ``"1"``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
@@ -250,7 +251,7 @@ class InventoryLedgerDocument(BaseModel):
         ledgers: Tuple of :class:`InventoryLedger` rows.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: str = INVENTORY_SCHEMA_VERSION
     ledgers: tuple[InventoryLedger, ...] = ()
@@ -324,7 +325,7 @@ class InventoryValuationResult(BaseModel):
             the period.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     closing_layers: tuple[StockLayer, ...]
     closing_value: Decimal

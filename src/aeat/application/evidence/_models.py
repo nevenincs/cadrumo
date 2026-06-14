@@ -21,8 +21,9 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -96,7 +97,7 @@ class EvidenceBundleCheckResult(BaseModel):
     diagnostic context is available.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     check: VerificationCheck
     passed: bool
@@ -113,7 +114,7 @@ class EvidenceRecordRef(BaseModel):
     completeness-ratio calculation.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     object_type: BucketEventObjectType
     object_id: str = Field(min_length=1, max_length=128)
@@ -131,7 +132,7 @@ class EvidenceBundle(BaseModel):
     confirm reachability without contacting AEAT or any remote service.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bundle_id: BundleId
     manifest_version: int = Field(ge=1)

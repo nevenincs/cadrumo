@@ -9,9 +9,9 @@ to obtain an ``TaxpayerProfile`` from the active profile bucket.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ValidationError
 
-from ...core import resolve_active_bucket_id
+from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ...core.setup_answers import SetupAnswers
 from ...domain.deadlines._models import (
     IVARegime,
@@ -43,7 +43,7 @@ class WizardStatusReport(BaseModel):
     contract that the repair renderer reads from.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     active_profile: str | None
     profile_ready: bool

@@ -43,7 +43,9 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
+
+from ...core import STRICT_FROZEN_CONFIG
 
 # IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
 # inside ``_iva_rate_to_domestic_category`` and ``classify_invoice_line_for_iva``
@@ -118,7 +120,7 @@ class IvaInvoiceClassification(BaseModel):
             recompute it.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     category: IvaCategory
     rate_kind: IvaRateKind | None

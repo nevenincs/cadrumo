@@ -13,9 +13,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from ....core import Period
+from ....core import STRICT_FROZEN_CONFIG, Period
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
@@ -26,7 +26,7 @@ ScenarioStatus = Literal["match", "mismatch"]
 class RegistryScenarioModel(BaseModel):
     """Strict frozen base for scenario verification records."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class RegistryScenarioExpectedOutput(RegistryScenarioModel):

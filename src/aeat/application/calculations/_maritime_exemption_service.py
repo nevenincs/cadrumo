@@ -39,8 +39,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry import CasillaObservation
 from ...domain.renta._errors import RentaValidationError
 from ...domain.renta._maritime_exemption import (
@@ -63,7 +64,7 @@ class MaritimeExemptionResult(BaseModel):
     persist or transmit only the flat casilla_values view.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
     retmar_mandatory_filing: bool = False
