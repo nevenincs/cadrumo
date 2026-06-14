@@ -588,7 +588,7 @@ def update_manual_transaction_fields(
     operator-driven counterpart to the automatic silent no-op (S14).
 
     ``_preloaded_catalogue`` is an internal optimisation: a caller that has
-    already decrypted the bucket transaction catalogue (e.g.
+    already decrypted the bucket :class:`TransactionCatalogue` (e.g.
     :func:`attach_manual_transaction_evidence`) passes it through so this function
     does not decrypt the whole catalogue a second time. There is no write between
     the caller's load and this one, so the preloaded view is current.

@@ -59,7 +59,7 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 file_complexity: Callable[[str], Any] | None
 try:
@@ -69,6 +69,7 @@ except ImportError:  # pragma: no cover - environment fallback
 else:
     file_complexity = _imported_file_complexity
 
+_UTF_8: Final[str] = "utf-8"
 _TARGET = "src/aeat"
 _PROD_EXCLUDE = "src/aeat/test_*.py,src/aeat/**/test_*.py,src/aeat/**/_test_*.py,src/aeat/tests/*,src/aeat/_data/*"
 _TEST_EXCLUDE = "src/aeat/application/*,src/aeat/domain/*,src/aeat/adapters/*,src/aeat/core/*,src/aeat/_data/*"
@@ -259,7 +260,7 @@ def load_baseline(is_test_run: bool, path: Path = _BASELINE_PATH) -> Baseline:
     """Load the committed baseline for the run scope, or empty when absent."""
     if not path.exists():
         return Baseline.empty()
-    document = json.loads(path.read_text(encoding="utf-8"))
+    document = json.loads(path.read_text(encoding=_UTF_8))
     raw = document.get(_scope_key(is_test_run), {})
     return Baseline(
         cyclomatic={str(k): int(v) for k, v in raw.get("cyclomatic", {}).items()},
@@ -281,7 +282,7 @@ def write_baseline(baseline: Baseline, is_test_run: bool, path: Path = _BASELINE
     """Write the baseline for the run scope, preserving the other scope's data."""
     document: dict[str, object] = {}
     if path.exists():
-        document = json.loads(path.read_text(encoding="utf-8"))
+        document = json.loads(path.read_text(encoding=_UTF_8))
     document["_comment"] = _BASELINE_COMMENT
     document[_scope_key(is_test_run)] = _scope_payload(baseline)
     # Keep a stable top-level ordering: comment, production, tests.
@@ -289,7 +290,7 @@ def write_baseline(baseline: Baseline, is_test_run: bool, path: Path = _BASELINE
     for scope in ("production", "tests"):
         if scope in document:
             ordered[scope] = document[scope]
-    path.write_text(json.dumps(ordered, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(ordered, indent=2, ensure_ascii=False) + "\n", encoding=_UTF_8)
 
 
 @dataclass(frozen=True)

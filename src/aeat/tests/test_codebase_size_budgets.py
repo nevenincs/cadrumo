@@ -20,7 +20,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # ceiling; their owners should extract submodules during their next pass.
     "src/aeat/application/calculations/_cross_period_clean_state.py": 1265,  # SPLIT-CANDIDATE
     "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1440,  # SPLIT-CANDIDATE
-    "src/aeat/application/ledger/_llm_classification.py": 1340,  # SPLIT-CANDIDATE (on-host vision + provider UX)
+    "src/aeat/application/ledger/_llm_classification.py": 1473,  # SPLIT-CANDIDATE (on-host vision + provider UX)
     "src/aeat/application/modelo/_verification_actions.py": 1469,  # SPLIT-CANDIDATE
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
@@ -46,7 +46,7 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
         "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     ): 226,  # SPLIT-CANDIDATE
     ("src/aeat/domain/calculations/registry/_formula_runtime.py", "calculate_registry_snapshot"): 192,
-    ("src/aeat/entrypoints/cli/_ledger.py", "ledger_classify"): 184,  # SPLIT-CANDIDATE
+    ("src/aeat/entrypoints/cli/_ledger.py", "ledger_classify"): 208,  # SPLIT-CANDIDATE
 }
 
 

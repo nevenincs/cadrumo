@@ -1,8 +1,8 @@
 # Set up your taxpayer profile
 
 A profile holds the facts about one taxpayer that every `aeat app` command reads
-and updates. Set one up before you import transactions, calculate a modelo (a
-numbered Spanish tax form), or export a filing.
+and updates. Set one up before you import transactions, calculate a {term}`modelo`,
+or export a filing.
 
 A profile is local. Creating, editing, showing, exporting, or importing a
 profile never submits anything to the Agencia Estatal de Administracion

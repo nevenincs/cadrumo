@@ -43,7 +43,7 @@ __all__ = ["dispatch_autosplit", "split_recommendation_notice"]
 
 
 def split_recommendation_notice(transaction_id: str, *, provider: LLMProvider | None) -> Notice:
-    """Build the typed ``info`` notice recommending an evidence-driven split.
+    """Build the typed ``info`` :class:`Notice` recommending an evidence-driven split.
 
     Fired when the evidence read judged the invoice multi-component. The
     ``suggestion`` is the exact runnable command that actions the split, preserving
