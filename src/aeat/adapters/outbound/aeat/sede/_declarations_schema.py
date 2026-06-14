@@ -5,17 +5,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import Period
 
 __all__ = ["Declaracion"]
 
-_STRICT_FROZEN = ConfigDict(
-    strict=True,
-    frozen=True,
-    extra="forbid",
-)
 
 
 class Declaracion(BaseModel):

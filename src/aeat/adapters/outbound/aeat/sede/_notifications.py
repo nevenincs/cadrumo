@@ -32,8 +32,9 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, Final, Literal
 
 from bs4 import BeautifulSoup
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -57,11 +58,6 @@ _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 _NOTIF_SUMMARY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_summary}"
 _NOTIF_QUERY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_query}"
 
-_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
-    strict=True,
-    frozen=True,
-    extra="forbid",
-)
 
 # Número de certificado: 13 digits. Captured: 2699101808461 / 2596230606502.
 _CERT_RE: Final[re.Pattern[str]] = re.compile(r"^\d{10,16}$")
