@@ -387,13 +387,22 @@ actividades chapter — all 100 matched their expected concept (0 skips), reprod
 2025 per-box grounding. Pinned by `test_inmuebles_rendimiento_grounding` (100 cases). **Retenciones
 / pagos** (0591/0604/0609 → art.99) also fixed (commit `580996288`).
 
-**Still open (inmuebles remainder — separate ganancias pass):** the ganancias-patrimoniales-por-
-transmisión boxes (1816-1915, 1226-1230, 1641 → arts. 33-39), the deducción-obras desglose
-(1393-1440), and the structural/identity data-entry fields (0063-0088) still carry the actividades
-chapter; these need a ganancias-grounding pass with its own per-box article map, NOT the capital-
-inmobiliario chain articles. Plus a separate **2025 over-grounding** artifact: casillas 0043/0044/
-0049 in 2025 carry a 17-article kitchen-sink set (incl. actividades + `orden-hac-277-2026` +
-`rd-439-2007`) — a 2025-authoring imprecision to narrow, tracked distinctly from this defect.
+**Still open (inmuebles remainder — from-scratch ganancias pass, NO ground truth):** the
+ganancias-patrimoniales-por-transmisión boxes (1816-1915, 1226-1230, 1641 → should be arts. 33-39
++ DT 9ª for the abatimiento reduction box 1839), the deducción-obras desglose (1393-1440), and the
+structural/identity data-entry fields (0063-0088) still carry the actividades chapter. CRITICAL: for
+the ganancias boxes there is **no usable ground truth** — verified that BOTH years are wrong: 2024
+cites the actividades chapter, and **2025 cites a 15-article kitchen-sink `{17-32,99}` that still
+OMITS the correct arts. 33-39** (e.g. 1833 "Ganancia patrimonial obtenida", 1826 "Valor de
+transmisión", 1839 "Reducción DT 9ª" all lack any ganancias article). So this is not a copy-from-2025
+fix like the rendimiento chain; it is a from-scratch, BOE/AEAT-verified ganancias-grounding pass
+(arts. 33-39, art. 38 reinversión, DT 9ª) with a per-box article map built and confirmed against the
+law — deliberately NOT rushed here, since no correct reference exists to copy. The whole
+ganancias-patrimoniales grounding is in fact wrong across the registry (all years), a significant
+standalone finding for that dedicated pass. Plus a separate **2025 over-grounding** artifact: the
+same 15-17-article kitchen-sink set (incl. actividades + `orden-hac-277-2026` + `rd-439-2007`)
+appears on 2025 boxes 0043/0044/0049 and the ganancias boxes — a 2025-authoring imprecision to
+narrow in the same pass.
 
 ## Recommendations
 
