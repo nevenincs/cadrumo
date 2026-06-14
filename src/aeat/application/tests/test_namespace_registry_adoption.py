@@ -1,4 +1,19 @@
-"""Guards for application secure-object namespace registry adoption."""
+"""Guard: every production secure-object namespace string is registry-declared.
+
+Feature modules may spell a secure-object namespace as an inline string literal
+rather than importing its registry constant. The domain repositories deliberately
+do so to preserve the lazy-import (json-pipe-safety) contract, which forbids a
+module-level ``aeat.adapters.persistence.storage`` import; the literal is
+duplicated precisely to avoid eagerly pulling the storage package into every CLI
+command's import chain.
+
+This gate therefore does NOT require the constant import. It requires the weaker,
+universally-satisfiable invariant that a namespace literal cannot drift from the
+authority: every ``aeat.*`` namespace string that is assigned to a ``*_NAMESPACE``
+target or passed as a secure-object call's ``namespace`` argument must equal a
+namespace value declared in ``STORAGE_NAMESPACE_REGISTRY``. A literal that matches
+no registered namespace is an unenrolled or typo'd namespace and fails the gate.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
 from ...core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -22,39 +38,43 @@ _SECURE_OBJECT_METHODS = {
     "save",
 }
 
+#: Production trees whose secure-object namespace literals are cross-checked.
+_GUARDED_ROOTS = (
+    "src/aeat/application",
+    "src/aeat/domain",
+    "src/aeat/adapters/outbound",
+)
 
-def test_application_production_secure_object_namespaces_use_registry_definitions() -> None:
+
+def test_production_secure_object_namespace_literals_match_the_registry() -> None:
+    registry_values = _registry_namespace_values()
     offences: list[str] = []
-    for path in _iter_application_production_sources():
+    for path in _iter_guarded_production_sources():
         relative = path.relative_to(PROJECT_ROOT).as_posix()
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        local_namespaces = _collect_local_namespace_bindings(tree)
-        registry_namespaces = _collect_registry_namespace_imports(tree)
-        registry_namespaces.update(_collect_registry_derived_namespace_bindings(tree, registry_namespaces))
         for node in ast.walk(tree):
-            if _assigns_namespace_literal(node):
-                lineno = getattr(node, "lineno", "?")
-                offences.append(f"{relative}:{lineno}: namespace literal assigned outside registry")
-            if isinstance(node, ast.Call) and _passes_namespace_literal(node):
-                lineno = getattr(node, "lineno", "?")
-                offences.append(f"{relative}:{lineno}: namespace literal passed to secure-object call")
-            if (
-                isinstance(node, ast.Call)
-                and (namespace_name := _secure_object_namespace_name(node)) is not None
-                and namespace_name in local_namespaces
-                and namespace_name not in registry_namespaces
-            ):
-                lineno = getattr(node, "lineno", "?")
-                offences.append(
-                    f"{relative}:{lineno}: secure-object namespace constant must come from storage registry",
-                )
+            for value, lineno in _namespace_literal_usages(node):
+                if value not in registry_values:
+                    offences.append(
+                        f"{relative}:{lineno}: secure-object namespace literal {value!r} "
+                        f"is not declared in STORAGE_NAMESPACE_REGISTRY",
+                    )
 
     assert offences == []
 
 
-def _iter_application_production_sources() -> tuple[Path, ...]:
+def _registry_namespace_values() -> frozenset[str]:
+    return frozenset(item.namespace for item in STORAGE_NAMESPACE_REGISTRY.namespaces)
+
+
+def _iter_guarded_production_sources() -> tuple[Path, ...]:
     return tuple(
-        sorted(path for path in (PROJECT_ROOT / "src/aeat/application").rglob("*.py") if not _is_test_surface(path)),
+        sorted(
+            path
+            for root in _GUARDED_ROOTS
+            for path in (PROJECT_ROOT / root).rglob("*.py")
+            if not _is_test_surface(path)
+        ),
     )
 
 
@@ -62,12 +82,34 @@ def _is_test_surface(path: Path) -> bool:
     return path.name.startswith("test_") or path.name == "conftest.py" or "/test_" in path.as_posix()
 
 
-def _assigns_namespace_literal(node: ast.AST) -> bool:
+def _namespace_literal_usages(node: ast.AST) -> list[tuple[str, int]]:
+    """Return ``(value, lineno)`` for every ``aeat.*`` namespace literal used as a
+    secure-object namespace: assigned to a ``namespace`` / ``*_NAMESPACE`` target or
+    passed as a secure-object call's ``namespace`` argument.
+    """
+    usages: list[tuple[str, int]] = []
     if isinstance(node, ast.Assign):
-        return any(_is_namespace_target(target) for target in node.targets) and _is_aeat_namespace_literal(node.value)
-    if isinstance(node, ast.AnnAssign):
-        return _is_namespace_target(node.target) and _is_aeat_namespace_literal(node.value)
-    return False
+        if any(_is_namespace_target(target) for target in node.targets):
+            _append_literal(usages, node.value)
+    elif isinstance(node, ast.AnnAssign):
+        if _is_namespace_target(node.target):
+            _append_literal(usages, node.value)
+    elif isinstance(node, ast.Call):
+        for keyword in node.keywords:
+            if keyword.arg == "namespace":
+                _append_literal(usages, keyword.value)
+        if node.args and _call_name(node.func) in _SECURE_OBJECT_METHODS:
+            _append_literal(usages, node.args[0])
+    return usages
+
+
+def _append_literal(usages: list[tuple[str, int]], node: ast.expr | None) -> None:
+    if (
+        isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value.startswith("aeat.")
+    ):
+        usages.append((node.value, getattr(node, "lineno", -1)))
 
 
 def _is_namespace_target(node: ast.AST) -> bool:
@@ -76,90 +118,6 @@ def _is_namespace_target(node: ast.AST) -> bool:
     if isinstance(node, ast.Attribute):
         return node.attr == "namespace" or node.attr.endswith("_NAMESPACE")
     return False
-
-
-def _passes_namespace_literal(node: ast.Call) -> bool:
-    if any(keyword.arg == "namespace" and _is_aeat_namespace_literal(keyword.value) for keyword in node.keywords):
-        return True
-    if not node.args or not _is_aeat_namespace_literal(node.args[0]):
-        return False
-    return _call_name(node.func) in _SECURE_OBJECT_METHODS
-
-
-def _secure_object_namespace_name(node: ast.Call) -> str | None:
-    for keyword in node.keywords:
-        if keyword.arg == "namespace" and isinstance(keyword.value, ast.Name):
-            return keyword.value.id
-    if node.args and isinstance(node.args[0], ast.Name) and _call_name(node.func) in _SECURE_OBJECT_METHODS:
-        return node.args[0].id
-    return None
-
-
-def _collect_local_namespace_bindings(tree: ast.AST) -> set[str]:
-    names: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
-            names.update(alias.asname or alias.name for alias in node.names if alias.name.endswith("_NAMESPACE"))
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name) and target.id.endswith("_NAMESPACE"):
-                    names.add(target.id)
-        if (
-            isinstance(node, ast.AnnAssign)
-            and isinstance(node.target, ast.Name)
-            and node.target.id.endswith("_NAMESPACE")
-        ):
-            names.add(node.target.id)
-    return names
-
-
-def _collect_registry_namespace_imports(tree: ast.AST) -> set[str]:
-    names: set[str] = set()
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.ImportFrom):
-            continue
-        if not _is_storage_registry_import(node):
-            continue
-        names.update(alias.asname or alias.name for alias in node.names if alias.name.endswith("_NAMESPACE"))
-    return names
-
-
-def _collect_registry_derived_namespace_bindings(tree: ast.AST, registry_namespaces: set[str]) -> set[str]:
-    names: set[str] = set()
-    for node in ast.walk(tree):
-        targets: list[ast.expr] = []
-        value: ast.expr | None = None
-        if isinstance(node, ast.Assign):
-            targets = list(node.targets)
-            value = node.value
-        elif isinstance(node, ast.AnnAssign):
-            targets = [node.target]
-            value = node.value
-        if not _is_registry_namespace_attribute(value, registry_namespaces):
-            continue
-        for target in targets:
-            if isinstance(target, ast.Name) and target.id.endswith("_NAMESPACE"):
-                names.add(target.id)
-    return names
-
-
-def _is_storage_registry_import(node: ast.ImportFrom) -> bool:
-    return node.module == "aeat.adapters.persistence.storage" or (
-        node.level > 0 and node.module == "adapters.persistence.storage"
-    )
-
-
-def _is_registry_namespace_attribute(node: ast.expr | None, registry_namespaces: set[str]) -> bool:
-    return (
-        isinstance(node, ast.Attribute)
-        and node.attr == "namespace"
-        and isinstance(node.value, ast.Name)
-        and node.value.id in registry_namespaces
-    )
-
-
-def _is_aeat_namespace_literal(node: ast.AST | None) -> bool:
-    return isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith("aeat.")
 
 
 def _call_name(node: ast.AST) -> str:
