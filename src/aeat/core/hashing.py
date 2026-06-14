@@ -13,6 +13,12 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Final
+
+# Local UTF-8 constant rather than importing ``UTF_8_ENCODING`` from
+# ``external_constants``: that module imports ``core.errors``, which pulls in
+# ``core.redaction`` -> ``core.hashing``, so the import would close a cycle.
+_UTF_8: Final[str] = "utf-8"
 
 _HASH_CHUNK_SIZE = 65536
 
@@ -33,7 +39,7 @@ def canonical_json_bytes(payload: object) -> bytes:
     content-hash helpers feed into SHA-256 so two semantically equal payloads
     produce the same bytes (and therefore the same content hash / id).
     """
-    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode(_UTF_8)
 
 
 def content_hash_hex(payload: object) -> str:

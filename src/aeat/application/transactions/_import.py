@@ -11,7 +11,6 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import timedelta
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -19,7 +18,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
-from ...domain.transactions import TransactionCatalogue
+from ...domain.transactions import RawTransaction, TransactionCatalogue
 from ...domain.transactions._models import derive_import_fingerprint, derive_transaction_id
 from ._diagnostics import (
     LedgerImportDiagnostic,
@@ -42,7 +41,7 @@ class LedgerImportResult(BaseModel):
 
 def import_ledger_with_diagnostics(
     source_path: Path,
-    raw_transactions: Iterable[Any],
+    raw_transactions: Iterable[RawTransaction],
     existing_catalogue: TransactionCatalogue,
     original_source_path: Path | None = None,
 ) -> LedgerImportResult:

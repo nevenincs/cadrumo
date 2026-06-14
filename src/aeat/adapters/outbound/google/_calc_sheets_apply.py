@@ -971,6 +971,7 @@ def _subfolder_name(plan: SheetExportPlan) -> str:
     return f"{metadata.modelo_id}-{metadata.period.registry_token}-{metadata.filing_year}"
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api drive/sheets Resource (dynamic discovery build).
 def _open_or_create_plan_spreadsheet(
     *,
     drive: Any,
@@ -1009,6 +1010,7 @@ def _open_or_create_plan_spreadsheet(
     return spreadsheet, period_folder_id
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _force_spreadsheet_locale(*, sheets: Any, spreadsheet_id: str) -> None:
     # Force the workbook locale to `en_US` so the formula argument
     # separator stays a comma. Applies on every run so a workbook
@@ -1032,6 +1034,7 @@ def _force_spreadsheet_locale(*, sheets: Any, spreadsheet_id: str) -> None:
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _ensure_plan_tabs_and_grid(
     *,
     sheets: Any,
@@ -1079,6 +1082,7 @@ def _ensure_plan_tabs_and_grid(
     return sheet_id_by_tab
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _clear_and_write_plan_values(
     *,
     sheets: Any,
@@ -1122,6 +1126,7 @@ def _clear_and_write_plan_values(
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _apply_plan_structural_requests(
     *,
     sheets: Any,

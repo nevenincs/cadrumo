@@ -215,17 +215,17 @@ class CensoSnapshotRepository:
         return self._repo.exists(snapshot_id)
 
     def load(self, snapshot_id: str) -> CensoSnapshot:
-        """Load and return the censo snapshot stored under ``snapshot_id``."""
+        """Load and return the :class:`CensoSnapshot` stored under ``snapshot_id``."""
         return self._repo.load(snapshot_id)
 
     def list_snapshots(self) -> tuple[CensoSnapshot, ...]:
-        """Return every censo snapshot for this bucket, oldest capture first."""
+        """Return every :class:`CensoSnapshot` for this bucket, oldest capture first."""
         return tuple(
             sorted(self._repo.list_snapshots(), key=lambda item: (item.captured_at, item.snapshot_id)),
         )
 
     def resolve(self, snapshot_id: str) -> CensoSnapshot:
-        """Resolve an exact or unambiguous-prefix snapshot id to a single snapshot."""
+        """Resolve an exact or unambiguous-prefix snapshot id to a single :class:`CensoSnapshot`."""
         return self._repo.resolve(snapshot_id)
 
     def save(self, snapshot: CensoSnapshot) -> None:
@@ -291,7 +291,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         profile_id: str | None = None,
         state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
     ) -> tuple[CensoSnapshot, ...]:
-        """Return censo snapshots for this bucket, narrowed by profile and state.
+        """Return :class:`CensoSnapshot` records for this bucket, narrowed by profile and state.
 
         Widens the base service's listing with two optional filters. Each
         snapshot moves through a closed lifecycle of ACTIVE, SUPERSEDED, then

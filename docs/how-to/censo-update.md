@@ -1,6 +1,6 @@
 # Link Modelo 036 census information
 
-Use this guide to pull your AEAT census information - the *censo* - into the
+Use this guide to pull your AEAT census information - the {term}`censo` - into the
 active local profile and compare it with what you entered by hand. In Spain, the
 censo is tied to Modelo 036 registration and changes.
 

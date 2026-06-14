@@ -72,7 +72,7 @@ def test_modelo_714_revision_2021_declares_constructs() -> None:
 
 
 def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -> None:
-    """Phase-B: cuota íntegra (29) is computed from the Ley 19/1991 art. 30 escala.
+    """Cuota íntegra (29) is computed from the Ley 19/1991 art. 30 escala.
 
     The downstream chain (base imponible, base liquidable, and the post-cuota
     casillas) stays a manual foundation pending its own official formula
@@ -81,7 +81,7 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
     """
     modelo, _ = _load_modelo_714()
     revision = modelo.revisions["2021-y-siguientes"]
-    # The sole Phase-B formula is the real, art.30-grounded escala — not a placeholder.
+    # The sole cuota-íntegra formula is the real, art.30-grounded escala — not a placeholder.
     escala_formula = next(f for f in revision.formulas if f.target == "patrimonio.cuota-integra")
     assert escala_formula.id == "patrimonio-cuota-integra-escala-estatal"
     assert "ley-19-1991:art-30" in escala_formula.legal_refs
