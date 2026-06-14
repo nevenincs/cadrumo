@@ -9,14 +9,13 @@ or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
     pass
@@ -1015,8 +1014,7 @@ def _provider_transaction_id(command: ManualLedgerTransactionCommand, *, occurre
 def _source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: datetime) -> str:
     payload = command.model_dump(mode="json")
     payload["occurred_at"] = occurred_at.isoformat()
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return sha256_hex(encoded)
+    return content_hash_hex(payload)
 
 
 def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:

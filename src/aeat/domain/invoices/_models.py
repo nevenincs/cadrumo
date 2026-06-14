@@ -12,7 +12,6 @@ Counterparty identity validation is delegated to
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
@@ -23,7 +22,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.parsing._dates import _parse_iso8601_date
 from .._identifiers import canonical_decimal_string
@@ -71,7 +70,7 @@ def derive_invoice_id(
     Returns:
         A lowercase SHA-256 digest that uniquely identifies the invoice.
     """
-    payload = json.dumps(
+    return content_hash_hex(
         {
             "counterparty_tax_id": counterparty_tax_id,
             "currency": currency,
@@ -79,12 +78,8 @@ def derive_invoice_id(
             "invoice_number": invoice_number,
             "issued_at": issued_at.isoformat(),
             "kind": kind.value,
-        },
-        ensure_ascii=True,
-        separators=(",", ":"),
-        sort_keys=True,
+        }
     )
-    return sha256_hex(payload.encode("utf-8"))
 
 
 def _is_hex_digest(value: str, *, length: int) -> bool:

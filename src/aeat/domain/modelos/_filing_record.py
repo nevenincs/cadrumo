@@ -24,7 +24,6 @@ signals. The filing record itself never initiates a live submission.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
@@ -33,7 +32,7 @@ from typing import Annotated, Self, override
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ...core import Period
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
@@ -136,8 +135,7 @@ def derive_filing_record_id(
     }
     if member_nif is not None:
         payload["member_nif"] = member_nif.strip()
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return sha256_hex(encoded)
+    return content_hash_hex(payload)
 
 
 class ModeloRecord(BaseModel):

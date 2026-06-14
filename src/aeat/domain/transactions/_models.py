@@ -32,7 +32,7 @@ from pydantic_core import core_schema
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
 from ...core.time import now
@@ -69,18 +69,14 @@ def derive_transaction_id(raw: RawTransaction) -> str:
         effective value date, amount, and narrative fields.
     """
     effective_value_date = raw.value_date or raw.booked_date
-    payload = json.dumps(
+    return content_hash_hex(
         {
             "amount": canonical_decimal_string(raw.amount),
             "narrative": raw.description,
             "provider_id": raw.transaction_id,
             "value_date": effective_value_date.isoformat(),
-        },
-        ensure_ascii=True,
-        separators=(",", ":"),
-        sort_keys=True,
+        }
     )
-    return sha256_hex(payload.encode("utf-8"))
 
 
 _REFERENCE_NOISE = re.compile(r"[^0-9a-z]+")
@@ -122,17 +118,13 @@ def derive_import_fingerprint(raw: RawTransaction) -> str:
     format) recognises the row as already present.
     """
     effective_value_date = raw.value_date or raw.booked_date
-    payload = json.dumps(
+    return content_hash_hex(
         {
             "amount": canonical_decimal_string(raw.amount),
             "reference": normalise_movement_reference(raw.description),
             "value_date": effective_value_date.isoformat(),
-        },
-        ensure_ascii=True,
-        separators=(",", ":"),
-        sort_keys=True,
+        }
     )
-    return sha256_hex(payload.encode("utf-8"))
 
 
 def derive_movement_day_key(raw: RawTransaction) -> str:
