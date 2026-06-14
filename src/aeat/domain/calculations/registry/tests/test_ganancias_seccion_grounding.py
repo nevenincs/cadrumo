@@ -28,6 +28,9 @@ _GROUNDED_GANANCIA_SECTIONS: dict[str, tuple[int, ...]] = {
     "elemento_criptomoneda": (2022, 2023, 2024),
     "elemento_inmueble": (2022, 2023, 2024),  # gp_otros_inmuebles (ganancias otros inmuebles)
     "elemento_patrimonial": (2021, 2022, 2023, 2024),  # gp_otros_elementos
+    # exención por reinversión sections (ganancia foundation + art. 38)
+    "exencion_rentas_vitalicias_res": (2021, 2022, 2023, 2024),
+    "exencion_nuevas_empresas_res": (2021, 2022, 2023, 2024),
 }
 
 
