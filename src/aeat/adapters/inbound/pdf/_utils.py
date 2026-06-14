@@ -7,14 +7,13 @@ helper being re-implemented in each per-format module.
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from pathlib import Path
 
+from ....core.hashing import sha256_file as _core_sha256_file
 from ....domain.justificante import PdfModeloImportError
 
 _logger = logging.getLogger(__name__)
-_HASH_CHUNK_SIZE = 65536
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 _SOURCE_REFERENCE_ROOT = Path(".secure-source")
 
@@ -22,15 +21,12 @@ _SOURCE_REFERENCE_ROOT = Path(".secure-source")
 def sha256_file(path: Path) -> str:
     """Return the lowercase hex SHA-256 of the bytes at ``path``.
 
-    Reads in 64 KiB chunks so PDFs larger than process memory still hash
-    cleanly. Use this instead of inline ``hashlib.sha256(path.read_bytes())``
-    when you need a stable digest of an on-disk artefact.
+    Delegates to the canonical chunked file digest, wrapping the ``OSError``
+    raised on an unreadable artefact in the PDF-import error so callers see the
+    translated message rather than a raw OS failure.
     """
-    digest = hashlib.sha256()
     try:
-        with path.open("rb") as fh:
-            for chunk in iter(lambda: fh.read(_HASH_CHUNK_SIZE), b""):
-                digest.update(chunk)
+        return _core_sha256_file(path)
     except OSError as exc:
         _logger.debug(
             "sha256_file: source=%s failure=%s",
@@ -42,7 +38,6 @@ def sha256_file(path: Path) -> str:
             context={"path": _INPUT_PDF_SOURCE_LABEL},
             translated_message="adapters.inbound.pdf.errors.hash_failed",
         ) from None
-    return digest.hexdigest()
 
 
 def source_pdf_reference_path(source_pdf_sha256: str) -> Path:
