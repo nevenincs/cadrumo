@@ -307,6 +307,27 @@ casillas not necessarily resolved at 0023's evaluation point. AEAT's own program
 ordering (an architectural question) before authoring the formula. Tracked as a future
 codification candidate; the casilla remains a grounded MANUAL input meanwhile.
 
+### V9 (GROUNDING DRIFT CLUSTER — FIXED) — M100 rendimientos-del-trabajo section
+
+The 0023 fix exposed a whole-section drift: the 2021-2024 M100 revisions had grounded the
+entire rendimientos-del-trabajo gasto/reducción sub-section to the `art-17` rendimientos-
+íntegros chapter instead of the specific binding article. Confirmed against the canonical
+2025 revision (which grounds each correctly) and the reviewed art-18/art-19/art-20 legal
+entries, then aligned 2021-2024:
+- **0011** (reducciones por irregularidad — label literally cites "artículo 18") → `art-18`.
+- **0013** (cotizaciones SS, art. 19.2.a), **0014/0015** (cuotas sindicato/colegio, art.
+  19.2.d), **0016** (defensa jurídica, art. 19.2.e), **0017** (rendimiento neto previo),
+  **0019** (otros gastos), **0020** (incremento movilidad geográfica), **0021** (incremento
+  discapacidad activos) → `art-19`.
+- **0023** (reducción art. 20) → `art-20` (V8).
+Casillas 0002-0010/0012 (rendimientos íntegros) correctly retain `art-17`. Total 16 casillas
+× 4 years corrected. `test_trabajo_reduccion_art20_grounded` now pins the full cluster (64
+cases across 2020-2025, barring the art-17 regression); 80 registry referential/legal tests
+green. Commits `80a87357f` (0023), `ad0835b14` (0019-0021), `13412f6d2` (0011/0013-0017).
+None of these touched a compiled regulatory VALUE — they are MANUAL-input casillas whose
+binding-article citation had drifted; no calc output changed, but the provenance surface
+(`registry-calculation-legal-grounding`) is now faithful per the AEAT DR section structure.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
