@@ -435,6 +435,17 @@ strictly per-year, per-box, label-confirmed (the proven-safe pattern), classifyi
 economic concept (ganancia vs deducción vs imputación) before assigning an article — never a bulk or
 cross-year operation. This is the single most renumbering-hostile surface found in the campaign.
 
+**FIXED — capital-inmobiliario amortización-base block (commit `48451f2b0`, 132 casillas).** The
+remaining capital-inmobiliario boxes (ids 100-156 in the inmueble section: intereses invertidos,
+gastos de reparación, valor catastral, importe/gastos de adquisición, mejoras, base de amortización,
+acquisition-type claves, fechas/días arrendado — 33/year × 4) were re-grounded to art. 23 (gastos
+deducibles incl. amortización), and the retención box 0153 to art. 99 + art. 101 + rd-439. The safe
+disambiguator was the **id range** (id < 1000 in the inmueble section = capital inmobiliario; ganancia
+boxes are ≥ 1226) plus a ganancia-label guard (0 hits) — this range is stable across years (33
+boxes/year, no 1xxx-style renumbering). Pinned by `test_capital_inmobiliario_range_never_cites_actividades`.
+With this, the WHOLE capital-inmobiliario section (rendimiento chain + amortización base + retención)
+is grounded; only the heterogeneous ganancia (1226-1915) minefield remains for the documented per-year pass.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
