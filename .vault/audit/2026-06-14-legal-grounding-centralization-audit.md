@@ -347,6 +347,29 @@ económicas, ganancias patrimoniales, deducciones) comparing each 2021-2024 casi
 article to its binding provision, fixing only the genuine-drift (a) cases and pinning each
 section with a gate. Do NOT diff-and-align; verify each casilla's binding article first.
 
+### V11 (CROSS-SECTION COPY-PASTE DEFECT — capital mobiliario FIXED; inmuebles/retenciones open)
+
+Executing V10's careful audit surfaced a genuinely-wrong (disjoint-grounding) class distinct
+from the over-broad enrichment noise: a **cross-section copy-paste defect** where whole sections
+in 2021-2024 carry the **actividades económicas** chapter `{art-27,28,30,31,32}` and *none* of
+their own provisions. The filter that isolates it: 2024 and 2025 ley-arts are disjoint AND the
+2024 box's own label matches its section (excluding the `0058`-style renumbering false-positives,
+where same id = different box across years — a proven hazard that bars naive id-mapping).
+
+**Fixed — capital mobiliario (29 boxes × 4 years = 116 casillas):** every
+`rdto_capital_mobiliario` box cited the actividades chapter. Re-grounded per-box from each box's
+**own label** within-year (ingreso→art-25, gastos/reducción→art-26, neto/reducido/suma→25+26) —
+a classification that independently *reproduces the canonical 2025 per-box grounding* on every
+matched box (strong cross-check), and is renumbering-immune. Pinned by
+`test_capital_mobiliario_grounding`. Commit `192e10b24`.
+
+**Open (same defect, careful follow-up):** the **inmuebles** section (~24 boxes citing the
+actividades chapter, correct grounding arts. 22/23/24 + 85 for imputación) and the **retenciones
+/ pagos a cuenta** boxes (0591/0604/0609, correct grounding art. 99) — fix per-box within-year by
+label, same method. Plus a separate **2025 over-grounding** artifact: casillas 0043/0044/0049 in
+2025 carry a 17-article kitchen-sink set (incl. actividades + `orden-hac-277-2026` + `rd-439-2007`)
+— a 2025-authoring imprecision to narrow, tracked distinctly from the 2021-2024 copy-paste defect.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
