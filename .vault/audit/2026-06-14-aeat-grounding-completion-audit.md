@@ -1,13 +1,14 @@
 ---
 tags:
-  - '#audit'
-  - '#aeat-grounding-completion'
+  - "#audit"
+  - "#aeat-grounding-completion"
 date: '2026-06-14'
-modified: '2026-06-14'
 related:
   - "[[2026-06-14-aeat-grounding-completion-plan]]"
+promoted_to:
+  - 'rule:legal-grounding-verifies-bundled-authoritative-corpus'
+modified: '2026-06-14'
 ---
-
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #audit) and one feature tag.
      Replace aeat-grounding-completion with a kebab-case feature tag, e.g. #foo-bar.
