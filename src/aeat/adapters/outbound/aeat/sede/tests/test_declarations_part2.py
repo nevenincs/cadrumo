@@ -38,12 +38,10 @@ from ._declarations_support import (
     _observed_casillas_from_submitted_file,
     _read_guard_policy_from_snapshot,
     _submitted_file_payload,
-    _temporary_sensitive_pdf_path,
     calculate_registry_snapshot,
     date,
     datetime,
     hashlib,
-    os,
     parse_export_payload,
     registry_observation_from_filed_declaration,
     resolve_export_layout,
@@ -479,19 +477,13 @@ class TestSubmittedFileObservation:
 
 
 class TestDeclaracionPdfObservation:
-    """Verify declaration-copy PDFs are interpreted through registry profiles."""
+    """Verify declaration-copy PDFs are interpreted through registry profiles.
 
-    def test_sensitive_pdf_temp_path_is_private_and_unlinked(self) -> None:
-        body = _declaration_pdf_payload({"03": Decimal("1")})
-
-        with _temporary_sensitive_pdf_path(body) as path:
-            captured = path
-            assert path.exists()
-            assert path.read_bytes() == body
-            if os.name == "posix":
-                assert path.stat().st_mode & 0o777 == 0o600
-
-        assert not captured.exists()
+    The bbox-anchored extraction path is exercised entirely in memory: the
+    decrypted declaration bytes are parsed via ``parse_declaracion_bytes`` and
+    never written to a plaintext scratch file
+    (sensitive-financial-data-secure-storage-only).
+    """
 
     def test_declaration_pdf_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_130_snapshot()
