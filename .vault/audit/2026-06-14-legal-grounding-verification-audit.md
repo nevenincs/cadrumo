@@ -94,6 +94,20 @@ Both figures are correct AND already centralised in the curated `external_consta
 re-export layer — the right pattern per `aeat-schema-central-config`. No gap; the
 earlier concern came from reading the service wrapper rather than the engine.
 
+### F2d (verified correct — stale comment fixed) — M200 micro-empresa DT 44ª tipos
+
+`_data/registry/aeat/modelos/200/.../parameters.toml` carries the micro-empresa
+(INCN < €1M) two-tranche scale: 2024 = 23% flat; 2025 = 21% (0-50k) / 22% (rest);
+2026 = 19% / 21% — grounded `legal_refs = ["ley-27-2014:art-29", "ley-27-2014:dt-44"]`.
+Online verification against LIS DT 44ª (Ley 7/2024) and the AEAT INFORMA 2025
+confirms every figure. The registry values are correct (this is the same surface the
+`registry-calculation-legal-grounding` rule records as previously corrected from a
+wrong 0.17/0.20). One residual drift fixed: the `formulas.toml` explanatory comment
+still read "(17/20 in 2025, 19/21 in 2026)" — 17/20 is the permanent destination
+rate, NOT the 2025 transitional figure; corrected to "(21/22 in 2025, 19/21 in
+2026)" so the comment cannot mislead a future author into reverting the correct
+parameter. Comment-only; the BOE-correct parameter values were unchanged.
+
 ### F3 (centralisation-mechanism observation, not wrong values) — two parallel legal-grounding mechanisms
 
 The codebase carries legal grounding two ways: the registry
