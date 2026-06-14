@@ -189,7 +189,8 @@ required_text = [
 #      Cooperativas fiscalmente protegidas and entidades sin fines
 #      lucrativos retain their own special-rate brackets even when INCN
 #      < 1M. The two-tranche micro-empresa scale
-#      `is.modelo-200.tipo-gravamen-pyme` (17/20 in 2025, 19/21 in 2026)
+#      `is.modelo-200.tipo-gravamen-pyme` (21/22 in 2025, 19/21 in 2026,
+#      per LIS DT 44ª transitional schedule, Ley 7/2024)
 #      applies to the micro-empresa threshold (INCN < 1M AND 2025+
 #      periods); for 2024 the pyme bracket holds a single flat 23 %
 #      row which is identical in value to the ERD bracket — the ERD
