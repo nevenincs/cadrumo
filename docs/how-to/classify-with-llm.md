@@ -254,6 +254,11 @@ you explicitly use `--reaffirm`.
 
 ## Read attached evidence
 
+For the full evidence workflow, including the on-host vision-model setup, the
+consent rules, and the privacy guarantees, see
+[Classify a transaction from its invoice with a model](classify-with-llm-evidence.md).
+This section is the short version.
+
 Attach a purchase invoice or receipt to a transaction, then let the model read it
 while classifying. The document bytes always stay in secure storage; nothing is
 written to a temporary file. How the document is read depends on its kind.
