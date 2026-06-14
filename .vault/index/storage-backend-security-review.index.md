@@ -19,8 +19,10 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S13]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P07-S15]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P07-S16]]'
+  - '[[2026-06-14-storage-backend-security-review-W04-P08-S17]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P08-S18]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P09-S19]]'
+  - '[[2026-06-14-storage-backend-security-review-W04-P09-S20]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P10-S21]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P11-S24]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P12-S26]]'
@@ -54,8 +56,10 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W03-P06-S13` - Re-read and re-validate the holder PID immediately before the stale-lock reclaim unlink
 - `2026-06-14-storage-backend-security-review-W04-P07-S15` - Replace the resolved absolute source_path provenance with a relative filename or sha-only reference in the raw transaction model
 - `2026-06-14-storage-backend-security-review-W04-P07-S16` - Add a cross-OS transaction provenance roundtrip test proving rehydration does not mutate the persisted shape
+- `2026-06-14-storage-backend-security-review-W04-P08-S17` - Move exported_at out of the equality-bearing portable bundle payload
 - `2026-06-14-storage-backend-security-review-W04-P08-S18` - Persist basename-only paths in the bucket exported and imported event payloads
 - `2026-06-14-storage-backend-security-review-W04-P09-S19` - Compare the manifest label against the record display_name in verify_profile_integrity and raise on divergence
+- `2026-06-14-storage-backend-security-review-W04-P09-S20` - Implement the manifest-digest cross-check over a timestamp-independent projection or correct the contract docstring
 - `2026-06-14-storage-backend-security-review-W05-P10-S21` - Route every domain and outbound secure-object namespace literal through its STORAGE_NAMESPACE_REGISTRY definition constant
 - `2026-06-14-storage-backend-security-review-W05-P11-S24` - Rebind the private bucket-submodule imports in profile health and overview to the bucket package surface
 - `2026-06-14-storage-backend-security-review-W05-P12-S26` - Replace the three private secure-objects-for-bucket route helpers with the canonical secure_object_repository_for_bucket wrapper

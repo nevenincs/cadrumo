@@ -174,7 +174,7 @@ Replace absolute source_path with relative or sha-only provenance and prove cros
 
 Remove non-deterministic bundle timestamps and host-absolute paths from the audit log.
 
-- [ ] `W04.P08.S17` - Move exported_at out of the equality-bearing portable bundle payload; `src/aeat/domain/user_profile/_portable_export.py`.
+- [x] `W04.P08.S17` - Move exported_at out of the equality-bearing portable bundle payload; `src/aeat/domain/user_profile/_portable_export.py`.
 - [x] `W04.P08.S18` - Persist basename-only paths in the bucket exported and imported event payloads; `src/aeat/application/bucket_maintenance/_service.py`.
 
 ### Phase `W04.P09` - rename integrity and digest contract
@@ -182,7 +182,7 @@ Remove non-deterministic bundle timestamps and host-absolute paths from the audi
 Detect cross-store rename drift and resolve the manifest-digest doc-vs-code gap.
 
 - [x] `W04.P09.S19` - Compare the manifest label against the record display_name in verify_profile_integrity and raise on divergence; `src/aeat/application/user_profile/_profile_repository.py`.
-- [ ] `W04.P09.S20` - Implement the manifest-digest cross-check over a timestamp-independent projection or correct the contract docstring; `src/aeat/application/bucket_maintenance/_manifest_digest.py`.
+- [x] `W04.P09.S20` - Implement the manifest-digest cross-check over a timestamp-independent projection or correct the contract docstring; `src/aeat/application/bucket_maintenance/_manifest_digest.py`.
 
 ## Wave `W05` - standardisation structure enrollment
 
