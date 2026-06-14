@@ -1098,6 +1098,7 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+      profile_integrity_label_mismatch: 'El almacenamiento del perfil no es coherente: la etiqueta del manifiesto no coincide con el registro seguro.'
   verification:
     errors:
       missing_binding_values: La verificación del registro requiere valores de vinculación
@@ -2650,6 +2651,11 @@ cli:
         --llm con un proveedor.
       taxable_base_help: Importe de base imponible
       vision_model_help: 'Sustituye el modelo de visión local de Ollama para leer una factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo configurado.'
+      auto_split_help: 'Lee la factura adjunta y, cuando es multicomponente, la divide en hijos base/IVA por línea; si no, la clasifica en su sitio (requiere --read-evidence).'
+      split_recommended_message: 'La factura adjunta parece contener varias líneas de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en hijos de base e IVA declarables de forma independiente.'
+      split_recommended_label: 'división recomendada'
+      auto_split_single_line: 'factura de una sola línea: no procede división; --apply la clasifica en su sitio'
+      auto_split_needs_evidence: '--auto-split requiere --read-evidence: la decisión de división se lee de la factura.'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
@@ -2896,6 +2902,7 @@ cli:
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la división de la transacción
       classification_dropped: 'La clasificación del padre %{classification} no se copió a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita reclasificarse con ''aeat app ledger classify''.'
+      vision_model_help: 'Sustituye el modelo de visión local de Ollama para leer una factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo configurado.'
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el perfil activo

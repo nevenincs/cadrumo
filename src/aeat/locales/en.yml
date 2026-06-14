@@ -1017,6 +1017,7 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      profile_integrity_label_mismatch: 'Profile storage is inconsistent: the manifest label does not match the secure record.'
   verification:
     errors:
       missing_binding_values: Registry verification requires external binding values.
@@ -2471,6 +2472,11 @@ cli:
         --llm with a provider.
       taxable_base_help: Taxable base amount
       vision_model_help: 'Override the local Ollama vision model for an image/scanned-invoice read (e.g. qwen2.5vl:7b); defaults to the configured model.'
+      auto_split_help: 'Read the attached invoice and, when it is multi-component, split it into per-line base/IVA children; otherwise classify it in place (requires --read-evidence).'
+      split_recommended_message: 'The attached invoice appears to carry multiple rate or category lines. Re-run with --auto-split to separate them into independently-filable base and IVA children.'
+      split_recommended_label: 'split recommended'
+      auto_split_single_line: 'single-line invoice: no split warranted; --apply classifies it in place'
+      auto_split_needs_evidence: '--auto-split requires --read-evidence: the split decision is read from the invoice.'
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence
@@ -2715,6 +2721,7 @@ cli:
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
       classification_dropped: 'Parent classification %{classification} was not copied to the split children; each child is NOT_YET_PROCESSED and needs re-classification with ''aeat app ledger classify''.'
+      vision_model_help: 'Override the local Ollama vision model for an image/scanned-invoice read (e.g. qwen2.5vl:7b); defaults to the configured model.'
     stash:
       actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile

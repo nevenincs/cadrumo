@@ -997,6 +997,7 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
+      profile_integrity_label_mismatch: 'A profiltárolás inkonzisztens: a manifest felirata nem egyezik a biztonságos rekorddal.'
   verification:
     errors:
       missing_binding_values: A registry-ellenőrzéshez külső kötési értékek szükségesek.
@@ -2538,6 +2539,11 @@ cli:
         ki a kategoriat.'
       taxable_base_help: Adóköteles alapösszeg.
       vision_model_help: 'Felülírja a helyi Ollama látómodellt egy beszkennelt vagy képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított modellt használja.'
+      auto_split_help: 'Beolvassa a csatolt számlát, és ha többkomponensű, soronkénti alap/áfa gyermekekre bontja; egyébként helyben osztályozza (a --read-evidence szükséges).'
+      auto_split_needs_evidence: 'A --auto-split igényli a --read-evidence kapcsolót: a bontási döntés a számláról olvasódik be.'
+      split_recommended_message: 'A csatolt számla több, eltérő kulcsú vagy kategóriájú sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan bevallható alap- és áfa-gyermekekre váljon szét.'
+      split_recommended_label: 'bontás javasolt'
+      auto_split_single_line: 'egysoros számla: nincs szükség bontásra; a --apply helyben osztályozza'
     doclink:
       actor_help: Operátor címke.
       help: Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított bizonyítékként
@@ -2800,6 +2806,7 @@ cli:
       yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
         N gyermek tranzakciót).
       classification_dropped: 'A szülő %{classification} besorolása nem öröklődött át a felosztás gyermekeire; minden gyermek NOT_YET_PROCESSED állapotú, és újra kell osztályozni az ''aeat app ledger classify'' paranccsal.'
+      vision_model_help: 'Felülírja a helyi Ollama látómodellt egy beszkennelt vagy képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított modellt használja.'
     stash:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       help: Egyetlen főkönyvi tranzakció elrejtése az aktív profilban.

@@ -24,6 +24,7 @@ from ...domain.user_profile import ProfileNotFoundError
 
 _INTEGRITY_IDENTITY_DRIFT_MESSAGE = "profile physical stores disagree on identity"
 _INTEGRITY_STATUS_DRIFT_MESSAGE = "profile physical stores disagree on lifecycle status"
+_INTEGRITY_LABEL_DRIFT_MESSAGE = "profile physical stores disagree on label"
 
 
 class ProfileIntegrityError(ProfileNotFoundError):
@@ -44,6 +45,8 @@ def verify_profile_integrity(
     record_profile_id: str,
     manifest_status: str,
     record_status: str,
+    manifest_label: str,
+    record_display_name: str,
 ) -> None:
     """Assert every physical store agrees on the profile UUID and status.
 
@@ -68,6 +71,14 @@ def verify_profile_integrity(
     tombstoned record would let ``list`` / ``switch`` serve a deleted
     profile — so it must be surfaced, never served.
 
+    The display label is denormalised the same way: ``rename`` writes the
+    encrypted record ``display_name`` and the plaintext manifest ``label`` as
+    two copies of one value. A crash between those two writes leaves them
+    divergent, and without this gate ``load`` would silently serve the stale
+    manifest label over the renamed record forever, with no signal for
+    ``repair``. ``manifest_label`` and ``record_display_name`` are compared by
+    their string value and a disagreement is surfaced, never served.
+
     A mismatch raises :class:`ProfileIntegrityError` with sanitized
     context naming the disagreeing stores so a ``repair`` surface can
     act on a concrete delta without echoing raw profile identifiers.
@@ -79,10 +90,13 @@ def verify_profile_integrity(
         record_profile_id: The ``profile_id`` from the decrypted record.
         manifest_status: The lifecycle status mirrored in the manifest.
         record_status: The authoritative lifecycle status from the record.
+        manifest_label: The display label mirrored in the manifest.
+        record_display_name: The authoritative display label from the record.
 
     Raises:
-        ProfileIntegrityError: If any store disagrees on the UUID, or
-            the manifest and record disagree on the lifecycle status.
+        ProfileIntegrityError: If any store disagrees on the UUID, the
+            manifest and record disagree on the lifecycle status, or they
+            disagree on the display label.
     """
     mismatches: list[str] = []
     if directory_name != profile_id:
@@ -102,6 +116,12 @@ def verify_profile_integrity(
             _INTEGRITY_STATUS_DRIFT_MESSAGE,
             translated_message="application.user_profile.errors.profile_integrity_status_mismatch",
             context={"mismatches": ("manifest_status", "secure_record_status")},
+        )
+    if manifest_label != record_display_name:
+        raise ProfileIntegrityError(
+            _INTEGRITY_LABEL_DRIFT_MESSAGE,
+            translated_message="application.user_profile.errors.profile_integrity_label_mismatch",
+            context={"mismatches": ("manifest_label", "secure_record_display_name")},
         )
 
 
