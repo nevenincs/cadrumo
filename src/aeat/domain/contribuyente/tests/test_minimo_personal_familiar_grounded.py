@@ -7,9 +7,11 @@ fails loudly. It is the durable consumer that keeps the per-year mínimo
 parameters honest (the menor-tres 3.000-vs-2.800 defect — a bundled-corpus error
 that had propagated to the parameter — is exactly what this gate catches).
 
-Amounts confirmed against the AEAT IRPF manual cuadro-resumen for 2024 and 2025
-(both identical): contribuyente 5.550 / +1.150 (>65) / +1.400 (>75); descendientes
-2.400 / 2.700 / 4.000 / 4.500; menor de 3 años +2.800; ascendientes 1.150 / +1.400.
+Amounts confirmed against the AEAT IRPF manuals for the ejercicios 2020-2025 (all
+identical — the figures have been stable since the Ley 26/2014 reform): contribuyente
+5.550 / +1.150 (>65) / +1.400 (>75); descendientes 2.400 / 2.700 / 4.000 / 4.500;
+menor de 3 años +2.800; ascendientes 1.150 / +1.400; discapacidad 3.000 / 9.000 /
++3.000 (gastos de asistencia).
 """
 
 from __future__ import annotations
@@ -27,6 +29,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # (param-id stem, AEAT-confirmed euro amount). The stem is suffixed with the year.
 _MINIMO_AMOUNTS: tuple[tuple[str, str], ...] = (
     ("minimo-contribuyente-base", "5550"),
+    ("minimo-contribuyente-edad-65-74", "1150"),
+    ("minimo-contribuyente-edad-75", "1400"),
     ("minimo-descendientes-primer-hijo", "2400"),
     ("minimo-descendientes-segundo-hijo", "2700"),
     ("minimo-descendientes-tercer-hijo", "4000"),
@@ -41,7 +45,7 @@ _MINIMO_AMOUNTS: tuple[tuple[str, str], ...] = (
 )
 
 
-@pytest.mark.parametrize("year", [2024, 2025])
+@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
 @pytest.mark.parametrize(("stem", "expected"), _MINIMO_AMOUNTS)
 def test_minimo_personal_familiar_amount_matches_aeat(year: int, stem: str, expected: str) -> None:
     value = read_parameter(

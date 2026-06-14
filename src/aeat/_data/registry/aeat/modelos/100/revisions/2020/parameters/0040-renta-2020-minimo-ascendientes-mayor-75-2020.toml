@@ -1,0 +1,16 @@
+[[revisions."2020".parameters]]
+id = "renta-2020-minimo-ascendientes-mayor-75-2020"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-59"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por ascendientes"]
+
+[[revisions."2020".parameters.values]]
+value = "1400"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
