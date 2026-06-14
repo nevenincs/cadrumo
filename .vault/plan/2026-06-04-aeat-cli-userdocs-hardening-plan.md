@@ -73,9 +73,9 @@ Make the first operator decision points plain: identity, taxpayer type, censo fa
 
 Help a user create a complete profile without turning profile setup into a flag catalogue.
 
-- [ ] `W03.P05.S15` - Rewrite the profile setup guide around choices a user recognizes: DNI for Spanish citizens, NIE for foreign individuals, NIF/CIF for tax identifiers, name fields, taxpayer type, activity, postcode, IRPF category, IVA regime, and output language; `docs/how-to/profile-setup.md`.
-- [ ] `W03.P05.S16` - Add a "check your profile facts before calculating" recipe using `aeat config profile status`, `show`, `validate`, and `preflight`; `profile how-to docs`.
-- [ ] `W03.P05.S17` - Document how wrong or missing profile facts affect modelo applicability without restating every profile flag; `profile how-to docs`.
+- [x] `W03.P05.S15` - Rewrite the profile setup guide around choices a user recognizes: DNI for Spanish citizens, NIE for foreign individuals, NIF/CIF for tax identifiers, name fields, taxpayer type, activity, postcode, IRPF category, IVA regime, and output language; `docs/how-to/profile-setup.md`.
+- [x] `W03.P05.S16` - Add a "check your profile facts before calculating" recipe using `aeat config profile status`, `show`, `validate`, and `preflight`; `profile how-to docs`.
+- [x] `W03.P05.S17` - Document how wrong or missing profile facts affect modelo applicability without restating every profile flag; `profile how-to docs`.
 - [x] `W03.P05.S53` - Normalize DNI, NIE, NIF, and CIF terminology across user-facing docs and profile tax-id CLI help so Spanish citizens are not routed toward NIE-first language; `docs/ and src/aeat/locales`.
 
 ### Phase `W03.P06` - Censo and enrolment
