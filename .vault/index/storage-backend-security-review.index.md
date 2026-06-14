@@ -25,6 +25,7 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W04-P09-S19]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P09-S20]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P10-S21]]'
+  - '[[2026-06-14-storage-backend-security-review-W05-P10-S22]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P11-S23]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P11-S24]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P12-S26]]'
@@ -67,6 +68,7 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W04-P09-S19` - Compare the manifest label against the record display_name in verify_profile_integrity and raise on divergence
 - `2026-06-14-storage-backend-security-review-W04-P09-S20` - Implement the manifest-digest cross-check over a timestamp-independent projection or correct the contract docstring
 - `2026-06-14-storage-backend-security-review-W05-P10-S21` - Route every domain and outbound secure-object namespace literal through its STORAGE_NAMESPACE_REGISTRY definition constant
+- `2026-06-14-storage-backend-security-review-W05-P10-S22` - Extend the namespace adoption gate to scan domain and adapters outbound in addition to application
 - `2026-06-14-storage-backend-security-review-W05-P11-S23` - Resolve the fincas domain hexagonal inversion by relocating the ORM-coupled repository or exposing a typed boundary facade and fix the stale docstring path
 - `2026-06-14-storage-backend-security-review-W05-P11-S24` - Rebind the private bucket-submodule imports in profile health and overview to the bucket package surface
 - `2026-06-14-storage-backend-security-review-W05-P12-S26` - Replace the three private secure-objects-for-bucket route helpers with the canonical secure_object_repository_for_bucket wrapper

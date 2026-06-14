@@ -192,8 +192,8 @@ Route every namespace literal through the registry and extend the adoption gate,
 
 Route domain and outbound namespace literals through the registry and extend the adoption gate.
 
-- [ ] `W05.P10.S21` - Route every domain and outbound secure-object namespace literal through its STORAGE_NAMESPACE_REGISTRY definition constant; `src/aeat/domain/`.
-- [ ] `W05.P10.S22` - Extend the namespace adoption gate to scan domain and adapters outbound in addition to application; `src/aeat/application/tests/test_namespace_registry_adoption.py`.
+- [x] `W05.P10.S21` - Route every domain and outbound secure-object namespace literal through its STORAGE_NAMESPACE_REGISTRY definition constant; `src/aeat/domain/`.
+- [x] `W05.P10.S22` - Extend the namespace adoption gate to scan domain and adapters outbound in addition to application; `src/aeat/application/tests/test_namespace_registry_adoption.py`.
 
 ### Phase `W05.P11` - hexagonal and import hygiene
 
