@@ -233,7 +233,7 @@ def _minimo_descendientes_estatal(descendientes: tuple[DescendantInfo, ...], fil
 
 
 def _minimo_menor_tres_estatal(descendientes: tuple[DescendantInfo, ...], filing_year: int) -> Decimal:
-    """Compute Art. 58.3 bajo-3-años supplement for casilla (part estatal).
+    """Compute Art. 58.2 bajo-3-años supplement for casilla (part estatal).
 
     Registry amount for each qualifying descendant.
     """

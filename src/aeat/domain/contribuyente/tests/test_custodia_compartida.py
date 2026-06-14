@@ -1,4 +1,4 @@
-"""Tests for Art. 59 LIRPF custodia compartida prorrata 50 % axis.
+"""Tests for Art. 61 LIRPF custodia compartida prorrata 50 % axis.
 
 Covers:
 - DescendantInfo.custodia_compartida field: default False, accepted True
@@ -106,7 +106,7 @@ def test_prorrata_factor_is_one_for_ineligible_with_custodia() -> None:
 
 
 def _mínimo_primer_hijo_with_prorrata(family: RentaFamilyProfile, filing_year: int) -> Decimal:
-    """Compute mínimo primer hijo applying Art. 59 prorrata.
+    """Compute mínimo primer hijo applying Art. 61 prorrata.
 
     Each eligible descendant contributes _MINIMO_1 (full year) multiplied by
     the per-descendant prorrata factor (0.5 when custodia compartida).
@@ -120,7 +120,7 @@ def _mínimo_primer_hijo_with_prorrata(family: RentaFamilyProfile, filing_year: 
 
 
 def test_two_progenitors_each_get_50_pct_minimo() -> None:
-    """Art. 59 LIRPF: shared custody → each progenitor claims 50 % of the mínimo.
+    """Art. 61 LIRPF: shared custody → each progenitor claims 50 % of the mínimo.
 
     Expected: each progenitor profile has 1 eligible custodia child and each
     receives €1,200 (50 % of €2,400) as their mínimo primer hijo contribution.
