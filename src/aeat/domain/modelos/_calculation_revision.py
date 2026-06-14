@@ -49,6 +49,7 @@ from typing import Annotated, override
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ...core.hashing import sha256_hex
+from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import CasillaObservation
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
@@ -94,13 +95,6 @@ _CasillaKey = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
-
-
-def _canonical_decimal(value: Decimal) -> str:
-    """Stable string form of a Decimal for hash inputs."""
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")
 
 
 def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, object]]:

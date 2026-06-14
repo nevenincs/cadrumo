@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from ...core.time import now as _utc_now
+from ...domain._identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import InputKind, ModeloRevision, calculate_registry_snapshot
@@ -192,13 +193,6 @@ _BUCKET_AGGREGATION_LOCK_SOURCES = frozenset(
 # --binding for one of these reaches the engine; for every other mesh-owned
 # (ledger) source it is refused.
 _CALLER_OVERRIDABLE_CARRY_SOURCES = frozenset({"previous_filing", "relation_prefill"})
-
-
-def _canonical_decimal_str(value: Decimal) -> str:
-    """Stable string form of a Decimal for content-addressing."""
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")
 
 
 def calculate_modelo_revision(
