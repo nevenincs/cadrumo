@@ -47,9 +47,7 @@ def _load_modelo_714() -> tuple[ModeloDefinition, RegistryCatalogues]:
 def test_modelo_714_cuota_integra_escala_matches_boe_table(base_liquidable: str, expected_cuota: str) -> None:
     """The art. 30 escala formula computes casilla 29 exactly per the BOE table."""
     modelo, catalogues = _load_modelo_714()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={"patrimonio.base-liquidable": Decimal(base_liquidable)},
@@ -127,9 +125,7 @@ def test_modelo_714_reduccion_limite_80_is_80pct_of_cuota_integra(
 ) -> None:
     """Casilla 39 (Ley 19/1991 art. 31 suelo) computes as 80% of the cuota integra."""
     modelo, catalogues = _load_modelo_714()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={"patrimonio.base-liquidable": Decimal(base_liquidable)},

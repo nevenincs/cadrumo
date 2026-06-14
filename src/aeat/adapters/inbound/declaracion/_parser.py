@@ -218,9 +218,7 @@ def _parse_declaracion_pages(
     _validate_snapshot_matches_template(snapshot, template)
     profile = _select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
     tax_id = _extract_tax_id(text)
-    values = _extract_profile_values(
-        pages, profile, source_pdf_path=source_path, pdf_bytes=pdf_bytes
-    )
+    values = _extract_profile_values(pages, profile, source_pdf_path=source_path, pdf_bytes=pdf_bytes)
     _logger.debug(
         "parse_declaracion: source=<input-pdf> modelo=%s año=%s period=%s revision=%s profile=%s",
         template.modelo,

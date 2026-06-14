@@ -72,7 +72,6 @@ _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
 _MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
 
 
-
 def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool, bool]:
     """Return ``(diverges, advisory)`` for a payload's revision stamp.
 

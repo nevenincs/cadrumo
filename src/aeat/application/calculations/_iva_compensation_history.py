@@ -296,9 +296,7 @@ def iva_compensation_annual_summary_from_filed_observation(
         )
     values = _decimal_casilla_values(observation)
     last_period = _resolve_casilla_value(values, "iva.anual.compensacion-ultimo-periodo-97") or _ZERO
-    generated_not_in_last = (
-        _resolve_casilla_value(values, "iva.anual.compensacion-generada-ejercicio-no-97") or _ZERO
-    )
+    generated_not_in_last = _resolve_casilla_value(values, "iva.anual.compensacion-generada-ejercicio-no-97") or _ZERO
     source_artefact_sha256 = next(
         (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
         None,
