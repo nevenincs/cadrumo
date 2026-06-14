@@ -48,7 +48,12 @@ class RawProvenance(BaseModel):
     """Per-row provenance pinned to one :class:`RawTransaction`.
 
     Attributes:
-        source_path: Resolved absolute path to the source file.
+        source_path: Basename of the source file (the filename only, never a
+            resolved absolute path). The file's content identity is carried by
+            ``source_sha256``; storing only the basename keeps provenance
+            human-readable without baking a host-specific absolute path into the
+            persisted and exported record (which would leak the operator's
+            directory layout and mutate across operating systems on rehydration).
         source_sha256: 64-character lowercase hex SHA-256 digest of the
             source file.
         source_row_index: One-based row index within the source file.
@@ -69,9 +74,21 @@ class RawProvenance(BaseModel):
 
     @field_validator("source_path")
     @classmethod
-    def _resolve_source_path(cls, value: Path) -> Path:
-        """Return the absolute resolved path for ``source_path``."""
-        return value.resolve()
+    def _basename_source_path(cls, value: Path) -> Path:
+        """Reduce ``source_path`` to its basename.
+
+        The persisted/exported record must not carry a resolved absolute path:
+        it would leak the operator's directory layout and, because the prior
+        ``.resolve()`` re-ran on rehydration, mutate a POSIX-authored path into
+        a malformed Windows path (and vice versa), breaking strict cross-OS
+        roundtrip equality. The basename is OS-neutral and idempotent: extracting
+        it at ingest runs on the authoring host where the separator matches, and
+        re-validating a stored bare filename is a no-op on every platform.
+        """
+        name = value.name
+        # A path with no filename component (e.g. a bare directory) keeps its
+        # string form rather than collapsing to an empty name.
+        return Path(name) if name else value
 
     @field_validator("source_sha256")
     @classmethod

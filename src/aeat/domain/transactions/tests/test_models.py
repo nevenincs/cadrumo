@@ -56,6 +56,42 @@ def _sample_raw(
     )
 
 
+def test_provenance_source_path_is_stored_as_basename_only() -> None:
+    """An absolute source path is reduced to its basename, leaking no directory."""
+    provenance = RawProvenance(
+        source_path=Path("/home/alice/private-statements/bank-2026.csv"),
+        source_sha256="b" * 64,
+        source_row_index=1,
+        source_format=SourceFormat.CSV,
+        ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+        provider_name="CSV provider",
+    )
+    assert provenance.source_path == Path("bank-2026.csv")
+    serialised = provenance.model_dump_json()
+    assert "alice" not in serialised
+    assert "private-statements" not in serialised
+
+
+def test_provenance_basename_survives_rehydration_unchanged() -> None:
+    """Re-validating a persisted bare filename is a no-op (no cross-OS mutation).
+
+    The prior ``.resolve()`` validator re-anchored the path on every load, so a
+    POSIX-authored bundle imported on Windows mutated the stored value and broke
+    strict roundtrip equality. The basename is platform-neutral and idempotent.
+    """
+    original = RawProvenance(
+        source_path=Path("/var/data/movements.csv"),
+        source_sha256="c" * 64,
+        source_row_index=3,
+        source_format=SourceFormat.CSV,
+        ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+        provider_name="CSV provider",
+    )
+    rehydrated = RawProvenance.model_validate_json(original.model_dump_json())
+    assert rehydrated == original
+    assert rehydrated.source_path == Path("movements.csv")
+
+
 def test_transaction_id_hash_is_stable_for_same_identity_tuple() -> None:
     """Equal identity tuples must derive the same transaction ID."""
     raw_a = _sample_raw(source_row_index=1, counterparty="First counterparty")
