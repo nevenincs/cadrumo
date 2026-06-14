@@ -209,7 +209,7 @@ Consume the canonical wrapper, delete the v1 bundle branch, and confirm the SQL 
 
 - [x] `W05.P12.S26` - Replace the three private secure-objects-for-bucket route helpers with the canonical secure_object_repository_for_bucket wrapper; `src/aeat/domain/invoices/_repository.py`.
 - [x] `W05.P12.S27` - Delete the v1 portable-bundle compat branch and drop version 1 from the supported set per no-legacy-compatibility; `src/aeat/application/user_profile/_bundle.py`.
-- [ ] `W05.P12.S28` - Confirm the SQL secure_objects store is covered by the bucket-DEK rewrap rotation path and document or extend the rotation contract; `src/aeat/adapters/persistence/storage/_rotation.py`.
+- [x] `W05.P12.S28` - Confirm the SQL secure_objects store is covered by the bucket-DEK rewrap rotation path and document or extend the rotation contract; `src/aeat/adapters/persistence/storage/_rotation.py`.
 
 ## Wave `W06` - performance
 

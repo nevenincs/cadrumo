@@ -27,6 +27,7 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W05-P11-S24]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P12-S26]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P12-S27]]'
+  - '[[2026-06-14-storage-backend-security-review-W05-P12-S28]]'
   - '[[2026-06-14-storage-backend-security-review-W06-P13-S29]]'
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-06-14-storage-backend-security-review-plan]]'
@@ -66,6 +67,7 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W05-P11-S24` - Rebind the private bucket-submodule imports in profile health and overview to the bucket package surface
 - `2026-06-14-storage-backend-security-review-W05-P12-S26` - Replace the three private secure-objects-for-bucket route helpers with the canonical secure_object_repository_for_bucket wrapper
 - `2026-06-14-storage-backend-security-review-W05-P12-S27` - Delete the v1 portable-bundle compat branch and drop version 1 from the supported set per no-legacy-compatibility
+- `2026-06-14-storage-backend-security-review-W05-P12-S28` - Confirm the SQL secure_objects store is covered by the bucket-DEK rewrap rotation path and document or extend the rotation contract
 - `2026-06-14-storage-backend-security-review-W06-P13-S29` - Remove the attach_evidence double full-catalogue decrypt by threading one decrypted catalogue through the command
 
 ### plan
