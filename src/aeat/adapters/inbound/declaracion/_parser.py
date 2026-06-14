@@ -7,6 +7,7 @@ against a :class:`RegistrySnapshot`, which the parser loads on demand through
 
 from __future__ import annotations
 
+import io
 import re
 from dataclasses import dataclass
 from decimal import Decimal
@@ -170,6 +171,7 @@ def parse_declaracion_bytes(
         source_path=source_pdf_path,
         source_pdf_path=source_pdf_path,
         source_pdf_sha256=digest,
+        pdf_bytes=pdf_bytes,
         modelo_override=modelo_override,
         template_revision_override=template_revision_override,
         año_override=año_override,
@@ -195,6 +197,7 @@ def _parse_declaracion_pages(
     registry_snapshot: RegistrySnapshot | None,
     registry_root: Path | None,
     source_root: Path | None,
+    pdf_bytes: bytes | None = None,
 ) -> DeclaracionObservation:
     text = "\n".join(pages)
 
@@ -215,7 +218,9 @@ def _parse_declaracion_pages(
     _validate_snapshot_matches_template(snapshot, template)
     profile = _select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
     tax_id = _extract_tax_id(text)
-    values = _extract_profile_values(pages, profile, source_pdf_path=source_path)
+    values = _extract_profile_values(
+        pages, profile, source_pdf_path=source_path, pdf_bytes=pdf_bytes
+    )
     _logger.debug(
         "parse_declaracion: source=<input-pdf> modelo=%s año=%s period=%s revision=%s profile=%s",
         template.modelo,
@@ -515,12 +520,18 @@ def _extract_profile_values(
     profile: ExtractionProfileDefinition,
     *,
     source_pdf_path: Path | None = None,
+    pdf_bytes: bytes | None = None,
 ) -> tuple[ExtractedCasilla, ...]:
-    # Load word-position data lazily only when bbox_anchored targets exist
+    # Load word-position data lazily only when bbox_anchored targets exist.
+    # Prefer in-memory bytes so decrypted declaration PDFs never touch disk;
+    # fall back to a real source file only when bytes are not supplied.
     pages_words: tuple[list[_PdfWord], ...] | None = None
     has_bbox_targets = any(t.match_strategy == "bbox_anchored" for t in profile.target_casillas)
-    if has_bbox_targets and source_pdf_path is not None and source_pdf_path.is_file():
-        pages_words = _extract_pages_words(source_pdf_path)
+    if has_bbox_targets:
+        if pdf_bytes is not None:
+            pages_words = _extract_pages_words_from_bytes(pdf_bytes)
+        elif source_pdf_path is not None and source_pdf_path.is_file():
+            pages_words = _extract_pages_words(source_pdf_path)
 
     values: list[ExtractedCasilla] = []
     missing: list[str] = []
@@ -565,6 +576,27 @@ def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
 
     try:
         with pdfplumber.open(pdf_path) as pdf:
+            return tuple(page.extract_words() or [] for page in pdf.pages)
+    except Exception as exc:
+        _logger.debug(
+            "pdfplumber word extraction failed for <input-pdf>: %s",
+            type(exc).__name__,
+            exc_info=True,
+        )
+        return ()
+
+
+def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[_PdfWord], ...]:
+    """Extract per-page word-position dicts from in-memory PDF bytes.
+
+    Mirrors :func:`_extract_pages_words` but opens an in-memory
+    :class:`io.BytesIO` stream so decrypted declaration bytes never have to be
+    written to a plaintext scratch file to satisfy ``pdfplumber.open``.
+    """
+    import pdfplumber
+
+    try:
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
             return tuple(page.extract_words() or [] for page in pdf.pages)
     except Exception as exc:
         _logger.debug(

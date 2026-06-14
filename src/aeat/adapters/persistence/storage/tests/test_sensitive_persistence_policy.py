@@ -265,19 +265,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "sidecar_path.write_text",
     ): "local-filesystem storage adapter writes the non-sensitive object-metadata sidecar",
     (
-        "src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py",
-        "_write_all_fd",
-        "os.write",
-    ): "declaration-PDF parser bridge writes through a pre-created private fd",
-    (
-        "src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py",
-        "_temporary_sensitive_pdf_path",
-        "tempfile.mkstemp",
-    ): (
-        "short-lived declaration-PDF parser bridge for bbox extraction; private tempfile is unlinked immediately "
-        "after parsing"
-    ),
-    (
         "src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
         "_dump_wallet_diagnostic",
         "write_text",
