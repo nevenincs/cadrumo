@@ -46,6 +46,12 @@ class UserProfilePortableExport(BaseModel):
     model_config = _STRICT_FROZEN
 
     bundle_schema_version: int = Field(default=2, ge=1)
+    # Provenance metadata, deliberately NOT content-addressable: two exports of
+    # identical bucket state differ by this timestamp. That is acceptable because
+    # the sealed-archive transport is itself non-deterministic by design (a random
+    # AEAD nonce per seal), so making the bundle byte-stable would not yield a
+    # content-addressable archive. The strict roundtrip gate compares re-loaded
+    # repository objects, not this wrapper, so the timestamp does not affect it.
     exported_at: datetime = Field(default_factory=utc_now)
     profile: UserProfileRecord
 
