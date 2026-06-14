@@ -67,15 +67,10 @@ def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     the runtime verifies the active session and constructs the
     bucket-local secure-object repository.
     """
-    from ...adapters.persistence.storage import inspect_bucket_storage_runtime
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...core.config import load_settings
 
-    settings = load_settings()
-    runtime = inspect_bucket_storage_runtime(
-        bucket_id,
-        settings,
-    )
-    return runtime.secure_object_repository()
+    return secure_object_repository_for_bucket(bucket_id, load_settings())
 
 
 def _clear_output_language_cache() -> None:

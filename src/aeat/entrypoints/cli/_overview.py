@@ -588,7 +588,7 @@ def _overview_calendar_all_profiles(
     calls :func:`build_overview_calendar` once per profile. Unreadable
     buckets are skipped with a warning line; they do not abort the scan.
     """
-    from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+    from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
     from ...application.user_profile import (
         ProfileRepository,
         profile_storage_session,

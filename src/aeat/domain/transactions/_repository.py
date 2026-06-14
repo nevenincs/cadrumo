@@ -36,10 +36,10 @@ TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return the runtime-created secure-object repository for ``bucket_id``."""
-    from ...adapters.persistence.storage import inspect_bucket_storage_runtime
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...core.config import load_settings
 
-    return inspect_bucket_storage_runtime(bucket_id, load_settings()).secure_object_repository()
+    return secure_object_repository_for_bucket(bucket_id, load_settings())
 
 
 def transaction_catalogue_object_key(bucket_id: str) -> str:
