@@ -61,6 +61,16 @@ LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_enabled"
 """Settings field backing the pytest-only live-read opt-in."""
 LIVE_READ_TEST_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_ENABLED"
 """Environment variable backing :attr:`Settings.aeat_live_tests_enabled`."""
+LIVE_READ_TEST_OPT_IN_VALUE = "1"
+"""The only literal value that opts in to live tests.
+
+Strict by design: ``"true"``/``"yes"``/``"on"`` are rejected so the opt-in
+surface cannot widen through bool coercion. This is the single canonical
+constant the :class:`Settings` predicates compare against."""
+LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_google"
+"""Settings field backing the pytest-only Google live-test opt-in."""
+LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_GOOGLE"
+"""Environment variable backing :attr:`Settings.aeat_live_tests_google`."""
 
 
 class Settings(AeatTimeoutSettings):
@@ -421,6 +431,30 @@ class Settings(AeatTimeoutSettings):
         default="",
         description="Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real external services",
     )
+    aeat_live_tests_google: str = Field(
+        default="",
+        description=(
+            "Opt-in flag (set to '1') to run @pytest.mark.aeat_live Google "
+            "(OAuth / Drive) tests against real Google services"
+        ),
+    )
+
+    @property
+    def live_tests_enabled(self) -> bool:
+        """Whether the pytest live-read opt-in is enabled (strict literal ``"1"``).
+
+        Single source of truth for the live-test gate: both the test-side
+        ``aeat.tests.live_gate`` helpers and the production
+        :class:`aeat.core.access_gate.AeatAccessGate` read this property, so
+        the strict-match safety rule (only ``"1"`` opts in; ``"true"`` /
+        ``"yes"`` / ``"on"`` are rejected) lives in exactly one place.
+        """
+        return self.aeat_live_tests_enabled == LIVE_READ_TEST_OPT_IN_VALUE
+
+    @property
+    def live_tests_google_enabled(self) -> bool:
+        """Whether the Google (OAuth / Drive) live-test opt-in is enabled (strict ``"1"``)."""
+        return self.aeat_live_tests_google == LIVE_READ_TEST_OPT_IN_VALUE
 
     # ── Replay IPC ──────────────────────────────────────────────────────────
     # Set by ``aeat.core.observability._replay.replay_run`` on the parent

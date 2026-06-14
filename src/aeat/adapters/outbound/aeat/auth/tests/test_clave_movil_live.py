@@ -14,6 +14,7 @@ from urllib.parse import quote
 import pytest
 
 from ......core.config import Settings
+from ......tests.live_gate import requires_live_enabled
 from .....persistence.storage import get_master_key_provider
 from ...browser import default_browser_session_factory
 from .. import (
@@ -28,8 +29,7 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
 
 def _settings_or_skip() -> Settings:
-    if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":
-        pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
+    requires_live_enabled()
     return Settings()
 
 
