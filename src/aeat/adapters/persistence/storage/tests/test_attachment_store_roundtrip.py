@@ -24,8 +24,12 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from ..sql._orm import SecureObjectRow
 
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
@@ -45,7 +49,7 @@ from ..sql.engine import get_engine
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def _row_payload_aad(row: object) -> bytes:
+def _row_payload_aad(row: SecureObjectRow) -> bytes:
     """Reconstruct the row's payload AEAD associated data for corruption probes.
 
     The secure-object payload is encrypted with the row identity bound into the
@@ -56,11 +60,11 @@ def _row_payload_aad(row: object) -> bytes:
     return secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
 
 
-def _decrypt_row_content(row: object) -> bytes:
+def _decrypt_row_content(row: SecureObjectRow) -> bytes:
     return decrypt_secure_object_payload(bytes(row.payload), associated_data=_row_payload_aad(row))
 
 
-def _encrypt_row_content(row: object, content: bytes) -> bytes:
+def _encrypt_row_content(row: SecureObjectRow, content: bytes) -> bytes:
     return encrypt_secure_object_payload(content, associated_data=_row_payload_aad(row))
 
 

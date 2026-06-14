@@ -13,11 +13,10 @@ It skips cleanly when the cert env is not fully configured.
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 from ......core.config import Settings
+from ......tests.live_gate import requires_live_enabled
 from .. import (
     AeatAuthenticator,
     AeatLoginAssertion,
@@ -39,8 +38,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     separate test below only when an injectable browser factory is
     available.
     """
-    if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":
-        pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
+    requires_live_enabled()
     settings = Settings()
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
         pytest.skip("AEAT certificate env vars are not fully configured")
@@ -81,8 +79,7 @@ async def test_aeat_authenticator_full_live_flow() -> None:
     Uses the real ``BrowserSession`` factory via a thin adapter so
     zero monkey-patching is involved.
     """
-    if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":
-        pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
+    requires_live_enabled()
     settings = Settings()
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
         pytest.skip("AEAT certificate env vars are not fully configured")

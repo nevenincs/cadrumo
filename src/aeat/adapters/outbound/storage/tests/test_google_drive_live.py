@@ -31,6 +31,7 @@ from datetime import UTC, datetime
 import pytest
 
 from .....core.logging import get_logger
+from .....tests.live_gate import requires_live_enabled, requires_live_google_enabled
 from .. import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     OutboundStorageNotFoundError,
@@ -57,10 +58,8 @@ def _live_profile() -> str:
 
 
 def _skip_unless_drive_configured() -> None:
-    if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":
-        pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
-    if os.environ.get("AEAT_LIVE_TESTS_GOOGLE") != "1":
-        pytest.skip("AEAT_LIVE_TESTS_GOOGLE is not 1")
+    requires_live_enabled()
+    requires_live_google_enabled()
     from .....core.config import load_settings
 
     settings = load_settings()

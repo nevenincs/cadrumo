@@ -123,7 +123,7 @@ class AeatAccessGate:
                 ``Settings.aeat_live_tests_enabled`` is not ``"1"``.
         """
         if self.live_read_requires_test_opt_in(pytest_current_test=pytest_current_test) and (
-            self.settings.aeat_live_tests_enabled != "1"
+            not self.settings.live_tests_enabled
         ):
             raise AeatLiveReadNotEnabledError(
                 f"pytest live AEAT reads require {_LIVE_READ_TEST_OPT_IN_ENV_VAR} set to the literal "
