@@ -150,6 +150,15 @@ class LLMClassificationSuggestion(BaseModel):
     confidence: Decimal
     reason: str = Field(min_length=1)
     evidence_id: str | None = None
+    multiple_components: bool | None = None
+    """Carried from the evidence read: True when the model judged the invoice to
+    carry multiple distinct rate/category lines warranting a split. Drives the
+    non-blocking split recommendation on the CLI; ``None`` when no evidence was read."""
+
+    @property
+    def recommends_split(self) -> bool:
+        """True when the evidence read flagged the invoice as multi-component."""
+        return self.multiple_components is True
 
 
 class LLMProviderAvailability(BaseModel):
@@ -448,6 +457,7 @@ def suggest_llm_classification(
         confidence=response.confidence,
         reason=response.reason,
         evidence_id=evidence.reference if evidence is not None else None,
+        multiple_components=response.multiple_components,
     )
 
 
@@ -616,6 +626,15 @@ class LLMSaturatedSuggestion(BaseModel):
     derivation_note: str = ""
     evidence_id: str | None = None
     evidence_advisory: str = ""
+    multiple_components: bool | None = None
+    """Carried from the evidence read: True when the model judged the invoice
+    multi-component (multiple distinct rate/category lines). Drives the non-blocking
+    split recommendation; ``None`` when no evidence was read."""
+
+    @property
+    def recommends_split(self) -> bool:
+        """True when the evidence read flagged the invoice as multi-component."""
+        return self.multiple_components is True
 
 
 def _resolve_saturation_classifier(provider: LLMProvider) -> LLMClassifier:
@@ -778,6 +797,7 @@ def saturate_llm_classification(
         derivation_note=derivation_note,
         evidence_id=evidence_reference,
         evidence_advisory=printed_iva_advisory(evidence_text, iva_amount) or "",
+        multiple_components=response.multiple_components,
     )
 
 
@@ -1050,6 +1070,16 @@ class LLMSplitSuggestion(BaseModel):
     children: tuple[LLMSplitChildSuggestion, ...]
     evidence_id: str | None = None
 
+    @property
+    def recommends_split(self) -> bool:
+        """True when the model proposed more than one child (a genuine split).
+
+        A single-child proposal is the "no split warranted" verdict — the model
+        read the invoice and judged it a single line/rate. The CLI surfaces that
+        verdict for review and never drives :func:`apply_evidence_split` with it.
+        """
+        return len(self.children) > 1
+
 
 class LLMSplitApplyResult(BaseModel):
     """Outcome of applying a reviewed evidence-driven split."""
@@ -1257,6 +1287,14 @@ def apply_evidence_split(
         TransactionNotFoundError: When the parent transaction id is unknown.
         TransactionValidationError: When the split invariants are violated.
     """
+    if not suggestion.recommends_split:
+        # A single-child suggestion is the no-split verdict; applying it as a
+        # one-way split is degenerate. The CLI routes this to single-transaction
+        # classification instead — never here.
+        raise TransactionValidationError(
+            "this proposal is a no-split verdict (one line); classify the transaction instead of splitting it",
+            context={"transaction_id": suggestion.transaction_id, "child_count": len(suggestion.children)},
+        )
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     parent = repository.load().get(suggestion.transaction_id)
     if parent is None:
@@ -1329,6 +1367,90 @@ def apply_evidence_split(
     )
 
 
+def apply_evidence_classification(
+    suggestion: LLMSplitSuggestion,
+    *,
+    bucket_id: str,
+    actor: str = "operator",
+    source_command: str = "aeat app ledger classify --read-evidence --auto-split --apply",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Apply a no-split (single-child) evidence suggestion in place on the parent.
+
+    The auto-split router uses one model call — the split proposer — to decide
+    whether to split. When the proposer returns a single child (the "no split
+    warranted" verdict), that child already carries the model-selected expense and
+    IVA categories and the registry-DERIVED ``taxable_base`` / ``iva_rate`` /
+    ``iva_amount`` for the whole gross. This stamps them on the parent through the
+    single-writer :func:`update_manual_transaction_fields`, with the parent invoice's
+    evidence link and the ``llm:<model>`` provenance — exactly the per-child write
+    :func:`apply_evidence_split` performs, but without splitting. The model emits no
+    euro amount or regulated number (``llm-selects-system-derives-tax-numbers``).
+
+    Args:
+        suggestion: A no-split :class:`LLMSplitSuggestion` (exactly one child).
+        bucket_id: Active profile bucket id.
+        actor: Operator identity for the audit event.
+        source_command: Source-command label recording the operator's verb.
+        transaction_repository: Injected catalogue repository.
+        bucket_event_repository: Injected audit-event repository.
+        occurred_at: Override clock for deterministic tests.
+
+    Returns:
+        The :class:`ManualLedgerTransactionResult` for the in-place classification.
+
+    Raises:
+        TransactionValidationError: When the suggestion recommends a split (use
+            :func:`apply_evidence_split`).
+        TransactionNotFoundError: When the transaction id is unknown.
+    """
+    if suggestion.recommends_split:
+        raise TransactionValidationError(
+            "this proposal recommends a split; apply it with apply_evidence_split, not in place",
+            context={"transaction_id": suggestion.transaction_id, "child_count": len(suggestion.children)},
+        )
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    parent = repository.load().get(suggestion.transaction_id)
+    if parent is None:
+        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+    child = suggestion.children[0]
+    patch_fields: dict[str, object] = {"business_classification": BusinessClassification.BUSINESS}
+    if parent.purchase_invoice_evidence_id is not None:
+        patch_fields["purchase_invoice_evidence_id"] = parent.purchase_invoice_evidence_id
+    elif parent.attachment_ids:
+        patch_fields["attachment_ids"] = parent.attachment_ids
+    if child.category is not None:
+        patch_fields["category_id"] = child.category.value
+    if child.iva_category is not None:
+        patch_fields["iva_category"] = child.iva_category
+    if child.rate_derivable:
+        patch_fields["taxable_base"] = child.taxable_base
+        patch_fields["iva_rate"] = child.iva_rate
+        patch_fields["iva_amount"] = child.iva_amount
+    patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
+    result = update_manual_transaction_fields(
+        bucket_id=bucket_id,
+        transaction_id=parent.transaction_id,
+        patch=patch,
+        actor=actor,
+        source_command=source_command,
+        classified_by_override=suggestion.provenance,
+        transaction_repository=repository,
+        bucket_event_repository=bucket_event_repository,
+        occurred_at=occurred_at,
+    )
+    _logger.info(
+        "llm auto-classify (no split): transaction=%s classified_by=%s category=%s iva_category=%s",
+        parent.transaction_id,
+        suggestion.provenance,
+        child.category.value if child.category is not None else "",
+        child.iva_category.value if child.iva_category is not None else "",
+    )
+    return result
+
+
 __all__ = [
     "LLMClassificationSuggestion",
     "LLMProvider",
@@ -1338,6 +1460,7 @@ __all__ = [
     "LLMSplitChildSuggestion",
     "LLMSplitSuggestion",
     "OperatorIvaDerivationResult",
+    "apply_evidence_classification",
     "apply_evidence_split",
     "apply_llm_classification",
     "apply_saturated_llm_classification",

@@ -31,6 +31,11 @@ def test_negative_gross_rejected() -> None:
         derive_child_amounts(Decimal("-50.00"), [Decimal("0.5"), Decimal("0.5")])
 
 
-def test_single_child_rejected() -> None:
-    with pytest.raises(ValueError, match="at least two"):
-        derive_child_amounts(Decimal("10.00"), [Decimal("1.0")])
+def test_single_child_is_the_whole_gross() -> None:
+    # The no-split verdict: one child at proportion 1.0 receives the whole gross.
+    assert derive_child_amounts(Decimal("10.00"), [Decimal("1.0")]) == (Decimal("10.00"),)
+
+
+def test_empty_proportions_rejected() -> None:
+    with pytest.raises(ValueError, match="at least one child"):
+        derive_child_amounts(Decimal("10.00"), [])

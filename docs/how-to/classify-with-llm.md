@@ -152,6 +152,47 @@ Apply a saturated suggestion after review:
 aeat app ledger classify <transaction-id> --llm claude --saturate --apply
 ```
 
+## Split a multi-line invoice automatically
+
+Read the attached invoice while you classify. Add `--read-evidence`:
+
+```bash
+aeat app ledger classify <transaction-id> --read-evidence --saturate
+```
+
+When the invoice carries several lines at different rates or categories, the
+preview adds a `split recommended` note with the exact command to separate them.
+Each line must become its own entry so its deductible IVA and base-rate expense
+file independently.
+
+Action the split with `--auto-split`. Preview it first:
+
+```bash
+aeat app ledger classify <transaction-id> --read-evidence --auto-split
+```
+
+The model reads the invoice and decides. A multi-line invoice previews one child
+per line, each with its own category, IVA category, and registry-derived base and
+IVA. A single-line invoice previews a normal in-place classification instead.
+
+Apply the decision:
+
+```bash
+aeat app ledger classify <transaction-id> --read-evidence --auto-split --apply
+```
+
+A multi-line invoice is split into children that sum exactly to the original
+amount. A single-line invoice is classified in place. The model never writes a
+number; the registry derives every base and IVA. Review the result:
+
+```bash
+aeat app ledger view <transaction-id>
+```
+
+Add `--llm claude` to read a text-layer PDF through your cloud provider, or omit
+it to read a scanned or image invoice on your own machine. Add `--vision-model
+qwen2.5vl:7b` for stronger reading of a dense scan.
+
 ## Derive the IVA fields yourself
 
 When you already know the IVA category — or the model returned `unknown` — pick

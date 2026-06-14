@@ -43,11 +43,21 @@ def test_valid_two_way_split_builds() -> None:
     )
     assert len(response.children) == 2
     assert sum(c.proportion for c in response.children) == Decimal("1.0")
+    assert response.recommends_split is True
 
 
-def test_split_requires_at_least_two_children() -> None:
+def test_single_child_is_the_no_split_verdict() -> None:
+    # A single child at proportion 1.0 is the "no split warranted" verdict — the
+    # model read the invoice and judged it a single line. It validates, and
+    # recommends_split is False so the auto-split router classifies in place.
+    response = LLMSplitResponse(children=(_child("1.0"),), reason="single line at one rate")
+    assert len(response.children) == 1
+    assert response.recommends_split is False
+
+
+def test_split_requires_at_least_one_child() -> None:
     with pytest.raises(ValidationError):
-        LLMSplitResponse(children=(_child("1.0"),), reason="single child")
+        LLMSplitResponse(children=(), reason="no children")
 
 
 def test_proportions_must_sum_to_one() -> None:
@@ -112,6 +122,7 @@ def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
     txn = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
     prompt = build_split_prompt(txn, spec=prompt_spec_with_saturation_fields(), evidence_text="line 1 ... line 2 ...")
     assert "begin evidence" in prompt
-    assert "TWO OR MORE children" in prompt
+    assert "EXACTLY ONE child with proportion 1.0" in prompt
+    assert "one child per line" in prompt
     assert "Do NOT output any euro amount" in prompt
     assert '"proportion"' in prompt
