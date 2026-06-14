@@ -12,7 +12,7 @@ upload it yourself.
 If you haven't installed and run `aeat` yet, start with the
 [quickstart](quickstart.md), then come back here.
 
-## What the active profile is
+## What the active profile means
 
 The active profile is the taxpayer context for `aeat app` commands. While a
 profile is active, commands such as ledger import, transaction classification,
