@@ -252,6 +252,36 @@ fabricated-corpus defect (módulos DT 32ª, caught by the honesty review). Every
 figure verified correct and centralized. The remaining items are NOT-CODIFIED feature gaps
 (M714 escala, M718, módulos enforcement) tracked for deliberate build, not drift.
 
+## Verification pass 4 — IRPF mínimo amounts + reducciones/deducciones (2026-06-14)
+
+### V6 (WRONG-vs-LAW — FIXED + surface completed) — IRPF mínimo personal y familiar
+
+The IRPF mínimo sweep found the campaign's THIRD wrong-calc-value: the 2024 menor-tres
+mínimo parameter codified 3.000 € where LIRPF art. 58.2 / the AEAT manual state 2.800 €
+(a €200 over-statement per child under 3). Root cause: a second C1-pattern bundled-corpus
+error — `ley-35-2006-art-58.html` itself carried 3.000 behind a header claiming official
+unchanged text — which had propagated to the parameter and two tautological tests. Fixed
+all four (parameter, corpus, legal-notes, tests). Beyond the fix, the whole mínimo surface
+was COMPLETED and gate-pinned: the previously-uncodified art. 60 discapacidad amounts
+(3.000/9.000/+3.000, legal entry grounded in the bundled `ley-35-2006.html#a60`), the missing
+2025 descendientes/ascendientes params, and the absent 2020-2023 backfill were all authored
+(every amount AEAT-cross-checked), and a `read_parameter`-backed grounding gate now pins all
+13 mínimo amounts across the six live ejercicios 2020-2025 (78 cases). The codified rule was
+refined: even the bundled corpus must be figure-cross-checked against live BOE/AEAT.
+
+### V7 (verified correct — 0 bugs; gaps + 1 flag) — IRPF reducciones/deducciones
+
+Verified the figure-bearing IRPF reductions: tributación conjunta (3.400/2.150, art. 84.2)
+CORRECT both years. ZERO wrong-calc-values; no ungrounded Python literals (all reductions
+live in registry formulas). One flag-for-review (not a bug): the previsión-social cap
+(art. 52) uses the `10.000` aggregate ceiling (1.500 personal + 8.500 employer) without an
+explicit 1.500 personal-only guard — defensible (the 1.500/8.500 split is form/casilla-chain
+handled; forcing 1.500 would wrongly cap employer-contribution filers), surfaced for operator
+review. NOT-CODIFIED gaps (operator-input casillas, no codified figure to drift): the art. 20
+work-income reduction brackets (6.498→7.302 €, the genuinely-changed-for-2025 / RDL 4/2024
+item — highest-risk gap), the DT-18ª vivienda-habitual deduction (15%/9.040 €), and the
+DT-15ª alquiler deduction (10,05%). Each is a future codification candidate, not a wrong value.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
