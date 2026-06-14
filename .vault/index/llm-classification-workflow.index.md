@@ -13,6 +13,7 @@ related:
   - '[[2026-06-14-llm-classification-workflow-P03-S05]]'
   - '[[2026-06-14-llm-classification-workflow-P03-S06]]'
   - '[[2026-06-14-llm-classification-workflow-adr]]'
+  - '[[2026-06-14-llm-classification-workflow-audit]]'
   - '[[2026-06-14-llm-classification-workflow-plan]]'
   - '[[2026-06-14-llm-classification-workflow-research]]'
 ---
@@ -26,6 +27,10 @@ Auto-generated index of all documents tagged with `#llm-classification-workflow`
 ### adr
 
 - `2026-06-14-llm-classification-workflow-adr` - `llm-classification-workflow` adr: `LLM classification workflow contract: split recommendation, evidence-driven auto-split, and the review loop` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-14-llm-classification-workflow-audit` - `llm-classification-workflow` audit: `Campaign-close honesty review: split recommendation and auto-split`
 
 ### exec
 
