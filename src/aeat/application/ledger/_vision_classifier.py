@@ -19,10 +19,10 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import hashlib
 
 from ...adapters.outbound.llm import LLMClient, LLMProvider, LLMRequest, MultimodalImageInput
 from ...core.config import Settings, load_settings
+from ...core.hashing import sha256_hex
 from ...domain.transactions import (
     LLMClassificationResponse,
     LLMSplitResponse,
@@ -40,7 +40,7 @@ def _to_multimodal_images(images: tuple[str, ...]) -> tuple[MultimodalImageInput
     """Pair each base64 image with its content address (sha256 of the raw bytes)."""
     resolved: list[MultimodalImageInput] = []
     for encoded in images:
-        digest = hashlib.sha256(base64.b64decode(encoded)).hexdigest()
+        digest = sha256_hex(base64.b64decode(encoded))
         resolved.append(MultimodalImageInput(content_sha256=digest, base64_data=encoded))
     return tuple(resolved)
 

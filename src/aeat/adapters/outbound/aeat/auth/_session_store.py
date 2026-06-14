@@ -7,7 +7,6 @@ so the browser cookies and tokens never touch disk in plaintext.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Mapping
 from datetime import datetime
@@ -16,6 +15,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.hashing import sha256_hex
 from .....core.time import now
 from ....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -100,4 +100,4 @@ def _repository() -> SecureObjectRepository:
 
 def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     payload = json.dumps(storage_state, sort_keys=True, separators=(",", ":"), default=str).encode(UTF_8_ENCODING)
-    return hashlib.sha256(payload).hexdigest()
+    return sha256_hex(payload)

@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 
 from ..config import Settings, load_settings
+from ..hashing import sha256_hex
 from ..logging import get_logger
 
 _log = get_logger(__name__)
@@ -67,7 +68,7 @@ def _hash_tree(
         rendering. Empty tree hashes to the digest of the empty string.
     """
     if not root.exists():
-        return hashlib.sha256(b"").hexdigest()
+        return sha256_hex(b"")
     entries: list[tuple[str, str]] = []
     for dirpath, dirnames, filenames in os.walk(root):
         dir_path = Path(dirpath)
@@ -152,11 +153,11 @@ def compute_corpus_sha256(
     tree_digest = _hash_tree(vault_dir, excluded_dirs=excluded_vault_subtrees)
     settings_blob = settings.model_dump_json().encode("utf-8")
     resolved_env_path = env_path if env_path is not None else PROJECT_ROOT / "env" / ".env"
-    env_digest = _file_sha256(resolved_env_path) if resolved_env_path.exists() else hashlib.sha256(b"").hexdigest()
+    env_digest = _file_sha256(resolved_env_path) if resolved_env_path.exists() else sha256_hex(b"")
     h = hashlib.sha256()
     h.update(tree_digest.encode("ascii"))
     h.update(b"|settings|")
-    h.update(hashlib.sha256(settings_blob).hexdigest().encode("ascii"))
+    h.update(sha256_hex(settings_blob).encode("ascii"))
     h.update(b"|env|")
     h.update(env_digest.encode("ascii"))
     return h.hexdigest()

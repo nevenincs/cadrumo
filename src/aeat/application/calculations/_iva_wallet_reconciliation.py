@@ -19,7 +19,6 @@ Binding resolution reads its active revision through a
 
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -27,6 +26,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from ...core import Modelo, Period
+from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import RegistrySnapshot
 from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
 from ...domain.iva_compensation._reconciliation import (
@@ -85,7 +85,7 @@ class IvaWalletDecisionSourceResolver:
             )
         if decision.selected_amount is None:
             raise IvaCompensationReconciliationInputError("IVA wallet reconciliation decision has no selected amount")
-        fingerprint = f"sha256:{hashlib.sha256(decision.model_dump_json().encode('utf-8')).hexdigest()}"
+        fingerprint = f"sha256:{sha256_hex(decision.model_dump_json().encode('utf-8'))}"
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

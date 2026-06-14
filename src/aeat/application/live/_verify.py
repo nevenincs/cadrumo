@@ -25,7 +25,6 @@ Structurally read-only:
 
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime
 from enum import StrEnum
 from typing import Literal
@@ -38,6 +37,7 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now
 from ._errors import LiveApplicationInputError
@@ -116,7 +116,7 @@ def _derive_observation_id(
     checked_at: datetime,
 ) -> str:
     canonical = f"{surface.value}|{nif}|{verdict}|{checked_at.isoformat()}"
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return sha256_hex(canonical.encode("utf-8"))
 
 
 class VerifyObservationRepository:

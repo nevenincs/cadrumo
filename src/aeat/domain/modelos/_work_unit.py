@@ -19,7 +19,6 @@ identifier; ``name`` is a display-only attribute.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
@@ -28,6 +27,7 @@ from typing import Annotated, override
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ...core import Period
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ..contribuyente._ccaa import CCAA
 from ._codes import ModeloCode
@@ -117,7 +117,7 @@ def derive_work_unit_id(
         revision_id.strip(),
     )
     payload = "\x1f".join(components).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
+    return sha256_hex(payload)
 
 
 class WorkUnit(BaseModel):

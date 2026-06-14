@@ -33,7 +33,6 @@ exception class names, secure-object storage layout, and per-call
 
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime
 from typing import Any, override
 
@@ -43,6 +42,7 @@ from ...adapters.outbound.aeat.sede import NotificationsSnapshot, RemoteNotifica
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId
 from ...core.time import now
 from ._errors import LiveApplicationInputError
@@ -96,7 +96,7 @@ def _derive_snapshot_id(
             },
         )
     canonical = snapshot.model_dump_json()
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return sha256_hex(canonical.encode("utf-8"))
 
 
 def notifications_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:

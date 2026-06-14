@@ -17,13 +17,13 @@ The service implementation lands in a follow-up commit per the
 
 from __future__ import annotations
 
-import hashlib
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, ProfileId
 from ...core.time import now
 from ...domain.buckets import (
@@ -65,7 +65,7 @@ def derive_m036_declaration_id(
             sede_justificante if sede_justificante is not None else "-",
         ],
     )
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return sha256_hex(canonical.encode("utf-8"))
 
 
 class M036DeclarationCommand(BaseModel):

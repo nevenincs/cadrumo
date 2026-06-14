@@ -22,7 +22,6 @@ captures every prior mutation.
 
 from __future__ import annotations
 
-import hashlib
 import io
 from pathlib import Path
 from typing import Literal
@@ -181,7 +180,7 @@ def sanitize_pdf(
         warnings.extend(xmp_warnings)
 
     output_bytes, flags = save_with_deterministic_flags(pdf)
-    output_sha = hashlib.sha256(output_bytes).hexdigest()
+    output_sha = sha256_hex(output_bytes)
     _LOG.info(
         "sanitize_pdf: completed source_sha=%s output_sha=%s replacements=%d surfaces=%d warnings=%d",
         source_sha[:16],

@@ -28,6 +28,7 @@ from typing import BinaryIO
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.attachments._errors import (
@@ -200,7 +201,7 @@ class AttachmentStore(BaseModel):
 
     def put_bytes(self, data: bytes) -> str:
         """Write ``data`` under its SHA-256 digest if not already present."""
-        digest = hashlib.sha256(data).hexdigest()
+        digest = sha256_hex(data)
         objects = self._objects_repo()
         if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
             _LOGGER.debug("reusing existing attachment object for %s", digest)
@@ -268,7 +269,7 @@ class AttachmentStore(BaseModel):
     def verify_blob(self, attachment_id: str) -> None:
         """Re-hash the stored blob and verify it matches ``attachment_id``."""
         digest = _require_digest(attachment_id)
-        actual = hashlib.sha256(self.read_bytes(digest)).hexdigest()
+        actual = sha256_hex(self.read_bytes(digest))
         if actual != digest:
             raise _attachment_validation_error("blob digest drift", violation="blob_digest_drift")
 

@@ -11,12 +11,12 @@ operation emits a typed bucket event to :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterable
 from datetime import date, datetime
 from typing import Literal
 
 from ...core.errors import BaseSeverity
+from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -59,7 +59,7 @@ def _paths_payload(facts: tuple[UserProfileFact, ...]) -> dict[str, str]:
     """Return bounded path summary payload for a bucket event."""
     paths = sorted({fact.path for fact in facts})
     encoded = "\n".join(paths).encode("utf-8")
-    return {"path_count": str(len(paths)), "paths_sha256": hashlib.sha256(encoded).hexdigest()}
+    return {"path_count": str(len(paths)), "paths_sha256": sha256_hex(encoded)}
 
 
 class ProfileLifecycleService:

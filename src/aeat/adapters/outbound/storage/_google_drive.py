@@ -25,7 +25,6 @@ and is the default when no override is supplied.
 
 from __future__ import annotations
 
-import hashlib
 import io
 from collections.abc import Iterator
 from datetime import datetime
@@ -33,6 +32,7 @@ from typing import Any
 
 from ....core.config import load_settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now
 from ._errors import (
@@ -610,7 +610,7 @@ class GoogleDriveProvider:
         if stored_hash:
             stripped = stored_hash.split("-", 1)[1] if stored_hash.startswith("sha256-") else stored_hash
             if len(stripped) == 64:
-                actual = hashlib.sha256(bytes(payload)).hexdigest()
+                actual = sha256_hex(bytes(payload))
                 if stripped != actual:
                     raise OutboundStorageIntegrityError(
                         "drive content_hash mismatch",

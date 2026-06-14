@@ -6,7 +6,6 @@ Diagnostic records are encrypted and retrieved through a
 
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import datetime
 from urllib.parse import urlsplit
@@ -18,6 +17,7 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
+from ...core.hashing import sha256_hex
 from ...core.time import now
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
@@ -289,7 +289,7 @@ def _redacted_ref(value: object) -> str:
         return ""
     if text.startswith("sha256:"):
         return text
-    return f"sha256:{hashlib.sha256(text.encode(UTF_8_ENCODING)).hexdigest()}"
+    return f"sha256:{sha256_hex(text.encode(UTF_8_ENCODING))}"
 
 
 def _optional_bool(value: object) -> bool | None:

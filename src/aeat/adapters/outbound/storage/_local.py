@@ -13,7 +13,6 @@ layer. The provider treats every payload as opaque bytes.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import typing
@@ -22,6 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now
 from ._errors import (
@@ -301,7 +301,7 @@ class LocalFileSystemProvider:
                 translated_message="adapters.outbound.storage.local.errors.payload_read_permission",
             ) from None
 
-        actual_hash = hashlib.sha256(payload).hexdigest()
+        actual_hash = sha256_hex(payload)
         stored_hash = str(sidecar.get("content_hash", ""))
         # The stored hash may be a vendor-prefixed string ("sha256-XXX")
         # or a bare hex digest; we accept either as long as the digest
