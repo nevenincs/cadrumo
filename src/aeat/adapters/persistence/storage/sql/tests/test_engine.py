@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from pathlib import Path
 
 import pytest
@@ -39,6 +40,70 @@ def test_engine_round_trips_query_against_tmp_sqlite(tmp_path: Path) -> None:
         assert db_file.exists()
     finally:
         engine.dispose()
+        dispose_engine(settings)
+
+
+def test_engine_applies_concurrency_pragmas(tmp_path: Path) -> None:
+    """A file-backed SQLite engine sets busy_timeout (and keeps foreign_keys on)."""
+    db_file = tmp_path / "pragmas.db"
+    settings = _settings_for(f"sqlite:///{db_file.as_posix()}")
+    engine = create_engine_from_settings(settings)
+    try:
+        with engine.connect() as conn:
+            assert conn.execute(text("PRAGMA busy_timeout")).scalar_one() == 5000
+            assert conn.execute(text("PRAGMA foreign_keys")).scalar_one() == 1
+    finally:
+        engine.dispose()
+        dispose_engine(settings)
+
+
+def test_concurrent_writers_do_not_raise_database_locked(tmp_path: Path) -> None:
+    """Four threads writing one bucket DB serialise without a database-locked error.
+
+    Under the prior rollback-journal default with ``busy_timeout=0`` a second
+    writer fails immediately with ``SQLITE_BUSY`` ("database is locked"); WAL plus
+    the busy_timeout makes the loser wait its turn instead. Each thread builds its
+    own engine from the same settings so every SQLite connection is created and
+    used in the thread that owns it.
+    """
+    db_file = tmp_path / "concurrent.db"
+    settings = _settings_for(f"sqlite:///{db_file.as_posix()}")
+    setup_engine = create_engine_from_settings(settings)
+    with setup_engine.begin() as conn:
+        conn.execute(text("CREATE TABLE writer_probe (id INTEGER PRIMARY KEY AUTOINCREMENT, who TEXT)"))
+    setup_engine.dispose()
+
+    worker_count = 4
+    writes_per_worker = 25
+    errors: list[Exception] = []
+    barrier = threading.Barrier(worker_count)
+
+    def worker(name: str) -> None:
+        engine = create_engine_from_settings(settings)
+        try:
+            barrier.wait()
+            for _ in range(writes_per_worker):
+                with engine.begin() as conn:
+                    conn.execute(text("INSERT INTO writer_probe (who) VALUES (:w)"), {"w": name})
+        except Exception as exc:
+            errors.append(exc)
+        finally:
+            engine.dispose()
+
+    threads = [threading.Thread(target=worker, args=(f"w{i}",)) for i in range(worker_count)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    verify_engine = create_engine_from_settings(settings)
+    try:
+        assert errors == [], f"concurrent writers raised: {errors!r}"
+        with verify_engine.connect() as conn:
+            total = conn.execute(text("SELECT COUNT(*) FROM writer_probe")).scalar_one()
+        assert total == worker_count * writes_per_worker
+    finally:
+        verify_engine.dispose()
         dispose_engine(settings)
 
 

@@ -3,9 +3,10 @@
 Provides a lazy, URL-keyed singleton engine used by the rest of
 :mod:`aeat.adapters.persistence.storage`. The factory normalises SQLite
 URLs against :data:`aeat.core.paths.PROJECT_ROOT`, ensures the parent
-directory exists, and attaches a ``connect`` listener that enables
-``PRAGMA foreign_keys=ON`` so cascade rules declared in the schema are
-enforced at runtime.
+directory exists, and attaches a ``connect`` listener that configures each
+SQLite connection: ``foreign_keys=ON`` (cascade enforcement) and a
+``busy_timeout`` (so concurrent invocations on one bucket no longer fail
+immediately with "database is locked").
 
 Tests can dispose the cached engines between runs via
 :func:`dispose_engine`.
@@ -31,6 +32,12 @@ from ..errors import StorageError
 _log = get_logger(__name__)
 _engines: dict[str, Engine] = {}
 _lock = Lock()
+
+# A writer that finds the bucket DB locked by a concurrent connection waits up to
+# this long for the lock to clear instead of failing immediately with
+# ``SQLITE_BUSY`` ("database is locked"). Five seconds comfortably covers the
+# brief windows a single-row secure-object write holds the write lock.
+_SQLITE_BUSY_TIMEOUT_MS = 5000
 
 
 def _route_marker(url: str) -> str:
@@ -80,12 +87,21 @@ def _ensure_sqlite_parent(url: str) -> None:
         Path(database).parent.mkdir(parents=True, exist_ok=True)
 
 
-def _enable_sqlite_foreign_keys(engine: Engine) -> None:
-    """Attach a ``connect`` listener that enables SQLite foreign-key enforcement.
+def _attach_sqlite_pragmas(engine: Engine) -> None:
+    """Attach a ``connect`` listener that configures the SQLite bucket database.
 
-    SQLite ignores ``ON DELETE CASCADE`` and ``ON DELETE SET NULL`` unless
-    ``PRAGMA foreign_keys=ON`` is issued on every new connection. This is a
-    no-op for non-SQLite dialects.
+    Every new connection issues two pragmas (no-ops for non-SQLite dialects,
+    harmless for ``:memory:`` databases):
+
+    - ``foreign_keys=ON`` so ``ON DELETE CASCADE`` / ``SET NULL`` declared in the
+      schema are enforced (SQLite ignores them otherwise).
+    - ``busy_timeout`` so a writer that meets a held lock from a concurrent
+      ``aeat`` invocation on the same bucket waits its turn rather than failing
+      immediately with ``SQLITE_BUSY`` ("database is locked").
+
+    ``synchronous`` is left at the rollback-journal-safe default (FULL).
+    WAL mode is a separate, larger change (it adds a ``-wal`` sidecar that the
+    at-rest test surface must learn to read) and is tracked as its own step.
 
     Args:
         engine: :class:`~sqlalchemy.engine.Engine` to attach the listener to.
@@ -98,6 +114,7 @@ def _enable_sqlite_foreign_keys(engine: Engine) -> None:
         cursor = dbapi_connection.cursor()
         try:
             cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.execute(f"PRAGMA busy_timeout={_SQLITE_BUSY_TIMEOUT_MS}")
         finally:
             cursor.close()
 
@@ -136,7 +153,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
             context={"route_marker": _route_marker(url), "error_type": type(exc).__name__},
             translated_message="errors.storage.engine.create_failed",
         ) from exc
-    _enable_sqlite_foreign_keys(engine)
+    _attach_sqlite_pragmas(engine)
     _log.debug("created engine route_marker=%s", _route_marker(url))
     return engine
 
