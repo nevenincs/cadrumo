@@ -363,10 +363,24 @@ a classification that independently *reproduces the canonical 2025 per-box groun
 matched box (strong cross-check), and is renumbering-immune. Pinned by
 `test_capital_mobiliario_grounding`. Commit `192e10b24`.
 
-**Open (same defect, careful follow-up):** the **inmuebles** section (~24 boxes citing the
-actividades chapter, correct grounding arts. 22/23/24 + 85 for imputación) and the **retenciones
-/ pagos a cuenta** boxes (0591/0604/0609, correct grounding art. 99) — fix per-box within-year by
-label, same method. Plus a separate **2025 over-grounding** artifact: casillas 0043/0044/0049 in
+**Open — inmuebles needs PER-SUBSECTION care, NOT the capital-mobiliario method.** Testing the
+within-year label classifier on the `inmueble` section revealed it is **heterogeneous**: 222 boxes
+cite the actividades chapter, but they conflate at least four grounding families — (1) the
+capital-inmobiliario rendimiento chain (arts. 22/23/24, + art-85 for imputación), (2) **ganancias
+patrimoniales por transmisión de inmuebles** (boxes 1816-1915, 1226-1230, 1641 — governed by arts.
+33-39, NOT 22), (3) structural/identity data-entry fields (0063-0088: % propiedad, referencia
+catastral, fechas, NIF — arguably no rendimiento article), and (4) deducción-obras desglose
+(1393-1440). The ingreso/gasto classifier validated against the 25 known-2025 rendimiento-chain
+boxes (24/25 OK) but would inject **art-22 onto ganancias-patrimoniales boxes** — a wrong-article
+regression. The capital-mobiliario sweep was safe precisely because that section is a single income
+category; inmuebles is not. Correct approach: restrict to the verified rendimiento-del-capital-
+inmobiliario computation chain (the ~25 boxes with known-2025 grounding: 0089, 0102, 0104, 0107,
+0109-0117, 0131/0132, 0146-0156) and fix only those, leaving the ganancias/structural boxes to a
+ganancias-patrimoniales grounding pass. Do NOT run the bulk classifier over the whole `inmueble`
+section.
+
+**Open — retenciones / pagos a cuenta** boxes (0591/0604/0609 → art. 99) remain a small clean
+subset, safe to fix. Plus a separate **2025 over-grounding** artifact: casillas 0043/0044/0049 in
 2025 carry a 17-article kitchen-sink set (incl. actividades + `orden-hac-277-2026` + `rd-439-2007`)
 — a 2025-authoring imprecision to narrow, tracked distinctly from the 2021-2024 copy-paste defect.
 
