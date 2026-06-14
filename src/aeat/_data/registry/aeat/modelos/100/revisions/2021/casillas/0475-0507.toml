@@ -4,5 +4,5 @@ number = "0507"
 label = "Reducción por pensiones compensatorias y anualidades por alimentos. Remanente de la casilla [0486] que se aplica"
 section = ["resultados", "base_liquidable_res"]
 semantic_role = "irpf_reduccion_pensiones_compensatorias_aplicada"
-legal_refs = ["ley-35-2006:art-50"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
