@@ -33,6 +33,7 @@ casillas = [
 ]
 formulas = [
     "patrimonio-cuota-integra-escala-estatal",
+    "patrimonio-reduccion-limite-80-suelo",
 ]
 application_links = [
     "modelo-714-calculation",

@@ -89,7 +89,8 @@ section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_reduccion_limite_ochenta"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "patrimonio-reduccion-limite-80-suelo"
 legal_refs = ["ley-19-1991:art-31"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
