@@ -364,7 +364,7 @@ class BucketMaintenanceService:
                 occurred_at=occurred_at,
                 payload_version=_EXPORT_PAYLOAD_VERSION,
                 payload={
-                    "output_path": str(command.output_path),
+                    "output_path": command.output_path.name,
                     "manifest_digest": manifest_digest,
                     "archive_schema_version": str(_ARCHIVE_SCHEMA_VERSION),
                     "recovery_wrap_present": str(header.recovery_wrap_present).lower(),
@@ -455,7 +455,7 @@ class BucketMaintenanceService:
                 occurred_at=occurred_at,
                 payload_version=_IMPORT_PAYLOAD_VERSION,
                 payload={
-                    "source_path": str(command.source_path),
+                    "source_path": command.source_path.name,
                     "manifest_digest": header.manifest_digest,
                     "archive_schema_version": str(header.archive_schema_version),
                     "force_replace": str(command.force_replace).lower(),
