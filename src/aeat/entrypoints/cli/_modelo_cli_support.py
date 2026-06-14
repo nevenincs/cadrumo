@@ -507,11 +507,7 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
                 default="No active work unit matches this modelo/year/period. Run `aeat app modelo work create` first.",
             ),
         )
-    key = getattr(exc, "translated_message", None)
-    context = getattr(exc, "context", None) or {}
-    if isinstance(key, str) and key:
-        return typer.BadParameter(tr(key, **context))
-    return typer.BadParameter(str(exc))
+    return bad_parameter_from_localized_context(exc)
 
 
 def parse_revision_selector(value: str) -> ModeloCalculationRevisionSelector:
