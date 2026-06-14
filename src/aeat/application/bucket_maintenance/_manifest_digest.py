@@ -3,12 +3,17 @@
 Used by: :mod:`~._service` (BucketMaintenanceService) to generate export archive digests.
 
 The ``ExportArchiveHeader.manifest_digest`` field carries a
-SHA-256 hex digest over the serialised :class:`aeat.adapters.persistence.storage.bucket.BucketManifest` TOML
-bytes. The importer cross-checks this digest against the
-freshly-provisioned manifest as a pre-flight integrity gate: a
-mismatched digest means the source archive was generated from a
-different bucket-manifest state than the one the importer is about
-to write, and the import refuses.
+SHA-256 hex digest over the serialised :class:`aeat.adapters.persistence.storage.bucket.BucketManifest`
+JSON bytes. The digest is the export's integrity anchor: it is bound into the
+sealed payload's AEAD associated data (``_archive_associated_data`` in
+:mod:`~._service`), so tampering with the header digest makes the payload's AEAD
+tag verification fail and the import is refused at decryption.
+
+The digest is NOT recomputed-and-compared against the freshly-provisioned
+manifest on the import host. The manifest carries host-specific lifecycle
+timestamps (``created_at``, ``last_unlocked_at``) that legitimately differ
+between the exporting and importing hosts, so a literal recompute could never
+match; the AEAD binding is the authoritative integrity mechanism.
 
 Authority: ``2026-06-03-bucket-sealed-archive-adr``.
 """
@@ -26,8 +31,11 @@ def compute_manifest_digest(manifest: BucketManifest) -> str:
     Uses JSON rather than TOML because pydantic's ``model_dump_json``
     provides a deterministic byte-stable serialisation that does not
     depend on the hand-rolled TOML emitter. The digest is the
-    archive-header integrity anchor; the import side recomputes it
-    from the freshly-imported manifest and refuses on mismatch.
+    archive-header integrity anchor: it is bound into the sealed
+    payload's AEAD associated data, so a tampered digest fails the
+    payload's authentication tag and the import is refused at
+    decryption (it is not recomputed-and-compared against the import-
+    host manifest, whose lifecycle timestamps legitimately differ).
 
     The output is a 64-character lowercase hex string matching the
     :class:`ExportArchiveHeader.manifest_digest` field constraint.
