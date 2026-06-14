@@ -33,11 +33,12 @@ class UserProfilePortableExport(BaseModel):
     attempting to parse ``profile``. Increment it when the serialised shape
     changes in a backward-incompatible way.
 
-    Version 1 is the facts-only bundle (``profile`` only) and remains
-    importable. Version 2 is the full bundle — it adds ``work_units``,
-    ``ledger_transactions``, ``calculation_revisions``, and
-    ``filing_records``, all defaulting to empty tuples so v1 facts-only
-    bundles remain importable.
+    Version 2 is the only supported shape (this is a pre-beta project with no
+    released bundles; the earlier facts-only v1 shape is deleted, not bridged —
+    see ``no-legacy-compatibility``). It carries ``profile`` plus the
+    financial-history fields ``work_units``, ``ledger_transactions``,
+    ``calculation_revisions``, and ``filing_records``, each defaulting to an
+    empty tuple because a bucket may legitimately have no rows in a category.
 
     Encrypted-material blobs are NOT included (ADR D2: strip encrypted
     material; re-encrypt under recipient bucket DEK on import).
@@ -56,8 +57,8 @@ class UserProfilePortableExport(BaseModel):
     profile: UserProfileRecord
 
     # --- v2 financial-history fields -----------------------------------------
-    # All default to empty tuples so v1 facts-only bundles round-trip
-    # cleanly; the import path checks bundle_schema_version before reading.
+    # All default to empty tuples because a bucket may legitimately carry no
+    # rows in a category; the import path checks bundle_schema_version first.
 
     work_units: tuple[_WorkUnit, ...] = ()
     ledger_transactions: tuple[_Transaction, ...] = ()
