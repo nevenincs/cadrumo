@@ -207,6 +207,51 @@ as an enforceable registry parameter or constant — the regime is gated by self
 booleans with no numeric safety net. Not a wrong value; a silent gating gap. Tracked as
 a future grounding feature (author the limits as registry parameters with legal_refs).
 
+## Verification pass 3 — IRNR / Patrimonio / amortización-deductions (3-agent swarm, 2026-06-14)
+
+Extended the BOE web-verification to surfaces the first two passes did not cover. Found
+ONE more real wrong-calc-value (now the campaign's second, after the reserva).
+
+### V4 (WRONG-vs-LAW — FIXED) — M210 IRNR interest rate 24% should be 19%
+
+`_data/registry/.../210/.../0001-m210-tipo-gravamen-2025.toml` `interest` keyed-bracket
+carried `0.24` with a comment claiming a "non-EU 24% fallback". TRLIRNR (RDLeg 5/2004)
+art. 25.1.f sets 19% for "1.º dividendos / 2.º intereses / 3.º ganancias patrimoniales"
+for ALL non-residents sin EP, with NO residency condition — confirmed against BOE
+(Iberley faithful reproduction) + AEAT manual no residentes. The comment confused the
+art. 25.1.a general-rate EU/EEE reduction with the unconditional art. 25.1.f. Internal
+corroboration: the registry's own `ganancia_patrimonial` (same letra f, 3º) was correctly
+0.19 while `interest` (2º) was 0.24. A non-EU resident's Spanish-source interest was
+over-declared ~26%. **Fixed** to 0.19; 46 M210/IRNR tests pass (no test asserted the wrong
+value). A C1-class side issue: the bundled corpus snippet `trlirnr-rdleg-5-2004` art. 25.1.f
+mis-phrases the rate as EU/EEE-conditional (self-declared non-authoritative Phase-1 anchor,
+`required_text` empty) — operator should refresh that corpus text; the parameter is the calc
+authority and is now correct.
+
+### V5 (verified correct / gaps) — Patrimonio (M714/M718) and amortización/deductions
+
+Patrimonio: 4 values verified CORRECT + centralized against bundled authoritative corpus
+(Ley 19/1991, BOE-A-1991-14392) — mínimo exento 700.000 €, vivienda habitual 300.000 €,
+límite conjunto 60%/80%, escala 0,2-3,5% — all correctly marked STATE defaults with CCAA
+devolution flagged. M714 escala is `input_kind=manual` (Phase-B calc deferred); M718 grandes
+fortunas (Ley 38/2022) entirely absent — both NOT-CODIFIED feature gaps, not wrong values.
+Amortización/deductions: 8 coefficients verified CORRECT + centralized (amortización 3%
+RIRPF art.14.2.a; M130 20%/2%; M131 2%/2%; rental tiers 50/60/70/90% + 5% rebaja) — all
+registry-causal with documented fallbacks, amortización grounded in bundled authoritative
+corpus. LIS amortización tabla + donativos 80/40 + I+D+i are NOT-CODIFIED (operator-input
+casillas, no multiplied coefficient to drift). No new ungrounded inline regulatory
+coefficient surfaced in the catch-all `Decimal("0.NN")` sweep.
+
+### Verification campaign tally (all passes)
+
+Across all verification passes the swarm web-checked the IS / IRPF / IVA / recargo /
+informativa / IRNR / patrimonio / amortización-deduction rate-and-threshold surface against
+BOE and found **2 real wrong-calc-values — both fixed** (Ley 44/2015 reserva especial cap
+4× too low; M210 IRNR interest 24% vs 19%) — plus several citation-precision fixes and one
+fabricated-corpus defect (módulos DT 32ª, caught by the honesty review). Every other audited
+figure verified correct and centralized. The remaining items are NOT-CODIFIED feature gaps
+(M714 escala, M718, módulos enforcement) tracked for deliberate build, not drift.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
