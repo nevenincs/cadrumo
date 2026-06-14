@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from .....core.classification import SensitivityClass
 from .....core.errors import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now as _utc_now
@@ -31,7 +32,7 @@ from ..errors import (
     StorageValidationError,
 )
 from . import _orm
-from ._secure_object_crypto import derive_revision_id, sha256_hex
+from ._secure_object_crypto import derive_revision_id
 from ._secure_object_integrity import (
     iter_namespace_decryptability as _iter_namespace_decryptability,
 )
