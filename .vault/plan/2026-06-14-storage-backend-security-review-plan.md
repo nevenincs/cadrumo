@@ -124,7 +124,8 @@ Parse the bbox declaration in memory and delete the tmp scratch path.
 Add the read-time Argon2 cost floor and delete write-only and dead crypto surfaces.
 
 - [ ] `W01.P03.S05` - Apply the manifest KDF validation window to the file-fallback parameters on read and reject below-floor Argon2 cost; `src/aeat/adapters/persistence/storage/master_key/_master_key_records.py`.
-- [ ] `W01.P03.S06` - Delete the write-only standalone salt artefact and the dead non-atomic _write_bytes_secure method; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [ ] `W01.P03.S06` - Delete the dead non-atomic _write_bytes_secure method and its sensitive-persistence-policy allowlist entries; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [ ] `W01.P03.S32` - OWNER-GATED DEFERRED: remove the write-only standalone salt artefact and shrink the torn-install detection tuple after owner review per the no-legacy-compatibility key-management caution; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 
 ## Wave `W02` - at-rest integrity row binding
 
