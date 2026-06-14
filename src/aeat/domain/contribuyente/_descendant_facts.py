@@ -154,7 +154,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
       ADOPCION=YYYY-MM-DD    (optional) adoption finalisation date
       DISCAPACIDAD=0|33|65   (optional) discapacidad grade
       CONVIVENCIA=true|false (optional, default true) cohabitation flag
-      CUSTODIA=true|false    (optional, default false) custodia compartida (Art. 59 LIRPF)
+      CUSTODIA=true|false    (optional, default false) custodia compartida (Art. 61 LIRPF)
       MESES_TRABAJO=0..12    (optional, default 0) months mother worked — Art. 81 deducción maternidad
       GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81 bis incremento 0613
       NIF=XXXXXXXXX          (optional) NIF/NIE

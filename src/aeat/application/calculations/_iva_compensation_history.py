@@ -251,7 +251,9 @@ def iva_compensation_state_from_filed_observation(
     result = _registry_casilla_value(values, m303, "iva.resultado")
     posterior = _registry_casilla_value(values, m303, "iva.compensacion-pendiente-periodos-posteriores")
     generated = max(Decimal("0"), -result) if result is not None else Decimal("0")
-    available = _registry_casilla_value(values, m303, "iva.compensacion-disponible-fin-periodo")
+    # Semantic-only casilla (no numeric AEAT box), so it was never an inline-number
+    # routing literal — looked up directly by its registry id, behaviour-preserving.
+    available = _casilla_value(values, "iva.compensacion-disponible-fin-periodo")
     if available is None:
         available = (posterior or Decimal("0")) + generated
     source_artefact_sha256 = next(
