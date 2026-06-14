@@ -114,7 +114,7 @@ Promote inline-grounded regulatory values to the central authority without chang
 
 Wire the dormant registry reader into the live calculation dispatch so the registry parameter becomes causal. Higher value, higher risk: the value reaches a real filing amount, so each wiring lands only with a parity proof against the existing oracle tests. Covers F1 (art.23.2 tier reducción).
 
-- [ ] `P02.S04` - F1: wire resolve_reduccion to the dormant _resolve_tier_reduccion_rate registry reader; `constant becomes documented fallback; prove parity against tier oracle tests; `src/aeat/domain/fincas/_tier_resolver.py`.
+- [x] `P02.S04` - F1: wire resolve_reduccion to the dormant _resolve_tier_reduccion_rate registry reader; `constant becomes documented fallback; prove parity against tier oracle tests; `src/aeat/domain/fincas/_tier_resolver.py`.
 
 ### Phase `P03` - Dormant/duplicate routing resolution
 
