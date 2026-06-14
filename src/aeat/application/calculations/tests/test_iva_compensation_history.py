@@ -702,3 +702,30 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
 
         assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
         assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}
+
+
+def test_compensation_casilla_numbers_match_registry() -> None:
+    """`_COMPENSATION_CASILLA_NUMBERS` is pinned to the registry casilla definitions.
+
+    Production code must not load the raw registry tree (the registry-orchestration
+    boundary), so the compensación box numbers live in a centralised constant. This
+    test fails the moment a registry box number drifts from that constant, keeping
+    the registry the authority without a production-side registry load.
+    """
+    from ....core.resources import bundled_path
+    from ....domain.calculations.registry import load_registry_tree
+    from .._iva_compensation_history import _COMPENSATION_CASILLA_NUMBERS
+
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    id_to_number: dict[str, str] = {}
+    for modelo_id in ("303", "390"):
+        modelo = next(m for m in modelos if m.id == modelo_id)
+        for revision in modelo.revisions.values():
+            for casilla in revision.casillas:
+                id_to_number[casilla.id] = casilla.number
+
+    for semantic_id, number in _COMPENSATION_CASILLA_NUMBERS.items():
+        assert id_to_number.get(semantic_id) == number, (
+            f"{semantic_id!r}: registry number {id_to_number.get(semantic_id)!r} "
+            f"!= centralised constant {number!r}"
+        )
