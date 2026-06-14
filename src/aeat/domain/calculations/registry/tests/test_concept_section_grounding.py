@@ -61,3 +61,36 @@ def test_concept_section_grounds_in_its_article_not_actividades(
     assert not missing, (
         f"M100 {year} {section_tag}: boxes not grounded in {article}: {missing}"
     )
+
+
+def _prevision_social_casillas(filing_year: int):
+    """Boxes for aportaciones/excesos a sistemas de previsión social + seguros
+    colectivos de dependencia (arts. 51/52), excluding patrimonio-protegido (art. 54)
+    and deportistas (DA-11ª) which share the 'excesos' prefix but bind to other law."""
+    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
+    modelos_by_id = {m.id: m for m in modelos}
+    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    out = []
+    for c in rev.casillas:
+        sec = "/".join(tuple(c.section))
+        if ("prevision_social" in sec or "seguros_colectivos_dependencia" in sec) and (
+            "patrim_protegid" not in sec and "deportista" not in sec
+        ):
+            out.append(c)
+    return out
+
+
+@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
+def test_prevision_social_grounds_in_arts_51_52_not_actividades(year: int) -> None:
+    """Previsión-social aportación/exceso boxes cite art. 51 (and not the actividades
+    chapter) — the binding reduction provision (límite conjunto in art. 52)."""
+    casillas = _prevision_social_casillas(year)
+    assert casillas, f"M100 {year}: previsión-social section must have casillas"
+    actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
+    assert not actividades, (
+        f"M100 {year}: previsión-social boxes still cite the actividades chapter: {actividades}"
+    )
+    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if "ley-35-2006:art-51" not in set(c.legal_refs)]
+    assert not missing, (
+        f"M100 {year}: previsión-social boxes not grounded in art. 51: {missing}"
+    )

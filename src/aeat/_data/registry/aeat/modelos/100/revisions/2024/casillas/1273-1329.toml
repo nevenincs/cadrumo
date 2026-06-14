@@ -4,5 +4,5 @@ number = "1329"
 label = "Ejercicio 2023: Aplicado en esta  declaración"
 section = ["resultados", "anexo_c_res", "excesos_sistemas_prevision_social_personas_disc_propias_res"]
 semantic_role = "irpf_anexo_c_exceso_sps_disc_propias_aplicado"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
