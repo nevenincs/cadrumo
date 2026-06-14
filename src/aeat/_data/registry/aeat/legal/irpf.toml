@@ -1619,6 +1619,24 @@ required_text = [
     "Ganancias patrimoniales no justificadas",
 ]
 
+[legal."ley-35-2006:dt-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtnovena"
+document_id = "BOE-A-2006-20764"
+article = "DT-9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtnovena"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#dtnovena; operator to re-stamp)"
+notes = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtnovena; operator to confirm and re-stamp."
+required_text = [
+    "adquiridos con anterioridad a 31 de diciembre de 1994",
+]
+
 [legal."ley-35-2006:art-82"]
 evidence_tier = "legal_authority"
 authority = "boe"
