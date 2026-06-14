@@ -2827,6 +2827,9 @@ cli:
         section_modelo: Modelo
         section_overview: Overview
         section_review_and_registry: Review and registry
+        ledger_add: 'Add a transaction by hand.'
+        modelo_verification_report: 'List and view modelo verification reports.'
+        modelo_m036: 'Record a Modelo 036 declaration you filed at AEAT.'
       config:
         auth_clear: Clear local authentication metadata.
         auth_configure: Configure an authentication provider.

@@ -2917,6 +2917,9 @@ cli:
         section_modelo: Nyomtatvány
         section_overview: Áttekintés
         section_review_and_registry: Felülvizsgálat és nyilvántartás
+        ledger_add: 'Tranzakció hozzáadása kézzel.'
+        modelo_verification_report: 'Modellellenőrzési jelentések listázása és megtekintése.'
+        modelo_m036: 'Az AEAT-nál benyújtott Modelo 036 nyilatkozat rögzítése.'
       config:
         auth_clear: Helyi hitelesítési metaadatok törlése.
         auth_configure: Hitelesítési szolgáltató konfigurálása.
