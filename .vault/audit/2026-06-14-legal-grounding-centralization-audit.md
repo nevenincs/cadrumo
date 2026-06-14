@@ -496,10 +496,29 @@ articles (atribución de rentas `re_at_rentas`→arts. 86-90; previsión-social 
 autonomic deductions→autonomic law; energy-efficiency deduction→its DA) — each a per-concept grounding
 with its own legal-entry check, not the ganancias foundation.
 
-**Running campaign total (this audit's grounding work): ~1064 M100 casillas re-grounded** across the
-trabajo, capital-mobiliario, capital-inmobiliario (rendimiento + amortización base + retención),
-retenciones, and three ganancias-by-asset sections, plus the IRPF mínimo surface — behind 8 grounding
-gates; plus 5 ganancias legal entries authored and corpus-verified.
+### V14 (V12 METHOD GENERALISED across concepts — ~1932 casillas, 6 legal entries)
+
+The V12 section-tag method was driven across the full set of cleanly-disambiguable concept-sections,
+each grounded to ITS concept's verified binding article(s) and pinned. Beyond the ganancias-by-asset
+sections (V13), this added: the two exención-por-reinversión sections (→ arts. 33/34/38, 52 casillas);
+the saldos-negativos-g/p integración sections (→ arts. 48/49, 104); the previsión-social aportación/
+exceso/dependencia sections (→ arts. 51/52, 325 — authoring the missing art-51 entry, art-52 already
+present); and the deducciones-inversión-empresarial section (→ art. 68.2, 387). A general
+`test_concept_section_grounding` gate (section-tag → concept article, with the previsión-social
+substring predicate excluding patrimonio-protegido/deportistas) pins the non-ganancia concepts.
+
+**Running campaign total (this audit's grounding work): ~1932 M100 casillas re-grounded** across ~13
+concept-sections — trabajo, capital-mobiliario, capital-inmobiliario (full), retenciones, five
+ganancias-by-asset sections, two exención sections, saldos-negativos g/p, previsión social, and
+deducciones inversión empresarial — plus the IRPF mínimo surface, behind 10 grounding gates; plus
+**6 LIRPF legal entries authored and corpus-verified** (arts. 35/36/38/39/51 + DT-9ª).
+
+**Still open (each needs its concept's article, some with entry authoring):** patrimonio-protegido
+(→ art. 54, entry MISSING), deportistas (→ DA-11ª, MISSING), anualidades-alimentos (→ arts. 64/75,
+art-64 MISSING), energy-efficiency deduction (→ its DA), the autonomic-deduction sections
+(`deduccion_autonomica_res/*` → autonomic law, a DIFFERENT corpus), and `re_at_rentas` (heterogeneous
+by income nature — actividades partly correct, per-box pass). The actividades/módulos sections
+(`reg_estima_obj*`, `actividad_*`) are correctly grounded and untouched.
 
 ## Recommendations
 
