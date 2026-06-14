@@ -2357,6 +2357,60 @@ required_text = [
     "Mutualidad de previsión social de deportistas profesionales",
 ]
 
+[legal."ley-35-2006:dt-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtdecimoctava"
+document_id = "BOE-A-2006-20764"
+article = "DT-18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtdecimoctava"
+published_at = 2006-11-29
+effective_from = 2013-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#dtdecimoctava; operator to re-stamp)"
+notes = "LIRPF disposición transitoria 18ª: régimen transitorio de la deducción por inversión en vivienda habitual — aplicable a contribuyentes que adquirieron su vivienda habitual (o satisficieron cantidades para su construcción) antes del 01-01-2013 y venían deduciéndose. Base legal de las casillas de deducción por vivienda habitual en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtdecimoctava; operator to confirm and re-stamp."
+required_text = [
+    "Deducción por inversión en vivienda habitual",
+]
+
+[legal."ley-35-2006:da-50"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-4"
+document_id = "BOE-A-2006-20764"
+article = "DA-50"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-4"
+published_at = 2006-11-29
+effective_from = 2021-10-06
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#da-4; operator to re-stamp)"
+notes = "LIRPF disposición adicional 50ª: deducción por obras de mejora de la eficiencia energética de viviendas (20%/40%/60% según el tipo de obra y la reducción de demanda/consumo acreditada por certificado energético). Base legal de las casillas de deducción y exceso por mejoras energéticas de vivienda en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-4 (DA quincuagésima); operator to confirm and re-stamp."
+required_text = [
+    "Deducción por obras de mejora de la eficiencia energética de viviendas",
+]
+
+[legal."ley-35-2006:da-58"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-11"
+document_id = "BOE-A-2006-20764"
+article = "DA-58"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-11"
+published_at = 2006-11-29
+effective_from = 2023-06-30
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#da-11; operator to re-stamp)"
+notes = "LIRPF disposición adicional 58ª: deducción por la adquisición de vehículos eléctricos enchufables y de pila de combustible y por la instalación de puntos de recarga (15% sobre el valor de adquisición, con límites). Base legal de las casillas de deducción por vehículos eléctricos y puntos de recarga en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-11 (DA quincuagésima octava); operator to confirm and re-stamp."
+required_text = [
+    "Deducción por la adquisición de vehículos eléctricos",
+]
+
 [legal."ley-35-2006:art-79"]
 evidence_tier = "legal_authority"
 authority = "boe"
