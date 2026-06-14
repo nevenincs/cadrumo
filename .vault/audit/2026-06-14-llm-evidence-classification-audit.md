@@ -71,14 +71,20 @@ named model to the request and the `llm:local-vision:<model>` provenance. `split
 also gained the provider-optional `--read-evidence` routing (consistent with
 `classify`).
 
-### DEFERRED (infra, not code) — pulling the `qwen2.5vl:7b` weights
+### BLOCKED (network infra, not code) — pulling the `qwen2.5vl:7b` weights
 
 `qwen2.5vl:7b` support is code-complete and tested, but pulling the ~6 GB weights
-into Ollama stalled on the manifest stage on this host (the manifest itself
-resolves HTTP 200 from the registry; the `3b` pull succeeded, so it is an
-Ollama-pull/host transient, not a code or registry-availability problem). An
-operator with an 8 GB+ GPU runs `ollama pull qwen2.5vl:7b` then
-`classify --read-evidence --vision-model qwen2.5vl:7b`.
+into Ollama is blocked by host network connectivity to Ollama's blob CDN. The
+manifest resolves (HTTP 200) and ~5.97 GB of the weights downloaded across
+attempts, but the final blob fails with
+`Error: max retries exceeded: ... r2.cloudflarestorage.com ... dial tcp
+172.64.66.2:443: i/o timeout` — the Cloudflare R2 node is unreachable from this
+host. The `3b` pull succeeded, confirming this is a network-path/CDN issue for
+the larger blob set, not a code, registry-availability, or disk problem. An
+operator on a network that can reach Cloudflare R2 runs `ollama pull qwen2.5vl:7b`
+then `classify --read-evidence --vision-model qwen2.5vl:7b`; the
+`--vision-model` routing is already proven live-equivalent by the model-override
+test and the live `qwen2.5vl:3b` run.
 
 ## Recommendations
 
@@ -86,8 +92,10 @@ operator with an 8 GB+ GPU runs `ollama pull qwen2.5vl:7b` then
   `--vision-model qwen2.5vl:7b` for stronger OCR on dense invoices; CPU-only
   operators can use `moondream`. The defaults (`qwen2.5vl:3b`, `num_ctx` 8192,
   300s vision timeout) are tuned for normal consumer hardware.
-- No action on the `7b` weights-pull stall — it is an Ollama-pull/host transient;
-  retry the pull. The code path is verified by the model-override test.
+- The `7b` weights pull is blocked by this host's network path to Cloudflare R2,
+  not by code; pull it from a network that can reach the CDN. The `--vision-model`
+  code path is verified by the model-override test and the equivalent live
+  `qwen2.5vl:3b` run, so no code change is owed.
 
 ## Codification candidates
 
