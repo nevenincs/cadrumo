@@ -83,6 +83,53 @@ state: each row carries a separate `local_filing_state` and an
 populates it. The calendar therefore never implies official AEAT state it has not
 observed.
 
+## Verification gates and tooling (W07.P14)
+
+- **S44 (conformance gate, process):** SATISFIED. `test_educational_docs_conformance.py`
+  was run after every narrative docs change this campaign; green at 75/75 at close
+  (up from 73 with the new live-data hub page).
+- **S45 (generated CLI reference reconciliation):** SATISFIED. The live leaf count
+  is 204 and the generated `docs/cli/index.rst` reads "all 204 leaf commands"; the
+  historical 193-vs-188 discrepancy is resolved. `docs/cli/` is gitignored build
+  output regenerated at build time, and the drift plus conformance gates
+  (`dev/docs/tests/test_cli_reference_drift.py`,
+  `test_cli_reference_conformance.py`) are green (6 passed). The leaf collector now
+  lives at `dev.docs.cli_reference`, not the retired production `_doc_reference.py`.
+- **S46 (Sphinx nitpicky build):** RUN; one campaign regression fixed, residual
+  external blocker recorded. The build surfaced that the profile-setup rewrite had
+  renamed the `What the active profile means` heading, breaking six cross-page
+  anchor xrefs in `check-aeat-notifications.md`, `classify-with-llm.md`, and
+  `filing-calendar.md`; the heading was restored to repair them. The residual
+  build failures are outside the userdocs surface and owned by peer churn in the
+  shared worktree: the first full build (before the regression fix) flagged a
+  peer-owned production docstring warning
+  (`aeat.core.external_constants.MODELO_720_REPORTING_THRESHOLD_EUR` py:class xref
+  `bloque`, from config-refactor commit `8401ce4cf`) plus dependency `hoverxref`
+  deprecation warnings; a confirmation re-run then failed at pytest collection on a
+  peer circular import (`cannot import name CoreValidationError from partially
+  initialized module aeat.core.errors`), triggered by an uncommitted peer edit to
+  `src/aeat/core/hashing.py`. Both blockers are peer-owned `core` churn, not the
+  userdocs surface. The campaign regression (the six broken anchor xrefs) is fixed
+  and verified; the residual is recorded honestly per the step's allowance and the
+  full-tree-gate-must-distinguish-owner rule.
+- **S47 (dual review per page, process):** SATISFIED. Every new or rewritten page
+  this campaign passed a live-CLI technical review and a zero-context editorial
+  review before commit, per the `userdocs-pages-require-live-cli-technical-review`
+  codification candidate.
+- **S49 (autobuild/watch):** SATISFIED. `just docs-serve` already wraps
+  sphinx-autobuild (`dev/docs/serve.py`) with live reload over `docs/` and
+  `src/aeat/`, excluding self-generated output. No new recipe warranted.
+- **S59 (relocate doc tooling out of production):** PARTIALLY SATISFIED, residual
+  DEFERRED. The plan-named production generator `_doc_reference.py` is already
+  relocated to `dev/docs/cli_reference.py`, and no `scripts/` path exists; the doc
+  tooling lives under `dev/docs/`. The one residual is the `src/aeat/terminology/`
+  package (plus its `_data/terminology/` authoring tree and tests), which is
+  doc-generation tooling with zero production runtime importers but still resides in
+  the production package. Relocating it is a distinct, high-risk multi-file atomic
+  move (packaging, ~10 `dev/docs/` importers, the terminology CLI, and tree-wide
+  conformance gates) governed by the relocation-atomicity rule. It is deferred as a
+  standalone follow-up rather than bundled into this userdocs-prose campaign.
+
 ## Recommendations
 
 - **S32 backlog acceptance criteria.** Deliver a guided manual-value entry flow

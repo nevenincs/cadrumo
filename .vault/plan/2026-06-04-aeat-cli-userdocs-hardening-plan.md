@@ -166,12 +166,12 @@ Move from subsystem diagnostics to symptoms a user recognizes.
 
 Make documentation quality enforceable where machines can help and reviewed where they cannot.
 
-- [ ] `W07.P14.S44` - Run `src/aeat/entrypoints/cli/test_educational_docs_conformance.py` after every narrative docs change; `docs conformance gate`.
-- [ ] `W07.P14.S45` - Regenerate or check the generated CLI reference after CLI tree changes and reconcile the observed 193 live leaves versus the stale 188-leaf generated index; `generated reference gate`.
-- [ ] `W07.P14.S46` - Run the Sphinx nitpicky docs build when the shared gate is available, or record the external blocker honestly; `docs build gate`.
-- [ ] `W07.P14.S47` - Require a technical review against live CLI help and a zero-context editorial/non-technical review before marking each handbook page complete; `review gates`.
+- [x] `W07.P14.S44` - Run `src/aeat/entrypoints/cli/test_educational_docs_conformance.py` after every narrative docs change; `docs conformance gate`.
+- [x] `W07.P14.S45` - Regenerate or check the generated CLI reference after CLI tree changes and reconcile the observed 193 live leaves versus the stale 188-leaf generated index; `generated reference gate`.
+- [x] `W07.P14.S46` - Run the Sphinx nitpicky docs build when the shared gate is available, or record the external blocker honestly; `docs build gate`.
+- [x] `W07.P14.S47` - Require a technical review against live CLI help and a zero-context editorial/non-technical review before marking each handbook page complete; `review gates`.
 - [x] `W07.P14.S48` - Implement a real single-source-page docs build that writes the requested page into the canonical HTML build output without rebuilding generated API/autodoc surfaces or producing a separate preview artifact; `docs build tooling`.
-- [ ] `W07.P14.S49` - Evaluate and implement an autobuild server or watch recipe for canonical docs page rebuilds after the single-page build path is stable; `docs build tooling`.
+- [x] `W07.P14.S49` - Evaluate and implement an autobuild server or watch recipe for canonical docs page rebuilds after the single-page build path is stable; `docs build tooling`.
 - [x] `W07.P14.S54` - Run a corpus terminology sweep for identity and tax-identifier wording after each profile, censo, or authentication docs edit: DNI for Spanish citizens, NIE for foreign individuals, NIF/CIF for tax identifiers and legal entities, and DNI/NIE only where Cl@ve identity specifically requires it; `docs/ and src/aeat/locales`.
 - [ ] `W07.P14.S59` - Move documentation generators, build helpers, and documentation verifier tests out of production package code and unsupported `scripts/` paths into supported `docs/tools/` tooling; update Sphinx hooks, just recipes, and generated API stubs so production code does not own documentation generation responsibilities; `docs/tools, docs/conf.py, justfile, docs/api, and docs verifier tests`.
 
