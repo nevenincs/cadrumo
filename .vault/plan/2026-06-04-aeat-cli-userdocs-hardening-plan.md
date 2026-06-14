@@ -159,7 +159,7 @@ Make help practical when something refuses, and keep the corpus from drifting ag
 Move from subsystem diagnostics to symptoms a user recognizes.
 
 - [x] `W07.P13.S41` - Rewrite troubleshooting around symptoms: no active profile, wrong profile, ledger not ready, missing binding, wrong period token, no exportable revision, deadline passed, localization mismatch, and live-read gate closed; `troubleshooting docs`.
-- [ ] `W07.P13.S42` - Add a read-only live-data guide for app live and censo surfaces, emphasizing configured AEAT authentication, zero live-write capability, local-only application of downloaded facts, and that AEAT_LIVE_TESTS_ENABLED is test/developer wording rather than an operator switch; `live-read docs`.
+- [x] `W07.P13.S42` - Add a read-only live-data guide for app live and censo surfaces, emphasizing configured AEAT authentication, zero live-write capability, local-only application of downloaded facts, and that AEAT_LIVE_TESTS_ENABLED is test/developer wording rather than an operator switch; `live-read docs`.
 - [x] `W07.P13.S43` - Add a privacy-safe support checklist naming command outputs and logs to include without exposing tax ids or personal data; `support docs`.
 
 ### Phase `W07.P14` - Verification gates
