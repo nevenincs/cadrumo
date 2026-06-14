@@ -8,34 +8,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core import resolve_active_bucket_id
+from ...core import resolve_repository_bucket_id
 from ._errors import ModeloError
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ...adapters.persistence.storage import SecureObjectRepository
 
-_NO_ACTIVE_PROFILE_BUCKET_MESSAGE = "application.workflow.errors.no_active_profile_bucket"
-_BLANK_EXPLICIT_BUCKET_CONTEXT = {"reason": "blank_explicit_bucket_id"}
-_MISSING_ACTIVE_BUCKET_CONTEXT = {"reason": "missing_active_profile_bucket"}
-
 
 def resolve_modelo_repository_bucket_id(bucket_id: str | None, *, error_type: type[ModeloError]) -> str:
     """Return an explicit or active profile bucket id for modelo repositories."""
-    if bucket_id is not None:
-        trimmed = bucket_id.strip()
-        if trimmed:
-            return trimmed
-        raise error_type(
-            translated_message=_NO_ACTIVE_PROFILE_BUCKET_MESSAGE,
-            context=_BLANK_EXPLICIT_BUCKET_CONTEXT,
-        )
-    active = resolve_active_bucket_id()
-    if active is None:
-        raise error_type(
-            translated_message=_NO_ACTIVE_PROFILE_BUCKET_MESSAGE,
-            context=_MISSING_ACTIVE_BUCKET_CONTEXT,
-        )
-    return active
+    return resolve_repository_bucket_id(bucket_id, error_type=error_type)
 
 
 def secure_objects_for_modelo_bucket(bucket_id: str) -> SecureObjectRepository:

@@ -104,15 +104,6 @@ def _read_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
     return Path(path).read_text(encoding="utf-8")
 
 
-def _load_json(path: Path) -> object:
-    """Read and parse a JSON file, raising :exc:`ManualParseError` on failure."""
-    raw = _read_text(path)
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ManualParseError(f"{path}: invalid JSON ({exc})") from exc
-
-
 def _load_chapters(chapters_path: Path) -> tuple[Chapter, ...]:
     """Parse ``chapters.json`` into a tuple of :class:`~aeat.domain.manuals.Chapter`.
 

@@ -252,10 +252,6 @@ def _referenced_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
     return tuple(seen)
 
 
-def _is_operator_input(casilla: CasillaDefinition) -> bool:
-    return casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND)
-
-
 def _is_computed(casilla: CasillaDefinition) -> bool:
     return casilla.input_kind == InputKind.COMPUTED
 

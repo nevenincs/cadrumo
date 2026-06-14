@@ -22,8 +22,7 @@ from datetime import date
 
 from ...adapters.persistence.storage.bucket import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...core import BucketPointer
-from ...core import write_pointer
+from ...core import BucketPointer, write_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -250,7 +249,10 @@ def register_active_profile(
         keys_id = "keys:" + ",".join(sorted(f.path for f in facts if f.value is not None))
         if keys_id != "keys:":
             updated = _append_workflow_event(
-                updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id,
+                updated,
+                action="profile.values.updated",
+                bucket_id=profile_id,
+                object_id=keys_id,
             )
     return updated
 

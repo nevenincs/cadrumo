@@ -212,13 +212,13 @@ aeat app ledger participation rebuild
 
 The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
 
-When nothing else recovers the problem, and only then, reset the saved progress of interrupted commands. This command is destructive:
+When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
 
 ```bash
 aeat config repair reset-progress --yes
 ```
 
-It removes the saved progress state for interrupted commands and requires `--yes`.
+It removes saved interrupted-command progress and requires `--yes`.
 
 ## Prepare a privacy-safe support request
 

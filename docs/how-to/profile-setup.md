@@ -413,26 +413,20 @@ calculations, filings — is recorded as an event in that profile's append-only
 history. Browse it when you want to know what changed, when, and by which
 command.
 
-Find the profile's bucket id first — it is printed by:
+Browse the history by profile name:
 
 ```bash
-aeat config profile list
-```
-
-Then browse the history:
-
-```bash
-aeat config profile history <bucket-id>
+aeat config profile history <profile-name>
 ```
 
 Each row shows the timestamp, the event type, the affected record, and the
 actor. Narrow long histories with filters, which combine:
 
 ```bash
-aeat config profile history <bucket-id> --event-type profile.renamed
-aeat config profile history <bucket-id> --since 2026-01-01 --until 2026-03-31
-aeat config profile history <bucket-id> --object-id <record-id>
-aeat config profile history <bucket-id> --actor operator
+aeat config profile history <profile-name> --event-type profile.renamed
+aeat config profile history <profile-name> --since 2026-01-01 --until 2026-03-31
+aeat config profile history <profile-name> --object-id <record-id>
+aeat config profile history <profile-name> --actor operator
 ```
 
 Repeat `--event-type` to include several types; an unknown type is refused

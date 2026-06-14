@@ -99,7 +99,6 @@ def test_attachment_store_logical_paths_use_namespace_registry() -> None:
     store = AttachmentStore()
     digest = "a" * 64
 
-    assert store.blob_path(digest).as_posix() == f"db:/secure_objects/aeat.domain.attachments.blobs/{digest}"
     assert store.manifest_path(digest).as_posix() == f"db:/secure_objects/aeat.domain.attachments.manifests/{digest}"
 
 

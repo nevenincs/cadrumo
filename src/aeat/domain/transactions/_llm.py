@@ -994,7 +994,10 @@ def build_antigravity_classifier(
         ``prompt_via_argument=True``.
     """
     resolved_model = _resolve_model_id(
-        provider="antigravity", alias=alias, explicit_model=model, minimum_tier=minimum_tier,
+        provider="antigravity",
+        alias=alias,
+        explicit_model=model,
+        minimum_tier=minimum_tier,
     )
     command = ("agy", "--prompt") if not resolved_model else ("agy", "--model", resolved_model, "--prompt")
     return SubprocessLLMClassifier(

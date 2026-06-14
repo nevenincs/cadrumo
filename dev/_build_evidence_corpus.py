@@ -102,7 +102,7 @@ def main() -> None:
             break
         try:
             data = _download(hit["url"])
-        except Exception as exc:  # noqa: BLE001 — best-effort sourcing
+        except Exception as exc:
             print(f"skip {hit['title']}: {exc}")
             continue
         if len(data) > _MAX_BYTES or len(data) < 1000:
@@ -126,7 +126,7 @@ def main() -> None:
             break
         try:
             data = _download(hit["url"])
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"skip {hit['title']}: {exc}")
             continue
         if len(data) > _MAX_BYTES or len(data) < 1000:

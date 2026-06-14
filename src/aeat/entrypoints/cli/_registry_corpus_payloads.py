@@ -16,57 +16,6 @@ from __future__ import annotations
 from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
-# Shared sub-models (not registered — used as nested types)
-# ---------------------------------------------------------------------------
-
-
-class CitationReferencePayload(OutputSchema):
-    """One citation reference row nested in citation results."""
-
-    id: str
-    kind: str
-    number: str
-    boe_id: str
-    short_title: str
-
-
-class CitationIssuePayload(OutputSchema):
-    """One verification issue nested in citation verify results."""
-
-    level: str
-    code: str
-    reference_id: str | None = None
-    message: str
-
-
-class ManualPartPayload(OutputSchema):
-    """One manual part row nested in manuals list results."""
-
-    manual_id: str
-    year: int
-    part: str
-    root: str
-
-
-class ManualIssuePayload(OutputSchema):
-    """One verification issue nested in manual verify results."""
-
-    level: str
-    code: str
-    reference_id: str | None = None
-    message: str
-
-
-class ManualRulePayload(OutputSchema):
-    """One rule nested in manual rules results."""
-
-    rule_id: str
-    kind: str
-    section_id: str
-    references_casillas: list[str] = []
-
-
-# ---------------------------------------------------------------------------
 # Registered schemas
 # ---------------------------------------------------------------------------
 

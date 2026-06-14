@@ -116,6 +116,17 @@ _CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
 _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
     r"(?i)\b(?:wallet|transaction-catalogue|invoice|attachment|justificante):[^\s,;]+",
 )
+# A tab-delimited column-header row is a list of bare field-name tokens, never a
+# ``label<TAB>value`` data pair. The identifier-assignment redactor treats the
+# ``<TAB>`` between two header cells as ``label<sep>value`` and rewrites the
+# *next column name* (e.g. ``modelo`` after ``bucket_id``) into a placeholder,
+# corrupting the header. A header is recognised as three or more cells where
+# every cell is a bare snake-case identifier word; any real id / date / numeric /
+# enum value (UUID, ``bucket-alpha``, ``2026``, ``FILED``) breaks the shape, and a
+# two-cell ``key<TAB>value`` data pair stays below the cell threshold and is still
+# redacted.
+_CLI_HEADER_CELL_PATTERN = re.compile(r"[a-z][a-z0-9_]*")
+_CLI_TABULAR_HEADER_MIN_CELLS = 3
 _CLI_PROFILE_ID_KEYS = frozenset(
     {
         "active_profile_id",
@@ -347,51 +358,130 @@ def _is_cli_profile_reference(value: object) -> bool:
     return isinstance(value, str) and _CLI_UUID_PATTERN.fullmatch(value.strip()) is not None
 
 
-def _cli_placeholder_for_key(key: object | None, value: object) -> str | None:
+def _cli_placeholder_for_key(
+    key: object | None,
+    value: object,
+    *,
+    reveal_identifiers: bool = False,
+) -> str | None:
     if value is None or value == "":
         return None
     normalised = _normalise_cli_key(key)
-    if normalised in _CLI_PROFILE_ID_KEYS:
-        return CLI_PROFILE_ID_PLACEHOLDER
-    if normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
-        return CLI_PROFILE_ID_PLACEHOLDER
-    if normalised in _CLI_BUCKET_ID_KEYS:
-        return CLI_BUCKET_ID_PLACEHOLDER
+    # The profile/bucket opt-out only un-redacts the opaque profile/bucket
+    # identifier surfaces; object keys (which can embed a NIF / period) and
+    # every PII / token / URL pass stay redacted unconditionally.
+    if not reveal_identifiers:
+        if normalised in _CLI_PROFILE_ID_KEYS:
+            return CLI_PROFILE_ID_PLACEHOLDER
+        if normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
+            return CLI_PROFILE_ID_PLACEHOLDER
+        if normalised in _CLI_BUCKET_ID_KEYS:
+            return CLI_BUCKET_ID_PLACEHOLDER
     if normalised in _CLI_OBJECT_KEY_KEYS:
         return CLI_OBJECT_KEY_PLACEHOLDER
     return None
 
 
-def _redact_cli_string(text: str) -> str:
-    redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(
-        lambda match: (
-            f"{match.group('label')}{match.group('sep')}"
-            f"{_cli_placeholder_for_key(match.group('label'), match.group('value')) or match.group('value')}"
-        ),
-        text,
-    )
+def _is_revealed_identifier_key(key: object | None, value: object) -> bool:
+    """Whether ``key`` is an opaque profile/bucket id the reveal opt-out exposes raw.
+
+    A revealed profile/bucket identifier is an opaque UUID and MUST pass through
+    verbatim — running it through the free-text redactor would let the NIF
+    pattern hash a UUID hex segment (``1470176e`` reads as 7 digits + letter)
+    and corrupt the value the operator opted in to see.
+    """
+    if value is None or value == "":
+        return False
+    normalised = _normalise_cli_key(key)
+    if normalised in _CLI_PROFILE_ID_KEYS or normalised in _CLI_BUCKET_ID_KEYS:
+        return True
+    return normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value)
+
+
+def _is_cli_tabular_header_line(text: str) -> bool:
+    cells = text.split("\t")
+    if len(cells) < _CLI_TABULAR_HEADER_MIN_CELLS:
+        return False
+    return all(_CLI_HEADER_CELL_PATTERN.fullmatch(cell) is not None for cell in cells)
+
+
+def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
+    # A column-header row carries no identifier values, only field names; the
+    # ``label<TAB>value`` heuristic would otherwise rewrite the *next column
+    # name* into a placeholder. Skip the assignment redactor for headers; the
+    # remaining UUID / token passes are no-ops on bare field names.
+    if _is_cli_tabular_header_line(text):
+        redacted = redact_for_log(text)
+        if not reveal_identifiers:
+            redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
+        return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+    # Under the reveal opt-out a revealed profile/bucket id is an opaque UUID
+    # that must survive the downstream free-text passes verbatim — otherwise the
+    # NIF pattern hashes a UUID hex segment (``1470176e`` reads as 7 digits + a
+    # letter). Park each revealed value behind a NUL-delimited sentinel that
+    # matches no redaction pattern, run the passes, then restore it.
+    protected: list[str] = []
+
+    def _substitute_assignment(match: re.Match[str]) -> str:
+        label = match.group("label")
+        value = match.group("value")
+        sep = match.group("sep")
+        placeholder = _cli_placeholder_for_key(label, value, reveal_identifiers=reveal_identifiers)
+        if placeholder is not None:
+            return f"{label}{sep}{placeholder}"
+        if reveal_identifiers and _is_revealed_identifier_key(label, value):
+            sentinel = f"\x00{len(protected)}\x00"
+            protected.append(value)
+            return f"{label}{sep}{sentinel}"
+        return f"{label}{sep}{value}"
+
+    redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(_substitute_assignment, text)
     redacted = redact_for_log(redacted)
-    redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
-    return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+    # The bare-UUID catch-all collapses every UUID to ``<profile-id>``; it is the
+    # other profile/bucket-identifier surface the opt-out un-redacts. PII, token,
+    # URL, and object-key passes above/below stay unconditional.
+    if not reveal_identifiers:
+        redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
+    redacted = _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+    for index, original in enumerate(protected):
+        redacted = redacted.replace(f"\x00{index}\x00", original)
+    return redacted
 
 
-def _redact_structured_for_cli_output(value: object, *, key: object | None = None) -> object:
-    placeholder = _cli_placeholder_for_key(key, value)
+def _redact_structured_for_cli_output(
+    value: object,
+    *,
+    key: object | None = None,
+    reveal_identifiers: bool = False,
+) -> object:
+    placeholder = _cli_placeholder_for_key(key, value, reveal_identifiers=reveal_identifiers)
     if placeholder is not None:
         return placeholder
+    # A revealed profile/bucket id is an opaque UUID; emit it verbatim so the
+    # free-text redactor does not hash a UUID hex segment as a NIF.
+    if reveal_identifiers and _is_revealed_identifier_key(key, value):
+        return value
     if isinstance(value, str):
-        return _redact_cli_string(value)
+        return _redact_cli_string(value, reveal_identifiers=reveal_identifiers)
     if isinstance(value, dict):
         redacted: dict[object, object] = {}
         for item_key, item_value in value.items():
-            redacted_key = _redact_cli_string(item_key) if isinstance(item_key, str) else item_key
+            redacted_key = (
+                _redact_cli_string(item_key, reveal_identifiers=reveal_identifiers)
+                if isinstance(item_key, str)
+                else item_key
+            )
             unique_key = _unique_mapping_key(redacted_key, redacted)
-            redacted[unique_key] = _redact_structured_for_cli_output(item_value, key=item_key)
+            redacted[unique_key] = _redact_structured_for_cli_output(
+                item_value,
+                key=item_key,
+                reveal_identifiers=reveal_identifiers,
+            )
         return redacted
     if isinstance(value, list):
-        return [_redact_structured_for_cli_output(item) for item in value]
+        return [_redact_structured_for_cli_output(item, reveal_identifiers=reveal_identifiers) for item in value]
     if isinstance(value, tuple):
-        return tuple(_redact_structured_for_cli_output(item) for item in value)
+        return tuple(_redact_structured_for_cli_output(item, reveal_identifiers=reveal_identifiers) for item in value)
     return value
 
 
@@ -439,7 +529,7 @@ def redact_for_log(text: str) -> str:
     return redact(text, rules=default_rules_for_class(_SensitivityClass.AUDIT))
 
 
-def redact_for_cli_output(text: str) -> str:
+def redact_for_cli_output(text: str, *, reveal_identifiers: bool = False) -> str:
     """Redact a rendered operator-facing CLI output line.
 
     The CLI public-output profile composes the AUDIT rule set used by
@@ -450,6 +540,10 @@ def redact_for_cli_output(text: str) -> str:
 
     Args:
         text: Rendered CLI text.
+        reveal_identifiers: When ``True``, opaque profile and bucket
+            identifier surfaces are emitted raw (the operator opt-out for
+            multi-client disambiguation). Tax identities, tokens, URLs,
+            and secure-object keys stay redacted regardless.
 
     Returns:
         Redacted CLI-safe text.
@@ -461,10 +555,10 @@ def redact_for_cli_output(text: str) -> str:
         from ..errors import RedactionError
 
         raise RedactionError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
-    return _redact_cli_string(text)
+    return _redact_cli_string(text, reveal_identifiers=reveal_identifiers)
 
 
-def redact_structured_for_cli_output(value: object) -> object:
+def redact_structured_for_cli_output(value: object, *, reveal_identifiers: bool = False) -> object:
     """Recursively redact a JSON-shaped value for public CLI output.
 
     Unlike :func:`redact_structured`, this helper is key-aware so values
@@ -474,11 +568,15 @@ def redact_structured_for_cli_output(value: object) -> object:
 
     Args:
         value: JSON-shaped payload to prepare for CLI success output.
+        reveal_identifiers: When ``True``, opaque profile and bucket
+            identifier surfaces are emitted raw (the operator opt-out for
+            multi-client disambiguation). Tax identities, tokens, URLs,
+            and secure-object keys stay redacted regardless.
 
     Returns:
         A redacted copy with the same nested shape.
     """
-    return _redact_structured_for_cli_output(value)
+    return _redact_structured_for_cli_output(value, reveal_identifiers=reveal_identifiers)
 
 
 __all__ = [

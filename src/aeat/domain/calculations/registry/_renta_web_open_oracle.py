@@ -10,6 +10,7 @@ from typing import Final, Literal, Protocol
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
 from ....core.config import Settings
+from ....core.decimal import normalize_decimal_separators
 from ._errors import RegistryValidationError
 from ._live_parity import (
     OracleSurfaceKind,
@@ -389,7 +390,7 @@ def _parse_decimal_text(value: str) -> Decimal | None:
     if not text:
         return None
     if "," in text:
-        text = text.replace(".", "").replace(",", ".")
+        text = normalize_decimal_separators(text, strip_thousands=True)
     try:
         return Decimal(text)
     except InvalidOperation:

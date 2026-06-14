@@ -108,6 +108,57 @@ def test_render_command_output_renders_json_payload_with_project_types() -> None
     assert _OTHER_OBJECT_KEY not in rendered.text
 
 
+def test_render_command_output_default_redacts_profile_and_bucket_ids_in_json() -> None:
+    """Default JSON rendering keeps the paste-safe placeholder policy."""
+
+    rendered = render_command_output(
+        format_name="json",
+        payload={"bucket_id": _PROFILE_ID, "profile_id": _PROFILE_ID},
+        lines=("ignored",),
+    )
+
+    payload = json.loads(rendered.text)
+    assert payload == {
+        "bucket_id": CLI_BUCKET_ID_PLACEHOLDER,
+        "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+    }
+    assert _PROFILE_ID not in rendered.text
+
+
+def test_render_command_output_reveal_opt_in_exposes_real_bucket_id_in_json() -> None:
+    """``aeat_cli_reveal_identifiers`` opt-out emits the real bucket/profile id."""
+
+    with override_settings(aeat_cli_reveal_identifiers=True):
+        rendered = render_command_output(
+            format_name="json",
+            payload={"bucket_id": _PROFILE_ID, "profile_id": _PROFILE_ID, "tax_id": _NIF},
+            lines=("ignored",),
+        )
+
+    payload = json.loads(rendered.text)
+    assert payload["bucket_id"] == _PROFILE_ID
+    assert payload["profile_id"] == _PROFILE_ID
+    # Tax identity stays redacted even under the reveal opt-out.
+    assert payload["tax_id"].startswith("sha256:")
+    assert _NIF not in rendered.text
+
+
+def test_render_command_output_does_not_corrupt_tabular_header_in_text() -> None:
+    """The text renderer must not rewrite a column-header field name."""
+
+    header = "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by"
+
+    rendered = render_command_output(
+        format_name="text",
+        payload={"ignored": True},
+        lines=(header,),
+    )
+
+    assert rendered.text == header
+    assert "\tmodelo\t" in rendered.text
+    assert CLI_BUCKET_ID_PLACEHOLDER not in rendered.text
+
+
 def test_render_command_output_uses_registered_error_for_unencodable_payload() -> None:
     assert get_registered_error_code(OutputRenderingError).code == "INTERNAL_OUTPUT_RENDERING"
 

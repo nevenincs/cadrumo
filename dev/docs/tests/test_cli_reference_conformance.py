@@ -31,7 +31,7 @@ _DOCS_CLI_DIR = Path(__file__).parent.parent.parent.parent.parent / "docs" / "cl
 
 #: Group-callback emit sites that register a schema but are not CLI leaf
 #: commands — they appear as group callbacks, not reachable leaves.
-_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app"})
+_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app", "ledger.participation"})
 
 #: Generated pages that carry navigation or root-level behaviour rather than
 #: per-command sections.  Only the family pages emit ``**Registry key:**``
@@ -152,8 +152,11 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
+        _ledger_rule_payloads,
         _modelo_payloads,
+        _modelo_payloads_m036,
         _overview_payloads,
+        _payloads_modelo_reconcile,
         _registry_corpus_payloads,
         _registry_payloads,
         _review_payloads,
@@ -194,8 +197,11 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
+        _ledger_rule_payloads,
         _modelo_payloads,
+        _modelo_payloads_m036,
         _overview_payloads,
+        _payloads_modelo_reconcile,
         _registry_corpus_payloads,
         _registry_payloads,
         _review_payloads,
@@ -231,8 +237,11 @@ def test_documented_schema_classes_match_registry() -> None:
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
+        _ledger_rule_payloads,
         _modelo_payloads,
+        _modelo_payloads_m036,
         _overview_payloads,
+        _payloads_modelo_reconcile,
         _registry_corpus_payloads,
         _registry_payloads,
         _review_payloads,

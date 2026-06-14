@@ -34,6 +34,7 @@ from typing import Final
 from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.decimal import normalize_decimal_separators
 from .....core.parsing import parse_bool as _parse_bool
 from .....core.parsing import parse_date as _parse_date_canonical
 from ._errors import SedeError, SedeFailureMode
@@ -266,7 +267,7 @@ def _parse_withholding(raw: str | None) -> str | None:
             field="elected_withholding_pct",
             raw=raw,
         )
-    return match.group(1).replace(",", ".")
+    return normalize_decimal_separators(match.group(1), strip_thousands=False)
 
 
 def _parse_m2(raw: str | None, *, field: str) -> Decimal | None:
@@ -282,7 +283,7 @@ def _parse_m2(raw: str | None, *, field: str) -> Decimal | None:
             field=field,
             raw=raw,
         )
-    decimal_str = match.group(1).replace(",", ".")
+    decimal_str = normalize_decimal_separators(match.group(1), strip_thousands=False)
     try:
         return Decimal(decimal_str)
     except InvalidOperation as exc:

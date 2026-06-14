@@ -58,16 +58,37 @@ def render_command_output(
             context={"format_name": format_name, "expected": "text,json"},
             translated_message="errors.refused.refused_output_format",
         ) from exc
+    reveal_identifiers = reveal_cli_identifiers_opt_in()
     if output_format is OutputFormat.JSON:
-        redacted_payload = redact_structured_for_cli_output(jsonable_output_payload(payload))
+        redacted_payload = redact_structured_for_cli_output(
+            jsonable_output_payload(payload),
+            reveal_identifiers=reveal_identifiers,
+        )
         return RenderedCommandOutput(
             format=output_format,
             text=json.dumps(redacted_payload, default=_json_default, ensure_ascii=False),
         )
     return RenderedCommandOutput(
         format=output_format,
-        text="\n".join(redact_for_cli_output(line) for line in lines),
+        text="\n".join(redact_for_cli_output(line, reveal_identifiers=reveal_identifiers) for line in lines),
     )
+
+
+def reveal_cli_identifiers_opt_in() -> bool:
+    """Resolve the profile/bucket identifier reveal opt-out at the output boundary.
+
+    Reading :func:`aeat.core.config.load_settings` here keeps the policy
+    decision at the central success-output privacy boundary (per the
+    centralized-output-redaction ADR) and keeps the pure redaction module free
+    of a Settings dependency. Default off preserves the paste-safe placeholder
+    behaviour; an operator sets ``AEAT_CLI_REVEAL_IDENTIFIERS=1`` to opt out.
+    Both success-output emitters — :func:`render_command_output` and the JSON
+    envelope :func:`aeat.core.json_contract.emit_json_success` — consult this
+    one resolver so the two transports cannot diverge.
+    """
+    from .config import load_settings
+
+    return load_settings().aeat_cli_reveal_identifiers
 
 
 def _json_default(value: object) -> object:
@@ -119,4 +140,5 @@ __all__ = [
     "RenderedCommandOutput",
     "jsonable_output_payload",
     "render_command_output",
+    "reveal_cli_identifiers_opt_in",
 ]

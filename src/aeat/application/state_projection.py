@@ -606,11 +606,7 @@ def _build_modelo_readiness(
                 profile_ready=profile_report.ready,
                 ledger_preflight_required=ledger_report is not None,
                 ledger_ready=ledger_report.ready if ledger_report is not None else None,
-                ledger_period=(
-                    ledger_report.period
-                    if ledger_report is not None
-                    else None
-                ),
+                ledger_period=(ledger_report.period if ledger_report is not None else None),
                 ledger_checked_transaction_count=(
                     ledger_report.checked_transaction_count if ledger_report is not None else 0
                 ),

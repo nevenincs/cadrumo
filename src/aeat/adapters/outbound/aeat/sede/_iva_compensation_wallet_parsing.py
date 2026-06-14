@@ -25,6 +25,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....core import Period
 from .....core.config import Settings
+from .....core.decimal import normalize_decimal_separators
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from ._adapter_utils import normalize_response_text
@@ -532,7 +533,7 @@ def _parse_year(value: str) -> int:
 
 def _parse_spanish_decimal(value: str) -> Decimal:
     cleaned = value.replace("\xa0", " ").strip()
-    cleaned = cleaned.replace(".", "").replace(",", ".")
+    cleaned = normalize_decimal_separators(cleaned, strip_thousands=True)
     cleaned = re.sub(r"[^0-9.\-]", "", cleaned)
     if not cleaned:
         raise SedeParseError(

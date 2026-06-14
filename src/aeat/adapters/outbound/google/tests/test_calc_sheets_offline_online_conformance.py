@@ -16,7 +16,6 @@ from io import BytesIO
 import pytest
 from openpyxl import load_workbook
 
-from .....core import Period
 from .....application.storage.calc_sheets import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
@@ -30,6 +29,7 @@ from .....application.storage.calc_sheets import (
     TabName,
     serialize_offline_workbook,
 )
+from .....core import Period
 from .._calc_sheets_apply import (
     _build_emphasis_format_requests,
     _build_evidence_value_data,

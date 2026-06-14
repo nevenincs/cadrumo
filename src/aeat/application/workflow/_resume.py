@@ -329,7 +329,9 @@ def _resolve_resume_from_visible_target(
 
 
 def _resolve_revision_for_resume_target(
-    *, target: ModeloWorkTarget, selector: object,
+    *,
+    target: ModeloWorkTarget,
+    selector: object,
 ) -> ModeloResolvedRevisionProjection:
     from ..modelo import ModeloCalculationRevisionSelector, ModeloRevisionPick, resolve_modelo_revision_pick
 

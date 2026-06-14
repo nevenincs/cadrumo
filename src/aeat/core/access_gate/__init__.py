@@ -22,6 +22,7 @@ through.
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -76,18 +77,6 @@ class AeatGateEnvSnapshot(BaseModel):
     aeat_live_tests_enabled: str
     pytest_current_test: str
 
-    def as_audit_dict(self) -> dict[str, str]:
-        """Return the snapshot rendered as the audit-log JSONL mapping.
-
-        Returns:
-            Mapping keyed by the canonical environment variable names
-            (``AEAT_LIVE_TESTS_ENABLED`` / ``PYTEST_CURRENT_TEST``)
-            with their raw string values.
-        """
-        return {
-            _LIVE_READ_TEST_OPT_IN_ENV_VAR: self.aeat_live_tests_enabled,
-            _PYTEST_CURRENT_TEST_ENV: self.pytest_current_test,
-        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +105,9 @@ class AeatAccessGate:
         still passes through auth/profile/read-only guards, but it is
         not refused by the pytest-only environment variable.
         """
-        return bool(self._pytest_current_test_value(pytest_current_test))
+        if pytest_current_test is not None:
+            return bool(pytest_current_test)
+        return bool(self._pytest_current_test_value()) or "pytest" in sys.modules
 
     def require_live_read(self, *, pytest_current_test: str | None = None) -> None:
         """Refuse pytest-driven live AEAT reads unless the test opt-in is on.

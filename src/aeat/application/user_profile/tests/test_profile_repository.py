@@ -28,8 +28,7 @@ import pytest
 from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....adapters.persistence.storage.bucket._manifest_io import manifest_path
 from ....adapters.persistence.storage.master_key._kdf_params import KdfParams
-from ....core import BucketPointer
-from ....core import read_pointer, write_pointer
+from ....core import BucketPointer, read_pointer, write_pointer
 from ....domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaValidationError,

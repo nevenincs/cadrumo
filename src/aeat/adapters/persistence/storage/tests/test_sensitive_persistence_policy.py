@@ -200,11 +200,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "output.write_text",
     ): "registry verification report export through the registry service",
     (
-        "src/aeat/application/live/_justificante.py",
-        "_materialized_capture_pdf",
-        "tempfile.mkstemp",
-    ): "short-lived justificante PDF materialisation uses a private tempfile for parser handoff",
-    (
         "src/aeat/locales/_modelo_manager.py",
         "_write_translation_path",
         "path.write_text",

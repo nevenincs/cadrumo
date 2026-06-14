@@ -142,7 +142,9 @@ def _assertion(valid: bool = True) -> object:
 
 def _factory(providers: list[_Provider]):
     def build(
-        kind: AuthProviderKind, settings: Settings, browser_session_factory: BrowserSessionFactory | None,
+        kind: AuthProviderKind,
+        settings: Settings,
+        browser_session_factory: BrowserSessionFactory | None,
     ) -> _Provider:
         del kind, settings, browser_session_factory
         return providers.pop(0)

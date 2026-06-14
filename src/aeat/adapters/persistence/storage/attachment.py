@@ -194,17 +194,9 @@ class AttachmentStore(BaseModel):
         """Return the logical manifest-object namespace marker."""
         return secure_object_namespace_logical_path(_ATTACHMENT_MANIFEST_NAMESPACE)
 
-    def blob_path(self, sha256: str) -> Path:
-        """Return a logical object marker for ``sha256``."""
-        return self.blobs_dir / _require_digest(sha256, field_name="sha256")
-
     def manifest_path(self, attachment_id: str) -> Path:
         """Return a logical object marker for ``attachment_id``."""
         return self.manifests_dir / _require_digest(attachment_id)
-
-    def _manifest_lock_target(self, attachment_id: str) -> Path:
-        """Return a logical lock marker; SQL transactions govern writes."""
-        return self.manifest_path(attachment_id).with_suffix(".lock")
 
     def put_bytes(self, data: bytes) -> str:
         """Write ``data`` under its SHA-256 digest if not already present."""

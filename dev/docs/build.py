@@ -393,7 +393,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--base", default="HEAD", help="Git revision used for committed branch changes.")
     parser.add_argument("--strict", action="store_true", help="Use nitpicky warnings-as-errors mode.")
     parser.add_argument(
-        "--rag-index", action="store_true", help="Refresh the service-backed RAG index after a clean build.",
+        "--rag-index",
+        action="store_true",
+        help="Refresh the service-backed RAG index after a clean build.",
     )
     parser.add_argument(
         "--single-page",

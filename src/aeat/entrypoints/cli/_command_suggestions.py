@@ -33,7 +33,7 @@ is resolved, so they never trigger a loader.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import override
+from typing import Any, override
 
 import click
 import typer
@@ -172,7 +172,7 @@ class AeatTyperGroup(TyperGroup):
     @override
     # KWARGS-ANY-RATIONALE-CLICK-MAIN: click's ``BaseCommand.main`` contract is
     # ``*args: Any, **kwargs: Any`` passthrough; the override forwards verbatim.
-    def main(self, *args: object, standalone_mode: bool = True, **kwargs: object) -> object:
+    def main(self, *args: Any, standalone_mode: bool = True, **kwargs: Any) -> object:
         """Terminal exception funnel honouring the JSON error contract.
 
         Typer's standalone ``main`` renders every :class:`ClickException`

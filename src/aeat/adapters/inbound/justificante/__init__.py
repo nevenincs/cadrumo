@@ -9,12 +9,15 @@ Major declaration:
 
 * :func:`parse_justificante` — parse a justificante PDF into its typed
   domain record.
+* :func:`parse_justificante_bytes` — parse secure-storage bytes without
+  materialising a plaintext file.
 """
 
 from __future__ import annotations
 
-from ._parser import parse_justificante
+from ._parser import parse_justificante, parse_justificante_bytes
 
 __all__ = [
     "parse_justificante",
+    "parse_justificante_bytes",
 ]

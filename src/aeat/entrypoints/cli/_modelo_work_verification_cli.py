@@ -9,6 +9,8 @@ import typer
 
 from ...application.calculations import (
     CalculationObservationRepository,
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyInventoryItem,
     CrossPeriodExpectedMemberSet,
     cross_period_dependency_inventory,
     evaluate_cross_period_clean_state,
@@ -283,7 +285,9 @@ def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedM
     )
 
 
-def _dependency_inventory_item_payload(item: object) -> CrossPeriodDependencyInventoryItemPayload:
+def _dependency_inventory_item_payload(
+    item: CrossPeriodDependencyInventoryItem,
+) -> CrossPeriodDependencyInventoryItemPayload:
     return CrossPeriodDependencyInventoryItemPayload(
         target_modelo=item.target_modelo,
         target_revision_id=item.target_revision_id,
@@ -306,7 +310,7 @@ def _dependency_inventory_item_payload(item: object) -> CrossPeriodDependencyInv
     )
 
 
-def _clean_state_payload(verdict: object) -> CrossPeriodCleanStatePayload:
+def _clean_state_payload(verdict: CrossPeriodCleanStateVerdict) -> CrossPeriodCleanStatePayload:
     return CrossPeriodCleanStatePayload(
         target_modelo=verdict.target_modelo,
         target_filing_year=verdict.target_filing_year,

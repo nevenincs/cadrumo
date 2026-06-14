@@ -48,9 +48,8 @@ from ...adapters.persistence.storage.bucket import (
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.master_key import KdfParams
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...core import BucketPointer
-from ...core import pointer_path, write_pointer
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import BucketPointer, pointer_path, write_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING

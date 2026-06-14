@@ -203,7 +203,6 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "output-language": typer.Option(
         "--output-language",
-        click_type=_choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
         help=tr("wizard.setup.flags.output-language.help"),
     ),
     "taxpayer-sex": typer.Option(

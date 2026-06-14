@@ -38,7 +38,6 @@ from ...domain.user_profile._values import utc_now
 from . import (
     DuplicateProfileCommand,
     EditProfileFieldCommand,
-    EditProfileSectionCommand,
     ProfileLifecycleResult,
     ProfileListing,
     ProfileListResult,
@@ -162,24 +161,6 @@ class ProfileLifecycleService:
             object_id=record.profile_id,
             occurred_at=result.applied_at,
             payload={"path": new_fact.path},
-        )
-        return result
-
-    def edit_section(self, command: EditProfileSectionCommand) -> ProfileLifecycleResult:
-        """Replace every fact in one schema section with the supplied facts.
-
-        Returns a :class:`ProfileLifecycleResult`.
-        """
-        record = self._repository.load(command.profile_id)
-        retained = tuple(fact for fact in record.facts if not fact.path.startswith(f"{command.section_key}."))
-        merged = self._merge_facts(retained, command.facts)
-        self._reject_invalid(command.profile_id, merged)
-        result = self._save_updated(record, merged)
-        self._emit_event(
-            event_type=BucketEventType.PROFILE_VALUES_UPDATED,
-            object_id=record.profile_id,
-            occurred_at=result.applied_at,
-            payload={"section": command.section_key, **_paths_payload(command.facts)},
         )
         return result
 

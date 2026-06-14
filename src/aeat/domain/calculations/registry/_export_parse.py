@@ -12,6 +12,7 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
+from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.parsing._utils import _parse_bool as _core_parse_bool
 from ._errors import RegistryValidationError
@@ -247,7 +248,7 @@ def _parse_xml_dictionary_value(data_type: str, raw: str) -> Decimal | str | boo
 
 
 def _parse_xml_decimal(raw: str) -> Decimal:
-    text = raw.strip().replace(",", ".")
+    text = normalize_decimal_separators(raw.strip(), strip_thousands=False)
     if not text:
         return Decimal("0")
     try:
@@ -400,7 +401,7 @@ def _parse_integer(field: ExportFieldDefinition, raw: str) -> Decimal:
 
 
 def _parse_decimal(raw: str, field: ExportFieldDefinition) -> Decimal:
-    text = raw.strip().replace(",", ".")
+    text = normalize_decimal_separators(raw.strip(), strip_thousands=False)
     if not text:
         return Decimal("0")
     try:

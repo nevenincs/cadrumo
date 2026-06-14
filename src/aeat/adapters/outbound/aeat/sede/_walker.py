@@ -57,10 +57,6 @@ _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
 
 
-def _get_expand_timeout_ms() -> int:
-    return load_settings().aeat_browser_form_interaction_timeout_ms
-
-
 def _get_navigation_timeout_ms() -> int:
     return load_settings().aeat_browser_navigation_timeout_ms
 
@@ -325,7 +321,8 @@ async def _snapshot_html(page: object) -> str:
                 await wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_TIMEOUT_SHORT_MS)
             except PlaywrightError as wait_exc:
                 log.debug(
-                    "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)", wait_exc,
+                    "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)",
+                    wait_exc,
                 )
         try:
             return await content()

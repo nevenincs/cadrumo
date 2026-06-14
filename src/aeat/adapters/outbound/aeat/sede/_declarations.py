@@ -963,8 +963,7 @@ async def _capture_filed_declaration_observation_from_row(
         metadata=metadata,
         extraction_coverage=extraction_coverage,
         registry_snapshot_id=(
-            f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:"
-            f"{declaration.period.registry_token}"
+            f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:{declaration.period.registry_token}"
         ),
     )
 

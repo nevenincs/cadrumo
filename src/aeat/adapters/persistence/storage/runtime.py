@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -27,7 +27,12 @@ from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from ....core.logging import get_logger
 from ....core.time import now as _utc_now
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from .errors import StorageValidationError
+from .errors import (
+    StorageValidationError,
+)
+from .errors import (
+    storage_validation_error as _storage_validation_error,
+)
 from .master_key._active_session import _active_session
 
 if TYPE_CHECKING:
@@ -36,7 +41,6 @@ if TYPE_CHECKING:
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
-_STORAGE_VALIDATION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_validation"
 _log = get_logger(__name__)
 
 
@@ -180,10 +184,6 @@ def runtime_not_ready_error(message: str, *, message_key: str) -> StorageValidat
 
 
 _runtime_not_ready_error = runtime_not_ready_error
-
-
-def _storage_validation_error(message: str) -> StorageValidationError:
-    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 def _readiness_issue(

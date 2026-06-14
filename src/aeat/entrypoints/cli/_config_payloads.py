@@ -576,14 +576,6 @@ class RepairProfileResult(OutputSchema):
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
-class RepairIntegrityNamespaceRowPayload(OutputSchema):
-    """One namespace row in a repair-integrity report."""
-
-    namespace: str
-    readable: int
-    unreadable: int
-
-
 @register_schema("config.repair.integrity.objects")
 class RepairIntegrityObjectsResult(OutputSchema):
     """JSON envelope for ``aeat config repair integrity objects``.

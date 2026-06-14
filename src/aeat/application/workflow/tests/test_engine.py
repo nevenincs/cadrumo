@@ -68,6 +68,7 @@ _NOTIFICATIONS_QUERY_URL = aeat_url("www6", configured_path("sede_paths", "notif
 def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
+
 # ── Test doubles ────────────────────────────────────────────────────────
 
 

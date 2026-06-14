@@ -14,6 +14,8 @@ import time
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
+from bs4 import BeautifulSoup
+
 from .....core.classification import SensitivityClass
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import UTF_8_ENCODING
@@ -511,7 +513,8 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         try:
             selected_own_name = await self._wait_for_own_name_representation_selector(page)
             await self._dismiss_pre303_alert_modal_if_present(page)
-            await click(selected_own_name)
+            if not await self._own_name_representation_is_already_selected(page):
+                await click(selected_own_name)
             await click(pre303.representation_submit_selector)
         except PlaywrightError as exc:
             raise AeatLoginAssertionError(
@@ -546,6 +549,28 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             raise last_error
         raise AeatLoginAssertionError("AEAT own-name representation selector configuration is empty")
 
+    async def _own_name_representation_is_already_selected(self, page: BrowserPageLike) -> bool:
+        """Return whether AEAT already selected the own-name representation radio."""
+        pre303 = self._settings.external_constants().aeat.pre303
+        content = getattr(page, "content", None)
+        if content is None:
+            return False
+        html = await content()
+        soup = BeautifulSoup(html, "html.parser")
+        own_name = soup.select_one(pre303.representation_own_name_selector)
+        representative = soup.select_one(pre303.representation_representative_selector)
+        if representative is not None and _html_input_checked(representative):
+            raise AeatLoginAssertionError(
+                "AEAT representation gate has representative mode selected; refusing to continue.",
+                context={
+                    "failure_mode": "representation_gate_representative_selected",
+                    "landing_url": getattr(page, "url", None),
+                    "blocked_operation": "representative_or_unknown_representation_gate",
+                },
+                suggestion="Use only the authenticated profile user's own-name access for read-only AEAT pulls.",
+            )
+        return own_name is not None and _html_input_checked(own_name)
+
     async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPageLike) -> None:
         pre303 = self._settings.external_constants().aeat.pre303
         content = getattr(page, "content", None)
@@ -553,11 +578,22 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         if content is None or click is None:
             return
         html = await content()
-        modal_marker = pre303.alert_modal_selector.lstrip("#")
-        if pre303.alert_modal_selector not in html and modal_marker not in html:
+        soup = BeautifulSoup(html, "html.parser")
+        modal = soup.select_one(pre303.alert_modal_selector)
+        if modal is None or not _html_node_has_class(modal, "show"):
             return
-        continue_selector = f'{pre303.alert_modal_selector} button:has-text("{pre303.alert_continue_button_text}")'
-        await click(continue_selector)
+        last_error: PlaywrightError | None = None
+        for continue_selector in _alert_continue_button_selectors(
+            pre303.alert_modal_selector,
+            pre303.alert_continue_button_text,
+        ):
+            try:
+                await click(continue_selector)
+                return
+            except PlaywrightError as exc:
+                last_error = exc
+        if last_error is not None:
+            raise last_error
 
 
 def _own_name_representation_selectors(*selectors: str) -> tuple[str, ...]:
@@ -567,6 +603,35 @@ def _own_name_representation_selectors(*selectors: str) -> tuple[str, ...]:
         if value and value not in deduped:
             deduped.append(value)
     return tuple(deduped)
+
+
+def _alert_continue_button_selectors(modal_selector: str, button_text: str) -> tuple[str, ...]:
+    title_case = button_text[:1].upper() + button_text[1:] if button_text else button_text
+    variants = (title_case, button_text)
+    selectors: list[str] = []
+    for text in variants:
+        value = text.strip()
+        if not value:
+            continue
+        selector = f'{modal_selector}.show button:has-text("{value}")'
+        if selector not in selectors:
+            selectors.append(selector)
+    fallback = f'{modal_selector}.show .modal-footer button[type="button"]'
+    if fallback not in selectors:
+        selectors.append(fallback)
+    return tuple(selectors)
+
+
+def _html_input_checked(node: object) -> bool:
+    has_attr = getattr(node, "has_attr", None)
+    return bool(has_attr is not None and has_attr("checked"))
+
+
+def _html_node_has_class(node: object, class_name: str) -> bool:
+    classes = getattr(node, "get", lambda _name, _default=None: _default)("class", [])
+    if isinstance(classes, str):
+        return class_name in classes.split()
+    return class_name in classes
 
 
 __all__ = ["_ClaveMovilPageFlowMixin"]

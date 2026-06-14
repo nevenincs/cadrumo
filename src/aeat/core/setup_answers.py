@@ -415,7 +415,8 @@ class SetupAnswers(BaseModel):
     # field_validator(mode='before') requires -> Any; actual return is always
     # a typed StrEnum/enum member.
     def _parse_unidad_familiar_descendientes_exclusivos(  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
-        cls, value: object,
+        cls,
+        value: object,
     ) -> Any:
         if value == "":
             return ""
@@ -567,7 +568,8 @@ class SetupAnswers(BaseModel):
     # field_validator(mode='before') requires -> Any; actual return is always
     # a typed StrEnum/enum member.
     def _parse_new_entity_first_two_profit_periods(  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
-        cls, value: object,
+        cls,
+        value: object,
     ) -> Any:
         if value == "" or value is None:
             return ""

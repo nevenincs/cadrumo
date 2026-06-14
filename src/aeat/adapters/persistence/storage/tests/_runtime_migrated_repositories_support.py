@@ -1,6 +1,5 @@
 """Shared support for split adapter tests."""
 
-
 from __future__ import annotations
 
 import hashlib
@@ -94,6 +93,8 @@ from .....domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from .....domain.modelos._filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordCatalogue,
     derive_filing_record_id,
@@ -573,6 +574,11 @@ def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogu
         filed_by="aeat.cli.modelo.file",
         notes=f"runtime migrated filing record {label}",
         aeat_accepted=True,
+        external_evidence=ExternalEvidence(
+            kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            reference_id=f"justificante-{label}",
+            imported_at=filed_at,
+        ),
     )
     return ModeloRecordCatalogue(records={record_id: record})
 

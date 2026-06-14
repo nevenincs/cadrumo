@@ -29,6 +29,7 @@ from typing import Annotated
 import typer
 
 from ..core.external_constants import OutputLanguage
+from ..core.i18n import tr
 from ._curation import (
     CurationError,
     audit_handbook,
@@ -49,14 +50,14 @@ from ._seed_import import (
     parse_ubterm_csv,
 )
 
-app = typer.Typer(name="terminology", help="Terminology Handbook maintenance.", no_args_is_help=True)
+app = typer.Typer(name="terminology", help=tr("Terminology Handbook maintenance."), no_args_is_help=True)
 
 
 @app.command("scaffold")
 def scaffold(
     check: Annotated[
         bool,
-        typer.Option("--check", help="Report drift without writing; exit non-zero on drift."),
+        typer.Option("--check", help=tr("Report drift without writing; exit non-zero on drift.")),
     ] = False,
 ) -> None:
     """Reconcile the Handbook against live enrolment sources (msgmerge contract)."""
@@ -68,20 +69,20 @@ def scaffold(
 
 @app.command("set")
 def set_field(
-    concept_id: Annotated[str, typer.Argument(help="Concept id to curate.")],
-    language: Annotated[OutputLanguage, typer.Argument(help="Language section code.")],
+    concept_id: Annotated[str, typer.Argument(help=tr("Concept id to curate."))],
+    language: Annotated[OutputLanguage, typer.Argument(help=tr("Language section code."))],
     field_name: Annotated[
         str,
-        typer.Argument(help="short_description | definition | scope_note | source | term."),
+        typer.Argument(help=tr("short_description | definition | scope_note | source | term.")),
     ],
-    value: Annotated[str, typer.Argument(help="Field value (citation for 'source'; label for 'term').")],
+    value: Annotated[str, typer.Argument(help=tr("Field value (citation for 'source'; label for 'term')."))],
     term_status: Annotated[
         TermStatus | None,
-        typer.Option("--term-status", help="Term status when field is 'term'."),
+        typer.Option("--term-status", help=tr("Term status when field is 'term'.")),
     ] = None,
     authority: Annotated[
         str | None,
-        typer.Option("--authority", help="Source authority when field is 'source'."),
+        typer.Option("--authority", help=tr("Source authority when field is 'source'.")),
     ] = None,
 ) -> None:
     """Set a curated language field or term on a concept."""
@@ -98,10 +99,10 @@ def set_field(
 
 @app.command("relate")
 def relate(
-    concept_id: Annotated[str, typer.Argument(help="Concept id to relate from.")],
-    relation: Annotated[str, typer.Argument(help="broader | related.")],
-    target_id: Annotated[str, typer.Argument(help="Target concept id.")],
-    remove: Annotated[bool, typer.Option("--remove", help="Remove the edge instead of adding it.")] = False,
+    concept_id: Annotated[str, typer.Argument(help=tr("Concept id to relate from."))],
+    relation: Annotated[str, typer.Argument(help=tr("broader | related."))],
+    target_id: Annotated[str, typer.Argument(help=tr("Target concept id."))],
+    remove: Annotated[bool, typer.Option("--remove", help=tr("Remove the edge instead of adding it."))] = False,
 ) -> None:
     """Add or remove a broader / related edge between two concepts."""
     try:
@@ -114,8 +115,8 @@ def relate(
 
 @app.command("retire")
 def retire(
-    concept_id: Annotated[str, typer.Argument(help="Concept id to retire.")],
-    replaced_by: Annotated[str, typer.Argument(help="Successor concept id (required).")],
+    concept_id: Annotated[str, typer.Argument(help=tr("Concept id to retire."))],
+    replaced_by: Annotated[str, typer.Argument(help=tr("Successor concept id (required)."))],
 ) -> None:
     """Tombstone a concept with a required successor (never deletes)."""
     try:
@@ -129,7 +130,7 @@ def retire(
 def audit(
     ratchet_check: Annotated[
         bool,
-        typer.Option("--ratchet-check", help="Fail if curation backlog grows beyond the committed baseline."),
+        typer.Option("--ratchet-check", help=tr("Fail if curation backlog grows beyond the committed baseline.")),
     ] = False,
 ) -> None:
     """Print the structured curation-health report."""
@@ -171,19 +172,19 @@ def audit(
 
 @app.command("seed")
 def seed(
-    source: Annotated[SeedSource, typer.Argument(help="Tier-A source: iate | ubterm (eurovoc once verified).")],
-    export_path: Annotated[Path, typer.Argument(help="Path to the downloaded source export file.")],
+    source: Annotated[SeedSource, typer.Argument(help=tr("Tier-A source: iate | ubterm (eurovoc once verified)."))],
+    export_path: Annotated[Path, typer.Argument(help=tr("Path to the downloaded source export file."))],
     min_reliability: Annotated[
         int,
-        typer.Option("--min-reliability", help="IATE: minimum reliability code to keep (>= 3)."),
+        typer.Option("--min-reliability", help=tr("IATE: minimum reliability code to keep (>= 3).")),
     ] = 3,
     domain: Annotated[
         list[str] | None,
-        typer.Option("--domain", help="IATE: subject-field allow-set (repeatable)."),
+        typer.Option("--domain", help=tr("IATE: subject-field allow-set (repeatable).")),
     ] = None,
     dry_run: Annotated[
         bool,
-        typer.Option("--dry-run", help="Report what would be seeded without writing."),
+        typer.Option("--dry-run", help=tr("Report what would be seeded without writing.")),
     ] = False,
 ) -> None:
     """Import a Tier-A external seed export, stamping provenance on every value.

@@ -9,34 +9,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core import resolve_active_bucket_id
+from ...core import resolve_repository_bucket_id
 from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql import SecureObjectRepository
 
-_NO_ACTIVE_PROFILE_BUCKET_MESSAGE = "application.workflow.errors.no_active_profile_bucket"
-_BLANK_EXPLICIT_BUCKET_CONTEXT = {"reason": "blank_explicit_bucket_id"}
-_MISSING_ACTIVE_BUCKET_CONTEXT = {"reason": "missing_active_profile_bucket"}
-
 
 def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
     """Return an explicit or active profile bucket id for filing application repositories."""
-    if bucket_id is not None:
-        trimmed = bucket_id.strip()
-        if trimmed:
-            return trimmed
-        raise ModeloApplicationError(
-            translated_message=_NO_ACTIVE_PROFILE_BUCKET_MESSAGE,
-            context=_BLANK_EXPLICIT_BUCKET_CONTEXT,
-        )
-    active = resolve_active_bucket_id()
-    if active is None:
-        raise ModeloApplicationError(
-            translated_message=_NO_ACTIVE_PROFILE_BUCKET_MESSAGE,
-            context=_MISSING_ACTIVE_BUCKET_CONTEXT,
-        )
-    return active
+    return resolve_repository_bucket_id(bucket_id, error_type=ModeloApplicationError)
 
 
 def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObjectRepository:

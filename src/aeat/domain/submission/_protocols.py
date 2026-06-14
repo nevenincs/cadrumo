@@ -99,7 +99,7 @@ class AuthProviderProbe(Protocol):
 class DeadlineWindowChecker(Protocol):
     """Narrow surface over :mod:`aeat.domain.deadlines` for the preflight gate."""
 
-    def is_window_open(self, modelo: str, period: "Period", today: date) -> bool:
+    def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         """Return ``True`` iff the AEAT filing window for ``modelo`` / ``period`` is open on ``today``."""
         ...
 
@@ -178,7 +178,7 @@ class ModeloDraftLike(Protocol):
     def modelo(self) -> str: ...
 
     @property
-    def period(self) -> "Period": ...
+    def period(self) -> Period: ...
 
     @property
     def profile_tax_id(self) -> SubjectTaxId: ...

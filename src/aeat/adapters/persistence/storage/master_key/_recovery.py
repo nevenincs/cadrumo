@@ -49,7 +49,9 @@ from ..crypto._crypto import (
     derive_key,
     encrypt_record,
 )
-from ..errors import StorageValidationError
+from ..errors import (
+    storage_validation_error as _storage_validation_error,
+)
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -57,11 +59,6 @@ _RECOVERY_KEY_SIZE: Final[int] = 32
 _MNEMONIC_WORD_COUNT: Final[int] = 24
 _HKDF_CONTEXT_RECOVERY: Final[bytes] = b"aeat.recovery-key.master-wrap.v1"
 _RECOVERY_AAD: Final[bytes] = b"aeat.recovery-key.aad.v1"
-_STORAGE_VALIDATION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_validation"
-
-
-def _storage_validation_error(message: str) -> StorageValidationError:
-    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
 
 
 class RecoveryKey(BaseModel):

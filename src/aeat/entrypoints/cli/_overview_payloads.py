@@ -146,14 +146,6 @@ class OverviewCalendarProfilePayload(OutputSchema):
     calendar: OverviewCalendarPayload
 
 
-class OverviewAgendaEntryPayload(OutputSchema):
-    """One agenda entry (next_due / due_today / due_soon / overdue)."""
-
-    modelo: str
-    period: str
-    adjusted_closes_on: str
-
-
 # ---------------------------------------------------------------------------
 # Registered schemas
 # ---------------------------------------------------------------------------

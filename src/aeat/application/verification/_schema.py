@@ -21,8 +21,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core import Period
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Period
 from ...domain.calculations.registry import CasillaId
 
 

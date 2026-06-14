@@ -20,7 +20,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # ceiling; their owners should extract submodules during their next pass.
     "src/aeat/application/calculations/_cross_period_clean_state.py": 1261,  # SPLIT-CANDIDATE
     "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1392,  # SPLIT-CANDIDATE
-    "src/aeat/application/ledger/_llm_classification.py": 1340,  # SPLIT-CANDIDATE (grew with on-host vision dispatch + provider-optional UX)
+    "src/aeat/application/ledger/_llm_classification.py": 1340,  # SPLIT-CANDIDATE (on-host vision + provider UX)
     "src/aeat/application/modelo/_verification_actions.py": 1469,  # SPLIT-CANDIDATE
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.

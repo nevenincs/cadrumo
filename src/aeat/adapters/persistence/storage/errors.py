@@ -70,6 +70,19 @@ class StorageValidationError(PersistenceError, ValueError):
     """
 
 
+_STORAGE_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_validation"
+
+
+def storage_validation_error(message: str) -> StorageValidationError:
+    """Build a :class:`StorageValidationError` carrying the shared integrity message key.
+
+    Single canonical factory for the storage-validation error that the
+    persistence-storage submodules (crypto, envelope, runtime, secret store,
+    and the master-key helpers) previously each declared identically.
+    """
+    return StorageValidationError(message, translated_message=_STORAGE_VALIDATION_MESSAGE_KEY)
+
+
 class EncryptionError(PersistenceError):
     """Base class for AEAD encryption / decryption failures."""
 

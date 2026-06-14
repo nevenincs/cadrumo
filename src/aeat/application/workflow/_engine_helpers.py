@@ -7,7 +7,6 @@ from enum import StrEnum
 from typing import Literal
 
 from ...core import Period
-from ._errors import WorkflowError
 
 CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
 

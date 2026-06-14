@@ -22,7 +22,6 @@ class AuthValidationError(AuthError, ValueError):
     """
 
 
-
 class AeatLoginAssertionError(AuthError):
     """Raised when a post-auth verification attempt cannot be produced.
 

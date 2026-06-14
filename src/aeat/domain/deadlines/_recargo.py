@@ -25,8 +25,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...core import Period
-from ...core import read_toml
+from ...core import Period, read_toml
 from ...core.decimal import coerce_decimal
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError

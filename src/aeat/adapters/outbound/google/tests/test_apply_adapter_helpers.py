@@ -23,7 +23,6 @@ from typing import Literal
 
 import pytest
 
-from .....core import Period
 from .....application.storage.calc_sheets import (
     SheetCellAddress,
     SheetCellConstraint,
@@ -33,6 +32,7 @@ from .....application.storage.calc_sheets import (
     SheetProtectedRange,
     TabName,
 )
+from .....core import Period
 from .._calc_sheets_apply import (
     _build_structural_cleanup_requests,
     _coerce_cell_value,

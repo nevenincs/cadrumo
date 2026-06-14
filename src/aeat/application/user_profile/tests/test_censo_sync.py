@@ -15,12 +15,14 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live._censo import CensoSnapshotService, SnapshotLifecycleState
 from ...overview import OverviewCalendarRange, build_overview_calendar
+from ...wizard import _catalogue as _wizard_catalogue
 from .. import (
     CENSO_DERIVED_SOURCE_TAG,
     CENSO_SOURCE_TAG,
@@ -35,6 +37,7 @@ from .._projections import projection_for_taxpayer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_WIZARD_REGISTRATION_MODULES = (_wizard_catalogue,)
 
 _G313 = aeat_url("sede", configured_path("sede_paths", "censo_g313_launcher"))
 
@@ -255,7 +258,11 @@ def test_apply_derives_taxpayer_axes_from_nie_and_iae_for_calendar(secure_store:
         today=date(2025, 4, 1),
     )
     assert calendar.taxpayer_model_declared is True
-    assert {entry.modelo for entry in calendar.entries} >= {"303"}
+    modelo_303 = next(entry for entry in calendar.entries if entry.modelo == "303")
+    assert modelo_303.filing_year == 2025
+    assert modelo_303.period == Period.from_year_and_code(2025, "1T")
+    assert modelo_303.opens_on == date(2025, 4, 1)
+    assert modelo_303.closes_on == date(2025, 4, 21)
 
 
 def test_apply_does_not_infer_income_category_without_iae(secure_store: SecureObjectRepository) -> None:

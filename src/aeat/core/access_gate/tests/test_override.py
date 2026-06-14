@@ -44,6 +44,13 @@ def test_override_to_zero_blocks_live_read() -> None:
         _build_gate().require_live_read()
 
 
+def test_loaded_pytest_module_blocks_live_read_when_current_test_env_is_hidden() -> None:
+    """Click isolation can hide PYTEST_CURRENT_TEST; loaded pytest still marks test execution."""
+    with override_settings(aeat_live_tests_enabled="0"), pytest.raises(AeatLiveReadNotEnabledError):
+        assert "pytest" in __import__("sys").modules
+        _build_gate().require_live_read(pytest_current_test=None)
+
+
 def test_override_to_true_string_still_blocks() -> None:
     """The gate is strict on the literal string '1' — 'true' does not pass."""
     with override_settings(aeat_live_tests_enabled="true"), pytest.raises(AeatLiveReadNotEnabledError):

@@ -63,12 +63,15 @@ _FALLBACK_MARKER: str = "unavailable"
 #: than a leaf command.  These are excluded from the per-command reference
 #: pages (they are group landing surfaces, not operator-invokable leaves) but
 #: are listed on the output-schema registry page (``schemas.rst``).
-_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app"})
+_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app", "ledger.participation"})
 
 #: Command-path normalisation rules that mirror the conformance-test normaliser
 #: in :mod:`aeat.entrypoints.cli.test_json_schema_conformance`.
 _APP_NAMESPACE_FLATTEN: frozenset[str] = frozenset({"ledger", "modelo", "overview", "registry", "review"})
 _APP_NAMESPACE_PASSTHROUGH: frozenset[str] = frozenset({"live"})
+_PATH_KEY_OVERRIDES: dict[str, str] = {
+    "config.profile.history": "config.bucket.history",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +161,8 @@ def _normalise_command_path(path: tuple[str, ...]) -> str:
             tokens = tokens[1:]
         elif head in _APP_NAMESPACE_PASSTHROUGH:
             pass  # keep ``app.`` prefix
-    return ".".join(tokens)
+    normalised = ".".join(tokens)
+    return _PATH_KEY_OVERRIDES.get(normalised, normalised)
 
 
 # ---------------------------------------------------------------------------
@@ -666,8 +670,11 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
+        _ledger_rule_payloads,
         _modelo_payloads,
+        _modelo_payloads_m036,
         _overview_payloads,
+        _payloads_modelo_reconcile,
         _registry_corpus_payloads,
         _registry_payloads,
         _review_payloads,
@@ -683,8 +690,11 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
+        _ledger_rule_payloads,
         _modelo_payloads,
+        _modelo_payloads_m036,
         _overview_payloads,
+        _payloads_modelo_reconcile,
         _registry_corpus_payloads,
         _registry_payloads,
         _review_payloads,

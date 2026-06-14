@@ -308,7 +308,8 @@ class TestInventoryEventEmission:
         assert event.event_type is BucketEventType.LEDGER_INVENTORY_MOVEMENT_ADDED
 
     def test_valuation_preview_emits_ledger_inventory_valuation_previewed(
-        self, secure_engine: TestRuntimeProfile,
+        self,
+        secure_engine: TestRuntimeProfile,
     ) -> None:
         svc = _make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")

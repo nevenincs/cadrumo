@@ -589,7 +589,8 @@ async def _submit_wallet_execute_gate_if_present(
             if _diag_dump_dir is not None:
                 await _dump_wallet_diagnostic(page, label="post-execute", dump_dir=_diag_dump_dir)
             if _wallet_execute_gate_status(
-                post_execute_html, expected_path=expected_path,
+                post_execute_html,
+                expected_path=expected_path,
             ) == "wallet-execute-submit-present" and not _has_wallet_table(post_execute_html):
                 raise SedeNavigationError(
                     "AEAT IVA wallet read query left the executable wallet shell without a wallet table",

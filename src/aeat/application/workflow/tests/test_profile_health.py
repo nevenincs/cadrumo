@@ -11,8 +11,7 @@ from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ....adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
 from ....application.user_profile import UserProfileLifecycleRepository
-from ....core import BucketPointer
-from ....core import read_pointer, write_pointer
+from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

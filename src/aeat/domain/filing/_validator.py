@@ -88,7 +88,9 @@ class ModeloValidator:
     # ── individual rules ─────────────────────────────────────────
 
     def _validate_schema_version(
-        self, draft: ModeloDraft, collection: CasillaCollection,
+        self,
+        draft: ModeloDraft,
+        collection: CasillaCollection,
     ) -> list[ModeloValidationFinding]:
         if draft.schema_version == collection.schema_version:
             return []
@@ -147,7 +149,9 @@ class ModeloValidator:
         )
 
     def _validate_formula_traces(
-        self, draft: ModeloDraft, collection: CasillaCollection,
+        self,
+        draft: ModeloDraft,
+        collection: CasillaCollection,
     ) -> list[ModeloValidationFinding]:
         out: list[ModeloValidationFinding] = []
         for value in draft.values:

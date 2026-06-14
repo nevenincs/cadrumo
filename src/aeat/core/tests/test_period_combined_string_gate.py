@@ -111,7 +111,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="sede connector tests preserve redacted submitted-file fixture names",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/outbound/google/tests/test_(?:pull_result_roundtrip|worksheet_export_pull_roundtrip)\.py$"),
+        path=_path(
+            r"^src/aeat/adapters/outbound/google/tests/test_(?:pull_result_roundtrip|worksheet_export_pull_roundtrip)\.py$"
+        ),
         reason="Google export tests preserve external pull labels and worksheet note locators",
     ),
     AllowlistRule(
@@ -123,7 +125,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="Period source and tests explicitly document/refuse the killed combined input forms",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/_common\.py$|^src/aeat/entrypoints/cli/tests/test_ledger_period_grammar\.py$"),
+        path=_path(
+            r"^src/aeat/entrypoints/cli/_common\.py$|^src/aeat/entrypoints/cli/tests/test_ledger_period_grammar\.py$"
+        ),
         reason="CLI period grammar refusal docs and tests prove calendar/hybrid spellings are rejected",
     ),
     AllowlistRule(
@@ -131,7 +135,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="operator docs explicitly say the killed calendar forms are not accepted",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/tests/(test_modelo_registry_surface|test_modelo|test_cold_start_no_profile)\.py$"),
+        path=_path(
+            r"^src/aeat/entrypoints/cli/tests/(test_modelo_registry_surface|test_modelo|test_cold_start_no_profile)\.py$"
+        ),
         reason="CLI refusal/regression tests use old combined strings as invalid operator input",
     ),
     AllowlistRule(
@@ -143,7 +149,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="privacy-redaction tests preserve sensitive old-shape strings to prove they are redacted",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/domain/calculations/registry/(?:_schema\.py|tests/test_(?:registry_schema_part2|queries)\.py)$"),
+        path=_path(
+            r"^src/aeat/domain/calculations/registry/(?:_schema\.py|tests/test_(?:registry_schema_part2|queries)\.py)$"
+        ),
         reason="registry loader boundary docs/tests cover legacy free-form authored period inputs",
     ),
     AllowlistRule(
@@ -155,7 +163,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="workflow key docs/tests prove declaration keys no longer store combined tokens",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/(?:domain/modelos|application/filing)/tests/test_(?:secure_storage_roundtrip|history_repository|repository)\.py$"),
+        path=_path(
+            r"^src/aeat/(?:domain/modelos|application/filing)/tests/test_(?:secure_storage_roundtrip|history_repository|repository)\.py$"
+        ),
         reason="secure-storage tests assert old combined strings are not persisted in encrypted stores",
     ),
     AllowlistRule(
@@ -187,7 +197,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="aggregation tests still carry targeted invalid-input and historical-label examples",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/calculations/tests/test_(?:iva_wallet_reconciliation|observations_repository_roundtrip)\.py$"),
+        path=_path(
+            r"^src/aeat/application/calculations/tests/test_(?:iva_wallet_reconciliation|observations_repository_roundtrip)\.py$"
+        ),
         reason="calculation tests preserve operator evidence/source locator labels and redaction assertions",
     ),
     AllowlistRule(
@@ -197,11 +209,15 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text("2025" + "-1T"),
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/(?:verification/tests/test_verify_helpers|calculations/tests/test_modelo_720_fichero_boe_roundtrip)\.py$"),
+        path=_path(
+            r"^src/aeat/application/(?:verification/tests/test_verify_helpers|calculations/tests/test_modelo_720_fichero_boe_roundtrip)\.py$"
+        ),
         reason="annual legacy-label tests cover non-core external periodo values",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/(?:adapters/outbound/(?:storage|llm)|application/filing)/tests/test_(?:local|cache_roundtrip|export|testing_registry)\.py$"),
+        path=_path(
+            r"^src/aeat/(?:adapters/outbound/(?:storage|llm)|application/filing)/tests/test_(?:local|cache_roundtrip|export|testing_registry)\.py$"
+        ),
         reason="artifact/cache/export tests preserve external filename and object-key labels",
     ),
     AllowlistRule(
@@ -214,7 +230,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="live capture tests preserve AEAT expediente, observation, and secure-object labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/(?:ledger/tests/_action_test_support|workflow/tests/test_state_persistence_roundtrip)\.py$"),
+        path=_path(
+            r"^src/aeat/application/(?:ledger/tests/_action_test_support|workflow/tests/test_state_persistence_roundtrip)\.py$"
+        ),
         reason="workflow and ledger support tests preserve external work-unit/export path labels",
     ),
     AllowlistRule(
@@ -230,7 +248,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="core tests preserve historical replay argv and path-token examples",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/domain/calculations/registry/tests/test_(?:corpus_round_trip_gate|provisional_specimen_gate)\.py$"),
+        path=_path(
+            r"^src/aeat/domain/calculations/registry/tests/test_(?:corpus_round_trip_gate|provisional_specimen_gate)\.py$"
+        ),
         reason="registry corpus gates generate external justificante fixture filenames",
     ),
     AllowlistRule(
@@ -238,7 +258,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="domain roundtrip tests preserve external justificante, work-unit, and storage labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/entrypoints/cli/tests/test_(?:cli_surface|ledger_corpus_journeys|ledger_persona_yearend_m100|modelo_reconcile_verb|overview_calendar_verb)\.py$"),
+        path=_path(
+            r"^src/aeat/entrypoints/cli/tests/test_(?:cli_surface|ledger_corpus_journeys|ledger_persona_yearend_m100|modelo_reconcile_verb|overview_calendar_verb)\.py$"
+        ),
         reason="CLI journey tests preserve existing filter-output and external work/evidence labels",
     ),
     AllowlistRule(
