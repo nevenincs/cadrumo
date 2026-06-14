@@ -4,5 +4,5 @@ number = "1777"
 label = "Base de la deducción aplicada en 2021, 2022 y 2023"
 section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
 semantic_role = "irpf_anexo_a_mejora_energia_base_aplicada_prev"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:da-50"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

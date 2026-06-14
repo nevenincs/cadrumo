@@ -119,6 +119,10 @@ _SUBSTRING_CONCEPTS: dict[str, tuple[str, tuple[int, ...]]] = {
     "patrim_protegid": ("ley-35-2006:art-54", (2021, 2022, 2023, 2024)),  # patrimonio protegido
     "deportista": ("ley-35-2006:da-11", (2021, 2022, 2023, 2024)),  # mutualidad deportistas
     "anualidades_alimentos": ("ley-35-2006:art-64", (2022, 2023, 2024)),  # anualidades por alimentos
+    "deduccion_vivienda_habitual": ("ley-35-2006:dt-18", (2021, 2022, 2023, 2024)),  # DT-18ª vivienda
+    "mejoras_energeticas": ("ley-35-2006:da-50", (2021, 2022, 2023, 2024)),  # DA-50ª eficiencia energética
+    "eficiencia_energetica": ("ley-35-2006:da-50", (2022, 2023, 2024)),
+    "vehiculos_elec": ("ley-35-2006:da-58", (2023, 2024)),  # DA-58ª vehículos eléctricos
 }
 
 
