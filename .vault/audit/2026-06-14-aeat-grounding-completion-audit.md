@@ -88,6 +88,33 @@ in the follow-up `0ab778724` — net HEAD green, flagged as a clean-collection p
 N1: `_casilla_id_to_number` loads the whole registry tree (lru-cached, off hot path) to
 resolve ~7 box numbers — acceptable.
 
+### W02 blocker verification (C1-lesson applied) — remaining steps need authoritative human-reviewed sourcing
+
+Applying the C1 lesson (check the bundled authoritative corpus before authoring), the three
+remaining grounding-completion steps were each verified blocked on operator input, not merely
+asserted:
+
+- **W02.P03 (IS ERD INCN<10M schedule):** the claimed 24/23/22/21 (2025–2028) schedule is
+  **NOT present in the bundled authoritative corpus** — `ley-27-2014-dt-44.html`
+  contains only the micro-empresa INCN<1M part (21/22 for 2025, 19/21 for 2026), and there
+  is no full `ley-27-2014.html` consolidation bundled. The verification-swarm claim came from
+  a secondary AEAT web page. Authoring it would repeat the C1 fabrication error. BLOCKED on an
+  operator-provided authoritative BOE excerpt (or confirmation the schedule is real and its
+  exact text).
+- **W02.P04 (M200 casilla 00558 two-tranche echo):** the cuota is already correct; only the
+  scalar rate echo is stale (flat 23 % for 2025/2026 micro-empresa). The fix needs AEAT's
+  exact 00558 convention for a two-tranche micro rate (does the box show 21, 23, or is it
+  computed?) — not derivable without the AEAT form spec. BLOCKED on that convention.
+- **W01.P02 (módulos advisory gate):** needs a *declared per-activity volume input* (250k
+  general / 125k factura / 250k compras) that the profile/ledger does not yet collect, AND
+  must gate on filing year because — per C1 — the limits are settled only for 2016–2024 and
+  derogated/unresolved for 2025+. Building it is a categorized-volume feature with a legal
+  year-scope, not a quick step.
+
+These are documented blockers, not skipped work: completing them by fabricating legal text
+from secondary sources or guessing a regulated form convention is exactly what the
+safety-legal-gates discipline and the C1 finding forbid.
+
 ### Verified-sound (honest green surface)
 
 The reviewer independently confirmed: F4 binding selectors correct (rate_kind=zero does not
