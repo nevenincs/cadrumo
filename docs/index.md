@@ -4,7 +4,7 @@
 
 This documentation is the landing page for the `aeat` command-line application:
 it shows how to turn local records into checked modelo figures and export files
-ready to submit to the Agencia Estatal de Administración Tributaria (AEAT). The
+that you upload yourself to the Agencia Estatal de Administración Tributaria (AEAT). The
 project source is on [GitHub](https://github.com/wgergely/aeat).
 
 `aeat` is for autónomos, small businesses, and the people who help them prepare

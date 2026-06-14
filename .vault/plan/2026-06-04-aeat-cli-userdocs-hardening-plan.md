@@ -147,8 +147,8 @@ Make verification failures actionable.
 Write the final handoff checklist.
 
 - [x] `W06.P12.S38` - Create a verify-export-upload-record-reconcile checklist: verify result, export path, checksum or file identity, upload manually in the AEAT portal, save justificante, record the local filed marker only after real upload, then reconcile; `filing handoff docs`.
-- [ ] `W06.P12.S39` - Rewrite `work file` language in userdocs so "filed" always reads as an internal state, never remote submission; `filing handoff docs`.
-- [ ] `W06.P12.S40` - Expand the reconciliation guide with what to do when casillas diverge and what evidence to keep; `reconciliation docs`.
+- [x] `W06.P12.S39` - Rewrite `work file` language in userdocs so "filed" always reads as an internal state, never remote submission; `filing handoff docs`.
+- [x] `W06.P12.S40` - Expand the reconciliation guide with what to do when casillas diverge and what evidence to keep; `reconciliation docs`.
 
 ## Wave `W07` - Troubleshooting, live-read, and gates
 
