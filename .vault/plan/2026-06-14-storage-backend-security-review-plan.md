@@ -181,7 +181,7 @@ Remove non-deterministic bundle timestamps and host-absolute paths from the audi
 
 Detect cross-store rename drift and resolve the manifest-digest doc-vs-code gap.
 
-- [ ] `W04.P09.S19` - Compare the manifest label against the record display_name in verify_profile_integrity and raise on divergence; `src/aeat/application/user_profile/_profile_repository.py`.
+- [x] `W04.P09.S19` - Compare the manifest label against the record display_name in verify_profile_integrity and raise on divergence; `src/aeat/application/user_profile/_profile_repository.py`.
 - [ ] `W04.P09.S20` - Implement the manifest-digest cross-check over a timestamp-independent projection or correct the contract docstring; `src/aeat/application/bucket_maintenance/_manifest_digest.py`.
 
 ## Wave `W05` - standardisation structure enrollment

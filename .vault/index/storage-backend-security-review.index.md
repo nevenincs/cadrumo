@@ -16,6 +16,7 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S13]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P07-S15]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P07-S16]]'
+  - '[[2026-06-14-storage-backend-security-review-W04-P09-S19]]'
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-06-14-storage-backend-security-review-plan]]'
   - '[[2026-06-14-storage-backend-security-review-research]]'
@@ -43,6 +44,7 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W03-P06-S13` - Re-read and re-validate the holder PID immediately before the stale-lock reclaim unlink
 - `2026-06-14-storage-backend-security-review-W04-P07-S15` - Replace the resolved absolute source_path provenance with a relative filename or sha-only reference in the raw transaction model
 - `2026-06-14-storage-backend-security-review-W04-P07-S16` - Add a cross-OS transaction provenance roundtrip test proving rehydration does not mutate the persisted shape
+- `2026-06-14-storage-backend-security-review-W04-P09-S19` - Compare the manifest label against the record display_name in verify_profile_integrity and raise on divergence
 
 ### plan
 
