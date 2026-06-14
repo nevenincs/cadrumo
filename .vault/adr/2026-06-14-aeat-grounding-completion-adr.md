@@ -1,0 +1,140 @@
+---
+tags:
+  - '#adr'
+  - '#aeat-grounding-completion'
+date: '2026-06-14'
+modified: '2026-06-14'
+related:
+  - "[[2026-06-14-legal-grounding-centralization-audit]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #adr) and one feature tag.
+     Replace aeat-grounding-completion with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     Status convention: the H1 status value is one of proposed, accepted,
+     rejected, or deprecated. A new ADR starts as proposed; it moves to
+     accepted or rejected when the decision is made, and to deprecated
+     when a later ADR supersedes it.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+# `aeat-grounding-completion` adr: `Build Legitimately-Missing Spanish-Tax Grounding Features` | (**status:** `accepted`)
+
+## Problem Statement
+
+The legal-grounding verification swarms confirmed the codebase's regulatory figures are
+overwhelmingly correct and centralized, but surfaced a class of findings that are not
+wrong values or mis-placed literals — they are LEGITIMATELY MISSING FEATURES: real
+Spanish-tax law the application should model but currently does not. Operator directive
+(2026-06-14): the grounding campaign is a multi-day effort, and where a feature is
+legitimately missing it is IN SCOPE to BUILD it (not merely track it as a gap). This
+ADR records the decision to build the identified missing grounding features and the
+per-gap approach, grounded against BOE/AEAT sources.
+
+## Considerations
+
+The missing features differ in kind and risk: (a) missing registry DATA/law that a
+gate would consume (the estimación-objetiva módulos magnitude-exclusion limits; the IS
+Entidad de Reducida Dimensión INCN<10M transitional schedule) — low-risk registry
+authoring with clear legal basis; (b) a display-echo limitation where the underlying
+tax is already correct (the M200 casilla 00558 two-tranche micro-empresa rate echo) —
+must not regress the correct cuota; (c) dormant/duplicate aggregation routing already
+tracked in the centralization plan's phase P03 (M303 casilla 59/60 base bindings, the
+compensación casilla routing, prorrata-subsystem enrollment) — those stay in that plan.
+Every authored value MUST carry its binding provision per `registry-calculation-legal-
+grounding`, and every gate must be advisory-first per `no-silent-under-declaration`
+where a hard block could refuse a legitimate filing.
+
+## Constraints
+
+These are regulated tax surfaces: a wrong authored value or an over-strict gate is the
+exact harm the campaign prevents, so each build lands only with BOE-grounded values,
+corpus cross-checks where a corpus text exists, and real-behaviour tests (no
+tautologies). The módulos limits depend on the existing estimación-objetiva regime
+selection (`IrpfEstimationRegime`); the IS schedule depends on the existing M200
+registry parameter/bracket structure. Both parent surfaces are stable. The work is
+incremental and independently landable per gap — no single large irreversible change.
+
+## Implementation
+
+Wave-structured, one gap-cluster per wave. **W01 módulos exclusion limits:** author the
+DT 32ª in-force magnitudes — 250.000 € general rendimientos íntegros, 125.000 €
+operaciones con obligación de factura (destinatario empresario), 250.000 € agrícolas/
+ganaderas/forestales, 250.000 € volumen de compras — as grounded registry parameters
+(legal_refs `ley-35-2006:art-31`, `ley-35-2006:dt-32`, the annual Orden de módulos),
+plus an advisory gate that surfaces a `Notice` when a declared volume exceeds a limit
+(módulos exclusion is operator-consequential but self-declared, so advisory-first).
+**W02 IS rate-surface gaps:** add the true ERD (INCN<10M, LIS art. 101) DT 44ª schedule
+24%(2025)/23%(2026)/22%(2027)/21%(2028) as a registry parameter distinct from the
+mis-named micro-empresa "erd" scalar, and land the deferred bracket-based casilla-00558
+rate echo so the displayed micro-empresa rate reflects the two-tranche scale for
+2025/2026 instead of the stale flat 23%. Each wave is its own grounded, tested landing.
+
+## Rationale
+
+Per the operator directive, a verified missing feature is in scope to build, not defer.
+The registry is the authority (`aeat-schema-central-config`, `aeat-registry-authority-
+flow`), so the missing law is authored there with grounding the existing gates enforce.
+Advisory-first gating follows `no-silent-under-declaration` (surface the risk) without
+the over-block risk a hard refusal carries on a self-declared regime. Sequencing the
+low-risk registry-data builds (módulos, ERD schedule) before the display-echo change
+keeps the correct cuota untouched while the safe wins land.
+
+## Consequences
+
+Gains: the application gains real filing-obligation gates it lacked (a taxpayer who
+exceeds the módulos volume is now alerted rather than silently mis-gated), the IS ERD
+INCN<10M lane gains its transitional rates, and the M200 rate echo stops displaying a
+stale figure. Honest difficulty: the módulos magnitudes are self-declared inputs the
+app may not yet collect, so the gate's antecedent (declared volume) may need a new
+profile/ledger input to be fully live — the advisory fires only when the input exists,
+and W01 must say so rather than imply full coverage. The M200 echo change touches a
+regulated display casilla and must prove the cuota is unchanged. The broader campaign
+(all Spanish-tax concepts) continues beyond these waves; this ADR covers the gaps the
+two verification swarms surfaced, and later swarms will surface more.
+
+## Codification candidates
+
+- **Rule slug:** `missing-regulatory-law-is-built-in-the-registry`. **Rule:** when a
+  verification pass finds a real Spanish-tax provision the application should model but
+  does not, author it as a grounded registry parameter (legal_refs→corpus_ref) with an
+  advisory-first gate — do not leave it as a corpus-only reference or an un-enforced
+  comment. (Promote only after this ADR's waves land and the pattern holds.)
+
+## Codification candidates
+
+<!-- If this decision introduces a durable cross-session constraint
+that should bind future agents (an obligation, a prohibition, a
+discipline that survives this feature's lifecycle), name it here as
+a candidate for promotion into a project rule under
+`.vaultspec/rules/rules/` via the codify pipeline phase.
+
+Each candidate names the proposed rule slug (kebab-case, naming the
+constraint's subject) and a one-sentence statement of the rule.
+
+Not every ADR produces a codification candidate. Decisions that are
+local to one feature, or that describe rather than constrain, leave
+this section empty. An empty Codification candidates section is a
+positive signal, not a failure. -->
+
+<!-- Example:
+
+- **Rule slug:** `destructive-verbs-need-dry-run`.
+  **Rule:** Every CLI verb that writes or removes state must
+  accept `--dry-run` and emit a usable preview before applying.
+
+-->
