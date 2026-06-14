@@ -555,6 +555,29 @@ The ley-35-2006 grounding lane has corrected every cleanly-disambiguable LIRPF c
 (autonomic-law corpus); the smaller LIRPF concepts are the same proven method, each gated on its
 legal entry.
 
+### V16 (added mínimo/rdtos sections; CONSTRUCT-ENTANGLEMENT constraint discovered + base sections reverted)
+
+Grounded two more clean result sections (commit `fcc54789f`, 108 casillas): `minimo_per_fam_res`
+→ art. 56 (mínimo personal y familiar) and `rdtos_cm_negativos_res` → art. 49 (integración base
+ahorro). **Running total ~2251 casillas.**
+
+**NEW CONSTRAINT — construct-bound casillas need coordinated grounding.** An attempt to ground the
+base-computation result sections (`base_imponible_res`→48/49, `base_liquidable_res`/`base_liq_neg_res`
+→50) tripped the registry referential validator: those casillas are members of calculation
+**constructs** (`renta-*-cuota-chain`, `mini-model-base-y-cuota`, `anexo-c-base-liquidable-negativa`),
+and the validator requires a construct to declare every legal_ref its member casillas carry
+(`construct '…base-liquidable-negativa-general' does not include legal refs ['…art-50'] required by
+casilla '1388'`). The base-computation sections are load-bearing calculation structure (the cuota
+chain), unlike the data-entry/result sections grounded so far. Grounding them by the simple
+section-tag method would require coordinated construct legal_refs updates across ~12 construct files
+per year (whack-a-mole risk). The base-section commit was therefore **reverted** (`63dbb98ad`,
+restoring referential green); the other ~2251 grounded casillas are unaffected (the whole registry
+re-validates). **Lesson for the next pass:** before grounding any `_res`/result casilla, check
+construct membership (`rg <casilla-id> .../constructs/`); a construct-bound casilla must have its new
+legal_ref added to every owning construct in the SAME change, or be left to a construct-aware pass.
+The cleanly-grounded sections so far were all NON-construct-bound (the validator confirms this by
+passing).
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
