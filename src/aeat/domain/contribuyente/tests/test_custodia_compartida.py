@@ -31,7 +31,7 @@ FILING_YEAR = 2024
 
 # Registry-authoritative Art. 58 amounts (2024 revision)
 _MINIMO_1 = Decimal("2400")
-_MENOR_TRES = Decimal("3000")
+_MENOR_TRES = Decimal("2800")
 
 
 # ---------------------------------------------------------------------------
