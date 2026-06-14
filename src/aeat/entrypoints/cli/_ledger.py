@@ -440,6 +440,11 @@ def ledger_classify(
         "--evidence-acknowledged",
         help=tr("cli.ledger.classify.evidence_acknowledged_help"),
     ),
+    vision_model: str | None = typer.Option(
+        None,
+        "--vision-model",
+        help=tr("cli.ledger.classify.vision_model_help"),
+    ),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
     if llm is not None or read_evidence:
@@ -455,6 +460,7 @@ def ledger_classify(
                 actor=actor,
                 read_evidence=read_evidence,
                 evidence_acknowledged=evidence_acknowledged,
+                vision_model=vision_model,
             )
             return
         _ledger_classify_llm(
@@ -468,6 +474,7 @@ def ledger_classify(
             actor=actor,
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
         )
         return
     if saturate:
@@ -592,6 +599,7 @@ def _ledger_classify_llm(
     actor: str | None,
     read_evidence: bool = False,
     evidence_acknowledged: bool = False,
+    vision_model: str | None = None,
 ) -> None:
     """Run the LLM suggest / apply loop for ``aeat app ledger classify --llm``.
 
@@ -649,6 +657,7 @@ def _ledger_classify_llm(
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
         )
     except LLMClassifierError as exc:
         raise _bad(
@@ -731,6 +740,7 @@ def _ledger_saturate_llm(
     actor: str | None,
     read_evidence: bool = False,
     evidence_acknowledged: bool = False,
+    vision_model: str | None = None,
 ) -> None:
     """Run the saturating LLM suggest / apply loop for ``classify --llm --saturate``.
 
@@ -783,6 +793,7 @@ def _ledger_saturate_llm(
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
         )
     except LLMClassifierError as exc:
         raise _bad(

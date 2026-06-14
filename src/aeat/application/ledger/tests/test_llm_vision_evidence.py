@@ -248,6 +248,7 @@ def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile)
             text_classifier=None,  # no --llm provider resolved
             spec=prompt_spec_with_saturation_fields(),
             vision_classifier=None,
+            vision_model=None,
             settings=load_settings(),
         )
 
@@ -265,5 +266,40 @@ def test_text_or_no_evidence_without_provider_refuses_instructively() -> None:
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(),
             vision_classifier=None,
+            vision_model=None,
             settings=load_settings(),
         )
+
+
+def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfile) -> None:
+    """--vision-model threads through to the request model and the provenance stamp."""
+    _ = profile  # active bucket session backs the LLM cache
+    classification_json = json.dumps(
+        {
+            "classification": "BUSINESS",
+            "confidence": 0.8,
+            "reason": "office invoice",
+            "category": SpendingCategory.HARDWARE_AMORTIZABLE.value,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL_21.value,
+        },
+    )
+    evidence = _ResolvedEvidence(
+        reference="ev-1", text=None, images=(base64.b64encode(_png_image()).decode("ascii"),),
+    )
+
+    def _call() -> tuple[LLMClassificationResponse, str]:
+        return _classify_with_evidence(
+            _transaction("ev-1"),
+            evidence,
+            text_classifier=None,
+            spec=prompt_spec_with_saturation_fields(),
+            vision_classifier=None,
+            vision_model="qwen2.5vl:7b",
+            settings=load_settings(),
+        )
+
+    observed, (_response, provenance) = _run_against_loopback_ollama(classification_json, _call)
+    assert provenance == "llm:local-vision:qwen2.5vl:7b"
+    body = observed["body"]
+    assert isinstance(body, dict)
+    assert body["model"] == "qwen2.5vl:7b"  # ty: ignore[invalid-argument-type]  # narrowed by isinstance above

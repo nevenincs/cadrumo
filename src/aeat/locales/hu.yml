@@ -2537,6 +2537,7 @@ cli:
         es az osszeget), vagy az --llm <szolgaltato> kapcsolot, hogy egy modell valassza
         ki a kategoriat.'
       taxable_base_help: Adóköteles alapösszeg.
+      vision_model_help: 'Felülírja a helyi Ollama látómodellt egy beszkennelt vagy képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított modellt használja.'
     doclink:
       actor_help: Operátor címke.
       help: Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított bizonyítékként

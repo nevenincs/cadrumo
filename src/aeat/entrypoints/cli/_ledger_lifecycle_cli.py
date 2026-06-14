@@ -487,12 +487,20 @@ def ledger_split(
             default="Acknowledge --read-evidence sends the evidence to a cloud model (off by default, gestor-barred).",
         ),
     ),
+    vision_model: str | None = typer.Option(
+        None,
+        "--vision-model",
+        help=tr(
+            "cli.ledger.split.vision_model_help",
+            default="Override the local Ollama vision model for a scanned/image invoice read (e.g. qwen2.5vl:7b).",
+        ),
+    ),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.split.reason_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.split.yes_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.split.actor_help")),
 ) -> None:
     """Redistribute one parent transaction into N child transactions (manual or --llm)."""
-    if llm is not None:
+    if llm is not None or read_evidence:
         _ledger_split_llm(
             ctx,
             transaction_id=transaction_id,
@@ -502,6 +510,7 @@ def ledger_split(
             apply=apply,
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
             reason=reason,
             yes=yes,
             actor=actor,
@@ -596,10 +605,11 @@ def _ledger_split_llm(
     transaction_id: str,
     child_amount: list[str],
     child_description: list[str],
-    provider: LLMProvider,
+    provider: LLMProvider | None,
     apply: bool,
     read_evidence: bool,
     evidence_acknowledged: bool,
+    vision_model: str | None,
     reason: str,
     yes: bool,
     actor: str | None,
@@ -624,7 +634,7 @@ def _ledger_split_llm(
                 "the manual path is the explicit operator override.",
             ),
         )
-    if not is_llm_provider_available(provider):
+    if provider is not None and not is_llm_provider_available(provider):
         raise _bad(
             tr(
                 "cli.ledger.classify.llm_provider_unavailable",
@@ -651,6 +661,7 @@ def _ledger_split_llm(
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
         )
     except PurchaseInvoiceEvidenceInputError as exc:
         raise _bad(str(exc)) from exc
@@ -683,7 +694,7 @@ def _ledger_split_llm(
                 "parent_transaction_id": suggestion.transaction_id,
                 "llm": True,
                 "persisted": False,
-                "provider": suggestion.provider.value,
+                "provider": suggestion.provider.value if suggestion.provider is not None else None,
                 "provenance": suggestion.provenance,
                 "reason": suggestion.reason,
                 "parent_amount": format(suggestion.parent_amount, "f"),
@@ -719,7 +730,7 @@ def _ledger_split_llm(
             "child_transaction_ids": list(applied.child_transaction_ids),
             "llm": True,
             "persisted": True,
-            "provider": suggestion.provider.value,
+            "provider": suggestion.provider.value if suggestion.provider is not None else None,
             "provenance": applied.provenance,
             "reason": suggestion.reason,
             "parent_amount": format(suggestion.parent_amount, "f"),
