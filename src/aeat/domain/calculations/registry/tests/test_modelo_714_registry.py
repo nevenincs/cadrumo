@@ -110,3 +110,30 @@ def test_modelo_714_snapshot_builds_for_2021_event_period() -> None:
         period="0A",
     )
     assert snapshot.revision.id == "2021-y-siguientes"
+
+
+@pytest.mark.parametrize(
+    ("base_liquidable", "expected_cuota", "expected_suelo_80"),
+    [
+        # Casilla 39 (art. 31 suelo) = 80% of the cuota integra (casilla 29).
+        ("0", "0.00", "0.00"),
+        ("1336999.51", "8523.36", "6818.69"),  # 8523.36 * 0.80
+        ("1000000", "5490.36", "4392.29"),  # 5490.36 * 0.80
+        ("20000000", "509310.43", "407448.34"),  # 509310.43 * 0.80
+    ],
+)
+def test_modelo_714_reduccion_limite_80_is_80pct_of_cuota_integra(
+    base_liquidable: str, expected_cuota: str, expected_suelo_80: str
+) -> None:
+    """Casilla 39 (Ley 19/1991 art. 31 suelo) computes as 80% of the cuota integra."""
+    modelo, catalogues = _load_modelo_714()
+    snapshot = build_snapshot(
+        modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A"
+    )
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={"patrimonio.base-liquidable": Decimal(base_liquidable)},
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+    assert result.values.get("patrimonio.cuota-integra") == Decimal(expected_cuota)
+    assert result.values.get("patrimonio.reduccion-limite-80") == Decimal(expected_suelo_80)

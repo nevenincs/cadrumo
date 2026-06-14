@@ -1,12 +1,14 @@
 # Modelo 714 calculation-completeness manifest.
 #
 # Enumerates the casillas in this revision's calculation closure. Phase-B
-# implements the cuota íntegra (casilla 29) as the Ley 19/1991 art. 30 escala
-# applied to the base liquidable, so the closure is exactly those two casillas:
-# the escala formula target (29) and its single operand (base liquidable).
-# Re-derived off-load-path by the record-design gate (test_record_design) and
-# asserted to match this manifest. The remaining downstream chain stays a manual
-# foundation (not part of the closure) until its own formula evidence lands.
+# implements (a) the cuota íntegra (casilla 29) as the Ley 19/1991 art. 30 escala
+# applied to the base liquidable, and (b) the 80%-suelo reference (casilla 39,
+# art. 31) as 80 % of the cuota íntegra. The closure is therefore the base
+# liquidable (escala operand), casilla 29 (escala target / 39 operand) and
+# casilla 39 (suelo target). Re-derived off-load-path by the record-design gate
+# (test_record_design) and asserted to match this manifest. The remaining
+# downstream chain (límite conjunto 33/40, cuota minorada, cuota a ingresar)
+# stays a manual foundation until its own formula evidence lands.
 
 [revisions."2021-y-siguientes".completeness_manifest]
 source_ref = "aeat-modelo-714-procedure"
@@ -18,3 +20,6 @@ number = "patrimonio.base-liquidable"
 
 [[revisions."2021-y-siguientes".completeness_manifest.casillas]]
 number = "29"
+
+[[revisions."2021-y-siguientes".completeness_manifest.casillas]]
+number = "39"
