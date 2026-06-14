@@ -770,28 +770,6 @@ class FileFallbackMasterKeyProvider:
                 _log.debug("chmod 0o700 failed on %s; continuing", target)
 
     @staticmethod
-    def _write_bytes_secure(target: Path, payload: bytes) -> None:
-        """Write ``payload`` to ``target`` with mode 0o600 on POSIX.
-
-        Uses ``os.open(O_WRONLY|O_CREAT|O_TRUNC, 0o600)`` on POSIX so
-        the file lands restricted from creation rather than relying on
-        a chmod after the fact (which has a TOCTOU window). On Windows
-        the mode argument is ignored and the file inherits the parent
-        directory's ACL; the file backend's confidentiality posture on
-        Windows depends on per-user profile permissions plus the
-        operator's passphrase, not on POSIX mode bits.
-        """
-        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-        # Avoid inheriting handles into child processes on Windows.
-        flags |= getattr(os, "O_NOINHERIT", 0)
-        flags |= getattr(os, "O_CLOEXEC", 0)
-        fd = os.open(target, flags, 0o600)
-        try:
-            os.write(fd, payload)
-        finally:
-            os.close(fd)
-
-    @staticmethod
     def _derive_kek_with_params(passphrase: bytes, salt: bytes, params: _KdfParameters) -> bytes:
         return derive_kek_with_params(
             passphrase,

@@ -7,6 +7,14 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ._kdf_params import (
+    _MAX_MEMORY_COST_KIB,
+    _MAX_PARALLELISM,
+    _MAX_TIME_COST,
+    _MIN_MEMORY_COST_KIB,
+    _MIN_PARALLELISM,
+    _MIN_TIME_COST,
+)
 from ._master_key_derivation import KDF_PARAMS_VERSION
 
 
@@ -36,15 +44,21 @@ class EnvelopeDocument(BaseModel):
 
 
 class _KdfParameters(BaseModel):
-    """On-disk record of the Argon2id parameters used to derive the KEK."""
+    """On-disk record of the Argon2id parameters used to derive the KEK.
+
+    The Argon2 cost fields carry the same OWASP-baseline validation window as the
+    bucket-manifest :class:`KdfParams`, so a tampered or buggy ``master.kdf`` that
+    declares a below-floor cost is refused on read instead of silently deriving a
+    weakened KEK.
+    """
 
     model_config = _STRICT_FROZEN
 
     version: int = Field(default=KDF_PARAMS_VERSION)
     algorithm: Literal["argon2id"] = Field(default="argon2id")
-    memory_cost: int
-    time_cost: int
-    parallelism: int
+    memory_cost: int = Field(ge=_MIN_MEMORY_COST_KIB, le=_MAX_MEMORY_COST_KIB)
+    time_cost: int = Field(ge=_MIN_TIME_COST, le=_MAX_TIME_COST)
+    parallelism: int = Field(ge=_MIN_PARALLELISM, le=_MAX_PARALLELISM)
     salt_b64: str
 
 
