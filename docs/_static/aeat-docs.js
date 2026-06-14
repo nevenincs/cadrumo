@@ -342,9 +342,30 @@
         return Promise.all([cardSearch, pageSearch]).then(function (both) {
           var cardResults = both[0] && both[0].results ? both[0].results : [];
           var pageResults = both[1] && both[1].results ? both[1].results : [];
+          /* Every injected concept card carries the same `weight` (tier one is
+           * a flat 1.0), so the weight-sorted card pass ties them all and
+           * returns them in Pagefind's internal (non-relevance) order - the
+           * exact-term match ("iva" -> the IVA concept) can then sink below
+           * concepts that only match "iva" incidentally, or fall out of the
+           * visible head entirely. The relevance pass DOES order by textual
+           * match, so capture each url's relevance rank and carry it onto the
+           * card; compose() breaks within-tier ties by it, floating the best
+           * textual match to the top of its tier while the tier itself still
+           * keeps cards above full-text pages. */
+          var relRank = {};
+          pageResults.forEach(function (r, i) {
+            if (relRank[r.url] === undefined) relRank[r.url] = i;
+          });
           return dataToCards(cardResults, 12).then(function (cards) {
             return dataToCards(pageResults, 6).then(function (pages) {
-              return cards.concat(pages);
+              var all = cards.concat(pages);
+              all.forEach(function (item) {
+                item.relRank =
+                  relRank[item.href] !== undefined
+                    ? relRank[item.href]
+                    : Number.MAX_SAFE_INTEGER;
+              });
+              return all;
             });
           });
         });
@@ -386,7 +407,12 @@
       var seenHref = {};
       var ordered = [];
       var cards = (pagefindCards || []).slice().sort(function (a, b) {
-        return b.tierRank - a.tierRank;
+        /* Primary axis: the tier+weight rank (concept > cli > casilla > page),
+         * so cards always sit above full-text pages. Secondary axis: the
+         * relevance rank, so within a tier the best textual match leads (the
+         * IVA concept ahead of concepts that merely mention "iva"). */
+        if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
+        return (a.relRank || 0) - (b.relRank || 0);
       });
       cards.forEach(function (card) {
         if (seenHref[card.href]) return;
