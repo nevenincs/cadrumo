@@ -31,6 +31,10 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str, tuple[int, ...]]] = {
     "saldos_neg_gy_p_ahorro_res": ("ley-35-2006:art-49", (2021, 2022, 2023, 2024)),
     # deducciones en cuota acogidas al régimen del IS (I+D, cine, etc.) — art. 68.2 LIRPF
     "deducciones_inversion_empresarial_res": ("ley-35-2006:art-68", (2021, 2022, 2023, 2024)),
+    # mínimo personal y familiar (resultado) — art. 56 (umbrella de arts. 56-61)
+    "minimo_per_fam_res": ("ley-35-2006:art-56", (2021, 2022, 2023, 2024)),
+    # rendimientos de capital mobiliario negativos pendientes — integración base ahorro
+    "rdtos_cm_negativos_res": ("ley-35-2006:art-49", (2021, 2022, 2023, 2024)),
 }
 
 
