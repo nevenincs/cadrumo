@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.external_constants import OutputLanguage
+
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import (
     InjectionStats,
@@ -120,16 +122,66 @@ def test_relevance_file_absent_yields_empty_map(tmp_path: Path) -> None:
 @pytest.mark.unit
 @pytest.mark.hex_core
 def test_relevance_file_present_is_loaded(tmp_path: Path) -> None:
-    """A present relevance file's weights are loaded and clamped."""
+    """The committed SweepResult is parsed into a per-record boost map.
+
+    The loader consumes the exact shape the sweep writes (``mappings[]`` with
+    laundered ``targets[]``), not a hand-imagined flat ``{"weights": {...}}``
+    map. A record id that several query terms resolved to keeps its STRONGEST
+    weight.
+    """
+    from ..terminology._search_record import SearchRecordKind
+    from ..terminology._sweep import SweepResult, TermRelevanceMapping, TermTargetRef
+
+    def _target(record_id: str, weight: float) -> TermTargetRef:
+        return TermTargetRef(
+            record_id=record_id,
+            target=f"_generated/glossary.html#term-{record_id.split(':')[-1]}",
+            kind=SearchRecordKind.CONCEPT,
+            surface="concept",
+            ranking_weight=weight,
+        )
+
+    result = SweepResult(
+        mappings=(
+            TermRelevanceMapping(
+                query="prorrata",
+                concept_id="prorrata",
+                language=OutputLanguage.ES,
+                targets=(_target("concept:prorrata", 0.6),),
+            ),
+            TermRelevanceMapping(
+                query="regla de prorrata",
+                concept_id="prorrata",
+                language=OutputLanguage.ES,
+                # Same record id surfaced again with a stronger weight: the
+                # loader keeps the maximum.
+                targets=(_target("concept:prorrata", 0.95), _target("concept:iva", 0.4)),
+            ),
+        ),
+        query_count=2,
+        concept_count=1,
+        failed_query_count=0,
+        reindex_note="test fixture",
+        score_floor=0.5,
+    )
+
     rel = tmp_path / "src/aeat/_data/terminology/relevance"
     rel.mkdir(parents=True)
-    (rel / "relevance.json").write_text(
-        json.dumps({"weights": {"concept:prorrata": 0.9, "concept:iva": 2.0}}),
-        encoding="utf-8",
-    )
+    (rel / "relevance.json").write_text(result.model_dump_json(), encoding="utf-8")
+
     weights = load_relevance_weights(tmp_path)
-    assert weights["concept:prorrata"] == 0.9
-    assert weights["concept:iva"] == 1.0  # clamped into [0, 1]
+    assert weights["concept:prorrata"] == 0.95  # strongest of 0.6 / 0.95
+    assert weights["concept:iva"] == 0.4
+
+
+@pytest.mark.unit
+@pytest.mark.hex_core
+def test_relevance_file_malformed_yields_empty_map(tmp_path: Path) -> None:
+    """A file that is not a valid SweepResult yields an empty boost map."""
+    rel = tmp_path / "src/aeat/_data/terminology/relevance"
+    rel.mkdir(parents=True)
+    (rel / "relevance.json").write_text(json.dumps({"not": "a sweep result"}), encoding="utf-8")
+    assert load_relevance_weights(tmp_path) == {}
 
 
 @pytest.mark.integration
@@ -257,6 +309,41 @@ def test_materialises_every_kind_with_graceful_cli() -> None:
     sample = materialised.records[0]
     assert sample.target
     assert 0.0 <= sample.ranking_weight <= 1.0
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_compile_search_index_wires_the_real_injector_over_built_html(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The docs-build driver compiles a working corpus over built HTML.
+
+    Proves the ``dev.docs.build.compile_search_index`` wiring end to end: it
+    runs the Pagefind directory pass over the built HTML and injects the unified
+    search records, writing a per-language index alongside the pages. This is
+    the seam ``just docs`` invokes after a full Sphinx build; without it the
+    bundled Ctrl-K corpus never compiles. A real concept-subset injector is
+    supplied so the wiring is exercised without the multi-minute full
+    casilla/CLI materialisation (production uses the default full injector).
+    """
+    from ..build import compile_search_index
+
+    site = _fixture_site(tmp_path, pages=3)
+    materialised = _concept_records()
+
+    async def inject(index: object) -> None:
+        await _inject_records(index, materialised, {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed
+
+    compile_search_index(site, _REPO_ROOT, injector=inject)
+
+    pagefind = site / "pagefind"
+    assert (pagefind / "pagefind-entry.json").is_file()
+    assert (pagefind / "pagefind.js").is_file()
+    # The driver reports the compiled corpus (page count + record line).
+    summary = capsys.readouterr().out
+    assert "Search index compiled" in summary
+    assert "term/casilla/CLI records" in summary
 
 
 @pytest.mark.unit

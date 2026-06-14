@@ -229,6 +229,17 @@ class TargetResolver:
         for card in _load_concept_cards():
             self._concept_by_id[card.concept_id] = to_search_record(card)
 
+    def concept_record(self, concept_id: str) -> SearchRecord | None:
+        """Return the unified concept-card record for ``concept_id``, if enrolled.
+
+        The concept card is the first-class palette result (ADR D4). The sweep
+        uses this to seed a query's originating concept card as a guaranteed
+        target: a closed-vocabulary term is, by construction, a label *of* that
+        concept, so its card is the canonical top result regardless of whether
+        RAG re-discovered the concept's own authoring fragment.
+        """
+        return self._concept_by_id.get(concept_id)
+
     def resolve(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
         """Resolve one chunk hit to a typed target, or drop and report it."""
         path = hit.posix_path.as_posix()

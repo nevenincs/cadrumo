@@ -45,29 +45,53 @@ def test_held_out_queries_are_compiled_vocabulary_cases() -> None:
 
 
 def test_held_out_miss_rate_measures_the_committed_relevance_mapping() -> None:
-    """Current committed data has one measured hit and honest targetless misses."""
+    """The refreshed, non-degraded corpus resolves every held-out query.
+
+    The committed mapping is now a complete, non-degraded sweep: zero failed
+    queries, and every shipped query carries at least its originating concept
+    card plus the RAG-discovered grounding surfaces. So every held-out case
+    resolves -- the worked example ``regla de prorrata`` to its BOE legal
+    article, the catalogued-term cases to their first-class concept card.
+    """
     evaluation = evaluate_held_out_miss_rate()
     by_query = {row.query: row for row in evaluation.rows}
 
     assert evaluation.case_count == len(load_held_out_query_set().cases)
     assert evaluation.compiled_query_count == load_committed_relevance().query_count
+    # The sweep is non-degraded: no transient retrieval failures were recorded.
+    assert evaluation.compiled_failed_query_count == 0
+    # Every shipped query resolved to at least one target (the concept-card seed
+    # guarantees coverage; RAG adds the grounding surfaces).
+    assert evaluation.compiled_targeted_query_count == evaluation.compiled_query_count
+    # The prorrata worked example resolves to its real BOE legal grounding.
     assert by_query["regla de prorrata"].hit
     assert by_query["regla de prorrata"].matched_record_id in {
         "legal:ley-37-1992:art-104",
         "legal:ley-37-1992:art-102",
         "concept:prorrata-especial",
     }
-    assert evaluation.hit_count == 1
-    assert evaluation.miss_count == 4
-    assert evaluation.miss_rate == pytest.approx(0.8)
-    assert {row.reason for row in evaluation.rows if not row.hit} == {MissReason.NO_TARGETS}
+    # No targetless misses remain on the complete corpus.
+    assert evaluation.hit_count == evaluation.case_count
+    assert evaluation.miss_count == 0
+    assert evaluation.miss_rate == pytest.approx(0.0)
+    assert not [row for row in evaluation.rows if row.reason is MissReason.NO_TARGETS]
 
 
-def test_rung2_adjudication_requires_relevance_refresh_before_embeddings() -> None:
-    """A degraded sweep cannot be used as proof that static embeddings are needed."""
+def test_rung2_adjudication_keeps_static_embeddings_deferred() -> None:
+    """A complete, non-degraded sweep keeps the static rung-2 matrix deferred.
+
+    With zero failed queries the adjudicator stops demanding a refresh and
+    measures honestly: the held-out miss-rate is within the accepted threshold,
+    so the ~1-3 MB static term-embedding matrix (rung 2) stays deferred. The
+    residual closed-vocabulary queries are served first-class by the concept
+    card and four-language declared aliases (rung 1); rung 2's unique value --
+    live embedding of UNCATALOGUED free text -- is not exercised by any
+    held-out miss.
+    """
     evaluation = evaluate_held_out_miss_rate()
     adjudication = adjudicate_rung2(evaluation)
 
-    assert evaluation.compiled_failed_query_count > 0
-    assert adjudication.decision is Rung2Decision.REFRESH_RELEVANCE_FIRST
+    assert evaluation.compiled_failed_query_count == 0
+    assert evaluation.miss_rate <= adjudication.miss_rate_threshold
+    assert adjudication.decision is Rung2Decision.KEEP_DEFERRED
     assert adjudication.measured_miss_rate == evaluation.miss_rate
