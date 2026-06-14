@@ -35,6 +35,11 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str, tuple[int, ...]]] = {
     "minimo_per_fam_res": ("ley-35-2006:art-56", (2021, 2022, 2023, 2024)),
     # rendimientos de capital mobiliario negativos pendientes — integración base ahorro
     "rdtos_cm_negativos_res": ("ley-35-2006:art-49", (2021, 2022, 2023, 2024)),
+    # base liquidable (reducciones) y base liquidable general negativa — art. 50
+    "base_liquidable_res": ("ley-35-2006:art-50", (2021, 2022, 2023, 2024)),
+    "base_liq_neg_res": ("ley-35-2006:art-50", (2021, 2022, 2023, 2024)),
+    # base imponible (integración y compensación de saldos) — arts. 48/49
+    "base_imponible_res": ("ley-35-2006:art-48", (2021, 2022, 2023, 2024)),
 }
 
 
