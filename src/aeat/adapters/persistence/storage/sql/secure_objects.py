@@ -541,7 +541,7 @@ class SecureObjectRepository:
             stmt = (
                 text(
                     "SELECT id, object_key, classification, schema_version, "
-                    "written_at, payload, payload_hash "
+                    "written_at, payload "
                     "FROM secure_objects WHERE namespace = :namespace "
                     "ORDER BY object_key",
                 )
@@ -630,17 +630,6 @@ class SecureObjectRepository:
                         schema_version=schema_version,
                         written_at=written_at,
                         reason=str(exc),
-                    )
-                    continue
-                if not self._payload_hash_matches(payload_plain, raw.payload_hash):
-                    yield SecureObjectUnreadable(
-                        namespace=namespace,
-                        row_id=row_id,
-                        object_key=object_key,
-                        classification=classification_str,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        reason="stored payload_hash does not match the decrypted payload",
                     )
                     continue
                 yield SecureObjectRecord(
@@ -1094,21 +1083,6 @@ class SecureObjectRepository:
             )
             return bool(result.rowcount and result.rowcount > 0)
 
-    @staticmethod
-    def _payload_hash_matches(payload_plain: bytes, stored_hash: str | None) -> bool:
-        """Return whether the decrypted payload matches its stored integrity hash.
-
-        ``payload_hash`` is the SHA-256 of the plaintext recorded at write time.
-        Recomputing it on read and comparing detects at-rest corruption or a
-        ciphertext that was moved into this row without its matching hash — a
-        row-substitution / replay attempt. A row that predates the hash column
-        (``stored_hash is None``) is tolerated rather than refused, matching the
-        existing revision-metadata fallback; the cryptographic closure of the
-        row-identity gap (binding the row identity into the payload AEAD) is the
-        follow-on step.
-        """
-        return stored_hash is None or sha256_hex(payload_plain) == stored_hash
-
     def _record_from_row(
         self,
         row: _orm.SecureObjectRow,
@@ -1150,11 +1124,6 @@ class SecureObjectRepository:
             schema_version=row.schema_version,
             definition=namespace_definition,
         )
-        if not self._payload_hash_matches(row.payload, row.payload_hash):
-            raise DecryptionError(
-                "stored payload_hash does not match the decrypted payload; "
-                "the row may be corrupted or substituted",
-            )
         return SecureObjectRecord(
             namespace=row.namespace,
             object_key=bytes(row.object_key),
