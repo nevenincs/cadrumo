@@ -523,6 +523,17 @@ SAL_RESERVA_DOTACION_RATE: Final[Decimal] = Decimal("0.10")
 #: alcance al menos una cifra superior al doble del capital social").
 SAL_RESERVA_CAPITAL_MULTIPLE: Final[Decimal] = Decimal("2")
 
+#: LIVA art. 103.Dos (Ley 37/1992, BOE-A-1992-28740) prorrata especial mandatory
+#: multiple: the especial regime is mandatory when the general-regime deduction
+#: exceeds the especial-regime deduction by more than ten percent — i.e. when
+#: ``deduction_general > deduction_especial * 1.10``.
+PRORRATA_ESPECIAL_MANDATORY_MULTIPLE: Final[Decimal] = Decimal("1.10")
+
+#: LIVA art. 9.1.c (Ley 37/1992, BOE-A-1992-28740) sectoral-separation threshold:
+#: régimen de sectores diferenciados is mandatory when the spread between the highest
+#: and lowest general prorrata across sectors exceeds fifty percentage points.
+PRORRATA_SECTORAL_SEPARATION_SPREAD_PP: Final[Decimal] = Decimal("50")
+
 
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:
