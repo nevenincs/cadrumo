@@ -282,6 +282,31 @@ work-income reduction brackets (6.498→7.302 €, the genuinely-changed-for-202
 item — highest-risk gap), the DT-18ª vivienda-habitual deduction (15%/9.040 €), and the
 DT-15ª alquiler deduction (10,05%). Each is a future codification candidate, not a wrong value.
 
+### V8 (GROUNDING DEFECT — FIXED) — M100 casilla 0023 art. 20 reduction citation
+
+Acting on the V7 art-20 gap, verification of the art. 20 work-income reduction surface
+found a grounding defect (not a wrong figure): casilla 0023 ("Cuantía aplicable con
+carácter general"), which IS the reducción por obtención de rendimientos del trabajo
+(art. 20 — it reduces rendimiento neto 0022 to rendimiento neto reducido 0025 via formula
+`0022 - 0057 - 0023`), cited `legal_refs = ["ley-35-2006:art-17"]` (rendimientos íntegros
+— the wrong article) in the 2021, 2022, 2023, and 2024 revisions. The 2020 and 2025
+revisions already carried `ley-35-2006:art-20`. Confirmed casilla identity against the AEAT
+2024 manual §7.1.6 and the formula position; confirmed the art-20 figures against the
+bundled `ley-35-2006.html#a20` (7.302 / 1,75 / 2.364,34 / 1,14 / 19.747,5 / 6.500, RDL
+4/2024 art. 3.1 BOE-A-2024-12944), which matches the AEAT manual. Fixed all four years to
+`ley-35-2006:art-20` and pinned `test_trabajo_reduccion_art20_grounded` (10 cases:
+0023→art-20 across 2020-2025 + art-17-regression bar on the corrected years). Commit
+`80a87357f`.
+
+**Deferred (needs ADR — not a defect):** making casilla 0023 *computed* from the verified
+art. 20 piecewise schedule is a genuine feature, NOT a safe inline edit, because the
+reduction's eligibility gate ("otras rentas, excluidas las exentas, distintas del trabajo
+≤ 6.500 €") depends on the whole rest of the return — a forward/ordering dependency on
+casillas not necessarily resolved at 0023's evaluation point. AEAT's own program computes
+0023 automatically; replicating that here requires deciding the otras-rentas aggregation
+ordering (an architectural question) before authoring the formula. Tracked as a future
+codification candidate; the casilla remains a grounded MANUAL input meanwhile.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
