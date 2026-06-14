@@ -14,7 +14,9 @@ import json
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from typing import Final
 
+_UTF_8: Final[str] = "utf-8"
 _CORPUS = Path("src/aeat/application/ledger/tests/_evidence_corpus")
 _UA = "aeat-fixtures/1.0 (evidence test corpus; contact: maintainers)"
 _CLEAN_LICENCES = {"public domain", "cc0", "cc-by", "cc-by-sa", "pd", "pd-old", "cc-pd-mark"}
@@ -25,7 +27,7 @@ def _api(params: dict[str, str]) -> dict[str, object]:
     url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"User-Agent": _UA})  # noqa: S310 — https Commons API
     with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
-        return json.loads(resp.read().decode("utf-8"))
+        return json.loads(resp.read().decode(_UTF_8))
 
 
 def _download(url: str) -> bytes:
@@ -88,7 +90,7 @@ def _save(name: str, data: bytes, *, source_url: str, licence: str, title: str, 
             indent=2,
         )
         + "\n",
-        encoding="utf-8",
+        encoding=_UTF_8,
     )
     print(f"saved {name} ({len(data)} bytes, {licence}) <- {title}")
 
