@@ -1088,6 +1088,7 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+      profile_integrity_label_mismatch: 'L''emmagatzematge del perfil no és coherent: l''etiqueta del manifest no coincideix amb el registre segur.'
   verification:
     errors:
       missing_binding_values: La verificació del registre requereix valors de vinculació
@@ -2614,6 +2615,11 @@ cli:
         --llm amb un proveidor.
       taxable_base_help: Import de base imposable
       vision_model_help: 'Substitueix el model de visió local d''Ollama per llegir una factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir el model configurat.'
+      auto_split_help: 'Llegeix la factura adjunta i, quan és multicomponent, la divideix en fills base/IVA per línia; si no, la classifica al lloc (requereix --read-evidence).'
+      split_recommended_message: 'La factura adjunta sembla contenir diverses línies de tipus o categoria. Torna a executar amb --auto-split per separar-les en fills de base i IVA declarables de manera independent.'
+      split_recommended_label: 'divisió recomanada'
+      auto_split_single_line: 'factura d''una sola línia: no cal divisió; --apply la classifica al lloc'
+      auto_split_needs_evidence: '--auto-split requereix --read-evidence: la decisió de divisió es llegeix de la factura.'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descarrega un enllaç de document de Drive i desa'n els bytes com a evidència
@@ -2859,6 +2865,7 @@ cli:
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la divisió de la transacció
       classification_dropped: 'La classificació del pare %{classification} no s''ha copiat als fills de la divisió; cada fill queda com a NOT_YET_PROCESSED i necessita reclassificar-se amb ''aeat app ledger classify''.'
+      vision_model_help: 'Substitueix el model de visió local d''Ollama per llegir una factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir el model configurat.'
     stash:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Apartar un moviment del llibre al perfil actiu
