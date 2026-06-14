@@ -71,6 +71,13 @@ class LLMClassificationResponse(BaseModel):
     category: SpendingCategory | None = None
     iva_category: IvaCategory | None = None
     business_pct: Decimal | None = None
+    multiple_components: bool | None = None
+    """Evidence-read multiplicity judgement: True when the attached invoice carries
+    multiple distinct rate/category lines that warrant a split into independently
+    filable base/IVA children. ``None`` when no evidence was read (the model cannot
+    judge multiplicity from the bank row alone). A boolean judgement, not an
+    allow-list value, so hallucination containment is unaffected; it only drives a
+    non-blocking split *recommendation*, never a write."""
 
     @field_validator("confidence")
     @classmethod
@@ -130,19 +137,35 @@ class LLMSplitChild(BaseModel):
 
 
 class LLMSplitResponse(BaseModel):
-    """An evidence-driven N-way split proposal: children whose proportions sum to one."""
+    """An evidence-driven split proposal: children whose proportions sum to one.
+
+    A proposal of **one** child (proportion ``1.0``) is the "no split warranted"
+    verdict — the model read the invoice and judged it a single line/rate. The
+    application surfaces that verdict for review and never applies a degenerate
+    one-way split. Two or more children is a genuine split recommendation.
+    """
 
     model_config = _STRICT_FROZEN
 
     children: tuple[LLMSplitChild, ...]
     reason: str = Field(min_length=1, max_length=_REASON_MAX_LENGTH)
 
+    @property
+    def recommends_split(self) -> bool:
+        """True when the model proposes more than one child (a genuine split)."""
+        return len(self.children) > 1
+
     @field_validator("children")
     @classmethod
     def _check_children(cls, value: tuple[LLMSplitChild, ...]) -> tuple[LLMSplitChild, ...]:
-        """Require at least two children whose proportions sum to ~1.0."""
-        if len(value) < 2:
-            raise TransactionValidationError("a split must propose at least two children")
+        """Require at least one child whose proportions sum to ~1.0.
+
+        One child is the no-split verdict; two or more is a split. Either way the
+        proportions must sum to approximately 1.0 (a single child must therefore
+        carry proportion 1.0).
+        """
+        if not value:
+            raise TransactionValidationError("a split proposal must carry at least one child")
         total = sum((child.proportion for child in value), Decimal("0"))
         if abs(total - _CONFIDENCE_MAX) > Decimal("0.01"):
             raise TransactionValidationError("split child proportions must sum to approximately 1.0")
@@ -577,6 +600,19 @@ def _render_prompt(
         )
         schema_fields.append('"iva_category": "<one IvaCategory or null>"')
         schema_fields.append('"business_pct": <0.0-1.0 when MIXED, else null>')
+    evidence_present = bool(evidence_text) or evidence_image_present
+    if evidence_present:
+        sections.extend(
+            [
+                "",
+                "Also judge whether the attached invoice carries MULTIPLE distinct lines at "
+                "different IVA rates or expense categories that should be split into separate "
+                "entries (so each line's deductible IVA and base-rate expense file independently). "
+                "Set multiple_components true only when two or more distinct rate/category lines are "
+                "present; set it false for a single-line, single-rate invoice.",
+            ],
+        )
+        schema_fields.append('"multiple_components": <true|false>')
     schema_line = "{" + ", ".join(schema_fields) + "}"
     example_confidence = "0.85"
     example_reason = "restaurante meal with a named client strongly suggests business meal"
@@ -697,9 +733,11 @@ def build_split_prompt(
         f"  Description: {raw.description}",
         "",
         *_evidence_block(evidence_text, evidence_image_present),
-        "Propose how to divide this transaction into TWO OR MORE children, one per distinct line or "
-        "category on the invoice. For each child give a proportion (a fraction of the total; all "
-        "proportions MUST sum to 1.0), a spending category, an iva_category, and a short "
+        "Propose how to divide this transaction into children, one per distinct line or category on "
+        "the invoice. If the invoice is a SINGLE line at a single IVA rate (no split warranted), "
+        "return EXACTLY ONE child with proportion 1.0. If it carries two or more distinct lines or "
+        "IVA rates, return one child per line. For each child give a proportion (a fraction of the "
+        "total; all proportions MUST sum to 1.0), a spending category, an iva_category, and a short "
         "evidence_citation naming the line. Do NOT output any euro amount, rate, base, or IVA figure.",
     ]
     if resolved_spec.categories:

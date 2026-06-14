@@ -15,13 +15,16 @@ from decimal import Decimal
 from typing import Annotated
 
 import typer
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ...application.ledger import (
     LedgerTransactionResultPayload,
     LLMProvider,
+    LLMSplitSuggestion,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
+    apply_evidence_classification,
+    apply_evidence_split,
     apply_llm_classification,
     apply_saturated_llm_classification,
     create_manual_transaction,
@@ -32,12 +35,14 @@ from ...application.ledger import (
     ledger_transaction_review_status,
     resolve_lineage_transaction_id,
     saturate_llm_classification,
+    suggest_evidence_split,
     suggest_llm_classification,
     update_manual_transaction_fields,
 )
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
@@ -445,8 +450,39 @@ def ledger_classify(
         "--vision-model",
         help=tr("cli.ledger.classify.vision_model_help"),
     ),
+    auto_split: bool = typer.Option(
+        False,
+        "--auto-split",
+        help=tr("cli.ledger.classify.auto_split_help"),
+    ),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
+    if auto_split:
+        if not read_evidence:
+            raise _bad(
+                tr(
+                    "cli.ledger.classify.auto_split_needs_evidence",
+                    default="--auto-split requires --read-evidence: the split decision is read from the invoice.",
+                ),
+            )
+        if classification is not None or from_csv is not None:
+            raise _bad(
+                tr(
+                    "cli.ledger.classify.llm_exclusive",
+                    default="--llm cannot be combined with --classification or --from-csv; "
+                    "the manual path is the explicit operator override.",
+                ),
+            )
+        _ledger_autosplit_llm(
+            ctx,
+            transaction_id=transaction_id,
+            provider=llm,
+            apply=apply,
+            actor=actor,
+            evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
+        )
+        return
     if llm is not None or read_evidence:
         if saturate:
             _ledger_saturate_llm(
@@ -587,6 +623,35 @@ def ledger_classify(
     )
 
 
+def _split_recommendation_notice(transaction_id: str, *, provider: LLMProvider | None) -> Notice:
+    """Build the typed ``info`` notice recommending an evidence-driven split.
+
+    Fired when the evidence read judged the invoice multi-component. The
+    ``suggestion`` is the exact runnable command that actions the split, preserving
+    the provider the operator used (``cli-notices-are-the-only-diagnostic-channel``;
+    the recommendation rides the Notice channel, never a bespoke result field).
+    """
+    provider_flag = f" --llm {provider.value}" if provider is not None else ""
+    command = (
+        f"aeat app ledger classify {transaction_id} "
+        f"--read-evidence --saturate --auto-split --apply{provider_flag}"
+    )
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="ledger.classify.split_recommended",
+        message=tr(
+            "cli.ledger.classify.split_recommended_message",
+            default=(
+                "The attached invoice appears to carry multiple rate or category lines. "
+                "Re-run with --auto-split to separate them into independently-filable "
+                "base and IVA children."
+            ),
+        ),
+        suggestion=command,
+        context={"transaction_id": transaction_id, "source": "evidence_read"},
+    )
+
+
 def _ledger_classify_llm(
     ctx: typer.Context,
     *,
@@ -691,7 +756,12 @@ def _ledger_classify_llm(
             f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
             tr("cli.ledger.classify.llm_review_hint"),
         ]
-        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines)
+        notices: list[Notice] = []
+        if suggestion.recommends_split:
+            notice = _split_recommendation_notice(suggestion.transaction_id, provider=provider)
+            notices.append(notice)
+            lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
+        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
         return
 
     try:
@@ -712,6 +782,228 @@ def _ledger_classify_llm(
     # canonical mutation quintet (LedgerClassifySingleResult); the llm provenance
     # is surfaced in the operator-facing text lines below.
     classify_result = LedgerClassifySingleResult.model_validate(
+        {
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
+        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+
+
+def _autosplit_child_payloads(suggestion: LLMSplitSuggestion) -> list[object]:
+    """Project a split suggestion's children to the shared proposal payload."""
+    from ._ledger_payloads import LedgerSplitChildProposalPayload
+
+    return [
+        LedgerSplitChildProposalPayload.model_validate(
+            {
+                "proportion": format(child.proportion, "f"),
+                "amount": format(child.amount, "f"),
+                "description": child.description,
+                "category": child.category.value if child.category is not None else None,
+                "iva_category": child.iva_category.value if child.iva_category is not None else None,
+                "iva_rate": format(child.iva_rate, "f") if child.iva_rate is not None else None,
+                "taxable_base": format(child.taxable_base, "f") if child.taxable_base is not None else None,
+                "iva_amount": format(child.iva_amount, "f") if child.iva_amount is not None else None,
+                "rate_derivable": child.rate_derivable,
+            },
+        ).model_dump(mode="json")
+        for child in suggestion.children
+    ]
+
+
+def _ledger_autosplit_llm(
+    ctx: typer.Context,
+    *,
+    transaction_id: str | None,
+    provider: LLMProvider | None,
+    apply: bool,
+    actor: str | None,
+    evidence_acknowledged: bool,
+    vision_model: str | None,
+) -> None:
+    """Route ``classify --read-evidence --auto-split`` on the model's split verdict.
+
+    One model call — the split proposer — yields the verdict. A multi-child verdict
+    drives the evidence-driven split (preview, or with ``--apply`` the
+    base/IVA-separating split); a single-child "no split" verdict classifies the
+    transaction in place from that child's selections (preview, or with ``--apply``
+    the in-place write). The model emits no euro amount or regulated number; the
+    registry derives every child's base and IVA.
+    """
+    from ._ledger_payloads import LedgerClassifyLlmSuggestResult, LedgerClassifySingleResult
+
+    if transaction_id is None:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.id_required",
+                default="A transaction id is required when --from-csv is not provided.",
+            ),
+        )
+    if provider is not None and not is_llm_provider_available(provider):
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_provider_unavailable",
+                provider=provider.value,
+                default=(
+                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
+                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
+                    "or run 'aeat app ledger providers' to list usable providers."
+                ),
+            ),
+        )
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    bucket_id = transaction_repository.bucket_id
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    try:
+        suggestion = suggest_evidence_split(
+            bucket_id=bucket_id,
+            transaction_id=resolved_id,
+            provider=provider,
+            transaction_repository=transaction_repository,
+            read_evidence=True,
+            evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
+        )
+    except LLMClassifierError as exc:
+        raise _bad(
+            tr("cli.ledger.classify.llm_failed", reason=str(exc), default=f"LLM split proposal failed: {exc}"),
+        ) from exc
+
+    if suggestion.recommends_split:
+        _autosplit_emit_split(ctx, suggestion, bucket_id=bucket_id, apply=apply, actor=actor)
+        return
+    _autosplit_emit_single(
+        ctx,
+        suggestion,
+        bucket_id=bucket_id,
+        apply=apply,
+        actor=actor,
+        result_models=(LedgerClassifyLlmSuggestResult, LedgerClassifySingleResult),
+    )
+
+
+def _autosplit_emit_split(
+    ctx: typer.Context,
+    suggestion: LLMSplitSuggestion,
+    *,
+    bucket_id: str,
+    apply: bool,
+    actor: str | None,
+) -> None:
+    """Preview or apply the multi-child evidence-driven split for the auto-split route."""
+    from ._ledger_payloads import LedgerSplitResult
+
+    proposed_children = _autosplit_child_payloads(suggestion)
+    if not apply:
+        result = LedgerSplitResult.model_validate(
+            {
+                "bucket_id": bucket_id,
+                "parent_transaction_id": suggestion.transaction_id,
+                "llm": True,
+                "persisted": False,
+                "provider": suggestion.provider.value if suggestion.provider is not None else None,
+                "provenance": suggestion.provenance,
+                "reason": suggestion.reason,
+                "parent_amount": format(suggestion.parent_amount, "f"),
+                "proposed_children": proposed_children,
+            },
+        )
+        lines = [
+            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+            f"{tr('cli.ledger.labels.children')}\t{len(proposed_children)}",
+            tr("cli.ledger.classify.llm_review_hint"),
+        ]
+        _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+        return
+    try:
+        applied = apply_evidence_split(
+            suggestion,
+            bucket_id=bucket_id,
+            actor=actor or resolve_active_bucket_id() or "operator",
+        )
+    except TransactionValidationError as exc:
+        raise _bad(str(exc)) from exc
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
+    result = LedgerSplitResult.model_validate(
+        {
+            "bucket_id": applied.bucket_id,
+            "parent_transaction_id": applied.parent_transaction_id,
+            "split_group_id": applied.split_group_id,
+            "child_transaction_ids": list(applied.child_transaction_ids),
+            "llm": True,
+            "persisted": True,
+            "provenance": applied.provenance,
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{applied.parent_transaction_id}",
+        f"{tr('cli.ledger.labels.children')}\t{len(applied.child_transaction_ids)}",
+        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}",
+    ]
+    _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+
+
+def _autosplit_emit_single(
+    ctx: typer.Context,
+    suggestion: LLMSplitSuggestion,
+    *,
+    bucket_id: str,
+    apply: bool,
+    actor: str | None,
+    result_models: tuple[type[BaseModel], type[BaseModel]],
+) -> None:
+    """Preview or apply the in-place single-line classification (no-split verdict)."""
+    suggest_model, single_model = result_models
+    child = suggestion.children[0]
+    if not apply:
+        suggest_result = suggest_model.model_validate(
+            {
+                "llm": True,
+                "persisted": False,
+                "transaction_id": suggestion.transaction_id,
+                "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
+                "classification": BusinessClassification.BUSINESS.value,
+                "category": child.category.value if child.category is not None else None,
+                "confidence": "1",
+                "reason": suggestion.reason,
+                "provenance": suggestion.provenance,
+            },
+        )
+        lines = [
+            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+            f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{BusinessClassification.BUSINESS.value}",
+            f"{tr('cli.ledger.labels.category_id')}\t{child.category.value if child.category else ''}",
+            f"{tr('cli.ledger.labels.iva_category')}\t{child.iva_category.value if child.iva_category else ''}",
+            tr("cli.ledger.classify.auto_split_single_line"),
+            tr("cli.ledger.classify.llm_review_hint"),
+        ]
+        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines)
+        return
+    try:
+        result = apply_evidence_classification(
+            suggestion,
+            bucket_id=bucket_id,
+            actor=actor or resolve_active_bucket_id() or "operator",
+        )
+    except TransactionValidationError as exc:
+        raise _bad(str(exc)) from exc
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
+    transaction_payload = ledger_transaction_payload(result.transaction)
+    review_status = ledger_transaction_review_status(result.transaction)
+    classify_result = single_model.model_validate(
         {
             "bucket_id": result.ref.bucket_id,
             "transaction_id": result.transaction.transaction_id,
@@ -850,7 +1142,12 @@ def _ledger_saturate_llm(
             lines.append(f"{tr('cli.ledger.classify.saturate_non_derivable')}\t{suggestion.derivation_note}")
         lines.append(f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}")
         lines.append(tr("cli.ledger.classify.llm_review_hint"))
-        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+        notices: list[Notice] = []
+        if suggestion.recommends_split:
+            notice = _split_recommendation_notice(suggestion.transaction_id, provider=provider)
+            notices.append(notice)
+            lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
+        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
         return
 
     try:
