@@ -167,8 +167,8 @@ Make persisted and exported records portable and roundtrip-equal across machines
 
 Replace absolute source_path with relative or sha-only provenance and prove cross-OS roundtrip.
 
-- [ ] `W04.P07.S15` - Replace the resolved absolute source_path provenance with a relative filename or sha-only reference in the raw transaction model; `src/aeat/domain/transactions/_raw_transaction.py`.
-- [ ] `W04.P07.S16` - Add a cross-OS transaction provenance roundtrip test proving rehydration does not mutate the persisted shape; `src/aeat/domain/transactions/tests/`.
+- [x] `W04.P07.S15` - Replace the resolved absolute source_path provenance with a relative filename or sha-only reference in the raw transaction model; `src/aeat/domain/transactions/_raw_transaction.py`.
+- [x] `W04.P07.S16` - Add a cross-OS transaction provenance roundtrip test proving rehydration does not mutate the persisted shape; `src/aeat/domain/transactions/tests/`.
 
 ### Phase `W04.P08` - determinism and audit hygiene
 

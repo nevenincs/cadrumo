@@ -14,6 +14,8 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S11]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S12]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S13]]'
+  - '[[2026-06-14-storage-backend-security-review-W04-P07-S15]]'
+  - '[[2026-06-14-storage-backend-security-review-W04-P07-S16]]'
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-06-14-storage-backend-security-review-plan]]'
   - '[[2026-06-14-storage-backend-security-review-research]]'
@@ -39,6 +41,8 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W03-P05-S11` - Add a concurrent-writer regression proving two sessions on one bucket do not raise an immediate database-locked error
 - `2026-06-14-storage-backend-security-review-W03-P06-S12` - fsync the staged tmp file and the parent directory before and after os.replace on the manifest write
 - `2026-06-14-storage-backend-security-review-W03-P06-S13` - Re-read and re-validate the holder PID immediately before the stale-lock reclaim unlink
+- `2026-06-14-storage-backend-security-review-W04-P07-S15` - Replace the resolved absolute source_path provenance with a relative filename or sha-only reference in the raw transaction model
+- `2026-06-14-storage-backend-security-review-W04-P07-S16` - Add a cross-OS transaction provenance roundtrip test proving rehydration does not mutate the persisted shape
 
 ### plan
 
