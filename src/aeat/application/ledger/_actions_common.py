@@ -14,6 +14,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core.decimal import format_decimal
 from ...core.time import now
 
 if TYPE_CHECKING:
@@ -555,11 +556,11 @@ def _optional_decimal(value: Decimal | None) -> str:
 
 
 def _display_decimal(value: Decimal) -> str:
-    return format(value.normalize(), "f")
+    return format_decimal(value, normalize=True)
 
 
 def _decimal_to_string(value: Decimal) -> str:
-    return format(value, "f")
+    return format_decimal(value)
 
 
 def _normalise_timestamp(value: datetime | None) -> datetime:
