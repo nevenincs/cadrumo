@@ -305,37 +305,10 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
     Returns a :class:`LedgerTransactionReviewPayload` with all operator-facing
     fields populated from the transaction record.
     """
-    raw = transaction.raw
+    base = ledger_transaction_payload(transaction)
     return LedgerTransactionReviewPayload(
-        transaction_id=transaction.transaction_id,
-        date=(raw.value_date or raw.booked_date).isoformat(),
-        booked_date=raw.booked_date.isoformat(),
-        value_date=raw.value_date.isoformat() if raw.value_date else None,
-        amount=_display_decimal(raw.amount),
-        currency=raw.currency,
-        direction=transaction.direction.value,
-        counterparty=raw.display_counterparty,
-        description=raw.description,
-        business_classification=transaction.business_classification.value,
-        business_pct=_display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
-        category_id=transaction.category_id,
-        taxable_base=_display_decimal(transaction.taxable_base) if transaction.taxable_base is not None else None,
-        iva_rate=_display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
-        iva_amount=_display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
-        irpf_category=transaction.irpf_category,
-        usage_ratio_id=transaction.usage_ratio_id,
-        prorrata_reference=transaction.prorrata_reference,
-        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
-        attachment_ids=transaction.attachment_ids,
-        notes=transaction.notes,
-        lifecycle_state=transaction.lifecycle_state.value,
+        **base.model_dump(),
         review_status=ledger_transaction_review_status(transaction),
-        classified_by=transaction.classified_by,
-        source_jurisdiction=transaction.source_jurisdiction,
-        value_in_eur=_display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
-        fx_rate=_display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
-        created_at=transaction.created_at.isoformat(),
-        modified_at=transaction.modified_at.isoformat(),
     )
 
 
