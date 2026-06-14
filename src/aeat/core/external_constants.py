@@ -494,6 +494,20 @@ DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR: Final[int] = 1200
 #: bis (familia numerosa / discapacidad).
 INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR: Final[int] = 1000
 
+#: Art. 58.1 LIRPF (Ley 35/2006, BOE-A-2006-20764) ordinary mínimo-por-descendientes
+#: age ceiling: a descendant qualifies for the ordinary mínimo while younger than 25
+#: (exclusive) at year end, unless disabled (which removes the age limit).
+MINIMO_DESCENDIENTE_MAX_AGE: Final[int] = 25
+
+#: Art. 58.3 LIRPF (Ley 35/2006, BOE-A-2006-20764) bajo-3-años supplement age ceiling:
+#: the additional mínimo applies to a descendant younger than 3 (exclusive) at year end.
+MINIMO_MENOR_TRES_MAX_AGE: Final[int] = 3
+
+#: Art. 59 LIRPF (Ley 35/2006, BOE-A-2006-20764) custodia compartida prorrata factor:
+#: the mínimo of a shared-custody descendant is split 50 % between the two custodial
+#: parents.
+CUSTODIA_COMPARTIDA_PRORRATA_FACTOR: Final[Decimal] = Decimal("0.5")
+
 
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:

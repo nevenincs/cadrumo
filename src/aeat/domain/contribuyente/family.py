@@ -15,9 +15,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
+    CUSTODIA_COMPARTIDA_PRORRATA_FACTOR,
     DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
     DEDUCCION_MATERNIDAD_MENSUAL_EUR,
     INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR,
+    MINIMO_DESCENDIENTE_MAX_AGE,
+    MINIMO_MENOR_TRES_MAX_AGE,
 )
 from ...core.parsing._dates import _parse_iso8601_date
 from ._errors import ProfileValidationError
@@ -26,10 +29,11 @@ from ._errors import ProfileValidationError
 _FULL_YEAR_CUTOFF_MONTH = 7
 _FULL_YEAR_CUTOFF_DAY = 1
 
-# Art. 58 thresholds: age < 25 (exclusive) for ordinary mínimo eligibility,
-# age < 3 (exclusive) for the bajo-3-años supplement.
-_MAX_AGE_ORDINARY = 25
-_MAX_AGE_MENOR_TRES = 3
+# Art. 58 thresholds sourced from the central authority: age < 25 (exclusive)
+# for ordinary mínimo eligibility, age < 3 (exclusive) for the bajo-3-años
+# supplement. The module-private aliases keep the internal call sites stable.
+_MAX_AGE_ORDINARY = MINIMO_DESCENDIENTE_MAX_AGE
+_MAX_AGE_MENOR_TRES = MINIMO_MENOR_TRES_MAX_AGE
 
 
 def _coerce_iso_date_field(value: object) -> object:
@@ -319,12 +323,12 @@ class RentaFamilyProfile(BaseModel):
     def custodia_compartida_prorrata_factor(self, descendant: DescendantInfo, filing_year: int) -> Decimal:
         """Return the Art. 59 LIRPF prorrata factor for one descendant.
 
-        Returns ``Decimal("0.5")`` when ``descendant.custodia_compartida`` is
-        ``True`` and the descendant is eligible for the mínimo, otherwise
-        ``Decimal("1")``.
+        Returns :data:`CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` (``0.5``, Art. 59
+        LIRPF) when ``descendant.custodia_compartida`` is ``True`` and the
+        descendant is eligible for the mínimo, otherwise ``Decimal("1")``.
         """
         if descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year):
-            return Decimal("0.5")
+            return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
         return Decimal("1")
 
     def custodia_compartida_advisory(self, filing_year: int) -> str | None:
