@@ -24,11 +24,19 @@ reads "en los ejercicios 2016 a 2024" and records the 2025/2026 extensions were 
 wrote both the excerpt and the `required_text`, so the gate validated internal consistency,
 not BOE faithfulness. The same root cause recurred as the M210 IRNR interest defect (a
 stale bundled corpus snippet phrased art. 25.1.f as EU/EEE-conditional, contributing to a
-wrong 24% rate where the law is 19%). Grounding a regulated calc value against a
-secondary-source or self-authored excerpt is how a wrong figure ships looking grounded; the
-bundled consolidated corpus is the faithful source the project already trusts and is the
-companion check to `registry-calculation-legal-grounding` (cite the binding provision) and
-`aeat-safety-legal-gates` (ground in BOE/AEAT, never invent).
+wrong 24% rate where the law is 19%). And it recurred a third time as the IRPF menor-tres
+mínimo defect — the bundled `ley-35-2006-art-58.html` itself carried "3.000 euros" (despite
+a header asserting it was the official unchanged BOE text) where the AEAT manual and BOE
+state 2.800, grounding a wrong registry parameter and two tautological tests. Grounding a
+regulated calc value against a secondary-source or self-authored excerpt is how a wrong
+figure ships looking grounded; the bundled consolidated corpus is the faithful source the
+project already trusts and is the companion check to `registry-calculation-legal-grounding`
+(cite the binding provision) and `aeat-safety-legal-gates` (ground in BOE/AEAT, never
+invent). CRITICAL REFINEMENT (from the menor-tres + M210 cases): the bundled corpus is
+*preferred* over secondary sources but is NOT infallible — it can carry authored figure
+errors. For any numeric AMOUNT or RATE, cross-check the figure against the live BOE/AEAT
+consolidated text even when the bundled corpus already states it; a bundled-corpus figure
+is a strong default, not a substitute for confirming the number itself.
 
 ## How
 
@@ -42,6 +50,15 @@ companion check to `registry-calculation-legal-grounding` (cite the binding prov
   registry parameter as the calc authority, verify the value against the live BOE/AEAT
   consolidation, and flag the snippet for an operator corpus refresh — do not trust the
   snippet's prose as the rate authority.
+- **Good:** when a verification pass touches a numeric amount or rate, cross-check the
+  figure against the live BOE/AEAT consolidated text even if the bundled corpus already
+  states it — and if the bundled corpus is wrong, correct the corpus, the grounded
+  parameter, the legal-entry notes, and any tautological test that baked the wrong value, in
+  one atomic commit (the menor-tres 3.000→2.800 fix touched all four).
+- **Bad:** trusting a bundled-corpus AMOUNT/RATE without confirming the number itself against
+  live BOE/AEAT — the corpus can carry an authored figure error (3.000 vs 2.800) behind a
+  header that claims it is the official unchanged text, and the self-referential
+  `required_text` gate passes anyway.
 - **Bad:** authoring a new `corpus/normatives/html/<provision>.html` excerpt by copying a
   gestoría blog or summary site, then citing it from a registry legal entry — the year-list
   / scope / figures may be stale or wrong, and the self-referential `required_text` gate
