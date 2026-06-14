@@ -42,6 +42,7 @@ You MUST respect these rules at all times:
 @.claude/rules/ledger-iva-advisory-only-on-cuota-bearing-categories.md
 @.claude/rules/ledger-mutation-returns-uniform-quintet.md
 @.claude/rules/ledger-participation-index-is-derived-rebuildable.md
+@.claude/rules/legal-grounding-verifies-bundled-authoritative-corpus.md
 @.claude/rules/local-filed-observations-are-non-official-evidence.md
 @.claude/rules/modelo-export-mirrors-official-structure.md
 @.claude/rules/modelo-identifiers-use-core-enum.md
