@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId
+from ...core.time import parse_iso_datetime
 from ...core.time._utc import validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
@@ -184,7 +185,7 @@ class Attachment(BaseModel):
     def _parse_captured_at(cls, value: object) -> datetime:
         """Parse ISO-8601 strings into aware datetimes and reject naive values."""
         if isinstance(value, str):
-            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            parsed = parse_iso_datetime(value)
         elif isinstance(value, datetime):
             parsed = value
         else:

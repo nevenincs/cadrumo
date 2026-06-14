@@ -35,7 +35,7 @@ from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL,
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
-from ...core.time import now
+from ...core.time import now, parse_iso_datetime
 from ...core.time._utc import validate_utc_aware
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
@@ -147,7 +147,7 @@ def _json_default(value: object) -> str:
 
 def _parse_datetime(value: str) -> datetime:
     """Parse an ISO-8601 datetime string into an aware ``datetime``."""
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return parse_iso_datetime(value)
 
 
 def _coerce_history(raw: object) -> tuple[object, ...]:

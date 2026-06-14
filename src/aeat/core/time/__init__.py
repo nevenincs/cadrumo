@@ -12,10 +12,11 @@ Public surface
 from __future__ import annotations
 
 from ._clock import now
-from ._utc import coerce_utc_aware, validate_utc_aware
+from ._utc import coerce_utc_aware, parse_iso_datetime, validate_utc_aware
 
 __all__ = [
     "coerce_utc_aware",
     "now",
+    "parse_iso_datetime",
     "validate_utc_aware",
 ]
