@@ -109,8 +109,8 @@ Close the residual secure-storage security, integrity, correctness, and standard
 
 Replace HKDF export-archive sealing with Argon2id and prove roundtrip.
 
-- [ ] `W01.P01.S01` - Replace export-archive HKDF sealing-key derivation with Argon2id and persist the kdf params in the recovery-wrap member; `src/aeat/application/bucket_maintenance/_service.py`.
-- [ ] `W01.P01.S02` - Add a strict export then import roundtrip test over the Argon2id-sealed archive with a non-default passphrase; `src/aeat/application/bucket_maintenance/tests/`.
+- [x] `W01.P01.S01` - Replace export-archive HKDF sealing-key derivation with Argon2id and persist the kdf params in the recovery-wrap member; `src/aeat/application/bucket_maintenance/_service.py`.
+- [x] `W01.P01.S02` - Add a strict export then import roundtrip test over the Argon2id-sealed archive with a non-default passphrase; `src/aeat/application/bucket_maintenance/tests/`.
 
 ### Phase `W01.P02` - decrypted-PDF-to-disk elimination
 
@@ -175,7 +175,7 @@ Replace absolute source_path with relative or sha-only provenance and prove cros
 Remove non-deterministic bundle timestamps and host-absolute paths from the audit log.
 
 - [ ] `W04.P08.S17` - Move exported_at out of the equality-bearing portable bundle payload; `src/aeat/domain/user_profile/_portable_export.py`.
-- [ ] `W04.P08.S18` - Persist basename-only paths in the bucket exported and imported event payloads; `src/aeat/application/bucket_maintenance/_service.py`.
+- [x] `W04.P08.S18` - Persist basename-only paths in the bucket exported and imported event payloads; `src/aeat/application/bucket_maintenance/_service.py`.
 
 ### Phase `W04.P09` - rename integrity and digest contract
 

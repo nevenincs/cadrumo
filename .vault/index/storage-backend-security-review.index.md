@@ -6,6 +6,8 @@ tags:
 date: '2026-06-14'
 modified: '2026-06-14'
 related:
+  - '[[2026-06-14-storage-backend-security-review-W01-P01-S01]]'
+  - '[[2026-06-14-storage-backend-security-review-W01-P01-S02]]'
   - '[[2026-06-14-storage-backend-security-review-W01-P02-S03]]'
   - '[[2026-06-14-storage-backend-security-review-W01-P02-S04]]'
   - '[[2026-06-14-storage-backend-security-review-W01-P03-S05]]'
@@ -17,6 +19,7 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S13]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P07-S15]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P07-S16]]'
+  - '[[2026-06-14-storage-backend-security-review-W04-P08-S18]]'
   - '[[2026-06-14-storage-backend-security-review-W04-P09-S19]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P10-S21]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P11-S24]]'
@@ -38,6 +41,8 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 
 ### exec
 
+- `2026-06-14-storage-backend-security-review-W01-P01-S01` - Replace export-archive HKDF sealing-key derivation with Argon2id and persist the kdf params in the recovery-wrap member
+- `2026-06-14-storage-backend-security-review-W01-P01-S02` - Add a strict export then import roundtrip test over the Argon2id-sealed archive with a non-default passphrase
 - `2026-06-14-storage-backend-security-review-W01-P02-S03` - Accept an in-memory binary stream in the bbox declaration parse path so no decrypted bytes touch disk
 - `2026-06-14-storage-backend-security-review-W01-P02-S04` - Delete the temporary sensitive PDF helper and fold the bbox branch into the in-memory bytes path
 - `2026-06-14-storage-backend-security-review-W01-P03-S05` - Apply the manifest KDF validation window to the file-fallback parameters on read and reject below-floor Argon2 cost
@@ -49,6 +54,7 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W03-P06-S13` - Re-read and re-validate the holder PID immediately before the stale-lock reclaim unlink
 - `2026-06-14-storage-backend-security-review-W04-P07-S15` - Replace the resolved absolute source_path provenance with a relative filename or sha-only reference in the raw transaction model
 - `2026-06-14-storage-backend-security-review-W04-P07-S16` - Add a cross-OS transaction provenance roundtrip test proving rehydration does not mutate the persisted shape
+- `2026-06-14-storage-backend-security-review-W04-P08-S18` - Persist basename-only paths in the bucket exported and imported event payloads
 - `2026-06-14-storage-backend-security-review-W04-P09-S19` - Compare the manifest label against the record display_name in verify_profile_integrity and raise on divergence
 - `2026-06-14-storage-backend-security-review-W05-P10-S21` - Route every domain and outbound secure-object namespace literal through its STORAGE_NAMESPACE_REGISTRY definition constant
 - `2026-06-14-storage-backend-security-review-W05-P11-S24` - Rebind the private bucket-submodule imports in profile health and overview to the bucket package surface
