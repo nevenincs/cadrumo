@@ -499,13 +499,15 @@ INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR: Final[int] = 1000
 #: (exclusive) at year end, unless disabled (which removes the age limit).
 MINIMO_DESCENDIENTE_MAX_AGE: Final[int] = 25
 
-#: Art. 58.3 LIRPF (Ley 35/2006, BOE-A-2006-20764) bajo-3-años supplement age ceiling:
-#: the additional mínimo applies to a descendant younger than 3 (exclusive) at year end.
+#: Art. 58.2 LIRPF (Ley 35/2006, BOE-A-2006-20764) bajo-3-años supplement age ceiling:
+#: "Cuando el descendiente sea menor de tres años, el mínimo … se aumentará". The
+#: additional mínimo applies to a descendant younger than 3 (exclusive) at year end.
 MINIMO_MENOR_TRES_MAX_AGE: Final[int] = 3
 
-#: Art. 59 LIRPF (Ley 35/2006, BOE-A-2006-20764) custodia compartida prorrata factor:
-#: the mínimo of a shared-custody descendant is split 50 % between the two custodial
-#: parents.
+#: Art. 61.4ª LIRPF (Ley 35/2006, BOE-A-2006-20764) custodia compartida prorrata
+#: factor: under the normas comunes, when two contribuyentes have the right to the
+#: same mínimo "su importe se prorrateará entre ellos por partes iguales" — a 50 %
+#: split between the two custodial parents.
 CUSTODIA_COMPARTIDA_PRORRATA_FACTOR: Final[Decimal] = Decimal("0.5")
 
 #: LIRPF Disposición Transitoria 12ª (Ley 35/2006, BOE-A-2006-20764) reducción rate:
