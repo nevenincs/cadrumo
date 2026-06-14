@@ -2265,6 +2265,24 @@ required_text = [
     "base liquidable del ahorro",
 ]
 
+[legal."ley-35-2006:art-51"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a51"
+document_id = "BOE-A-2006-20764"
+article = "51"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a51"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a51; operator to re-stamp)"
+notes = "LIRPF art 51: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social (planes de pensiones, mutualidades de previsión social, planes de previsión asegurados, planes de previsión social empresarial, seguros de dependencia, y sistemas a favor de personas con discapacidad). Base legal de las casillas de reducción/exceso por previsión social en Modelo 100; el límite conjunto lo fija el art. 52. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a51; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por aportaciones y contribuciones a sistemas de previsión social",
+]
+
 [legal."ley-35-2006:art-52"]
 evidence_tier = "legal_authority"
 authority = "boe"
