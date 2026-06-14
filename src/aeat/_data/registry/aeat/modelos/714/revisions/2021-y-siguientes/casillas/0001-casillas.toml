@@ -64,7 +64,8 @@ section = ["liquidacion", "cuota"]
 data_type = "money"
 semantic_role = "patrimonio_cuota_integra"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "patrimonio-cuota-integra-escala-estatal"
 legal_refs = ["ley-19-1991:art-30"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 

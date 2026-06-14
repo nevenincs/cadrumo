@@ -1,8 +1,13 @@
-# Modelo 714 (patrimonio) Phase-A construct.
+# Modelo 714 (patrimonio) construct.
 #
-# Phase-A lands the manual-casilla surface and official source grounding.
-# It intentionally does not declare FormulaDefinition entries until the
-# patrimonio calculation chain is implemented from official formula evidence.
+# Phase-A landed the manual-casilla surface and official source grounding.
+# Phase-B (incremental) now begins with the cuota íntegra (casilla 29): the
+# Ley 19/1991 art. 30 escala estatal is implemented from official formula
+# evidence — the verbatim eight-bracket tarifa in the bundled authoritative
+# corpus `ley-19-1991-art-30.html` — so cuota-integra is computed from the
+# base liquidable via `patrimonio-cuota-integra-escala-estatal`. The remaining
+# downstream chain (límite conjunto, reducción 80%, cuota minorada, cuota a
+# ingresar) stays manual pending its own official formula evidence.
 
 [[revisions."2021-y-siguientes".constructs]]
 id = "m714-patrimonio-calculation"
@@ -26,9 +31,17 @@ casillas = [
     "patrimonio.cuota-minorada",
     "patrimonio.cuota-a-ingresar",
 ]
+formulas = [
+    "patrimonio-cuota-integra-escala-estatal",
+]
 application_links = [
+    "modelo-714-calculation",
     "modelo-714-filing",
     "modelo-714-extractor",
     "modelo-714-verification",
+    "modelo-714-review",
+    "modelo-714-approval",
+    "modelo-714-reconciliation",
+    "modelo-714-workflow",
     "modelo-714-deadline",
 ]
