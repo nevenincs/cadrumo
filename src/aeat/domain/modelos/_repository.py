@@ -17,7 +17,7 @@ from ...core.time import now
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ...adapters.persistence.storage import SecureObjectRepository
-from ._errors import ModeloError
+from ._errors import ModeloError, raise_catalogue_integrity_error
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 from ._work_unit import WorkUnit, WorkUnitCatalogue
 
@@ -80,15 +80,13 @@ class WorkUnitCatalogueRepository:
                 max_supported_version=_WORK_UNIT_CATALOGUE_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
-            _LOGGER.error("work-unit catalogue integrity error", exc_info=True)
-            raise WorkUnitPersistenceError(
-                "work-unit catalogue integrity error",
+            raise_catalogue_integrity_error(
+                exc,
+                error_cls=WorkUnitPersistenceError,
+                label="work-unit",
                 translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
-                context={
-                    "reason": "secure_object_integrity",
-                    "cause_type": type(exc).__name__,
-                },
-            ) from exc
+                logger=_LOGGER,
+            )
         if record is None:
             _LOGGER.debug("work-unit catalogue not found; returning empty catalogue")
             return WorkUnitCatalogue()

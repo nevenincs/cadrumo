@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ...core.time import now
-from ._errors import ModeloError
+from ._errors import ModeloError, raise_catalogue_integrity_error
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 from ._verification_report import VerificationReport, VerificationReportCatalogue
 
@@ -105,15 +105,13 @@ class VerificationReportCatalogueRepository:
                 max_supported_version=_VERIFICATION_CATALOGUE_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
-            _LOGGER.error("verification-report catalogue integrity error", exc_info=True)
-            raise VerificationReportPersistenceError(
-                "verification-report catalogue integrity error",
+            raise_catalogue_integrity_error(
+                exc,
+                error_cls=VerificationReportPersistenceError,
+                label="verification-report",
                 translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
-                context={
-                    "reason": "secure_object_integrity",
-                    "cause_type": type(exc).__name__,
-                },
-            ) from exc
+                logger=_LOGGER,
+            )
         if record is None:
             return VerificationReportCatalogue()
         envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode("utf-8"))
