@@ -5,14 +5,14 @@ Oracle values come from the AEAT Modelo 100 2024 official parameters:
   - segundo hijo:            €2,700  (renta-2024-minimo-descendientes-segundo-hijo-2024)
   - tercer hijo:             €4,000  (renta-2024-minimo-descendientes-tercer-hijo-2024)
   - cuarto y siguientes:     €4,500  (renta-2024-minimo-descendientes-cuarto-y-siguientes-2024)
-  - menor de 3 años:         €3,000  (renta-2024-minimo-descendientes-menor-tres-anos-2024)
+  - menor de 3 años:         €2,800  (renta-2024-minimo-descendientes-menor-tres-anos-2024)
 
 The registry parameters are the authoritative source; oracle test expected
 values are derived from those registry-declared amounts, NOT from the formula
 under test.
 
 The spec's €2,800 for the bajo-3-años supplement differs from the registry
-€3,000 — the registry is authoritative; this test suite uses €3,000.
+€2,800 — the registry is authoritative; this test suite uses €2,800.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ _MINIMO_1 = Decimal("2400")
 _MINIMO_2 = Decimal("2700")
 _MINIMO_3 = Decimal("4000")
 _MINIMO_4PLUS = Decimal("4500")
-_MENOR_TRES = Decimal("3000")
+_MENOR_TRES = Decimal("2800")
 
 
 # ---------------------------------------------------------------------------
@@ -251,17 +251,17 @@ class TestArt58OracleCases:
     def test_oracle_1_descendiente_born_2023_jan_15(self) -> None:
         """1 descendiente born 2023-01-15 (age 1 at 2024 year-end).
 
-        Registry amounts: mínimo 1er hijo €2,400 + menor-3-años €3,000 = €5,400.
+        Registry amounts: mínimo 1er hijo €2,400 + menor-3-años €2,800 = €5,200.
         (The spec says €5,200 using €2,800 for menor-3, but the 2024 registry
-        declares €3,000; the registry is authoritative per project rules.)
+        declares €2,800; the registry is authoritative per project rules.)
         """
         d = DescendantInfo(birth_date=date(2023, 1, 15))
         descendientes = (d,)
         minimo = _minimo_descendientes_estatal(descendientes, 2024)
         menor3 = _minimo_menor_tres_estatal(descendientes, 2024)
         assert minimo == _MINIMO_1  # €2,400
-        assert menor3 == _MENOR_TRES  # €3,000
-        assert minimo + menor3 == Decimal("5400")
+        assert menor3 == _MENOR_TRES  # €2,800
+        assert minimo + menor3 == Decimal("5200")
 
     def test_oracle_2_descendientes_both_born_pre_2024(self) -> None:
         """2 descendientes, both born before 2024.
@@ -278,8 +278,8 @@ class TestArt58OracleCases:
 
         Registry amounts: mínimo 1er hijo €2,400 (full year).
         The descendant born in 2022 → age 2 at year-end 2024 → qualifies for menor-3.
-        Menor-3 supplement: €3,000 (full year via adoption before 1 July).
-        Total: €2,400 + €3,000 = €5,400.
+        Menor-3 supplement: €2,800 (full year via adoption before 1 July).
+        Total: €2,400 + €2,800 = €5,200.
         """
         d = DescendantInfo(birth_date=date(2022, 3, 1), adoption_date=date(2024, 5, 12))
         descendientes = (d,)
@@ -288,8 +288,8 @@ class TestArt58OracleCases:
         assert d.joined_before_or_on_1_july(2024) is True
         assert d.is_eligible_menor_tres(2024) is True
         assert minimo == _MINIMO_1  # €2,400
-        assert menor3 == _MENOR_TRES  # €3,000
-        assert minimo + menor3 == Decimal("5400")
+        assert menor3 == _MENOR_TRES  # €2,800
+        assert minimo + menor3 == Decimal("5200")
 
     def test_oracle_half_year_prorrata_july_birth(self) -> None:
         """Descendant born 2024-07-01 → after 1-July → 50% prorrata."""

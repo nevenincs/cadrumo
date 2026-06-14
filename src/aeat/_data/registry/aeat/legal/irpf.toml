@@ -1849,7 +1849,7 @@ effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
-notes = "LIRPF art 58: minimo por descendientes. 2.400 euros por el primero, 2.700 por el segundo, 4.000 por el tercero, 4.500 por el cuarto y siguientes. Incremento de 3.000 euros por descendiente menor de 3 anios."
+notes = "LIRPF art 58: minimo por descendientes. 2.400 euros por el primero, 2.700 por el segundo, 4.000 por el tercero, 4.500 por el cuarto y siguientes. Incremento de 2.800 euros por descendiente menor de 3 anios."
 required_text = [
     "Mínimo por descendientes",
     "2.400 euros",

@@ -10,7 +10,7 @@ source_ref = "aeat-renta-2024-manual-parte1"
 required_text = ["Mínimo por descendientes", "tres años"]
 
 [[revisions."2024".parameters.values]]
-value = "3000"
+value = "2800"
 date_axis = "filing_period"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
