@@ -115,16 +115,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "master-key backend writes key material through a private fd",
     (
-        "src/aeat/adapters/persistence/storage/master_key/_master_key.py",
-        "_write_bytes_secure",
-        "os.open",
-    ): "master-key backend writes key material with restrictive file modes",
-    (
-        "src/aeat/adapters/persistence/storage/master_key/_master_key.py",
-        "_write_bytes_secure",
-        "os.write",
-    ): "master-key backend writes key material through a private fd",
-    (
         "src/aeat/adapters/persistence/storage/secret_store/_secret_store.py",
         "_write_index",
         "tempfile.NamedTemporaryFile",
