@@ -146,6 +146,41 @@ observed.
   reachable via the Typer help and are intentionally out of the first-journey
   curated set.
 
+## Campaign-close honesty review
+
+A fresh-context honesty review ran before declaring the campaign structurally
+complete, per the campaign-close honesty-review discipline. Verdict: honestly
+structurally complete, with `S59` legitimately deferred. The review independently
+verified against source that the contested closures are substantive, not
+assertion-dressing: `S22`/`S23` are honest section strengthenings of the canonical
+pages (no duplicate stubs); `S11` is fully landed (`_help.py` entries plus the
+three locale keys present with real translations across all four catalogues);
+`S20`/`S26`/`S37`/`S52` each point at a real command surface that answers the
+operator need (`overview --show-suppressed`, ledger `status`/`review`/`preflight`,
+the typed finding `next_action`, and the separate `local_filing_state` vs
+`aeat_submission_state`); `S32` is correctly scoped as a UX backlog, not a docs
+gap; and the residual red full-tree gates are peer-owned `core` churn, not a gate
+this campaign left red. A prose/Diataxis spot-read of profile-setup, the
+read-live-aeat-data hub, and reconcile found no remaining over-claim or
+type-mixing.
+
+One INFO note surfaced, out of scope for this docs campaign: the codebase carries
+two parallel reconciliation verdict taxonomies (the domain `ReconciliationStatus`
+and the `application/modelo` `ModeloReconciliationVerdict`). reconcile.md
+documents the correct one (the CLI verb's `ModeloReconciliationVerdict`), so the
+docs are accurate, but the duplication is a candidate for the next semantic-overlap
+structural audit swarm. No new verification-gated step is mandated; the review
+surfaced no blocking item.
+
+## Step-evidence convention
+
+Per the plan-closure discipline, this campaign records step completion through its
+per-step commits (each `docs(userdocs)` commit names the steps it closes and the
+green conformance gate) plus this resolution audit and the prior
+`2026-06-10-aeat-cli-userdocs-hardening-audit`, rather than one exec record per
+step. This matches the convention the earlier waves used. `S59` is left unchecked
+and deferred with its follow-up named here.
+
 ## Codification candidates
 
 No finding meets the three durability criteria. S11 is a one-time curated-help
