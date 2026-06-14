@@ -109,7 +109,7 @@ Author the estimación-objetiva (módulos) DT 32ª in-force exclusion magnitudes
 
 Author the four DT 32ª in-force módulos exclusion magnitudes as grounded registry parameters.
 
-- [ ] `W01.P01.S01` - Author módulos exclusion magnitudes as registry parameters: 250.000 EUR general rendimientos, 125.000 EUR operaciones con obligación de factura, 250.000 EUR agrícolas/ganaderas/forestales, 250.000 EUR volumen de compras — grounded ley-35-2006:art-31 + dt-32 + Orden de módulos; `src/aeat/_data/registry/aeat/`.
+- [x] `W01.P01.S01` - Author módulos exclusion magnitudes as registry parameters: 250.000 EUR general rendimientos, 125.000 EUR operaciones con obligación de factura, 250.000 EUR agrícolas/ganaderas/forestales, 250.000 EUR volumen de compras — grounded ley-35-2006:art-31 + dt-32 + Orden de módulos; `src/aeat/_data/registry/aeat/`.
 
 ### Phase `W01.P02` - Advisory exclusion gate
 
@@ -131,7 +131,7 @@ Author the true ERD (INCN<10M) DT 44ª transitional rate schedule.
 
 Land the deferred bracket-based rate echo for the two-tranche micro-empresa rate.
 
-- [ ] `W02.P04.S04` - Land the deferred bracket-based casilla-00558 rate echo so the displayed micro-empresa rate reflects the two-tranche scale for 2025/2026; prove the cuota is unchanged; `src/aeat/_data/registry/aeat/modelos/200/`.
+- [ ] `W02.P04.S04` - Land the deferred bracket-based casilla-00558 rate echo so the displayed micro-empresa rate reflects the two-tranche scale for 2025/2026; `prove the cuota is unchanged; `src/aeat/_data/registry/aeat/modelos/200/`.
 
 ## Description
 

@@ -1,0 +1,68 @@
+# LIRPF estimación-objetiva (módulos) magnitudes excluyentes.
+#
+# PROVENANCE: agent-authored (claude-opus, 2026-06-14) under the
+# aeat-grounding-completion campaign, grounding audit finding V3 (the módulos
+# exclusion limits existed only in corpus reference text, never as enforceable
+# registry values). The DT 32ª corpus excerpt and these parameters are prepared
+# for operator review: the legal catalogue is a human-reviewed, filing-grade
+# surface (review_status is Literal["reviewed"]), so `reviewed_by` records the
+# agent author and the operator MUST confirm the BOE year-list and re-stamp.
+#
+# Binding provision: Ley 35/2006 DT 32ª fixes the art. 31.1.3ª magnitudes for the
+# ejercicios 2016 onward — the 150.000/75.000 EUR rendimientos-íntegros limits
+# become 250.000/125.000 EUR, and the 150.000 EUR volumen-de-compras limit
+# becomes 250.000 EUR. The agrícolas/ganaderas/forestales limit (art. 31.1.3ª.b,
+# not a DT 32ª override) is deferred until art. 31 itself is grounded.
+
+[legal."ley-35-2006:dt-32"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-dt-32.html#dt32"
+document_id = "BOE-A-2006-20764"
+article = "DT-32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dt32"
+published_at = 2006-11-29
+effective_from = 2016-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-14
+reviewed_by = "claude-opus (agent-authored; operator to confirm BOE year-list)"
+notes = "LIRPF DT 32ª: límites para la aplicación del método de estimación objetiva. Para los ejercicios 2016 en adelante (prorrogada anualmente; última prórroga 2026), las magnitudes de 150.000 y 75.000 euros del art. 31.1.3ª.b.a' quedan fijadas en 250.000 y 125.000 euros, y la magnitud de 150.000 euros del art. 31.1.3ª.c (volumen de compras) queda fijada en 250.000 euros. AGENT-AUTHORED: corpus excerpt reproduced from the BOE consolidated text via a secondary source; the exact year-list shifts with each prórroga and requires operator confirmation against the official BOE consolidation before filing-grade reliance."
+required_text = [
+    "método de estimación objetiva",
+    "quedan fijadas en 250.000 y 125.000 euros",
+    "queda fijada en 250.000 euros",
+]
+
+[parameters."lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur"]
+evidence_tier = "legal_authority"
+value = "250000"
+unit = "EUR"
+applies_to = "lirpf-estimacion-objetiva-magnitud-excluyente-rendimientos-conjunto"
+legal_refs = ["ley-35-2006:dt-32"]
+review_status = "reviewed"
+reviewed_at = 2026-06-14
+reviewed_by = "claude-opus (agent-authored; operator to confirm)"
+notes = "Magnitud excluyente de estimación objetiva por volumen de rendimientos íntegros del conjunto de actividades económicas (excepto agrícolas, ganaderas y forestales): 250.000 euros anuales (DT 32ª, que eleva los 150.000 euros base del art. 31.1.3ª.b.a')."
+
+[parameters."lirpf-dt-32:eo-exclusion-rendimientos-factura-eur"]
+evidence_tier = "legal_authority"
+value = "125000"
+unit = "EUR"
+applies_to = "lirpf-estimacion-objetiva-magnitud-excluyente-operaciones-con-factura"
+legal_refs = ["ley-35-2006:dt-32"]
+review_status = "reviewed"
+reviewed_at = 2026-06-14
+reviewed_by = "claude-opus (agent-authored; operator to confirm)"
+notes = "Magnitud excluyente de estimación objetiva por volumen de rendimientos íntegros correspondiente a operaciones con obligación de expedir factura cuando el destinatario sea empresario o profesional: 125.000 euros anuales (DT 32ª, que eleva los 75.000 euros base del art. 31.1.3ª.b.a')."
+
+[parameters."lirpf-dt-32:eo-exclusion-compras-eur"]
+evidence_tier = "legal_authority"
+value = "250000"
+unit = "EUR"
+applies_to = "lirpf-estimacion-objetiva-magnitud-excluyente-volumen-compras"
+legal_refs = ["ley-35-2006:dt-32"]
+review_status = "reviewed"
+reviewed_at = 2026-06-14
+reviewed_by = "claude-opus (agent-authored; operator to confirm)"
+notes = "Magnitud excluyente de estimación objetiva por volumen de compras en bienes y servicios (excluidas las adquisiciones de inmovilizado): 250.000 euros anuales (DT 32ª, que eleva los 150.000 euros base del art. 31.1.3ª.c)."
