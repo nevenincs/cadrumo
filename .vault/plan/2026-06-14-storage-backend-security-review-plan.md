@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#storage-backend-security-review'
 date: '2026-06-14'
-modified: '2026-06-14'
+modified: '2026-06-15'
 tier: L3
 related:
   - '[[2026-06-14-storage-backend-security-review-adr]]'
@@ -157,7 +157,7 @@ fsync the manifest atomic write, re-validate lockfile reclaim, dispose engine on
 
 - [x] `W03.P06.S12` - fsync the staged tmp file and the parent directory before and after os.replace on the manifest write; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
 - [x] `W03.P06.S13` - Re-read and re-validate the holder PID immediately before the stale-lock reclaim unlink; `src/aeat/adapters/persistence/storage/bucket/_lockfile.py`.
-- [ ] `W03.P06.S14` - Dispose the cached engine when a bucket DB is hard-deleted so a recreated file does not reuse stale connections; `src/aeat/adapters/persistence/storage/sql/engine.py`.
+- [x] `W03.P06.S14` - Dispose the cached engine when a bucket DB is hard-deleted so a recreated file does not reuse stale connections; `src/aeat/adapters/persistence/storage/sql/engine.py`.
 
 ## Wave `W04` - cross-machine correctness
 
