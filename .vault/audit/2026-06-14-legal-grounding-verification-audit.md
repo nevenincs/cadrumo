@@ -74,6 +74,13 @@ alone would have caught it.
 (Ley 12/2023) confirms the figures and the transitional 60%-grandfathering of
 pre-Ley-12/2023 contracts. Values correct; grounded in code via `boe_citation_id`.
 
+### F2b (verified correct) — M202 art. 40.3 LIS INCN threshold
+
+`domain/calculations/registry/_applicability_modelo202.py:_MODELO_202_ART_40_3_INCN_THRESHOLD
+= Decimal("6000000")`. Online verification against AEAT Modelo-202 instructions and
+LIS art. 40.3 confirms the figure: the modalidad of art. 40.3 is obligatoria when
+the importe neto de la cifra de negocios exceeds 6.000.000 €. Correct.
+
 ### F3 (centralisation-mechanism observation, not wrong values) — two parallel legal-grounding mechanisms
 
 The codebase carries legal grounding two ways: the registry
