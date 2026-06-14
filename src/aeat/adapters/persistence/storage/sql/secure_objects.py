@@ -20,7 +20,10 @@ from .....core.logging import get_logger
 from .....core.time import now as _utc_now
 from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
 from ..crypto._encrypted_columns import (
-    decrypt_encrypted_bytes_column,
+    decrypt_secure_object_payload,
+    encrypt_secure_object_payload,
+    secure_object_key_digest,
+    secure_object_payload_aad,
 )
 from ..errors import (
     ClassificationError,
@@ -620,7 +623,10 @@ class SecureObjectRepository:
                     )
                     continue
                 try:
-                    payload_plain = decrypt_encrypted_bytes_column(payload_wire)
+                    payload_plain = decrypt_secure_object_payload(
+                        payload_wire,
+                        associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
+                    )
                 except DecryptionError as exc:
                     yield SecureObjectUnreadable(
                         namespace=namespace,
@@ -872,20 +878,30 @@ class SecureObjectRepository:
                     _orm.SecureObjectRow.revision_id,
                     _orm.SecureObjectRow.revision_ancestor_ids,
                     _orm.SecureObjectRow.payload_hash,
-                    _orm.SecureObjectRow.payload,
                 ).where(_orm.SecureObjectRow.id == row_id),
             ).one()
             previous_revision_id = previous_metadata.revision_id
             previous_revision_ancestor_ids = self._parse_revision_ancestor_ids(previous_metadata.revision_ancestor_ids)
-            previous_payload_hash = previous_metadata.payload_hash or sha256_hex(
-                previous_metadata.payload,
-            )
+            # The stored plaintext hash is always present from birth; the payload
+            # column is now AEAD wire bytes, so there is no plaintext to fall back
+            # on (and hashing the ciphertext would be meaningless).
+            previous_payload_hash = previous_metadata.payload_hash
         elif expected_revision_id is not None:
             raise self._revision_conflict(
                 namespace=namespace,
                 expected_revision_id=expected_revision_id,
                 current_revision_id=None,
             )
+        # Encrypt the payload explicitly, binding the row identity into the AEAD
+        # associated data so the ciphertext is valid only for this exact
+        # (namespace, object_key, schema_version) row. ``key`` matches the value
+        # the ``object_key`` HashedLookup column persists, so the digest used here
+        # reconstructs identically on read.
+        object_key_digest = secure_object_key_digest(key)
+        payload_wire = encrypt_secure_object_payload(
+            payload,
+            associated_data=secure_object_payload_aad(namespace, object_key_digest, schema_version),
+        )
         try:
             if row_id is None:
                 row = _orm.SecureObjectRow(
@@ -894,7 +910,7 @@ class SecureObjectRepository:
                     classification=classification.value,
                     schema_version=schema_version,
                     written_at=written_at,
-                    payload=payload,
+                    payload=payload_wire,
                 )
                 session.add(row)
                 session.flush()
@@ -913,7 +929,7 @@ class SecureObjectRepository:
                             classification=classification.value,
                             schema_version=schema_version,
                             written_at=written_at,
-                            payload=payload,
+                            payload=payload_wire,
                         ),
                     ),
                 )
@@ -1124,11 +1140,19 @@ class SecureObjectRepository:
             schema_version=row.schema_version,
             definition=namespace_definition,
         )
+        payload_plain = decrypt_secure_object_payload(
+            bytes(row.payload),
+            associated_data=secure_object_payload_aad(
+                row.namespace,
+                bytes(row.object_key),
+                row.schema_version,
+            ),
+        )
         return SecureObjectRecord(
             namespace=row.namespace,
             object_key=bytes(row.object_key),
             classification=classification,
             schema_version=row.schema_version,
             written_at=row.written_at,
-            payload=row.payload,
+            payload=payload_plain,
         )

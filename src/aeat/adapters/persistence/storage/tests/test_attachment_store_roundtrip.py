@@ -35,9 +35,33 @@ from .....domain.attachments._errors import AttachmentPersistenceError, Attachme
 from .....domain.attachments._models import Attachment
 from .....tests.secure_sql import isolated_runtime_profile
 from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
+from ..crypto._encrypted_columns import (
+    decrypt_secure_object_payload,
+    encrypt_secure_object_payload,
+    secure_object_payload_aad,
+)
 from ..sql.engine import get_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def _row_payload_aad(row: object) -> bytes:
+    """Reconstruct the row's payload AEAD associated data for corruption probes.
+
+    The secure-object payload is encrypted with the row identity bound into the
+    AEAD associated data, so a corruption test that rewrites the stored content
+    must decrypt and re-encrypt under the same AAD (corrupting the *content* the
+    manifest validator inspects, not producing invalid ciphertext).
+    """
+    return secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+
+
+def _decrypt_row_content(row: object) -> bytes:
+    return decrypt_secure_object_payload(bytes(row.payload), associated_data=_row_payload_aad(row))
+
+
+def _encrypt_row_content(row: object, content: bytes) -> bytes:
+    return encrypt_secure_object_payload(content, associated_data=_row_payload_aad(row))
 
 
 def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
@@ -163,7 +187,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
                 SecureObjectRow.object_key == attachment.attachment_id,
             )
             row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode(UTF_8_ENCODING))
+            envelope = _json.loads(_decrypt_row_content(row).decode(UTF_8_ENCODING))
             manifest = envelope["payload"]
             # write_manifest drops attachment_id from the persisted payload
             # (the row's object_key carries it as the content-addressing
@@ -175,7 +199,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
             )
             tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
             manifest["sha256"] = tampered_digest
-            row.payload = _json.dumps(envelope).encode(UTF_8_ENCODING)
+            row.payload = _encrypt_row_content(row, _json.dumps(envelope).encode(UTF_8_ENCODING))
 
         with pytest.raises(AttachmentValidationError, match="invalid attachment manifest"):
             store.load_manifest(attachment.attachment_id)
@@ -217,9 +241,9 @@ def test_attachment_manifest_envelope_metadata_drift_fails_closed(
                 SecureObjectRow.object_key == attachment.attachment_id,
             )
             row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode(UTF_8_ENCODING))
+            envelope = _json.loads(_decrypt_row_content(row).decode(UTF_8_ENCODING))
             envelope[field_name] = tampered_value
-            row.payload = _json.dumps(envelope).encode(UTF_8_ENCODING)
+            row.payload = _encrypt_row_content(row, _json.dumps(envelope).encode(UTF_8_ENCODING))
 
         with pytest.raises(AttachmentValidationError) as excinfo:
             store.load_manifest(attachment.attachment_id)
@@ -264,7 +288,7 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
                 SecureObjectRow.object_key == attachment.attachment_id,
             )
             row = session.execute(stmt).scalar_one()
-            row.payload = stored_payload
+            row.payload = _encrypt_row_content(row, stored_payload)
 
         for read_manifests in (
             lambda: store.load_manifest(attachment.attachment_id),
