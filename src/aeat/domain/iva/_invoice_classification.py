@@ -45,10 +45,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-# IvaRate is imported lazily inside ``_iva_rate_to_iva_kind`` /
-# ``_iva_rate_to_domestic_category`` to break a circular initialisation
-# without violating the sibling-domain ``_enums`` ban (clause 5 of
-# the structural enum-import placement check).
+# IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
+# inside ``_iva_rate_to_domestic_category`` and ``classify_invoice_line_for_iva``
+# to break a circular initialisation without violating the sibling-domain
+# ``_enums`` ban (clause 5 of the structural enum-import placement check).
 # At runtime the helpers are called only after the invoices package init
 # finishes, so the public-package import resolves cleanly.
 from ._classification import InvoiceKind
@@ -76,31 +76,6 @@ def _invoice_validation_error(message: str) -> Exception:
 
 
 @lru_cache(maxsize=1)
-def _iva_rate_to_iva_kind() -> dict[IvaRate, IvaRateKind]:
-    """Closed mapping from invoice IvaRate slot to substrate IvaRateKind.
-
-    NOT_SUBJECT is intentionally absent — operations outside the scope of
-    IVA do not carry a rate-tier classification. Callers handling
-    NOT_SUBJECT lines must construct the record directly with
-    ``IvaCategory.OPERACION_NO_SUJETA`` and skip the rate-tier axis.
-
-    Built lazily so the IvaRate import resolves through the public
-    ``aeat.domain.invoices`` surface (avoiding the sibling-domain
-    ``_enums`` violation) after the invoices package finishes
-    initialising.
-    """
-    from ..invoices import IvaRate
-
-    return {
-        IvaRate.RATE_0: IvaRateKind.ZERO,
-        IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
-        IvaRate.RATE_10: IvaRateKind.REDUCED,
-        IvaRate.RATE_21: IvaRateKind.GENERAL,
-        IvaRate.EXEMPT: IvaRateKind.EXEMPT,
-    }
-
-
-@lru_cache(maxsize=1)
 def _iva_rate_to_domestic_category() -> dict[IvaRate, IvaCategory]:
     """Closed mapping from invoice IvaRate slot to the matching domestic IvaCategory.
 
@@ -109,8 +84,8 @@ def _iva_rate_to_domestic_category() -> dict[IvaRate, IvaCategory]:
     operations have their own IvaCategory values not derivable from
     IvaRate alone.
 
-    Built lazily for the same package-init reason as
-    :func:`_iva_rate_to_iva_kind`.
+    Built lazily for the same package-init reason as the public
+    ``aeat.domain.invoices.iva_rate_kind`` accessor.
     """
     from ..invoices import IvaRate
 
@@ -222,6 +197,7 @@ def classify_invoice_line_for_iva(
             handled by the standard-case helper.
     """
     from ..invoices import IvaRate as _IvaRate
+    from ..invoices import iva_rate_kind
 
     if iva_rate is _IvaRate.NOT_SUBJECT:
         raise _invoice_validation_error(
@@ -231,7 +207,9 @@ def classify_invoice_line_for_iva(
         )
 
     category = _iva_rate_to_domestic_category()[iva_rate]
-    rate_kind = _iva_rate_to_iva_kind()[iva_rate]
+    rate_kind = iva_rate_kind(iva_rate)
+    if rate_kind is None:  # unreachable: NOT_SUBJECT (the only keyless rate) is rejected above
+        raise _invoice_validation_error(f"IvaRate {iva_rate!r} has no rate-tier classification")
     flow_direction = IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
     return IvaInvoiceClassification(
         category=category,
