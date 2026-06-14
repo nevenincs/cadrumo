@@ -32,9 +32,11 @@ if TYPE_CHECKING:
     from ...domain.user_profile._portable_export import UserProfilePortableExport
 
 
-#: Versions the import path will accept.  Add new integers here when
-#: a new schema version is introduced; never remove existing ones.
-SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({1, 2})
+#: Versions the import path will accept.  This is a pre-beta project with no
+#: released bundles (no-legacy-compatibility): only the current shape (v2) is
+#: accepted; the earlier facts-only v1 shape is deleted, not bridged.  Add a new
+#: integer here when a new schema version is introduced.
+SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({2})
 
 
 # ---------------------------------------------------------------------------
@@ -94,12 +96,10 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
     """Import financial-history objects from ``bundle`` into ``target_bucket_id``.
 
     Validates ``bundle.bundle_schema_version`` against
-    ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes (ADR D4).
+    ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes (ADR D4); only the
+    current v2 shape is accepted.
 
-    For v1 bundles: no financial-history objects to import — the caller
-    handles profile-record provisioning via the atomic-create path.
-
-    For v2 bundles: saves work units, ledger transactions, calculation
+    Saves work units, ledger transactions, calculation
     revisions, and filing records into the target bucket via the standard
     repository save paths.  Each domain object is re-encrypted under the
     target bucket's own DEK (ADR D2).  No ``dict[str, Any]`` intermediate
@@ -124,10 +124,6 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
             f"bundle_schema_version {bundle.bundle_schema_version!r} is not supported; "
             f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
         )
-
-    if bundle.bundle_schema_version == 1:
-        # v1 is facts-only; no financial-history objects to write.
-        return
 
     # v2: import all four financial-history categories.
     _import_work_units(bundle, target_bucket_id=target_bucket_id)
