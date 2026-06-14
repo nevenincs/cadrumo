@@ -37,16 +37,6 @@ def test_snapshot_env_reflects_settings_field_value() -> None:
         assert snapshot.pytest_current_test == ""
 
 
-def test_snapshot_as_audit_dict_matches_engine_schema() -> None:
-    with override_settings(aeat_live_tests_enabled="1"):
-        settings = Settings(aeat_live_tests_enabled="1")
-        snapshot = AeatAccessGate(settings).snapshot_env(pytest_current_test="")
-        assert snapshot.as_audit_dict() == {
-            "AEAT_LIVE_TESTS_ENABLED": "1",
-            "PYTEST_CURRENT_TEST": "",
-        }
-
-
 def test_require_live_read_passes_when_enabled() -> None:
     with override_settings(aeat_live_tests_enabled="1"):
         settings = Settings(aeat_live_tests_enabled="1")

@@ -77,18 +77,6 @@ class AeatGateEnvSnapshot(BaseModel):
     aeat_live_tests_enabled: str
     pytest_current_test: str
 
-    def as_audit_dict(self) -> dict[str, str]:
-        """Return the snapshot rendered as the audit-log JSONL mapping.
-
-        Returns:
-            Mapping keyed by the canonical environment variable names
-            (``AEAT_LIVE_TESTS_ENABLED`` / ``PYTEST_CURRENT_TEST``)
-            with their raw string values.
-        """
-        return {
-            _LIVE_READ_TEST_OPT_IN_ENV_VAR: self.aeat_live_tests_enabled,
-            _PYTEST_CURRENT_TEST_ENV: self.pytest_current_test,
-        }
 
 
 @dataclass(frozen=True, slots=True)
