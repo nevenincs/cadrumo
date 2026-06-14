@@ -16,7 +16,7 @@ from __future__ import annotations
 import base64
 import json
 import secrets
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
@@ -67,7 +67,6 @@ _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
 _ARCHIVE_SCHEMA_VERSION = 1
 _RECOVERY_WRAP_SALT_BYTES = 16
-_RECOVERY_WRAP_CONTEXT = b"aeat.bucket-maintenance.recovery-wrap.v1"
 
 
 class BucketMaintenanceService:
@@ -291,7 +290,13 @@ class BucketMaintenanceService:
         from ...adapters.persistence.storage import get_active_master_key
         from ...adapters.persistence.storage.bucket import ExportArchiveHeader, bucket_paths, read_manifest
         from ...adapters.persistence.storage.bucket._sealed_archive_writer import write_sealed_archive
-        from ...adapters.persistence.storage.crypto import derive_key, encrypt_record
+        from ...adapters.persistence.storage.crypto import encrypt_record
+        from ...adapters.persistence.storage.master_key import (
+            ARGON2_MEMORY_COST_KIB,
+            ARGON2_PARALLELISM,
+            ARGON2_TIME_COST,
+            derive_kek_with_params,
+        )
         from ...core.config import load_settings
 
         pointer = read_profile_bucket_by_id(command.bucket_id)
@@ -312,12 +317,25 @@ class BucketMaintenanceService:
             if command.recovery_wrap_passphrase is None:
                 sealing_key = get_active_master_key()
             else:
+                # Seal the exported bucket under a password KDF (Argon2id), not a
+                # bare HKDF pass: a recovery-passphrase archive may leave the host,
+                # and Argon2id's work factor is what makes an offline brute force of
+                # the operator-chosen passphrase infeasible. The Argon2 parameters
+                # ride in the recovery-wrap member so the importer can reproduce the
+                # derivation.
                 salt = secrets.token_bytes(_RECOVERY_WRAP_SALT_BYTES)
-                recovery_wrap_bytes = _recovery_wrap_bytes(salt)
-                sealing_key = derive_key(
-                    key_material=command.recovery_wrap_passphrase.encode(UTF_8_ENCODING),
-                    salt=salt,
-                    context=_RECOVERY_WRAP_CONTEXT,
+                recovery_wrap_bytes = _recovery_wrap_bytes(
+                    salt,
+                    memory_cost=ARGON2_MEMORY_COST_KIB,
+                    time_cost=ARGON2_TIME_COST,
+                    parallelism=ARGON2_PARALLELISM,
+                )
+                sealing_key = derive_kek_with_params(
+                    command.recovery_wrap_passphrase.encode(UTF_8_ENCODING),
+                    salt,
+                    memory_cost=ARGON2_MEMORY_COST_KIB,
+                    time_cost=ARGON2_TIME_COST,
+                    parallelism=ARGON2_PARALLELISM,
                 )
             payload = bundle.model_dump_json().encode(UTF_8_ENCODING)
             encrypted = encrypt_record(
@@ -373,7 +391,8 @@ class BucketMaintenanceService:
         """
         from ...adapters.persistence.storage import get_active_master_key
         from ...adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
-        from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key
+        from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record
+        from ...adapters.persistence.storage.master_key import derive_kek_with_params
         from ...domain.user_profile import UserProfilePortableExport
 
         contents = read_sealed_archive(command.source_path)
@@ -400,10 +419,13 @@ class BucketMaintenanceService:
                     translated_message="application.bucket_maintenance.errors.import_recovery_wrap_missing",
                     context={"bucket_id": header.bucket_id},
                 )
-            sealing_key = derive_key(
-                key_material=command.recovery_wrap_passphrase.encode(UTF_8_ENCODING),
-                salt=_salt_from_recovery_wrap(contents.recovery_wrap_bytes),
-                context=_RECOVERY_WRAP_CONTEXT,
+            recovery_kdf = _recovery_wrap_kdf(contents.recovery_wrap_bytes)
+            sealing_key = derive_kek_with_params(
+                command.recovery_wrap_passphrase.encode(UTF_8_ENCODING),
+                recovery_kdf.salt,
+                memory_cost=recovery_kdf.memory_cost,
+                time_cost=recovery_kdf.time_cost,
+                parallelism=recovery_kdf.parallelism,
             )
         else:
             sealing_key = get_active_master_key()
@@ -506,17 +528,44 @@ def _archive_associated_data(bucket_id: str, manifest_digest: str) -> bytes:
     return f"aeat.bucket-maintenance.archive.v1:{bucket_id}:{manifest_digest}".encode()
 
 
-def _recovery_wrap_bytes(salt: bytes) -> bytes:
-    return json.dumps({"kdf": "hkdf-sha256", "salt_b64": base64.b64encode(salt).decode("ascii")}).encode(UTF_8_ENCODING)
+class _RecoveryWrapKdf(NamedTuple):
+    """Argon2id parameters read back from a sealed archive's recovery-wrap member."""
+
+    salt: bytes
+    memory_cost: int
+    time_cost: int
+    parallelism: int
 
 
-def _salt_from_recovery_wrap(payload: bytes) -> bytes:
+def _recovery_wrap_bytes(salt: bytes, *, memory_cost: int, time_cost: int, parallelism: int) -> bytes:
+    return json.dumps(
+        {
+            "kdf": "argon2id",
+            "salt_b64": base64.b64encode(salt).decode("ascii"),
+            "memory_cost": memory_cost,
+            "time_cost": time_cost,
+            "parallelism": parallelism,
+        },
+    ).encode(UTF_8_ENCODING)
+
+
+def _recovery_wrap_kdf(payload: bytes) -> _RecoveryWrapKdf:
     try:
         raw = json.loads(payload.decode(UTF_8_ENCODING))
-        salt_b64 = raw["salt_b64"]
-        if raw.get("kdf") != "hkdf-sha256":
+        if raw.get("kdf") != "argon2id":
             raise ValueError("unsupported recovery-wrap kdf")
-        return base64.b64decode(salt_b64.encode("ascii"), validate=True)
+        salt = base64.b64decode(raw["salt_b64"].encode("ascii"), validate=True)
+        memory_cost = int(raw["memory_cost"])
+        time_cost = int(raw["time_cost"])
+        parallelism = int(raw["parallelism"])
+        if memory_cost <= 0 or time_cost <= 0 or parallelism <= 0:
+            raise ValueError("non-positive argon2 parameter")
+        return _RecoveryWrapKdf(
+            salt=salt,
+            memory_cost=memory_cost,
+            time_cost=time_cost,
+            parallelism=parallelism,
+        )
     except Exception as exc:
         raise BucketImportError(
             translated_message="application.bucket_maintenance.errors.import_recovery_wrap_invalid",
