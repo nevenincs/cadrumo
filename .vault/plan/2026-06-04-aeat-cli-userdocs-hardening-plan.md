@@ -94,9 +94,9 @@ Make the ledger usable before modelo calculation: import, manual entry, evidence
 
 Turn ledger import into a complete "make the ledger tax-ready" path.
 
-- [ ] `W04.P07.S21` - Expand the bank-import guide with the full loop: import, list, view, classify, allocate, fix, preflight, and status; `docs/how-to/import-bank-statements.md`.
-- [ ] `W04.P07.S22` - Add a manual transaction guide for `aeat app ledger add`, including date, amount, direction, category, IVA fields, source jurisdiction, and evidence ids; `ledger how-to docs`.
-- [ ] `W04.P07.S23` - Add a mixed-use allocation guide that explains business percentage and usage ratios in operator language; `ledger how-to docs`.
+- [x] `W04.P07.S21` - Expand the bank-import guide with the full loop: import, list, view, classify, allocate, fix, preflight, and status; `docs/how-to/import-bank-statements.md`.
+- [x] `W04.P07.S22` - Add a manual transaction guide for `aeat app ledger add`, including date, amount, direction, category, IVA fields, source jurisdiction, and evidence ids; `ledger how-to docs`.
+- [x] `W04.P07.S23` - Add a mixed-use allocation guide that explains business percentage and usage ratios in operator language; `ledger how-to docs`.
 
 ### Phase `W04.P08` - Evidence and correction
 
