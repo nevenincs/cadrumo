@@ -58,12 +58,34 @@ related:
 
 ## Outcome
 
-PARTIAL — outbound subtree only. Behaviour-preserving (every constant equals the
-prior literal). 48 LLM tests green; outbound collect-only clean. Committed in
-`1a06c2e47`. Step LEFT OPEN: the `domain/` namespace literals (submission, filing,
-invoices, transactions, calculation_revisions, justificante, usage_ratios,
-participation index, verification/filing/complementaria repos, bucket event repo)
-remain to be routed through the registry.
+PARTIAL + CORRECTED. Two pieces landed:
+1. Outbound subtree literals routed through the registry constants (committed
+   `1a06c2e47`).
+2. The `aeat.domain.*` namespace definitions promoted from anonymous inline tuple
+   entries to named, exported module-level constants (committed `ea0a4c99d`; 35
+   registry + smoke tests green) so they are addressable by the gate and by
+   non-lazy consumers.
+
+CORRECTION TO THE AUDIT FINDING (HEAD-verified): the audit's prescribed fix
+("route each domain repository's namespace literal through the registry
+constant") is INFEASIBLE for the domain modules and was NOT applied. Those
+repositories (transactions, invoices, submission, filing, modelos, etc.)
+deliberately DEFER all `aeat.adapters.persistence.storage` imports (inside
+`TYPE_CHECKING` / function bodies) to preserve the json-pipe-safety contract: a
+module-level `from ...storage import <CONSTANT>` would eagerly trigger the heavy
+storage `__init__` (Alembic plugin discovery) and break the import-isolation tests
+(`test_lazy_boundary.py`, `test_lazy_command_tree.py`, `test_wizard_catalogue.py`).
+The namespace literal is duplicated precisely to avoid that eager import. So the
+literal must STAY; the correct enforcement is a gate that CROSS-CHECKS each domain
+literal against the registry namespace values (no drift) rather than requiring a
+constant import.
+
+STEP OPEN for the corrected remaining work (folds into S22): refine the adoption
+gate to (a) recognise a string literal that equals a registry-declared namespace
+value as compliant, and (b) restrict the "must come from registry" check to
+non-lazy modules, so it stops over-flagging the lazy domain literals and the
+legitimate non-registry `_NAMESPACE` constants (mirror keys, `"_probe"`).
+
 
 ## Notes
 
