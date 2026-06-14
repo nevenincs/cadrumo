@@ -39,4 +39,5 @@ def test_operator_target_rejects_period_year_mismatch() -> None:
             registry_revision_id=None,
         )
 
+    assert exc_info.value.context is not None
     assert exc_info.value.context["year"] == 2025

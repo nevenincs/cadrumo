@@ -615,7 +615,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         save_inventory((_inventory_ledger("bucket-a"),))
         save_amortizacion_ledger(_amortizacion_ledger("bucket-a"))
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        stored_a = store.persist_artefact(("303", 2026, "1T", "202610013522456T"), artefact_a, body_a)
+        stored_a = store.persist_artefact(
+            ("303", 2026, Period.from_year_and_code(2026, "1T"), "202610013522456T"), artefact_a, body_a
+        )
 
     with _active_runtime(tmp_path, "bucket-b"):
         assert google_session_store.load_client(profile) is None
@@ -634,7 +636,9 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         save_inventory((_inventory_ledger("bucket-b"),))
         save_amortizacion_ledger(_amortizacion_ledger("bucket-b"))
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-        store.persist_artefact(("303", 2026, "2T", "202610013522457T"), artefact_b, body_b)
+        store.persist_artefact(
+            ("303", 2026, Period.from_year_and_code(2026, "2T"), "202610013522457T"), artefact_b, body_b
+        )
 
     with _active_runtime(tmp_path, "bucket-a"):
         cached = cache.read(request, LLMProvider.OPENAI, "gpt-test")

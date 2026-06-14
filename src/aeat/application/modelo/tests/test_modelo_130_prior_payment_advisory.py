@@ -57,6 +57,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation import CalculationSourceDiagnostic
 from ...calculations._observations_repository import CalculationObservationRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -242,11 +243,11 @@ def _calculate(
     )
 
 
-def _prior_payment_advisories(result: BucketAggregationCalculationResult) -> tuple[object, ...]:
+def _prior_payment_advisories(result: BucketAggregationCalculationResult) -> tuple[CalculationSourceDiagnostic, ...]:
     return tuple(diag for diag in result.source_diagnostics if diag.reason == _ADVISORY_REASON)
 
 
-def _minoracion_advisories(result: BucketAggregationCalculationResult) -> tuple[object, ...]:
+def _minoracion_advisories(result: BucketAggregationCalculationResult) -> tuple[CalculationSourceDiagnostic, ...]:
     return tuple(diag for diag in result.source_diagnostics if diag.reason == _MINORACION_ADVISORY_REASON)
 
 

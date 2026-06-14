@@ -141,7 +141,7 @@ def filing_record_list(
                 record.bucket_id,
                 str(record.modelo),
                 str(record.filing_year),
-                record.period,
+                record.period.registry_token,
                 record.status.value,
                 record.filed_at.isoformat(),
                 record.filed_by,

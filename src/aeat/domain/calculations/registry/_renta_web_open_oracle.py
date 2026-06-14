@@ -7,8 +7,9 @@ from decimal import Decimal, InvalidOperation
 from json import JSONDecodeError, loads
 from typing import Final, Literal, Protocol
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AnyUrl, BaseModel, Field, field_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
 from ....core.decimal import normalize_decimal_separators
 from ._errors import RegistryValidationError
@@ -27,7 +28,7 @@ _RENTA_WEB_OPEN_DEFAULT_YEAR: Final[int] = 2025
 class RentaWebOpenModel(BaseModel):
     """Strict frozen base for Renta WEB Open parity records."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class RentaWebOpenSyntheticProfile(RentaWebOpenModel):

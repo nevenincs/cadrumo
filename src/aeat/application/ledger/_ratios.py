@@ -15,8 +15,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...domain.categories import (
     ProportionalityRule,
@@ -51,7 +52,7 @@ class EligibleCategoryRow(BaseModel):
     readiness check passes.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     category: SpendingCategory
     proportionality_kind: str = Field(min_length=1)
@@ -62,7 +63,7 @@ class EligibleCategoryRow(BaseModel):
 class RatiosValidationFinding(BaseModel):
     """One issue raised by ``ratios validate`` for an eligible category."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     category: SpendingCategory
     kind: str = Field(min_length=1)
@@ -72,7 +73,7 @@ class RatiosValidationFinding(BaseModel):
 class RatiosValidationReport(BaseModel):
     """Result of ``ratios validate``. Read-only, emits no bucket event."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     profile_present: bool
@@ -236,7 +237,7 @@ class RatiosCensoOverrideWarning(BaseModel):
     auditors can review the divergence.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     category: SpendingCategory
     override_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))

@@ -16,8 +16,9 @@ import json
 from pathlib import Path
 
 import httpx
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, ValidationError
+from pydantic import AnyHttpUrl, BaseModel, ValidationError
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
@@ -47,7 +48,7 @@ class PartSpec(BaseModel):
         source_pdf_url: Canonical AEAT URL the PDF is fetched from.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     manual_id: ManualId
     year: int
@@ -189,7 +190,7 @@ class FetchResult(BaseModel):
         manifest_path: Absolute path to the JSON manifest on disk.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest: FetchedManualPart
     part_root: Path

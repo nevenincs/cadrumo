@@ -464,7 +464,10 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
         # CAST-RATIONALE-CLICK-GROUP: ``list_commands`` is the structural group
         # marker used above before calling the click group API.
         group = cast("click.Group", command)
-        subcommand = group.get_command(ctx, token)
+        # CAST-RATIONALE-CLICK-CONTEXT: ``typer.Context`` is the vendored-fork
+        # context; ty treats it as distinct from upstream ``click.core.Context``
+        # that ``get_command`` annotates, though it is structurally identical.
+        subcommand = group.get_command(cast("click.Context", ctx), token)
         if subcommand is None:
             return True
         command = subcommand

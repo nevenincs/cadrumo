@@ -19,9 +19,9 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ...core import Modelo
+from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.external_constants import AMORTIZACION_INMUEBLE_RATE
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
@@ -90,7 +90,7 @@ class AmortizationComputation(BaseModel):
             amortización below its theoretical value.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     period_year: int
     basis: Decimal = Field(ge=Decimal("0"))

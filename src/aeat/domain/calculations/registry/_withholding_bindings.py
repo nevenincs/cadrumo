@@ -10,8 +10,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import RowSetGroupingKind
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
@@ -46,7 +47,7 @@ _WithholdingFact = Literal["row_field", "perceptor_count", "percibido_sum", "ret
 class WithholdingObservation(BaseModel):
     """Per-perceptor retencion / ingreso-a-cuenta observation for modelo 190 / 193."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
     perceptor_tax_id: str = Field(min_length=1, max_length=64)
@@ -82,7 +83,7 @@ class WithholdingObservation(BaseModel):
 class WithholdingObservationRequirement(BaseModel):
     """Withholding-source slice declared by one or more withholding bindings."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_ids: tuple[str, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
@@ -91,7 +92,7 @@ class WithholdingObservationRequirement(BaseModel):
 
 
 class _WithholdingSelector(BaseModel):
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     # Promoted from ``str`` to a typed Literal so the snapshot-build
     # shape gate rejects unknown fact values, mirroring the runtime

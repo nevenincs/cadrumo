@@ -6,6 +6,7 @@ from datetime import date
 
 import pytest
 
+from ....core import Period
 from ....domain.deadlines import TaxpayerProfile
 from ....domain.deadlines._models import (
     EntityType,
@@ -91,7 +92,7 @@ def test_agenda_partitions_are_disjoint() -> None:
 
     agenda = build_overview_agenda(_profile(), as_of=date(2026, 4, 15), horizon_days=30)
 
-    seen: set[tuple[str, str]] = set()
+    seen: set[tuple[str, Period]] = set()
     for cohort in (agenda.due_today, agenda.due_soon, agenda.overdue):
         for entry in cohort:
             key = (entry.modelo, entry.period)

@@ -334,7 +334,8 @@ def extract_justificante_from_digest(
         record = Justificante(
             csv=csv_value,
             modelo=modelo,
-            period=period,
+            # Justificante.period before-validator coerces the printed (token, ejercicio) into a Period.
+            period=period,  # ty: ignore[invalid-argument-type]
             ejercicio=ejercicio,
             presentation_id=presentation_id,
             presented_at=presented_at,

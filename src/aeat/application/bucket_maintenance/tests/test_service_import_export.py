@@ -149,6 +149,66 @@ def test_import_recovery_archive_provisions_profile_in_fresh_root(
         assert BucketEventType.BUCKET_IMPORTED in event_types
 
 
+def test_recovery_wrap_member_records_argon2id_password_kdf(
+    runtime: TestRuntimeProfile,
+    registered_profile: None,
+    tmp_path: Path,
+) -> None:
+    """The recovery-wrap archive seals under Argon2id, not a bare HKDF pass.
+
+    A recovery-passphrase archive may leave the host; sealing it under a password
+    KDF with a real work factor is what defeats an offline brute force of the
+    operator-chosen passphrase. The recovery-wrap member must declare ``argon2id``
+    and carry the cost parameters so the importer reproduces the derivation.
+    """
+    import json
+
+    from ....adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
+
+    archive_path = tmp_path / "profile.aeat-bucket.tar.gz"
+    BucketMaintenanceService().export(
+        ExportBucketCommand(
+            bucket_id=runtime.bucket_id,
+            output_path=archive_path,
+            recovery_wrap_passphrase=_recovery_phrase(),
+        ),
+    )
+
+    contents = read_sealed_archive(archive_path)
+    assert contents.recovery_wrap_bytes is not None
+    member = json.loads(contents.recovery_wrap_bytes.decode("utf-8"))
+    assert member["kdf"] == "argon2id"
+    assert member["memory_cost"] >= 19 * 1024
+    assert member["time_cost"] >= 2
+    assert member["parallelism"] >= 1
+    assert isinstance(member["salt_b64"], str) and member["salt_b64"]
+
+
+def test_import_recovery_archive_rejects_wrong_passphrase(
+    runtime: TestRuntimeProfile,
+    registered_profile: None,
+    tmp_path: Path,
+) -> None:
+    """A wrong recovery passphrase derives the wrong KEK and the import fails closed."""
+    del registered_profile
+    archive_path = tmp_path / "profile.aeat-bucket.tar.gz"
+    BucketMaintenanceService().export(
+        ExportBucketCommand(
+            bucket_id=runtime.bucket_id,
+            output_path=archive_path,
+            recovery_wrap_passphrase=_recovery_phrase(),
+        ),
+    )
+
+    with isolated_profile_storage_root(tmp_path=tmp_path / "import-root"), pytest.raises(BucketImportError):
+        BucketMaintenanceService().import_(
+            ImportBucketCommand(
+                source_path=archive_path,
+                recovery_wrap_passphrase=f"wrong-{_recovery_phrase()}",
+            ),
+        )
+
+
 def test_import_refuses_recovery_archive_without_passphrase(
     runtime: TestRuntimeProfile,
     registered_profile: None,

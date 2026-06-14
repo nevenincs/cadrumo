@@ -14,8 +14,9 @@ import json
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -35,10 +36,10 @@ TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return the runtime-created secure-object repository for ``bucket_id``."""
-    from ...adapters.persistence.storage import inspect_bucket_storage_runtime
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...core.config import load_settings
 
-    return inspect_bucket_storage_runtime(bucket_id, load_settings()).secure_object_repository()
+    return secure_object_repository_for_bucket(bucket_id, load_settings())
 
 
 def transaction_catalogue_object_key(bucket_id: str) -> str:
@@ -79,7 +80,7 @@ class ImportSummary(BaseModel):
         catalogue_path: Logical URI of the encrypted database object.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     imported: int = Field(ge=0)
     skipped: int = Field(ge=0)

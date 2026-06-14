@@ -123,7 +123,7 @@ def _participation_lines(
                     "participation",
                     entry.modelo,
                     str(entry.filing_year),
-                    entry.period,
+                    entry.period.registry_token,
                     entry.revision_state,
                     entry.calculation_revision_id,
                     entry.filing_record_id or "-",

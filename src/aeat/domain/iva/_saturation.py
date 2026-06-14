@@ -39,8 +39,9 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents
 from ._lookup import lookup_rate
 from ._schema import EUMemberState, IvaCategory, IvaRateKind
@@ -140,7 +141,7 @@ class IvaRateResolution(BaseModel):
             is not derivable; the empty string otherwise.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     category: IvaCategory = Field(description="The IvaCategory that was resolved.")
     derivable: bool = Field(description="Whether a domestic rate fraction was derived.")

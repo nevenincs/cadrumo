@@ -10,10 +10,11 @@ from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.time import now as _now_utc
@@ -45,7 +46,7 @@ from ._errors import (
 class InventoryActividadSummary(BaseModel):
     """One row in ``inventory list``: actividad + year + movement count."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
@@ -57,7 +58,7 @@ class InventoryActividadSummary(BaseModel):
 class InventoryMovementCommand(BaseModel):
     """Strict input shape for ``inventory movement add``."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     movement_id: str = Field(min_length=1, max_length=64)
     movement_date: date
@@ -71,7 +72,7 @@ class InventoryMovementCommand(BaseModel):
 class InventoryValuationPreview(BaseModel):
     """Outcome of a ``valuation preview`` invocation."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
@@ -83,7 +84,7 @@ class InventoryValuationPreview(BaseModel):
 class InventoryLedgerResult(BaseModel):
     """Return record from a mutating inventory verb — ledger plus emitted event id."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     ledger: InventoryLedger
     bucket_event_ids: tuple[str, ...] = ()
@@ -92,7 +93,7 @@ class InventoryLedgerResult(BaseModel):
 class InventoryValuationPreviewResult(BaseModel):
     """Return record from valuation_preview — preview plus emitted event id."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     preview: InventoryValuationPreview
     bucket_event_ids: tuple[str, ...] = ()

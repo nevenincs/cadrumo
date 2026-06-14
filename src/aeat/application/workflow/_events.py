@@ -13,8 +13,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -41,7 +42,7 @@ class WorkflowStateResetFingerprint(BaseModel):
     ``"absent"`` when no envelope row is present.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int | None = Field(default=None, ge=1)
     written_at: datetime | None = None
@@ -53,7 +54,7 @@ class WorkflowStateResetFingerprint(BaseModel):
 class WorkflowStateResetEvent(BaseModel):
     """Typed payload for the ``workflow_state.reset`` bucket event."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     fingerprint: WorkflowStateResetFingerprint
     actor: str = Field(min_length=1, max_length=64)

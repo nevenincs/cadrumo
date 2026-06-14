@@ -32,15 +32,17 @@ relevance file lands - no re-injection is needed.
 
 from __future__ import annotations
 
-import json
 import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from pydantic import ValidationError
+
 from aeat.core.external_constants import OutputLanguage
 
+from .terminology._sweep import SweepResult
 from .terminology._unified_record import SearchRecord, to_search_record
 
 if TYPE_CHECKING:
@@ -90,32 +92,36 @@ class _Materialised:
 
 
 def load_relevance_weights(repo_root: Path) -> dict[str, float]:
-    """Load the committed term-to-weight relevance map, or an empty map.
+    """Load the committed sweep's per-record relevance boost map, or empty.
 
-    The file maps a record ``id`` (or a term/target identifier the sweep
-    emitted) to a relevance weight in ``[0, 1]``. Absent or unparseable file
-    yields an empty map - the injection then uses base weights only.
+    The committed file is the build-time RAG sweep's :class:`SweepResult`
+    (``mappings[].targets[]``, each carrying a ``record_id`` and a normalised
+    ``ranking_weight``) -- the exact shape ``dev.docs.terminology.sweep``
+    writes and ``test_relevance_data`` validates. A record id that several
+    query terms resolved to keeps its STRONGEST weight (the best term that
+    surfaced it). Absent or unparseable file yields an empty map -- the
+    injection then uses base weights only.
 
     Args:
         repo_root: Repository root holding the relevance file.
 
     Returns:
-        A ``record-id -> weight`` mapping (possibly empty).
+        A ``record-id -> weight`` mapping in ``[0, 1]`` (possibly empty).
     """
     path = repo_root / _RELEVANCE_RELPATH
     if not path.is_file():
         return {}
     try:
-        data = json.loads(path.read_text(encoding=_UTF_8))
-    except (OSError, json.JSONDecodeError):
-        logger.warning("relevance file present but unreadable: %s", path)
+        result = SweepResult.model_validate_json(path.read_text(encoding=_UTF_8))
+    except (OSError, ValidationError) as exc:
+        logger.warning("relevance file present but not a valid sweep result: %s (%s)", path, exc)
         return {}
     weights: dict[str, float] = {}
-    raw = data.get("weights", data) if isinstance(data, dict) else {}
-    if isinstance(raw, dict):
-        for key, value in raw.items():
-            if isinstance(value, (int, float)):
-                weights[str(key)] = min(1.0, max(0.0, float(value)))
+    for mapping in result.mappings:
+        for target in mapping.targets:
+            clamped = min(1.0, max(0.0, target.ranking_weight))
+            if clamped > weights.get(target.record_id, -1.0):
+                weights[target.record_id] = clamped
     return weights
 
 
@@ -132,9 +138,15 @@ def _materialise_records() -> _Materialised:
 
     out = _Materialised()
 
+    # Inject APPROVED concept cards only. A draft concept is scaffold-empty
+    # (placeholder short_description) and absent from the approved-only
+    # generated glossary (ADR D7), so its ``#term-<id>`` deep link is dead --
+    # surfacing it as a first-class palette result ships a placeholder card that
+    # 404s. Drafts re-enter the corpus automatically once curated to approved.
     concept_cards, _ = project_concept_cards()
-    out.concepts = len(concept_cards)
-    out.records.extend(to_search_record(card) for card in concept_cards)
+    approved_cards = [card for card in concept_cards if card.is_approved]
+    out.concepts = len(approved_cards)
+    out.records.extend(to_search_record(card) for card in approved_cards)
 
     casilla_records, _ = project_casilla_search_records()
     out.casillas = len(casilla_records)

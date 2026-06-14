@@ -16,9 +16,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, InstanceOf, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import Modelo, Period
+from ...core import STRICT_FROZEN_CONFIG, Modelo, Period
 from ...core.aggregation import AggregationSourceKind, ForeignAssetClass
 from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
@@ -50,7 +50,7 @@ def _validate_country(value: str) -> str:
 class ForeignAssetIngestObservation(BaseModel):
     """One asset observation for a Modelo 720 aggregator pass."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: str = Field(min_length=1)
     source_object_id: str = Field(min_length=1)
@@ -76,7 +76,7 @@ class ForeignAssetIngestObservation(BaseModel):
 class ForeignAssetClassRollup(BaseModel):
     """Per-source-kind and per-asset-class rollup row."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: str = Field(min_length=1)
     asset_class: ForeignAssetClass
@@ -109,7 +109,7 @@ class ForeignAssetClassRollup(BaseModel):
 class ForeignAssetsAggregation(BaseModel):
     """720 aggregation output: per-class rollups + cross-class totals."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1)
     period: InstanceOf[Period]

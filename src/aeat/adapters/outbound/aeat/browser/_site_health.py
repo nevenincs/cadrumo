@@ -21,12 +21,12 @@ from pydantic import (
     AnyHttpUrl,
     AwareDatetime,
     BaseModel,
-    ConfigDict,
     Field,
     TypeAdapter,
     field_validator,
 )
 
+from .....core import STRICT_FROZEN_CONFIG
 from .....core.redaction import redact_for_log
 from ._errors import BrowserValidationError
 
@@ -70,7 +70,7 @@ class _SiteHealthRecord(BaseModel):
     pass-through.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class SiteHealthEvidence(_SiteHealthRecord):

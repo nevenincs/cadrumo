@@ -112,6 +112,25 @@ class Settings(AeatTimeoutSettings):
         default="http://127.0.0.1:11434/api/chat",
         description="Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments",
     )
+    aeat_llm_ollama_num_ctx: int = Field(
+        default=8192,
+        gt=0,
+        description=(
+            "Ollama context window (num_ctx) for local requests. The vision read sends "
+            "the full registry allow-list prompt plus the encoded invoice image, which "
+            "exceeds Ollama's 4096 default; 8192 fits the prompt + image + output with "
+            "headroom and still runs on consumer hardware"
+        ),
+    )
+    aeat_llm_vision_read_timeout_s: int = Field(
+        default=300,
+        gt=0,
+        description=(
+            "Per-request timeout for the on-host local vision read; larger than the "
+            "general LLM timeout because a local vision model on consumer hardware "
+            "(CPU or a modest GPU) can take one to several minutes to read an invoice"
+        ),
+    )
     aeat_llm_ollama_vision_model: str = Field(
         default="qwen2.5vl:3b",
         description=(

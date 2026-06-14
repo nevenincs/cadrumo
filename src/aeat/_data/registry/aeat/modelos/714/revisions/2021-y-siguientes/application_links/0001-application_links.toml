@@ -1,4 +1,12 @@
 [[revisions."2021-y-siguientes".application_links]]
+id = "modelo-714-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".application_links]]
 id = "modelo-714-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
@@ -28,4 +36,39 @@ surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+# Snapshot-workflow surfaces required once the revision declares a calculation
+# formula (the Phase-B escala): a formula-bearing construct must expose the full
+# calculation/verification/review/approval/reconciliation/workflow surface set.
+[[revisions."2021-y-siguientes".application_links]]
+id = "modelo-714-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2021-y-siguientes".application_links]]
+id = "modelo-714-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2021-y-siguientes".application_links]]
+id = "modelo-714-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2021-y-siguientes".application_links]]
+id = "modelo-714-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30"]
 source_refs = ["aeat-modelo-714-procedure"]

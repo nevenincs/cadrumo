@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ...core.time import now
-from ._errors import ModeloError
+from ._errors import ModeloError, raise_catalogue_integrity_error
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
@@ -95,15 +95,13 @@ class ModeloRecordCatalogueRepository:
                 max_supported_version=_FILING_CATALOGUE_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
-            _LOGGER.error("filing-record catalogue integrity error", exc_info=True)
-            raise ModeloRecordPersistenceError(
-                "filing-record catalogue integrity error",
+            raise_catalogue_integrity_error(
+                exc,
+                error_cls=ModeloRecordPersistenceError,
+                label="filing-record",
                 translated_message=_FILING_PERSISTENCE_MESSAGE,
-                context={
-                    "reason": "secure_object_integrity",
-                    "cause_type": type(exc).__name__,
-                },
-            ) from exc
+                logger=_LOGGER,
+            )
         if record is None:
             return ModeloRecordCatalogue()
         envelope = Envelope[ModeloRecordCatalogue].model_validate_json(record.payload.decode("utf-8"))

@@ -105,6 +105,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
     # IVA-exclusive base, the untagged row its gross — never any other
     # field pairing. The inequality guards prove the selection is live:
     # a gross-summing regression yields 1710, a base-only regression 1000.
+    assert tagged.taxable_base_amount is not None
     assert resolved[_INGRESOS_BINDING] == tagged.taxable_base_amount + untagged.gross_amount
     assert resolved[_INGRESOS_BINDING] != tagged.gross_amount + untagged.gross_amount, (
         "IVA-inclusive gross must not feed casilla 01"

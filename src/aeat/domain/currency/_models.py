@@ -4,7 +4,9 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+
+from ...core import STRICT_FROZEN_CONFIG
 
 
 class CurrencyNormalizationStatus(StrEnum):
@@ -19,7 +21,7 @@ class CurrencyNormalizationStatus(StrEnum):
 class MonetaryAmount(BaseModel):
     """A monetary amount with its currency."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     amount: Decimal
     currency: str = Field(min_length=3, max_length=3)
@@ -28,7 +30,7 @@ class MonetaryAmount(BaseModel):
 class NormalizedAmount(BaseModel):
     """A EUR-normalized monetary amount with provenance."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     original: MonetaryAmount
     eur_amount: Decimal

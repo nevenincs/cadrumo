@@ -7,8 +7,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 
+from .....core import STRICT_FROZEN_CONFIG
 from .....core.time._utc import coerce_utc_aware
 from ._errors import AeatLoginAssertionError
 from ._providers import (
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
 class AeatLoginAssertion(BaseModel):
     """Structured outcome of a single live AEAT verification attempt."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     target_url: str
     is_valid: bool
@@ -65,7 +66,7 @@ class AeatLoginAssertion(BaseModel):
 class AeatSession(BaseModel):
     """Record describing an authenticated live AEAT session without secret material."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     provider_kind: AuthProviderKind
     authenticated_at: datetime

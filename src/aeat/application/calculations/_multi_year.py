@@ -31,9 +31,11 @@ the operator, fall back to AEAT live state, or zero-fill.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, override
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -49,7 +51,6 @@ from ..aggregation._source_mesh import (
 from ._binding_prefill import _revision_prefill_divergence
 from ._observations_repository import CalculationObservationRepository
 
-_STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 

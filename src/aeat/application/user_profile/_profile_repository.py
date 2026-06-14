@@ -348,8 +348,9 @@ class ProfileRepository:
 
         Reads the plaintext manifest and the encrypted record, runs
         :func:`verify_profile_integrity` to confirm the directory, the
-        manifest, and the record all agree on the UUID and on the
-        lifecycle status, then builds the :class:`ProfileAggregate`.
+        manifest, and the record all agree on the UUID, the lifecycle
+        status, and the display label, then builds the
+        :class:`ProfileAggregate`.
 
         Args:
             profile_id: The UUID of the profile to load.
@@ -377,6 +378,8 @@ class ProfileRepository:
             record_profile_id=record.profile_id,
             manifest_status=manifest.status.value,
             record_status=record.status.value,
+            manifest_label=manifest.label,
+            record_display_name=record.display_name,
         )
 
         return ProfileAggregate(

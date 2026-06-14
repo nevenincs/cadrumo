@@ -18,8 +18,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -43,7 +44,7 @@ from ._action_errors import WorkUnitNotFoundError
 class WorkUnitHistoryEvent(BaseModel):
     """One row in a work-unit history stream."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     event_id: str = Field(min_length=1)
     occurred_at: datetime
@@ -57,7 +58,7 @@ class WorkUnitHistoryEvent(BaseModel):
 class WorkUnitHistory(BaseModel):
     """Chronologically-ordered event timeline for one work unit."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     work_unit_id: WorkUnitId

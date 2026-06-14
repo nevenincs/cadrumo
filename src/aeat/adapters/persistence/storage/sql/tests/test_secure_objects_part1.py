@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ...errors import DecryptionError
 from ._secure_objects_support import (
     UTC,
     Base,
@@ -26,6 +27,60 @@ from ._secure_objects_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def test_secure_object_row_substitution_fails_closed(tmp_path: Path) -> None:
+    """A ciphertext moved into a different row refuses to decrypt (AAD row binding).
+
+    The payload AEAD binds the row identity (namespace, object_key digest,
+    schema_version) as associated data. An attacker with write access to the
+    bucket SQLite file who copies one row's ciphertext into another row produces a
+    payload that no longer authenticates under the target row's identity, so the
+    read fails closed instead of silently returning the wrong plaintext. This is
+    the anti-tautology proof for the at-rest row-substitution gap.
+    """
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "substitution.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            for key, body in (("key-alpha", b"alpha-secret-payload"), ("key-beta", b"beta-secret-payload")):
+                repo.save(
+                    namespace="aeat.test",
+                    object_key=key,
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=body,
+                )
+            # key-beta (saved second) reads cleanly before tampering.
+            assert (
+                repo.load("aeat.test", "key-beta", expected_class=SensitivityClass.FINANCIAL, max_supported_version=1)
+                is not None
+            )
+
+            # Copy the first row's (key-alpha) ciphertext into the second row
+            # (key-beta) -- same bucket, same DEK -- a within-bucket substitution
+            # the old static AAD allowed to decrypt as the wrong row.
+            with sqlite3.connect(db_path) as con:
+                ids = [row_id for (row_id,) in con.execute("SELECT id FROM secure_objects ORDER BY id").fetchall()]
+                (first_payload,) = con.execute(
+                    "SELECT payload FROM secure_objects WHERE id = :id",
+                    {"id": ids[0]},
+                ).fetchone()
+                con.execute(
+                    "UPDATE secure_objects SET payload = :p WHERE id = :id",
+                    {"p": first_payload, "id": ids[-1]},
+                )
+                con.commit()
+
+            with pytest.raises(DecryptionError):
+                repo.load("aeat.test", "key-beta", expected_class=SensitivityClass.FINANCIAL, max_supported_version=1)
+        finally:
+            engine.dispose()
 
 
 def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:

@@ -10,6 +10,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
@@ -17,6 +18,9 @@ if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
 
 from dev.docs.apidocs import ApiStubManager
 from dev.docs.cli_reference import generate_cli_reference
+
+if TYPE_CHECKING:
+    from dev.docs.pagefind_index import InjectCallback
 
 DOC_SUFFIXES = {".md", ".rst"}
 PY_SUFFIX = ".py"
@@ -361,6 +365,56 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
             result = subprocess.run(specific_command, cwd=repo_root, env=env, check=False)
     if result.returncode != 0:
         raise SystemExit(result.returncode)
+    # The offline Ctrl-K search corpus is compiled only for a canonical full
+    # build: the changed-page and single-page modes write previews (temp trees
+    # or a lone page) that must not regenerate the whole search index.
+    if plan.full_build_required:
+        compile_search_index(docs_root / "_build" / "html", repo_root)
+
+
+def compile_search_index(
+    html_root: Path,
+    repo_root: Path,
+    *,
+    injector: InjectCallback | None = None,
+) -> None:
+    """Compile the bundled Ctrl-K search corpus over the freshly built HTML.
+
+    Runs the post-build Pagefind index pass (ADR D5) and injects the unified
+    search records -- concept cards, casilla and CLI navigation surfaces --
+    boosted by the committed build-time RAG sweep (ADR D4/D6). The resulting
+    per-language index is an uncommitted build artifact, regenerated on every
+    full build exactly like the generated CLI/API surfaces. A missing vendored
+    Pagefind wheel is reported and skipped rather than failing the
+    otherwise-successful docs build (the documented Orama fallback applies only
+    if the wheel is unvendorable for a platform).
+
+    Args:
+        html_root: The built Sphinx HTML output directory to index.
+        repo_root: Repository root (for the committed relevance sweep file).
+        injector: Optional pre-built injection callback. Defaults to the full
+            record injector (concepts + casillas + CLI). Injectable so a test
+            can drive a small real injector without paying the full
+            materialisation cost; production always uses the default.
+    """
+    from dev.docs.pagefind_index import PagefindUnavailableError, build_search_index
+    from dev.docs.pagefind_inject import InjectionStats, build_record_injector
+
+    captured: list[InjectionStats] = []
+    resolved_injector = build_record_injector(repo_root, on_complete=captured.append) if injector is None else injector
+    try:
+        outcome = build_search_index(html_root, inject=resolved_injector)
+    except PagefindUnavailableError as exc:
+        print(f"Search index skipped (vendored Pagefind unavailable): {exc}", flush=True)
+        return
+    stats = captured[0] if captured else None
+    written = stats.custom_records_written if stats is not None else 0
+    boosts = stats.relevance_boosts_applied if stats is not None else 0
+    print(
+        f"Search index compiled: {outcome.page_count} pages + {written} term/casilla/CLI records "
+        f"({boosts} relevance-boosted) -> {outcome.html_root / outcome.output_subdir}",
+        flush=True,
+    )
 
 
 def update_rag_index(repo_root: Path) -> None:

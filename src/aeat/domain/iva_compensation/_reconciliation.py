@@ -21,13 +21,12 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Final, Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.time import now
 from ._errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
-
-_STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
 _FILED_HISTORY_OBSERVATION: Final = "filed_history_observation"

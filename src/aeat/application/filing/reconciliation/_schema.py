@@ -18,18 +18,13 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Period
 from ._kind import ModeloDivergenceKind
-
-_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
-    strict=True,
-    frozen=True,
-    extra="forbid",
-)
 
 
 class ReconciliationStatus(StrEnum):

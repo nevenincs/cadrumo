@@ -67,9 +67,7 @@ def _modelo_303_revision():
 
 def _casilla_base(aggregation: IvaLedgerAggregation, casilla: str) -> Decimal:
     """Resolve a casilla base imponible via the registry binding from an aggregation."""
-    resolved = resolve_ledger_iva_aggregation_binding_values(
-        _modelo_303_revision(), aggregation.observations
-    )
+    resolved = resolve_ledger_iva_aggregation_binding_values(_modelo_303_revision(), aggregation.observations)
     return resolved.get(_CASILLA_BASE_BINDING[casilla], Decimal("0"))
 
 

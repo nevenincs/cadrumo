@@ -26,6 +26,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ._errors import NormativeValidationError
 
@@ -142,11 +143,7 @@ def _require_spanish(translatable: LocalizedText, field_name: str) -> None:
 class _NormativeStrictFrozen(BaseModel):
     """Shared base config: strict validation, immutable, no extras."""
 
-    model_config = ConfigDict(
-        strict=True,
-        frozen=True,
-        extra="forbid",
-    )
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class _NormativeStrictMutable(BaseModel):

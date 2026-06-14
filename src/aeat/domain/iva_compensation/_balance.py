@@ -12,14 +12,14 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
 )
 
-_STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _FOUR_YEAR_WINDOW: Final[int] = 4
 
 

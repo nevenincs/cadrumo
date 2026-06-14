@@ -36,8 +36,9 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...domain.iva import (
     ProrrataInputs,
     ProrrataKind,
@@ -94,7 +95,7 @@ class IvaOperation(BaseModel):
     legible in the calculation revision.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     operation_id: _NonEmptyShortString
     operation_date: date
@@ -113,7 +114,7 @@ class ProrrataAggregation(BaseModel):
     on the ``aeat app modelo bindings list`` output.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     year: Annotated[int, Field(ge=2000, le=2100)]
     inputs: ProrrataInputs

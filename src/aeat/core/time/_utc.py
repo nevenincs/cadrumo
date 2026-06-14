@@ -19,6 +19,17 @@ from datetime import UTC, datetime
 from ..errors import CoreValidationError
 
 
+def parse_iso_datetime(raw: str) -> datetime:
+    """Parse an ISO-8601 datetime string, normalising a trailing ``Z`` to ``+00:00``.
+
+    :meth:`datetime.fromisoformat` historically rejects the ``Z`` UTC suffix; this
+    normalises it first so UTC-suffixed timestamps parse. The result may be naive
+    or aware depending on the input — pass it through :func:`validate_utc_aware` or
+    :func:`coerce_utc_aware` when an aware value is required.
+    """
+    return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+
+
 def coerce_utc_aware(value: datetime) -> datetime:
     """Return a UTC-aware datetime, coercing a naive one if necessary.
 

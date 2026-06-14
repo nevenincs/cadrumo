@@ -20,8 +20,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents as _round_to_cents
 from ._enums import ExpenseCategory
 from ._models import FincaGasto
@@ -38,7 +39,7 @@ CAPPED_CATEGORIES: frozenset[ExpenseCategory] = frozenset(
 class CarryForwardEntry(BaseModel):
     """A single carry-forward generation, anchored to its origination year."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     origination_year: int
     remaining_amount: Decimal = Field(ge=Decimal("0"))
@@ -67,7 +68,7 @@ class GastosForYear(BaseModel):
             applying caps and carry-forward consumption.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     period_year: int
     ingresos_for_period: Decimal = Field(ge=Decimal("0"))

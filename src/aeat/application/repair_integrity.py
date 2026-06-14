@@ -28,13 +28,12 @@ from a decision record alone.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Generator, Iterator, Sequence
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import (
     REPAIR_INTEGRITY_DECISION_NAMESPACE as REPAIR_DECISION_STORAGE_NAMESPACE,
@@ -49,8 +48,9 @@ from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
 )
+from ..core import STRICT_FROZEN_CONFIG
 from ..core.errors import CoreError
-from ..core.hashing import sha256_hex
+from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
 from .diagnostics import DiagnosticCheck
 
@@ -106,7 +106,7 @@ class _SecureObjectRepositoryProtocol(Protocol):
 class RepairIntegrityReport(BaseModel):
     """Output of ``aeat config repair integrity [--namespace N]``."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespaces: tuple[SecureObjectNamespaceIntegrity, ...]
     readable_total: int = Field(ge=0)
@@ -117,7 +117,7 @@ class RepairIntegrityReport(BaseModel):
 class RepairListRow(BaseModel):
     """One row in the secure-object repair inventory."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key_digest: str = Field(min_length=1)
@@ -132,7 +132,7 @@ class RepairListRow(BaseModel):
 class RepairListReport(BaseModel):
     """Output of the secure-object repair inventory."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     integrity: SecureObjectNamespaceIntegrity
@@ -333,7 +333,7 @@ class RepairRemediationDecision(BaseModel):
     re-derivation guard.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     decision_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     target_namespace: str = Field(min_length=1)
@@ -383,8 +383,7 @@ def repair_remediation_decision_id(
             sorted(item.strip() for item in verified_replacement_evidence_refs),
         ),
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return sha256_hex(encoded)
+    return content_hash_hex(payload)
 
 
 class RepairRemediationDecisionRepository:
@@ -506,7 +505,7 @@ def _expected_repair_decision_id(decision: RepairRemediationDecision) -> str:
 class RepairPolicyNamespaceClassification(BaseModel):
     """Minimal namespace classification attached to a repair-policy surface."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     role: str = Field(min_length=1)
 
@@ -514,7 +513,7 @@ class RepairPolicyNamespaceClassification(BaseModel):
 class RepairPolicyNamespacePolicy(BaseModel):
     """Policy metadata for one namespace governed by a command surface."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace_classification: RepairPolicyNamespaceClassification
     owner_domain: str = Field(min_length=1)
@@ -532,7 +531,7 @@ class RepairPolicyNamespacePolicy(BaseModel):
 class RepairPolicyCommandSurface(BaseModel):
     """One catalogued repair-policy CLI command surface."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     command_path: str = Field(min_length=1)
     """The canonical CLI command path (e.g. ``config repair integrity objects``)."""

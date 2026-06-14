@@ -15,8 +15,9 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.money import round_to_cents as _round_to_cents
 from ._bindings import CasillaObservation
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
@@ -92,7 +93,7 @@ class RegistryCalculationEntry(BaseModel):
     ``RegistrySnapshot.revision.casillas`` directly.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     formula_id: FormulaId
     target: str
@@ -134,7 +135,7 @@ class RegistryCalculationResult(BaseModel):
     :attr:`observations` directly — the entries view drops them by design.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str
     revision: str

@@ -28,6 +28,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .._loader import load_registry_tree
+from .._schema import ModeloRevision, RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -45,15 +46,15 @@ _VALUE_FEEDING_ROLES = frozenset(
 _EVIDENCE_ROLE = "factual_evidence"
 
 
-def _walk(expression) -> Iterator[object]:
+def _walk(expression: object) -> Iterator[object]:
     yield expression
     for arg in getattr(expression, "args", ()) or ():
         yield from _walk(arg)
 
 
-def _consumption_index(revision) -> tuple[set[str], set[str], set[str]]:
+def _consumption_index(revision: ModeloRevision) -> tuple[set[str], set[str], set[str]]:
     """Return (casilla-bound bindings, formula-referenced relations, formula-referenced bindings)."""
-    casilla_bindings = {c.binding for c in revision.casillas if getattr(c, "binding", None)}
+    casilla_bindings = {c.binding for c in revision.casillas if c.binding is not None}
     formula_relations: set[str] = set()
     formula_bindings: set[str] = set()
     for formula in revision.formulas:
@@ -67,7 +68,7 @@ def _consumption_index(revision) -> tuple[set[str], set[str], set[str]]:
     return casilla_bindings, formula_relations, formula_bindings
 
 
-def _relation_is_consumed(relation, index: tuple[set[str], set[str], set[str]]) -> bool:
+def _relation_is_consumed(relation: RelationDefinition, index: tuple[set[str], set[str], set[str]]) -> bool:
     casilla_bindings, formula_relations, formula_bindings = index
     if relation.id in formula_relations:
         return True
@@ -88,7 +89,7 @@ def test_no_inert_value_feeding_cross_period_relations() -> None:
     gaps: list[str] = []
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():
-            relations = getattr(revision, "relations", ()) or ()
+            relations = revision.relations
             if not relations:
                 continue
             index = _consumption_index(revision)
@@ -121,13 +122,13 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
     unconsumed_roles: set[str] = set()
     for modelo in modelos:
         for _revision_id, revision in modelo.revisions.items():
-            relations = getattr(revision, "relations", ()) or ()
+            relations = revision.relations
             if not relations:
                 continue
             index = _consumption_index(revision)
             for relation in relations:
                 if not _relation_is_consumed(relation, index):
-                    unconsumed_roles.add(getattr(relation, "dependency_role", None))
+                    unconsumed_roles.add(relation.dependency_role)
 
     assert unconsumed_roles <= {_EVIDENCE_ROLE}, (
         f"Unconsumed relations carry unexpected roles {unconsumed_roles - {_EVIDENCE_ROLE}!r}; "

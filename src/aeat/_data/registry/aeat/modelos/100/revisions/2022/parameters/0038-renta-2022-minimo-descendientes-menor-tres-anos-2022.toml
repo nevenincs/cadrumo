@@ -1,0 +1,16 @@
+[[revisions."2022".parameters]]
+id = "renta-2022-minimo-descendientes-menor-tres-anos-2022"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Mínimo por descendientes", "menor de tres"]
+
+[[revisions."2022".parameters.values]]
+value = "2800"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31

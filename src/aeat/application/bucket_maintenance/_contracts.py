@@ -13,8 +13,9 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 
 
@@ -28,7 +29,7 @@ class RenameBucketCommand(BaseModel):
     move together).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     new_label: str = Field(min_length=1, max_length=160)
@@ -43,7 +44,7 @@ class RenameBucketResult(BaseModel):
     ``BUCKET_RENAMED`` bucket event.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     previous_label: str = Field(min_length=1, max_length=160)
@@ -60,7 +61,7 @@ class DeleteBucketCommand(BaseModel):
     must switch profiles first.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     confirmed: bool = False
@@ -73,7 +74,7 @@ class DeleteBucketResult(BaseModel):
     emitter can render a confirming line without re-reading anything.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     previous_label: str = Field(min_length=1, max_length=160)
@@ -90,7 +91,7 @@ class BrowseBucketCommand(BaseModel):
     composition-pattern ADR.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     namespace_filter: str | None = Field(default=None, min_length=1, max_length=128)
@@ -99,7 +100,7 @@ class BrowseBucketCommand(BaseModel):
 class BucketNamespaceInventoryRow(BaseModel):
     """One row of the namespace-inventory browse result."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     row_count: int = Field(ge=0)
@@ -113,7 +114,7 @@ class BrowseBucketResult(BaseModel):
     stored-row count. Read-only; emits no bucket event.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     rows: tuple[BucketNamespaceInventoryRow, ...]
@@ -130,7 +131,7 @@ class ExportBucketCommand(BaseModel):
     active KEK and emits a 2-member archive without recovery-wrap.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     output_path: Path
@@ -146,7 +147,7 @@ class ExportBucketResult(BaseModel):
     backup or transfer.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     output_path: Path
@@ -165,7 +166,7 @@ class ImportBucketCommand(BaseModel):
     the matching ``recovery_wrap_passphrase``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_path: Path
     force_replace: bool = False
@@ -181,7 +182,7 @@ class ImportBucketResult(BaseModel):
     pre-flight integrity gate.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")

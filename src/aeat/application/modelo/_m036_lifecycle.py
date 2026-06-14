@@ -20,9 +20,10 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, ProfileId
 from ...core.time import now
@@ -78,7 +79,7 @@ class M036DeclarationCommand(BaseModel):
     any local filing action.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     event_kind: CensoModeloEventKind
@@ -106,7 +107,7 @@ class M036DeclarationResult(BaseModel):
     re-derivation) read these fields to decide what to recompute.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     declaration_id: str = Field(
         min_length=64,

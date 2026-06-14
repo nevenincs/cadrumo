@@ -31,6 +31,12 @@ from ._master_key import (
     looks_like_real_tax_id,
     refuse_unsecured_with_real_nif,
 )
+from ._master_key_derivation import (
+    ARGON2_MEMORY_COST_KIB,
+    ARGON2_PARALLELISM,
+    ARGON2_TIME_COST,
+    derive_kek_with_params,
+)
 from ._recovery import (
     RecoveryKey,
     WrappedMasterKey,
@@ -54,6 +60,9 @@ from ._recovery_facade import (
 from ._recovery_record import RecoveryRecord
 
 __all__ = [
+    "ARGON2_MEMORY_COST_KIB",
+    "ARGON2_PARALLELISM",
+    "ARGON2_TIME_COST",
     "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
     "KdfParams",
@@ -69,6 +78,7 @@ __all__ = [
     "activate_session",
     "atomic_write_secure_bytes",
     "decode_mnemonic",
+    "derive_kek_with_params",
     "encode_mnemonic",
     "generate_recovery_key",
     "get_master_key_provider",

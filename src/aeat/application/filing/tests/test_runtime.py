@@ -132,7 +132,7 @@ def test_runtime_schema_provider_rejects_raw_period_string() -> None:
         build_runtime_schema_provider(
             modelos=[_TEST_MODELO],
             filing_year=_TEST_YEAR,
-            period=_TEST_PERIOD.registry_token,
+            period=_TEST_PERIOD.registry_token,  # pyright: ignore  # ty: ignore  # negative test: raw str rejected
         )
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.period_type"

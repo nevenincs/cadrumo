@@ -7,13 +7,14 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import ClassVar, override
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import (
     APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
 )
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -51,7 +52,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
 class EvidenceBundleVerificationReport(BaseModel):
     """Outcome of a verification pass over a bundle."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bundle_id: BundleId
     verification_state: BundleVerificationState

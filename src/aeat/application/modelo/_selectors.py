@@ -8,9 +8,9 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
-from ...core import Period, resolve_active_bucket_id
+from ...core import STRICT_FROZEN_CONFIG, Period, resolve_active_bucket_id
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._codes import ModeloCode
@@ -145,7 +145,7 @@ class ModeloWorkSelectorRequest(BaseModel):
     against the loaded work unit.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloCode | None = None
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
@@ -177,7 +177,7 @@ class ModeloWorkSelectorRequest(BaseModel):
 class ModeloWorkUnitCandidate(BaseModel):
     """Human-readable candidate metadata for selector guidance."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     work_unit_id: WorkUnitId
     short_work_unit_id: str
@@ -216,7 +216,7 @@ class ModeloWorkUnitCandidate(BaseModel):
 class ModeloCalculationRevisionCandidate(BaseModel):
     """Human-readable calculation revision metadata for selector guidance."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     calculation_revision_id: CalculationRevisionId
     short_calculation_revision_id: str
@@ -245,7 +245,7 @@ class ModeloCalculationRevisionCandidate(BaseModel):
 class ModeloCalculationRevisionSelection(BaseModel):
     """Resolved calculation revision selection under a work unit."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     selector: ModeloCalculationRevisionSelector
     work_unit_id: WorkUnitId
@@ -260,7 +260,7 @@ type ModeloCalculationRevisionDefault = Literal["verify", "file", "export"]
 class ModeloWorkResolution(BaseModel):
     """Resolved selector outcome for a visible modelo filing target."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     state: ModeloWorkSelectorState
     bucket_id: _BucketId

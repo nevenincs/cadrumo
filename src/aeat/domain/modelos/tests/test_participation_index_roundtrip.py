@@ -29,6 +29,7 @@ import pytest
 from ....adapters.persistence.storage import SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
+from .._codes import ModeloCode
 from .._participation_index import (
     PARTICIPATION_INDEX_NAMESPACE,
     PARTICIPATION_INDEX_SCHEMA_VERSION,
@@ -64,7 +65,7 @@ def _populated_index() -> TransactionRevisionParticipationIndex:
     filed = TransactionRevisionParticipation(
         calculation_revision_id=_hex("b"),
         work_unit_id=_hex("c"),
-        modelo="303",
+        modelo=ModeloCode("303"),
         filing_year=2024,
         period=_P_2024_2T,
         revision_state="presentado",
@@ -74,7 +75,7 @@ def _populated_index() -> TransactionRevisionParticipationIndex:
     verified = TransactionRevisionParticipation(
         calculation_revision_id=_hex("e"),
         work_unit_id=_hex("f"),
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2024,
         period=_P_2024_2T,
         revision_state="verificado_completo",

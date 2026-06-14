@@ -9,9 +9,9 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import Period
+from ....core import STRICT_FROZEN_CONFIG, Period
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
@@ -31,7 +31,7 @@ class _RegistryModeloObservationLike(Protocol):
 class RegistryModeloObservationRequirement(BaseModel):
     """Filed declaration required by one or more registry bindings."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=8)
     filing_period: Period | None = None
@@ -219,7 +219,7 @@ def resolve_previous_filing_binding_values(
 
 
 class _PreviousModeloSelector(BaseModel):
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year_delta: int = 0

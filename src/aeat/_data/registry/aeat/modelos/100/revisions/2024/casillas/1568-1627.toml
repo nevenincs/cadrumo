@@ -4,5 +4,5 @@ number = "1627"
 label = "\"Barcelona Music Lab. El futuro de la música\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"
-legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

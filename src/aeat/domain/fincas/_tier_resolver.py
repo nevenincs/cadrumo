@@ -34,9 +34,9 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ...core import Modelo
+from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.logging import get_logger
 from ._enums import ReduccionTier, UseType
 from ._errors import TierResolutionError
@@ -88,7 +88,7 @@ class TierResolution(BaseModel):
             ``"art_23_2_par_4_lau_17_6"``).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     tier: ReduccionTier
     reduccion_pct: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))

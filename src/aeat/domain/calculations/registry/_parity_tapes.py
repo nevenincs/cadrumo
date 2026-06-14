@@ -13,9 +13,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from ....core import Period
+from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.time import now
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
@@ -36,7 +36,7 @@ ParityStatus = Literal["match", "mismatch"]
 class ParityTapeModel(BaseModel):
     """Strict frozen base for parity tape records."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class ParityScenario(ParityTapeModel):

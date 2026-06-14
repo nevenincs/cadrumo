@@ -27,8 +27,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ..core import STRICT_FROZEN_CONFIG
 from .errors import CoreError, ProfileAnswerTypeError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .logging import get_logger
@@ -201,7 +202,7 @@ class SetupAnswers(BaseModel):
     raise :class:`~aeat.core.errors.ProfileAnswerTypeError`.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     # ── profile identity ─────────────────────────────────────────────────
     tax_id: str = Field(min_length=1)

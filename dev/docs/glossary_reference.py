@@ -160,10 +160,38 @@ def _body_text(concept: ConceptRecord) -> str:
     return section.definition or section.short_description
 
 
+def _related_lines(
+    concept: ConceptRecord,
+    headwords: dict[str, str],
+    body_indent: str,
+) -> list[str]:
+    """Render the concept's broader/related SKOS relations as ``:term:`` links.
+
+    The Handbook declares shallow SKOS relations (``broader`` / ``related``)
+    between concepts, but they were invisible to the reader -- they rode on the
+    search-record metadata and nowhere else. Rendering them here as ``:term:``
+    cross-references turns the glossary into a navigable concept graph: a reader
+    on the prorrata entry jumps straight to the casilla and IVA entries.
+
+    Only relations whose target is an APPROVED concept (one that renders as a
+    glossary entry, so its ``:term:`` anchor exists) are linked; a relation to a
+    draft or self is skipped, because a ``:term:`` to a non-existent anchor would
+    red the nitpicky ``-n -W`` build. The link text is the target's headword,
+    the exact surface the glossary entry claims.
+    """
+    relation_lines: list[str] = []
+    for label, ids in (("Broader", concept.broader), ("Related", concept.related)):
+        refs = [f":term:`{headwords[ref]}`" for ref in ids if ref != concept.concept_id and ref in headwords]
+        if refs:
+            relation_lines.append(f"{body_indent}* {label}: {', '.join(refs)}")
+    return relation_lines
+
+
 def _render_entry(
     concept: ConceptRecord,
     permalinks: dict[str, str],
     claimed: set[str],
+    headwords: dict[str, str],
 ) -> tuple[str, int, list[str]]:
     """Render one ``glossary`` entry and return ``(rst, legal_count, dropped)``.
 
@@ -177,7 +205,7 @@ def _render_entry(
 
     The block is the surviving term lines (headword + admitted aliases), then a
     6-space-indented definition paragraph, then any resolvable BOE grounding
-    links as an indented bullet list.
+    links and broader/related concept cross-references as an indented bullet list.
     """
     dropped: list[str] = []
     term_lines: list[str] = []
@@ -197,6 +225,7 @@ def _render_entry(
         if permalink:
             grounding.append(f"{body_indent}* Legal basis: `{ref} <{permalink}>`__")
             legal_count += 1
+    grounding.extend(_related_lines(concept, headwords, body_indent))
     if grounding:
         block.append("")
         block.extend(grounding)
@@ -217,6 +246,11 @@ def render_glossary(repo_root: Path, handbook: TerminologyHandbook) -> tuple[str
     """
     permalinks = _legal_permalinks(repo_root)
     approved = _approved_concepts(handbook)
+    # concept_id -> headword for every approved concept, so broader/related
+    # relations can be rendered as resolvable ``:term:`` cross-references to the
+    # target's glossary anchor (a relation to a draft/non-rendered concept is
+    # skipped, never emitting an unresolvable reference).
+    headwords = {concept.concept_id: _headword(concept) for concept in approved}
     drafts = sum(1 for concept in handbook.concepts if concept.lifecycle is ConceptLifecycle.DRAFT)
 
     header = (
@@ -237,7 +271,7 @@ def render_glossary(repo_root: Path, handbook: TerminologyHandbook) -> tuple[str
     deduplicated: list[str] = []
     rendered = 0
     for concept in approved:
-        entry, count, dropped = _render_entry(concept, permalinks, claimed)
+        entry, count, dropped = _render_entry(concept, permalinks, claimed, headwords)
         deduplicated.extend(dropped)
         # A concept whose every term collided with an earlier entry has no
         # surviving headword; skip it rather than emit a term-less block.

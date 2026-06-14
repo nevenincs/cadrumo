@@ -19,8 +19,9 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
+from ...core import STRICT_FROZEN_CONFIG
 from ..config import PROJECT_ROOT, load_settings
 from ..logging import attach_run_sink, detach_run_sink, get_logger
 from ..time._clock import now
@@ -70,7 +71,7 @@ class RunContextInfo(BaseModel):
             ``STEP_START`` boundary event.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     run_id: str
     entrypoint: str

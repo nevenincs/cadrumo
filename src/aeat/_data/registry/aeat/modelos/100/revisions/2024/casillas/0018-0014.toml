@@ -4,5 +4,5 @@ number = "0014"
 label = "Cuotas satisfechas a sindicatos"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
 semantic_role = "irpf_rendimiento_trabajo_gasto_sindicato"
-legal_refs = ["ley-35-2006:art-17"]
+legal_refs = ["ley-35-2006:art-19"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

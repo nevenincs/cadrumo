@@ -71,6 +71,13 @@ Understand quarters, annual period codes, dates, and year-end.
 Capture, list, and view official AEAT notifications from your electronic inbox.
 :::
 
+:::{grid-item-card} Read Live AEAT Data
+:link: read-live-aeat-data
+:link-type: doc
+
+Pull read-only data from AEAT: censo, notifications, filed returns, and receipts.
+:::
+
 :::{grid-item-card} Work with Transactions
 :link: import-bank-statements
 :link-type: doc
@@ -234,6 +241,7 @@ choose-modelo
 filing-calendar
 filing-periods
 check-aeat-notifications
+read-live-aeat-data
 import-bank-statements
 classify-transactions
 ledger-evidence

@@ -14,6 +14,7 @@ from datetime import date
 import pytest
 
 from ......application.auth import AuthProviderKind, ensure_authenticated_aeat_session
+from ......core import Modelo, Period
 from ......core.config import load_settings
 from ......core.errors import AeatError
 from ......tests.live_gate import requires_live_enabled
@@ -47,7 +48,7 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
 
     today = date.today()
     target_year = today.year
-    target_period = _quarter_period(today.month)
+    target_period = _quarter_period(target_year, today.month)
     try:
         with get_master_key_provider():
             observation = await fetch_iva_compensation_wallet(
@@ -61,7 +62,7 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
 
     if observation.mode != "read":
         pytest.fail("live IVA wallet observation was not read-only")
-    if observation.target_modelo != "303":
+    if observation.target_modelo != Modelo.M303:
         pytest.fail("live IVA wallet observation target modelo was not 303")
     if observation.target_year != target_year or observation.target_period != target_period:
         pytest.fail("live IVA wallet observation target period did not match requested period")
@@ -73,6 +74,6 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
         pytest.fail("live IVA wallet observation included a non-read row")
 
 
-def _quarter_period(month: int) -> str:
+def _quarter_period(year: int, month: int) -> Period:
     quarter = ((month - 1) // 3) + 1
-    return f"{quarter}T"
+    return Period.from_year_and_code(year, f"{quarter}T")

@@ -29,10 +29,10 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...domain.calculations.registry import (
     ModeloRevision,
     OssIossLedgerObservation,
@@ -91,7 +91,7 @@ class OssIossLedgerCandidate(BaseModel):
             be non-negative.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     ledger_id: _LedgerId
     transaction_date: date

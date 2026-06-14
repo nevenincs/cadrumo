@@ -115,16 +115,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "master-key backend writes key material through a private fd",
     (
-        "src/aeat/adapters/persistence/storage/master_key/_master_key.py",
-        "_write_bytes_secure",
-        "os.open",
-    ): "master-key backend writes key material with restrictive file modes",
-    (
-        "src/aeat/adapters/persistence/storage/master_key/_master_key.py",
-        "_write_bytes_secure",
-        "os.write",
-    ): "master-key backend writes key material through a private fd",
-    (
         "src/aeat/adapters/persistence/storage/secret_store/_secret_store.py",
         "_write_index",
         "tempfile.NamedTemporaryFile",
@@ -237,7 +227,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
         "src/aeat/adapters/persistence/storage/bucket/_manifest_io.py",
         "write_manifest",
-        "tmp.write_text",
+        "open",
     ): "bucket directory manifest is plaintext TOML by design; carries no NIF/financial data",
     (
         "src/aeat/core/_bucket_pointer_io.py",
@@ -264,19 +254,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "put",
         "sidecar_path.write_text",
     ): "local-filesystem storage adapter writes the non-sensitive object-metadata sidecar",
-    (
-        "src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py",
-        "_write_all_fd",
-        "os.write",
-    ): "declaration-PDF parser bridge writes through a pre-created private fd",
-    (
-        "src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py",
-        "_temporary_sensitive_pdf_path",
-        "tempfile.mkstemp",
-    ): (
-        "short-lived declaration-PDF parser bridge for bbox extraction; private tempfile is unlinked immediately "
-        "after parsing"
-    ),
     (
         "src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
         "_dump_wallet_diagnostic",

@@ -14,9 +14,9 @@ from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validator
 
-from ...core import Period, PeriodError
+from ...core import STRICT_FROZEN_CONFIG, Period, PeriodError
 
 
 class JustificanteParserBackend(StrEnum):
@@ -61,11 +61,7 @@ class Justificante(BaseModel):
         parsed_at: UTC wall-clock time the parse finished.
     """
 
-    model_config = ConfigDict(
-        strict=True,
-        frozen=True,
-        extra="forbid",
-    )
+    model_config = STRICT_FROZEN_CONFIG
 
     csv: str = Field(..., min_length=4, max_length=64)
     modelo: str = Field(..., min_length=1, max_length=16)

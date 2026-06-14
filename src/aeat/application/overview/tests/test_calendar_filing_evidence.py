@@ -235,14 +235,14 @@ def test_calendar_event_refuses_contradictory_justificante_state() -> None:
 
     with pytest.raises(ValidationError):
         OverviewCalendarEvent(
-            **base,
+            **base,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: heterogeneous **dict splat
             aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
             justificante_verified=False,
         )
 
     with pytest.raises(ValidationError):
         OverviewCalendarEvent(
-            **base,
+            **base,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: heterogeneous **dict splat
             aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
             justificante_verified=True,
         )
@@ -1210,7 +1210,7 @@ def test_imported_justificante_record_for_wrong_obligation_is_not_verified(
                 filed_by="aeat-import",
             ),
         ),
-        justificantes=(_justificante_metadata(csv=csv, **metadata_updates),),
+        justificantes=(_justificante_metadata(csv=csv, **metadata_updates),),  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: parametrized **dict splat
         expected_tax_id="X1234567L",
     )
 

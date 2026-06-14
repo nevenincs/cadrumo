@@ -198,7 +198,7 @@ class TestInvariants:
         with pytest.raises(ValidationError, match="Period"):
             ForeignAssetsAggregation(
                 modelo="720",
-                period="2025",
+                period="2025",  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
                 rollups=(),
                 total_assets=0,
                 total_valuation_eur=Decimal("0"),
@@ -210,7 +210,7 @@ class TestInvariants:
         with pytest.raises(ValidationError, match="Period"):
             ForeignAssetsAggregation(
                 modelo="720",
-                period={"filing_year": 2025, "code": "0A"},
+                period={"filing_year": 2025, "code": "0A"},  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
                 rollups=(),
                 total_assets=0,
                 total_valuation_eur=Decimal("0"),

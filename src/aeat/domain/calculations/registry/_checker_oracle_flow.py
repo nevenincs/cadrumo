@@ -10,8 +10,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
+from ....core import STRICT_FROZEN_CONFIG
 from ._errors import RegistryValidationError
 from ._live_parity import ParityFieldComparison, decode_replay_json_payload
 from ._remote_state_guard import RemoteOperation
@@ -25,7 +26,7 @@ class _CheckerBaseModel(BaseModel):
     consistent strict-frozen-forbid Pydantic config across all checker surfaces.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 def normalize_verdict_mapping(values: Mapping[str, str], *, blank_message: str) -> dict[str, str]:

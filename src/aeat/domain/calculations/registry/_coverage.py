@@ -13,8 +13,9 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
+from ....core import STRICT_FROZEN_CONFIG
 from ._errors import RegistryValidationError
 from ._schema import EvidenceTier, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import _build_validated_snapshot
@@ -33,7 +34,7 @@ _REQUIRED_COVERAGE_TIERS: tuple[RequiredCoverageTier, ...] = (
 class CoverageModel(BaseModel):
     """Strict frozen base for coverage reports."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class EvidenceTierCoverageGate(CoverageModel):

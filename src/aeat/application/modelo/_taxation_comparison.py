@@ -307,7 +307,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     declaration_inputs = _resolve_declaration_period_inputs(
         snapshot.revision,
         filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        period=work_unit.period,
     )
     bound_inputs = resolve_bound_casilla_inputs_for_available_bindings(
         snapshot.revision,

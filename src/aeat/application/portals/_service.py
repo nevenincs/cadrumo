@@ -10,8 +10,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import AeatError
 from ...core.i18n import tr
 from ...domain.modelos import ModeloCode
@@ -36,7 +37,7 @@ class PortalRow(BaseModel):
     i18n where needed.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     portal: Portal
     url: str = Field(min_length=1)

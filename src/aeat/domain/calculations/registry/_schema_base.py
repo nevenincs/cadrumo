@@ -7,8 +7,9 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass
 from ._errors import RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
@@ -107,7 +108,7 @@ FormulaOperator = Literal[
 class RegistryModel(BaseModel):
     """Strict frozen base for registry schema objects."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class SourceCitation(RegistryModel):

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
 from ..classification import (
@@ -188,8 +190,8 @@ def test_cli_output_structured_reveal_identifiers_unredacts_only_profile_and_buc
         "modelo": "130",
     }
 
-    default_redacted = redact_structured_for_cli_output(payload)
-    revealed = redact_structured_for_cli_output(payload, reveal_identifiers=True)
+    default_redacted = cast("dict[str, object]", redact_structured_for_cli_output(payload))
+    revealed = cast("dict[str, object]", redact_structured_for_cli_output(payload, reveal_identifiers=True))
 
     assert default_redacted["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert default_redacted["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
@@ -199,8 +201,10 @@ def test_cli_output_structured_reveal_identifiers_unredacts_only_profile_and_buc
     assert revealed["modelo"] == "130"
     # Object key, tax id, and URL stay redacted in the reveal path.
     assert revealed["object_key"] == CLI_OBJECT_KEY_PLACEHOLDER
-    assert revealed["tax_id"] != _NIF
-    assert revealed["tax_id"].startswith("sha256:")
+    revealed_tax_id = revealed["tax_id"]
+    assert isinstance(revealed_tax_id, str)
+    assert revealed_tax_id != _NIF
+    assert revealed_tax_id.startswith("sha256:")
     assert revealed["callback"] == "https://example.test"
 
 

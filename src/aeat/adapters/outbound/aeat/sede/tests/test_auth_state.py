@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from ......core import Period
 from ......core.i18n import tr
 from ...auth._authenticator import AeatSession, CertificateSessionDetail, HandshakeResult
 from ...auth._providers import AuthProviderKind
@@ -143,7 +144,7 @@ def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path()
                 session,
                 taxpayer_nif="12345678Z",
                 target_year=2025,
-                target_period="4T",
+                target_period=Period.from_year_and_code(2025, "4T"),
             ),
         )
 

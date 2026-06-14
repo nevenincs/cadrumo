@@ -9,14 +9,13 @@ or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
     pass
@@ -42,6 +41,7 @@ from ...domain.transactions import (
     RawTransaction,
     SourceFormat,
     Transaction,
+    TransactionCatalogue,
     TransactionDirection,
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
@@ -171,7 +171,8 @@ def attach_manual_transaction_evidence(
     trimmed_actor = _require_actor(actor, operation="ledger evidence attachment")
     trimmed_source_command = _require_source_command(source_command, operation="ledger evidence attachment")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    current = _require_transaction(repository.load(), transaction_id)
+    catalogue = repository.load()
+    current = _require_transaction(catalogue, transaction_id)
     normalized_purchase_evidence_id = purchase_invoice_evidence_id.strip() if purchase_invoice_evidence_id else None
     normalized_attachment_ids = _normalise_attachment_patch_ids(attachment_ids)
     if normalized_purchase_evidence_id is None and not normalized_attachment_ids:
@@ -208,6 +209,7 @@ def attach_manual_transaction_evidence(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         occurred_at=occurred_at,
+        _preloaded_catalogue=catalogue,
     )
 
 
@@ -576,6 +578,7 @@ def update_manual_transaction_fields(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
+    _preloaded_catalogue: TransactionCatalogue | None = None,
 ) -> ManualLedgerTransactionResult:
     """Apply a typed field patch to one active bucket-scoped ledger transaction.
 
@@ -584,11 +587,18 @@ def update_manual_transaction_fields(
     field-for-field identical to the stored transaction. This is the explicit
     operator-driven counterpart to the automatic silent no-op (S14).
 
+    ``_preloaded_catalogue`` is an internal optimisation: a caller that has
+    already decrypted the bucket :class:`TransactionCatalogue` (e.g.
+    :func:`attach_manual_transaction_evidence`) passes it through so this function
+    does not decrypt the whole catalogue a second time. There is no write between
+    the caller's load and this one, so the preloaded view is current.
+
     Returns a :class:`ManualLedgerTransactionResult` reflecting the updated
     transaction state after the patch is applied.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    current = _require_transaction(repository.load(), transaction_id)
+    catalogue = _preloaded_catalogue if _preloaded_catalogue is not None else repository.load()
+    current = _require_transaction(catalogue, transaction_id)
     command = _command_from_patch(
         bucket_id=bucket_id,
         current=current,
@@ -1015,8 +1025,7 @@ def _provider_transaction_id(command: ManualLedgerTransactionCommand, *, occurre
 def _source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: datetime) -> str:
     payload = command.model_dump(mode="json")
     payload["occurred_at"] = occurred_at.isoformat()
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return sha256_hex(encoded)
+    return content_hash_hex(payload)
 
 
 def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:

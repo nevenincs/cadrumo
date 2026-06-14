@@ -63,22 +63,48 @@ Both transports report one of three verdicts:
 - **mismatches** — one or more fields differ. The report names each field and
   shows the local value next to the value found in the PDF.
 - **evidence_invalid** — the PDF could not be read. Check that the file is the
-  actual AEAT justificante and not a different document.
+  AEAT justificante and not a different document.
 
-Fields checked include the modelo code, the filing year, and the taxpayer
-identifier (NIF, CIF, DNI, NIE, or NII).
+Reconciliation compares four header fields only: the modelo code, the filing
+year, the period, and the taxpayer identifier (NIF, CIF, DNI, or NIE). It does
+not compare box (casilla) values. A `mismatches` verdict always names
+one of those four fields, never a box.
 
 ## Handle a mismatch
 
-If the verdict is `mismatches`:
+A `mismatches` verdict names the header field that differs and shows your local
+value next to the value in the justificante.
 
-1. Check that the justificante is the correct one for this filing (not a
-   different period or a different taxpayer).
-2. If the justificante is correct and your local record has the wrong value,
-   use the amendment workflow. See
-   [Review and supply calculation inputs](review-calculation-values.md).
-3. If the justificante itself appears wrong, contact your asesor or AEAT
+1. Confirm the justificante is the correct one for this filing, not a different
+   period or taxpayer. A wrong receipt is the most common cause.
+2. If the modelo, year, or period differs, you either reconciled against the
+   wrong filing or filed the wrong period at the portal. Re-run reconciliation
+   with the correct selectors, or check what you submitted.
+3. If the taxpayer identifier differs, confirm the active profile matches the
+   taxpayer the justificante was issued to.
+4. If the justificante itself appears wrong, contact your asesor or AEAT
    directly.
+
+## If a box value looks wrong
+
+Reconciliation does not compare box (casilla) values, so it cannot tell you that
+a computed total differs from what you filed. To correct a box value, use the
+amendment workflow rather than reconciliation. Re-check the inputs and
+re-calculate. If the period was already filed, file a complementaria. See
+[Review and supply calculation inputs](review-calculation-values.md).
+
+## What to keep as evidence
+
+The justificante is your proof of what AEAT received. Here is what each path
+stores:
+
+- `reconcile pull` stores the fetched justificante as an encrypted copy in your
+  profile.
+- `reconcile file` reads a PDF you supply but does not store it. If you reconcile
+  against a downloaded PDF, also pull the receipt so an encrypted copy is kept in
+  your profile. See [Pull and keep your filing receipts](justificante-receipts.md).
+- Reconciliation history is a read-back you can regenerate from the justificante,
+  so it needs no separate backup.
 
 ## Review past reconciliations
 

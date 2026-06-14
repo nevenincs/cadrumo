@@ -55,6 +55,11 @@ from sqlalchemy import Engine, select
 
 from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider, SensitivityClass
+from ..crypto._encrypted_columns import (
+    decrypt_secure_object_payload,
+    encrypt_secure_object_payload,
+    secure_object_payload_aad,
+)
 from ..errors import ClassificationError
 from ..sql._orm import Base, SecureObjectRow
 from ..sql.engine import create_engine_from_settings, dispose_engine
@@ -271,13 +276,18 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload[T: BaseModel](
     with session_scope(engine) as session:
         stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == repo.namespace).limit(1)
         row = session.execute(stmt).scalar_one()
-        decoded = json.loads(row.payload.decode("utf-8"))
+        # The payload is AEAD-encrypted with the row identity in the associated
+        # data, so corrupt the decrypted *content* and re-encrypt under the same
+        # AAD; writing raw plaintext would merely fail to decrypt and hide the
+        # field-drop signal this anti-tautology proof depends on.
+        aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+        decoded = json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8"))
         assert case.mutation_field in decoded["payload"], (
             f"contract fixture must serialise {case.mutation_field!r} into "
             f"the envelope payload for the negative case to have signal"
         )
         del decoded["payload"][case.mutation_field]
-        row.payload = json.dumps(decoded).encode("utf-8")
+        row.payload = encrypt_secure_object_payload(json.dumps(decoded).encode("utf-8"), associated_data=aad)
 
     regression_caught = False
     try:

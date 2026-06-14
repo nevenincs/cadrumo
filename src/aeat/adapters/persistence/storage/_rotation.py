@@ -34,8 +34,9 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ....core.logging import get_logger
@@ -106,7 +107,7 @@ class RotationPlanEntry(BaseModel):
             every other file in the directory.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     store_dir: Path
     hkdf_context: bytes
@@ -154,7 +155,7 @@ class RotationSummary(BaseModel):
             decrypted under either key, or re-encrypted.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     rotated: int = Field(ge=0)
     skipped: int = Field(ge=0)
@@ -386,9 +387,18 @@ def rotate_master_key(
 def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlanEntry, ...]:
     """Return the canonical rotation plan as a tuple of :class:`RotationPlanEntry` records.
 
-    Enumerates every repository's directory + HKDF
-    context. Operators with custom directories / additional consumers
-    pass an extended plan to :func:`rotate_master_key` directly.
+    Enumerates every master-key-encrypted file-envelope consumer's directory +
+    HKDF context. Operators with custom directories / additional consumers pass
+    an extended plan to :func:`rotate_master_key` directly.
+
+    Scope boundary: this plan covers only the ``*.envelope.json`` file consumers
+    whose ciphertext is derived directly from the project master key (via the
+    per-consumer HKDF context above). The SQL ``secure_objects`` store is NOT in
+    this plan and intentionally so: its payloads are encrypted under the
+    per-bucket DEK (the column layer resolves the active :class:`BucketSession`
+    DEK, not the master key). A master-key / passphrase custody change rewraps
+    that DEK without changing its value, so the ``secure_objects`` ciphertext
+    stays valid and never requires re-encryption on master-key rotation.
     """
     return (
         RotationPlanEntry(

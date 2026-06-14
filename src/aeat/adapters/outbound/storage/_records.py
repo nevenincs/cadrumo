@@ -20,7 +20,9 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+
+from ....core import STRICT_FROZEN_CONFIG
 
 _OBJECT_KEY_HMAC_LENGTH = 64
 _CIPHERTEXT_HASH_LENGTH = 64
@@ -65,7 +67,7 @@ class ProviderObjectMetadata(BaseModel):
     subsequent get/delete/patch calls without re-resolving by name.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key_hmac: str = Field(min_length=1)
@@ -86,7 +88,7 @@ class ProviderProbeReport(BaseModel):
     Google Drive).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     provider_kind: ProviderKind
     reachable: bool
@@ -99,7 +101,7 @@ class ProviderProbeReport(BaseModel):
 class RemoteMirrorObjectManifest(BaseModel):
     """One ciphertext object entry recorded in a remote mirror manifest."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key_hmac: _ObjectKeyHmac
@@ -117,7 +119,7 @@ class RemoteMirrorObjectManifest(BaseModel):
 class RemoteMirrorNamespaceManifest(BaseModel):
     """Manifest persisted beside remote ciphertext objects for one namespace."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest_schema_version: int = Field(default=1, ge=1)
     namespace: str = Field(min_length=1)
@@ -130,7 +132,7 @@ class RemoteMirrorNamespaceManifest(BaseModel):
 class RemoteMirrorIssue(BaseModel):
     """One detected remote mirror degradation."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: RemoteMirrorIssueKind
     namespace: str = Field(min_length=1)
@@ -141,7 +143,7 @@ class RemoteMirrorIssue(BaseModel):
 class RemoteMirrorInspection(BaseModel):
     """Typed result of comparing or probing a remote mirror namespace."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     issues: tuple[RemoteMirrorIssue, ...] = ()

@@ -31,8 +31,9 @@ from enum import StrEnum
 from json import JSONDecodeError, loads
 from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._ids import CrossReferenceId, OracleId, RevisionId
@@ -120,7 +121,7 @@ _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
 class _ParityModel(BaseModel):
     """Strict frozen base for parity records."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class ParityFieldComparison(_ParityModel):

@@ -41,6 +41,17 @@ if TYPE_CHECKING:
     from ....domain.user_profile import UserProfileRecord
 
 
+def _comma_join(value: object) -> str:
+    """Render an obligation-row sequence field as a comma-joined string.
+
+    The calendar obligation rows carry ``object`` values; narrow the
+    enrolment-source field to an iterable before joining its members.
+    """
+    if isinstance(value, (list, tuple)):
+        return ",".join(str(item) for item in value)
+    return ""
+
+
 def _active_pointer() -> tuple[str, str]:
     from ....application.workflow import read_profile_bucket_by_id
     from ....core import resolve_active_bucket_id
@@ -368,7 +379,7 @@ def _register_censo_apply(censo_app: typer.Typer) -> None:
                 f"payment_cutoff_on={row.get('payment_cutoff_on') or ''}\t"
                 f"status={row.get('status', '')}\t"
                 f"user_state={row.get('user_state', '')}\t"
-                f"enrolment_sources={','.join(str(item) for item in row.get('enrolment_source_paths', ()))}",
+                f"enrolment_sources={_comma_join(row.get('enrolment_source_paths', ()))}",
             )
         if typed_apply.calendar_warning_codes:
             lines.append(f"calendar_warnings\t{','.join(typed_apply.calendar_warning_codes)}")

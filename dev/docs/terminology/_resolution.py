@@ -224,10 +224,28 @@ class TargetResolver:
         # file-declared id against the validated catalogue.
         self._known_legal_ids: frozenset[str] = frozenset(self._authority.catalogues.legal)
         # Index the Handbook concept cards by concept_id (the fragment stem), so
-        # a sweep hit on a concept authoring fragment resolves to its card.
+        # a sweep hit on a concept authoring fragment resolves to its card. Only
+        # APPROVED concepts are indexed: a draft concept is absent from the
+        # approved-only generated glossary (ADR D7), so its
+        # ``#term-<id>`` deep link would be dead. Resolving a RAG hit on a draft
+        # fragment (or seeding a draft card) would ship a dead link, so drafts
+        # are excluded here exactly as they are from the Pagefind injection.
         self._concept_by_id: dict[str, SearchRecord] = {}
         for card in _load_concept_cards():
+            if not card.is_approved:
+                continue
             self._concept_by_id[card.concept_id] = to_search_record(card)
+
+    def concept_record(self, concept_id: str) -> SearchRecord | None:
+        """Return the unified concept-card record for ``concept_id``, if enrolled.
+
+        The concept card is the first-class palette result (ADR D4). The sweep
+        uses this to seed a query's originating concept card as a guaranteed
+        target: a closed-vocabulary term is, by construction, a label *of* that
+        concept, so its card is the canonical top result regardless of whether
+        RAG re-discovered the concept's own authoring fragment.
+        """
+        return self._concept_by_id.get(concept_id)
 
     def resolve(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
         """Resolve one chunk hit to a typed target, or drop and report it."""

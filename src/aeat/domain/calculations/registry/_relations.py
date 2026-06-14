@@ -11,9 +11,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ....core import Period
+from ....core import STRICT_FROZEN_CONFIG, Period
 from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._period_offset_math import apply_period_offset
@@ -31,7 +31,7 @@ __all__ = [
 class RegistryRelationSourceRequirement(BaseModel):
     """External source filings required by one or more registry relations."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)

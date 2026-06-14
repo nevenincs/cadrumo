@@ -8,9 +8,9 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import Modelo
+from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -66,7 +66,7 @@ class RentaReconciliationStatus(StrEnum):
 class _RentaStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class RentaDeductibilityContext(_RentaStrictFrozenModel):

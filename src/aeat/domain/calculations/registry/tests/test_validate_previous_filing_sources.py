@@ -17,7 +17,10 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import resources
-from .._bindings_previous_filing import previous_filing_observation_requirements
+from .._bindings_previous_filing import (
+    RegistryModeloObservationRequirement,
+    previous_filing_observation_requirements,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -25,7 +28,7 @@ _CARRY_BINDING_ID = "modelo-130-pagos-fraccionados-anteriores"
 _FILING_YEAR = 2026
 
 
-def _casilla_05_requirements(period: str) -> tuple[object, ...]:
+def _casilla_05_requirements(period: str) -> tuple[RegistryModeloObservationRequirement, ...]:
     snapshot = resources().modelos.authority.snapshot("130", filing_year=_FILING_YEAR, period=period)
     return tuple(
         requirement

@@ -1166,7 +1166,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
             capture_source_filed_data(
                 modelo="180",
                 year=2026,
-                period="0A",
+                period=Period.from_year_and_code(2026, "0A"),
                 output_root=output_root,
                 registry_root=_REGISTRY_ROOT,
                 source_root=bundled_path(),

@@ -631,6 +631,8 @@ def _html_node_has_class(node: object, class_name: str) -> bool:
     classes = getattr(node, "get", lambda _name, _default=None: _default)("class", [])
     if isinstance(classes, str):
         return class_name in classes.split()
+    if classes is None:
+        return False
     return class_name in classes
 
 

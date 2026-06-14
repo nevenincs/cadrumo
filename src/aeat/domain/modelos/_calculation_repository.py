@@ -17,7 +17,7 @@ from ._calculation_revision import (
     CalculationRevisionCatalogue,
     assert_revision_snapshot_evidence_coverage,
 )
-from ._errors import ModeloError
+from ._errors import ModeloError, raise_catalogue_integrity_error
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -106,15 +106,13 @@ class CalculationRevisionCatalogueRepository:
                 max_supported_version=_CALCULATION_CATALOGUE_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
-            _LOGGER.error("calculation-revision catalogue integrity error", exc_info=True)
-            raise CalculationRevisionPersistenceError(
-                "calculation-revision catalogue integrity error",
+            raise_catalogue_integrity_error(
+                exc,
+                error_cls=CalculationRevisionPersistenceError,
+                label="calculation-revision",
                 translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
-                context={
-                    "reason": "secure_object_integrity",
-                    "cause_type": type(exc).__name__,
-                },
-            ) from exc
+                logger=_LOGGER,
+            )
         if record is None:
             return CalculationRevisionCatalogue()
         envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(record.payload.decode("utf-8"))

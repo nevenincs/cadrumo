@@ -6,9 +6,9 @@ from collections.abc import Iterable
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
-from ....core import Period
+from ....core import STRICT_FROZEN_CONFIG, Period
 from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
@@ -31,7 +31,7 @@ class RegistryFiledStateDrift(BaseModel):
     default to ``None`` / empty tuples.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     local_value: Decimal
@@ -45,7 +45,7 @@ class RegistryFiledStateDrift(BaseModel):
 class RegistryFiledStateComparison(BaseModel):
     """Verdict for one local calculation versus one normalized filed observation."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=8)
     revision: str = Field(min_length=1)

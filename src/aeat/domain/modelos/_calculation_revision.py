@@ -39,16 +39,17 @@ with the same data is naturally idempotent.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.hashing import sha256_hex
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.hashing import content_hash_hex
+from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import CasillaObservation
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
@@ -94,13 +95,6 @@ _CasillaKey = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
-
-
-def _canonical_decimal(value: Decimal) -> str:
-    """Stable string form of a Decimal for hash inputs."""
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")
 
 
 def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, object]]:
@@ -169,8 +163,7 @@ def derive_calculation_revision_id(
     canonical_rows = _canonical_detail_rows(tuple(detail_rows))
     if canonical_rows:
         payload["detail_rows"] = canonical_rows
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return sha256_hex(encoded)
+    return content_hash_hex(payload)
 
 
 def _outputs_for_hash_from_mapping(casilla_values: Mapping[str, Decimal]) -> dict[str, str]:
@@ -259,7 +252,7 @@ class CalculationRevision(BaseModel):
             to ``DESCARTADO``. ``None`` otherwise.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
@@ -435,7 +428,7 @@ class CalculationRevision(BaseModel):
 class CalculationRevisionCatalogue(BaseModel):
     """Immutable catalogue of every calculation revision in storage."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     revisions: Mapping[str, CalculationRevision] = Field(default_factory=dict)
 

@@ -18,9 +18,10 @@ from __future__ import annotations
 
 from typing import Never, Self, SupportsIndex, override
 
-from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
+from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.hashing import sha256_hex
@@ -85,7 +86,7 @@ class EvidenceInput(BaseModel):
             :class:`Attachment`, else ``None``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     media_kind: MediaKind
     mime_type: str = Field(min_length=1)

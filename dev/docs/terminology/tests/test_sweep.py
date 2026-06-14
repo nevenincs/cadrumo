@@ -211,19 +211,25 @@ def test_sweep_result_is_json_serialisable_for_the_landing_step() -> None:
 
 
 @pytest.mark.unit
-def test_below_floor_query_yields_an_empty_but_recorded_mapping() -> None:
-    """A query whose hits are all below the floor maps to zero targets, honestly.
+def test_below_floor_query_yields_only_the_seeded_concept_card() -> None:
+    """A thin-signal query still surfaces its originating concept card, no more.
 
-    A thin-signal term (no recorded hits) produces a mapping with no targets
-    rather than a fabricated one -- the honest empty result, still recorded with
-    its concept association.
+    With no RAG hits above the floor, the sweep fabricates no grounding target.
+    But a swept term is, by construction, a declared label of its concept, so
+    the concept card is seeded deterministically as the sole target (ADR D4:
+    concepts are first-class palette results). The mapping is therefore never
+    targetless -- it carries exactly the concept card -- yet carries no invented
+    RAG grounding.
     """
     client: RagSearchClient = _RecordedClient({})  # no hits for any query
     result = run_sweep(client=client, concept_ids={"prorrata"}, reindex=False)
     assert result.query_count == len(enumerate_query_vocabulary(concept_ids={"prorrata"}))
-    assert all(mapping.targets == () for mapping in result.mappings)
-    # Every mapping still names its query + concept.
-    assert all(mapping.concept_id == "prorrata" for mapping in result.mappings)
+    # Every mapping carries exactly its originating concept card, nothing more.
+    for mapping in result.mappings:
+        assert mapping.concept_id == "prorrata"
+        assert [t.record_id for t in mapping.targets] == ["concept:prorrata"]
+        assert mapping.targets[0].surface == "concept"
+        assert mapping.targets[0].target == "_generated/glossary.html#term-prorrata"
 
 
 # ---------------------------------------------------------------------------

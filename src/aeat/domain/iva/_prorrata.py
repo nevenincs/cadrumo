@@ -64,7 +64,6 @@ from typing import Annotated
 
 from pydantic import (
     BaseModel,
-    ConfigDict,
     Field,
     StringConstraints,
     ValidationError,
@@ -72,6 +71,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import (
     PRORRATA_ESPECIAL_MANDATORY_MULTIPLE,
     PRORRATA_SECTORAL_SEPARATION_SPREAD_PP,
@@ -83,11 +83,7 @@ from ._errors import ProrrataInputError, ProrrataSectorError
 class _ProrrataStrictFrozen(BaseModel):
     """Strict, immutable Pydantic base for the prorrata substrate."""
 
-    model_config = ConfigDict(
-        strict=True,
-        frozen=True,
-        extra="forbid",
-    )
+    model_config = STRICT_FROZEN_CONFIG
 
 
 SectorId = Annotated[

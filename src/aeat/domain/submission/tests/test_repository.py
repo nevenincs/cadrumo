@@ -53,7 +53,7 @@ def _make_filing(
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="130",
-        period=period,
+        period=period,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: model boundary coerces Period|dict; dict/combined-string shapes are exercised by callers
         profile_tax_id="00000000T",
         status=status,
         submitted_at=submitted_at,
@@ -109,7 +109,7 @@ class TestSaveLoad:
 
     def test_combined_period_string_rejected_at_model_boundary(self) -> None:
         with pytest.raises(ValidationError, match="period"):
-            _make_filing(period="2026Q1")
+            _make_filing(period="2026Q1")  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: combined period string must be rejected at the model boundary
 
 
 class TestListAndIter:

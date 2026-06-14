@@ -26,9 +26,17 @@ _EXCLUDED_MODULES: set[Path] = set()
 
 _ALLOWED_DIRECT_OUTPUTS = {
     ("entrypoints/cli/__init__.py", "typer.echo"),
-    ("entrypoints/cli/_app_live.py", "typer.echo"),
+    # Auth-preflight diagnostics are emitted already redacted via
+    # ``typer.echo(redact_for_cli_output(line), err=True)`` — an audited
+    # exception that honours the redaction boundary.
+    ("entrypoints/cli/_app_live_auth_preflight.py", "typer.echo"),
     ("entrypoints/cli/_common.py", "typer.echo"),
     ("entrypoints/cli/_errors.py", "write"),
+    # Last-resort crash-boundary fallbacks (``# pragma: no cover``) used only
+    # when typer/rich rendering is unavailable: the abort marker and the
+    # ClickException usage message. They cannot route through the rich path
+    # they are the fallback for.
+    ("entrypoints/cli/_terminal_errors.py", "write"),
     ("entrypoints/cli/_exit_codes.py", "typer.echo"),
     ("application/wizard/_commands.py", "typer.echo"),
 }

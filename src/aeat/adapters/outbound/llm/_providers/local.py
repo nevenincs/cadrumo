@@ -127,10 +127,10 @@ class LocalAdapter(_ProviderAdapter):
             # ``images`` field; only present them when a vision read supplied them.
             user_message["images"] = list(request.images)
         messages.append(user_message)
-        chat_url = load_settings().aeat_llm_ollama_chat_url
+        settings = load_settings()
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:
             response = await client.post(
-                chat_url,
+                settings.aeat_llm_ollama_chat_url,
                 json={
                     "model": request.model,
                     "messages": messages,
@@ -138,6 +138,10 @@ class LocalAdapter(_ProviderAdapter):
                     "options": {
                         "temperature": request.temperature,
                         "num_predict": request.max_tokens,
+                        # A vision request packs the allow-list prompt plus the encoded
+                        # invoice image past Ollama's 4096 default context; size the
+                        # window from settings so the request is not truncated/rejected.
+                        "num_ctx": settings.aeat_llm_ollama_num_ctx,
                     },
                 },
             )

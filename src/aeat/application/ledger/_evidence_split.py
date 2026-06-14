@@ -29,14 +29,19 @@ def derive_child_amounts(gross: Decimal, proportions: Sequence[Decimal]) -> tupl
         gross: The parent transaction gross as a non-negative magnitude.
         proportions: Per-child fractions (each in ``(0, 1]``, summing to ~1.0).
 
+    A single proportion (``1.0``) is the "no split warranted" verdict and yields
+    ``(gross,)`` — the whole amount on one child. The caller (``suggest_evidence_split``)
+    surfaces that verdict for review and never drives a one-way split through
+    ``split_transaction``; ``apply_evidence_split`` refuses a single-child suggestion.
+
     Returns:
         Per-child amounts, in child order, summing exactly to ``gross``.
 
     Raises:
-        ValueError: When fewer than two proportions are supplied or ``gross`` is negative.
+        ValueError: When no proportions are supplied or ``gross`` is negative.
     """
-    if len(proportions) < 2:
-        raise ValueError("a split needs at least two children")
+    if not proportions:
+        raise ValueError("a split proposal needs at least one child")
     if gross < Decimal("0"):
         raise ValueError("split parent amount must be a non-negative magnitude")
     amounts = [round_to_cents(gross * proportion) for proportion in proportions[:-1]]

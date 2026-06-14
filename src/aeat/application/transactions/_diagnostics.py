@@ -26,8 +26,9 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 
@@ -58,7 +59,7 @@ class LedgerImportDiagnostic(BaseModel):
             file-wide diagnostics (e.g., a malformed header).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: LedgerImportDiagnosticKind
     severity: BaseSeverity

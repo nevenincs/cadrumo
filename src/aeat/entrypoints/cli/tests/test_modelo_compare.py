@@ -310,7 +310,10 @@ def test_compare_delta_rows_carry_provenance() -> None:
         inputs={
             "01": Decimal("10000"),
             "02": Decimal("4000"),
-            "05": Decimal("0"),
+            # Casilla 05 (pagos fraccionados anteriores) is a previous-filing-bound
+            # carry; at 1T its expanding span is empty so the engine materialises it
+            # as the absent-by-design zero. Supplying it as a raw input is now
+            # smuggling past the previous-filing binding and is rejected by the guard.
             "06": Decimal("0"),
             "08": Decimal("0"),
             "10": Decimal("0"),

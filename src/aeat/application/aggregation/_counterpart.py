@@ -17,9 +17,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, InstanceOf, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import Modelo, Period
+from ...core import STRICT_FROZEN_CONFIG, Modelo, Period
 from ...core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     CounterpartSourceKind,
@@ -46,7 +46,7 @@ def _validate_country(value: str, *, field_name: str) -> str:
 class CounterpartObservation(BaseModel):
     """One typed observation for a 347 or 349 aggregator pass."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: CounterpartSourceKind
     source_object_id: str = Field(min_length=1)
@@ -77,7 +77,7 @@ class CounterpartObservation(BaseModel):
 class CounterpartRollup(BaseModel):
     """One (source_kind, counterparty_nif, operation_kind) rollup row."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: CounterpartSourceKind
     counterparty_nif: str = Field(min_length=1, max_length=20)
@@ -109,7 +109,7 @@ class CounterpartRollup(BaseModel):
 class CounterpartAggregation(BaseModel):
     """347 / 349 counterpart aggregation output."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1)
     period: InstanceOf[Period]

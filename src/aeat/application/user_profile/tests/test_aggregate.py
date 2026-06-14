@@ -154,6 +154,8 @@ def test_verify_integrity_passes_when_every_store_agrees() -> None:
         record_profile_id=_PROFILE_UUID,
         manifest_status="active",
         record_status="active",
+        manifest_label="Aggregate Operator",
+        record_display_name="Aggregate Operator",
     )
 
 
@@ -183,6 +185,8 @@ def test_verify_integrity_raises_on_manifest_drift() -> None:
             record_profile_id=_PROFILE_UUID,
             manifest_status="active",
             record_status="active",
+            manifest_label="Aggregate Operator",
+            record_display_name="Aggregate Operator",
         )
     error = exc_info.value
     assert error.context == {"mismatches": ("manifest_bucket_id",)}
@@ -206,6 +210,8 @@ def test_verify_integrity_raises_on_record_drift() -> None:
             record_profile_id=mismatched_record_id,
             manifest_status="active",
             record_status="active",
+            manifest_label="Aggregate Operator",
+            record_display_name="Aggregate Operator",
         )
     error = exc_info.value
     assert error.context == {"mismatches": ("secure_record_profile_id",)}
@@ -246,6 +252,8 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
             record_profile_id=_PROFILE_UUID,
             manifest_status="active",
             record_status="tombstoned",
+            manifest_label="Aggregate Operator",
+            record_display_name="Aggregate Operator",
         )
     error = exc_info.value
     assert error.context == {"mismatches": ("manifest_status", "secure_record_status")}
@@ -254,6 +262,38 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
         message="profile physical stores disagree on lifecycle status",
         translated_message="application.user_profile.errors.profile_integrity_status_mismatch",
         sensitive_tokens=(_PROFILE_UUID, "active", "tombstoned"),
+    )
+
+
+def test_verify_integrity_raises_on_label_drift() -> None:
+    """A manifest label that disagrees with the record display name raises.
+
+    A crash between the two sequential rename writes leaves the manifest and the
+    record holding different labels. The read-time integrity gate surfaces that
+    drift as a ``ProfileIntegrityError`` (the same way it surfaces status drift),
+    so the repository never serves a profile whose two stores disagree on its
+    name. ``ProfileAggregate`` enforces the same agreement one layer later; this
+    gate makes the refusal happen at the documented integrity boundary.
+    """
+
+    with pytest.raises(ProfileIntegrityError) as exc_info:
+        verify_profile_integrity(
+            profile_id=_PROFILE_UUID,
+            directory_name=_PROFILE_UUID,
+            manifest_bucket_id=_PROFILE_UUID,
+            record_profile_id=_PROFILE_UUID,
+            manifest_status="active",
+            record_status="active",
+            manifest_label="Renamed Operator",
+            record_display_name="Aggregate Operator",
+        )
+    error = exc_info.value
+    assert error.context == {"mismatches": ("manifest_label", "secure_record_display_name")}
+    _assert_integrity_error_redacts(
+        error,
+        message="profile physical stores disagree on label",
+        translated_message="application.user_profile.errors.profile_integrity_label_mismatch",
+        sensitive_tokens=(_PROFILE_UUID, "Renamed Operator", "Aggregate Operator"),
     )
 
 

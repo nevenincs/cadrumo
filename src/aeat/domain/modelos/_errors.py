@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from logging import Logger
+from typing import NoReturn
+
 from ...core.errors import AeatError, CoreValidationError
 
 
@@ -57,6 +60,32 @@ class CensoStaleRefusedError(ModeloError):
     """
 
 
+def raise_catalogue_integrity_error(
+    exc: Exception,
+    *,
+    error_cls: type[ModeloError],
+    label: str,
+    translated_message: str,
+    logger: Logger,
+) -> NoReturn:
+    """Log and re-raise a secure-object catalogue integrity failure as ``error_cls``.
+
+    The modelo catalogue repositories share one recovery path when a stored
+    envelope fails its classification / schema-version guard: log the
+    ``"<label> catalogue integrity error"`` at error level and raise the
+    repository's typed ``ModeloError`` subclass carrying the
+    ``secure_object_integrity`` reason and the originating exception's type in
+    its context, chained from ``exc``.
+    """
+    message = f"{label} catalogue integrity error"
+    logger.error(message, exc_info=True)
+    raise error_cls(
+        message,
+        translated_message=translated_message,
+        context={"reason": "secure_object_integrity", "cause_type": type(exc).__name__},
+    ) from exc
+
+
 __all__ = [
     "CensoStaleRefusedError",
     "Modelo036LifecycleError",
@@ -66,4 +95,5 @@ __all__ = [
     "ModeloExportError",
     "ModeloExportManifestError",
     "ModeloValidationError",
+    "raise_catalogue_integrity_error",
 ]

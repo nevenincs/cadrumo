@@ -17,10 +17,12 @@ from re import compile
 from typing import TYPE_CHECKING, Any, Protocol
 from unicodedata import category, normalize
 
+from .....core import STRICT_FROZEN_CONFIG
+
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
@@ -63,7 +65,7 @@ class _SedeCheckerModel(BaseModel):
     declaration in each module.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 def assert_query_browser_action_for(policy: RemoteStateGuardPolicy, action: str) -> None:

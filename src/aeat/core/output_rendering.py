@@ -9,8 +9,9 @@ from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ..core import STRICT_FROZEN_CONFIG
 from .errors import AeatError
 from .redaction import redact_for_cli_output, redact_structured_for_cli_output
 
@@ -33,7 +34,7 @@ class OutputFormat(StrEnum):
 class RenderedCommandOutput(BaseModel):
     """Rendered output document returned to CLI transports."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     format: OutputFormat
     text: str = Field(default="")

@@ -7,12 +7,8 @@ and :class:`ValidatedRegistryAuthority` for compliance.
 from __future__ import annotations
 
 import json
-import os
-import tempfile
-from collections.abc import Callable, Iterator, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlsplit
 
@@ -42,7 +38,7 @@ from .....domain.calculations.registry import (
     resolve_relation_values_from_observations,
 )
 from .....domain.iva_compensation._carry_forward import derive_303_compensation_available
-from ....inbound.declaracion import DeclaracionParseError, parse_declaracion, parse_declaracion_bytes
+from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from ._browser_constants import SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING
 from ._declarations_schema import Declaracion
 from ._errors import SedeParseError
@@ -62,7 +58,6 @@ __all__ = [
     "_store_artefact",
     "_submitted_file_coverage_for_casillas",
     "_submitted_file_extraction_coverage",
-    "_temporary_sensitive_pdf_path",
     "_verify_submitted_file_context",
     "_with_derived_303_compensation_available_observation",
     "registry_observation_from_filed_declaration",
@@ -327,107 +322,26 @@ def _parse_modelo_303_money(raw: str, *, casilla_id: str) -> Decimal:
     return sign * (Decimal(digits) / Decimal("100"))
 
 
-def _write_all_fd(fd: int, payload: bytes) -> None:
-    remaining = memoryview(payload)
-    while remaining:
-        write_failed = False
-        try:
-            written = os.write(fd, remaining)
-        except OSError:
-            write_failed = True
-            written = 0
-        if write_failed:
-            raise SedeParseError(
-                "failed to write declaration PDF parser scratch file",
-                context={"operation": "declaration_pdf_scratch_write"},
-                translated_message=tr("adapters.sede.errors.parse_failed"),
-            )
-        if written == 0:
-            raise SedeParseError(
-                "declaration PDF parser scratch write made no progress",
-                translated_message=tr("adapters.sede.errors.parse_failed"),
-            )
-        remaining = remaining[written:]
-
-
-@contextmanager
-def _temporary_sensitive_pdf_path(body: bytes) -> Iterator[Path]:
-    create_failed = False
-    try:
-        fd, tmp_path_str = tempfile.mkstemp(prefix="aeat-declaration-pdf-", suffix=".pdf")
-    except OSError:
-        create_failed = True
-        fd = -1
-        tmp_path_str = ""
-    if create_failed:
-        raise SedeParseError(
-            "failed to create declaration PDF parser scratch file",
-            context={"operation": "declaration_pdf_scratch_create"},
-            translated_message=tr("adapters.sede.errors.parse_failed"),
-        )
-    tmp_path = Path(tmp_path_str)
-    try:
-        try:
-            _write_all_fd(fd, body)
-        finally:
-            close_failed = False
-            try:
-                os.close(fd)
-            except OSError:
-                close_failed = True
-            if close_failed:
-                raise SedeParseError(
-                    "failed to close declaration PDF parser scratch file",
-                    context={"operation": "declaration_pdf_scratch_close"},
-                    translated_message=tr("adapters.sede.errors.parse_failed"),
-                )
-        yield tmp_path
-    finally:
-        unlink_failed = False
-        try:
-            tmp_path.unlink(missing_ok=True)
-        except OSError:
-            unlink_failed = True
-        if unlink_failed:
-            raise SedeParseError(
-                "failed to remove declaration PDF parser scratch file",
-                context={"operation": "declaration_pdf_scratch_unlink"},
-                translated_message=tr("adapters.sede.errors.parse_failed"),
-            )
-
-
 def _observed_casillas_from_declaration_pdf(
     *,
     snapshot: RegistrySnapshot,
     declaration: Declaracion,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
-    needs_word_positions = any(
-        any(target.match_strategy == "bbox_anchored" for target in profile.target_casillas)
-        for profile in snapshot.extraction_profiles.values()
-        if profile.surface == "declaracion_pdf"
-    )
     parse_failed = False
     try:
         declaration_period = declaration.period.registry_token
-        if needs_word_positions:
-            with _temporary_sensitive_pdf_path(body) as tmp_path:
-                filing = parse_declaracion(
-                    tmp_path,
-                    modelo_override=declaration.modelo,
-                    año_override=declaration.ejercicio,
-                    period_override=declaration_period,
-                    registry_snapshot=snapshot,
-                )
-        else:
-            filing = parse_declaracion_bytes(
-                body,
-                source_label="secure declaration PDF",
-                modelo_override=declaration.modelo,
-                año_override=declaration.ejercicio,
-                period_override=declaration_period,
-                registry_snapshot=snapshot,
-            )
+        # The decrypted declaration bytes are parsed entirely in memory, including
+        # bbox-anchored word-position extraction; they are never written to a
+        # plaintext scratch file (sensitive-financial-data-secure-storage-only).
+        filing = parse_declaracion_bytes(
+            body,
+            source_label="secure declaration PDF",
+            modelo_override=declaration.modelo,
+            año_override=declaration.ejercicio,
+            period_override=declaration_period,
+            registry_snapshot=snapshot,
+        )
     except DeclaracionParseError:
         parse_failed = True
         filing = None

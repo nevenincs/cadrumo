@@ -15,9 +15,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, InstanceOf, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import Modelo, Period
+from ...core import STRICT_FROZEN_CONFIG, Modelo, Period
 from ...core.aggregation import AggregationSourceKind, RetencionScheme
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
@@ -39,7 +39,7 @@ class RetencionObservation(BaseModel):
     ``payable_invoice`` / ``collectible_invoice`` instead.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: str = Field(min_length=1)
     source_object_id: str = Field(min_length=1)
@@ -62,7 +62,7 @@ class RetencionObservation(BaseModel):
 class RetencionPerceptorRollup(BaseModel):
     """One row in the aggregation: a perceptor's totals across schemes."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: str = Field(min_length=1)
     perceptor_nif: str = Field(min_length=1, max_length=16)
@@ -81,7 +81,7 @@ class RetencionesAggregation(BaseModel):
     scheme) and the same totals.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1)
     period: InstanceOf[Period]

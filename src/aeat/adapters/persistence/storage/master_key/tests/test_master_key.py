@@ -179,6 +179,33 @@ class TestFileFallbackProvider:
         assert (tmp_path / "secrets" / "master.key").exists()
         assert (tmp_path / "secrets" / "master.kdf").exists()
 
+    def test_below_floor_kdf_cost_is_refused_on_read(self, tmp_path: Path) -> None:
+        """A tampered master.kdf declaring a below-floor Argon2 cost fails closed.
+
+        The file-fallback KDF parameters carry the same OWASP-baseline validation
+        window as the bucket-manifest params, so an attacker (or a buggy writer)
+        that lowers ``memory_cost`` below the floor is refused on read rather than
+        silently deriving a weakened KEK.
+        """
+        store_dir = tmp_path / "secrets"
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        provider.provision_master_key()
+
+        kdf_path = store_dir / "master.kdf"
+        document = json.loads(kdf_path.read_text(encoding=UTF_8_ENCODING))
+        document["memory_cost"] = 8  # far below the 19 MiB OWASP floor
+        kdf_path.write_text(json.dumps(document), encoding=UTF_8_ENCODING)
+
+        reopened = FileFallbackMasterKeyProvider(
+            store_dir=store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        with pytest.raises(MasterKeyUnavailableError, match="KDF parameters"):
+            reopened.get_master_key()
+
     def test_bootstrap_activation_mints_distinct_persisted_bucket_dek(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(

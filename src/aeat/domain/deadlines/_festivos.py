@@ -47,7 +47,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
-from ...core import Modelo, read_toml
+from ...core import STRICT_FROZEN_CONFIG, Modelo, read_toml
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
 
@@ -119,7 +119,7 @@ _NonEmptyShortString = Annotated[
 class Holiday(BaseModel):
     """A single declared holiday."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     holiday_date: date
     jurisdiction: HolidayJurisdiction
@@ -135,7 +135,7 @@ class HolidayCalendar(BaseModel):
     an optional convenience anchor for the same resolution.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     year: Annotated[int, Field(ge=2000, le=2100)]
     boe_ref: _NonEmptyShortString
@@ -197,7 +197,7 @@ class DeadlineShift(BaseModel):
     specific holidays whose presence on the calendar caused the shift.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     original_close_date: date
     adjusted_close_date: date

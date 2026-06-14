@@ -79,22 +79,33 @@ EU suppliers, or recargo de equivalencia. Run
 
 ## Classify mixed-use transactions
 
-Use `MIXED` with a business percentage from `0` to `1`:
+A mixed-use transaction is one you use partly for business and partly
+personally, such as a phone bill, a car cost, or a home-office expense. Record
+the business share so the calculation counts only the deductible part.
+
+Record the share in one of three ways, ordered from single-use to reusable:
+
+- A one-off percentage with `--business-pct` on the row. Use it for a single
+  transaction.
+- A saved category ratio, set with `aeat app ledger ratios set` and applied
+  through `--usage-ratio-id`. Use it when the same share applies to every
+  expense in a category.
+- A prorrata reference with `--prorrata-reference`, for the IVA prorrata rule
+  (regla de prorrata) when you also make IVA-exempt sales.
+
+Set the share while you classify the row, with a percentage from `0` to `1`:
 
 ```bash
 aeat app ledger classify <transaction-id> --classification MIXED --business-pct 0.5 --category-id <category-id>
 ```
 
-You can also record allocation through the allocation command:
+Or record the share on a row you have already classified, using `allocate`:
 
 ```bash
 aeat app ledger allocate <transaction-id> --business-pct 0.5 --category-id <category-id>
 ```
 
-Leave `--usage-ratio-id` out unless you have already set up a saved proportion
-for this type of expense — most users do not need it. Use
-`--prorrata-reference` only if your IVA return uses the prorrata rule (regla de
-prorrata) — for example, if you also make VAT-exempt sales.
+Most users need only `--business-pct`.
 
 For shared expenses, first check which category ratios are supported:
 

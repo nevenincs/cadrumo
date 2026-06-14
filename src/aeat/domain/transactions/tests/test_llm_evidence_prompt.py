@@ -8,6 +8,7 @@ travels with it.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -20,6 +21,7 @@ from .. import (
     SourceFormat,
     Transaction,
     TransactionDirection,
+    parse_response,
     prompt_spec_with_saturation_fields,
 )
 
@@ -63,3 +65,48 @@ def test_prompt_without_evidence_has_no_evidence_section() -> None:
     prompt = prompt_spec_with_saturation_fields().render(_transaction())
     assert "begin evidence" not in prompt
     assert _EVIDENCE not in prompt
+
+
+def test_multiple_components_asked_only_when_evidence_present() -> None:
+    """The multiplicity judgement is requested only when there is an invoice to read.
+
+    On the bare bank-row path the model cannot judge multiplicity, so the field
+    and its instruction must be absent; with evidence text or an attached image
+    they must be present.
+    """
+    spec = prompt_spec_with_saturation_fields()
+    bare = spec.render(_transaction())
+    assert '"multiple_components"' not in bare
+    assert "multiple_components true" not in bare
+
+    with_text = spec.render(_transaction(), evidence_text=_EVIDENCE)
+    assert '"multiple_components"' in with_text
+    assert "multiple_components true" in with_text
+
+    with_image = spec.render(_transaction(), evidence_image_present=True)
+    assert '"multiple_components"' in with_image
+
+
+def test_multiple_components_survives_the_allow_list_parse() -> None:
+    """A model-emitted multiplicity flag round-trips through the allow-list parse."""
+    spec = prompt_spec_with_saturation_fields()
+    flagged = parse_response(
+        json.dumps(
+            {
+                "classification": "BUSINESS",
+                "confidence": 0.9,
+                "reason": "two distinct rate lines on the attached invoice",
+                "iva_category": "domestic_general_21",
+                "multiple_components": True,
+            },
+        ),
+        spec=spec,
+    )
+    assert flagged.multiple_components is True
+
+    # Absent in the payload -> None (no judgement was made / no evidence read).
+    unflagged = parse_response(
+        json.dumps({"classification": "BUSINESS", "confidence": 0.9, "reason": "single line"}),
+        spec=spec,
+    )
+    assert unflagged.multiple_components is None

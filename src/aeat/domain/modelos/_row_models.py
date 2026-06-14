@@ -31,8 +31,9 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR as M347_THRESHOLD_EUR  # re-export
 
@@ -67,7 +68,7 @@ class Modelo184MemberRow(BaseModel):
     * ``pais`` → ``country_code`` (ES default)
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     row_type: Literal["miembro"] = "miembro"
     nif: _NifStr
@@ -169,7 +170,7 @@ class Modelo232VinculadaRow(BaseModel):
     * ``importe`` → ``amount`` (binding: modelo-232-related-party-row-amount)
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     row_type: Literal["vinculada"] = "vinculada"
     nif: _NifStr
@@ -254,7 +255,7 @@ class Modelo349OperadorRow(BaseModel):
     * ``importe`` → ``op.base-imponible`` (casilla 134-146)
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     row_type: Literal["operador"] = "operador"
     codigo_pais: _IsoCountryCode
@@ -328,7 +329,7 @@ class Modelo347ContraparteRow(BaseModel):
     * ``pais_codigo`` → ``contraparte.pais`` (ISO 3166-1; None = domestic)
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     row_type: Literal["contraparte"] = "contraparte"
     nif: _NifStr

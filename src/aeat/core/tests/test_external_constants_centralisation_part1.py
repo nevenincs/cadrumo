@@ -432,7 +432,7 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
 
 
 def test_m347_threshold_eur_value() -> None:
-    """``M347_THRESHOLD_EUR`` equals €3,005.06 per RD 1065/2007 art. 31.1."""
+    """``M347_THRESHOLD_EUR`` equals €3,005.06 per RD 1065/2007 art. 33.1."""
 
     from decimal import Decimal
 

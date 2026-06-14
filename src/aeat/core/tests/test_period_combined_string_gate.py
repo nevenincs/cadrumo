@@ -236,7 +236,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="workflow and ledger support tests preserve external work-unit/export path labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/overview/(?:_calendar|tests/test_calendar)\.py$"),
+        path=_path(r"^src/aeat/application/overview/(?:_calendar|tests/test_calendar[a-z_]*)\.py$"),
         reason="overview calendar code/tests preserve pre-existing display-doc and justificante CSV labels",
     ),
     AllowlistRule(

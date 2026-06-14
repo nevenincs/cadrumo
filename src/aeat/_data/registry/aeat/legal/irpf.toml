@@ -1546,6 +1546,97 @@ required_text = [
     "transmisión",
 ]
 
+[legal."ley-35-2006:art-35"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a35"
+document_id = "BOE-A-2006-20764"
+article = "35"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a35"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a35; operator to re-stamp)"
+notes = "LIRPF art 35: transmisiones a título oneroso — el valor de adquisición (importe real + inversiones/mejoras + gastos y tributos inherentes, menos amortizaciones) y el valor de transmisión (importe real menos gastos y tributos inherentes a cargo del transmitente). Base legal del cálculo de ganancia/pérdida por transmisión onerosa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a35; operator to confirm and re-stamp."
+required_text = [
+    "Transmisiones a título oneroso",
+    "valor de adquisición",
+]
+
+[legal."ley-35-2006:art-36"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a36"
+document_id = "BOE-A-2006-20764"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a36"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a36; operator to re-stamp)"
+notes = "LIRPF art 36: transmisiones a título lucrativo — se aplican las reglas del art. 35 tomando por importe real los valores del Impuesto sobre Sucesiones y Donaciones (sin exceder el valor de mercado). Base legal del cálculo de ganancia/pérdida por transmisión lucrativa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a36; operator to confirm and re-stamp."
+required_text = [
+    "Transmisiones a título lucrativo",
+]
+
+[legal."ley-35-2006:art-38"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a38"
+document_id = "BOE-A-2006-20764"
+article = "38"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a38"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a38; operator to re-stamp)"
+notes = "LIRPF art 38: ganancias excluidas de gravamen en supuestos de reinversión — exención de la ganancia por transmisión de la vivienda habitual reinvertida en otra vivienda habitual, y de acciones/participaciones de entidades de nueva o reciente creación. Base legal de las casillas de exención por reinversión en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a38; operator to confirm and re-stamp."
+required_text = [
+    "Ganancias excluidas de gravamen en supuestos de reinversión",
+]
+
+[legal."ley-35-2006:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a39"
+document_id = "BOE-A-2006-20764"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a39"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a39; operator to re-stamp)"
+notes = "LIRPF art 39: ganancias patrimoniales no justificadas — bienes o derechos cuya tenencia/declaración/adquisición no se corresponde con la renta o patrimonio declarados, integradas en la base liquidable general del periodo. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a39; operator to confirm and re-stamp."
+required_text = [
+    "Ganancias patrimoniales no justificadas",
+]
+
+[legal."ley-35-2006:dt-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtnovena"
+document_id = "BOE-A-2006-20764"
+article = "DT-9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtnovena"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#dtnovena; operator to re-stamp)"
+notes = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtnovena; operator to confirm and re-stamp."
+required_text = [
+    "adquiridos con anterioridad a 31 de diciembre de 1994",
+]
+
 [legal."ley-35-2006:art-82"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1849,7 +1940,7 @@ effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
-notes = "LIRPF art 58: minimo por descendientes. 2.400 euros por el primero, 2.700 por el segundo, 4.000 por el tercero, 4.500 por el cuarto y siguientes. Incremento de 3.000 euros por descendiente menor de 3 anios."
+notes = "LIRPF art 58: minimo por descendientes. 2.400 euros por el primero, 2.700 por el segundo, 4.000 por el tercero, 4.500 por el cuarto y siguientes. Incremento de 2.800 euros por descendiente menor de 3 anios."
 required_text = [
     "Mínimo por descendientes",
     "2.400 euros",
@@ -1873,6 +1964,26 @@ notes = "LIRPF art 59: minimo por ascendientes. 1.150 euros por ascendiente mayo
 required_text = [
     "Mínimo por ascendientes",
     "1.150 euros",
+]
+
+[legal."ley-35-2006:art-60"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a60"
+document_id = "BOE-A-2006-20764"
+article = "60"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a60"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-14
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a60; operator to re-stamp)"
+notes = "LIRPF art 60: minimo por discapacidad. Del contribuyente: 3.000 euros (discapacidad grado >=33%<65%), 9.000 euros (grado >=65%); +3.000 euros en concepto de gastos de asistencia (ayuda de terceras personas, movilidad reducida, o grado >=65%). De ascendientes o descendientes con discapacidad: 3.000 euros por cada uno (>=33%), 9.000 euros (>=65%); +3.000 euros gastos de asistencia. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a60; operator to confirm and re-stamp."
+required_text = [
+    "Mínimo por discapacidad",
+    "3.000 euros anuales cuando sea una persona con discapacidad",
+    "9.000 euros anuales",
 ]
 
 [legal."ley-35-2006:art-56"]
@@ -2152,6 +2263,24 @@ required_text = [
     "base liquidable general",
     "base imponible general",
     "base liquidable del ahorro",
+]
+
+[legal."ley-35-2006:art-51"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a51"
+document_id = "BOE-A-2006-20764"
+article = "51"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a51"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a51; operator to re-stamp)"
+notes = "LIRPF art 51: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social (planes de pensiones, mutualidades de previsión social, planes de previsión asegurados, planes de previsión social empresarial, seguros de dependencia, y sistemas a favor de personas con discapacidad). Base legal de las casillas de reducción/exceso por previsión social en Modelo 100; el límite conjunto lo fija el art. 52. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a51; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por aportaciones y contribuciones a sistemas de previsión social",
 ]
 
 [legal."ley-35-2006:art-52"]

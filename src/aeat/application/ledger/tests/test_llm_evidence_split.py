@@ -49,12 +49,14 @@ from ....domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
+    TransactionValidationError,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     LLMProvider,
     LLMSplitApplyResult,
     LLMSplitSuggestion,
+    apply_evidence_classification,
     apply_evidence_split,
     suggest_evidence_split,
 )
@@ -388,3 +390,122 @@ def test_apply_child_numbers_are_registry_derived_not_model(
     assert sorted(child.raw.amount for child in children) == [Decimal("96.80"), Decimal("145.20")]
     for child in children:
         assert child.iva_rate == Decimal("0.21")
+
+
+# ---------------------------------------------------------------------------
+# no-split verdict: one child = "single line", routed to in-place classification
+# ---------------------------------------------------------------------------
+
+
+def _single_line_proposal() -> LLMSplitResponse:
+    """A single-child proposal — the model's 'no split warranted' verdict."""
+    return LLMSplitResponse(
+        children=(
+            LLMSplitChild(
+                proportion=Decimal("1.0"),
+                category=SpendingCategory.MATERIAL_OFICINA,
+                iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+                evidence_citation="material de oficina",
+            ),
+        ),
+        reason="invoice is a single line at one rate",
+    )
+
+
+def test_single_child_suggestion_does_not_recommend_split(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+) -> None:
+    repository, _events, _objects = repositories
+    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+
+    suggestion = suggest_evidence_split(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        provider=LLMProvider.CLAUDE,
+        proposer=_FixedSplitProposer(response=_single_line_proposal()),
+        transaction_repository=repository,
+        read_evidence=False,
+    )
+
+    assert suggestion.recommends_split is False
+    assert len(suggestion.children) == 1
+    # The lone child carries the whole gross and the registry-derived substrate.
+    assert suggestion.children[0].amount == Decimal("121.00")
+    assert suggestion.children[0].iva_rate == Decimal("0.21")
+
+
+def test_apply_evidence_split_refuses_a_no_split_verdict(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+) -> None:
+    repository, events, _objects = repositories
+    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    suggestion = suggest_evidence_split(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        provider=LLMProvider.CLAUDE,
+        proposer=_FixedSplitProposer(response=_single_line_proposal()),
+        transaction_repository=repository,
+        read_evidence=False,
+    )
+    with pytest.raises(TransactionValidationError, match="no-split verdict"):
+        apply_evidence_split(
+            suggestion,
+            bucket_id=_BUCKET,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+            occurred_at=_NOW,
+        )
+
+
+def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+) -> None:
+    repository, events, _objects = repositories
+    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    suggestion = suggest_evidence_split(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        provider=LLMProvider.CLAUDE,
+        proposer=_FixedSplitProposer(response=_single_line_proposal()),
+        transaction_repository=repository,
+        read_evidence=False,
+    )
+
+    result = apply_evidence_classification(
+        suggestion,
+        bucket_id=_BUCKET,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+        occurred_at=_NOW,
+    )
+
+    # The parent is classified in place — NOT split; no child rows are created.
+    catalogue = repository.load()
+    parent = catalogue.get(tx_id)
+    assert parent is not None
+    assert parent.lifecycle_state is TransactionLifecycleState.ACTIVE
+    assert parent.business_classification is BusinessClassification.BUSINESS
+    assert parent.category_id == SpendingCategory.MATERIAL_OFICINA.value
+    assert parent.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    # Registry-derived substrate for the whole gross, stamped with llm provenance.
+    assert parent.iva_rate == Decimal("0.21")
+    assert parent.taxable_base is not None and parent.iva_amount is not None
+    assert parent.taxable_base + parent.iva_amount == Decimal("121.00")
+    assert result.transaction.classified_by == "llm:claude:test-model"
+
+
+def test_apply_evidence_classification_refuses_a_multi_child_split(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+) -> None:
+    repository, _events, _objects = repositories
+    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    suggestion = suggest_evidence_split(
+        bucket_id=_BUCKET,
+        transaction_id=tx_id,
+        provider=LLMProvider.CLAUDE,
+        proposer=_FixedSplitProposer(response=_two_line_proposal()),
+        transaction_repository=repository,
+        read_evidence=False,
+    )
+    with pytest.raises(TransactionValidationError, match="recommends a split"):
+        apply_evidence_classification(suggestion, bucket_id=_BUCKET, transaction_repository=repository)

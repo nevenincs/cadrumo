@@ -19,8 +19,9 @@ from importlib.resources import files  # nosemgrep
 from pathlib import Path
 from typing import Any, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ..core import STRICT_FROZEN_CONFIG
 from . import Modelo
 from .errors import CoreValidationError
 
@@ -55,7 +56,7 @@ CLASSIFIED_BY_AUTO: Final[str] = "auto"
 class _Frozen(BaseModel):
     """Strict, frozen base for external-constant submodels."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class AeatDomains(_Frozen):
@@ -418,7 +419,7 @@ SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang i
 #: Counterparties whose annual operations total at most this amount are NOT declarable.
 M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 
-#: Modelo 720 declaration floor per asset class (bloque). Binding provision: RD 1065/2007
+#: Modelo 720 declaration floor per asset class (``bloque``). Binding provision: RD 1065/2007
 #: arts. 42 bis/ter/quater (added by RD 1558/2012) under LGT DA 18ª — each block
 #: (cuentas / valores-seguros / inmuebles) carries an independent 50.000 € umbral.
 #: An asset class is declarable iff its total valuation strictly exceeds this amount.

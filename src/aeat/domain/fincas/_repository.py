@@ -1,8 +1,8 @@
 """Typed repositories for the rental-register record types.
 
 Bridges between the public :mod:`aeat.domain.fincas._models` records and the
-internal :mod:`aeat.adapters.persistence.storage._orm` mapper rows. Every method routes
-through ``Repository._flush_or_wrap`` so DB integrity violations
+internal :mod:`aeat.adapters.persistence.storage.sql._orm` mapper rows. Every
+method routes through ``Repository._flush_or_wrap`` so DB integrity violations
 surface as :class:`RepositoryError`.
 
 Storage imports are deferred behind methods that consult them so the

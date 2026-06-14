@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
+
+from ...core import STRICT_FROZEN_CONFIG
 
 
 class AuthState(BaseModel):
     """Local AEAT access readiness state."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str | None = None
     certificate_path: str | None = None

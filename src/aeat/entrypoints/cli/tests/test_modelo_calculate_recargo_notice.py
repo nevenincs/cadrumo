@@ -14,6 +14,15 @@ in-time posture is derived from the registry deadline window the engine
 itself resolves (``resolve_filing_closes_on``) against the real
 ``date.today()``, never hand-asserted, so the test tracks the registry
 rather than a frozen calendar literal.
+
+Period selection is deterministic and self-calibrating: rather than
+hardcode a quarter and skip when the calendar makes its branch
+unreachable, each test enumerates the M130 quarterly periods the
+registry actually defines deadline windows for and picks the period
+whose ``closes_on`` guarantees the wanted posture relative to today
+(the most recent already-past close for the overdue test, the nearest
+still-future close for the in-time test). Both branches are therefore
+always reachable and no calendar-edge skip is needed.
 """
 
 from __future__ import annotations
@@ -40,6 +49,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _RECARGO_NOTICE_CODE = "modelo.work.calculate.plazo_vencido_recargo"
 _M130_REVISION = "2019-y-siguientes"
 _M130_FILING_YEAR = 2026
+
+# The quarterly periods the M130 2019-y-siguientes revision declares, in
+# chronological close order. Each test resolves their real registry close
+# dates and selects deterministically against ``date.today()``.
+_M130_QUARTERLY_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 
 
 @pytest.fixture(autouse=True)
@@ -128,25 +142,64 @@ def _closes_on(period_token: str) -> date:
     return closes_on
 
 
+def _registered_quarterly_closes() -> list[tuple[str, date]]:
+    """(period_token, closes_on) for every M130 quarter with a registry window.
+
+    Sorted by close date so callers can pick the most-recent-past or the
+    nearest-future deadline deterministically against the run date.
+    """
+    pairs = [(token, _closes_on(token)) for token in _M130_QUARTERLY_PERIODS]
+    return sorted(pairs, key=lambda pair: pair[1])
+
+
+def _select_overdue_period() -> tuple[str, date]:
+    """Pick the M130 quarter whose plazo voluntario is guaranteed already past.
+
+    Returns the most recent quarter whose ``closes_on`` is strictly before
+    today, so the calculate path always resolves an overdue posture and the
+    recargo branch is always exercised — no calendar-edge skip.
+    """
+    today = date.today()
+    past = [pair for pair in _registered_quarterly_closes() if pair[1] < today]
+    assert past, (
+        "no M130 quarterly deadline window in the registry closes before "
+        f"{today.isoformat()}; the overdue recargo branch cannot be exercised "
+        "deterministically. Extend the M130 registry deadline windows."
+    )
+    return past[-1]
+
+
+def _select_in_time_period() -> tuple[str, date]:
+    """Pick the M130 quarter whose plazo voluntario is guaranteed still open.
+
+    Returns the nearest quarter whose ``closes_on`` is strictly after today,
+    so the calculate path always resolves an in-time posture and the
+    no-recargo branch is always exercised — no calendar-edge skip.
+    """
+    today = date.today()
+    future = [pair for pair in _registered_quarterly_closes() if pair[1] > today]
+    assert future, (
+        "no M130 quarterly deadline window in the registry closes after "
+        f"{today.isoformat()}; the in-time no-recargo branch cannot be "
+        "exercised deterministically. Extend the M130 registry deadline windows."
+    )
+    return future[0]
+
+
 def test_calculate_overdue_period_surfaces_recargo_notice_with_legal_context() -> None:
     """An overdue M130 period carries the Art. 27 LGT recargo notice + deadline block.
 
-    The 1T window closes mid-April; once the run date is past it the
-    calculate envelope MUST carry (a) a warning-severity recargo
-    :class:`Notice` whose ``context`` includes the binding ``legal_refs``,
-    and (b) a non-null ``result.deadline`` with a populated overdue posture.
-    The text mode keeps its existing ``recargo_*`` / ``AVISO:`` lines.
+    A quarter whose voluntary window has already closed is selected from the
+    registry's M130 deadline windows, so once a calculate runs against it the
+    envelope MUST carry (a) a warning-severity recargo :class:`Notice` whose
+    ``context`` includes the binding ``legal_refs``, and (b) a non-null
+    ``result.deadline`` with a populated overdue posture. The text mode keeps
+    its existing ``recargo_*`` / ``AVISO:`` lines.
     """
-    closes_on = _closes_on("1T")
-    if date.today() <= closes_on:
-        pytest.skip(
-            f"M130 1T {_M130_FILING_YEAR} deadline {closes_on.isoformat()} is not yet "
-            "overdue against the current run date; the overdue branch is unreachable. "
-            "This is a calendar-edge skip, not a code skip.",
-        )
+    period, closes_on = _select_overdue_period()
 
     _create_natural_person_profile()
-    work_unit_id = _create_m130_work_unit(period="1T")
+    work_unit_id = _create_m130_work_unit(period=period)
     seed_m130_income_transaction(
         amount=Decimal("12000.00"),
         filing_year=_M130_FILING_YEAR,
@@ -210,21 +263,16 @@ def test_calculate_overdue_period_surfaces_recargo_notice_with_legal_context() -
 def test_calculate_in_time_period_carries_no_recargo_notice() -> None:
     """An in-time M130 period carries no recargo notice and an in-time deadline.
 
-    Anti-tautology converse of the overdue test: the 2T window closes in
-    July, so before that date the calculate envelope MUST NOT carry the
-    recargo notice, its status stays ``success``, and ``result.deadline``
-    reports ``days_remaining`` with no overdue posture and no recargo band.
+    Anti-tautology converse of the overdue test: a quarter whose voluntary
+    window is still open is selected from the registry's M130 deadline
+    windows, so the calculate envelope MUST NOT carry the recargo notice, its
+    status stays ``success``, and ``result.deadline`` reports
+    ``days_remaining`` with no overdue posture and no recargo band.
     """
-    closes_on = _closes_on("2T")
-    if date.today() > closes_on:
-        pytest.skip(
-            f"M130 2T {_M130_FILING_YEAR} deadline {closes_on.isoformat()} is already past "
-            "against the current run date; the in-time branch is unreachable. "
-            "This is a calendar-edge skip, not a code skip.",
-        )
+    period, closes_on = _select_in_time_period()
 
     _create_natural_person_profile()
-    work_unit_id = _create_m130_work_unit(period="2T")
+    work_unit_id = _create_m130_work_unit(period=period)
     seed_m130_income_transaction(
         amount=Decimal("12000.00"),
         filing_year=_M130_FILING_YEAR,

@@ -206,8 +206,17 @@ def _reclaim_if_stale(target: Path) -> None:
         _log.debug("bucket lockfile stale reclaim skipped unreadable lockfile")
         return
     should_reclaim = pid is _PidReadState.INVALID or (isinstance(pid, int) and not _pid_is_alive(pid))
-    if should_reclaim:
-        _unlink_lockfile_if_present(target, reason="stale_reclaim")
+    if not should_reclaim:
+        return
+    # Re-read the PID immediately before unlinking and reclaim only when the
+    # record is byte-identical to the one we judged stale. This closes the
+    # TOCTOU window where a peer reclaims the stale lock and re-creates it with
+    # its own live PID between our read and our unlink: without the re-check we
+    # would delete that peer's live lock, letting a third writer in.
+    if _read_pid(target) != pid:
+        _log.debug("bucket lockfile stale reclaim aborted; holder changed under reclaim")
+        return
+    _unlink_lockfile_if_present(target, reason="stale_reclaim")
 
 
 def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:

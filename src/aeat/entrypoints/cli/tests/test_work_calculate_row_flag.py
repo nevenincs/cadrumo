@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import subprocess
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 import typer
@@ -321,7 +322,7 @@ class TestRevisionViewSurfacesDetailRows:
     """
 
     @staticmethod
-    def _run_cli(storage_root: object, argv: list[str]) -> subprocess.CompletedProcess[str]:
+    def _run_cli(storage_root: Path, argv: list[str]) -> subprocess.CompletedProcess[str]:
         import subprocess
         import sys
         import textwrap
@@ -348,7 +349,7 @@ class TestRevisionViewSurfacesDetailRows:
             check=False,
         )
 
-    def test_m184_member_rows_surface_in_revision_view(self, tmp_path: object) -> None:
+    def test_m184_member_rows_surface_in_revision_view(self, tmp_path: Path) -> None:
         """A cold M184 ``--row`` flow renders the members as ``detail_row`` lines.
 
         End-to-end so the work unit resolves (the result-summary block runs on a

@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 if TYPE_CHECKING:
     from googleapiclient.discovery import Resource as _GoogleResource
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ....application.storage.calc_sheets import collect_row_sets, registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
@@ -836,7 +836,7 @@ class PullCoverageDiscrepancy(BaseModel):
     check before consuming the pull.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     kind: Literal[
         "metadata_mismatch",

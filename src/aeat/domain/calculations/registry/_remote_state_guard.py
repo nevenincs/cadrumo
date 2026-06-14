@@ -11,8 +11,9 @@ from fnmatch import fnmatchcase
 from typing import Literal
 from urllib.parse import urlparse
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ._aeat_hosts import first_aeat_host, is_aeat_host
 from ._errors import RegistryValidationError
 from ._schema import LiveCrossReferenceDecision
@@ -124,7 +125,7 @@ _FORBIDDEN_TOKENS: tuple[str, ...] = (
 class RemoteStateGuardModel(BaseModel):
     """Strict frozen base for remote-state guard records."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class RemoteStateGuardPolicy(RemoteStateGuardModel):

@@ -41,7 +41,7 @@ from aeat.core.external_constants import OutputLanguage
 from aeat.terminology import TerminologyHandbook, load_terminology_handbook
 from aeat.terminology._enums import TermStatus
 
-from ._resolution import ChunkHit, TargetResolver, resolve_chunk_hits
+from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
 from ._search_record import SearchRecordKind
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, wrangle
 
@@ -449,7 +449,7 @@ def run_sweep(
             continue
         resolution = resolve_chunk_hits(hits, resolver=target_resolver)
         wrangled = wrangle(resolution, score_floor=score_floor)
-        mappings.append(_mapping_from(query, wrangled))
+        mappings.append(_mapping_from(query, wrangled, resolver=target_resolver))
 
     return SweepResult(
         mappings=tuple(mappings),
@@ -466,7 +466,12 @@ def _empty_mapping(query: SweepQuery) -> TermRelevanceMapping:
     return TermRelevanceMapping(query=query.query, concept_id=query.concept_id, language=query.language)
 
 
-def _mapping_from(query: SweepQuery, wrangled: WrangledResult) -> TermRelevanceMapping:
+def _mapping_from(
+    query: SweepQuery,
+    wrangled: WrangledResult,
+    *,
+    resolver: TargetResolver,
+) -> TermRelevanceMapping:
     targets = tuple(
         TermTargetRef(
             record_id=target.record.id,
@@ -477,6 +482,7 @@ def _mapping_from(query: SweepQuery, wrangled: WrangledResult) -> TermRelevanceM
         )
         for target in wrangled.targets
     )
+    targets = _seed_concept_card(query, targets, resolver)
     dominant = wrangled.clusters[0] if wrangled.clusters else None
     locator = f"{dominant.surface}:{dominant.locator}" if dominant is not None else None
     return TermRelevanceMapping(
@@ -488,6 +494,38 @@ def _mapping_from(query: SweepQuery, wrangled: WrangledResult) -> TermRelevanceM
         collapsed_count=len(wrangled.collapsed),
         dominant_cluster=locator,
     )
+
+
+def _seed_concept_card(
+    query: SweepQuery,
+    targets: tuple[TermTargetRef, ...],
+    resolver: TargetResolver,
+) -> tuple[TermTargetRef, ...]:
+    """Guarantee the query's originating concept card heads the target list.
+
+    A swept query string is, by construction, a declared label of its concept
+    (ADR D4: concepts are first-class palette results). RAG retrieval over a
+    generic or ambiguous surface form (the English "box", the bare "modelo
+    303") may score the concept's own authoring fragment below the strong-
+    signal floor or miss it entirely, but the concept card is still the
+    canonical answer. Seeding it deterministically -- at the concept tier
+    weight, ahead of the RAG-discovered grounding surfaces -- makes the
+    compiled mapping complete without inventing a relevance signal: the card
+    is enrolment fact, not a retrieval guess. A no-op when RAG already
+    surfaced the card (deduped by record id) or when the concept has no
+    enrolled card.
+    """
+    record = resolver.concept_record(query.concept_id)
+    if record is None or any(ref.record_id == record.id for ref in targets):
+        return targets
+    seed = TermTargetRef(
+        record_id=record.id,
+        target=record.target,
+        kind=record.kind,
+        surface=GroundingSurface.CONCEPT.value,
+        ranking_weight=record.ranking_weight,
+    )
+    return (seed, *targets)
 
 
 def _default_repo_root() -> Path:

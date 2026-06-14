@@ -24,7 +24,7 @@ def test_period_constructs_quarter_from_year_and_code_and_is_frozen() -> None:
     assert period.start_date == date(2025, 1, 1)
     assert period.end_date == date(2025, 3, 31)
     with pytest.raises(ValidationError):
-        period.year = 2026
+        period.year = 2026  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[invalid-assignment]  # negative test: Period is frozen
 
 
 def test_aggregation_period_kind_values() -> None:

@@ -34,9 +34,9 @@ import re
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...domain.deadlines import ModeloDeadline
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
@@ -88,7 +88,7 @@ _WORK_UNIT_ID_RE = re.compile(r"^[0-9a-f]{64}$")
 class WorkflowResumeRunCandidate(BaseModel):
     """Operator-facing workflow run candidate for natural-key resume guidance."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     run_id: str = Field(min_length=16, max_length=16)
     modelo: str = Field(min_length=1, max_length=8)
@@ -103,7 +103,7 @@ class WorkflowResumeRunCandidate(BaseModel):
 class WorkflowResumeTargetResolution(BaseModel):
     """Resolved workflow-run target plus visible modelo work metadata."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     run_id: str = Field(min_length=16, max_length=16)
     source: str = Field(min_length=1, max_length=64)
@@ -119,7 +119,7 @@ class WorkflowResumeTargetResolution(BaseModel):
 class WorkflowResumeContext(BaseModel):
     """Inputs the engine needs to start a fresh attempt over a prior run."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     resumed_from_run_id: str = Field(min_length=16, max_length=16)
     modelo: str = Field(min_length=1, max_length=8)

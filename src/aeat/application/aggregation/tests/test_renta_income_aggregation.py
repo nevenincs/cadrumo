@@ -528,6 +528,7 @@ def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> Non
     # inequality guard proves the selection is live (a gross-summing
     # regression would produce the IVA-inflated total instead).
     projected = result.casilla_aggregation.casilla_values["01"]
+    assert tagged.taxable_base is not None
     assert projected == tagged.taxable_base + untagged.raw.amount
     assert projected != tagged.raw.amount + untagged.raw.amount
 

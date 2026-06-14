@@ -78,7 +78,6 @@ class AeatGateEnvSnapshot(BaseModel):
     pytest_current_test: str
 
 
-
 @dataclass(frozen=True, slots=True)
 class AeatAccessGate:
     """Pre-flight gate that authorises live AEAT reads and writes.

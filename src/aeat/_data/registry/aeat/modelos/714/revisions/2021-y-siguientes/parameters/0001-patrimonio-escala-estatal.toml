@@ -1,0 +1,79 @@
+# Modelo 714 (Impuesto sobre el Patrimonio) escala estatal por defecto.
+#
+# Ley 19/1991 art. 30 cuota íntegra: la base liquidable se grava a la escala
+# aprobada por la Comunidad Autónoma; en su defecto, a esta escala estatal
+# subsidiaria. Authored verbatim from the BUNDLED authoritative corpus
+# `corpus/normatives/html/ley-19-1991-art-30.html` (BOE-A-1991-14392 texto
+# consolidado) — the eight-bracket 0,2-3,5 % progressive tarifa. Each bracket's
+# `fixed_addition` is the published cumulative "Cuota" at the bracket's lower
+# bound, and `upper_bound` is the next lower bound (the published "Resto base
+# liquidable hasta" widths sum to these boundaries). This is the STATE default;
+# a CCAA that approves its own escala overrides it (out of scope for Phase-B's
+# state-baseline calc).
+
+[[revisions."2021-y-siguientes".parameters]]
+id = "patrimonio-escala-estatal"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-714-procedure"
+required_text = ["patrimonio neto"]
+
+[[revisions."2021-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "167129.45"
+fixed_addition = "0"
+marginal_rate = "0.002"
+valid_from = 2021-01-01
+
+[[revisions."2021-y-siguientes".parameters.brackets]]
+lower_bound = "167129.45"
+upper_bound = "334252.88"
+fixed_addition = "334.26"
+marginal_rate = "0.003"
+valid_from = 2021-01-01
+
+[[revisions."2021-y-siguientes".parameters.brackets]]
+lower_bound = "334252.88"
+upper_bound = "668499.75"
+fixed_addition = "835.63"
+marginal_rate = "0.005"
+valid_from = 2021-01-01
+
+[[revisions."2021-y-siguientes".parameters.brackets]]
+lower_bound = "668499.75"
+upper_bound = "1336999.51"
+fixed_addition = "2506.86"
+marginal_rate = "0.009"
+valid_from = 2021-01-01
+
+[[revisions."2021-y-siguientes".parameters.brackets]]
+lower_bound = "1336999.51"
+upper_bound = "2673999.01"
+fixed_addition = "8523.36"
+marginal_rate = "0.013"
+valid_from = 2021-01-01
+
+[[revisions."2021-y-siguientes".parameters.brackets]]
+lower_bound = "2673999.01"
+upper_bound = "5347998.03"
+fixed_addition = "25904.35"
+marginal_rate = "0.017"
+valid_from = 2021-01-01
+
+[[revisions."2021-y-siguientes".parameters.brackets]]
+lower_bound = "5347998.03"
+upper_bound = "10695996.06"
+fixed_addition = "71362.33"
+marginal_rate = "0.021"
+valid_from = 2021-01-01
+
+[[revisions."2021-y-siguientes".parameters.brackets]]
+lower_bound = "10695996.06"
+fixed_addition = "183670.29"
+marginal_rate = "0.035"
+valid_from = 2021-01-01

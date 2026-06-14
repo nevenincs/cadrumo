@@ -40,8 +40,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from .. import NON_REGISTRY_MODELOS, Modelo, read_toml
 from ._errors import AuthorizationManifestError
 
@@ -135,7 +136,7 @@ class ModeloAuthorizationEntry(BaseModel):
             observes equals ``renta_years``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=8)
     renta_years: tuple[int, ...]
@@ -175,7 +176,7 @@ class AuthorizationManifest(BaseModel):
     duplicate is an authoring error, not a silent last-wins overwrite.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     entries: tuple[ModeloAuthorizationEntry, ...] = ()
 
@@ -227,7 +228,7 @@ class ModeloAuthorization(BaseModel):
             ``None`` when ``UNAUTHORIZED``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=8)
     state: AuthorizationState

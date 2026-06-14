@@ -448,7 +448,7 @@ def work_candidate_lines(candidates: tuple[ModeloWorkUnitCandidate, ...]) -> str
                     candidate.short_work_unit_id,
                     str(candidate.modelo),
                     str(candidate.filing_year),
-                    candidate.period,
+                    candidate.period.registry_token,
                     candidate.revision_id,
                     candidate.state.value,
                     short_id(candidate.current_calculation_revision_id) or "",
@@ -507,11 +507,7 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
                 default="No active work unit matches this modelo/year/period. Run `aeat app modelo work create` first.",
             ),
         )
-    key = getattr(exc, "translated_message", None)
-    context = getattr(exc, "context", None) or {}
-    if isinstance(key, str) and key:
-        return typer.BadParameter(tr(key, **context))
-    return typer.BadParameter(str(exc))
+    return bad_parameter_from_localized_context(exc)
 
 
 def parse_revision_selector(value: str) -> ModeloCalculationRevisionSelector:

@@ -7,16 +7,15 @@ records the rest of the project pins against — keep them stable.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ...core import Period
+from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.errors import BaseSeverity
+from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
 from ..calculations.registry import BindingId, CasillaId, RegistrySnapshotRef
@@ -60,7 +59,7 @@ class ModeloValue(BaseModel):
             kinds.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: ModeloScalar
@@ -72,7 +71,7 @@ class ModeloValue(BaseModel):
 class ModeloBindingValue(BaseModel):
     """The typed value of one registry binding on a :class:`ModeloDraft`."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     value: ModeloScalar
@@ -91,7 +90,7 @@ class ModeloCasillaProvenance(BaseModel):
     created.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     formula_id: str | None = None
@@ -113,7 +112,7 @@ class ModeloValidationFinding(BaseModel):
             justify the finding (see :class:`aeat.domain.manuals.Rule`).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId | None
     severity: BaseSeverity
@@ -125,7 +124,7 @@ class ModeloValidationFinding(BaseModel):
 class ModeloApprovalBasis(BaseModel):
     """Persisted approval-basis digests for deterministic stale detection."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     version: str = APPROVAL_BASIS_VERSION
     draft_payload_fingerprint: str
@@ -145,7 +144,7 @@ class ModeloDraft(BaseModel):
     from the hash.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     draft_id: str
     modelo: str
@@ -217,5 +216,4 @@ def compute_modelo_draft_id(
         "values": [v.model_dump(mode="json") for v in sorted_values],
         "binding_values": [v.model_dump(mode="json") for v in sorted_binding_values],
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()[:16]
+    return content_hash_hex(payload)[:16]

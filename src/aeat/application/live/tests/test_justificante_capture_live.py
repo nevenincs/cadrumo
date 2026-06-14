@@ -15,7 +15,7 @@ import hashlib
 
 import pytest
 
-from ....core import require_active_bucket_id
+from ....core import Period, require_active_bucket_id
 from ....tests.live_gate import requires_live_enabled
 from .. import (
     _default_justificante_declarations,
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 _LIVE_MODELO = "130"
 
 
-async def _discover_filed_period(*, modelo: str, year: int) -> str | None:
+async def _discover_filed_period(*, modelo: str, year: int) -> Period | None:
     session, settings = await _default_justificante_session()
     declarations = await _default_justificante_declarations(session, settings, modelo=modelo, year=year)
     for declaration in declarations:

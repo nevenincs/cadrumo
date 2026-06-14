@@ -54,7 +54,7 @@ aeat app ledger import ./statement.csv --provider auto --verify
 ```
 
 If the diagnostic source should point at a different original file, pass it
-with `--source`:
+with `--file`:
 
 ```bash
 aeat app ledger import ./processed.csv --provider csv --verify --file ./statement.csv
@@ -73,9 +73,9 @@ aeat app ledger add --date 2026-03-15 --amount 49.99 --direction OUTGOING --desc
 ```
 
 Required fields are date, amount, direction, and description. Write the amount
-as a positive figure — the direction carries whether money came in or went
-out, and the command refuses a negative amount. `OUTGOING` is for expenses — money
-you paid out. `INCOMING` is for income — money you received.
+as a positive figure. The direction carries whether money came in or went out,
+and the command refuses a negative amount. `OUTGOING` is for expenses, money you
+paid out. `INCOMING` is for income, money you received.
 
 For a received payment or issued invoice, use `INCOMING`:
 
@@ -88,6 +88,44 @@ For an expense or supplier invoice, use `OUTGOING`:
 ```bash
 aeat app ledger add --date 2026-03-21 --amount 60.50 --direction OUTGOING --description "Office supplies"
 ```
+
+The third direction, `INTERNAL_TRANSFER`, records money moved between your own
+accounts.
+
+### Record tax details on a manual transaction
+
+`ledger add` accepts the same tax fields you set during classification, so you
+record a complete transaction in one step:
+
+```bash
+aeat app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING \
+  --description "Office supplies" --counterparty "Papeleria SL" \
+  --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00 \
+  --notes "Receipt filed"
+```
+
+Useful optional fields:
+
+- `--currency` records a non-euro amount; it defaults to `EUR`.
+- `--counterparty` records who you paid or were paid by.
+- `--category-id` assigns the income or expense category. Run
+  `aeat app ledger categories` to list the ids.
+- `--taxable-base`, `--iva-rate`, and `--iva-amount` record the IVA breakdown.
+- `--irpf-category` records the IRPF (personal income tax) category.
+- `--source-jurisdiction` records the country a movement belongs to, as an
+  ISO two-letter code, which matters for non-resident scopes.
+- `--notes` adds a short operator note.
+
+For a part-business, part-personal movement, set `--classification MIXED` and the
+business share with `--business-pct`, a value from `0` to `1`:
+
+```bash
+aeat app ledger add --date 2026-03-22 --amount 80.00 --direction OUTGOING \
+  --description "Mobile phone" --classification MIXED --business-pct 0.5 --category-id <category-id>
+```
+
+For the IVA category, EU member-state, and usage-ratio semantics behind these
+fields, see [Classify transactions](classify-transactions.md).
 
 Use the invoice commands when you also need to track whether an invoice exists
 separately from the bank movement:

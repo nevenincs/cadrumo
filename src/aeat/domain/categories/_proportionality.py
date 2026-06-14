@@ -14,8 +14,9 @@ from __future__ import annotations
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, model_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, model_validator
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
 from ._errors import CategoryValidationError
 
@@ -23,7 +24,7 @@ from ._errors import CategoryValidationError
 class _ProportionalityStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 class CategoryCitationSource(StrEnum):

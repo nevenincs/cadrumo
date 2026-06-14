@@ -137,7 +137,9 @@ def _valid_modelo_130_inputs() -> dict[str, Decimal]:
     return {
         "01": Decimal("10000"),
         "02": Decimal("4000"),
-        "05": Decimal("250"),
+        # Casilla 05 (pagos fraccionados anteriores) is previous-filing-bound; its
+        # value flows through the matching binding id in _valid_modelo_130_bindings,
+        # not as a raw casilla input (which the smuggling guard now rejects).
         "06": Decimal("100"),
         "08": Decimal("2000"),
         "10": Decimal("10"),
@@ -150,4 +152,7 @@ def _valid_modelo_130_bindings() -> dict[str, Decimal]:
     return {
         "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        # Casilla 05's prior-quarter carry, supplied through its previous-filing
+        # binding (the source-of-truth channel) rather than as a raw casilla input.
+        "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
     }

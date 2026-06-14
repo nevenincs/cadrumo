@@ -19,8 +19,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
 from ._amortization_ledger import compute_amortization_for_year
@@ -44,7 +45,7 @@ _log = get_logger(__name__)
 class FincaAttribution(BaseModel):
     """Per-finca contribution to rental aggregate totals."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     finca_id: int
     finca_identifier: str
@@ -58,7 +59,7 @@ class FincaAttribution(BaseModel):
 class ContractTierAttribution(BaseModel):
     """Per-contract tier resolution + reducción amount."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     contract_id: int
     finca_id: int
@@ -83,7 +84,7 @@ class FincaAggregates(BaseModel):
             amount.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     period_year: int
     ingresos_integros: Decimal = Field(ge=Decimal("0"))

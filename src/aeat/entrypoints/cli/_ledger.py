@@ -38,6 +38,7 @@ from ...application.ledger import (
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...core.json_contract import Notice
 from ...core.logging import get_logger
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
@@ -57,6 +58,7 @@ from ._common import (
     _state,
     _tx_repo,
 )
+from ._ledger_autosplit_cli import dispatch_autosplit, split_recommendation_notice
 from ._ledger_business_invoice_cli import (
     invoice_app,
     register_business_invoice_commands,
@@ -440,8 +442,32 @@ def ledger_classify(
         "--evidence-acknowledged",
         help=tr("cli.ledger.classify.evidence_acknowledged_help"),
     ),
+    vision_model: str | None = typer.Option(
+        None,
+        "--vision-model",
+        help=tr("cli.ledger.classify.vision_model_help"),
+    ),
+    auto_split: bool = typer.Option(
+        False,
+        "--auto-split",
+        help=tr("cli.ledger.classify.auto_split_help"),
+    ),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
+    if auto_split:
+        dispatch_autosplit(
+            ctx,
+            transaction_id=transaction_id,
+            classification=classification,
+            from_csv=from_csv,
+            provider=llm,
+            apply=apply,
+            actor=actor,
+            read_evidence=read_evidence,
+            evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
+        )
+        return
     if llm is not None or read_evidence:
         if saturate:
             _ledger_saturate_llm(
@@ -455,6 +481,7 @@ def ledger_classify(
                 actor=actor,
                 read_evidence=read_evidence,
                 evidence_acknowledged=evidence_acknowledged,
+                vision_model=vision_model,
             )
             return
         _ledger_classify_llm(
@@ -468,6 +495,7 @@ def ledger_classify(
             actor=actor,
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
         )
         return
     if saturate:
@@ -592,6 +620,7 @@ def _ledger_classify_llm(
     actor: str | None,
     read_evidence: bool = False,
     evidence_acknowledged: bool = False,
+    vision_model: str | None = None,
 ) -> None:
     """Run the LLM suggest / apply loop for ``aeat app ledger classify --llm``.
 
@@ -649,6 +678,7 @@ def _ledger_classify_llm(
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
         )
     except LLMClassifierError as exc:
         raise _bad(
@@ -682,7 +712,12 @@ def _ledger_classify_llm(
             f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
             tr("cli.ledger.classify.llm_review_hint"),
         ]
-        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines)
+        notices: list[Notice] = []
+        if suggestion.recommends_split:
+            notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
+            notices.append(notice)
+            lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
+        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
         return
 
     try:
@@ -731,6 +766,7 @@ def _ledger_saturate_llm(
     actor: str | None,
     read_evidence: bool = False,
     evidence_acknowledged: bool = False,
+    vision_model: str | None = None,
 ) -> None:
     """Run the saturating LLM suggest / apply loop for ``classify --llm --saturate``.
 
@@ -783,6 +819,7 @@ def _ledger_saturate_llm(
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
         )
     except LLMClassifierError as exc:
         raise _bad(
@@ -839,7 +876,12 @@ def _ledger_saturate_llm(
             lines.append(f"{tr('cli.ledger.classify.saturate_non_derivable')}\t{suggestion.derivation_note}")
         lines.append(f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}")
         lines.append(tr("cli.ledger.classify.llm_review_hint"))
-        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+        notices: list[Notice] = []
+        if suggestion.recommends_split:
+            notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
+            notices.append(notice)
+            lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
+        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
         return
 
     try:

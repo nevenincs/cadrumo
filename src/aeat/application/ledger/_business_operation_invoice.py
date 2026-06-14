@@ -30,11 +30,12 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import override
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...adapters.persistence.storage import LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -160,7 +161,7 @@ class BusinessOperationInvoice(BaseModel):
     fields grandfather in as ``None`` (schema migration per spec §5).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: str = Field(min_length=1, max_length=64)
     source_kind: BusinessOperationInvoiceSourceKind
@@ -202,7 +203,7 @@ class BusinessOperationInvoicePatch(BaseModel):
     immutable and cannot be patched.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     counterparty_nif: str | None = Field(default=None, min_length=1)
     counterparty_name: str | None = Field(default=None, max_length=200)
@@ -222,7 +223,7 @@ class BusinessOperationInvoicePatch(BaseModel):
 class BusinessOperationInvoiceResult(BaseModel):
     """Return record from a mutating invoice verb — record plus emitted event id."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     record: BusinessOperationInvoice
     bucket_event_ids: tuple[str, ...] = ()
@@ -231,7 +232,7 @@ class BusinessOperationInvoiceResult(BaseModel):
 class BusinessOperationInvoiceDocument(BaseModel):
     """Encrypted bucket-local business-operation invoice catalogue."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     source_kind: BusinessOperationInvoiceSourceKind

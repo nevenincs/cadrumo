@@ -5,8 +5,9 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.errors import AeatError
 from ....core.resources import bundled_path
 
@@ -22,7 +23,7 @@ class UnknownScopeError(AeatError):
 class ApoderadoScope(BaseModel):
     """One scope entry: code plus localized names plus optional modelo binding."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     code: str = Field(min_length=1, max_length=32)
     name_es: str = Field(min_length=1, max_length=200)
@@ -42,7 +43,7 @@ class ApoderadoScope(BaseModel):
 class ApoderamientosCatalogue(BaseModel):
     """Loaded scope catalogue with version metadata."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     catalogue_version: str = Field(min_length=1)
     scopes: tuple[ApoderadoScope, ...]
