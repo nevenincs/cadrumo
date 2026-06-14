@@ -7,8 +7,6 @@ records the rest of the project pins against — keep them stable.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -17,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import Period
 from ...core.errors import BaseSeverity
+from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
 from ..calculations.registry import BindingId, CasillaId, RegistrySnapshotRef
@@ -217,5 +216,4 @@ def compute_modelo_draft_id(
         "values": [v.model_dump(mode="json") for v in sorted_values],
         "binding_values": [v.model_dump(mode="json") for v in sorted_binding_values],
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()[:16]
+    return content_hash_hex(payload)[:16]

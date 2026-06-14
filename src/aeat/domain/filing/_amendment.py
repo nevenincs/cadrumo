@@ -24,8 +24,6 @@ that matches the LGT Art. 122 article you're filing under.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -35,6 +33,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.hashing import content_hash_hex
 from ._protocols import ModeloInputs
 from ._schema import ModeloDraft
 
@@ -112,8 +111,7 @@ def make_amendment_id(
         "amendment_kind": amendment_kind.value,
         "delta": [change.model_dump(mode="json") for change in delta],
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()[:16]
+    return content_hash_hex(payload)[:16]
 
 
 __all__ = [

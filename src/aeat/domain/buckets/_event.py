@@ -12,7 +12,6 @@ codebase as enum additions, never as ad-hoc strings.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
@@ -20,7 +19,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 from ..contribuyente import ProfileName as _ProfileName
 from ._errors import BucketEventValidationError
 
@@ -229,8 +228,7 @@ def derive_bucket_event_id(
         "object_id": object_id.strip(),
         "payload": _canonical_payload(payload),
     }
-    encoded = json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return sha256_hex(encoded)
+    return content_hash_hex(body)
 
 
 class BucketEvent(BaseModel):

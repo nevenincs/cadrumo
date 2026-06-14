@@ -1,14 +1,17 @@
 """Canonical file-hashing utilities for the AEAT codebase.
 
-Provides :func:`sha256_hex`, :func:`sha256_file`, and :func:`hash_file` as
-the single authoritative SHA-256 implementations.  All adapters, application
-services, and domain modules import from here rather than inlining
-``hashlib.sha256(data).hexdigest()`` or duplicating the chunked-read loop.
+Provides :func:`sha256_hex`, :func:`sha256_file`, :func:`hash_file`,
+:func:`canonical_json_bytes`, and :func:`content_hash_hex` as the single
+authoritative SHA-256 implementations.  All adapters, application services, and
+domain modules import from here rather than inlining
+``hashlib.sha256(data).hexdigest()``, duplicating the chunked-read loop, or
+re-deriving the canonical-JSON content-hash serialisation.
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 _HASH_CHUNK_SIZE = 65536
@@ -21,6 +24,26 @@ def sha256_hex(data: bytes) -> str:
     For file-path inputs use :func:`sha256_file` or :func:`hash_file`.
     """
     return hashlib.sha256(data).hexdigest()
+
+
+def canonical_json_bytes(payload: object) -> bytes:
+    """Return deterministic canonical-JSON bytes for content hashing.
+
+    Sorted keys, compact separators, UTF-8 — the single serialisation the
+    content-hash helpers feed into SHA-256 so two semantically equal payloads
+    produce the same bytes (and therefore the same content hash / id).
+    """
+    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def content_hash_hex(payload: object) -> str:
+    """Return the SHA-256 hex digest of the canonical-JSON form of ``payload``.
+
+    The canonical content-addressing primitive: equivalent to
+    ``sha256_hex(canonical_json_bytes(payload))``. Callers that need a truncated
+    id slice the returned digest (``content_hash_hex(payload)[:16]``).
+    """
+    return sha256_hex(canonical_json_bytes(payload))
 
 
 def hash_file(path: Path) -> tuple[str, int]:
@@ -50,4 +73,4 @@ def sha256_file(path: Path) -> str:
     return hex_digest
 
 
-__all__ = ["hash_file", "sha256_file", "sha256_hex"]
+__all__ = ["canonical_json_bytes", "content_hash_hex", "hash_file", "sha256_file", "sha256_hex"]

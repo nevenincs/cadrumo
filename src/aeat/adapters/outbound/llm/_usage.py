@@ -16,6 +16,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from ....core.config import load_settings
+from ....core.hashing import canonical_json_bytes
 from ._errors import LLMCacheError
 from ._models import LLMResponse, UsageRecord, UsageSummary
 
@@ -108,7 +109,7 @@ class UsageRecorder:
                 classification=SensitivityClass.DIAGNOSTIC,
                 schema_version=_USAGE_VERSION,
                 written_at=record.created_at,
-                payload=json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+                payload=canonical_json_bytes(payload),
             )
         except OSError as exc:
             msg = "Failed to append LLM usage record."
