@@ -116,15 +116,15 @@ Replace HKDF export-archive sealing with Argon2id and prove roundtrip.
 
 Parse the bbox declaration in memory and delete the tmp scratch path.
 
-- [ ] `W01.P02.S03` - Accept an in-memory binary stream in the bbox declaration parse path so no decrypted bytes touch disk; `src/aeat/adapters/inbound/declaracion/_parser.py`.
-- [ ] `W01.P02.S04` - Delete the temporary sensitive PDF helper and fold the bbox branch into the in-memory bytes path; `src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py`.
+- [x] `W01.P02.S03` - Accept an in-memory binary stream in the bbox declaration parse path so no decrypted bytes touch disk; `src/aeat/adapters/inbound/declaracion/_parser.py`.
+- [x] `W01.P02.S04` - Delete the temporary sensitive PDF helper and fold the bbox branch into the in-memory bytes path; `src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py`.
 
 ### Phase `W01.P03` - KDF floor and dead-surface deletion
 
 Add the read-time Argon2 cost floor and delete write-only and dead crypto surfaces.
 
-- [ ] `W01.P03.S05` - Apply the manifest KDF validation window to the file-fallback parameters on read and reject below-floor Argon2 cost; `src/aeat/adapters/persistence/storage/master_key/_master_key_records.py`.
-- [ ] `W01.P03.S06` - Delete the dead non-atomic _write_bytes_secure method and its sensitive-persistence-policy allowlist entries; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `W01.P03.S05` - Apply the manifest KDF validation window to the file-fallback parameters on read and reject below-floor Argon2 cost; `src/aeat/adapters/persistence/storage/master_key/_master_key_records.py`.
+- [x] `W01.P03.S06` - Delete the dead non-atomic _write_bytes_secure method and its sensitive-persistence-policy allowlist entries; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [ ] `W01.P03.S32` - OWNER-GATED DEFERRED: remove the write-only standalone salt artefact and shrink the torn-install detection tuple after owner review per the no-legacy-compatibility key-management caution; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 
 ## Wave `W02` - at-rest integrity row binding
@@ -147,16 +147,16 @@ Add WAL and busy_timeout to the bucket engine, fsync the manifest atomic write, 
 
 Set WAL, busy_timeout, and synchronous on the bucket engine connect listener.
 
-- [ ] `W03.P05.S10` - Set SQLite busy_timeout in the bucket engine connect listener so a concurrent invocation waits rather than failing immediately with database-locked; `src/aeat/adapters/persistence/storage/sql/engine.py`.
-- [ ] `W03.P05.S11` - Add a concurrent-writer regression proving two sessions on one bucket do not raise an immediate database-locked error; `src/aeat/adapters/persistence/storage/sql/tests/`.
+- [x] `W03.P05.S10` - Set SQLite busy_timeout in the bucket engine connect listener so a concurrent invocation waits rather than failing immediately with database-locked; `src/aeat/adapters/persistence/storage/sql/engine.py`.
+- [x] `W03.P05.S11` - Add a concurrent-writer regression proving two sessions on one bucket do not raise an immediate database-locked error; `src/aeat/adapters/persistence/storage/sql/tests/`.
 - [ ] `W03.P05.S33` - LARGER FOLLOW-UP: enable journal_mode=WAL and synchronous=NORMAL after migrating the ~21 at-rest raw-db test readers to a shared WAL-aware helper that also scans the -wal sidecar; `src/aeat/adapters/persistence/storage/sql/engine.py`.
 
 ### Phase `W03.P06` - durability and locking
 
 fsync the manifest atomic write, re-validate lockfile reclaim, dispose engine on hard-delete.
 
-- [ ] `W03.P06.S12` - fsync the staged tmp file and the parent directory before and after os.replace on the manifest write; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
-- [ ] `W03.P06.S13` - Re-read and re-validate the holder PID immediately before the stale-lock reclaim unlink; `src/aeat/adapters/persistence/storage/bucket/_lockfile.py`.
+- [x] `W03.P06.S12` - fsync the staged tmp file and the parent directory before and after os.replace on the manifest write; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
+- [x] `W03.P06.S13` - Re-read and re-validate the holder PID immediately before the stale-lock reclaim unlink; `src/aeat/adapters/persistence/storage/bucket/_lockfile.py`.
 - [ ] `W03.P06.S14` - Dispose the cached engine when a bucket DB is hard-deleted so a recreated file does not reuse stale connections; `src/aeat/adapters/persistence/storage/sql/engine.py`.
 
 ## Wave `W04` - cross-machine correctness
