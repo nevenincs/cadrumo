@@ -38,7 +38,6 @@ from ....core.time import now
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
-    OutboundStorageIntegrityError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,
@@ -46,6 +45,7 @@ from ._errors import (
     OutboundStorageUnavailableError,
     OutboundStorageValidationError,
 )
+from ._integrity import verify_content_hash
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
@@ -608,15 +608,16 @@ class GoogleDriveProvider:
         app_properties = entry.get("appProperties") or {}
         stored_hash = str(app_properties.get("content_hash", "") or "")
         if stored_hash:
-            stripped = stored_hash.split("-", 1)[1] if stored_hash.startswith("sha256-") else stored_hash
-            if len(stripped) == 64:
-                actual = sha256_hex(bytes(payload))
-                if stripped != actual:
-                    raise OutboundStorageIntegrityError(
-                        "drive content_hash mismatch",
-                        context={"stored_hash": stored_hash, "actual_sha256": actual},
-                        translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
-                    )
+            actual = sha256_hex(bytes(payload))
+            # The Drive policy only verifies a full 64-char digest.
+            verify_content_hash(
+                actual,
+                stored_hash,
+                message="drive content_hash mismatch",
+                context={"stored_hash": stored_hash, "actual_sha256": actual},
+                translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
+                require_full_digest=True,
+            )
         return bytes(payload), metadata
 
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
