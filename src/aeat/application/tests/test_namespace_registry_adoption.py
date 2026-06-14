@@ -104,11 +104,7 @@ def _namespace_literal_usages(node: ast.AST) -> list[tuple[str, int]]:
 
 
 def _append_literal(usages: list[tuple[str, int]], node: ast.expr | None) -> None:
-    if (
-        isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and node.value.startswith("aeat.")
-    ):
+    if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith("aeat."):
         usages.append((node.value, getattr(node, "lineno", -1)))
 
 
