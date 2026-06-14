@@ -35,6 +35,8 @@ _GROUNDED_GANANCIA_SECTIONS: dict[str, tuple[int, ...]] = {
     "entidad_accion": (2021, 2022, 2023, 2024),
     "entidad_derecho": (2021, 2022, 2023, 2024),
     "fondo": (2021, 2022, 2023, 2024),
+    # ganancias y pérdidas patrimoniales — sumas/resultado
+    "gp_patrimoniales_res": (2021, 2022, 2023, 2024),
 }
 
 

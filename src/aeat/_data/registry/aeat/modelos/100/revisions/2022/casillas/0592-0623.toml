@@ -4,5 +4,5 @@ number = "0623"
 label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
 semantic_role = "irpf_deduccion_descendiente_discapacidad"
-legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

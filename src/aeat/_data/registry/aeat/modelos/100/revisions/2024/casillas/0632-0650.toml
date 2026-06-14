@@ -5,5 +5,5 @@ label = "Fecha de inicio del título de familia numerosa"
 section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
 data_type = "text"
 semantic_role = "irpf_familia_numerosa_fecha_inicio"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
