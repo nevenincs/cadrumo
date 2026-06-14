@@ -124,10 +124,10 @@ Separate the repeated lifecycle from per-modelo recipes.
 
 Give missing values their own operational guide.
 
-- [ ] `W05.P10.S30` - Create a focused guide for entering missing `--casilla` values: how to list casillas, identify the printed box, enter a value, and avoid guessing; `manual values docs`.
-- [ ] `W05.P10.S31` - Create a focused guide for entering missing `--binding` values: how to run `bindings list --missing`, distinguish profile, ledger, prior-period, relation, and manual values, and record first-filing zeroes honestly; `manual values docs`.
+- [x] `W05.P10.S30` - Create a focused guide for entering missing `--casilla` values: how to list casillas, identify the printed box, enter a value, and avoid guessing; `manual values docs`.
+- [x] `W05.P10.S31` - Create a focused guide for entering missing `--binding` values: how to run `bindings list --missing`, distinguish profile, ledger, prior-period, relation, and manual values, and record first-filing zeroes honestly; `manual values docs`.
 - [ ] `W05.P10.S32` - Backlog a natural manual-value product surface if users must infer binding/casilla sources from raw ids rather than a guided prompt or report; `product backlog`.
-- [ ] `W05.P10.S33` - Document relation rows and typed `--row` inputs for multi-record modelos only after confirming the live CLI examples and output are stable; `manual values docs`.
+- [x] `W05.P10.S33` - Document relation rows and typed `--row` inputs for multi-record modelos only after confirming the live CLI examples and output are stable; `manual values docs`.
 
 ## Wave `W06` - Verification, export, filing handoff, and reconciliation
 
