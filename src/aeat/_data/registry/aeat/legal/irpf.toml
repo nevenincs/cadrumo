@@ -1875,6 +1875,26 @@ required_text = [
     "1.150 euros",
 ]
 
+[legal."ley-35-2006:art-60"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a60"
+document_id = "BOE-A-2006-20764"
+article = "60"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a60"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-14
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a60; operator to re-stamp)"
+notes = "LIRPF art 60: minimo por discapacidad. Del contribuyente: 3.000 euros (discapacidad grado >=33%<65%), 9.000 euros (grado >=65%); +3.000 euros en concepto de gastos de asistencia (ayuda de terceras personas, movilidad reducida, o grado >=65%). De ascendientes o descendientes con discapacidad: 3.000 euros por cada uno (>=33%), 9.000 euros (>=65%); +3.000 euros gastos de asistencia. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a60; operator to confirm and re-stamp."
+required_text = [
+    "Mínimo por discapacidad",
+    "3.000 euros anuales cuando sea una persona con discapacidad",
+    "9.000 euros anuales",
+]
+
 [legal."ley-35-2006:art-56"]
 evidence_tier = "legal_authority"
 authority = "boe"
