@@ -1,12 +1,11 @@
 # Link Modelo 036 census information
 
-Use this guide to pull your AEAT census information into the active local
-profile and compare it with what you entered by hand. In Spain, this census
-information is tied to Modelo 036 registration and changes.
+Use this guide to pull your AEAT census information - the *censo* - into the
+active local profile and compare it with what you entered by hand. In Spain, the
+censo is tied to Modelo 036 registration and changes.
 
-Modelo 036 is the active implemented censo foundation in `aeat`. Modelo 037 is
-historical/inactive in this workflow and is treated as superseded by Modelo
-036.
+This guide covers Modelo 036. Modelo 037 is superseded and not used in this
+workflow.
 
 The censo commands read from AEAT and save local profile data only after you
 review and apply it. They do not file Modelo 036, do not submit changes to
@@ -17,7 +16,7 @@ AEAT, and do not modify AEAT records.
 You need:
 
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
-- the taxpayer's fiscal ID (NIF, CIF, DNI, NIE, or NII) saved in that profile
+- the taxpayer's fiscal ID (NIF, CIF, DNI, or NIE) saved in that profile
 - AEAT authentication configured for read-only live access; see
   [Authenticate with AEAT](authenticate-with-aeat.md)
 
@@ -29,10 +28,9 @@ aeat config profile status
 
 ## Why link censo information
 
-Modelo 036 census facts are AEAT facts about the taxpayer's registered tax
-situation. Pulling them into `aeat` helps you check whether the local profile
-matches AEAT records before you plan deadlines, classify some expenses, or
-calculate modelos.
+Modelo 036 censo facts are AEAT facts about the taxpayer's registered tax
+situation. Pull them into `aeat` to check the local profile against AEAT records
+before you plan deadlines, classify expenses, or calculate modelos.
 
 The implemented censo/profile flow can affect:
 
@@ -46,7 +44,7 @@ The implemented censo/profile flow can affect:
   the work used fresh or older local censo facts
 - local audit history for censo pulls and censo applies
 
-If you do not link censo information, you can still work with a manually entered
+If you do not link censo information, you still work with a manually entered
 profile. The consequence is that profile-dependent workflows use your manual
 facts only. Calendar and filing-calendar checks may be less reliable if the
 activity start date, tax regime, IVA regime, Renta/IRPF regime, or enrollment
@@ -66,11 +64,11 @@ Pull the latest AEAT censo facts into the local snapshot store:
 aeat config profile censo pull
 ```
 
-This uses the active profile and the configured AEAT authentication. It saves a
-snapshot under the profile. It does not apply those values to the profile yet.
-It is a live read that requires an active AEAT authentication session.
+This live read uses the active profile and the configured AEAT authentication,
+and saves a snapshot under the profile. It does not apply those values yet. It
+requires an active AEAT authentication session.
 
-If AEAT returns no usable censo facts, refresh can stop with a no-facts error.
+If AEAT returns no usable censo facts, the pull can stop with a no-facts error.
 
 ## Review the snapshot
 
@@ -86,7 +84,7 @@ Show a specific earlier snapshot by its reference number:
 aeat config profile censo show --snapshot-id <snapshot-id>
 ```
 
-Review that the facts belong to the taxpayer and match what you expect from the
+Confirm the facts belong to the taxpayer and match what you expect from the
 AEAT censo surface.
 
 `show`, `compare`, and `apply` need a saved snapshot. If no snapshot exists,
@@ -114,7 +112,7 @@ aeat config profile censo apply
 ```
 
 Apply writes AEAT-reported censo facts into the local profile with censo
-provenance. Existing censo-derived facts are replaced by the new censo snapshot.
+provenance. The new censo snapshot replaces existing censo-derived facts.
 Manually entered facts from other sources are preserved so you can still compare
 manual profile values with AEAT-reported values.
 
@@ -159,12 +157,11 @@ For modelo-specific readiness, use profile preflight:
 aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
 ```
 
-## Required or optional?
+## When linking is required
 
-Linking censo information is optional for a manually maintained profile, but it
-is strongly recommended when your filing calendar, tax regime, IVA regime,
-Renta/IRPF regime, enrollment facts, or home-office expense ratios depend on
-official census facts.
+Linking censo information is optional for a manually maintained profile. Link it
+when your filing calendar, tax regime, IVA regime, Renta/IRPF regime, enrollment
+facts, or home-office expense ratios depend on official censo facts.
 
 It is required only for workflows where you need the local profile to be
 grounded in the AEAT-reported censo snapshot or where a command explicitly
