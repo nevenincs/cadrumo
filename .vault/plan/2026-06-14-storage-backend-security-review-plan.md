@@ -200,14 +200,14 @@ Route domain and outbound namespace literals through the registry and extend the
 Resolve the fincas inversion, rebind private-submodule imports, and promote missing re-exports.
 
 - [ ] `W05.P11.S23` - Resolve the fincas domain hexagonal inversion by relocating the ORM-coupled repository or exposing a typed boundary facade and fix the stale docstring path; `src/aeat/domain/fincas/_repository.py`.
-- [ ] `W05.P11.S24` - Rebind the private bucket-submodule imports in profile health and overview to the bucket package surface; `src/aeat/application/workflow/_profile_health.py`.
+- [x] `W05.P11.S24` - Rebind the private bucket-submodule imports in profile health and overview to the bucket package surface; `src/aeat/application/workflow/_profile_health.py`.
 - [ ] `W05.P11.S25` - Promote the sealed-archive read and write helpers to the bucket package all and rebind the maintenance service call sites; `src/aeat/adapters/persistence/storage/bucket/__init__.py`.
 
 ### Phase `W05.P12` - enrollment and legacy deletion
 
 Consume the canonical wrapper, delete the v1 bundle branch, and confirm the SQL rotation contract.
 
-- [ ] `W05.P12.S26` - Replace the three private secure-objects-for-bucket route helpers with the canonical secure_object_repository_for_bucket wrapper; `src/aeat/domain/invoices/_repository.py`.
+- [x] `W05.P12.S26` - Replace the three private secure-objects-for-bucket route helpers with the canonical secure_object_repository_for_bucket wrapper; `src/aeat/domain/invoices/_repository.py`.
 - [ ] `W05.P12.S27` - Delete the v1 portable-bundle compat branch and drop version 1 from the supported set per no-legacy-compatibility; `src/aeat/application/user_profile/_bundle.py`.
 - [ ] `W05.P12.S28` - Confirm the SQL secure_objects store is covered by the bucket-DEK rewrap rotation path and document or extend the rotation contract; `src/aeat/adapters/persistence/storage/_rotation.py`.
 
