@@ -40,6 +40,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import Period
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
@@ -120,7 +121,7 @@ class _IvaWalletDecisionEnvelopePayload(BaseModel):
 
 
 def _decision_payload_digest(decision: IvaCompensationReconciliationDecision) -> str:
-    return hashlib.sha256(decision.model_dump_json().encode(UTF_8_ENCODING)).hexdigest()
+    return sha256_hex(decision.model_dump_json().encode(UTF_8_ENCODING))
 
 
 def _require_observation_period(period: Period) -> Period:

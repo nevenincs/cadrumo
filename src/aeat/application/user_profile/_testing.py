@@ -12,11 +12,11 @@ composes only canonical surfaces.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
+from ...core.hashing import sha256_hex
 from ...core.identity import nif_check_letter
 from ...domain.deadlines._models import IVARegime
 from ...domain.user_profile import ProfileAlreadyExistsError, UserProfileFact
@@ -33,7 +33,7 @@ def _distinct_valid_nif(profile_id: str) -> str:
     of ``profile_id``; the control letter is computed so the result
     passes the NIF checksum validator.
     """
-    digest = hashlib.sha256(profile_id.encode("utf-8")).hexdigest()
+    digest = sha256_hex(profile_id.encode("utf-8"))
     number = int(digest, 16) % 100_000_000
     return f"{number:08d}{nif_check_letter(number)}"
 

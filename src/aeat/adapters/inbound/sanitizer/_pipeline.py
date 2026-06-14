@@ -22,7 +22,6 @@ captures every prior mutation.
 
 from __future__ import annotations
 
-import hashlib
 import io
 from pathlib import Path
 from typing import Literal
@@ -30,6 +29,7 @@ from typing import Literal
 import pikepdf
 from pikepdf import PdfError as PikepdfError
 
+from ....core.hashing import hash_file, sha256_hex
 from ....core.logging import get_logger
 from . import fixtures as _fixtures
 from ._determinism import save_with_deterministic_flags
@@ -180,7 +180,7 @@ def sanitize_pdf(
         warnings.extend(xmp_warnings)
 
     output_bytes, flags = save_with_deterministic_flags(pdf)
-    output_sha = hashlib.sha256(output_bytes).hexdigest()
+    output_sha = sha256_hex(output_bytes)
     _LOG.info(
         "sanitize_pdf: completed source_sha=%s output_sha=%s replacements=%d surfaces=%d warnings=%d",
         source_sha[:16],
@@ -207,12 +207,11 @@ def sanitize_pdf(
 def _digest_source(source: bytes | Path) -> tuple[str, int]:
     """Returns ``(sha256_hex, size_bytes)`` for ``source``.
 
-    Streams ``Path`` inputs through hashlib in 1 MiB chunks so a
-    multi-hundred-megabyte capture never has to be fully resident
-    in memory. ``bytes`` inputs (rare — used by library consumers
-    with the bytes already in hand) hash directly. Result mirrors
-    the previous ``_read_source`` + ``hashlib.sha256(...)`` pair
-    but without the load-everything intermediate buffer.
+    ``Path`` inputs delegate to the canonical chunked file digest so a
+    multi-hundred-megabyte capture never has to be fully resident in memory,
+    wrapping the ``OSError`` on an unreadable artefact in the sanitizer source
+    error. ``bytes`` inputs (rare — used by library consumers with the bytes
+    already in hand) hash directly through the canonical in-memory digest.
 
     Args:
         source: Raw bytes of the source PDF, or a :class:`Path`.
@@ -221,18 +220,12 @@ def _digest_source(source: bytes | Path) -> tuple[str, int]:
         Tuple of (lowercase hex SHA-256 digest, byte count).
     """
     if isinstance(source, bytes):
-        return hashlib.sha256(source).hexdigest(), len(source)
-    digest = hashlib.sha256()
+        return sha256_hex(source), len(source)
+    digest = ""
     size = 0
     source_parse_error: SanitizerSourceParseError | None = None
     try:
-        with source.open("rb") as fh:
-            while True:
-                chunk = fh.read(1 << 20)  # 1 MiB
-                if not chunk:
-                    break
-                digest.update(chunk)
-                size += len(chunk)
+        digest, size = hash_file(source)
     except OSError as exc:
         _LOG.debug(
             "sanitize_pdf: source=<input-pdf> failure=%s",
@@ -240,8 +233,10 @@ def _digest_source(source: bytes | Path) -> tuple[str, int]:
         )
         source_parse_error = SanitizerSourceParseError(failure=type(exc).__name__)
     if source_parse_error is not None:
+        # Raise outside the ``except`` block so neither ``__cause__`` nor
+        # ``__context__`` carries the OSError (which leaks the source path).
         raise source_parse_error
-    return digest.hexdigest(), size
+    return digest, size
 
 
 def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:

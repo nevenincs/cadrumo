@@ -9,7 +9,6 @@ or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterable
 from datetime import datetime
@@ -17,6 +16,8 @@ from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
+
+from ...core.hashing import sha256_hex
 
 if TYPE_CHECKING:
     from ...adapters.inbound.financial.providers import ParsedLedgerRow, ProviderValidation
@@ -539,4 +540,4 @@ def _import_batch_id(
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return sha256_hex(encoded)

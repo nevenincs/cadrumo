@@ -14,7 +14,6 @@ TOML edit — no code change.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from decimal import Decimal
 
@@ -23,6 +22,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
@@ -233,7 +233,7 @@ class Modelo100BorradorSourceResolver:
                 error=exc,
             )
         fingerprint = (
-            f"sha256:{hashlib.sha256(result.borrador_snapshot_id.encode('utf-8')).hexdigest()}"
+            f"sha256:{sha256_hex(result.borrador_snapshot_id.encode('utf-8'))}"
             if result.borrador_snapshot_id is not None
             else None
         )

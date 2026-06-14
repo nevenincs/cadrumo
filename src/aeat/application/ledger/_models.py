@@ -336,49 +336,15 @@ class LedgerTransactionPayload(BaseModel):
         return _validate_iso_3166_jurisdiction(value)
 
 
-class LedgerTransactionReviewPayload(BaseModel):
-    """Canonical read projection for one ledger transaction plus review status."""
+class LedgerTransactionReviewPayload(LedgerTransactionPayload):
+    """Canonical read projection for one ledger transaction plus review status.
 
-    model_config = _STRICT_FROZEN
+    Extends :class:`LedgerTransactionPayload` with the derived operator
+    ``review_status`` so the two projections share one field set, validator, and
+    config; ``review_status`` serialises after the inherited fields.
+    """
 
-    transaction_id: TransactionId
-    date: str = Field(min_length=10, max_length=10)
-    booked_date: str = Field(min_length=10, max_length=10)
-    value_date: str | None = None
-    amount: str = Field(min_length=1)
-    currency: str = Field(min_length=3, max_length=3)
-    direction: str = Field(min_length=1)
-    counterparty: str = ""
-    description: str = Field(min_length=1)
-    business_classification: str = Field(min_length=1)
-    business_pct: str | None = None
-    category_id: str | None = None
-    taxable_base: str | None = None
-    iva_rate: str | None = None
-    iva_amount: str | None = None
-    irpf_category: str | None = None
-    usage_ratio_id: str | None = None
-    prorrata_reference: str | None = None
-    purchase_invoice_evidence_id: str | None = None
-    attachment_ids: tuple[str, ...] = ()
-    notes: str = ""
-    lifecycle_state: str = Field(min_length=1)
     review_status: LedgerReviewStatus
-    classified_by: str = Field(min_length=1)
-    source_jurisdiction: str | None = None
-    # FX provenance (ledger-fx-conversion ADR): EUR-equivalent + applied
-    # CCY->EUR rate for foreign rows; None for EUR-native rows.
-    value_in_eur: str | None = None
-    fx_rate: str | None = None
-    # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
-    # rendered as ISO-8601 strings.
-    created_at: str
-    modified_at: str
-
-    @field_validator("source_jurisdiction")
-    @classmethod
-    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
-        return _validate_iso_3166_jurisdiction(value)
 
 
 class LedgerTransactionResultPayload(BaseModel):

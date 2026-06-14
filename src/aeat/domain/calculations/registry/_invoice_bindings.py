@@ -10,6 +10,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -76,14 +77,7 @@ class InvoiceObservation(BaseModel):
     rectified_base_previous: Decimal | None = None
     party_legal_name: str | None = Field(default=None, max_length=200)
 
-    @field_validator("country_code")
-    @classmethod
-    def _country_code_uppercase(cls, value: str) -> str:
-        if value != value.upper():
-            raise RegistryValidationError("country_code must be uppercase")
-        if not value.isalpha():
-            raise RegistryValidationError("country_code must be alphabetic")
-        return value
+    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
 
     @field_validator("intracommunity_clave")
     @classmethod
@@ -136,12 +130,7 @@ class InvoiceObservationRequirement(BaseModel):
     rectification_scope: _RectificationScope = "any"
     iva_regime: str | None = None
 
-    @field_validator("binding_ids", "claves")
-    @classmethod
-    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("invoice requirement tuple entries must be unique")
-        return value
+    _values_unique = field_validator("binding_ids", "claves")(unique_tuple("invoice requirement tuple"))
 
 
 class _InvoiceSelector(BaseModel):

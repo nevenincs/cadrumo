@@ -78,6 +78,8 @@ _LEDGER_CUOTA_BINDINGS = (
     "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
     "modelo-303-iva-autorepercutido-interior-devengado-cuota",
     "modelo-303-iva-autorepercutido-interior-deducible-cuota",
+    "modelo-303-casilla-59-entregas-intracomunitarias-base",
+    "modelo-303-casilla-60-exportaciones-base",
 )
 _AUTOCONSUMO_BINDING = "modelo-303-autoconsumo-promotor-base"
 _STATE_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"

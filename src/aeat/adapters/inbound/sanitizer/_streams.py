@@ -24,7 +24,6 @@ page index, instruction index, and SHA-256 of the cleartext.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -41,6 +40,8 @@ from pikepdf import (
 from pikepdf import (
     Object as PikepdfObject,
 )
+
+from ....core.hashing import sha256_hex
 
 if TYPE_CHECKING:
     from pikepdf.models._content_stream import UnparseableContentStreamInstructions
@@ -104,7 +105,7 @@ def _flatten_mapping(mapping: TokenMap) -> tuple[tuple[str, str, str], ...]:
     for category in categories:
         for entry in category:
             real = entry.real.get_secret_value()
-            sha = hashlib.sha256(real.encode("utf-8")).hexdigest()
+            sha = sha256_hex(real.encode("utf-8"))
             triples.append((real, entry.synthetic, sha))
     triples.sort(key=lambda triple: len(triple[0]), reverse=True)
     return tuple(triples)

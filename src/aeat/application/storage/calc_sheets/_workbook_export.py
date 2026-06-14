@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
@@ -19,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import sha256_hex
 from ._records import (
     SheetAutoFilter,
     SheetColumnWidth,
@@ -259,14 +259,14 @@ def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResu
         :class:`OfflineWorkbookExportResult`: The export result.
     """
     workbook_payload = serialize_offline_workbook(plan)
-    workbook_sha256 = _sha256(workbook_payload)
+    workbook_sha256 = sha256_hex(workbook_payload)
     sidecar = build_evidence_sidecar(plan, workbook_sha256=workbook_sha256)
     evidence_sidecar_payload = serialize_evidence_sidecar(sidecar)
     return OfflineWorkbookExportResult(
         workbook_payload=workbook_payload,
         workbook_sha256=workbook_sha256,
         evidence_sidecar_payload=evidence_sidecar_payload,
-        evidence_sidecar_sha256=_sha256(evidence_sidecar_payload),
+        evidence_sidecar_sha256=sha256_hex(evidence_sidecar_payload),
     )
 
 
@@ -401,10 +401,6 @@ def _format_optional_decimal(value: Decimal | None) -> str:
 
 def _join(values: tuple[str, ...]) -> str:
     return ";".join(values)
-
-
-def _sha256(payload: bytes) -> str:
-    return hashlib.sha256(payload).hexdigest()
 
 
 __all__ = [

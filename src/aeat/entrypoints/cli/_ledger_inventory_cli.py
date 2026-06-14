@@ -5,18 +5,18 @@ from __future__ import annotations
 import typer
 
 from ...application.inventory import InventoryMovementCommand, InventoryService
-from ...core import require_active_bucket_id
-from ...core.errors import NoActiveProfileError
 from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.i18n import tr
 from ...domain.contribuyente.inventory import MovementKind
 from ._common import (
     _bad,
     _emit_envelope,
-    _no_active_profile_refusal,
     _parse_iso_date,
     parse_decimal_amount,
     parse_optional_decimal_amount,
+)
+from ._common import (
+    active_bucket_id_or_refuse as _inventory_bucket_id,
 )
 from ._ledger_payloads import (
     InventoryCreateResult,
@@ -31,14 +31,6 @@ def register_inventory_commands(app: typer.Typer) -> None:
     app.add_typer(inventory_app, name="inventory")
     inventory_app.add_typer(inventory_movement_app, name="movement")
     inventory_app.add_typer(inventory_valuation_app, name="valuation")
-
-
-def _inventory_bucket_id() -> str:
-    """Return the active workflow bucket id or raise the standard CLI refusal."""
-    try:
-        return require_active_bucket_id()
-    except NoActiveProfileError as exc:
-        raise _no_active_profile_refusal() from exc
 
 
 def _parse_movement_kind(raw: str) -> MovementKind:

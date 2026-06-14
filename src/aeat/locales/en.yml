@@ -4263,9 +4263,7 @@ locales:
       updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: 50 %% prorrata (Art. 59 LIRPF) applied for
-      shared custody in %{count} dependent(s). Each parent declares half the applicable
-      mínimo (casillas 0513/0514 and, where applicable, 0515/0516).
+    custodia_compartida_prorrata_applied: '50 % prorrata (Art. 61 LIRPF) applied for shared custody in %{count} dependent(s). Each parent declares half the applicable mínimo (casillas 0513/0514 and, where applicable, 0515/0516).'
     deduccion_maternidad_applied: 'Art. 81 LIRPF maternity deduction computed: %{amount}
       € (casilla 0611). Formula sum(min(months × 100, 1,200)) applied per dependent
       under 3 with declared working months.'

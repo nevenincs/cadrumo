@@ -17,13 +17,13 @@ surface.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
 from .....core.config import Settings, load_settings
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
+from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
@@ -255,7 +255,7 @@ async def capture_justificante(
             raise JustificanteFetchError(f"empty PDF body for CSV={ref.csv!r}")
         if _PDF_MIME_TYPE not in content_type.lower():
             raise JustificanteFetchError(f"unexpected content-type {content_type!r} for CSV={ref.csv!r}")
-        sha256 = hashlib.sha256(body).hexdigest()
+        sha256 = sha256_hex(body)
         log.info(
             "capture_justificante: captured PDF expediente=%s CSV=%s size=%d sha256=%s",
             expediente.expediente_id,

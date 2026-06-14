@@ -15,6 +15,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ....core.config import load_settings
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now
 from ._errors import LLMCacheError
@@ -68,7 +69,7 @@ class LLMCache:
             # (sensitive-financial-data-secure-storage-only).
             "image_content_addresses": [image.content_sha256 for image in request.images],
         }
-        prompt_hash = hashlib.sha256(prompt_material.encode("utf-8")).hexdigest()
+        prompt_hash = sha256_hex(prompt_material.encode("utf-8"))
         args_hash = hashlib.sha256(
             json.dumps(args_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
         ).hexdigest()
@@ -311,8 +312,17 @@ class LLMCache:
         Forward slashes (used for vendor-prefixed names like
         ``anthropic/claude-3-7-sonnet``) are replaced with ``__`` so
         the model becomes a single directory segment under the
-        provider directory. Every other path-shaped or unsafe value
-        raises.
+        provider directory. A colon (the Ollama ``name:tag`` separator,
+        e.g. ``qwen2.5vl:3b``) is normalised to ``_`` so the tag is
+        carried into a safe single segment rather than rejected. Every
+        other path-shaped or unsafe value raises.
+
+        Path-traversal and drive-letter shapes stay rejected: a Windows
+        drive path carries a backslash and is refused by the backslash
+        check before any colon is considered, and the sanitised colon
+        is a literal token inside one path segment joined under
+        ``root_dir`` — it can never re-introduce a drive prefix or an
+        alternate-data-stream separator.
         """
         if not model:
             raise LLMCacheError("LLM cache: model identifier must be non-empty")
@@ -325,6 +335,7 @@ class LLMCache:
         # Split and normalise on forward slashes so each segment is
         # validated against path-traversal tokens individually.
         segments = model.split("/")
+        sanitised_segments: list[str] = []
         for segment in segments:
             if not segment:
                 raise LLMCacheError(
@@ -338,11 +349,11 @@ class LLMCache:
                 raise LLMCacheError(
                     f"LLM cache: model identifier segment must not start with '.': {model!r}",
                 )
-            # Drive letters / colons are file-shape-suspicious on
-            # Windows (``C:\\foo``) and POSIX-portable identifiers
-            # do not need them.
-            if ":" in segment:
-                raise LLMCacheError(
-                    f"LLM cache: model identifier must not contain ':': {model!r}",
-                )
-        return "__".join(segments)
+            # Normalise the Ollama ``name:tag`` separator into a safe
+            # single-character token. The backslash rejection above has
+            # already refused Windows drive paths (``C:\\foo``), so a
+            # residual colon here is a legitimate tag separator, not a
+            # drive letter; folding it to ``_`` keeps the segment a
+            # literal, traversal-free path token.
+            sanitised_segments.append(segment.replace(":", "_"))
+        return "__".join(sanitised_segments)

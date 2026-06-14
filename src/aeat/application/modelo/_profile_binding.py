@@ -28,7 +28,6 @@ may carry ``typed_enum`` yet still be consumed as a Decimal operand.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
@@ -39,6 +38,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.parsing._dates import _parse_iso8601_date
 from ...domain.calculations.registry import (
@@ -101,7 +101,7 @@ def _profile_record_fingerprint(profile_record: object | None) -> str | None:
     if profile_record is None:
         return None
     payload = profile_record.model_dump_json() if isinstance(profile_record, BaseModel) else repr(profile_record)
-    digest = hashlib.sha256(payload.encode(UTF_8_ENCODING)).hexdigest()
+    digest = sha256_hex(payload.encode(UTF_8_ENCODING))
     return f"sha256:{digest}"
 
 

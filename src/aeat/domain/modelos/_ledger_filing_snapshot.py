@@ -15,7 +15,6 @@ free of the ledger-read dependency, per the hexagonal boundary.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
@@ -23,6 +22,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.hashing import sha256_hex
 
 
 class LedgerRowFingerprint(BaseModel):
@@ -84,7 +84,7 @@ class LedgerFilingStalenessVerdict(BaseModel):
 def snapshot_fingerprint(rows: tuple[LedgerRowFingerprint, ...]) -> str:
     """Return the aggregate content address over sorted contributor fingerprints."""
     canonical = "\n".join(f"{row.transaction_id}={row.fingerprint}" for row in _sorted_rows(rows))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return sha256_hex(canonical.encode("utf-8"))
 
 
 def _sorted_rows(rows: tuple[LedgerRowFingerprint, ...]) -> tuple[LedgerRowFingerprint, ...]:

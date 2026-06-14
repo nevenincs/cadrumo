@@ -412,11 +412,15 @@ DEFAULT_OUTPUT_LANGUAGE: Final[OutputLanguage] = OutputLanguage.ES
 #: boundary.
 SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang in OutputLanguage)
 
-#: Modelo 347 declaration floor per counterparty per RD 1065/2007 art. 31.1.
+#: Modelo 347 declaration floor per counterparty. Binding provision: RD 1065/2007
+#: art. 33.1 ("operaciones que en su conjunto … hayan superado la cifra de 3.005,06
+#: euros"), which fixes the figure; art. 31.1 only defines the general obligation.
 #: Counterparties whose annual operations total at most this amount are NOT declarable.
 M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 
-#: Modelo 720 declaration floor per asset class per AEAT instrucciones.
+#: Modelo 720 declaration floor per asset class (bloque). Binding provision: RD 1065/2007
+#: arts. 42 bis/ter/quater (added by RD 1558/2012) under LGT DA 18ª — each block
+#: (cuentas / valores-seguros / inmuebles) carries an independent 50.000 € umbral.
 #: An asset class is declarable iff its total valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
@@ -493,6 +497,48 @@ DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR: Final[int] = 1200
 #: casilla 0613.  Note: this is Art. 81 LIRPF (deducción maternidad supplemento), NOT Art. 81
 #: bis (familia numerosa / discapacidad).
 INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR: Final[int] = 1000
+
+#: Art. 58.1 LIRPF (Ley 35/2006, BOE-A-2006-20764) ordinary mínimo-por-descendientes
+#: age ceiling: a descendant qualifies for the ordinary mínimo while younger than 25
+#: (exclusive) at year end, unless disabled (which removes the age limit).
+MINIMO_DESCENDIENTE_MAX_AGE: Final[int] = 25
+
+#: Art. 58.2 LIRPF (Ley 35/2006, BOE-A-2006-20764) bajo-3-años supplement age ceiling:
+#: "Cuando el descendiente sea menor de tres años, el mínimo … se aumentará". The
+#: additional mínimo applies to a descendant younger than 3 (exclusive) at year end.
+MINIMO_MENOR_TRES_MAX_AGE: Final[int] = 3
+
+#: Art. 61.4ª LIRPF (Ley 35/2006, BOE-A-2006-20764) custodia compartida prorrata
+#: factor: under the normas comunes, when two contribuyentes have the right to the
+#: same mínimo "su importe se prorrateará entre ellos por partes iguales" — a 50 %
+#: split between the two custodial parents.
+CUSTODIA_COMPARTIDA_PRORRATA_FACTOR: Final[Decimal] = Decimal("0.5")
+
+#: LIRPF Disposición Transitoria 12ª (Ley 35/2006, BOE-A-2006-20764) reducción rate:
+#: 40 % reducción on the part of a plan-de-pensiones capital rescate attributable to
+#: contributions made on or before 31-12-2006.
+DT12_RESCATE_REDUCCION_RATE: Final[Decimal] = Decimal("0.40")
+
+#: Ley 44/2015 art. 14.1 (BOE-A-2015-11071) SAL/SLL reserva especial dotación rate:
+#: 10 % of net profit endowed each year ("se dotará con el diez por ciento del
+#: beneficio líquido de cada ejercicio").
+SAL_RESERVA_DOTACION_RATE: Final[Decimal] = Decimal("0.10")
+
+#: Ley 44/2015 art. 14.1 (BOE-A-2015-11071) SAL/SLL reserva especial accumulation cap
+#: multiple: the reserve accrues until it exceeds twice the share capital ("hasta que
+#: alcance al menos una cifra superior al doble del capital social").
+SAL_RESERVA_CAPITAL_MULTIPLE: Final[Decimal] = Decimal("2")
+
+#: LIVA art. 103.Dos (Ley 37/1992, BOE-A-1992-28740) prorrata especial mandatory
+#: multiple: the especial regime is mandatory when the general-regime deduction
+#: exceeds the especial-regime deduction by more than ten percent — i.e. when
+#: ``deduction_general > deduction_especial * 1.10``.
+PRORRATA_ESPECIAL_MANDATORY_MULTIPLE: Final[Decimal] = Decimal("1.10")
+
+#: LIVA art. 9.1.c (Ley 37/1992, BOE-A-1992-28740) sectoral-separation threshold:
+#: régimen de sectores diferenciados is mandatory when the spread between the highest
+#: and lowest general prorrata across sectors exceeds fifty percentage points.
+PRORRATA_SECTORAL_SEPARATION_SPREAD_PP: Final[Decimal] = Decimal("50")
 
 
 @lru_cache(maxsize=1)

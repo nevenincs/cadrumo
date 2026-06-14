@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.hashing import hash_file
 from ._errors import RegistryValidationError
 from ._schema import SourceReference
 
@@ -68,13 +68,8 @@ def _resolve_corpus_path(root: Path, source: SourceReference) -> Path:
 @lru_cache(maxsize=2048)
 def _source_file_fingerprint(path: str, byte_count: int, modified_ns: int) -> tuple[int, str]:
     del byte_count, modified_ns
-    digest = hashlib.sha256()
-    length = 0
-    with Path(path).open("rb") as handle:
-        while chunk := handle.read(65_536):
-            digest.update(chunk)
-            length += len(chunk)
-    return length, digest.hexdigest()
+    hex_digest, length = hash_file(Path(path))
+    return length, hex_digest
 
 
 def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> None:

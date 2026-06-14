@@ -7,7 +7,6 @@ imports do not enter ``sys.modules`` at user-profile package init.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 from datetime import date, datetime
@@ -20,6 +19,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
+from ...core.hashing import sha256_hex
 from ...core.identity import ProfileId as _ProfileId
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
@@ -302,7 +302,7 @@ def _derive_canonical_hash(
             "facts": [fact.model_dump(mode="json") for fact in facts],
         },
     )
-    return hashlib.sha256(payload).hexdigest()
+    return sha256_hex(payload)
 
 
 def _canonical_payload(payload: object) -> bytes:

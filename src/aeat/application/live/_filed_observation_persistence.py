@@ -7,7 +7,6 @@ Use of :class:`CasillaObservation` for compliance. Stamps matching
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,6 +17,7 @@ from ...adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
+    FiledDeclaracionObservationStore,
     ObservedCasillaValue,
     SedeParseError,
     registry_observation_from_filed_declaration,
@@ -29,6 +29,7 @@ from ...application.calculations import (
     observation_key,
 )
 from ...core import Modelo, Period
+from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.resources import resources
 from ...domain.buckets import (
@@ -139,7 +140,7 @@ def persist_latest_filed_calculation_observations(
 def persist_filed_justificante_metadata(
     observation: FiledDeclaracionObservation,
     *,
-    store,
+    store: FiledDeclaracionObservationStore,
     repository: JustificanteRepository | None = None,
 ) -> tuple[str, ...]:
     """Persist parsed justificante metadata from a filed-declaration observation.
@@ -168,7 +169,7 @@ def persist_filed_justificante_metadata(
 def enroll_filed_justificante_evidence(
     observation: FiledDeclaracionObservation,
     *,
-    store,
+    store: FiledDeclaracionObservationStore,
     bucket_id: str,
     justificante_repository: JustificanteRepository | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
@@ -380,7 +381,7 @@ def _persist_filed_calculation_observation_if_extractable(
 def _parse_matching_filed_justificante(
     observation: FiledDeclaracionObservation,
     artefact: FiledDeclaracionArtefact,
-    store,
+    store: FiledDeclaracionObservationStore,
 ) -> Justificante | None:
     storage_ref = artefact.storage_ref
     if storage_ref is None:
@@ -394,7 +395,7 @@ def _parse_matching_filed_justificante(
             exc_info=True,
         )
         return None
-    if len(body) != artefact.byte_count or hashlib.sha256(body).hexdigest() != artefact.sha256:
+    if len(body) != artefact.byte_count or sha256_hex(body) != artefact.sha256:
         logger.warning(
             "filed observation: ignored justificante artefact %s with mismatched manifest",
             storage_ref,
@@ -440,7 +441,7 @@ def _filed_justificante_can_stamp_filing(
     justificante: Justificante,
     *,
     observation: FiledDeclaracionObservation,
-    filing,
+    filing: ModeloRecord,
 ) -> bool:
     from ._justificante import _expected_tax_id_for_filing_record, _justificante_matches_filing_record
 

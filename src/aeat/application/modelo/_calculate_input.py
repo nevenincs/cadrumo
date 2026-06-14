@@ -264,7 +264,7 @@ def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
     except Modelo347ThresholdError as exc:
         raise ModeloCalculateDetailRowsError(
             f"M347 contraparte row (nif={exc.nif!r}): importe total {exc.total} "
-            f"does not exceed the EUR {M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 31.1",
+            f"does not exceed the EUR {M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 33.1",
             context={"nif": exc.nif, "total": str(exc.total), "threshold": str(M347_THRESHOLD_EUR)},
             translated_message="application.modelo.errors.calculate_m347_threshold_not_met",
         ) from exc

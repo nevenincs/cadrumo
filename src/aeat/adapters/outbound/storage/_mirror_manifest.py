@@ -8,6 +8,7 @@ from datetime import datetime
 
 from pydantic import ValidationError
 
+from ....core.hashing import sha256_hex
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
 from ._errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
 from ._protocol import StorageProvider
@@ -57,7 +58,7 @@ def put_remote_mirror_namespace_manifest(
         REMOTE_MIRROR_MANIFEST_NAMESPACE,
         _manifest_object_key_hmac(manifest.namespace),
         payload,
-        content_hash=f"sha256-{hashlib.sha256(payload).hexdigest()}",
+        content_hash=f"sha256-{sha256_hex(payload)}",
         label=f"mirror-manifest-{_manifest_label(manifest.namespace)}",
     )
 
@@ -177,7 +178,7 @@ def _remote_mirror_object_manifest(row: SecureObjectRawRow) -> RemoteMirrorObjec
         classification=row.classification,
         schema_version=row.schema_version,
         byte_length=len(row.payload),
-        ciphertext_hash=row.ciphertext_hash or hashlib.sha256(row.payload).hexdigest(),
+        ciphertext_hash=row.ciphertext_hash or sha256_hex(row.payload),
         storage_revision_id=row.revision_id,
         previous_storage_revision_id=row.previous_revision_id,
         revision_ancestor_ids=row.revision_ancestor_ids,
@@ -187,7 +188,7 @@ def _remote_mirror_object_manifest(row: SecureObjectRawRow) -> RemoteMirrorObjec
 
 
 def _manifest_object_key_hmac(namespace: str) -> str:
-    return hashlib.sha256(f"remote-mirror-manifest:{namespace}".encode()).hexdigest()
+    return sha256_hex(f"remote-mirror-manifest:{namespace}".encode())
 
 
 def _load_remote_manifest(provider: StorageProvider, namespace: str) -> RemoteMirrorNamespaceManifest:
@@ -281,7 +282,7 @@ def _provider_payload_matches_manifest_entry(
         and metadata.byte_length == entry.byte_length
         and len(payload) == entry.byte_length
         and digest == entry.ciphertext_hash
-        and hashlib.sha256(payload).hexdigest() == entry.ciphertext_hash
+        and sha256_hex(payload) == entry.ciphertext_hash
     )
 
 

@@ -1,7 +1,7 @@
 """Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
 ``export_modelo_revision`` accepts a :class:`CalculationRevision` id, builds
-and approves a ``ModeloDraft`` from the revision's captured inputs, then writes
+and approves a :class:`ModeloDraft` from the revision's captured inputs, then writes
 a fichero-BOE-formatted artefact to the operator-supplied output path. A
 ``MODELO_EXPORTED`` event is appended to the :class:`BucketEventHistoryRepository`.
 
@@ -16,7 +16,6 @@ service.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterable
 from datetime import date, datetime
 from pathlib import Path
@@ -25,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.time import now as _utc_now
@@ -65,6 +65,7 @@ from ..calculations import (
     IvaWalletDecisionRepository,
 )
 from ..filing import (
+    ModeloDraft,
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
@@ -214,7 +215,7 @@ class ModeloExportResult(BaseModel):
 
 
 def _sha256_ref(value: str) -> str:
-    return f"sha256:{hashlib.sha256(value.encode('utf-8')).hexdigest()}"
+    return f"sha256:{sha256_hex(value.encode('utf-8'))}"
 
 
 def _discard_tmp_output_after_failure(tmp_output: Path, *, stage: str) -> None:
@@ -427,7 +428,7 @@ def _approve_export_draft(
     workflow_profile: TaxpayerProfile,
     actor: str,
     approved_at: datetime,
-) -> tuple[Period, object]:
+) -> tuple[Period, ModeloDraft]:
     period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=period.filing_year,

@@ -25,10 +25,10 @@ for drift evaluation.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 
+from ...core.hashing import sha256_hex
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._errors import ModeloValidationError
 from ...domain.modelos._ledger_filing_snapshot import (
@@ -96,7 +96,7 @@ def _resolve(transaction: Transaction, path: str) -> object:
 def row_fingerprint(transaction: Transaction) -> str:
     """Return the SHA-256 content fingerprint of one transaction's tax facts."""
     canonical = "|".join(f"{label}={_normalise(_resolve(transaction, path))}" for label, path in _FINGERPRINT_FIELDS)
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return sha256_hex(canonical.encode("utf-8"))
 
 
 def _index(catalogue: TransactionCatalogue) -> dict[str, Transaction]:

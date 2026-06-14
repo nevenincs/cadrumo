@@ -16,7 +16,6 @@ revision.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterator, Mapping
 from datetime import datetime
@@ -25,6 +24,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from ...core.hashing import sha256_hex
 from ._errors import ModeloValidationError
 from ._ids import VerificationReportId
 
@@ -131,7 +131,7 @@ def derive_verification_report_id(
         "verified_by": verified_by.strip(),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return sha256_hex(encoded)
 
 
 class VerificationReport(BaseModel):

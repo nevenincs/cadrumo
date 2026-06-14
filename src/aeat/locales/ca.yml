@@ -4504,9 +4504,7 @@ locales:
       updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 59 LIRPF)
-      per custòdia compartida en %{count} descendent(s). Cada progenitor declara la
-      meitat del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516).
+    custodia_compartida_prorrata_applied: 'S''ha aplicat prorrata 50 %% (Art. 61 LIRPF) per custòdia compartida en %{count} descendent(s). Cada progenitor declara la meitat del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516).'
     deduccion_maternidad_applied: 'Deducció maternitat Art. 81 LIRPF calculada: %{amount}
       € (casella 0611). Fórmula sum(min(mesos × 100, 1.200)) per descendent menor
       de 3 anys amb mesos de treball declarats.'

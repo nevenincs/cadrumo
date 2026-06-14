@@ -7,11 +7,11 @@ scalar invoice-source binding values for the calculation mesh.
 
 from __future__ import annotations
 
-import hashlib
 from datetime import date
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import Period
+from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import InvoiceObservation, resolve_invoice_binding_values
 from ...domain.invoices import Invoice, InvoiceCatalogueRepository
 from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
@@ -144,7 +144,7 @@ def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> Ca
     return CalculationSourceProvenance(
         source_kind=source_kind,
         source_ref=f"{source_kind}:{observation.invoice_id}",
-        fingerprint=f"sha256:{hashlib.sha256(payload.encode('utf-8')).hexdigest()}",
+        fingerprint=f"sha256:{sha256_hex(payload.encode('utf-8'))}",
     )
 
 

@@ -140,6 +140,25 @@ _TIER_90 = TierResolution(
 )
 
 
+def _with_registry_rate(template: TierResolution, period_year: int, tier_id: str) -> TierResolution:
+    """Return ``template`` with its reducción rate sourced from the registry.
+
+    Wires a four-tier dispatch result to the law-determined
+    ``renta-<period_year>-rental-reduccion-rate-<tier_id>`` Modelo-100 parameter
+    so the registry is the causal authority for the numeric rate. When the
+    registry rate equals the template's documented rate — the registered-year
+    case (every supported year currently matches) and the fallback case — the
+    frozen singleton is returned unchanged, preserving identity and behaviour.
+    Only the genuine four-tier results route through here; the grandfathering
+    (pre-amendment / DT-38) and forfeit resolutions are distinct provisions and
+    keep their documented constant.
+    """
+    rate = _resolve_tier_reduccion_rate(period_year, tier_id)
+    if rate == template.reduccion_pct:
+        return template
+    return template.model_copy(update={"reduccion_pct": rate})
+
+
 def resolve_reduccion(
     contract: Arrendamiento,
     finca: Finca,
@@ -206,7 +225,7 @@ def resolve_reduccion(
     rebaja_threshold = _resolve_prior_rent_rebaja_threshold(period_year)
     if _qualifies_for_tier_90(contract, finca, prior_rent_rebaja_threshold=rebaja_threshold):
         _logger.debug("reduccion tier: TIER_90 for contract_id=%s finca_id=%s", contract.id, finca.id)
-        return _TIER_90
+        return _with_registry_rate(_TIER_90, period_year, "tier-90")
     age_min, age_max = _resolve_joven_tenant_age_range(period_year)
     tier_70 = _resolve_tier_70(contract, finca, joven_age_min=age_min, joven_age_max=age_max)
     if tier_70 is not None:
@@ -216,13 +235,13 @@ def resolve_reduccion(
             contract.id,
             finca.id,
         )
-        return tier_70
+        return _with_registry_rate(tier_70, period_year, "tier-70")
     rehab_lookback_days = _resolve_rehab_lookback_days(period_year)
     if _qualifies_for_tier_60_rehab(contract, rehab_lookback_days=rehab_lookback_days):
         _logger.debug("reduccion tier: TIER_60_REHAB for contract_id=%s", contract.id)
-        return _TIER_60_REHAB
+        return _with_registry_rate(_TIER_60_REHAB, period_year, "tier-60")
     _logger.debug("reduccion tier: TIER_50 (fallback) for contract_id=%s", contract.id)
-    return _TIER_50
+    return _with_registry_rate(_TIER_50, period_year, "tier-50")
 
 
 def _qualifies_for_tier_90(

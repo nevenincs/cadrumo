@@ -12,6 +12,8 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core import Period
+from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
 from ._period_offset_math import apply_period_offset
 from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
@@ -38,12 +40,7 @@ class RegistryModeloObservationRequirement(BaseModel):
     binding_ids: tuple[str, ...] = Field(min_length=1)
     source_casillas: tuple[str, ...] = Field(min_length=1)
 
-    @field_validator("binding_ids", "source_casillas")
-    @classmethod
-    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("observation requirement tuple entries must be unique")
-        return value
+    _values_unique = field_validator("binding_ids", "source_casillas")(unique_tuple("observation requirement tuple"))
 
 
 def previous_filing_observation_requirements(
@@ -219,13 +216,6 @@ def resolve_previous_filing_binding_values(
             source_casillas=_previous_filing_source_ids(_previous_filing_selector(binding)),
         )
     return resolved
-
-
-def _selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
-    selector = binding.selector
-    if isinstance(selector, BaseModel):
-        return selector.model_dump(exclude={"source"}, exclude_none=True)
-    return {k: v for k, v in selector.items() if k != "source"}
 
 
 class _PreviousModeloSelector(BaseModel):

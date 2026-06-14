@@ -732,44 +732,6 @@ def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
     return None
 
 
-def casilla_59_base_imponible(aggregation: IvaLedgerAggregation) -> Decimal:
-    """Return the casilla 59 base imponible from a completed IVA ledger aggregation.
-
-    Casilla 59 ("Entregas intracomunitarias de bienes y servicios") is the
-    sum of base amounts for ``INTRA_COMMUNITY_SUPPLY`` repercutido observations
-    (Ley 37/1992 arts. 25 and 88).  The registry binding in S94 will supersede
-    this helper when the TOML annotation is confirmed; until then this
-    function is the authoritative application-tier projection.
-    """
-    return sum(
-        (
-            obs.base_amount
-            for obs in aggregation.observations
-            if obs.category is IvaCategory.INTRA_COMMUNITY_SUPPLY and obs.flow_direction is IvaFlowDirection.REPERCUTIDO
-        ),
-        Decimal("0"),
-    )
-
-
-def casilla_60_base_imponible(aggregation: IvaLedgerAggregation) -> Decimal:
-    """Return the casilla 60 base imponible from a completed IVA ledger aggregation.
-
-    Casilla 60 ("Exportaciones y operaciones asimiladas") is the sum of base
-    amounts for ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` repercutido observations
-    (Ley 37/1992 art. 21).  The registry binding in S94 will supersede this
-    helper when the TOML annotation is confirmed.
-    """
-    return sum(
-        (
-            obs.base_amount
-            for obs in aggregation.observations
-            if obs.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
-            and obs.flow_direction is IvaFlowDirection.REPERCUTIDO
-        ),
-        Decimal("0"),
-    )
-
-
 __all__ = [
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
@@ -781,8 +743,6 @@ __all__ = [
     "aggregate_iva_ledger_candidates",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
-    "casilla_59_base_imponible",
-    "casilla_60_base_imponible",
     "iva_ledger_missing_fact_reasons",
     "validate_iva_ledger_observation",
     "validate_iva_ledger_observations",

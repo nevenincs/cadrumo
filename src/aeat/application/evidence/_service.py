@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import zipfile
 from collections.abc import Callable, Mapping
 from pathlib import Path
@@ -17,6 +16,7 @@ from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from ._ids import BundleId
 from ._models import (
     BundleVerificationState,
@@ -60,7 +60,7 @@ class EvidenceBundleVerificationReport(BaseModel):
 
 
 def _hash_payload(payload: bytes) -> str:
-    return hashlib.sha256(payload).hexdigest()
+    return sha256_hex(payload)
 
 
 class EvidenceBundleService:

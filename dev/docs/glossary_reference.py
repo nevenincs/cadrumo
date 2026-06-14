@@ -278,5 +278,8 @@ def generate_glossary_reference(docs_root: Path) -> GlossaryResult:
     output_path = docs_root / _GENERATED_RELPATH
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if not (output_path.is_file() and output_path.read_text(encoding=_UTF_8) == rst):
-        output_path.write_text(rst, encoding=_UTF_8)
+        # Force LF so the generated page is byte-identical across platforms; the
+        # default newline translation emits CRLF on Windows, which doc8's
+        # CheckCarriageReturn (D004) then flags on every regeneration.
+        output_path.write_text(rst, encoding=_UTF_8, newline="\n")
     return result

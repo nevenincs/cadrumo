@@ -11,9 +11,9 @@ caller does not supply one.
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....domain.justificante._errors import JustificanteParseError
 from ....domain.justificante._schema import Justificante, JustificanteParserBackend
@@ -87,7 +87,7 @@ def parse_justificante_bytes(
     text = extract_text_from_bytes(pdf_bytes, resolved_backend)
     return extract_justificante_from_digest(
         text,
-        source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+        source_pdf_sha256=sha256_hex(pdf_bytes),
         source_label="<input-pdf>",
     )
 

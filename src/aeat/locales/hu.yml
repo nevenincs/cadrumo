@@ -4344,10 +4344,7 @@ locales:
       updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 59.
-      cikk) megosztott felügyelet esetén %{count} eltartott(ak)nál. Minden szülő a
-      vonatkozó minimum felét vallja be (0513/0514. mező, és ahol alkalmazható, 0515/0516.
-      mező).
+    custodia_compartida_prorrata_applied: '50%-os arányosítás alkalmazva (LIRPF 61. cikk) megosztott felügyelet esetén %{count} eltartott(ak)nál. Minden szülő a vonatkozó minimum felét vallja be (0513/0514. mező, és ahol alkalmazható, 0515/0516. mező).'
     deduccion_maternidad_applied: 'LIRPF 81. cikk szerinti anyasági levonás számítva:
       %{amount} € (0611. mező). A képlet: összeg(min(hónapok × 100; 1 200)) eltartottanként,
       akik 3 évesnél fiatalabbak és bejelentett munkahónapokkal rendelkeznek.'

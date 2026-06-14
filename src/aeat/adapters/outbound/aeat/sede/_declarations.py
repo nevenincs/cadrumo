@@ -24,7 +24,6 @@ legal and source references.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -38,6 +37,7 @@ from .....core.config import Settings, load_settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
+from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
@@ -734,7 +734,7 @@ async def capture_declaration(
 
         from ._schema import Expediente
 
-        sha256 = hashlib.sha256(body).hexdigest()
+        sha256 = sha256_hex(body)
         log.info(
             "capture_declaration: captured PDF expediente=%s CSV=%s size=%d sha256=%s",
             declaration.expediente_id,
@@ -1139,7 +1139,7 @@ async def _capture_row_pdf_artefact(
             source_url=pdf_url,
             content_type=content_type,
             byte_count=len(body),
-            sha256=hashlib.sha256(body).hexdigest(),
+            sha256=sha256_hex(body),
             captured_at=now(),
         ),
         body,
@@ -1186,7 +1186,7 @@ async def _capture_submitted_file_artefact(
             source_url=AnyHttpUrl(source_url),
             content_type=_BINARY_MIME_TYPE,
             byte_count=len(body),
-            sha256=hashlib.sha256(body).hexdigest(),
+            sha256=sha256_hex(body),
             captured_at=now(),
         ),
         body,

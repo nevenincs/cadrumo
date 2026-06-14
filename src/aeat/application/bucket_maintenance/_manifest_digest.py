@@ -15,10 +15,9 @@ Authority: ``2026-06-03-bucket-sealed-archive-adr``.
 
 from __future__ import annotations
 
-import hashlib
-
 from ...adapters.persistence.storage.bucket import BucketManifest
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 
 
 def compute_manifest_digest(manifest: BucketManifest) -> str:
@@ -34,7 +33,7 @@ def compute_manifest_digest(manifest: BucketManifest) -> str:
     :class:`ExportArchiveHeader.manifest_digest` field constraint.
     """
     serialised = manifest.model_dump_json().encode(UTF_8_ENCODING)
-    return hashlib.sha256(serialised).hexdigest()
+    return sha256_hex(serialised)
 
 
 __all__ = ["compute_manifest_digest"]

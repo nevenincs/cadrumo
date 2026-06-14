@@ -9,7 +9,6 @@ logic and are not surfaced as operator-facing CLI help.
 
 from __future__ import annotations
 
-import hashlib
 from datetime import date as _date
 from pathlib import Path
 
@@ -25,6 +24,7 @@ from ...application.overview import (
     calendar_events_from_modelo_records,
     calendar_filing_evidence_from_sources,
 )
+from ...core.hashing import sha256_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._common import (
@@ -310,7 +310,7 @@ def _stored_filed_artefact_matching_observation_csv(
             exc_info=True,
         )
         return None
-    if len(body) != artefact.byte_count or hashlib.sha256(body).hexdigest() != artefact.sha256:
+    if len(body) != artefact.byte_count or sha256_hex(body) != artefact.sha256:
         return None
     return _stored_filed_justificante_matching_observation_csv(
         body,

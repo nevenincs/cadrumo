@@ -303,7 +303,7 @@ def validate_m349_nif_format(nif: str, pais: str) -> bool:
 # (reglamento de gestión e inspección tributaria, obligación de informar
 # sobre operaciones con terceros); Ley 58/2003 art. 93.
 # Threshold: total annual importe > €3,005.06 per counterparty (RD
-# 1065/2007 art. 31.1).  The threshold check is performed at the CLI
+# 1065/2007 art. 33.1).  The threshold check is performed at the CLI
 # validator level, not here, so that partial row accumulation works.
 # ---------------------------------------------------------------------------
 
@@ -318,7 +318,7 @@ class Modelo347ContraparteRow(BaseModel):
     ``347/revisions/2008-y-siguientes``.
 
     One row per counterparty. The annual total importe (sum of Q1-Q4)
-    must exceed €3,005.06 per RD 1065/2007 art. 31.1.
+    must exceed €3,005.06 per RD 1065/2007 art. 33.1.
 
     Parity assertions:
     * ``nif`` → ``contraparte.nif`` (counterparty tax id)
@@ -383,7 +383,7 @@ class Modelo347ThresholdError(AeatError, ValueError):
         self.total = total
         super().__init__(
             f"M347 contraparte (nif={nif!r}): importe total {total} does not exceed the "
-            f"{M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 31.1",
+            f"{M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 33.1",
         )
 
 
@@ -401,7 +401,7 @@ class Modelo184ShareSumError(AeatError, ValueError):
 def validate_m347_threshold(rows: Sequence[Modelo347ContraparteRow]) -> None:
     """Enforce the Modelo 347 per-counterparty declarability threshold.
 
-    RD 1065/2007 art. 31.1: only counterparties whose annual operations exceed
+    RD 1065/2007 art. 33.1: only counterparties whose annual operations exceed
     EUR 3,005.06 are declarable. The check is per row (one row = one counterparty).
 
     Raises:

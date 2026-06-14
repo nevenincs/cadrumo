@@ -16,7 +16,6 @@ raw ``data`` field is excluded from ``repr`` for the same reason.
 
 from __future__ import annotations
 
-import hashlib
 from typing import Never, Self, SupportsIndex, override
 
 from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
@@ -24,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_valid
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core.config import Settings
 from ...core.external_constants import PDF_MIME_TYPE
+from ...core.hashing import sha256_hex
 from ._evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
 
 __all__ = [
@@ -99,7 +99,7 @@ class EvidenceInput(BaseModel):
         """Reject bytes whose digest does not match the declared content address."""
         if not self.data:
             raise ValueError("EvidenceInput.data must not be empty")
-        digest = hashlib.sha256(self.data).hexdigest()
+        digest = sha256_hex(self.data)
         if digest != self.content_sha256:
             raise ValueError("EvidenceInput.content_sha256 must equal sha256(data)")
         if self.evidence_id is None and self.attachment_id is None:

@@ -13,7 +13,6 @@ layer. The provider treats every payload as opaque bytes.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import typing
@@ -22,6 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now
 from ._errors import (
@@ -32,6 +32,7 @@ from ._errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
+from ._integrity import verify_content_hash
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 _logger = get_logger(__name__)
@@ -301,18 +302,18 @@ class LocalFileSystemProvider:
                 translated_message="adapters.outbound.storage.local.errors.payload_read_permission",
             ) from None
 
-        actual_hash = hashlib.sha256(payload).hexdigest()
+        actual_hash = sha256_hex(payload)
         stored_hash = str(sidecar.get("content_hash", ""))
         # The stored hash may be a vendor-prefixed string ("sha256-XXX")
         # or a bare hex digest; we accept either as long as the digest
-        # portion matches.
-        stripped_stored = stored_hash.split("-", 1)[1] if stored_hash.startswith("sha256-") else stored_hash
-        if stripped_stored and stripped_stored != actual_hash:
-            raise OutboundStorageIntegrityError(
-                f"content_hash mismatch for {target_path.name}: stored={stored_hash!r} actual_sha256={actual_hash!r}",
-                context={"path": str(target_path), "stored_hash": stored_hash, "actual_sha256": actual_hash},
-                translated_message="adapters.outbound.storage.local.errors.content_hash_mismatch",
-            )
+        # portion matches. The local policy verifies any non-empty digest.
+        verify_content_hash(
+            actual_hash,
+            stored_hash,
+            message=f"content_hash mismatch for {target_path.name}",
+            context={"path": str(target_path), "stored_hash": stored_hash, "actual_sha256": actual_hash},
+            translated_message="adapters.outbound.storage.local.errors.content_hash_mismatch",
+        )
 
         written_at_raw = str(sidecar.get("written_at", ""))
         try:

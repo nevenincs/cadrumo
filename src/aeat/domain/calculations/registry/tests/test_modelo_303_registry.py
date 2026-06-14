@@ -429,6 +429,8 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
+        "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
+        "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00"),
         # No autoconsumo promotor in this period; zero disables the formula path.
         "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
@@ -555,6 +557,8 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
+        "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
+        "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-autoconsumo-promotor-base": Decimal("1400000"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
@@ -604,6 +608,8 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
+        "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
+        "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }

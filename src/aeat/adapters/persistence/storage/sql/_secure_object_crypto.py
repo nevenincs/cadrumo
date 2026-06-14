@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime
 
 from .....core.external_constants import UTF_8_ENCODING
-
-
-def sha256_hex(payload: bytes) -> str:
-    """Return the SHA-256 hex digest for ``payload``."""
-    return hashlib.sha256(payload).hexdigest()
+from .....core.hashing import sha256_hex
 
 
 def derive_revision_id(

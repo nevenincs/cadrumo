@@ -18,7 +18,6 @@ Key types:
 
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime
 from enum import StrEnum
 
@@ -26,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now
 from ...domain.buckets._event import BucketEventObjectType
@@ -172,7 +172,7 @@ def derive_bundle_id(
             f"record={record.object_type.value}:{record.object_id}:{record.content_sha256}",
         )
     canonical = "\n".join(payload_parts).encode(UTF_8_ENCODING)
-    return hashlib.sha256(canonical).hexdigest()
+    return sha256_hex(canonical)
 
 
 def utcnow() -> datetime:

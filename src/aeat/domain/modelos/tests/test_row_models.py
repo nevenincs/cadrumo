@@ -526,7 +526,7 @@ class TestModelo347ContraparteRow:
     def test_importe_total_sums_quarters(self) -> None:
         """importe_total property sums all four quarterly importes.
 
-        Oracle: RD 1065/2007 art. 31.1 — the threshold test is against
+        Oracle: RD 1065/2007 art. 33.1 — the threshold test is against
         the annual sum, not any individual quarter.
         """
         row = Modelo347ContraparteRow(
@@ -565,7 +565,7 @@ class TestModelo347ContraparteRow:
             row.nif = "99999999Z"  # type: ignore[misc]
 
     def test_threshold_constant_matches_rd_1065_2007(self) -> None:
-        """M347_THRESHOLD_EUR equals €3,005.06 per RD 1065/2007 art. 31.1.
+        """M347_THRESHOLD_EUR equals €3,005.06 per RD 1065/2007 art. 33.1.
 
         Anti-tautology: checks the constant is correct, not that the constant
         equals itself. A change in threshold would be a legal change requiring

@@ -23,17 +23,20 @@ from decimal import Decimal
 import pytest
 
 from ...calculations.registry import read_parameter
+from .._enums import ReduccionTier
 from .._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
     JOVEN_TENANT_AGE_MAX,
     JOVEN_TENANT_AGE_MIN,
     PRIOR_RENT_REBAJA_THRESHOLD,
     REHAB_LOOKBACK_DAYS,
+    TierResolution,
     _resolve_ejercicio_amendment_year,
     _resolve_joven_tenant_age_range,
     _resolve_prior_rent_rebaja_threshold,
     _resolve_rehab_lookback_days,
     _resolve_tier_reduccion_rate,
+    _with_registry_rate,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -170,3 +173,56 @@ def test_resolver_tier_rate_helper_returns_registry_value(year: int, tier_id: st
 
 def test_resolver_tier_rate_helper_falls_back_for_unregistered_year() -> None:
     assert _resolve_tier_reduccion_rate(1999, "tier-90") == Decimal("0.90")
+
+
+# --- Causality proof: the dispatch sources the tier rate FROM the registry ---
+#
+# Before this wiring the registry reader was dormant — the dispatch returned
+# inline TierResolution singletons and the registry parameter was authoritative
+# only on paper. These tests prove _with_registry_rate (the dispatch's seam to
+# the reader) is genuinely causal: a template carrying a wrong rate is corrected
+# to the registry value, not echoed back. If the wiring is ever reverted to
+# return the inline constant, the override test fails.
+
+
+@pytest.mark.parametrize(("tier_id", "registry_rate"), _TIER_RATES)
+def test_with_registry_rate_overrides_wrong_template_with_registry_value(
+    tier_id: str,
+    registry_rate: Decimal,
+) -> None:
+    """A template carrying a deliberately-wrong rate is corrected to the registry value."""
+    wrong_template = TierResolution(
+        tier=ReduccionTier.TIER_90,
+        reduccion_pct=Decimal("0.99"),
+        qualifying_share=Decimal("1"),
+        boe_citation_id="art_23_2_a",
+    )
+    result = _with_registry_rate(wrong_template, 2024, tier_id)
+    # The rate comes from the registry parameter, NOT the template's 0.99.
+    assert result.reduccion_pct == registry_rate
+    assert result.reduccion_pct != Decimal("0.99")
+
+
+def test_with_registry_rate_preserves_singleton_identity_when_rate_matches() -> None:
+    """When the registry rate equals the template rate the frozen singleton is returned unchanged."""
+    template = TierResolution(
+        tier=ReduccionTier.TIER_90,
+        reduccion_pct=Decimal("0.90"),
+        qualifying_share=Decimal("1"),
+        boe_citation_id="art_23_2_a",
+    )
+    result = _with_registry_rate(template, 2024, "tier-90")
+    assert result is template
+
+
+def test_with_registry_rate_preserves_qualifying_share_on_override() -> None:
+    """Overriding the rate must not disturb the computed qualifying_share (joven co-tenant case)."""
+    joven_template = TierResolution(
+        tier=ReduccionTier.TIER_70_JOVEN,
+        reduccion_pct=Decimal("0.99"),
+        qualifying_share=Decimal("0.5"),
+        boe_citation_id="art_23_2_b_1",
+    )
+    result = _with_registry_rate(joven_template, 2024, "tier-70")
+    assert result.reduccion_pct == Decimal("0.70")
+    assert result.qualifying_share == Decimal("0.5")

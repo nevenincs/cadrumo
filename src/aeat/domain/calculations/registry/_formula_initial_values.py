@@ -8,8 +8,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from pydantic import BaseModel
-
+from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from ._bindings import CasillaObservation
 from ._bindings_previous_filing import _PreviousModeloSelector
 from ._errors import RegistryValidationError
@@ -271,10 +270,3 @@ def _previous_filing_selector_has_period_anchor(selector: _PreviousModeloSelecto
         or selector.source_period_offset_from_target is not None
         or selector.prior_quarter_expanding_span
     )
-
-
-def _binding_selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
-    selector = binding.selector
-    if isinstance(selector, BaseModel):
-        return selector.model_dump(exclude={"source"}, exclude_none=True)
-    return {k: v for k, v in selector.items() if k != "source"}

@@ -9,11 +9,12 @@ or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
 
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from ...core.hashing import sha256_hex
 
 if TYPE_CHECKING:
     pass
@@ -354,7 +355,7 @@ def _build_split_child_transaction(
         description=child.description,
         provenance=RawProvenance(
             source_path=Path.cwd() / ".aeat-ledger-split",
-            source_sha256=hashlib.sha256(f"split:{parent.transaction_id}:{index}".encode()).hexdigest(),
+            source_sha256=sha256_hex(f"split:{parent.transaction_id}:{index}".encode()),
             source_row_index=index + 1,
             source_format=SourceFormat.MANUAL,
             ingested_at=occurred_at,
@@ -572,7 +573,7 @@ def _build_merged_transaction(
         description=parent_raw.description,
         provenance=RawProvenance(
             source_path=Path.cwd() / ".aeat-ledger-merge",
-            source_sha256=hashlib.sha256(merged_provider_id.encode("utf-8")).hexdigest(),
+            source_sha256=sha256_hex(merged_provider_id.encode("utf-8")),
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
             ingested_at=occurred_at,

@@ -23,19 +23,19 @@ from ...application.ledger import (
     PayableInvoiceService,
     validate_eu_iva_id,
 )
-from ...core import require_active_bucket_id
-from ...core.errors import NoActiveProfileError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.iva import InvoiceKind
 from ._common import (
     _bad,
     _emit_envelope,
-    _no_active_profile_refusal,
     _parse_iso_date_str,
     _parse_optional_iso_date_str,
     parse_decimal_amount,
     parse_optional_decimal_amount,
+)
+from ._common import (
+    active_bucket_id_or_refuse as _business_invoice_bucket_id,
 )
 from ._ledger_payloads import (
     InvoiceAddResult,
@@ -62,14 +62,6 @@ class InvoiceKindOption(StrEnum):
 def register_business_invoice_commands(app: typer.Typer) -> None:
     """Mount the unified invoice command group on the ledger app."""
     app.add_typer(invoice_app, name="invoice")
-
-
-def _business_invoice_bucket_id() -> str:
-    """Return the active workflow bucket id or raise the standard CLI refusal."""
-    try:
-        return require_active_bucket_id()
-    except NoActiveProfileError as exc:
-        raise _no_active_profile_refusal() from exc
 
 
 def _service_for_kind(

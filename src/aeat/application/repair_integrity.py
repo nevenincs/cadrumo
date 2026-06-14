@@ -28,7 +28,6 @@ from a decision record alone.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Generator, Iterator, Sequence
 from contextlib import contextmanager
@@ -51,6 +50,7 @@ from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectRepository,
 )
 from ..core.errors import CoreError
+from ..core.hashing import sha256_hex
 from ..core.logging import get_logger
 from .diagnostics import DiagnosticCheck
 
@@ -384,7 +384,7 @@ def repair_remediation_decision_id(
         ),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return sha256_hex(encoded)
 
 
 class RepairRemediationDecisionRepository:

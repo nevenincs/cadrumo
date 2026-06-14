@@ -53,11 +53,15 @@ from aeat.core.external_constants import UTF_8_ENCODING
 if TYPE_CHECKING:
     import click
 
-#: Sentinel text that the CLI's import-failure fallback emits.  The generator
-#: walks the materialised tree and raises when any command carries this marker
-#: so a missing optional dependency surfaces as an error rather than a silently
-#: degraded reference page.
-_FALLBACK_MARKER: str = "unavailable"
+#: Sentinel text that the CLI's import-failure fallback emits (the rendered
+#: ``cli.root.unavailable_app_help`` string). The generator walks the
+#: materialised tree and raises when any command carries this marker so a
+#: missing optional dependency surfaces as an error rather than a silently
+#: degraded reference page. The marker is the distinctive full phrase rather
+#: than the bare word "unavailable" so it cannot collide with a legitimately
+#: sealed command whose help honestly says it is unavailable (e.g. the
+#: apoderado ``check`` live-read verb).
+_FALLBACK_MARKER: str = "not available in the current configuration"
 
 #: Group-callback emit sites — keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
@@ -616,7 +620,9 @@ def _write_text_if_changed(path: Path, content: str) -> None:
     """
     if path.is_file() and path.read_text(encoding=UTF_8_ENCODING) == content:
         return
-    path.write_text(content, encoding=UTF_8_ENCODING)
+    # Force LF so generated pages are byte-identical across platforms; the
+    # default newline translation emits CRLF on Windows.
+    path.write_text(content, encoding=UTF_8_ENCODING, newline="\n")
 
 
 # ---------------------------------------------------------------------------

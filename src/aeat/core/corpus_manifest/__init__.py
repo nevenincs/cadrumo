@@ -35,6 +35,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import CoreValidationError as _CoreValidationError
+from ..hashing import sha256_hex as _sha256_hex
 from ..logging import get_logger as _get_logger
 from ..time._utc import validate_utc_aware
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
@@ -286,7 +287,7 @@ def build_corpus_manifest(
         generated_at=generated_at,
         entries=entries,
     )
-    manifest_sha256 = hashlib.sha256(body).hexdigest()
+    manifest_sha256 = _sha256_hex(body)
     _logger.debug(
         "build_corpus_manifest: built manifest for %r with %d entries (sha256=%s)",
         corpus_root_name,
@@ -419,7 +420,7 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
         generated_at=manifest.generated_at,
         entries=manifest.entries,
     )
-    expected_sha256 = hashlib.sha256(body).hexdigest()
+    expected_sha256 = _sha256_hex(body)
     if manifest.manifest_sha256 != expected_sha256:
         _logger.error(
             "load_corpus_manifest: tamper detected in manifest at %s (recorded sha256 does not match body)",
