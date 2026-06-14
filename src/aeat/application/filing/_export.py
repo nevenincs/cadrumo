@@ -26,7 +26,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterable
 from datetime import datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
@@ -37,6 +37,7 @@ from ...core import Period
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file
 from ...core.logging import get_logger
+from ...core.money import round_to_cents
 from ...core.time import now
 from ...domain.calculations.registry import (
     CasillaFieldKind,
@@ -560,7 +561,7 @@ def _format_money(value: object, *, length: int, signed: bool) -> str:
     if isinstance(value, bool):
         raise FilingExportValidationError("money export fields cannot render boolean values")
     amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
-    cents = int((abs(amount).quantize(_MONEY_QUANT, rounding=ROUND_HALF_UP) * 100).to_integral_value())
+    cents = int((round_to_cents(abs(amount)) * 100).to_integral_value())
     if amount < 0:
         if not signed:
             raise FilingExportValidationError("unsigned money export field cannot render a negative value")
