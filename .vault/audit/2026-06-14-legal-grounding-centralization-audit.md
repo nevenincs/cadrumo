@@ -479,6 +479,28 @@ legal-entry infrastructure (arts. 33-39 + DT-9ª) is in place for the ganancias 
 is a large, deliberately-scoped, per-section effort — NOT an autonomous bulk operation, and explicitly
 not blanket-strippable because actividades is the correct grounding in the actividades sections.
 
+### V13 (V12 METHOD APPLIED — ganancias-by-asset concept-sections grounded, ~496 casillas)
+
+The V12 section-tag method was validated end-to-end and applied to the three concept-pure
+ganancias-por-transmisión-de-elementos sections, each grounded to the ganancias foundation
+(arts. 33 concepto + 34 importe) — foundation-correct for every box, never the actividades chapter:
+`elemento_criptomoneda` (102 casillas, 2022-2024, commit `dee24ad84`), `elemento_inmueble`
+(gp_otros_inmuebles) and `elemento_patrimonial` (gp_otros_elementos) together (394 casillas,
+2021-2024, commit `48da981a4`). Each section was verified concept-pure (0 deducción labels, no
+interleaving) before grounding — the section tag is the clean, renumbering-immune discriminator V12
+predicted (it caught `elemento_patrimonial` boxes from id 0357, which the 1226-1915 id-range never
+would have). Pinned by the extensible `test_ganancias_seccion_grounding`. Per-box precision
+(valor transmisión→art-35, reinversión→art-38, abatimiento→DT-9ª) is a future refinement on top of
+the correct foundation. Remaining actividades-default concept-sections need their OWN concept's
+articles (atribución de rentas `re_at_rentas`→arts. 86-90; previsión-social excesos→arts. 51/52;
+autonomic deductions→autonomic law; energy-efficiency deduction→its DA) — each a per-concept grounding
+with its own legal-entry check, not the ganancias foundation.
+
+**Running campaign total (this audit's grounding work): ~1064 M100 casillas re-grounded** across the
+trabajo, capital-mobiliario, capital-inmobiliario (rendimiento + amortización base + retención),
+retenciones, and three ganancias-by-asset sections, plus the IRPF mínimo surface — behind 8 grounding
+gates; plus 5 ganancias legal entries authored and corpus-verified.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
