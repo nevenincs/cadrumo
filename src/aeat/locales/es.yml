@@ -2649,6 +2649,7 @@ cli:
       saturate_requires_llm: La opcion --saturate solo se aplica con --llm; indique
         --llm con un proveedor.
       taxable_base_help: Importe de base imponible
+      vision_model_help: 'Sustituye el modelo de visión local de Ollama para leer una factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo configurado.'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia

@@ -2613,6 +2613,7 @@ cli:
       saturate_requires_llm: L'opcio --saturate nomes s'aplica amb --llm; indiqueu
         --llm amb un proveidor.
       taxable_base_help: Import de base imposable
+      vision_model_help: 'Substitueix el model de visió local d''Ollama per llegir una factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir el model configurat.'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descarrega un enllaç de document de Drive i desa'n els bytes com a evidència

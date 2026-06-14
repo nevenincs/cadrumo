@@ -298,6 +298,7 @@ def _classify_with_evidence(
     text_classifier: LLMClassifier | None,
     spec: PromptSpec,
     vision_classifier: LocalVisionLLMClassifier | None,
+    vision_model: str | None,
     settings: Settings,
 ) -> tuple[LLMClassificationResponse, str]:
     """Classify, routing scan/image evidence to the on-host vision classifier.
@@ -305,14 +306,15 @@ def _classify_with_evidence(
     Returns ``(response, provenance)``. Image evidence is read by the local vision
     model (``llm:local-vision:<model>`` provenance) and needs no ``text_classifier``;
     text or no evidence runs the cloud subprocess ``text_classifier``
-    (``llm:<provider>:<model>`` provenance), which must be present.
+    (``llm:<provider>:<model>`` provenance), which must be present. ``vision_model``
+    overrides the settings default vision model for this read.
 
     Raises:
         TransactionValidationError: When the text path is taken but no
             ``text_classifier`` was resolved (no ``--llm`` provider supplied).
     """
     if evidence is not None and evidence.is_images:
-        vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings)
+        vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
         return vision.classify(transaction, evidence_images=evidence.images), vision.decided_by
     if text_classifier is None:
         raise TransactionValidationError(
@@ -330,16 +332,19 @@ def _split_with_evidence(
     proposer: LLMSplitProposer | None,
     spec: PromptSpec,
     vision_classifier: LocalVisionLLMClassifier | None,
+    vision_model: str | None,
     settings: Settings,
 ) -> tuple[LLMSplitResponse, str]:
     """Propose a split, routing scan/image evidence to the on-host vision classifier.
+
+    ``vision_model`` overrides the settings default vision model for this read.
 
     Raises:
         TransactionValidationError: When the text path is taken but no ``proposer``
             was resolved (no ``--llm`` provider supplied).
     """
     if evidence is not None and evidence.is_images:
-        vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings)
+        vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
         return vision.propose_split(transaction, evidence_images=evidence.images), vision.decided_by
     if proposer is None:
         raise TransactionValidationError(
@@ -357,6 +362,7 @@ def suggest_llm_classification(
     provider: LLMProvider | None,
     classifier: LLMClassifier | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
+    vision_model: str | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     read_evidence: bool = False,
     evidence_acknowledged: bool = False,
@@ -377,6 +383,8 @@ def suggest_llm_classification(
             None, resolved via :func:`resolve_classifier` for ``provider``.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Overrides the settings default local vision model (e.g.
+            ``qwen2.5vl:7b``) for an image/scan read; ``None`` uses the default.
         transaction_repository: Injected catalogue repository.
         read_evidence: When True, resolve the transaction's linked evidence and read
             it on-host — a text-layer PDF is inlined and sent to the cloud
@@ -421,6 +429,7 @@ def suggest_llm_classification(
         text_classifier=resolved_classifier,
         spec=prompt_spec_with_every_spending_category(),
         vision_classifier=vision_classifier,
+        vision_model=vision_model,
         settings=resolved_settings,
     )
     _logger.info(
@@ -654,6 +663,7 @@ def saturate_llm_classification(
     provider: LLMProvider | None,
     classifier: LLMClassifier | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
+    vision_model: str | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     on_date: date | None = None,
     read_evidence: bool = False,
@@ -678,6 +688,8 @@ def saturate_llm_classification(
             the saturation prompt spec.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Overrides the settings default local vision model (e.g.
+            ``qwen2.5vl:7b``) for an image/scan read; ``None`` uses the default.
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve the registry rate; defaults to
             the transaction's value date (or booked date).
@@ -723,6 +735,7 @@ def saturate_llm_classification(
         text_classifier=resolved_classifier,
         spec=prompt_spec_with_saturation_fields(),
         vision_classifier=vision_classifier,
+        vision_model=vision_model,
         settings=resolved_settings,
     )
     evidence_text = evidence.text if evidence is not None else None
@@ -1080,6 +1093,7 @@ def suggest_evidence_split(
     provider: LLMProvider | None,
     proposer: LLMSplitProposer | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
+    vision_model: str | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     on_date: date | None = None,
     read_evidence: bool = True,
@@ -1103,6 +1117,8 @@ def suggest_evidence_split(
             None, resolved via :func:`resolve_split_proposer` for ``provider``.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Overrides the settings default local vision model (e.g.
+            ``qwen2.5vl:7b``) for an image/scan read; ``None`` uses the default.
         transaction_repository: Injected catalogue repository.
         on_date: Effective date used to resolve each child's registry rate;
             defaults to the transaction's value date (or booked date).
@@ -1148,6 +1164,7 @@ def suggest_evidence_split(
         proposer=resolved_proposer,
         spec=prompt_spec_with_saturation_fields(),
         vision_classifier=vision_classifier,
+        vision_model=vision_model,
         settings=resolved_settings,
     )
     evidence_reference = evidence.reference if evidence is not None else None

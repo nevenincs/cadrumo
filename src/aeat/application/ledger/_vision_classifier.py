@@ -69,11 +69,16 @@ class LocalVisionLLMClassifier:
         resolved_settings = settings if settings is not None else load_settings()
         self._spec = spec
         self._model = model if model is not None else resolved_settings.aeat_llm_ollama_vision_model
+        # A local vision model on consumer hardware can take minutes; give the
+        # vision read its own (longer) timeout without affecting cloud calls.
+        vision_settings = resolved_settings.model_copy(
+            update={"aeat_llm_default_timeout_s": resolved_settings.aeat_llm_vision_read_timeout_s},
+        )
         self._client = (
             client
             if client is not None
             else LLMClient(
-                settings=resolved_settings,
+                settings=vision_settings,
                 caller="aeat.application.ledger.vision",
                 prompt_id="ledger-vision-classify",
             )

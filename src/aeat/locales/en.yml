@@ -2470,6 +2470,7 @@ cli:
       saturate_requires_llm: The --saturate option applies only with --llm; supply
         --llm with a provider.
       taxable_base_help: Taxable base amount
+      vision_model_help: 'Override the local Ollama vision model for an image/scanned-invoice read (e.g. qwen2.5vl:7b); defaults to the configured model.'
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence
