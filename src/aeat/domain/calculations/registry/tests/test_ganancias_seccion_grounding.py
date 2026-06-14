@@ -31,6 +31,10 @@ _GROUNDED_GANANCIA_SECTIONS: dict[str, tuple[int, ...]] = {
     # exención por reinversión sections (ganancia foundation + art. 38)
     "exencion_rentas_vitalicias_res": (2021, 2022, 2023, 2024),
     "exencion_nuevas_empresas_res": (2021, 2022, 2023, 2024),
+    # ganancias por transmisión de acciones/participaciones/fondos de inversión
+    "entidad_accion": (2021, 2022, 2023, 2024),
+    "entidad_derecho": (2021, 2022, 2023, 2024),
+    "fondo": (2021, 2022, 2023, 2024),
 }
 
 
