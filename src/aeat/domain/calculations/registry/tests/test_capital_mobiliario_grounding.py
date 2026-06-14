@@ -71,3 +71,31 @@ def test_capital_mobiliario_cites_its_own_chapter(year: int) -> None:
         f"M100 {year}: capital-mobiliario casillas with an LIRPF article that is "
         f"not art. 25/26: {bad}"
     )
+
+
+# The retenciones / pagos a cuenta boxes were part of the same cross-section
+# copy-paste defect (citing the actividades chapter); their binding provision is
+# LIRPF art. 99 (obligación de practicar pagos a cuenta).
+_RETENCIONES_PAGOS = ("0591", "0604", "0609")
+
+
+def _m100_casilla(filing_year: int, cid: str):
+    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
+    modelos_by_id = {m.id: m for m in modelos}
+    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    return {c.id: c for c in rev.casillas}.get(cid)
+
+
+@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024, 2025])
+@pytest.mark.parametrize("cid", _RETENCIONES_PAGOS)
+def test_retenciones_pagos_ground_in_art99_not_actividades(year: int, cid: str) -> None:
+    """Retenciones/pagos-a-cuenta boxes cite art. 99, never the actividades chapter."""
+    casilla = _m100_casilla(year, cid)
+    assert casilla is not None, f"M100 {year} must declare casilla {cid}"
+    refs = set(casilla.legal_refs)
+    assert "ley-35-2006:art-99" in refs, (
+        f"casilla {cid} ({year}) is a retenciones/pagos box; must cite art. 99, found {sorted(refs)}"
+    )
+    assert not (_ACTIVIDADES_CHAPTER & refs), (
+        f"casilla {cid} ({year}) must not cite the actividades chapter: {sorted(refs)}"
+    )
