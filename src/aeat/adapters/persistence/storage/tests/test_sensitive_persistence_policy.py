@@ -227,7 +227,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
         "src/aeat/adapters/persistence/storage/bucket/_manifest_io.py",
         "write_manifest",
-        "tmp.write_text",
+        "open",
     ): "bucket directory manifest is plaintext TOML by design; carries no NIF/financial data",
     (
         "src/aeat/core/_bucket_pointer_io.py",
