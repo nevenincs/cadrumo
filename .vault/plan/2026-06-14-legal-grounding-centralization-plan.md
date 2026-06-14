@@ -106,7 +106,7 @@ Promote inline-grounded regulatory values to the central authority without chang
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - F6: promote LIRPF art.58/59 family thresholds (max-age 25, max-age 3, custodia 0.5) to external_constants grounded on the cited articles; `src/aeat/domain/contribuyente/family.py`.
+- [x] `P01.S01` - F6: promote LIRPF art.58/59 family thresholds (max-age 25, max-age 3, custodia 0.5) to external_constants grounded on the cited articles; `src/aeat/domain/contribuyente/family.py`.
 - [ ] `P01.S02` - F5: promote DT12 40% rescate reducción and Ley 44/2015 SAL 10% dotación + 2x cap factor to registry/external_constants with legal_refs->corpus_ref; `src/aeat/domain/modelos/_dt12_reduccion.py`.
 - [ ] `P01.S03` - F2-interim: promote prorrata art.103.Dos (1.10) and art.9.1.c (50pp) thresholds to external_constants with legal_refs, value-identical; `src/aeat/domain/iva/_prorrata.py`.
 
