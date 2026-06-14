@@ -2975,6 +2975,9 @@ cli:
         section_modelo: Models fiscals
         section_overview: Estat general
         section_review_and_registry: Revisio i registre
+        ledger_add: 'Afegir una transacció al llibre manualment.'
+        modelo_verification_report: 'Llistar i veure informes de verificació de models.'
+        modelo_m036: 'Registrar una declaració Model 036 presentada a l''AEAT.'
       config:
         auth_clear: Eliminar les credencials d'autenticacio emmagatzemades.
         auth_configure: Configurar el proveidor d'autenticacio amb l'AEAT.

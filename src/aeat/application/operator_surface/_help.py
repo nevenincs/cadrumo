@@ -354,6 +354,10 @@ def _app_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.app.ledger_import"),
                     ),
                     HelpEntry(
+                        command="aeat app ledger add",
+                        description=tr("cli.operator_surface.help.app.ledger_add"),
+                    ),
+                    HelpEntry(
                         command="aeat app ledger list",
                         description=tr("cli.operator_surface.help.app.ledger_list"),
                     ),
@@ -425,6 +429,14 @@ def _app_help() -> HelpDocument:
                     HelpEntry(
                         command="aeat app modelo work",
                         description=tr("cli.operator_surface.help.app.modelo_work"),
+                    ),
+                    HelpEntry(
+                        command="aeat app modelo verification-report list",
+                        description=tr("cli.operator_surface.help.app.modelo_verification_report"),
+                    ),
+                    HelpEntry(
+                        command="aeat app modelo m036",
+                        description=tr("cli.operator_surface.help.app.modelo_m036"),
                     ),
                 ),
             ),

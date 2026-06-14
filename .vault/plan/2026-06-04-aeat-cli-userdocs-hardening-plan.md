@@ -50,7 +50,7 @@ Give readers a reliable place to start and choose their next page by task.
 - [x] `W02.P03.S08` - Rewrite the userdocs landing route so non-technical readers can choose setup, ledger, modelo filing, troubleshooting, or reference without understanding the architecture first; `docs/index.md or docs/index.rst`.
 - [x] `W02.P03.S09` - Add a short "where to ask for help" route covering the issue tracker, diagnostic outputs to include, and what not to paste publicly; `docs landing route`.
 - [x] `W02.P03.S10` - Replace glossary-dependent routes with inline first-use definitions and search/reference-backed lookup surfaces; `do not make the monolithic glossary the primary explanation path for general readers; `docs navigation and future search/reference backlog`.
-- [ ] `W02.P03.S11` - Decide whether curated root help should advertise handbook-critical surfaces omitted today: manual ledger add, evidence/doclink, verification reports, providers, and M036; `CLI root help backlog`.
+- [x] `W02.P03.S11` - Decide whether curated root help should advertise handbook-critical surfaces omitted today: manual ledger add, evidence/doclink, verification reports, providers, and M036; `CLI root help backlog`.
 - [x] `W02.P03.S50` - Revise the rejected documentation index through the VaultSpec documentation pipeline and present only built canonical HTML for human review; `docs/index.md`.
 - [x] `W02.P03.S51` - Normalize landing-page route labels, target document H1s, and document filenames so user-facing guide names do not diverge; `docs/index.md and linked user guides`.
 
@@ -84,7 +84,7 @@ Separate AEAT census facts from ordinary local profile editing.
 
 - [x] `W03.P06.S18` - Create a standalone censo/enrolment how-to for config profile censo refresh, show, compare, and apply, including authenticated read-only AEAT access, local snapshot review, apply-only-after-review guidance, post-apply profile validation, and handoff to calendar or ledger setup; `censo how-to docs`.
 - [x] `W03.P06.S19` - Create a standalone Modelo 036 lifecycle how-to for `app modelo m036 alta`, `modificacion`, and `baja`, clearly stating these record declarations filed at sede and do not file remotely; `M036 how-to docs`.
-- [ ] `W03.P06.S20` - Backlog any missing "what enrolments do I need?" product surface if the CLI cannot answer it from the active profile in plain language; `product backlog`.
+- [x] `W03.P06.S20` - Backlog any missing "what enrolments do I need?" product surface if the CLI cannot answer it from the active profile in plain language; `product backlog`.
 
 ## Wave `W04` - Ledger operation guides
 
@@ -104,7 +104,7 @@ Document how paper and PDF evidence connects to ledger rows.
 
 - [x] `W04.P08.S24` - Add a purchase-invoice evidence guide for `ledger evidence add/list/view/update/remove` and `ledger attach`; `ledger evidence docs`.
 - [x] `W04.P08.S25` - Add a correction guide for `ledger update`, `remove`, `merge`, `split`, `stash`, and `history`, focused on safe operator workflows; `ledger correction docs`.
-- [ ] `W04.P08.S26` - Backlog any missing ledger "what still needs review?" surface if existing `ledger review`, `status`, and `preflight` cannot answer it plainly; `product backlog`.
+- [x] `W04.P08.S26` - Backlog any missing ledger "what still needs review?" surface if existing `ledger review`, `status`, and `preflight` cannot answer it plainly; `product backlog`.
 
 ## Wave `W05` - Modelo lifecycle and manual inputs
 
@@ -117,7 +117,7 @@ Separate the repeated lifecycle from per-modelo recipes.
 - [x] `W05.P09.S27` - Create a stable lifecycle how-to for `work create`, `calculate`, `verify`, optional internal `file`, and `export`, with the work-unit id vs calculation-revision id distinction; `modelo lifecycle docs`.
 - [x] `W05.P09.S28` - Fix output-file naming consistency across getting-started, quickstart, tutorial, and recipes so the final artifact is not described as `.xml` in one place and fichero-BOE text elsewhere; `narrative docs`.
 - [x] `W05.P09.S29` - Add a "which modelo should I file?" guide using `overview explain`, `overview calendar`, `overview agenda`, `modelo list`, and `modelo describe`; `modelo selection docs`.
-- [ ] `W05.P09.S52` - Backlog a plain tax-year filing-history surface that can answer what has been filed, what was missed, and what remains due without implying overview calendar has official AEAT state; `product backlog`.
+- [x] `W05.P09.S52` - Backlog a plain tax-year filing-history surface that can answer what has been filed, what was missed, and what remains due without implying overview calendar has official AEAT state; `product backlog`.
 - [x] `W05.P09.S56` - Rewrite modelo lifecycle prose so general readers first see the filing task in plain language, with work units, calculation revisions, registry revisions, selectors, checksums, and exact IDs introduced only as advanced details after the export and manual AEAT handoff are clear; `docs/getting-started.md, docs/how-to/quickstart.md, docs/how-to/filing-spine.md, docs/how-to/modelo-303.md, docs/how-to/modelo-390.md, docs/tutorials/index.md`.
 
 ### Phase `W05.P10` - Casillas and bindings
@@ -126,7 +126,7 @@ Give missing values their own operational guide.
 
 - [x] `W05.P10.S30` - Create a focused guide for entering missing `--casilla` values: how to list casillas, identify the printed box, enter a value, and avoid guessing; `manual values docs`.
 - [x] `W05.P10.S31` - Create a focused guide for entering missing `--binding` values: how to run `bindings list --missing`, distinguish profile, ledger, prior-period, relation, and manual values, and record first-filing zeroes honestly; `manual values docs`.
-- [ ] `W05.P10.S32` - Backlog a natural manual-value product surface if users must infer binding/casilla sources from raw ids rather than a guided prompt or report; `product backlog`.
+- [x] `W05.P10.S32` - Backlog a natural manual-value product surface if users must infer binding/casilla sources from raw ids rather than a guided prompt or report; `product backlog`.
 - [x] `W05.P10.S33` - Document relation rows and typed `--row` inputs for multi-record modelos only after confirming the live CLI examples and output are stable; `manual values docs`.
 
 ## Wave `W06` - Verification, export, filing handoff, and reconciliation
@@ -140,7 +140,7 @@ Make verification failures actionable.
 - [x] `W06.P11.S34` - Create a verification-report guide for `modelo work verify`, `verification-report list`, and `verification-report view`; `verification docs`.
 - [x] `W06.P11.S35` - Add symptom-first advice for incomplete, blocked, no exportable revision, deadline passed, and id mix-up failures; `verification docs`.
 - [x] `W06.P11.S36` - Fix or backlog the invalid verification-report next-action path if it is user-visible: `aeat app modelo work verification-report list` should route to the live `aeat app modelo verification-report list/view` surface; `CLI next-action backlog`.
-- [ ] `W06.P11.S37` - Backlog any missing "plain next action" product surface for verification findings that only expose internal ids or registry terms; `product backlog`.
+- [x] `W06.P11.S37` - Backlog any missing "plain next action" product surface for verification findings that only expose internal ids or registry terms; `product backlog`.
 
 ### Phase `W06.P12` - Export and manual filing
 
