@@ -114,8 +114,8 @@ Make the filing path readable from modelo selection through calculation, includi
 
 Separate the repeated lifecycle from per-modelo recipes.
 
-- [ ] `W05.P09.S27` - Create a stable lifecycle how-to for `work create`, `calculate`, `verify`, optional internal `file`, and `export`, with the work-unit id vs calculation-revision id distinction; `modelo lifecycle docs`.
-- [ ] `W05.P09.S28` - Fix output-file naming consistency across getting-started, quickstart, tutorial, and recipes so the final artifact is not described as `.xml` in one place and fichero-BOE text elsewhere; `narrative docs`.
+- [x] `W05.P09.S27` - Create a stable lifecycle how-to for `work create`, `calculate`, `verify`, optional internal `file`, and `export`, with the work-unit id vs calculation-revision id distinction; `modelo lifecycle docs`.
+- [x] `W05.P09.S28` - Fix output-file naming consistency across getting-started, quickstart, tutorial, and recipes so the final artifact is not described as `.xml` in one place and fichero-BOE text elsewhere; `narrative docs`.
 - [x] `W05.P09.S29` - Add a "which modelo should I file?" guide using `overview explain`, `overview calendar`, `overview agenda`, `modelo list`, and `modelo describe`; `modelo selection docs`.
 - [ ] `W05.P09.S52` - Backlog a plain tax-year filing-history surface that can answer what has been filed, what was missed, and what remains due without implying overview calendar has official AEAT state; `product backlog`.
 - [x] `W05.P09.S56` - Rewrite modelo lifecycle prose so general readers first see the filing task in plain language, with work units, calculation revisions, registry revisions, selectors, checksums, and exact IDs introduced only as advanced details after the export and manual AEAT handoff are clear; `docs/getting-started.md, docs/how-to/quickstart.md, docs/how-to/filing-spine.md, docs/how-to/modelo-303.md, docs/how-to/modelo-390.md, docs/tutorials/index.md`.

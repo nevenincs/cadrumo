@@ -102,7 +102,9 @@ aeat app modelo work status <another-work-unit-id>
 
 ## What a calculation revision is
 
-A calculation revision is one saved calculation result inside a work unit.
+A calculation revision is one saved calculation result inside a work unit. It
+has its own reference number, the calculation-revision-id, which `calculate`
+creates and which is separate from the work-unit-id.
 
 When you run calculate, `aeat` saves a draft calculation revision:
 
@@ -166,6 +168,10 @@ current verified revision:
 ```bash
 aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
+
+The `.boe` extension is a naming convention. The tool writes the file to the
+`--output` path you choose and always produces a fixed-width fichero-BOE text
+file, whatever extension you give it.
 
 Each command automatically picks the most appropriate saved calculation:
 
