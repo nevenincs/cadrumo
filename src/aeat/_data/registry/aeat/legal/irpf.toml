@@ -1546,6 +1546,79 @@ required_text = [
     "transmisión",
 ]
 
+[legal."ley-35-2006:art-35"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a35"
+document_id = "BOE-A-2006-20764"
+article = "35"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a35"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a35; operator to re-stamp)"
+notes = "LIRPF art 35: transmisiones a título oneroso — el valor de adquisición (importe real + inversiones/mejoras + gastos y tributos inherentes, menos amortizaciones) y el valor de transmisión (importe real menos gastos y tributos inherentes a cargo del transmitente). Base legal del cálculo de ganancia/pérdida por transmisión onerosa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a35; operator to confirm and re-stamp."
+required_text = [
+    "Transmisiones a título oneroso",
+    "valor de adquisición",
+]
+
+[legal."ley-35-2006:art-36"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a36"
+document_id = "BOE-A-2006-20764"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a36"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a36; operator to re-stamp)"
+notes = "LIRPF art 36: transmisiones a título lucrativo — se aplican las reglas del art. 35 tomando por importe real los valores del Impuesto sobre Sucesiones y Donaciones (sin exceder el valor de mercado). Base legal del cálculo de ganancia/pérdida por transmisión lucrativa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a36; operator to confirm and re-stamp."
+required_text = [
+    "Transmisiones a título lucrativo",
+]
+
+[legal."ley-35-2006:art-38"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a38"
+document_id = "BOE-A-2006-20764"
+article = "38"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a38"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a38; operator to re-stamp)"
+notes = "LIRPF art 38: ganancias excluidas de gravamen en supuestos de reinversión — exención de la ganancia por transmisión de la vivienda habitual reinvertida en otra vivienda habitual, y de acciones/participaciones de entidades de nueva o reciente creación. Base legal de las casillas de exención por reinversión en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a38; operator to confirm and re-stamp."
+required_text = [
+    "Ganancias excluidas de gravamen en supuestos de reinversión",
+]
+
+[legal."ley-35-2006:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a39"
+document_id = "BOE-A-2006-20764"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a39"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a39; operator to re-stamp)"
+notes = "LIRPF art 39: ganancias patrimoniales no justificadas — bienes o derechos cuya tenencia/declaración/adquisición no se corresponde con la renta o patrimonio declarados, integradas en la base liquidable general del periodo. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a39; operator to confirm and re-stamp."
+required_text = [
+    "Ganancias patrimoniales no justificadas",
+]
+
 [legal."ley-35-2006:art-82"]
 evidence_tier = "legal_authority"
 authority = "boe"
