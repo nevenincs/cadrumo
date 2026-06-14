@@ -327,6 +327,25 @@ green. Commits `80a87357f` (0023), `ad0835b14` (0019-0021), `13412f6d2` (0011/00
 None of these touched a compiled regulatory VALUE — they are MANUAL-input casillas whose
 binding-article citation had drifted; no calc output changed, but the provenance surface
 (`registry-calculation-legal-grounding`) is now faithful per the AEAT DR section structure.
+The net-chain trio (0018/0022 → art-19, 0025 → art-18+19+20) was completed in commit
+`fbfb2d1e7`, closing the section (19 casillas × 4 years). Final gate: 81 cases (2020-2025).
+
+### V10 (DISCOVERY — broader cross-section divergence, NOT bulk-fixable) — open follow-up
+
+A 2024-vs-2025 `legal_refs` diff over the 2.053 shared M100 casillas surfaces a large
+divergence set beyond the trabajo section. **It is a discovery signal, not an auto-fix
+list, and MUST NOT be bulk-applied.** Two distinct populations are mixed in the diff: (a)
+genuine 2024 drift (a casilla citing an article that is *wrong* for it — the art-17-for-a-
+reduction class this campaign fixed in the trabajo section); and (b) 2025 *enrichment* —
+the 2025 revision was authored more recently with broader, sometimes 2025/2026-specific
+refs (e.g. `orden-hac-277-2026:art-3`, `rd-439-2007:art-109`, `art-99` retenciones added to
+many íntegro casillas) that are NOT 2024 defects and would be WRONG to copy into 2024.
+Distinguishing (a) from (b) requires per-casilla judgment against the AEAT DR + the binding
+provision — exactly the care the trabajo-section sweep applied. Tracked as an open
+follow-up: a dedicated section-by-section grounding audit (capital mobiliario, actividades
+económicas, ganancias patrimoniales, deducciones) comparing each 2021-2024 casilla's cited
+article to its binding provision, fixing only the genuine-drift (a) cases and pinning each
+section with a gate. Do NOT diff-and-align; verify each casilla's binding article first.
 
 ## Recommendations
 
