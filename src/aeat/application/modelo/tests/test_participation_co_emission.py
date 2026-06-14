@@ -27,6 +27,7 @@ from ....domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ....domain.modelos._participation_index import TransactionParticipationIndexRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
@@ -66,7 +67,7 @@ def _seed_borrador(
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
-        modelo="303",
+        modelo=ModeloCode("303"),
         filing_year=2024,
         period=Period.from_year_and_code(2024, "2T"),
         revision_id=revision_id_seed,

@@ -47,7 +47,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
         report = asyncio.run(
             capture_iva_compensation_wallet(
                 target_year=target_year,
-                target_period=target_period,
+                target_period=target_filing_period,
                 output_root=settings.aeat_audit_dir / "live" / "iva-wallet",
             ),
         )

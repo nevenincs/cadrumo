@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -84,7 +85,7 @@ def _classify_business(transaction_id: str) -> None:
     assert result.exit_code == 0, result.output
 
 
-def _split_json(parent: str) -> dict:
+def _split_json(parent: str) -> dict[str, Any]:
     result = _RUNNER.invoke(
         app,
         [

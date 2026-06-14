@@ -19,7 +19,7 @@ import calendar
 import re
 from datetime import date
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, override
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
@@ -327,6 +327,7 @@ class Period(BaseModel):
         """
         return self.start_date <= value <= self.end_date
 
+    @override
     def __str__(self) -> str:
         """Return the canonical display form: the year and code, space-separated.
 
@@ -337,9 +338,11 @@ class Period(BaseModel):
         """
         return f"{self.filing_year} {self.code}"
 
+    @override
     def __repr__(self) -> str:
         return f"Period(filing_year={self.filing_year}, code={str(self.code)!r})"
 
+    @override
     def __hash__(self) -> int:
         return hash((self.filing_year, str(self.code)))
 

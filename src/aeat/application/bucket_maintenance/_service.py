@@ -55,7 +55,10 @@ from ._contracts import (
 from ._manifest_digest import compute_manifest_digest
 
 if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
+    from datetime import datetime
+
     from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+    from ...domain.user_profile import UserProfilePortableExport
 
 
 _RENAME_PAYLOAD_VERSION = 1
@@ -449,7 +452,7 @@ class BucketMaintenanceService:
         bucket_id: str,
         event_type: BucketEventType,
         object_id: str,
-        occurred_at,
+        occurred_at: datetime,
         payload_version: int,
         payload: dict[str, str],
     ) -> None:
@@ -476,7 +479,7 @@ class BucketMaintenanceService:
         repository.save(append_bucket_event(repository.load(), event))
 
     @staticmethod
-    def _provision_imported_bucket(bundle) -> None:
+    def _provision_imported_bucket(bundle: UserProfilePortableExport) -> None:
         from ..user_profile import register_active_profile
         from ..workflow import workflow_state_repository
 

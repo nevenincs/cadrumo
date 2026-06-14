@@ -142,7 +142,7 @@ def _justificante_record(
     return Justificante(
         csv="SANITIZEDCSV111",
         modelo=modelo,
-        period=period,
+        period=Period.from_year_and_code(int(ejercicio), period),
         ejercicio=ejercicio,
         presentation_id="1114264149320",
         presented_at=_FIXED_NOW,

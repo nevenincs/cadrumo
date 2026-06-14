@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from ....core import Period
 from ....domain.deadlines import IVARegime, Schedule, TaxpayerProfile
 from ....domain.filing import ModeloInputs
 from .. import default_engine
@@ -41,7 +42,7 @@ class _DraftBuilder:
         self,
         *,
         modelo: str,
-        period: str,
+        period: Period,
         profile: TaxpayerProfile,
         inputs: ModeloInputs,
         fail_on_warning: bool = False,

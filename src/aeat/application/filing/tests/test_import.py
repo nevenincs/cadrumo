@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from pydantic import AnyHttpUrl
 
 from ....core import Period
 from ....domain.filing import ModeloImportError
@@ -124,7 +125,7 @@ def test_submission_record_preserves_typed_draft_period(
         presented_at=datetime(2026, 4, 10, 11, 23, 45),
         tax_id="12345678Z",
         total_a_ingresar=Decimal("10.00"),
-        verification_url=justificante_cotejo_url("ABCD1234EFGH5678"),
+        verification_url=AnyHttpUrl(justificante_cotejo_url("ABCD1234EFGH5678")),
         source_pdf_path=Path("var") / "justificantes" / "modelo_130_2026Q1.pdf",
         source_pdf_sha256="a" * 64,
         parsed_at=datetime(2026, 4, 10, 9, 25, tzinfo=UTC),

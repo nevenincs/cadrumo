@@ -232,7 +232,10 @@ def calendar_events_from_justificante_capture_snapshots(
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarEvent, ...]:
-    """Project verified live justificante captures into calendar filing events."""
+    """Project verified live justificante captures into calendar filing events.
+
+    Returns a tuple of :class:`OverviewCalendarEvent`.
+    """
     justificantes_by_csv = _justificantes_by_csv(justificantes)
     events: list[OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
@@ -682,7 +685,7 @@ def _filing_evidence_from_filed_declaration_observation(
     )
     verified = justificante is not None
     verified_csv = None
-    if verified and justificante.storage_ref is not None:
+    if justificante is not None and justificante.storage_ref is not None:
         verified_csv = verified_artefact_csv_by_ref.get(justificante.storage_ref)
     if verified and not verified_csv:
         verified = False

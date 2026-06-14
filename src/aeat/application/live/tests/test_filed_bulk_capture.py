@@ -70,6 +70,7 @@ def test_filed_register_walk_timeout_reports_modelo_year_context() -> None:
 
     assert raised.value.surface == "filed_declarations_register_walk"
     assert raised.value.timeout_ms == 1
+    assert raised.value.context is not None
     assert raised.value.context["progress"] == {"modelo": "303", "year": 2026}
 
 

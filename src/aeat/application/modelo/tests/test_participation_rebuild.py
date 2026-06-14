@@ -25,6 +25,7 @@ from ....domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
 from ....domain.modelos._participation_index import TransactionParticipationIndexRepository
@@ -60,7 +61,7 @@ def _work_unit(*, modelo: str, period: str, revision_seed: str) -> WorkUnit:
     return WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
-        modelo=modelo,
+        modelo=ModeloCode(modelo),
         filing_year=2024,
         period=typed_period,
         revision_id=revision_seed,
@@ -79,7 +80,7 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
         casilla_values={},
         source_transaction_ids=txids,
     )
-    extra: dict[str, object] = {}
+    extra: dict[str, datetime | str] = {}  # only datetime / actor-label keys; **splat below is scaffolding
     if state in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}:
         extra["verified_at"] = _T0 + timedelta(hours=1)
         extra["verified_by"] = "aeat.cli.modelo.verify"
@@ -94,7 +95,7 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
         source_transaction_ids=txids,
         created_at=_T0,
         updated_at=_T0 + timedelta(hours=2),
-        **extra,
+        **extra,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: conditional datetime/actor-label **dict splat
     )
 
 
@@ -147,7 +148,7 @@ def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record(
             work_unit_id=filed_wu.work_unit_id,
             calculation_revision_id=filed_rev.calculation_revision_id,
             bucket_id=_BUCKET_ID,
-            modelo="303",
+            modelo=ModeloCode("303"),
             filing_year=2024,
             period=Period.from_year_and_code(2024, "1T"),
             filed_at=_T0 + timedelta(hours=2),

@@ -112,7 +112,7 @@ def test_string_period_input_is_rejected_at_helper_boundary() -> None:
     with pytest.raises(ModeloBuilderError, match=r"requires a core\.Period"):
         build_registry_filing_draft(
             modelo="130",
-            period="2026Q1",
+            period="2026Q1",  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             casilla_values=_valid_inputs(),
             binding_values=_valid_bindings(),
             status=ModeloDraftStatus.BORRADOR,

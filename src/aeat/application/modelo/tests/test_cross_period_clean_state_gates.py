@@ -118,7 +118,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing
         Justificante(
             csv=csv,
             modelo=modelo,
-            period=period,
+            period=Period.from_year_and_code(filing_year, period),
             ejercicio=str(filing_year),
             presentation_id=None,
             presented_at=_CLOCK,

@@ -62,7 +62,7 @@ def modelo_work_plazo_summary(
         recovery = build_recovery_for_overdue(
             days_late=days_overdue,
             modelo=str(work_unit.modelo),
-            period=work_unit.period.registry_token,
+            period=work_unit.period,
         )
     except DeadlineValidationError:
         _LOG.debug(

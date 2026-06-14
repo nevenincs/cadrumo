@@ -295,7 +295,7 @@ class TestAggregationInvariants:
         with pytest.raises(ValidationError, match="Period"):
             RetencionesAggregation(
                 modelo="111",
-                period="2025Q1",
+                period="2025Q1",  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
                 rollups=(),
                 total_perceptors=0,
                 total_taxable_base=Decimal("0"),
@@ -308,7 +308,7 @@ class TestAggregationInvariants:
         with pytest.raises(ValidationError, match="Period"):
             RetencionesAggregation(
                 modelo="111",
-                period={"filing_year": 2025, "code": "1T"},
+                period={"filing_year": 2025, "code": "1T"},  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
                 rollups=(),
                 total_perceptors=0,
                 total_taxable_base=Decimal("0"),

@@ -264,7 +264,7 @@ def google_sync_calc_verify(
         profile=active,
         modelo=report.modelo_id,
         revision=report.revision_id,
-        period=report.period,
+        period=report.period.registry_token,
         year=report.filing_year,
         spreadsheet_id=report.spreadsheet_id,
         spreadsheet_url=report.spreadsheet_url,

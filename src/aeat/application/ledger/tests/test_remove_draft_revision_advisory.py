@@ -115,7 +115,7 @@ def _seed_revision_citing_transaction(
         casilla_values={"01": Decimal("1")},
         created_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
-        **audit_fields,
+        **audit_fields,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: state-keyed audit-field splat
     )
     WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
     catalogue = CalculationRevisionCatalogueRepository(objects=objects).load()
