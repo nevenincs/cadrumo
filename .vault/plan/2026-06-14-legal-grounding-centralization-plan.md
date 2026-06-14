@@ -122,7 +122,7 @@ Resolve dormant or inline casilla-routing per no-legacy-compatibility: bind thro
 
 - [x] `P03.S05` - F3: resolve M303/M390 compensación casilla ids through the registry snapshot casilla definitions instead of inline numeric literals; `src/aeat/application/calculations/_iva_compensation_history.py`.
 - [x] `P03.S06` - F4: author the ledger_iva_aggregation base_amount_sum bindings (INTRA_COMMUNITY_SUPPLY->59, EXPORT_THIRD_COUNTRY_ZERO_RATED->60) and delete the dormant casilla_59/60 Python helpers; `src/aeat/application/aggregation/_iva_ledger.py`.
-- [ ] `P03.S07` - F2-final: decide prorrata subsystem fate — enroll as registry-declared aggregation source on 303/390 casillas OR delete the dormant subsystem per no-legacy-compatibility; `src/aeat/domain/iva/_prorrata.py`.
+- [x] `P03.S07` - F2-final: decide prorrata subsystem fate — enroll as registry-declared aggregation source on 303/390 casillas OR delete the dormant subsystem per no-legacy-compatibility; `src/aeat/domain/iva/_prorrata.py`.
 
 ## Description
 
