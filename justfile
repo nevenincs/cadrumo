@@ -269,9 +269,12 @@ audit-types:
 audit-complexity:
     @uv run --no-sync python -m dev.audit.complexity
 
-# Scan for dead code.
+# Scan for dead code. The whitelist clears individually-justified
+# false positives (contract-fixed signature params); see its docstring.
+# src/aeat is named explicitly because a positional whitelist path
+# overrides (not merges with) the config `paths`.
 audit-dead-code:
-    @uv run --no-sync vulture --config pyproject.toml
+    @uv run --no-sync vulture --config pyproject.toml src/aeat dev/vulture_whitelist.py
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
 audit-duplication:
