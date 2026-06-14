@@ -12,6 +12,8 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W01-P03-S06]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S10]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S11]]'
+  - '[[2026-06-14-storage-backend-security-review-W03-P06-S12]]'
+  - '[[2026-06-14-storage-backend-security-review-W03-P06-S13]]'
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-06-14-storage-backend-security-review-plan]]'
   - '[[2026-06-14-storage-backend-security-review-research]]'
@@ -35,6 +37,8 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W01-P03-S06` - Delete the dead non-atomic _write_bytes_secure method and its sensitive-persistence-policy allowlist entries
 - `2026-06-14-storage-backend-security-review-W03-P05-S10` - Set SQLite busy_timeout in the bucket engine connect listener so a concurrent invocation waits rather than failing immediately with database-locked
 - `2026-06-14-storage-backend-security-review-W03-P05-S11` - Add a concurrent-writer regression proving two sessions on one bucket do not raise an immediate database-locked error
+- `2026-06-14-storage-backend-security-review-W03-P06-S12` - fsync the staged tmp file and the parent directory before and after os.replace on the manifest write
+- `2026-06-14-storage-backend-security-review-W03-P06-S13` - Re-read and re-validate the holder PID immediately before the stale-lock reclaim unlink
 
 ### plan
 
