@@ -151,3 +151,12 @@ number = "37"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "45"
+
+# Informativa base-imponible boxes (entregas intracomunitarias exentas, casilla
+# 59; exportaciones exentas, casilla 60) became computed projection targets when
+# their ledger_iva_aggregation bindings landed; they join the calculation closure.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "59"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "60"

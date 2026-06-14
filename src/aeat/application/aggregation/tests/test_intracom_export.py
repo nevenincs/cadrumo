@@ -22,11 +22,17 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
 
 from ....core import Period
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import load_registry_tree
+from ....domain.calculations.registry._ledger_bindings import (
+    resolve_ledger_iva_aggregation_binding_values,
+)
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -39,9 +45,32 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from .. import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
-from .._iva_ledger import casilla_59_base_imponible, casilla_60_base_imponible
+from .._iva_ledger import IvaLedgerAggregation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+# Casilla 59/60 base imponible are resolved through the registry
+# ledger_iva_aggregation bindings (the canonical path production uses), not a
+# bespoke application-tier helper. These tests assert the registry binding
+# reproduces the expected base sums end-to-end.
+_CASILLA_BASE_BINDING = {
+    "59": "modelo-303-casilla-59-entregas-intracomunitarias-base",
+    "60": "modelo-303-casilla-60-exportaciones-base",
+}
+
+
+@lru_cache(maxsize=1)
+def _modelo_303_revision():
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    return next(m for m in modelos if m.id == "303").revisions["2023-y-siguientes"]
+
+
+def _casilla_base(aggregation: IvaLedgerAggregation, casilla: str) -> Decimal:
+    """Resolve a casilla base imponible via the registry binding from an aggregation."""
+    resolved = resolve_ledger_iva_aggregation_binding_values(
+        _modelo_303_revision(), aggregation.observations
+    )
+    return resolved.get(_CASILLA_BASE_BINDING[casilla], Decimal("0"))
 
 
 def _period(year: int, code: str) -> Period:
@@ -116,8 +145,8 @@ def test_intracom_goods_supply_populates_casilla_59() -> None:
     assert len(aggregation.observations) == 1
     obs = aggregation.observations[0]
     assert obs.category is IvaCategory.INTRA_COMMUNITY_SUPPLY
-    assert casilla_59_base_imponible(aggregation) == Decimal("5000.00")
-    assert casilla_60_base_imponible(aggregation) == Decimal("0")
+    assert _casilla_base(aggregation, "59") == Decimal("5000.00")
+    assert _casilla_base(aggregation, "60") == Decimal("0")
 
 
 def test_domestic_not_subject_services_do_not_populate_casilla_59() -> None:
@@ -125,7 +154,7 @@ def test_domestic_not_subject_services_do_not_populate_casilla_59() -> None:
 
     Per cross-border contract D4: B2B services to EU taxable persons under art. 69 land in
     DOMESTIC_NOT_SUBJECT, not INTRA_COMMUNITY_SUPPLY.  The observation is
-    produced (category=DOMESTIC_NOT_SUBJECT) but casilla_59_base_imponible
+    produced (category=DOMESTIC_NOT_SUBJECT) but the casilla 59 registry binding
     returns 0 for this observation.
     """
     tx = _inbound_tx(
@@ -141,7 +170,7 @@ def test_domestic_not_subject_services_do_not_populate_casilla_59() -> None:
     assert len(aggregation.observations) == 1
     obs = aggregation.observations[0]
     assert obs.category is IvaCategory.DOMESTIC_NOT_SUBJECT
-    assert casilla_59_base_imponible(aggregation) == Decimal("0")
+    assert _casilla_base(aggregation, "59") == Decimal("0")
 
 
 def test_export_third_country_populates_casilla_60() -> None:
@@ -157,8 +186,8 @@ def test_export_third_country_populates_casilla_60() -> None:
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
     assert len(aggregation.issues) == 0, f"unexpected issues: {aggregation.issues}"
-    assert casilla_60_base_imponible(aggregation) == Decimal("3000.00")
-    assert casilla_59_base_imponible(aggregation) == Decimal("0")
+    assert _casilla_base(aggregation, "60") == Decimal("3000.00")
+    assert _casilla_base(aggregation, "59") == Decimal("0")
 
 
 def test_d5_intracom_with_es_counterparty_is_rejected() -> None:
@@ -237,5 +266,5 @@ def test_marc_combined_scenario() -> None:
     assert IvaCategory.INTRA_COMMUNITY_SUPPLY in categories
     assert IvaCategory.DOMESTIC_NOT_SUBJECT in categories
     # Only the goods invoice feeds casilla 59
-    assert casilla_59_base_imponible(aggregation) == Decimal("5000.00")
-    assert casilla_60_base_imponible(aggregation) == Decimal("0")
+    assert _casilla_base(aggregation, "59") == Decimal("5000.00")
+    assert _casilla_base(aggregation, "60") == Decimal("0")
