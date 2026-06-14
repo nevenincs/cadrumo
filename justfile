@@ -133,11 +133,11 @@ env-playwright:
 
 # Start the background vaultspec-rag HTTP service daemon on loopback port 8766.
 env-rag-start:
-    uv run --no-sync vaultspec-rag server service start --watch --port 8766
+    uv run --no-sync vaultspec-rag server start --updates --port 8766
 
 # Stop the background vaultspec-rag HTTP service daemon.
 env-rag-stop:
-    uv run --no-sync vaultspec-rag server service stop
+    uv run --no-sync vaultspec-rag server stop
 
 # ── Static checks (Verify, Read-only) ────────────────────────────────────────
 
@@ -189,7 +189,7 @@ check-security:
 
 # Check if the RAG service daemon is running.
 check-rag:
-    @uv run --no-sync vaultspec-rag server service status
+    @uv run --no-sync vaultspec-rag server status
 
 # Run programmatic semantic audit checks using the local RAG daemon. Silent on success.
 check-semantic:

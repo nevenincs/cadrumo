@@ -445,9 +445,9 @@ class Settings(AeatTimeoutSettings):
 
         Single source of truth for the live-test gate: both the test-side
         ``aeat.tests.live_gate`` helpers and the production
-        :class:`aeat.core.access_gate.AeatAccessGate` read this property, so
-        the strict-match safety rule (only ``"1"`` opts in; ``"true"`` /
-        ``"yes"`` / ``"on"`` are rejected) lives in exactly one place.
+        ``AeatAccessGate`` read this property, so the strict-match safety
+        rule (only ``"1"`` opts in; ``"true"`` / ``"yes"`` / ``"on"`` are
+        rejected) lives in exactly one place.
         """
         return self.aeat_live_tests_enabled == LIVE_READ_TEST_OPT_IN_VALUE
 
