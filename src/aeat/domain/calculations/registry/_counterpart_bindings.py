@@ -9,6 +9,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, AggregationSourceKind, CounterpartSourceKind
+from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
 from ._invoice_bindings import (
     _INVOICE_FACTS,
@@ -61,14 +62,7 @@ class CounterpartAggregationObservation(BaseModel):
     rectified_base_previous: Decimal | None = None
     party_legal_name: str | None = Field(default=None, max_length=200)
 
-    @field_validator("country_code")
-    @classmethod
-    def _country_code_uppercase(cls, value: str) -> str:
-        if value != value.upper():
-            raise RegistryValidationError("country_code must be uppercase")
-        if not value.isalpha():
-            raise RegistryValidationError("country_code must be alphabetic")
-        return value
+    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
 
     @field_validator("intracommunity_clave")
     @classmethod
@@ -117,12 +111,9 @@ class CounterpartObservationRequirement(BaseModel):
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
 
-    @field_validator("binding_ids", "claves", "source_kinds")
-    @classmethod
-    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("counterpart requirement tuple entries must be unique")
-        return value
+    _values_unique = field_validator("binding_ids", "claves", "source_kinds")(
+        unique_tuple("counterpart requirement tuple")
+    )
 
 
 _COUNTERPART_FACTS = _INVOICE_FACTS

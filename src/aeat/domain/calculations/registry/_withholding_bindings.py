@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core.aggregation import RowSetGroupingKind
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -59,12 +60,7 @@ class WithholdingObservation(BaseModel):
     retencion_practicada: Decimal = Decimal("0")
     ingreso_a_cuenta: Decimal = Decimal("0")
 
-    @field_validator("country_code")
-    @classmethod
-    def _country_code_uppercase(cls, value: str) -> str:
-        if value != value.upper() or not value.isalpha():
-            raise RegistryValidationError("country_code must be uppercase alphabetic")
-        return value
+    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
 
     @field_validator("clave")
     @classmethod
@@ -91,12 +87,7 @@ class WithholdingObservationRequirement(BaseModel):
     binding_ids: tuple[str, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
 
-    @field_validator("binding_ids", "claves")
-    @classmethod
-    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("withholding requirement tuple entries must be unique")
-        return value
+    _values_unique = field_validator("binding_ids", "claves")(unique_tuple("withholding requirement tuple"))
 
 
 class _WithholdingSelector(BaseModel):
@@ -111,7 +102,6 @@ class _WithholdingSelector(BaseModel):
     row_field: _WithholdingRowField | None = None
     grouping: _WithholdingGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
-
 
 
 def _withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
