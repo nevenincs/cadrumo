@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from ...core.external_constants import SAL_RESERVA_CAPITAL_MULTIPLE, SAL_RESERVA_DOTACION_RATE
 from ...core.money import round_to_cents
 from ._errors import PensionReduccionError
 
@@ -49,8 +50,8 @@ def compute_sal_reserva_especial_dotacion(
             context={"field": "reserva_dotada", "value": str(reserva_dotada)},
         )
 
-    cap = round_to_cents(capital_social * Decimal("2"))
+    cap = round_to_cents(capital_social * SAL_RESERVA_CAPITAL_MULTIPLE)
     headroom = max(Decimal("0.00"), cap - reserva_dotada)
-    dotacion_obligatoria = round_to_cents(beneficio_neto * Decimal("0.10"))
+    dotacion_obligatoria = round_to_cents(beneficio_neto * SAL_RESERVA_DOTACION_RATE)
     dotacion = min(dotacion_obligatoria, headroom)
     return round_to_cents(dotacion)
