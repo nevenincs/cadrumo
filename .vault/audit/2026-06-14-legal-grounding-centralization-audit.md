@@ -404,6 +404,18 @@ same 15-17-article kitchen-sink set (incl. actividades + `orden-hac-277-2026` + 
 appears on 2025 boxes 0043/0044/0049 and the ganancias boxes — a 2025-authoring imprecision to
 narrow in the same pass.
 
+**UNBLOCKED — missing ganancias legal entries authored (commit `a056aeda4`).** A prerequisite for
+that pass was that the binding provisions exist in the legal catalogue: only art-33/34/37 did —
+art-35 (transmisiones onerosas), art-36 (transmisiones lucrativas), art-38 (exención por
+reinversión), and art-39 (ganancias no justificadas) were ALL MISSING, so the registry could not
+have grounded any ganancia box to them even with a correct map. Authored all four grounded in the
+bundled `ley-35-2006.html` (#a35/#a36/#a38/#a39), each with a corpus-verified `required_text` the
+catalogue-verification gate validates, and honest agent-authored `reviewed_by` provenance (operator
+to re-stamp). Still to do in the dedicated pass: author the DT-9ª entry (abatimiento reduction),
+build and apply the per-box ganancia article map (valor transmisión/adquisición→art-35,
+ganancia/pérdida obtenida→art-33/34, lucrativa→art-36, reinversión→art-38, abatimiento→DT-9ª),
+separate the structural data-entry fields, and pin the section.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
