@@ -4,5 +4,5 @@ number = "0592"
 label = "Suma de retenciones e ingresos a cuenta atribuidos del capital mobiliario  (suma de las casillas [1597])"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
 semantic_role = "irpf_retencion_atribuida_capital_mobiliario"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

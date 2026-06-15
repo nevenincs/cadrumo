@@ -4,5 +4,5 @@ number = "0724"
 label = "Importe de la deducción: Donativos a fundaciones y asociaciones de utilidad pública no comprendidas en la Ley 49/2002 de 23 de Diciembre"
 section = ["resultados", "anexo_a_res", "deduccion_donativos_res"]
 semantic_role = "irpf_anexo_a_deducciones_donativo_importe"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-68.3"]
+legal_refs = ["ley-35-2006:art-68"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
