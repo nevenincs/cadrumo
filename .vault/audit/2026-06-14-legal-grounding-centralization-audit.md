@@ -803,6 +803,43 @@ deferrable into the helper-mechanism pattern that unblocked art-20 Phase-1 (that
 the value is already present in the same revision's `casilla_values`; F1/F3/F4 and M714 require
 cross-binding/cross-modelo registry resolution).
 
+### V27 (decisive blocker root-cause — HEAD loads clean; the break is transient working-tree peer WIP, not a committed regression)
+
+The registry-load failure was characterised precisely on 2026-06-15 by inspecting the COMMITTED state
+versus the working tree:
+
+- `git show HEAD:.../registry/_schema.py` and `_bindings.py` carry NO `BindingAggregationOp` reference;
+  `_binding_aggregation.py` is NOT committed (`git cat-file -e HEAD:...` fails — it is an untracked
+  working-tree file). The working-tree `_bindings.py` (` M`) imports `BindingAggregationOp` from
+  `core.aggregation` and `binding_aggregation_op` from the untracked `._binding_aggregation`.
+- Therefore the `Input should be an instance of BindingAggregationOp [input_value='copy']` load failure
+  is produced ONLY by the peer's UNCOMMITTED working-tree edits. HEAD is clean: the committed registry
+  TOML's `aggregation.op = "copy"` strings validate against the committed schema, so HEAD — and thus CI,
+  a fresh clone, and `main` — loads the registry normally.
+
+Two consequences settle the campaign's completion state honestly:
+
+1. **The committed deliverables are canonically verifiable.** Every grounding commit (~6345 M100
+   casillas, validated against construct/binding coverage at commit time) and the art-20 Phase-1 advisory
+   are sound at HEAD; the local working-tree break is a property of a peer's in-flight edits, not of this
+   campaign's committed work. The schema-independent integrity gate (V23) additionally pins resolution
+   integrity regardless of working-tree state.
+2. **The unbuilt features are correctly deferred behind the SURFACE, not just the load.** The peer is
+   refactoring the binding-aggregation surface itself (`aggregation.op` string→`BindingAggregationOp`
+   enum). art-20 Phase-2, M714, and F1/F3/F4 all author bindings/resolvers ON that surface. Building them
+   now — even in a clean worktree where HEAD loads — would target the string-form `op` the peer is
+   replacing, guaranteeing a merge conflict with the peer's enum form. The two ADRs defer these precisely
+   because the mesh is mid-refactor; the deferral is an engineering correctness decision
+   (`composition-service-no-parallel-write-path` in spirit — do not build a parallel path onto a surface
+   being rewritten), not merely a reaction to the broken load.
+
+Per `aeat-git-worktree-safety` and `aeat-swarm-orchestration`, a blocker rooted in a peer's uncommitted
+WIP is reported for coordinator adjudication, never resolved by editing or swapping the peer's
+working-tree files. This V27 is that report: the campaign is complete to its canonical, CI-verifiable
+boundary; the residual is gated on the peer's binding-aggregation refactor landing (then F1/F3/F4 +
+art-20 Phase-2 + M714 + the inmueble/gravamenes grounding tail become buildable on the final mesh) and on
+the operator's legal re-stamp of the 14 agent-authored entries.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
