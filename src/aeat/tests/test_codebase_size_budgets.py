@@ -32,6 +32,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/overview/_calendar.py": 1490,
     "src/aeat/application/overview/tests/test_calendar.py": 1396,
     "src/aeat/application/overview/tests/test_calendar_filing_evidence.py": 1530,  # SPLIT-CANDIDATE
+    "src/aeat/adapters/persistence/storage/sql/secure_objects.py": 1273,  # SPLIT-CANDIDATE (active storage refactor)
     "src/aeat/domain/calculations/registry/_applicability.py": 1252,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_schema.py": 1286,
     "src/aeat/entrypoints/cli/tests/test_registry_cli.py": 1300,  # SPLIT-CANDIDATE (Period construction verbosity)
