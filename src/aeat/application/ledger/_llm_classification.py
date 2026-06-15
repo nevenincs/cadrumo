@@ -1451,6 +1451,145 @@ def apply_evidence_classification(
     return result
 
 
+# ── reject: the fourth decision terminal (audit-trailed) ──────────
+
+
+class LLMSuggestionRejectionResult(BaseModel):
+    """Outcome of explicitly rejecting an LLM suggestion (an audit event only).
+
+    A rejection records the operator's judgement that the model's proposal was
+    wrong; it mutates nothing. The transaction stays unclassified (review status
+    ``pending``) and the rejection rides the bucket-event history as a
+    ``ledger.transaction.llm_suggestion.rejected`` event.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1)
+    transaction_id: str = Field(min_length=1)
+    bucket_event_id: str = Field(min_length=1)
+    suggestion_kind: str = Field(min_length=1)
+    provenance: str = Field(min_length=1)
+    operator_reason: str = ""
+
+
+def reject_llm_suggestion(
+    suggestion: LLMClassificationSuggestion | LLMSaturatedSuggestion | LLMSplitSuggestion,
+    *,
+    bucket_id: str,
+    reason: str = "",
+    actor: str = "operator",
+    source_command: str = "aeat app ledger classify --llm --reject",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> LLMSuggestionRejectionResult:
+    """Record an explicit, audit-trailed rejection of an LLM suggestion.
+
+    This is the fourth decision terminal of the suggest -> review -> decide loop
+    (after approve = apply and update = manual override). It captures *what* the
+    model proposed and the operator's reason in a
+    ``LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED`` bucket event, and **mutates
+    nothing** — the transaction's classification, numbers, and lifecycle are
+    untouched, so its review status stays ``pending`` (it is still unclassified).
+    No regulated number is written; the model emitted none and reject writes none.
+
+    Args:
+        suggestion: The captured proposal being rejected — a stage-1
+            classification, a saturated suggestion, or an evidence-driven split.
+        bucket_id: Active profile bucket id.
+        reason: The operator's free-text reason for rejecting (optional).
+        actor: Operator identity for the audit event.
+        source_command: Source-command label recording the operator's verb.
+        transaction_repository: Injected catalogue repository.
+        bucket_event_repository: Injected audit-event repository.
+        occurred_at: Override clock for deterministic tests.
+
+    Returns:
+        An :class:`LLMSuggestionRejectionResult` naming the recorded event.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        TransactionValidationError: When the transaction is not active.
+    """
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    catalogue = repository.load()
+    transaction = catalogue.get(suggestion.transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(f"transaction not found: {suggestion.transaction_id}")
+    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can carry an LLM rejection record",
+            context={
+                "transaction_id": suggestion.transaction_id,
+                "lifecycle_state": transaction.lifecycle_state.value,
+            },
+        )
+    occurred = coerce_utc_aware(occurred_at or now())
+    if isinstance(suggestion, LLMSplitSuggestion):
+        suggestion_kind = "split"
+        payload: dict[str, str] = {
+            "suggestion_kind": suggestion_kind,
+            "child_count": str(len(suggestion.children)),
+            "model_reason": suggestion.reason,
+        }
+    else:
+        suggestion_kind = "classification"
+        payload = {
+            "suggestion_kind": suggestion_kind,
+            "classification": suggestion.classification.value,
+            "category": suggestion.category.value if suggestion.category is not None else "",
+            "confidence": format(suggestion.confidence, "f"),
+            "model_reason": suggestion.reason,
+        }
+        if isinstance(suggestion, LLMSaturatedSuggestion) and suggestion.iva_category is not None:
+            payload["iva_category"] = suggestion.iva_category.value
+    payload["provider"] = suggestion.provider.value if suggestion.provider is not None else "local-vision"
+    payload["provenance"] = suggestion.provenance
+    payload["operator_reason"] = reason
+    payload["source_command"] = source_command
+    payload["mutation_kind"] = "llm_suggestion_rejected"
+
+    event = _build_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
+        occurred_at=occurred,
+        actor=actor,
+        object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+        object_id=suggestion.transaction_id,
+        payload=payload,
+    )
+    # Persist the event through the transaction repository's secure-write batch
+    # (the unchanged catalogue rides along as a no-op), exactly as the apply path
+    # does — a bare BucketEventHistoryRepository().save() does not bind to the
+    # active bucket store in the CLI flow.
+    _event_repo_arg = bucket_event_repository or BucketEventHistoryRepository()
+    assert isinstance(_event_repo_arg, BucketEventHistoryRepository), (
+        "reject_llm_suggestion requires a concrete BucketEventHistoryRepository "
+        "(to_secure_object_write is not on the protocol)"
+    )
+    _save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=_event_repo_arg,
+        catalogue=catalogue,
+        events=(event,),
+    )
+    _logger.info(
+        "llm reject: transaction=%s kind=%s provenance=%s",
+        suggestion.transaction_id,
+        suggestion_kind,
+        suggestion.provenance,
+    )
+    return LLMSuggestionRejectionResult(
+        bucket_id=bucket_id,
+        transaction_id=suggestion.transaction_id,
+        bucket_event_id=event.event_id,
+        suggestion_kind=suggestion_kind,
+        provenance=suggestion.provenance,
+        operator_reason=reason,
+    )
+
+
 __all__ = [
     "LLMClassificationSuggestion",
     "LLMProvider",
@@ -1459,6 +1598,7 @@ __all__ = [
     "LLMSplitApplyResult",
     "LLMSplitChildSuggestion",
     "LLMSplitSuggestion",
+    "LLMSuggestionRejectionResult",
     "OperatorIvaDerivationResult",
     "apply_evidence_classification",
     "apply_evidence_split",
@@ -1467,6 +1607,7 @@ __all__ = [
     "available_llm_providers",
     "derive_operator_iva_substrate",
     "is_llm_provider_available",
+    "reject_llm_suggestion",
     "saturate_llm_classification",
     "suggest_evidence_split",
     "suggest_llm_classification",

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#llm-classification-workflow'
 date: '2026-06-14'
-modified: '2026-06-14'
+modified: '2026-06-15'
 tier: L2
 related:
   - '[[2026-06-14-llm-classification-workflow-adr]]'
@@ -122,6 +122,15 @@ Real-behaviour tests for the no-split verdict, recommendation Notice, and auto-s
 
 - [x] `P03.S05` - Real-behaviour tests: no-split verdict, in-place apply, auto-split route, recommendation Notice; `src/aeat/application/ledger/tests, src/aeat/entrypoints/cli/tests`.
 - [x] `P03.S06` - Add locale keys via aeat.locales; `update classify-with-llm how-to with the auto-split flow; `src/aeat/locales, docs/how-to/classify-with-llm.md`.
+
+### Phase `P04` - Audit-trailed reject: the fourth decision terminal (F10)
+
+Add the LLM-suggestion-rejected event, reject_llm_suggestion, classify --reject CLI, history/view surfacing, locales, docs, and tests, closing the review loop.
+
+- [x] `P04.S07` - Add BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED + catalogue pin test; `src/aeat/domain/buckets/_event.py, src/aeat/domain/buckets/tests/test_event_catalogue.py`.
+- [x] `P04.S08` - Add reject_llm_suggestion + LLMSuggestionRejectionResult emitting the rejection event without mutating the transaction; `src/aeat/application/ledger/_llm_classification.py`.
+- [x] `P04.S09` - Add classify --reject (stage-1/saturate/auto-split) and surface the prior rejection in ledger view; `src/aeat/entrypoints/cli/_ledger.py, src/aeat/entrypoints/cli/_ledger_autosplit_cli.py, src/aeat/entrypoints/cli/_ledger_read_cli.py`.
+- [x] `P04.S10` - Real-behaviour tests for reject (event recorded, no mutation, history/view); `locales; how-to review-loop section; `src/aeat/application/ledger/tests, src/aeat/entrypoints/cli/tests, src/aeat/locales, docs/how-to/classify-with-llm.md`.
 
 ## Description
 

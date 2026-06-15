@@ -2656,6 +2656,11 @@ cli:
       split_recommended_label: 'división recomendada'
       auto_split_single_line: 'factura de una sola línea: no procede división; --apply la clasifica en su sitio'
       auto_split_needs_evidence: '--auto-split requiere --read-evidence: la decisión de división se lee de la factura.'
+      reject_help: 'Registra un rechazo explícito de la sugerencia del modelo como evento de auditoría, sin clasificar la fila (no se puede combinar con --apply).'
+      reason_help: 'Motivo en texto libre que se registra con una decisión --reject.'
+      reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra una sugerencia rechazada, apply una aceptada.'
+      llm_rejected_message: 'Sugerencia del modelo rechazada y registrada. La transacción no cambia; clasifícala manualmente cuando quieras.'
+      llm_rejected_label: 'rechazada'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia

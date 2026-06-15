@@ -2620,6 +2620,11 @@ cli:
       split_recommended_label: 'divisió recomanada'
       auto_split_single_line: 'factura d''una sola línia: no cal divisió; --apply la classifica al lloc'
       auto_split_needs_evidence: '--auto-split requereix --read-evidence: la decisió de divisió es llegeix de la factura.'
+      reject_help: 'Registra un rebuig explícit del suggeriment del model com a esdeveniment d''auditoria, sense classificar la fila (no es pot combinar amb --apply).'
+      reason_help: 'Motiu en text lliure que es registra amb una decisió --reject.'
+      reject_apply_exclusive: '--reject no es pot combinar amb --apply: reject registra un suggeriment rebutjat, apply un d''acceptat.'
+      llm_rejected_message: 'Suggeriment del model rebutjat i registrat. La transacció no canvia; classifica-la manualment quan vulguis.'
+      llm_rejected_label: 'rebutjada'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descarrega un enllaç de document de Drive i desa'n els bytes com a evidència

@@ -277,52 +277,6 @@ class LedgerClassifyBulkResult(OutputSchema):
     failures: list[BulkClassifyFailurePayload] = []
 
 
-class LedgerClassifyLlmSuggestResult(OutputSchema):
-    """JSON envelope for the ``aeat app ledger classify --llm`` (no ``--apply``) path (D1).
-
-    The proposed decision is surfaced for operator review; nothing is
-    persisted (``persisted`` is ``False``) until the operator re-runs with
-    ``--apply``.
-    """
-
-    llm: bool
-    provider: str
-    transaction_id: str
-    classification: str | None = None
-    category: str | None = None
-    confidence: str | None = None
-    reason: str | None = None
-    provenance: str | None = None
-    persisted: bool = False
-
-
-class LedgerClassifyLlmSaturateResult(OutputSchema):
-    """JSON envelope for the ``aeat app ledger classify --llm --saturate`` path (D1).
-
-    The model-selected IVA category plus the system-derived euro substrate.
-    The numbers are present only when the category was derivable; otherwise
-    ``derivation_note`` explains why the operator must complete them.
-    """
-
-    llm: bool
-    provider: str
-    transaction_id: str
-    # Stage-1 classification decision carried alongside the saturated substrate.
-    classification: str | None = None
-    category: str | None = None
-    confidence: str | None = None
-    reason: str | None = None
-    provenance: str | None = None
-    # Saturated IVA substrate (system-derived from the registry).
-    iva_category: str | None = None
-    iva_rate: str | None = None
-    taxable_base: str | None = None
-    iva_amount: str | None = None
-    rate_derivable: bool | None = None
-    derivation_note: str | None = None
-    persisted: bool = False
-
-
 @register_schema("ledger.allocate")
 class LedgerAllocateResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger allocate``."""

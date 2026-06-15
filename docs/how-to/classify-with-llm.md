@@ -92,8 +92,24 @@ aeat app ledger classify <transaction-id> --classification MIXED --business-pct 
 
 ## 3. Reject, apply, or override
 
-Reject a suggestion by doing nothing else. Preview mode leaves the row
-unchanged.
+The review loop has four terminals: review (preview), approve (`--apply`), reject
+(`--reject`), and override (manual classify).
+
+Reject a suggestion when the model is wrong and you want the decision on record:
+
+```bash
+aeat app ledger classify <transaction-id> --llm claude --reject --reason "this is personal"
+```
+
+Reject records what the model proposed and your reason as an audit event. The row
+is left unclassified. See the record later:
+
+```bash
+aeat app ledger history <transaction-id>
+```
+
+`--reject` cannot be combined with `--apply`. Simply previewing and walking away
+also leaves the row unchanged, but `--reject` is what writes the audit trail.
 
 Apply a suggestion only after review:
 
