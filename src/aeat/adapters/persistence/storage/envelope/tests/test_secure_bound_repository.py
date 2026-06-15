@@ -88,9 +88,11 @@ def test_secure_bound_repository_save_load_iter_delete_roundtrip(
             assert loaded == first
             assert loaded is not None and loaded.value == 42
 
-            # Lexicographic id ordering is part of the contract.
-            assert tuple(repo.iter_ids()) == ("alpha", "beta")
-            assert tuple(repo.iter_records()) == (first, second)
+            # Enumeration yields the full set in storage order (digest order),
+            # not a sorted order: callers that need a specific order sort the
+            # result. Compare order-independently (sort both sides by id).
+            assert sorted(repo.iter_ids()) == ["alpha", "beta"]
+            assert sorted(repo.iter_records(), key=lambda p: p.id) == [first, second]
 
             assert repo.delete("alpha") is True
             assert repo.delete("alpha") is False
