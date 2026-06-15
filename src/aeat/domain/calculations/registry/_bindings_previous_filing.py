@@ -14,8 +14,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
+from ._binding_selector_utils import invariant_diagnostics, selector_against_model, unique_tuple
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
-from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
 from ._period_offset_math import apply_period_offset
 from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
@@ -326,6 +326,64 @@ def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousModelo
         return _PreviousModeloSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
+
+
+_PREVIOUS_FILING_OPS: frozenset[BindingAggregationOp] = frozenset(
+    {
+        BindingAggregationOp.SUM,
+        BindingAggregationOp.COPY,
+        BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS,
+    },
+)
+
+
+def _validate_previous_filing_invariants(binding: DataBindingDefinition) -> None:
+    """Lift the resolve-time previous-filing op/source invariants to build time.
+
+    A previous_filing binding aggregates one or more source casillas under one of
+    the supported ops. The op must be a member of :data:`_PREVIOUS_FILING_OPS`
+    (the same closed set :func:`_aggregate_previous_filing_binding` accepts at
+    resolve time); ``copy`` requires exactly one source casilla and
+    ``prior_pagos_fraccionados`` requires exactly two (per quarter pair). These
+    are determinable from the selector at build time, so a malformed pairing
+    fails at snapshot construction rather than only on a taxpayer calculation.
+
+    Only direct previous_filing bindings carry a source-casilla shape; a
+    relation-targeted previous_filing slot is short-circuited (its value is
+    produced by relation resolution, not this aggregator).
+    """
+    op = binding_aggregation_op(binding)
+    if op not in _PREVIOUS_FILING_OPS:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} uses unsupported previous-filing aggregation {op.value!r}",
+        )
+    if not _is_direct_previous_filing_binding(binding):
+        return
+    selector = _previous_filing_selector(binding)
+    source_ids = _previous_filing_source_ids(selector)
+    if op == BindingAggregationOp.COPY and len(source_ids) != 1:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} copy aggregation requires one source casilla",
+        )
+    if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS and len(source_ids) != 2:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} prior_pagos_fraccionados aggregation requires exactly two "
+            f"source casillas (positive-part casilla then minoracion casilla); got {source_ids!r}",
+        )
+
+
+def validate_previous_filing_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a previous_filing binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector shape against
+    :class:`_PreviousModeloSelector` and lifts the previous-filing op/source
+    invariants (supported op set, copy single-casilla, pagos-fraccionados
+    casilla-pair) to build time, preserving the underlying pydantic field error.
+    """
+    failures = selector_against_model(binding, _PreviousModeloSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "previous-filing", _validate_previous_filing_invariants)
 
 
 def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:

@@ -466,7 +466,10 @@ def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
     mutated = revision.model_copy(update={"bindings": bindings})
 
-    with pytest.raises(RegistryValidationError, match="malformed invoice selector"):
+    # The unified validator preserves the underlying pydantic field error rather
+    # than flattening to a generic "malformed selector": the missing ``fact`` key
+    # is named explicitly (selector violates _InvoiceSelector / fact Field required).
+    with pytest.raises(RegistryValidationError, match=r"selector violates _InvoiceSelector"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 

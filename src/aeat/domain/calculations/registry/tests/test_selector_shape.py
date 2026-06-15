@@ -211,7 +211,49 @@ def test_withholding_selector_rejects_unknown_fact() -> None:
 
 
 def test_collectible_invoice_selector_accepts_well_shaped_selector() -> None:
-    """A canonical invoice-shaped binding with grouping + fact passes the gate."""
+    """A canonical scalar invoice-shaped binding passes the gate.
+
+    A ``base_sum`` scalar fact must NOT declare ``row_field`` or ``grouping``
+    (those are row-producer keys); the unified invoice validator rejects a
+    scalar fact that carries a grouping. The well-shaped scalar selector here
+    declares no grouping and passes.
+    """
+
+    binding = _binding(
+        source="collectible_invoice",
+        selector={
+            "fact": "base_sum",
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_collectible_invoice_row_field_selector_accepts_grouping() -> None:
+    """A row-producer invoice-shaped binding declares row_field + grouping + op rows."""
+
+    binding = DataBindingDefinition(
+        id="collectible-rows",
+        source="collectible_invoice",  # type: ignore[arg-type]
+        selector={
+            "fact": "row_field",
+            "row_field": "country_code",
+            "grouping": "operator_clave",
+        },
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+        legal_refs=("lirpf.art-99",),
+        source_refs=("aeat.test",),
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_collectible_invoice_scalar_fact_rejects_grouping() -> None:
+    """A scalar invoice fact paired with a row-producer grouping fails the unified gate.
+
+    Under the single validator contract every invoice-shaped source runs the
+    strict invoice fact/op invariant, so a ``base_sum`` scalar fact that also
+    declares ``grouping`` (a row-producer key) is rejected at registry-build
+    rather than slipping through the selector-shape entry point.
+    """
 
     binding = _binding(
         source="collectible_invoice",
@@ -219,8 +261,11 @@ def test_collectible_invoice_selector_accepts_well_shaped_selector() -> None:
             "fact": "base_sum",
             "grouping": "operator_clave",
         },
+        binding_id="bad-scalar-grouping",
     )
-    assert validate_binding_selector_shape(binding) == []
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-scalar-grouping" in failures[0]
 
 
 def test_counterpart_sources_validate_against_invoice_selector() -> None:
@@ -407,21 +452,47 @@ def test_profile_selector_required_when_pair_must_match() -> None:
     assert "bad-required-when" in failures[0]
 
 
+def test_invoice_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
+    """Invoice fact/op cross-invariants fire at the snapshot-build gate.
+
+    An invoice-source binding that declares ``fact = "operator_count"`` must
+    pair it with ``aggregation.op = "count_distinct"``. A binding that pairs
+    operator_count with op="sum" is structurally malformed; the single
+    invoice validator lifts that invariant to build time so the snapshot-build
+    gate catches it rather than only the resolver at handler-call time. Audit
+    selector-drift F3.
+    """
+    # NEGATIVE TEST: source="collectible_invoice" is valid but the fact/op pair is invalid
+    binding = DataBindingDefinition(
+        id="bad-invoice-fact-op",
+        source="collectible_invoice",  # type: ignore[arg-type]
+        selector={
+            "fact": "operator_count",
+            "claves": ("E", "M"),
+            "rectification_scope": "exclude_rectifications",
+        },
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),  # mismatched op — should be "count_distinct"
+        legal_refs=("lirpf.art-99",),
+        source_refs=("aeat.test",),
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-invoice-fact-op" in failures[0]
+    assert "invoice invariants" in failures[0]
+
+
 def test_counterpart_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
     """Counterpart fact/op cross-invariants fire at the snapshot-build gate.
 
-    A counterpart-source binding that declares ``fact = "operator_count"``
-    must pair it with ``aggregation.op = "count_distinct"`` (per the
-    handler-call-time invariant in ``_validated_counterpart_selector``).
-    A binding that pairs operator_count with op="sum" is structurally
-    malformed; without this lifted invariant the snapshot-build gate
-    would pass it and the resolver would only raise at handler-call
-    time. Audit selector-drift F3.
+    ``ledger_transaction`` is a counterpart-only source (never an invoice
+    source), so its build-time validator is the counterpart family validator.
+    A binding that pairs ``fact = "operator_count"`` with op="sum" is
+    structurally malformed; the lifted counterpart invariant catches it at
+    snapshot build. Audit selector-drift F3.
     """
-    # NEGATIVE TEST: source="collectible_invoice" is valid but the fact/op pair is invalid (ty: invalid-argument-type)
     binding = DataBindingDefinition(
         id="bad-counterpart-fact-op",
-        source="collectible_invoice",  # type: ignore
+        source="ledger_transaction",  # type: ignore[arg-type]
         selector={
             "fact": "operator_count",
             "claves": ("E", "M"),

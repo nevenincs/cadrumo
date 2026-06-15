@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from typing import Literal
@@ -12,8 +12,15 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
+from ._binding_selector_utils import (
+    intracommunity_clave_validator,
+    invariant_diagnostics,
+    selector_against_model,
+    unique_tuple,
+    uppercase_alpha_code,
+    validate_rectification_fields,
+)
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
-from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -42,7 +49,11 @@ __all__ = [
     "invoice_binding_requirements",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
+    "resolve_invoice_family_row_values",
+    "resolve_invoice_family_scalar_values",
+    "validate_invoice_binding",
     "validate_invoice_binding_definition",
+    "validate_invoice_family_fact_and_aggregation",
 ]
 
 # Invoice-source bindings (modelo-agnostic factual aggregation from the user's
@@ -78,17 +89,7 @@ class InvoiceObservation(BaseModel):
     party_legal_name: str | None = Field(default=None, max_length=200)
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
-
-    @field_validator("intracommunity_clave")
-    @classmethod
-    def _clave_uppercase(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        if value != value.upper():
-            raise RegistryValidationError("intracommunity_clave must be uppercase")
-        if value not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
-            raise RegistryValidationError(f"intracommunity_clave {value!r} is not an AEAT clave de operacion")
-        return value
+    _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
 
     @field_validator("base_amount", "rectified_base_previous")
     @classmethod
@@ -101,18 +102,7 @@ class InvoiceObservation(BaseModel):
 
     @model_validator(mode="after")
     def _validate_rectification(self) -> InvoiceObservation:
-        if self.is_rectification:
-            if self.rectified_year is None or self.rectified_period is None:
-                raise RegistryValidationError(
-                    "rectification observation must declare rectified_year and rectified_period",
-                )
-            if self.rectified_base_previous is None:
-                raise RegistryValidationError("rectification observation must declare rectified_base_previous")
-        else:
-            if self.rectified_year is not None or self.rectified_period is not None:
-                raise RegistryValidationError("non-rectification observation must not declare rectified_year/period")
-            if self.rectified_base_previous is not None:
-                raise RegistryValidationError("non-rectification observation must not declare rectified_base_previous")
+        validate_rectification_fields(self)
         return self
 
 
@@ -229,22 +219,58 @@ def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
     _validated_invoice_selector(binding)
 
 
+def validate_invoice_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate an invoice-source binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector against
+    :class:`_InvoiceSelector` and lifts the invoice fact/op invariants to build
+    time, preserving the underlying pydantic field error. This is the
+    ``list[str]`` companion to the raise-style
+    :func:`validate_invoice_binding_definition` (kept as a defence-in-depth
+    resolve-time re-check).
+    """
+    failures = selector_against_model(binding, _InvoiceSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "invoice", lambda b: _validated_invoice_selector(b))
+
+
 def _validated_invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
     selector = _invoice_selector(binding)
-    _validate_invoice_fact_and_aggregation(binding, selector)
+    validate_invoice_family_fact_and_aggregation(binding, selector, family_label="invoice", strict_scalar_shape=True)
     return selector
 
 
-def _validate_invoice_fact_and_aggregation(binding: DataBindingDefinition, selector: _InvoiceSelector) -> None:
+def validate_invoice_family_fact_and_aggregation(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    *,
+    family_label: str,
+    strict_scalar_shape: bool,
+) -> None:
+    """Shared invoice/counterpart fact + aggregation-op cross-invariant.
+
+    The invoice and counterpart families share one selector shape
+    (:class:`_InvoiceSelector`) and one fact set (:data:`_INVOICE_FACTS`); their
+    op/fact cross-checks were near-verbatim copies differing only in the
+    family-name in the unsupported-fact message and in whether the invoice-only
+    scalar-shape guards (``non-row fact must not declare row_field/grouping`` and
+    ``op 'rows' requires fact 'row_field'``) run. ``family_label`` selects the
+    error wording; ``strict_scalar_shape`` toggles the invoice-only guards (the
+    counterpart variant historically omitted them, so the flag preserves that
+    behaviour exactly).
+    """
     if selector.fact not in _INVOICE_FACTS:
-        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
+        raise RegistryValidationError(
+            f"binding {binding.id!r} declares unsupported {family_label} fact {selector.fact!r}",
+        )
     op = binding_aggregation_op(binding)
     _validate_scalar_invoice_fact_op(binding, selector, op)
     if selector.fact == "row_field":
         _validate_row_field_invoice_fact(binding, selector, op)
-    elif selector.row_field is not None or selector.grouping is not None:
+    elif strict_scalar_shape and (selector.row_field is not None or selector.grouping is not None):
         raise RegistryValidationError(f"binding {binding.id!r} non-row fact must not declare row_field or grouping")
-    if op == BindingAggregationOp.ROWS and selector.fact != "row_field":
+    if strict_scalar_shape and op == BindingAggregationOp.ROWS and selector.fact != "row_field":
         raise RegistryValidationError(f"binding {binding.id!r} aggregation op 'rows' requires fact 'row_field'")
 
 
@@ -311,6 +337,92 @@ def _validate_row_field_invoice_fact(
             )
 
 
+def resolve_invoice_family_scalar_values(
+    revision: ModeloRevision,
+    *,
+    source_kinds: frozenset[str] | frozenset[object],
+    validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
+    observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
+) -> dict[str, Decimal]:
+    """Resolve scalar bindings of one invoice-shaped family into Decimal aggregates.
+
+    Shared core for both the invoice and counterpart scalar resolvers; the two
+    differed only in (a) the family membership set, (b) the per-family selector
+    validator, and (c) whether observations are filtered directly (invoice) or
+    matched by ``source_kind`` and converted from counterpart observations.
+    Row-producer bindings (``fact == "row_field"``) are skipped here.
+    """
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source not in source_kinds:
+            continue
+        selector = validate_selector(binding)
+        if selector.fact == "row_field":
+            continue
+        scope_filtered = tuple(_filter_invoice_observations(observations_for_binding(binding), selector))
+        resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)
+    return resolved
+
+
+def resolve_invoice_family_row_values(
+    revision: ModeloRevision,
+    *,
+    source_kinds: frozenset[str] | frozenset[object],
+    validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
+    observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
+    cohort_by_source: bool,
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer bindings of one invoice-shaped family into per-row values.
+
+    Shared core for both the invoice and counterpart row resolvers. Bindings
+    sharing the same cohort key share one-based row indexes so that an export
+    record with ``repeat = "binding_rows"`` correlates field values across
+    bindings on the same row. The counterpart family adds ``binding.source`` to
+    the cohort key (``cohort_by_source = True``) so a different counterpart
+    source kind does not share rows; the invoice family does not.
+    """
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    cohorts: dict[
+        tuple[object, _InvoiceGrouping, _RectificationScope, tuple[str, ...], str | None],
+        list[tuple[DataBindingDefinition, _InvoiceSelector]],
+    ] = {}
+    for binding in revision.bindings:
+        if binding.source not in source_kinds:
+            continue
+        selector = validate_selector(binding)
+        if selector.fact != "row_field":
+            continue
+        assert selector.grouping is not None  # guarded by validator
+        cohort_source = binding.source if cohort_by_source else None
+        cohort_key = (
+            cohort_source,
+            selector.grouping,
+            selector.rectification_scope,
+            tuple(sorted(selector.claves)),
+            selector.iva_regime,
+        )
+        cohorts.setdefault(cohort_key, []).append((binding, selector))
+    for members in cohorts.values():
+        sample_binding, sample_selector = members[0]
+        grouping = sample_selector.grouping
+        assert grouping is not None
+        scope_filtered = tuple(
+            _filter_invoice_observations(observations_for_binding(sample_binding), sample_selector),
+        )
+        rows = _build_invoice_rows(grouping, scope_filtered)
+        for binding, selector in members:
+            assert selector.row_field is not None  # guarded by validator
+            for row_index, row in enumerate(rows, start=1):
+                value = row.get(selector.row_field)
+                if value is None:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
+                        f"for grouping {grouping!r}",
+                    )
+                resolved[(binding.id, row_index)] = value
+    return resolved
+
+
 def resolve_invoice_binding_values(
     revision: ModeloRevision,
     observations: Iterable[InvoiceObservation],
@@ -325,16 +437,12 @@ def resolve_invoice_binding_values(
         observations: Invoice ledger lines to aggregate over.
     """
     available = tuple(observations)
-    resolved: dict[str, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
-            continue
-        selector = _validated_invoice_selector(binding)
-        if selector.fact == "row_field":
-            continue
-        scope_filtered = tuple(_filter_invoice_observations(available, selector))
-        resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)
-    return resolved
+    return resolve_invoice_family_scalar_values(
+        revision,
+        source_kinds=INVOICE_BINDING_SOURCE_KINDS,
+        validate_selector=_validated_invoice_selector,
+        observations_for_binding=lambda _binding: available,
+    )
 
 
 def resolve_invoice_binding_row_values(
@@ -357,45 +465,13 @@ def resolve_invoice_binding_row_values(
             bindings group, filter, and aggregate into indexed row values.
     """
     available = tuple(observations)
-    resolved: dict[tuple[str, int], Decimal | str] = {}
-    # Group bindings by (grouping, rectification_scope, claves, iva_regime) so
-    # that bindings sharing a row source share row indexes.
-    cohorts: dict[
-        tuple[_InvoiceGrouping, _RectificationScope, tuple[str, ...], str | None],
-        list[tuple[DataBindingDefinition, _InvoiceSelector]],
-    ] = {}
-    for binding in revision.bindings:
-        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
-            continue
-        selector = _validated_invoice_selector(binding)
-        if selector.fact != "row_field":
-            continue
-        assert selector.grouping is not None  # guarded by validator
-        cohort_key = (
-            selector.grouping,
-            selector.rectification_scope,
-            tuple(sorted(selector.claves)),
-            selector.iva_regime,
-        )
-        cohorts.setdefault(cohort_key, []).append((binding, selector))
-    for cohort_key, members in cohorts.items():
-        grouping = cohort_key[0]
-        # The cohort selector for filtering is constant across members; use the
-        # first member's selector for filtering.
-        _, sample_selector = members[0]
-        scope_filtered = tuple(_filter_invoice_observations(available, sample_selector))
-        rows = _build_invoice_rows(grouping, scope_filtered)
-        for binding, selector in members:
-            assert selector.row_field is not None  # guarded by validator
-            for row_index, row in enumerate(rows, start=1):
-                value = row.get(selector.row_field)
-                if value is None:
-                    raise RegistryValidationError(
-                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
-                        f"for grouping {grouping!r}",
-                    )
-                resolved[(binding.id, row_index)] = value
-    return resolved
+    return resolve_invoice_family_row_values(
+        revision,
+        source_kinds=INVOICE_BINDING_SOURCE_KINDS,
+        validate_selector=_validated_invoice_selector,
+        observations_for_binding=lambda _binding: available,
+        cohort_by_source=False,
+    )
 
 
 def _build_invoice_rows(
