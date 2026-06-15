@@ -79,7 +79,7 @@ def register(app: typer.Typer) -> None:
             lines.append(f"dependency\t{dep['service']}\t{mark}{tail}")
         for issue in issues:
             lines.append(f"{tr('cli.config.check.issue_label', default='issue')}\t{issue}")
-        _emit_envelope(ctx, command="config.check", result=result, lines=lines)
+        _emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))
         if not ok:
             raise typer.Exit(code=2)
 
