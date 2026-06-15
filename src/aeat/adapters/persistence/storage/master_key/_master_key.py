@@ -9,8 +9,8 @@ protocol:
   account; explicit enrollment mints a 32-byte random key and persists
   it.
 - :class:`FileFallbackMasterKeyProvider` — backed by a passphrase-
-  derived KEK (Argon2id) wrapping an AES-256-GCM master key persisted
-  alongside a per-store random salt.
+  derived KEK (Argon2id) wrapping an AES-256-GCM master key. The
+  per-store random salt is carried inside ``master.kdf`` (``salt_b64``).
 - :class:`EphemeralMasterKeyProvider` — an in-memory provider used
   exclusively by tests; the key vanishes when the provider object is
   garbage-collected.
@@ -21,15 +21,15 @@ the OS keychain and falls back to the file backend only when the
 keychain is unusable. The ``keyring`` backend refuses to fall back; the
 ``file`` backend never consults the keychain.
 
-The on-disk file backend persists three artefacts in
+The on-disk file backend persists two artefacts in
 :attr:`Settings.aeat_secret_store_dir`:
 
-- ``salt`` — 16 random bytes (read at startup, never rotated).
 - ``master.key`` — the AES-256-GCM ciphertext of the master key, plus
   its 12-byte nonce, plus the 16-byte tag, base64-encoded.
 - ``master.kdf`` — a small JSON document carrying the Argon2id
-  parameters used to derive the KEK from the operator's passphrase.
-  This file is human-readable; only ``master.key`` is sensitive.
+  parameters (including the per-store random ``salt_b64``) used to
+  derive the KEK from the operator's passphrase. This file is
+  human-readable; only ``master.key`` is sensitive.
 
 Passphrase resolution: ``AEAT_SECRET_PASSPHRASE`` env var is consulted
 first; absent that, the passphrase is prompted interactively via
@@ -436,8 +436,8 @@ class KeyringMasterKeyProvider:
 class FileFallbackMasterKeyProvider:
     """Encrypted-file-backed master-key provider.
 
-    Persists ``salt`` and ``master.key`` (plus a human-readable
-    ``master.kdf`` parameters document) under
+    Persists ``master.key`` (plus a human-readable ``master.kdf``
+    parameters document carrying the per-store ``salt_b64``) under
     :attr:`Settings.aeat_secret_store_dir`. The KEK is derived from a
     passphrase via Argon2id and wraps the master key with AES-256-GCM.
     """
@@ -451,8 +451,8 @@ class FileFallbackMasterKeyProvider:
         """Bind the provider to a store directory.
 
         Args:
-            store_dir: Directory containing ``salt``, ``master.key``,
-                and ``master.kdf``. Created on first use.
+            store_dir: Directory containing ``master.key`` and
+                ``master.kdf``. Created on first use.
             passphrase_callback: Optional override for passphrase
                 resolution. Defaults to
                 :func:`_default_passphrase_callback`. Tests inject a
@@ -473,10 +473,6 @@ class FileFallbackMasterKeyProvider:
         tb: TracebackType | None,
     ) -> None:
         _provider_exit(self, exc_type, exc, tb)
-
-    @property
-    def _salt_path(self) -> Path:
-        return self._store_dir / "salt"
 
     @property
     def _kdf_params_path(self) -> Path:
@@ -508,8 +504,8 @@ class FileFallbackMasterKeyProvider:
         Resolves the operator passphrase, then serialises the
         unwrap-or-refuse decision under an exclusive ``master.lock`` so two
         first-time callers cannot race-mint conflicting ``master.key`` /
-        ``master.kdf`` pairs. When all three artefacts (``master.key``,
-        ``master.kdf``, ``salt``) are present, derives the Argon2id
+        ``master.kdf`` pairs. When both artefacts (``master.key``,
+        ``master.kdf``) are present, derives the Argon2id
         key-encryption key (KEK) from the passphrase and uses it to unwrap
         the wrapped master key. A partial artefact set is a torn install -- a
         prior mint or recovery crashed mid-write -- and is refused rather
@@ -540,7 +536,7 @@ class FileFallbackMasterKeyProvider:
         # the artefacts the first caller wrote and route to unwrap.
         lock_target = self._store_dir / "master.lock"
         with exclusive_file_lock(lock_target):
-            artefacts = (self._master_key_path, self._kdf_params_path, self._salt_path)
+            artefacts = (self._master_key_path, self._kdf_params_path)
             present = [p for p in artefacts if p.exists()]
             if len(present) == len(artefacts):
                 key = self._unwrap_existing(passphrase)
@@ -590,7 +586,7 @@ class FileFallbackMasterKeyProvider:
         passphrase = self._resolve_passphrase()
         lock_target = self._store_dir / "master.lock"
         with exclusive_file_lock(lock_target):
-            artefacts = (self._master_key_path, self._kdf_params_path, self._salt_path)
+            artefacts = (self._master_key_path, self._kdf_params_path)
             present = [p for p in artefacts if p.exists()]
             if present and not force:
                 raise SecretAlreadyExistsError(
@@ -662,18 +658,17 @@ class FileFallbackMasterKeyProvider:
         master_key = secrets.token_bytes(KEY_SIZE)
         blob = encrypt_record(master_key, key=kek, associated_data=b"aeat.master-key.v1")
         # Restrict directory permissions on POSIX so the wrapped master
-        # key, the salt, and the KDF parameters cannot be world-read.
+        # key and the KDF parameters cannot be world-read.
         # On Windows os.chmod is a no-op; POSIX gets 0o700 on the dir
         # and 0o600 on every file. icacls hardening is out of scope
         # here (the broader session-state pattern handles that).
         self._restrict_dir_permissions(self._store_dir)
         # Use the durable atomic-write helper so a power-loss between
-        # the three artefact writes does not leave a torn install
+        # the two artefact writes does not leave a torn install
         # (truncated master.key under fresh master.kdf, etc.).
         # Same write order as ``complete_recovery``: master.key first
-        # (under the new KEK), then master.kdf (the parameters that
-        # derive the KEK), then salt (informational — the canonical
-        # salt also lives in master.kdf.salt_b64).
+        # (under the new KEK), then master.kdf (the parameters — including
+        # the canonical salt in ``salt_b64`` — that derive the KEK).
         atomic_write_secure_bytes(
             self._master_key_path,
             base64.b64encode(blob.to_wire()),
@@ -682,19 +677,18 @@ class FileFallbackMasterKeyProvider:
             self._kdf_params_path,
             params.model_dump_json().encode(_UTF_8_ENCODING),
         )
-        atomic_write_secure_bytes(self._salt_path, salt)
         _log.info("master key minted in encrypted file at %s", self._master_key_path)
         return master_key
 
     def complete_recovery(self, master_key: bytes) -> None:
         """Re-mint the file-fallback artefacts under recovered key bytes.
 
-        Writes ``master.kdf``, ``master.key``, and ``salt`` for the
-        operator's *current* passphrase (via the configured callback),
-        wrapping ``master_key`` under a freshly-derived Argon2id KEK.
-        The three artefacts are written via the atomic
-        tempfile-and-replace pattern so a crash between writes leaves
-        the existing on-disk state untouched.
+        Writes ``master.kdf`` and ``master.key`` for the operator's
+        *current* passphrase (via the configured callback), wrapping
+        ``master_key`` under a freshly-derived Argon2id KEK. Both
+        artefacts are written via the atomic tempfile-and-replace
+        pattern so a crash between writes leaves the existing on-disk
+        state untouched.
 
         Use after a recovery-key unwrap (`unwrap_master_key`) to bind
         the recovered master-key bytes to a new passphrase. The
@@ -735,10 +729,9 @@ class FileFallbackMasterKeyProvider:
         self._restrict_dir_permissions(self._store_dir)
         with exclusive_file_lock(self._store_dir / "master.lock"):
             # Write order: ``master.key`` first (under the new KEK),
-            # then ``master.kdf`` (the parameters that derive the new
-            # KEK), then ``salt`` (informational — the canonical salt
-            # also lives in ``master.kdf.salt_b64``). A crash between
-            # the first and second write leaves a state where the new
+            # then ``master.kdf`` (the parameters — including the
+            # canonical salt in ``salt_b64`` — that derive the new KEK).
+            # A crash between the two writes leaves a state where the new
             # ``master.key`` cannot decrypt under the OLD KDF — and
             # the OLD ``master.key`` content has already been
             # overwritten — but the recovery-key wrapping at
@@ -753,7 +746,6 @@ class FileFallbackMasterKeyProvider:
                 self._kdf_params_path,
                 params.model_dump_json().encode(_UTF_8_ENCODING),
             )
-            atomic_write_secure_bytes(self._salt_path, salt)
         _log.info(
             "master key recovered and re-wrapped under new passphrase at %s",
             self._master_key_path,
@@ -1175,11 +1167,7 @@ def get_master_key_provider(
         # K1 sitting in the locked keychain. The operator must either
         # unlock the keychain or set ``AEAT_SECRET_STORE_BACKEND=file``
         # explicitly to acknowledge the file-only path.
-        file_fallback_exists = (
-            (store_dir / "master.key").exists()
-            and (store_dir / "master.kdf").exists()
-            and (store_dir / "salt").exists()
-        )
+        file_fallback_exists = (store_dir / "master.key").exists() and (store_dir / "master.kdf").exists()
         if file_fallback_exists:
             _log.info(
                 "OS keychain locked (%s); routing through pre-existing file-fallback at %s",
@@ -1200,11 +1188,7 @@ def get_master_key_provider(
             "and provision a file-fallback master key with `aeat config profile create NAME`.",
         ) from exc
     except MasterKeyMaterialMissingError:
-        file_fallback_exists = (
-            (store_dir / "master.key").exists()
-            and (store_dir / "master.kdf").exists()
-            and (store_dir / "salt").exists()
-        )
+        file_fallback_exists = (store_dir / "master.key").exists() and (store_dir / "master.kdf").exists()
         if file_fallback_exists:
             _log.info(
                 "OS keychain unprovisioned; routing through pre-existing file-fallback at %s",
