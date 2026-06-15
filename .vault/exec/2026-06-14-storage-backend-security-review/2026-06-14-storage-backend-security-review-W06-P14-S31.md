@@ -9,38 +9,8 @@ related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace storage-backend-security-review with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S31 and 2026-06-14-storage-backend-security-review-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Move the transaction catalogue to one secure-object row per transaction keyed by transaction id so single-row mutations stop rewriting the whole catalogue and ## Scope
-
-- `src/aeat/domain/transactions/_repository.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Move the transaction catalogue to one secure-object row per transaction keyed by transaction id so single-row mutations stop rewriting the whole catalogue
 
@@ -50,7 +20,6 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Confirm the premise: `TransactionCatalogueRepository` stores the entire
   catalogue as ONE encrypted secure-object row keyed
@@ -84,8 +53,28 @@ deferral-then-complete discipline that carried S23.
 
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 Performance finding (medium): single-row mutations rewriting the whole catalogue is
 O(n) write amplification per ledger edit. Correctness is unaffected today; this is a
 scalability optimisation for large catalogues. No production regression to absorb.
+
+**Deeper scoping (this session).** An API-preserving diff design (keep
+`load()`/`save(catalogue)`, store one secure-object row per `transaction_id`,
+write only changed rows) would keep every mutation caller unchanged — so the blast
+radius is the repository internals + its tests, not the ~10 consumers. BUT the
+correctness crux is **atomicity**: `save_with_secure_object_writes` atomically
+commits the transaction catalogue *together with* the bucket-event-history and
+invoice catalogues in one `save_many` unit (`_actions_common.py:719,739` — the
+ledger-mutation + its event entry + invoice update must be all-or-nothing). Per-row
+storage needs (a) diff-on-save, which reads current stored row digests and so
+breaks the current purity of `to_secure_object_write` (a pure serialise used for
+atomic composition), and (b) for the `remove`/`split`/`merge` paths, **atomic row
+deletions** — but `save_many` is upsert-only, so deletes do not compose atomically
+with the multi-catalogue co-write today. Delivering S31 safely means designing an
+atomic upsert+delete batch primitive (or restructuring the co-write) so the
+participation-index + event-history + invoice atomicity invariant is preserved
+across per-row deletes. That is a focused correctness-critical slice on the hot
+ledger path, with the ledger + transactions + persistence suites as the gate —
+the same deferral-then-complete discipline that carried S23/S30/S33, but genuinely
+warranting its own session rather than a rushed landing that risks the atomic
+co-write invariant.
