@@ -725,6 +725,38 @@ art-20/M714 ADR IMPLEMENTATIONS, gated on the same registry-load fix; and (c) op
 the 14 agent-authored legal entries. (a) and (b) are the peer's registry-refactor lane; (c) is the
 operator's legal-review lane.
 
+### V24 (inline-literal centralisation lane CLOSED — M202 INCN threshold migrated; production code swept clean)
+
+The campaign's SECOND mandate ("inline or hardcoded ... definitions need migrating to centralized
+schemas") is now also complete to its verifiable boundary, and this lane is verifiable WITHOUT the
+peer-blocked registry load (pure-code import + value + lint).
+
+1. **The one genuine violation is fixed.** The Modelo 202 art. 40.3 INCN threshold lived as an
+   inline `_MODELO_202_ART_40_3_INCN_THRESHOLD: Decimal = Decimal("6000000")` in
+   `_applicability_modelo202.py` — a binding regulatory value (art. 40.3 LIS, Ley 27/2014,
+   BOE-A-2014-12328) per `aeat-schema-central-config`. Migrated to
+   `external_constants.MODELO_202_ART_40_3_INCN_THRESHOLD_EUR` with a binding-provision docstring;
+   the feature module now imports it (local def + unused `Decimal` import removed). Value 6.000.000
+   preserved; centralisation gate green (`test_external_constants_centralisation_part1`, 46 passed).
+   Commit `ee7560c34`.
+2. **The rest of the production tree is clean.** A sweep for regulatory-threshold-shaped literals
+   (large round €: 3005.06 / 50000 / 60100 / 6000000 / 2800 / 3000 / 9000 / minimo figures) and tax
+   rate literals (`Decimal("0.15|0.19|0.21|0.23|0.24|0.25|0.30|0.37|0.45|0.47")`) across `src/aeat`
+   (excluding tests / `external_constants` / `_data`) found ZERO remaining production violations: the
+   only 0.21 matches are docstring examples in `domain/iva/_saturation.py`; `_pricing.py` is
+   non-regulatory LLM pricing. The known AEAT thresholds (M347/M720) and IVA rates already live in
+   `external_constants`/registry.
+3. **Two assessed-and-correctly-left-local literals** (NOT violations, NOT migrated):
+   `_dt12_advisory.py:_DT12_LARGE_TRABAJO_THRESHOLD = Decimal("20000")` is an ADVISORY heuristic (the
+   "large trabajo income" trigger for a missing-DT12-reduction warning), not a figure DT-12 defines —
+   `aeat-schema-central-config` targets regulatory values, not advisory tuning. The `_tier_resolver`
+   fincas reducción-pct tiers are domain rent-management config already wired to the registry rate by
+   the earlier F1 pass; re-touching them risks that live calc work for no centralisation gain.
+
+The inline-literal lane is therefore complete: the single regulatory-literal violation is centralised
+and gated, the production code is swept and proven clean, and the two non-violations are documented so
+a future pass does not re-flag them.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
