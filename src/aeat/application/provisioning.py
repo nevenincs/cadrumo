@@ -128,7 +128,7 @@ def _playwright_browsers_root() -> Path:
 
 
 def probe_playwright_browser() -> DependencyStatus:
-    """Probe whether a Playwright Chromium browser binary is installed.
+    """Probe the Playwright Chromium browser binary, returning a :class:`DependencyStatus`.
 
     Scans the Playwright browsers cache for an installed ``chromium*`` build (a fast
     filesystem check; the Playwright sync driver can hang inside the CLI process, so

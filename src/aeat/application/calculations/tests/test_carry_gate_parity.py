@@ -1,13 +1,13 @@
-"""Parity tests for the single shared ADR-R2 revision-carry gate.
+"""Parity tests for the single shared revision-carry gate.
 
-W03.P06.S19. The ADR-R2 carry gate (period-revision-resolution-adr, Ruling 3 /
+The carry gate (period-revision-resolution-adr, Ruling 3 /
 R2) was implemented across three carry-read sites:
 
 - ``_binding_prefill._revision_carry_outcome`` (returns ``(diverges, advisory)``);
 - ``_cross_period_clean_state._revision_carry_check`` (returns ``(blockers, advisory)``);
 - ``_relation_prefill._gather_observations_for_snapshot`` (drops divergent priors).
 
-W03.P06.S17 collapsed them onto the one
+They were later collapsed onto the one
 ``_revision_carry_gate.revision_carry_outcome`` implementation. These tests prove
 the two adapter sites map the SAME shared decision onto their respective shapes
 for every R2 outcome — matching, divergent, missing-stamp, and indeterminate —

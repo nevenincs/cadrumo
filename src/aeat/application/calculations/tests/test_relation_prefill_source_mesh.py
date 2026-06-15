@@ -142,7 +142,7 @@ def _diagnosed_relation_ids(resolution: CalculationSourceResolution) -> set[str]
 
 
 def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(tmp_path: Path) -> None:
-    """W03.P06.S18 false-fire guard: a cold-start non-formula relation is silent.
+    """False-fire guard: a cold-start non-formula relation is silent.
 
     Modelo 202's relations are referenced by no formula but each materialises a
     declared ``target_binding`` slot the engine threads (resolving to the
@@ -177,12 +177,12 @@ def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(t
 
     assert non_formula.isdisjoint(_diagnosed_relation_ids(source_resolution)), (
         "a cold-start non-formula relation whose target_binding materialises an observable slot "
-        "must NOT fire the S18 advisory — that would regress the cross-modelo carry contract"
+        "must NOT fire the cold-start advisory — that would regress the cross-modelo carry contract"
     )
 
 
 def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Path) -> None:
-    """W03.P06.S18: an unresolved non-formula relation that reaches nothing is surfaced.
+    """An unresolved non-formula relation that reaches nothing is surfaced.
 
     The narrow silent gap: a declared relation referenced by no formula whose
     ``target_binding`` is NOT a declared binding on the revision materialises no
@@ -227,5 +227,5 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
 
     assert orphan_relation.id in _diagnosed_relation_ids(source_resolution), (
         "an unresolved non-formula relation that materialises no binding slot produced no "
-        "diagnostic — the narrow silent gap S18 closes"
+        "diagnostic — the narrow silent gap this guard closes"
     )

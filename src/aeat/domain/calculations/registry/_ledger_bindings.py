@@ -227,7 +227,7 @@ def unsupported_ledger_oss_observations(
     revision: ModeloRevision,
     observations: Iterable[OssIossLedgerObservation],
 ) -> tuple[OssIossLedgerObservation, ...]:
-    """Return OSS/IOSS observations no binding on ``revision`` can consume.
+    """Return the :class:`OssIossLedgerObservation` rows no binding on ``revision`` can consume.
 
     Fail-closed counterpart to
     :func:`resolve_ledger_oss_aggregation_binding_values`, mirroring
@@ -605,7 +605,7 @@ def unsupported_ledger_renta_expense_observations(
     revision: ModeloRevision,
     observations: Iterable[RentaExpenseObservationProtocol],
 ) -> tuple[RentaExpenseObservationProtocol, ...]:
-    """Return renta-expense observations no binding on ``revision`` can consume.
+    """Return the :class:`RentaExpenseObservationProtocol` rows no binding on ``revision`` can consume.
 
     Fail-closed counterpart to
     :func:`resolve_ledger_renta_expense_aggregation_binding_values`, mirroring
@@ -787,7 +787,7 @@ def unsupported_ledger_renta_income_observations(
     revision: ModeloRevision,
     observations: Iterable[RentaIncomeObservationProtocol],
 ) -> tuple[RentaIncomeObservationProtocol, ...]:
-    """Return renta-income observations no binding on ``revision`` can consume.
+    """Return the :class:`RentaIncomeObservationProtocol` rows no binding on ``revision`` can consume.
 
     Fail-closed counterpart to
     :func:`resolve_ledger_renta_income_aggregation_binding_values`, mirroring

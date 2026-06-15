@@ -1,6 +1,6 @@
 """Build-time rejection tests for the single binding validator contract.
 
-The :mod:`bindings-interface-hardening` Wave W02 collapsed the three
+The binding-interface hardening collapsed the three
 incompatible binding-validation conventions onto one per-family
 ``validate(binding) -> list[str]`` accumulating validator, registered in the
 single ``_BINDING_VALIDATOR_REGISTRY`` dispatch table and run by the
