@@ -288,8 +288,12 @@ class BucketMaintenanceService:
             An :class:`ExportBucketResult` describing the written sealed archive.
         """
         from ...adapters.persistence.storage import get_active_master_key
-        from ...adapters.persistence.storage.bucket import ExportArchiveHeader, bucket_paths, read_manifest
-        from ...adapters.persistence.storage.bucket._sealed_archive_writer import write_sealed_archive
+        from ...adapters.persistence.storage.bucket import (
+            ExportArchiveHeader,
+            bucket_paths,
+            read_manifest,
+            write_sealed_archive,
+        )
         from ...adapters.persistence.storage.crypto import encrypt_record
         from ...adapters.persistence.storage.master_key import (
             ARGON2_MEMORY_COST_KIB,
@@ -390,7 +394,7 @@ class BucketMaintenanceService:
             An :class:`ImportBucketResult` describing the restored bucket.
         """
         from ...adapters.persistence.storage import get_active_master_key
-        from ...adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
+        from ...adapters.persistence.storage.bucket import read_sealed_archive
         from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record
         from ...adapters.persistence.storage.master_key import derive_kek_with_params
         from ...domain.user_profile import UserProfilePortableExport

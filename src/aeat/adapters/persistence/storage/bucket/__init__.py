@@ -23,6 +23,8 @@ from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from ._lockfile import acquire_lock, lock_path, release_lock
 from ._manifest import BucketKeySchedule, BucketLifecycleStatus, BucketManifest, ManifestKdfParams
 from ._manifest_io import manifest_path, read_manifest, write_manifest
+from ._sealed_archive_reader import SealedArchiveContents, read_sealed_archive
+from ._sealed_archive_writer import write_sealed_archive
 
 __all__ = [
     "BucketAlreadyPresentError",
@@ -39,6 +41,7 @@ __all__ = [
     "NoActiveBucketError",
     "RecoveryUnavailableError",
     "RecoveryVerificationError",
+    "SealedArchiveContents",
     "acquire_lock",
     "bucket_paths",
     "keystore_path",
@@ -47,7 +50,9 @@ __all__ = [
     "manifest_path",
     "provision_bucket_directory",
     "read_manifest",
+    "read_sealed_archive",
     "release_lock",
     "validate_keystore_separation",
     "write_manifest",
+    "write_sealed_archive",
 ]
