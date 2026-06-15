@@ -43,6 +43,7 @@ Submodules
    aeat.core._ledger_sort
    aeat.core._modelo
    aeat.core._models
+   aeat.core._optional_extras
    aeat.core._period
    aeat.core._tax_domain
    aeat.core._toml

@@ -5,16 +5,21 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from playwright.async_api import (
-    Browser,
-    BrowserContext,
-    Page,
-    Playwright,
-    ProxySettings,
-    Response,
-)
+if TYPE_CHECKING:
+    # playwright is the optional `browser` extra; keep its types out of module
+    # load so this module imports without it. The only runtime use,
+    # ProxySettings, is imported lazily at its call site (behind the factory's
+    # require_optional_extra(BROWSER_EXTRA) guard).
+    from playwright.async_api import (
+        Browser,
+        BrowserContext,
+        Page,
+        Playwright,
+        ProxySettings,
+        Response,
+    )
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -143,6 +148,8 @@ class BrowserSession:
         """Translate the settings's proxy block into a Playwright ProxySettings record."""
         if not self.settings.aeat_proxy_url:
             return None
+        from playwright.async_api import ProxySettings
+
         proxy = ProxySettings(server=self.settings.aeat_proxy_url)
         if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret is not None:
             proxy["username"] = self.settings.aeat_proxy_username

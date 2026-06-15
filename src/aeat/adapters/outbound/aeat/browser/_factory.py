@@ -256,7 +256,19 @@ async def opened_browser_page(
 
 
 async def _start_playwright() -> Playwright:
-    """Start the single browser-base Playwright runtime."""
+    """Start the single browser-base Playwright runtime.
+
+    The single runtime chokepoint every browser session funnels through. Guard
+    the optional ``browser`` extra here so a missing playwright is an instructive
+    :class:`BrowserError`, not a raw ``ModuleNotFoundError`` from the import below.
+    """
+    from .....core import BROWSER_EXTRA, MissingOptionalExtraError, require_optional_extra
+    from ._errors import BrowserError
+
+    try:
+        require_optional_extra(BROWSER_EXTRA)
+    except MissingOptionalExtraError as exc:
+        raise BrowserError(message=str(exc), suggestion=exc.install_hint) from exc
     from playwright.async_api import async_playwright
 
     playwright_manager = async_playwright()
