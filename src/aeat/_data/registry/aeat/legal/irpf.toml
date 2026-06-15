@@ -2375,6 +2375,24 @@ required_text = [
     "Deducción por inversión en vivienda habitual",
 ]
 
+[legal."ley-35-2006:dt-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtdecimoquinta"
+document_id = "BOE-A-2006-20764"
+article = "DT-15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtdecimoquinta"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#dtdecimoquinta; operator to re-stamp)"
+notes = "LIRPF disposición transitoria 15ª: régimen transitorio de la deducción por alquiler de la vivienda habitual — aplicable a contribuyentes con contrato de arrendamiento anterior al 01-01-2015 que venían deduciéndose (10,05% con base máxima según base imponible). Base legal de las casillas informativas y de cálculo de la deducción por alquiler en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtdecimoquinta; operator to confirm and re-stamp."
+required_text = [
+    "Deducción por alquiler de la vivienda habitual",
+]
+
 [legal."ley-35-2006:da-50"]
 evidence_tier = "legal_authority"
 authority = "boe"
