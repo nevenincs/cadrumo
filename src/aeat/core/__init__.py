@@ -13,6 +13,8 @@ Direct exports:
 * :class:`Modelo` — the closed set of AEAT modelo identifier codes.
 * :class:`AggregationSourceKind` — provenance kinds for aggregated ledger
   values, resolved lazily to avoid an import cycle.
+* :class:`BindingSourceKind` — the single canonical closed set of registry
+  binding ``source`` tokens, resolved lazily to avoid an import cycle.
 
 Major subpackages: :mod:`aeat.core.config` (the central settings surface),
 :mod:`aeat.core.errors` (the error taxonomy and registry),
@@ -28,6 +30,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._capabilities import ServiceCapability
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
@@ -56,11 +59,13 @@ if TYPE_CHECKING:
         resolve_repository_bucket_id,
         write_pointer,
     )
+    from .aggregation import AggregationSourceKind, BindingSourceKind
 
 __all__: list[str] = [
     "NON_REGISTRY_MODELOS",
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
+    "BindingSourceKind",
     "BucketPointer",
     "LedgerSortField",
     "LedgerSortOrder",
@@ -69,6 +74,7 @@ __all__: list[str] = [
     "PeriodError",
     "PeriodKind",
     "RegistryPeriodCode",
+    "ServiceCapability",
     "StandardPeriodCode",
     "TaxDomain",
     "accepted_period_codes",
@@ -92,6 +98,10 @@ def __getattr__(name: str) -> object:
         from .aggregation import AggregationSourceKind
 
         return AggregationSourceKind
+    if name == "BindingSourceKind":
+        from .aggregation import BindingSourceKind
+
+        return BindingSourceKind
     if name == "BucketPointer":
         from ._bucket_pointer import BucketPointer
 
