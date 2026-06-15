@@ -1931,6 +1931,13 @@ cli:
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     bucket: null
+    check:
+      available: available
+      help: Check external-dependency availability and the active profile's service
+        capability posture, with the fix for any gap.
+      issue_label: issue
+      missing: missing
+      profile_label: profile
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
       confirm_new_passphrase_prompt: 'Confirm new AEAT secret-store passphrase: '
@@ -2007,7 +2014,8 @@ cli:
       sync:
         calc:
           export:
-            capability_disabled: 'Google export is disabled for this profile; enable it with ''aeat config profile capabilities set google_export on''.'
+            capability_disabled: Google export is disabled for this profile; enable
+              it with 'aeat config profile capabilities set google_export on'.
             modelo_help: Modelo id to export (e.g. 130, 303, 100)
             period_help: Filing period code (e.g. 1T, 2T, 0A)
             prefill_relations_help: Prefill cross-revision relation values from the
@@ -2078,17 +2086,19 @@ cli:
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       capabilities:
-        capability_help: 'Service capability to opt in or out of.'
-        capability_label: 'capability'
-        enabled: 'enabled'
-        help: 'Opt this profile in or out of external services (cloud upload, LLM vision, Google export).'
-        no_active_profile: 'No active profile; select one with ''aeat config profile use <name>'' before setting a capability.'
+        capability_help: Service capability to opt in or out of.
+        capability_label: capability
+        disabled: disabled
+        enabled: enabled
+        help: Opt this profile in or out of external services (cloud upload, LLM vision,
+          Google export).
+        no_active_profile: No active profile; select one with 'aeat config profile
+          use <name>' before setting a capability.
         set_help: Opt the active profile in or out of one service capability.
         show_help: Show the resolved posture of every service capability for the active
           profile.
         state_help: Whether to enable (on) or disable (off) the capability.
         state_label: state
-        disabled: 'disabled'
       censo:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field

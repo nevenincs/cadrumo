@@ -67,6 +67,26 @@ def test_set_disables_a_capability_and_show_reflects_it() -> None:
     assert rows["llm_vision"]["source"] == "profile"
 
 
+def test_config_check_reports_capabilities_and_dependencies() -> None:
+    # Opt out of llm_vision so the report is deterministic regardless of whether a
+    # real Ollama is running in the test environment (no opted-in dependency gap).
+    off = _RUNNER.invoke(app, ["config", "profile", "capabilities", "set", "llm_vision", "off"])
+    assert off.exit_code == 0, off.output
+
+    result = _RUNNER.invoke(app, ["--format", "json", "config", "check"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["ok"] is True
+    assert payload["issues"] == []
+    caps = {c["capability"]: c for c in payload["capabilities"]}
+    assert set(caps) == {"cloud_evidence_upload", "llm_vision", "google_export"}
+    assert caps["llm_vision"]["enabled"] is False
+    services = {d["service"] for d in payload["dependencies"]}
+    assert "ollama-vision" in services
+    assert "playwright-chromium" in services
+    assert any(s.startswith("llm-provider:") for s in services)
+
+
 def test_set_enables_cloud_upload_via_profile_opt_in() -> None:
     setres = _RUNNER.invoke(
         app,
