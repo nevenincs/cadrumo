@@ -639,6 +639,7 @@ application:
         required casilla ids are missing from the corrected map.'
       amendment_verification_refused_no_snapshot: Registry has no snapshot for the
         requested modelo, year, and period.
+      calculate_binding_unknown: '--binding %{key} does not match any binding id in this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings list <MODELO>` to list valid binding ids.'
       calculate_casilla_ambiguous: '--casilla %{key} matches multiple casillas in
         this revision: %{candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate.'
       calculate_casilla_non_numeric: --casilla %{casilla_id} targets non-numeric data
@@ -3986,6 +3987,7 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
+    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
@@ -4547,6 +4549,15 @@ wizard:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    capabilities:
+      cloud-evidence-upload:
+        prompt: Allow uploading sensitive evidence to cloud LLM providers? (off by
+          default)
+      google-export:
+        prompt: Enable Google Sheets export?
+      llm-vision:
+        prompt: Enable on-host LLM vision for reading invoices?
+      title: Service capabilities
     certificate:
       path:
         prompt: Enter the path to your digital certificate (.p12, .pfx)
@@ -4592,6 +4603,8 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
+      cloud-evidence-upload:
+        help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
       country-of-fiscal-residence:
         help: ISO 3166-1 alpha-2 code of the country of fiscal residence (e.g. GB,
           DE, FR). Required when fiscal-residency is non_resident_irnr.
@@ -4613,6 +4626,8 @@ wizard:
       fiscal-residency:
         help: 'Fiscal residency category: resident_irpf (habitual resident in Spain)
           or non_resident_irnr (non-resident, IRNR taxation RDLeg 5/2004).'
+      google-export:
+        help: Enable Google Sheets export.
       has-employees:
         help: Has employees and pays salaries with retención
       incn-prior-12-months:
@@ -4645,6 +4660,8 @@ wizard:
         help: Whether the taxpayer is enrolled in the SII
       legal-entity-form:
         help: Recognised legal form when the entity type is a legal entity
+      llm-vision:
+        help: Enable on-host LLM vision for reading invoices.
       name:
         help: Display name shown in local reviews
       new-entity-first-two-profit-periods:

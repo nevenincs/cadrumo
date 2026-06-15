@@ -650,6 +650,7 @@ application:
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
+      calculate_binding_unknown: application.modelo.errors.calculate_binding_unknown
       calculate_casilla_ambiguous: 'A --casilla %{key} több casillához illeszkedik
         ebben a revízióban: %{candidates}. A pontosításhoz adja meg a PREFIX:NNNNN
         alakú azonosítót.'
@@ -4115,6 +4116,7 @@ errors:
       kell kitenniük.
     modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
       bevallási lefedettség szükséges.
+    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
@@ -4697,6 +4699,15 @@ wizard:
     question_prefix: '%{q_n}. kérdés / %{q_total}'
     section_header: '%{section_n}. lépés / %{section_total}: %{title}'
   setup:
+    capabilities:
+      cloud-evidence-upload:
+        prompt: Engedélyezi az érzékeny bizonylatok feltöltését felhő LLM-szolgáltatókhoz?
+          (alapból kikapcsolva)
+      google-export:
+        prompt: Engedélyezi a Google Sheets exportálást?
+      llm-vision:
+        prompt: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
+      title: Szolgáltatási képességek
     certificate:
       path:
         prompt: Adja meg a digitális tanúsítvány elérési útját (.p12, .pfx)
@@ -4745,6 +4756,9 @@ wizard:
         help: Adóügyi lakcím irányítószáma
       bienes-extranjero-above-threshold:
         help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
+      cloud-evidence-upload:
+        help: Érzékeny bizonylatok feltöltésének engedélyezése felhő LLM-szolgáltatókhoz
+          (alapból kikapcsolva).
       country-of-fiscal-residence:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
@@ -4767,6 +4781,8 @@ wizard:
         help: 'Adóügyi illetőségi kategória: resident_irpf (Spanyolországban szokásos
           lakóhellyel rendelkező) vagy non_resident_irnr (nem rezidens, IRNR szerinti
           adózás, RDLeg 5/2004).'
+      google-export:
+        help: Google Sheets exportálás engedélyezése.
       has-employees:
         help: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
       incn-prior-12-months:
@@ -4802,6 +4818,8 @@ wizard:
         help: Az adózó be van-e jegyezve az SII-be
       legal-entity-form:
         help: Elismert jogi forma, ha az entitástípus jogi személy
+      llm-vision:
+        help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
       name:
         help: A helyi áttekintésekben megjelenő megjelenítési név
       new-entity-first-two-profit-periods:

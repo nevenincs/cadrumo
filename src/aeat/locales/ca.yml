@@ -704,6 +704,7 @@ application:
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: El registre no té una instantània
         per al model, any i període sol·licitats.
+      calculate_binding_unknown: application.modelo.errors.calculate_binding_unknown
       calculate_casilla_ambiguous: '--casilla %{key} coincideix amb diverses caselles
         d''aquesta revisio: %{candidates}. Indica la forma qualificada PREFIX:NNNNN
         per desambiguar.'
@@ -2217,7 +2218,8 @@ cli:
         enabled: activat
         help: Activa o desactiva en aquest perfil els serveis externs (pujada al núvol,
           visió LLM, exportació a Google).
-        no_active_profile: 'No hi ha cap perfil actiu; selecciona''n un amb ''aeat config switch <nom>'' abans de configurar una capacitat.'
+        no_active_profile: No hi ha cap perfil actiu; selecciona'n un amb 'aeat config
+          switch <nom>' abans de configurar una capacitat.
         set_help: Activa o desactiva una capacitat de servei per al perfil actiu.
         show_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
           actiu.
@@ -4212,6 +4214,7 @@ errors:
       184 han de sumar exactament el 100 %.
     modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
       requereixen cobertura declarativa explícita.
+    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
@@ -4798,7 +4801,14 @@ wizard:
     section_header: 'Pas %{section_n} de %{section_total}: %{title}'
   setup:
     capabilities:
-      title: 'Capacitats de serveis'
+      cloud-evidence-upload:
+        prompt: Voleu permetre pujar evidència sensible a proveïdors LLM al núvol?
+          (desactivat per defecte)
+      google-export:
+        prompt: Voleu activar l'exportació a Google Sheets?
+      llm-vision:
+        prompt: Voleu activar la visió LLM local per llegir factures?
+      title: Capacitats de serveis
     certificate:
       path:
         prompt: Introduiu el cami del certificat digital (.p12, .pfx)
@@ -4844,6 +4854,9 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
+      cloud-evidence-upload:
+        help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat
+          per defecte).
       country-of-fiscal-residence:
         help: Codi ISO 3166-1 alfa-2 del país de residència fiscal (p.ex. GB, DE,
           FR). Obligatori quan fiscal-residency és non_resident_irnr.
@@ -4865,6 +4878,8 @@ wizard:
       fiscal-residency:
         help: 'Categoria de residència fiscal: resident_irpf (resident habitual a
           Espanya) o non_resident_irnr (no resident, tributació per IRNR RDLeg 5/2004).'
+      google-export:
+        help: Activar l'exportació a Google Sheets.
       has-employees:
         help: Té empleats i paga salaris amb retenció
       incn-prior-12-months:
@@ -4898,6 +4913,8 @@ wizard:
         help: Si el contribuent està inscrit al SII
       legal-entity-form:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
+      llm-vision:
+        help: Activar la visió LLM local per llegir factures.
       name:
         help: Nom visible mostrat en revisions locals
       new-entity-first-two-profit-periods:
