@@ -74,10 +74,17 @@ Lean-core capability-extras migration (completed):
 - Graceful degradation: add `OptionalExtra` / `OPTIONAL_EXTRAS` and `probe_optional_extra(s)` (spec-only, never raises) + `require_optional_extra` (instructive ImportError) to `provisioning.py`; `aeat config check` now reports each extra's importability and raises an issue when `google_export` is opted in but the `google` extra is absent (commit `dd6122263`).
 - Document `pip install aeat[google|browser|anthropic|all]` in the onboarding guide (commit `975a98e39`).
 
+Feature-boundary guards (completed — no longer a non-goal):
+
+- Add the guard primitive to `core` (innermost layer, importable by every adapter without a layer violation): `OptionalExtra`, `GOOGLE/BROWSER/ANTHROPIC_EXTRA`, `optional_extra_available` (spec-only), and `require_optional_extra` raising the typed `MissingOptionalExtraError` (an `ImportError` subclass carrying `install_hint`).
+- Make the eager-import adapters import-safe: anthropic adapter is lazy (`_providers.__getattr__` + imported in `LLMClient._build_adapter` only behind the guard); `_playwright.py` falls back to stub exception classes when playwright is absent; browser `session.py`/`evasion.py` move playwright types to `TYPE_CHECKING` and lazy-import `ProxySettings` at its one use.
+- Guard each feature at its own boundary, raising the feature's native typed error: anthropic → `LLMConfigError`, browser `_start_playwright` (the single runtime chokepoint) → `BrowserError`; google's pre-existing `ImportError` guards' hints move to `pip install aeat[google]`.
+- Real-behaviour tests via a `sys.meta_path` import blocker (no mocks): the CLI builds with all three extras blocked, and each boundary refuses with its `pip install aeat[<extra>]` hint (commit `3a0ab7823`).
+
 ## Outcome
 
-S09 is complete. A bare `pip install aeat` is now lean — the optional Google / browser / Anthropic stacks install only on demand — while the dev environment stays identical. The doctor reconciles each enabled capability against its extra's availability and prints the exact install command, giving the cohesive graceful-degradation behaviour the campaign set out to deliver. deptry clean, import contracts 4 kept / 0 broken, json-schema conformance + provisioning/doctor suites green.
+S09 is complete. A bare `pip install aeat` is now lean — the optional Google / browser / Anthropic stacks install only on demand — while the dev environment stays identical. The package imports without any extra installed; reaching a feature whose extra is absent refuses with the feature's own typed error naming the exact install command, and the doctor reconciles each enabled capability against its extra. deptry clean, import contracts 4 kept / 0 broken, ty clean, json-schema + 597 adapter/degradation/import-smoke tests green.
 
 ## Notes
 
-The feature-boundary inline guards (converting a raw deep `ModuleNotFoundError` at the exact moment a feature with a missing extra is invoked, rather than at the doctor) were intentionally not added: they would require making the browser / google / anthropic adapters' eager top-level imports lazy and risk a layer-direction violation. The doctor's reporting + `require_optional_extra` helper provide the actionable guidance; the deep raw error only appears if a feature is invoked without first running `aeat config check`.
+The feature-boundary guards were initially deferred (raw `ModuleNotFoundError` at invocation) on a layer-violation concern. That concern was resolved by siting the guard primitive in `core` rather than `application` — `entrypoints > adapters > application > domain > core`, so an adapter importing `core.require_optional_extra` is contract-legal — and by making the eager-import adapter modules import-safe. The deep raw error no longer appears on any path.
